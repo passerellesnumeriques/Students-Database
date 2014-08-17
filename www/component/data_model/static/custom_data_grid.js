@@ -5,6 +5,8 @@ function CustomDataGridColumn(grid_column, data_getter, shown, data_getter_param
 	this.data_getter = data_getter;
 	this.data_getter_param = data_getter_param;
 	this.select_menu_name = select_menu_name;
+	if (select_menu_name)
+		this.grid_column.text_title = select_menu_name;
 	this.shown = shown;
 }
 
@@ -69,13 +71,11 @@ function custom_data_grid(container, id_getter) {
 		this._drag_supports = [];
 		this._actions = [];
 
-		var button = document.createElement("BUTTON");
-		button.className = "flat small";
-		button.innerHTML = "<img src='/static/data_model/table_column.png'/>";
-		button.t = this;
-		button.onclick = function() { this.t._menuColumns(this); return false; };
-		this.col_actions = new GridColumn("#actions", button, null, "right", "field_html");
+		this.col_actions_title = document.createElement("DIV");
+		this.col_actions = new GridColumn("#actions", this.col_actions_title, null, "right", "field_html");
 		this.grid.addColumn(this.col_actions);
+		
+		this.setColumnsChooserInGrid();
 	}
 }
 custom_data_grid.prototype = {
@@ -132,6 +132,9 @@ custom_data_grid.prototype = {
 				}
 			}
 		}
+		// put data
+		for (var i = 0; i < this.list.length; ++i)
+			this.grid.setCellData(this.id_getter(this.list[i]), col_id, col.data_getter(this.list[i], col.data_getter_param));
 		this.column_shown.fire(col);
 	},
 	_showColumnInContainer: function(parent_container, container, col_id, index) {
@@ -148,6 +151,8 @@ custom_data_grid.prototype = {
 					if (!container.shown) {
 						// first one: create the container with the column
 						container.grid_column_container = new GridColumnContainer(container.title, [container.sub_columns[i].grid_column]);
+						if (container.select_menu_name)
+							container.grid_column_container.text_title = container.select_menu_name;
 						container.shown = true;
 						if (!parent_container)
 							this.grid.addColumnContainer(container.grid_column_container, index);
@@ -185,6 +190,11 @@ custom_data_grid.prototype = {
 		col.shown = false;
 		var index = this.grid.getColumnIndex(col.grid_column);
 		this.grid.removeColumn(index);
+		for (var i = 0; i < this.columns.length; ++i)
+			if (this.columns[i] instanceof CustomDataGridColumnContainer)
+				if (this.columns[i].getColumnById(col_id) != null)
+					if (this.columns[i].getNbFinalColumnsShown() == 0 && this.columns[i].shown)
+						this.columns[i].shown = false;
 		this.column_hidden.fire(col);
 	},
 	addColumnContainer: function(column_container, index) {
@@ -386,6 +396,43 @@ custom_data_grid.prototype = {
 		this._actions.push(creator);
 	},
 	
+	setColumnsChooserInGrid: function() {
+		if (this.columns_chooser) {
+			if (this.columns_chooser.parentNode == this.col_actions_title) return;
+			if (this.columns_chooser.parentNode) this.columns_chooser.parentNode.removeChild(this.columns_chooser);
+		}
+		this.columns_chooser = document.createElement("BUTTON");
+		this.columns_chooser.className = "flat small";
+		this.columns_chooser.innerHTML = "<img src='/static/data_model/table_column.png'/>";
+		var t=this;
+		this.columns_chooser.onclick = function() { t._menuColumns(this); return false; };
+		this.col_actions_title.appendChild(this.columns_chooser);
+	},
+	setColumnsChooserButton: function(button) {
+		if (this.columns_chooser) {
+			if (this.columns_chooser == button) return;
+			if (this.columns_chooser.parentNode) this.columns_chooser.parentNode.removeChild(this.columns_chooser);
+		}
+		this.columns_chooser = button;
+		var t=this;
+		this.columns_chooser.onclick = function() { t._menuColumns(this); return false; };
+	},
+	setExportButton: function(button,filename,sheetname) {
+		var t=this;
+		button.onclick = function() {
+			require("context_menu.js",function(){
+				var menu = new context_menu();
+				menu.removeOnClose = true;
+				menu.addTitleItem(null, "Export Format");
+				menu.addIconItem('/static/data_model/excel_16.png', 'Excel 2007 (.xlsx)', function() { t.grid.exportData('excel2007',filename,sheetname,["#actions"]); });
+				menu.addIconItem('/static/data_model/excel_16.png', 'Excel 5 (.xls)', function() { t.grid.exportData('excel5',filename,sheetname,["#actions"]); });
+				menu.addIconItem('/static/data_model/pdf_16.png', 'PDF', function() { t.grid.exportData('pdf',filename,sheetname,["#actions"]); });
+				menu.addIconItem('/static/data_model/csv.gif', 'CSV', function() { t.grid.exportData('csv',filename,sheetname,["#actions"]); });
+				menu.showBelowElement(button);
+			});
+		};
+	},
+	
 	_menuColumns: function(button) {
 		var t=this;
 		require("context_menu.js", function() {
@@ -412,6 +459,20 @@ custom_data_grid.prototype = {
 				div.appendChild(cb);
 				div.appendChild(document.createTextNode(" "+(columns[i].select_menu_name ? columns[i].select_menu_name : columns[i].grid_column.title)));
 			} else {
+				var cb = document.createElement("INPUT"); cb.type = 'checkbox';
+				cb.checked = columns[i].shown ? "checked" : "";
+				cb.col = columns[i];
+				cb.g = this;
+				cb.style.cssFloat = "left";
+				cb.onchange = function() {
+					var cols = this.col.getFinalColumns();
+					for (var i = 0; i < cols.length; ++i)
+						if (this.checked)
+							this.g.showColumn(cols[i].grid_column.id);
+						else
+							this.g.hideColumn(cols[i].grid_column.id);
+				};
+				div.appendChild(cb);
 				div.appendChild(document.createTextNode(columns[i].select_menu_name ? columns[i].select_menu_name : columns[i].title));
 				div.className = "context_menu_title";
 			}

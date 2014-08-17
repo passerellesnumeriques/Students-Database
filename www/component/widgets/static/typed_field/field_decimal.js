@@ -13,6 +13,16 @@ function field_decimal(data,editable,config) {
 field_decimal.prototype = new typed_field();
 field_decimal.prototype.constructor = field_decimal;		
 field_decimal.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };		
+field_decimal.prototype.exportCell = function(cell) {
+	var val = this.getCurrentData();
+	if (val == null)
+		cell.value = "";
+	else {
+		cell.value = val;
+		cell.format = "number:"+this.config.decimal_digits;
+	}
+};
+
 field_decimal.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;

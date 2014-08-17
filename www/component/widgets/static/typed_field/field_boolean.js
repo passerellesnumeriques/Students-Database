@@ -6,7 +6,8 @@ function field_boolean(data,editable,config) {
 	typed_field.call(this, data, editable, config);
 }
 field_boolean.prototype = new typed_field();
-field_boolean.prototype.constructor = field_text;		
+field_boolean.prototype.constructor = field_text;
+field_boolean.prototype.exportCell = function(cell) { cell.value = this.getCurrentData() ? "Yes" : "No"; cell.format = "boolean"; };
 field_boolean.prototype.canBeNull = function() {
 	if (!this.config) return true;
 	if (this.config.can_be_null) return true;

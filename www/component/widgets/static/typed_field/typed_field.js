@@ -82,6 +82,9 @@ typed_field.prototype = {
 	 * @returns the current data (the edited one)
 	 */
 	getCurrentData: function() { return this._data; },
+	exportCell: function(cell) {
+		cell.value = "Export not implemented in typed_field: "+getObjectClassName(this);
+	},
 	/**
 	 * @returns the data from the edited field
 	 */

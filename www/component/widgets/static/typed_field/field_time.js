@@ -11,7 +11,16 @@ function field_time(data,editable,config) {
 }
 field_time.prototype = new typed_field();
 field_time.prototype.constructor = field_time;		
-field_time.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };		
+field_time.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };
+field_time.prototype.exportCell = function(cell) {
+	var t = this.getCurrentData();
+	if (t == null)
+		cell.value = "";
+	else {
+		cell.value = t;
+		cell.format = "time";
+	}
+};
 field_time.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;

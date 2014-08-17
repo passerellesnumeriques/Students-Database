@@ -198,6 +198,7 @@ class page_subject_grades extends Page {
 		?>
 		</select>
 		<span style='margin-right: 10px'></span>
+		<span style='white-space:nowrap'>
 		<input type='checkbox'
 		<?php if ($subject["only_final_grade"] == 1) echo " checked='checked'";?>
 		<?php
@@ -207,7 +208,8 @@ class page_subject_grades extends Page {
 			echo " disabled='disabled'";
 		} 
 		?>
-		/> Enter only final grade for this subject
+		/> Enter only final grade
+		</span>
 		<?php if ($edit) { ?>
 		<span id='actions_evaluations' style='margin-left:5px;<?php if ($subject["only_final_grade"] == 1) echo "display:none;";?>'>
 			<button class='action' onclick='newEvaluationType();'>New Evaluation Type</button>

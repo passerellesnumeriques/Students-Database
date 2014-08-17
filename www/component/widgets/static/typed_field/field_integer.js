@@ -9,7 +9,16 @@ function field_integer(data,editable,config) {
 }
 field_integer.prototype = new typed_field();
 field_integer.prototype.constructor = field_integer;		
-field_integer.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };		
+field_integer.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };
+field_integer.prototype.exportCell = function(cell) {
+	var val = this.getCurrentData();
+	if (val == null)
+		cell.value = "";
+	else {
+		cell.value = val;
+		cell.format = "number:0";
+	}
+};
 field_integer.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;

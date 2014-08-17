@@ -61,7 +61,7 @@ waitFrameContentReady(document.getElementById('print_content'), function(win) { 
 	window.printing_ready = true;
 });
 
-window.setPrintContent = function(container) {
+window.setPrintContent = function(container, onready) {
 	var win = getIFrameWindow(document.getElementById('print_content'));
 	win.document.body.innerHTML = container.innerHTML;
 	win.document.body.style.backgroundColor = "white";
@@ -75,6 +75,7 @@ window.setPrintContent = function(container) {
 			link.rel = cl.rel;
 			link.href = cl.href;
 			link.type = cl.type;
+			link.media = "all";
 			head.appendChild(link);
 		}
 	}
@@ -85,6 +86,7 @@ window.setPrintContent = function(container) {
 		node.parentNode.removeChild(node);
 		var n = document.createElement("STYLE");
 		n.type = "text/css";
+		n.media = "all";
 		n.appendChild(document.createTextNode(node.textContent));
 		head.appendChild(n);
 	}
@@ -98,6 +100,9 @@ window.setPrintContent = function(container) {
 		n.textContent = node.textContent;
 		head.appendChild(n);
 	}
+	win.document.body.style.backgroundColor = "white";
+	win.document.body.style.WebkitPrintColorAdjust = "exact";
+	if (onready) onready();
 };
 </script>
 <?php 

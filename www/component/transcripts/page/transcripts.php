@@ -39,10 +39,13 @@ class page_transcripts extends Page {
 		$published = SQLQuery::create()->select("PublishedTranscript")->whereValue("PublishedTranscript","period",$period["id"])->whereValue("PublishedTranscript","specialization",$spe <> null ? $spe["id"] : null)->execute();
 ?>
 <style type='text/css'>
-#published_list {
+#transcripts_header {
 	height:25px;
 	background-color:white;
 	border-bottom:1px solid #A0A0A0;
+}
+#published_list {
+	height:25px;
 	display: flex;
 	flex-direction: row;
 	align-items: flex-end;
@@ -107,6 +110,20 @@ class page_transcripts extends Page {
     content: '';
     z-index: 80;
 }
+#transcript {
+	text-align:left;
+	background-color:white;
+	border-radius:5px;
+	display:inline-block;
+	box-shadow: 2px 2px 2px 0px #808080;
+	width:630px;
+	height:810px;
+	margin:5px 0px;
+	border:1px solid #C0C0C0;
+}
+#transcript>.transcripts {
+	border-radius:5px;
+}
 </style>
 <div style='width:100%;height:100%;display:flex;flex-direction:column'>
 	<div class='page_title' style='flex:none'>
@@ -122,52 +139,73 @@ class page_transcripts extends Page {
 			<div style='flex:1 1 auto;overflow-y:auto;' id='students_list'>
 				<?php
 				foreach ($students as $s)
-					echo "<div class='student' onclick='selectStudent(".$s['people_id'].",this);'>".htmlentities($s["last_name"])." ".htmlentities($s["first_name"])."</div>";
+					echo "<div class='student' onclick='selectStudent(".$s['people_id'].",this,".json_encode($s["last_name"]." ".$s["first_name"], JSON_HEX_APOS).");'>".htmlentities($s["last_name"])." ".htmlentities($s["first_name"])."</div>";
 				?>
 			</div>
 		</div>
 		<div style='flex:1 1 auto;display:flex;flex-direction:column;'>
-			<div id='published_list' style='flex:none;'>
+			<div id='transcripts_header' style='flex:none;'>
+				<div style='float:right;height:100%;margin-right:5px;display:flex;flex-direction:row;align-items:center;'>
+					<button id='print_button' disabled='disabled' onclick="printContent('transcript',null,'TOR_Batch_<?php echo $batch["name"];?>_<?php echo $period["name"];?>_'+selected_transcript_name+'_'+selected_student_name);"><img src='<?php echo theme::$icons_16["print"];?>'/> Print</button>
+					<button id='print_all_button' disabled='disabled' onclick="printAll();"><img src='<?php echo theme::$icons_16["print"];?>'/> Print All</button>
+				</div>
+				<div id='published_list'>
 				<?php 
 				if (count($published) == 0)
 					echo "<span style='font-style:italic'>There is no transcript published yet</span>";
 				else foreach ($published as $p)
-					echo "<span class='menu_item' onclick='selectTranscript(".$p["id"].",this);'>".htmlentities($p['name'])."</span>";
+					echo "<span class='menu_item' onclick='selectTranscript(".$p["id"].",this,".json_encode($p["name"],JSON_HEX_APOS).");'>".htmlentities($p['name'])."</span>";
 				?>
+				</div>
 			</div>
 			<div style='flex:1 1 auto;overflow:auto;text-align:center;'>
-				<div id='transcript' style='text-align:left;background-color:white;border-radius:5px;display:inline-block;box-shadow: 2px 2px 2px 0px #808080;width:630px;height:810px;margin:5px 0px;border:1px solid #C0C0C0;'>
+				<div id='transcript'>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
 <script type='text/javascript'>
+var students_ids = [<?php 
+$first = true;
+foreach ($students as $s) {
+	if ($first) $first = false; else echo ",";
+	echo $s["people_id"];
+}
+?>];
 var selected_student = null;
+var selected_student_name = null;
 var selected_transcript = null;
+var selected_transcript_name = null;
 
-function selectStudent(id,div) {
+function selectStudent(id,div,name) {
 	var list = document.getElementById('students_list');
 	for (var i = 0; i < list.childNodes.length; ++i)
 		if (list.childNodes[i].nodeType == 1)
 			removeClassName(list.childNodes[i], "selected");
 	addClassName(div, "selected");
 	selected_student = id;
+	selected_student_name = name;
 	refreshTranscript();
 }
 
-function selectTranscript(id,div) {
+function selectTranscript(id,div,name) {
 	var list = document.getElementById('published_list');
 	for (var i = 0; i < list.childNodes.length; ++i)
 		if (list.childNodes[i].nodeType == 1)
 			removeClassName(list.childNodes[i], "selected");
 	addClassName(div, "selected");
 	selected_transcript = id;
+	selected_transcript_name = name;
 	refreshTranscript();
 }
 
 function refreshTranscript() {
 	var transcript = document.getElementById('transcript');
+	var print_button = document.getElementById('print_button');
+	var print_all_button = document.getElementById('print_all_button');
+	print_button.disabled = "disabled";
+	print_all_button.disabled = selected_transcript == null ? "disabled" : "";
 	if (selected_student == null) {
 		if (selected_transcript == null)
 			transcript.innerHTML = "<div style='padding:20px;font-style:italic'>Please select a transcript and a student</div>";
@@ -178,12 +216,46 @@ function refreshTranscript() {
 		transcript.innerHTML = "<div style='padding:20px;font-style:italic'>Please select a transcript</div>";
 		return;
 	}
+	print_button.disabled = "";
 	var locker = lock_screen(null, "Reloading transcript");
 	service.html("transcripts","generate_transcript",{id:selected_transcript,student:selected_student},document.getElementById('transcript'),function() {
 		unlock_screen(locker);
 	});
 }
 refreshTranscript();
+
+function printAll() {
+	var container = document.createElement("DIV");
+	container.style.textAlign = "left";
+	container.style.backgroundColor = "white";
+	container.style.width = "630px";
+	container.style.position = "absolute";
+	container.style.top = "-10000px";
+	container.style.visibility = "hidden";
+	document.body.appendChild(container);
+	var nb = students_ids.length;
+	var locker = lock_screen(null, "Generating transcripts...");
+	set_lock_screen_content_progress(locker, nb, "Generating transcripts...", false, function(span,pb){
+		var checkEnd = function() {
+			if (--nb > 0) return;
+			unlock_screen(locker);
+			printContent(container,function() {
+				container.parentNode.removeChild(container);
+			});
+		};
+		for (var i = 0; i < students_ids.length; ++i) {
+			var div = document.createElement("DIV");
+			div.style.pageBreakAfter = "always";
+			div.style.breakAfter = "always";
+			//div.style.height = "810px";
+			container.appendChild(div);
+			service.html("transcripts","generate_transcript",{id:selected_transcript,student:students_ids[i]},div,function() {
+				pb.addAmount(1);
+				checkEnd();
+			});
+		}
+	});
+}
 </script>
 <?php 
 	}

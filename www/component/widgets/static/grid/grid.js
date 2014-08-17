@@ -14,6 +14,7 @@ function GridColumnAction(id,icon,onclick,tooltip) {
 
 function GridColumnContainer(title, sub_columns, attached_data) {
 	this.title = title;
+	this.text_title = null;
 	this.sub_columns = sub_columns;
 	this.attached_data = attached_data;
 	this.th = document.createElement("TH");
@@ -85,6 +86,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	// put values in the object
 	this.id = id;
 	this.title = title;
+	this.text_title = null;
 	this.width = width;
 	this.align = align ? align : "left";
 	this.field_type = field_type;
@@ -245,12 +247,12 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			this.th.appendChild(title);
 		else
 			this.th.innerHTML = title;
-		var span = document.createElement("DIV");
-		span.style.whiteSpace = 'nowrap';
+		this.span_actions = document.createElement("DIV");
+		this.span_actions.style.whiteSpace = 'nowrap';
 		//if (this.align == "right")
 		//	this.th.insertBefore(span, this.th.childNodes[0]);
 		//else
-			this.th.appendChild(span);
+			this.th.appendChild(this.span_actions);
 		var create_action_image = function(url, info, onclick) {
 			var img = document.createElement("IMG");
 			img.src = url;
@@ -268,26 +270,26 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		if (this.sort_order) {
 			switch (this.sort_order) {
 			case 1: // ascending
-				span.appendChild(create_action_image(
+				this.span_actions.appendChild(create_action_image(
 					url+"/arrow_up_10.gif",
 					"Sort by descending order (currently ascending)",
 					function() { t._onsort(2); }
 				));
 				break;
 			case 2: // descending
-				span.appendChild(create_action_image(
+				this.span_actions.appendChild(create_action_image(
 					url+"/arrow_down_10.gif",
 					"Sort by ascending order (currently descending)",
 					function() { t._onsort(1); }
 				));
 				break;
 			case 3: // not sorted yet
-				span.appendChild(create_action_image(
+				this.span_actions.appendChild(create_action_image(
 					url+"/arrow_up_10.gif",
 					"Sort by descending order",
 					function() { t._onsort(2); }
 				));
-				span.appendChild(create_action_image(
+				this.span_actions.appendChild(create_action_image(
 					url+"/arrow_down_10.gif",
 					"Sort by ascending order",
 					function() { t._onsort(1); }
@@ -303,7 +305,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			);
 			img.data = this.actions[i];
 			this.actions[i].element = img;
-			span.appendChild(img);
+			this.span_actions.appendChild(img);
 			img.ondomremoved(function(img) { img.data.element = null; img.data = null; });
 		}
 		layout.invalidate(this.th);
@@ -1241,6 +1243,92 @@ function grid(element) {
 			parent.appendChild(f.getHTMLElement());
 			ondone(f);
 		});
+	};
+	
+	t.exportData = function(format,filename,sheetname,excluded_columns) {
+		if (!excluded_columns) excluded_columns = [];
+		else for (var i = 0; i < excluded_columns.length; ++i) {
+			excluded_columns[i] = t.getColumnById(excluded_columns[i]);
+			if (excluded_columns[i] == null) {
+				excluded_columns.splice(i,1);
+				i--;
+			}
+		}
+		var ex = {format:format,name:filename,sheets:[]};
+		var sheet = {name:sheetname,rows:[]};
+		ex.sheets.push(sheet);
+		// headers
+		for (var i = 0; i < t.header_rows.length; ++i) {
+			var row = [];
+			for (var j = 0; j < t.header_rows[i].childNodes.length; ++j) {
+				var th = t.header_rows[i].childNodes[j];
+				var excluded = false;
+				for (var k = 0; k < excluded_columns.length; ++k) if (excluded_columns[k].th == th) { excluded = true; break; }
+				var cell = {};
+				if (excluded)
+					cell.value = "";
+				else {
+					if (th.rowSpan && th.rowSpan > 1) cell.rowSpan = th.rowSpan;
+					if (th.colSpan && th.colSpan > 1) cell.colSpan = th.colSpan;
+					if (th.col && th.col.text_title)
+						cell.value = th.col.text_title;
+					else {
+						if (th.col.span_actions)
+							th.removeChild(th.col.span_actions);
+						cell.value = th.innerHTML;
+						if (th.col.span_actions)
+							th.appendChild(th.col.span_actions);
+					}
+					cell.style = {fontWeight:'bold',textAlign:'center'};
+				}
+				row.push(cell);
+			}
+			sheet.rows.push(row);
+		}
+		// rows
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var row = [];
+			for (var j = 0; j < t.table.childNodes[i].childNodes.length; ++j) {
+				var cell = {};
+				var excluded = false;
+				if (!t.table.childNodes[i].title_row)
+					for (var k = 0; k < excluded_columns.length; ++k) if (j < t.columns.length && excluded_columns[k].id == t.columns[j].id) { excluded = true; break; }
+				if (excluded)
+					cell.value = "";
+				else {
+					var td = t.table.childNodes[i].childNodes[j];
+					if (td.rowSpan && td.rowSpan > 1) cell.rowSpan = td.rowSpan;
+					if (td.colSpan && td.colSpan > 1) cell.colSpan = td.colSpan;
+					if (td.field) td.field.exportCell(cell);
+					else cell.value = td.innerHTML;
+					if (!cell.style) cell.style = {};
+					cell.style.textAlign = t.columns[j].align;
+				}
+				row.push(cell);
+			}
+			sheet.rows.push(row);
+		}
+		// export
+		var form = document.createElement("FORM");
+		var input = document.createElement("INPUT");
+		form.appendChild(input);
+		form.action = "/dynamic/lib_php_excel/service/create";
+		form.method = 'POST';
+		input.type = 'hidden';
+		input.name = 'input';
+		input.value = service.generateInput(ex);
+		if (t._download_frame) document.body.removeChild(t._download_frame);
+		var frame = document.createElement("IFRAME");
+		frame.style.position = "absolute";
+		frame.style.top = "-10000px";
+		frame.style.visibility = "hidden";
+		frame.name = "grid_download";
+		document.body.appendChild(frame);
+		form.target = "grid_download";
+		document.body.appendChild(form);
+		form.submit();
+		t._download_frame = frame;
+		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
 	};
 
 	t._columns_loading = 0;

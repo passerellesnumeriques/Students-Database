@@ -14,97 +14,114 @@ function field_grade(data,editable,config) {
 }
 field_grade.prototype = new typed_field();
 field_grade.prototype.constructor = field_grade;		
-field_grade.prototype.canBeNull = function() { return true; };		
-field_grade.prototype._create = function(data) {
-	var t=this;
-	var init_system = function() {
-		t.steps = [];
-		var i = t.config.system.indexOf('/');
-		var s;
-		t.digits = 2;
-		if (i < 0) {
-			s = t.config.system;
-		} else {
-			s = t.config.system.substr(0,i);
-			var cfg = t.config.system.substring(i+1).split(",");
-			for (var j = 0; j < cfg.length; ++j) {
-				i = cfg[j].indexOf('=');
-				if (i < 0) continue;
-				var name = cfg[j].substr(0,i);
-				var value = cfg[j].substr(i+1);
-				if (name == "digits") t.digits = parseInt(value);
-			}
+field_grade.prototype.canBeNull = function() { return true; };
+field_grade.prototype.init_system = function() {
+	this.steps = [];
+	var i = this.config.system.indexOf('/');
+	var s;
+	this.digits = 2;
+	if (i < 0) {
+		s = this.config.system;
+	} else {
+		s = this.config.system.substr(0,i);
+		var cfg = this.config.system.substring(i+1).split(",");
+		for (var j = 0; j < cfg.length; ++j) {
+			i = cfg[j].indexOf('=');
+			if (i < 0) continue;
+			var name = cfg[j].substr(0,i);
+			var value = cfg[j].substr(i+1);
+			if (name == "digits") this.digits = parseInt(value);
 		}
-		var steps_str = s.split(",");
-		for (i = 0; i < steps_str.length; ++i) {
-			var j = steps_str[i].indexOf("=");
-			t.steps.push({percent:steps_str[i].substr(0,j),value:parseFloat(steps_str[i].substr(j+1))});
-		}
-	};
-	init_system();
-	this.setGradingSystem = function(system) {
-		t.config.system = system;
-		init_system();
-		t._setData(t.getCurrentData());
-		t.validate();
-	};
-	this.setMaxAndPassingGrades = function(max,passing) {
-		t.config.max = max;
-		t.config.passing = passing;
-		t._setData(t.getCurrentData());
-		t.validate();
-	};
-	var get_step_grade = function(step_index) {
-		var grade = t.steps[step_index].percent;
-		if (grade == "passing") return t.config.passing != null ? t.config.passing : t.config.max != null ? t.config.max/2 : 0.5;
-		if (grade == "max") return t.config.max != null ? t.config.max : 1;
-		return 0;
-	};
-	/** Converts a grade into a displayable value according to the grading system */
-	var get_value_from_system = function(grade) {
-		var step = 0;
-		do {
-			var step_grade = get_step_grade(step);
-			var next_step_grade = get_step_grade(step+1);
-			var step_value = t.steps[step].value;
-			var next_step_value = t.steps[step+1].value;
-			if (grade >= step_grade && grade <= next_step_grade) {
-				if (step_value < next_step_value) {
-					// ascending order
-					return (step_value+((grade-step_grade)/(next_step_grade-step_grade))*(next_step_value-step_value)).toFixed(t.digits);
-				}
-				// descending order
-				return (step_value-((grade-step_grade)/(next_step_grade-step_grade))*(step_value-next_step_value)).toFixed(t.digits);
-			}
-			step++;
-		} while (step < t.steps.length-1);
-		// should never happen
-		return "?";
-	};
-	/** Converts a displayable value into a grade, according to the grading system */
-	var get_grade_from_system = function(value) {
-		var step = 0;
-		do {
-			var step_grade = get_step_grade(step);
-			var next_step_grade = get_step_grade(step+1);
-			var step_value = t.steps[step].value;
-			var next_step_value = t.steps[step+1].value;
+	}
+	var steps_str = s.split(",");
+	for (i = 0; i < steps_str.length; ++i) {
+		var j = steps_str[i].indexOf("=");
+		this.steps.push({percent:steps_str[i].substr(0,j),value:parseFloat(steps_str[i].substr(j+1))});
+	}
+};
+field_grade.prototype.setGradingSystem = function(system) {
+	this.config.system = system;
+	this.init_system();
+	this._setData(this.getCurrentData());
+	this.validate();
+};
+field_grade.prototype.setMaxAndPassingGrades = function(max,passing) {
+	this.config.max = max;
+	this.config.passing = passing;
+	this._setData(this.getCurrentData());
+	this.validate();
+};
+field_grade.prototype.get_step_grade = function(step_index) {
+	var grade = this.steps[step_index].percent;
+	if (grade == "passing") return this.config.passing != null ? this.config.passing : this.config.max != null ? this.config.max/2 : 0.5;
+	if (grade == "max") return this.config.max != null ? this.config.max : 1;
+	return 0;
+};
+/** Converts a grade into a displayable value according to the grading system */
+field_grade.prototype.get_value_from_system = function(grade) {
+	var step = 0;
+	do {
+		var step_grade = this.get_step_grade(step);
+		var next_step_grade = this.get_step_grade(step+1);
+		var step_value = this.steps[step].value;
+		var next_step_value = this.steps[step+1].value;
+		if (grade >= step_grade && grade <= next_step_grade) {
 			if (step_value < next_step_value) {
 				// ascending order
-				if (value >= step_value && value <= next_step_value) {
-					return step_grade+((value-step_value)/(next_step_value-step_value))*(next_step_grade-step_grade);
-				}
-			} else {
-				// descending order
-				if (value >= next_step_value && value <= step_value) {
-					return next_step_grade-((value-next_step_value)/(step_value-next_step_value))*(next_step_grade-step_grade);
-				}
+				return (step_value+((grade-step_grade)/(next_step_grade-step_grade))*(next_step_value-step_value)).toFixed(this.digits);
 			}
-			step++;
-		} while (step < t.steps.length-1);
-		// should never happen
-		return 0;
-	};
+			// descending order
+			return (step_value-((grade-step_grade)/(next_step_grade-step_grade))*(step_value-next_step_value)).toFixed(this.digits);
+		}
+		step++;
+	} while (step < this.steps.length-1);
+	// should never happen
+	return "?";
+};
+/** Converts a displayable value into a grade, according to the grading system */
+field_grade.prototype.get_grade_from_system = function(value) {
+	var step = 0;
+	do {
+		var step_grade = this.get_step_grade(step);
+		var next_step_grade = this.get_step_grade(step+1);
+		var step_value = this.steps[step].value;
+		var next_step_value = this.steps[step+1].value;
+		if (step_value < next_step_value) {
+			// ascending order
+			if (value >= step_value && value <= next_step_value) {
+				return step_grade+((value-step_value)/(next_step_value-step_value))*(next_step_grade-step_grade);
+			}
+		} else {
+			// descending order
+			if (value >= next_step_value && value <= step_value) {
+				return next_step_grade-((value-next_step_value)/(step_value-next_step_value))*(next_step_grade-step_grade);
+			}
+		}
+		step++;
+	} while (step < this.steps.length-1);
+	// should never happen
+	return 0;
+};
+field_grade.prototype.getGradeColor = function(grade) {
+	return grade == null ? "#C0C0C0" :
+		grade < this.config.passing ? "#FF8080" :
+		grade <= this.config.passing+(25*(this.config.max-this.config.passing)/100) ? "#FFC000" :
+		"#80FF80";
+};
+field_grade.prototype.exportCell = function(cell) {
+	var val = this.getCurrentData();
+	if (val == null)
+		cell.value = "";
+	else {
+		cell.value = this.get_value_from_system(val);
+		cell.format = "number:"+this.digits;
+	}
+	if (typeof this.config.color == 'undefined' || this.config.color)
+		cell.style = {backgroundColor:this.getGradeColor(val)};
+};
+field_grade.prototype._create = function(data) {
+	var t=this;
+	this.init_system();
 	if (this.editable) {
 		var input = document.createElement("INPUT");
 		input.type = "text";
@@ -154,13 +171,13 @@ field_grade.prototype._create = function(data) {
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
-			input.value = data != null ? get_value_from_system(data) : "";
+			input.value = data != null ? this.get_value_from_system(data) : "";
 		};
 		this._getEditedData = function() {
 			if (input.value == "") return null;
 			var value = parseFloat(input.value);
 			if (isNaN(value)) return null;
-			return get_grade_from_system(value);
+			return this.get_grade_from_system(value);
 		};
 
 		this.signal_error = function(error) {
@@ -174,8 +191,8 @@ field_grade.prototype._create = function(data) {
 		};
 		this.validate = function() {
 			var grade = this._getEditedData();
-			if (grade < 0) this.signal_error("Must be minimum "+get_value_from_system(0));
-			else if (grade > t.config.max) this.signal_error("Must be maximum "+get_value_from_system(t.config.max));
+			if (grade < 0) this.signal_error("Must be minimum "+this.get_value_from_system(0));
+			else if (grade > t.config.max) this.signal_error("Must be maximum "+this.get_value_from_system(t.config.max));
 			else this.signal_error(null);
 			this.element.style.backgroundColor =
 				grade == null ? "#C0C0C0" :
@@ -188,7 +205,7 @@ field_grade.prototype._create = function(data) {
 		this.validate();
 	} else {
 		this._setData = function(grade) {
-			var display_value = grade != null ? get_value_from_system(grade) : "";
+			var display_value = grade != null ? this.get_value_from_system(grade) : "";
 			this.element.removeAllChildren();
 			this.element.appendChild(document.createTextNode(display_value));
 			if (typeof this.config.color == 'undefined' || this.config.color) {
@@ -199,11 +216,7 @@ field_grade.prototype._create = function(data) {
 				this.element.style.position = "absolute";
 				this.element.style.top = "0px";
 				this.element.style.left = "0px";
-				this.element.style.backgroundColor =
-					grade == null ? "#C0C0C0" :
-					grade < t.config.passing ? "#FF8080" :
-					grade <= t.config.passing+(25*(t.config.max-t.config.passing)/100) ? "#FFC000" :
-					"#80FF80";
+				this.element.style.backgroundColor = this.getGradeColor(grade);
 			}
 		};
 		this._setData(data);

@@ -60,6 +60,7 @@ function set_lock_screen_content(div, content) {
 	td.appendChild(d);
 }
 function set_lock_screen_content_progress(lock_div, total, message, sub_div, onready) {
+	theme.css("progress_bar.css");
 	require("progress_bar.js", function() {
 		var div = document.createElement("DIV");
 		div.style.textAlign = "center";
@@ -77,7 +78,9 @@ function set_lock_screen_content_progress(lock_div, total, message, sub_div, onr
 			div.appendChild(sub);
 		}
 		set_lock_screen_content(lock_div, div);
-		onready(span, pb, sub);
+		theme.css("progress_bar.css",function() {
+			onready(span, pb, sub);			
+		});
 	});
 }
 /**
@@ -284,14 +287,14 @@ function tooltip(element, content) {
 	};
 }
 
-function printContent(container) {
+function printContent(container, onready, filename) {
 	if (typeof container == 'string') container = document.getElementById(container);
-	window.top.popup_frame(theme.icons_16.print, "Print", "/dynamic/application/page/print", null, 95, 95, function(frame,pop){
+	window.top.popup_frame(theme.icons_16.print, "Print", "/dynamic/application/page/print"+(filename?"?filename="+encodeURIComponent(filename):""), null, 95, 95, function(frame,pop){
 		waitFrameContentReady(frame, 
 			function(win) {
 				return win.printing_ready;
 			}, function(win) {
-				win.setPrintContent(container);
+				win.setPrintContent(container, onready);
 			}
 		);
 	});

@@ -125,6 +125,7 @@ if ($message <> null) {
 		<a href="?destroy_session=true">Destroy session</a><br/>
 		<a href="?uninstall=true">Reset installation</a><br/>
 		<a href="/deploy/" target="_blank">Deploy new version</a><br/>
+		<span id='libraries_updates'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/>Checking libraries versions...</span>
 	</td></tr>
 </table>
 <script type="text/javascript">
@@ -141,6 +142,17 @@ function exportStorage() {
 	popup_frame(null,"Export Storage", "/dynamic/development/page/export_storage", null, 90, 90, function(frame,pop) {
 	});
 }
+service.json("development","check_libraries_updates",null,function(res) {
+	var span = document.getElementById('libraries_updates');
+	if (!res || res.length == 0)
+		span.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> All libraries are up to date";
+	else {
+		span.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> Some libraries are not up to date:<br/>";
+		for (var i = 0; i < res.length; ++i) {
+			span.innerHTML += res[i].name+": current version is "+res[i].current_version+", new available version is "+res[i].new_version+"<br/>";
+		}
+	}
+});
 </script>
 <?php
 #END 

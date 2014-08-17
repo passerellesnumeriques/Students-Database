@@ -15,7 +15,14 @@ field_text.prototype.canBeNull = function() {
 	if (this.config.can_be_null) return true;
 	if ((typeof this.config.min_length != 'undefined') && this.config.min_length == 0) return true;
 	return false;
-};		
+};
+field_text.prototype.exportCell = function(cell) {
+	var val = this.getCurrentData();
+	if (val == null)
+		cell.value = "";
+	else
+		cell.value = val;
+};
 field_text.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;
