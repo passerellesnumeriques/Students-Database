@@ -12,7 +12,7 @@ function NewsObject(id, section, category, html, people, user, timestamp, update
 if (typeof require != 'undefined') require("animation.js");
 if (typeof theme != 'undefined') theme.css("news.css");
 
-function news(container, sections, exclude_sections, onready, onrefreshing) {
+function news(container, sections, exclude_sections, news_type, onready, onrefreshing) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	this._main_news = [];
@@ -24,7 +24,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 	this._replies_to_load = [];
 	this.more = function(ondone) {
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
-		service.json("news", "get_more", {olders:t._olders,olders_timestamp:t._olders_timestamp,sections:t._selected_sections,nb:10}, function(res) {
+		service.json("news", "get_more", {type:news_type,olders:t._olders,olders_timestamp:t._olders_timestamp,sections:t._selected_sections,nb:10}, function(res) {
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			if (!res) { if (ondone) ondone(false); return; }
 			if (res.length == 0) { if (ondone) ondone(false); return; }
@@ -81,7 +81,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		if (t.refresh_timeout) clearTimeout(t.refresh_timeout);
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
 		++t._refreshing;
-		service.json("news", "get_latests", {latests:t._latests,latests_timestamp:t._latests_timestamp,sections:t._selected_sections}, function(res) {
+		service.json("news", "get_latests", {type:news_type,latests:t._latests,latests_timestamp:t._latests_timestamp,sections:t._selected_sections}, function(res) {
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			t.refresh_timout = setTimeout(t.refresh, 30000);
 			if (!res) return;
@@ -512,6 +512,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 				for (var i = 0; i < tags_cb.length; ++i) if (tags_cb[i].checked) data.tags.push(tags_cb[i].tag_name);
 				var ed = tinymce.get(editor.id);
 				data.message = ed.getContent();
+				data.type = news_type;
 				popup.freeze("Posting message...");
 				service.json("news", "post", data, function(res) {
 					t.refresh();

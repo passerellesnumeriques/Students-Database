@@ -140,20 +140,16 @@ if (@$_COOKIE["test_deploy"] == "true") {
 			icon="/static/news/news.png"
 			title="Latest Updates"
 		>
-			<div>
-				<div class='page_section_title3'>
-					General updates
-					<?php if (PNApplication::$instance->news->canPostInSection("application")) { ?>
-					<button style='float:right' class='flat icon' title='Post message' onclick="postGeneralUpdate();"><img src='/static/news/write_16.png'/></button>
-					<?php } ?>
-				</div>
-				<div id='general_news_container'>
-					<img src='/static/news/loading.gif' id='general_news_loading'/>
-				</div>
-				<div class='page_section_title3'>Other updates</div>
-				<div id='other_news_container'>
-					<img src='/static/news/loading.gif' id='other_news_loading'/>
-				</div>
+			<div id='updates_container'>
+				<img src='/static/news/loading.gif' id='updates_loading'/>
+			</div>
+		</div>
+		<div id="activities" style="flex:1 1 auto;align-self:flex-start;margin-left:10px"
+			icon="/static/news/news.png"
+			title="Latest Activities"
+		>
+			<div id='activities_container'>
+				<img src='/static/news/loading.gif' id='activities_loading'/>
 			</div>
 		</div>
 		<div id="calendar_events" style="flex:1 1 auto;align-self:flex-start;margin-left:10px;vertical-align:top"
@@ -168,6 +164,7 @@ if (@$_COOKIE["test_deploy"] == "true") {
 <script type='text/javascript'>
 var calendars_section = sectionFromHTML('calendar_events');
 var updates_section = sectionFromHTML('updates');
+var activities_section = sectionFromHTML('activities');
 
 require("calendar_view.js");
 require("calendar_view_week.js");
@@ -243,21 +240,23 @@ init_calendars();
 
 var general_updates = null, other_updates = null;
 require("news.js",function() {
-	general_updates = new news('general_news_container', [{name:"application"}], null, function(n) {
-		var loading = document.getElementById('general_news_loading');
+	updates = new news('updates_container', [], null, 'update', function(n) {
+		var loading = document.getElementById('updates_loading');
 		loading.parentNode.removeChild(loading);
 	});
-	other_updates = new news('other_news_container', [], [{name:"application"}], function(n) {
-		var loading = document.getElementById('other_news_loading');
+	activities = new news('activities_container', [], null, 'activity', function(n) {
+		var loading = document.getElementById('activities_loading');
 		loading.parentNode.removeChild(loading);
 	});
+	var post_button = document.createElement("BUTTON");
+	post_button.className = "flat icon";
+	post_button.innerHTML = "<img src='/static/news/write_16.png'/>";
+	post_button.title = "Post a message";
+	updates_section.addToolRight(post_button);
+	post_button.onclick = function() {
+		updates.post();
+	};
 });
-
-function postGeneralUpdate() {
-	if (!general_updates) { setTimeout(postGeneralUpdate,100); return; }
-	general_updates.post('application');
-}
-
 </script>
 <?php 		
 	}

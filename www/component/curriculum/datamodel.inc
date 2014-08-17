@@ -47,27 +47,27 @@ $model->addTable("StudentBatch")
 	->addRemoveAccess("edit_curriculum", true)
    	->onInsert(function($fields,$id,$sub_model_instance) {
   		try {
-  			PNApplication::$instance->news->post("students", "students", array("batch".$id), "Batch ".htmlentities($fields["name"])." created.");
+  			PNApplication::$instance->news->post("students", "students", array("batch".$id), "activity", "Batch ".htmlentities($fields["name"])." created.");
   		} catch (Exception $e) { PNApplication::error($e); }
    	})
    	->onRemove(function($row,$sub_model_instance) {
    		try {
-   			PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "Batch ".htmlentities($row["name"])." removed.");
+   			PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Batch ".htmlentities($row["name"])." removed.");
    		} catch (Exception $e) { PNApplication::error($e); }
    	})
    	->onBeforeUpdate(function($fields_values,$key,$sub_model_instance) {
    		$row = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$key)->executeSingleRow();
    		if (isset($fields_values["name"]) && $fields_values["name"] <> $row["name"])
    	  		try {
-   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "Batch ".htmlentities($row["name"])." renamed to ".htmlentities($fields_values["name"]).".");
+   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Batch ".htmlentities($row["name"])." renamed to ".htmlentities($fields_values["name"]).".");
    			} catch (Exception $e) { PNApplication::error($e); }
    		if (isset($fields_values["start_date"]) && $fields_values["start_date"] <> $row["start_date"])
    	  		try {
-   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "Integration date of Batch ".htmlentities($row["name"])." changed from ".$row["start_date"]." to ".$fields_values["start_date"].".");
+   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Integration date of Batch ".htmlentities($row["name"])." changed from ".$row["start_date"]." to ".$fields_values["start_date"].".");
    			} catch (Exception $e) { PNApplication::error($e); }
    		if (isset($fields_values["end_date"]) && $fields_values["end_date"] <> $row["end_date"])
    	  		try {
-   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "Graduation date of Batch ".htmlentities($row["name"])." changed from ".$row["end_date"]." to ".$fields_values["end_date"].".");
+   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Graduation date of Batch ".htmlentities($row["name"])." changed from ".$row["end_date"]." to ".$fields_values["end_date"].".");
    			} catch (Exception $e) { PNApplication::error($e); }
    	})
  	->setRowDescriptionProvider(function($row) {
@@ -99,7 +99,7 @@ $model->addTable("Specialization")
 	->addRemoveAccess("edit_curriculum", true)
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			PNApplication::$instance->news->post("students", "curriculum", null, "Specialization ".$fields["name"]." created.");
+			PNApplication::$instance->news->post("students", "curriculum", null, "activity", "Specialization ".$fields["name"]." created.");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
  	// TODO other news
@@ -148,7 +148,7 @@ $model->addTable("AcademicClass")
 				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
 				$message .= " with specialization ".$spe;
 			}
-			PNApplication::$instance->news->post("students", "students", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
+			PNApplication::$instance->news->post("students", "students", array("batch".$period["batch_id"],"period".$fields["period"]), "activity", $message);
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
  	// TODO other news
@@ -171,7 +171,7 @@ $model->addTable("CurriculumSubjectCategory")
 	->addRemoveAccess("edit_curriculum", true)
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			PNApplication::$instance->news->post("students", "curriculum", null, "Category of subject <i>".$fields["name"]."</i> created for the curricula.");
+			PNApplication::$instance->news->post("students", "curriculum", null, "activity", "Category of subject <i>".$fields["name"]."</i> created for the curricula.");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
  	// TODO other news
@@ -211,7 +211,7 @@ $model->addTable("CurriculumSubject")
 				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
 				$message .= " in specialization ".$spe;
 			}
-			PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
+			PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch_id"],"period".$fields["period"]), "activity", $message);
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
  	// TODO other news

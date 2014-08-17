@@ -17,7 +17,7 @@ $sm->addTable("InformationSession")
 	->addRemoveAccess("manage_information_session",true)
 	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			PNApplication::$instance->news->post("selection", null, array("campaign".$sub_model_instance), "New Information Session: <i>".$fields["name"]."</i>");
+			PNApplication::$instance->news->post("selection", null, array("campaign".$sub_model_instance), "activity", "New Information Session: <i>".$fields["name"]."</i>");
 		} catch (Exception $e) { PNApplication::error($e); }
 	})
 	;

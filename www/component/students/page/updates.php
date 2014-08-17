@@ -86,19 +86,31 @@ class page_updates extends Page {
 				<button class='flat icon' title='Post a message' onclick="postMessage();"><img src='/static/news/write_24.png'/></button>
 				<?php } ?>
 			</div>
-			<div id='news_container' style='flex:1 1 auto;overflow:auto;padding:10px;'></div>
+			<div style='flex:1 1 auto;display:flex;flex-direction:row;overflow:auto;'>
+				<div style='flex:1 1 auto;'>
+					<div class='page_section_title2' style='background-color:white'>Updates</div>
+					<div id='updates_container' style='padding:5px'></div>
+				</div>
+				<div style='flex:1 1 auto;'>
+					<div class='page_section_title2' style='background-color:white'>Activities</div>
+					<div id='activities_container' style='padding:5px'></div>
+				</div>
+			</div>
 		</div>
 		<script>
 		var sections = [{name:"students",categories:null,tags:<?php echo $tags?>}];
 		var exclude = [];
-		var news_obj = new news('news_container',sections,exclude,function(n){
+		var updates = new news('updates_container',sections,exclude,'update',function(n){
+		},function(starts){
+		});
+		var activities = new news('activities_container',sections,exclude,'activity',function(n){
 		},function(starts){
 		});
 		function postMessage() {
 			var div = document.createElement("DIV");
 			div.className = "info_box";
 			div.innerHTML = "<img src='"+theme.icons_16.info+"' style='vertical-align:bottom'/> Messages without category are visible by students:<ul><li>If it is not related to any batch, all students will see it</li><li>Else only students of the selected batches will see it</li></ul>Other messages are not visible by students";
-			news_obj.post('students',null,<?php echo $post_tags;?>,div);
+			updates.post('students',null,<?php echo $post_tags;?>,div);
 		}
 		</script>
 		<?php 

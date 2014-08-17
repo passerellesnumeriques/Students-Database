@@ -11,6 +11,7 @@ $model->addTable("News")
 	->addInteger("timestamp")
 	->addInteger("update_timestamp")
 	->addString("tags", 2000, 0, true)
+	->addEnum("type", array("activity","update"))
 	->addForeignKey("reply_to", "News", true, false, true, true, false)
 	->setRoot()
 	;
