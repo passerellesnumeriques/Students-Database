@@ -95,17 +95,17 @@ class curriculum extends Component {
 	 */
 	public function getBatchPeriodsWithAcademicPeriods($batch_id) {
 		return SQLQuery::create()
-		->select("BatchPeriod")
-		->whereValue("BatchPeriod", "batch", $batch_id)
-		->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"))
-		->fieldsOfTable("BatchPeriod")
-		->field("AcademicPeriod", "id", "academic_period_id")
-		->field("AcademicPeriod", "name", "academic_period_name")
-		->field("AcademicPeriod", "start", "academic_period_start")
-		->field("AcademicPeriod", "end", "academic_period_end")
-		->field("AcademicPeriod", "weeks", "academic_period_weeks")
-		->field("AcademicPeriod", "weeks_break", "academic_period_weeks_break")
-		->execute();
+			->select("BatchPeriod")
+			->whereValue("BatchPeriod", "batch", $batch_id)
+			->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"))
+			->fieldsOfTable("BatchPeriod")
+			->field("AcademicPeriod", "id", "academic_period_id")
+			->field("AcademicPeriod", "name", "academic_period_name")
+			->field("AcademicPeriod", "start", "academic_period_start")
+			->field("AcademicPeriod", "end", "academic_period_end")
+			->field("AcademicPeriod", "weeks", "academic_period_weeks")
+			->field("AcademicPeriod", "weeks_break", "academic_period_weeks_break")
+			->execute();
 	}
 	
 	/** Retrieve the list of existing batches of students
@@ -256,6 +256,9 @@ class curriculum extends Component {
 	 */
 	public function getBatchPeriods($batch_id) {
 		return SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod", "batch", $batch_id)->execute();
+	}
+	public function getBatchPeriodsById($periods_ids) {
+		return SQLQuery::create()->select("BatchPeriod")->whereIn("BatchPeriod", "id", $periods_ids)->execute();
 	}
 	
 	/** Return all BatchPeriod rows corresponding to the given academic periods

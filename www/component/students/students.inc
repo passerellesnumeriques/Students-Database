@@ -152,5 +152,12 @@ class students extends Component {
 		}
 		return $q->execute();
 	}
+	
+	public function getStudentClasses($people_id) {
+		return SQLQuery::create()
+			->select("StudentClass")
+			->whereValue("StudentClass", "people", $people_id)
+			->execute();
+	}
 }
 ?>
