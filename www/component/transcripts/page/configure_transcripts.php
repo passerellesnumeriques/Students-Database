@@ -123,7 +123,7 @@ class page_configure_transcripts extends Page {
 					array_push($subjects, $s);
 					echo "<div style='white-space:nowrap'>";
 					echo "<input type='checkbox' onchange='changeSubject(".$s["id"].",this.checked);'";
-					foreach ($selected_subjects as $ss) if ($s["id"] == $ss["subject"]) { echo " checked='checked'"; break; }
+					foreach ($selected_subjects as $ss) if ($s["id"] == $ss["id"]) { echo " checked='checked'"; break; }
 					echo "/> ".htmlentities($s["code"])." - ".htmlentities($s["name"]);
 					echo "</div>";
 				}

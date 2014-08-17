@@ -7,7 +7,7 @@ $model->addTable("AcademicYear")
 	->addPrimaryKey("id")
 	->addInteger("year", 16, 2000)
 	->addString("name", 50, 1, false, true)
-	->addReadAccess("consult_curriculum", true)
+	->allowReadAccess()
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
@@ -24,7 +24,7 @@ $model->addTable("AcademicPeriod")
 	->addDate("end", false, false, "start")
 	->addInteger("weeks",8,1,200, false, false)
 	->addInteger("weeks_break",8,0,200,false,false)
-	->addReadAccess("consult_curriculum", true)
+	->allowReadAccess()
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
@@ -47,27 +47,27 @@ $model->addTable("StudentBatch")
 	->addRemoveAccess("edit_curriculum", true)
    	->onInsert(function($fields,$id,$sub_model_instance) {
   		try {
-  			PNApplication::$instance->news->post("students", "batch", array("batch".$id), "Batch ".htmlentities($fields["name"])." created.");
+  			PNApplication::$instance->news->post("students", "students", array("batch".$id), "Batch ".htmlentities($fields["name"])." created.");
   		} catch (Exception $e) { PNApplication::error($e); }
    	})
    	->onRemove(function($row,$sub_model_instance) {
    		try {
-   			PNApplication::$instance->news->post("students", "batch", array("batch".$row["id"]), "Batch ".htmlentities($row["name"])." removed.");
+   			PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "Batch ".htmlentities($row["name"])." removed.");
    		} catch (Exception $e) { PNApplication::error($e); }
    	})
    	->onBeforeUpdate(function($fields_values,$key,$sub_model_instance) {
    		$row = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$key)->executeSingleRow();
    		if (isset($fields_values["name"]) && $fields_values["name"] <> $row["name"])
    	  		try {
-   				PNApplication::$instance->news->post("students", "batch", array("batch".$row["id"]), "Batch ".htmlentities($row["name"])." renamed to ".htmlentities($fields_values["name"]).".");
+   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "Batch ".htmlentities($row["name"])." renamed to ".htmlentities($fields_values["name"]).".");
    			} catch (Exception $e) { PNApplication::error($e); }
    		if (isset($fields_values["start_date"]) && $fields_values["start_date"] <> $row["start_date"])
    	  		try {
-   				PNApplication::$instance->news->post("students", "batch", array("batch".$row["id"]), "Integration date of Batch ".htmlentities($row["name"])." changed from ".$row["start_date"]." to ".$fields_values["start_date"].".");
+   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "Integration date of Batch ".htmlentities($row["name"])." changed from ".$row["start_date"]." to ".$fields_values["start_date"].".");
    			} catch (Exception $e) { PNApplication::error($e); }
    		if (isset($fields_values["end_date"]) && $fields_values["end_date"] <> $row["end_date"])
    	  		try {
-   				PNApplication::$instance->news->post("students", "batch", array("batch".$row["id"]), "Graduation date of Batch ".htmlentities($row["name"])." changed from ".$row["end_date"]." to ".$fields_values["end_date"].".");
+   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "Graduation date of Batch ".htmlentities($row["name"])." changed from ".$row["end_date"]." to ".$fields_values["end_date"].".");
    			} catch (Exception $e) { PNApplication::error($e); }
    	})
  	->setRowDescriptionProvider(function($row) {
@@ -93,7 +93,7 @@ $model->addTable("Specialization")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false, true)
 	->setRoot()
-	->addReadAccess("consult_curriculum", true)
+	->allowReadAccess()
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
@@ -113,6 +113,7 @@ $model->addTable("BatchPeriodSpecialization")
 	->addForeignKey("specialization", "Specialization", true, false, true, false, false)
 	->setKey(array("period","specialization"))
 	->addReadAccess("consult_curriculum", true)
+	->addReadAccessFromForeignTable("BatchPeriod")
 	->setRowDescriptionProvider(function($row) {
 		$spe_name = SQLQuery::create()->select("Specialization")->whereValue("Specialization","id",$row["specialization"])->field("name")->executeSingleValue();
 		$period = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","id",$row["period"])->executeSingleRow();
@@ -127,6 +128,7 @@ $model->addTable("AcademicClass")
 	->addForeignKey("specialization", "Specialization", false, false, true)
 	->addString("name", 100, 1, false, false)
 	->addReadAccess("consult_curriculum", true)
+	->addReadAccessFromForeignTable("period")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
@@ -146,7 +148,7 @@ $model->addTable("AcademicClass")
 				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
 				$message .= " with specialization ".$spe;
 			}
-			PNApplication::$instance->news->post("students", "batch", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
+			PNApplication::$instance->news->post("students", "students", array("batch".$period["batch_id"],"period".$fields["period"]), $message);
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
  	// TODO other news
@@ -163,7 +165,7 @@ $model->addTable("CurriculumSubjectCategory")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false, false)
 	->setRoot()
-	->addReadAccess("consult_curriculum", true)
+	->allowReadAccess()
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
@@ -188,6 +190,7 @@ $model->addTable("CurriculumSubject")
 	->addEnum("hours_type", array("Per week","Per period"), true)
 	->addInteger("coefficient", 8, 0, 50, true, false)
 	->addReadAccess("consult_curriculum", true)
+	->addReadAccessFromForeignTable("period")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)

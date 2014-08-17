@@ -23,6 +23,7 @@ class ApplicationNewsSection implements NewsSection {
 		return 1; // everybody can see
 	}
 	public function getCategories() { return array(); }
+	public function getTagsFilters() { return array(); }
 	
 }
 ?>

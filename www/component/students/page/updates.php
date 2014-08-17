@@ -7,12 +7,12 @@ class page_updates extends Page {
 		$batches = null;
 		if (isset($_GET["batches"])) {
 			if ($_GET["batches"] == "current") {
-				$title = "Current Students";
+				$title = "for Current Students";
 				$list = PNApplication::$instance->curriculum->getCurrentBatches();
 				$batches = array();
 				foreach ($list as $b) array_push($batches, $b["id"]);
 			} else if ($_GET["batches"] == "alumni") {
-				$title = "Alumni";
+				$title = "for Alumni";
 				$list = PNApplication::$instance->curriculum->getAlumniBatches();
 				$batches = array();
 				foreach ($list as $b) array_push($batches, $b["id"]);
@@ -22,7 +22,7 @@ class page_updates extends Page {
 			$batches = array($_GET["batch"]);
 			$batch = PNApplication::$instance->curriculum->getBatch($_GET["batch"]);
 			$id = $this->generateID();
-			$title = "Batch <span id='$id'>".htmlentities($batch["name"])."</span>";
+			$title = "for Batch <span id='$id'>".htmlentities($batch["name"])."</span>";
 			$this->onload("window.top.datamodel.registerCellSpan(window, 'StudentBatch', 'name', ".$batch["id"].", document.getElementById('$id'));");
 		}
 		
@@ -70,7 +70,10 @@ class page_updates extends Page {
 			$tags .= "]";
 		} else {
 			$tags = "null";
-			$title = "All Students";
+			if (PNApplication::$instance->user_management->has_right("consult_students_list"))
+				$title = "for All Students";
+			else
+				$title = "";
 		}
 		
 		$this->addJavascript("/static/news/news.js");
@@ -78,7 +81,7 @@ class page_updates extends Page {
 		<div id='page' style='width:100%;height:100%;display:flex;flex-direction:column;'>
 			<div class='page_title' style='flex:none;'>
 				<img src='/static/news/news_32.png'/>
-				Updates for <?php echo $title;?>
+				Updates <?php echo $title;?>
 				<?php if (PNApplication::$instance->news->canPostInSection("students")) { ?>
 				<button class='flat icon' title='Post a message' onclick="postMessage();"><img src='/static/news/write_24.png'/></button>
 				<?php } ?>
@@ -92,7 +95,10 @@ class page_updates extends Page {
 		},function(starts){
 		});
 		function postMessage() {
-			news_obj.post('students',null,<?php echo $post_tags;?>);
+			var div = document.createElement("DIV");
+			div.className = "info_box";
+			div.innerHTML = "<img src='"+theme.icons_16.info+"' style='vertical-align:bottom'/> Messages without category are visible by students:<ul><li>If it is not related to any batch, all students will see it</li><li>Else only students of the selected batches will see it</li></ul>Other messages are not visible by students";
+			news_obj.post('students',null,<?php echo $post_tags;?>,div);
 		}
 		</script>
 		<?php 

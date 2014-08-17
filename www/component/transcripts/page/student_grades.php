@@ -1,10 +1,15 @@
 <?php 
 class page_student_grades extends Page {
 	
-	public function getRequiredRights() { return array("consult_students_grades"); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		$people_id = $_GET["people"];
+		if (!PNApplication::$instance->user_management->has_right("consult_students_grades") &&
+			$people_id != PNApplication::$instance->user_management->people_id) {
+			PNApplication::error("Access denied");
+			return;
+		}
 		
 		$published_grades = SQLQuery::create()->select("PublishedTranscriptStudentSubjectGrade")->whereValue("PublishedTranscriptStudentSubjectGrade","people",$people_id)->execute();
 		if (count($published_grades) == 0) {

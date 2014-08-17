@@ -11,6 +11,7 @@ class service_menu extends Service {
 	public function execute(&$component, $input) {
 		//$current_batches = PNApplication::$instance->curriculum->getCurrentBatches();
 ?>
+<?php if (PNApplication::$instance->user_management->has_right("consult_students_list")) { ?>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/updates'>
 	<img src='/static/news/news_white.png'/>
 	Updates
@@ -19,6 +20,12 @@ class service_menu extends Service {
 	<img src='/static/students/students_white.png'/>
 	Students List
 </a>
+<?php } else { ?>
+<a class='application_left_menu_item' href='/dynamic/students/page/updates'>
+	<img src='/static/news/news_white.png'/>
+	Updates
+</a>
+<?php } ?>
 <?php
 /*
 foreach ($current_batches as $b) {
@@ -56,6 +63,11 @@ foreach ($current_batches as $b) {
 	<img src='/static/curriculum/teacher_assign_white.png'/>
 	Assignments
 </a>
+<?php } else if (in_array("student",PNApplication::$instance->user_management->people_types)) { ?>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/curriculum'>
+	<img src='/static/curriculum/curriculum_white.png'/>
+	Curriculum
+</a>
 <?php } ?>
 <?php if (PNApplication::$instance->user_management->has_right("consult_students_grades")) { ?>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/students_grades'>
@@ -75,6 +87,11 @@ foreach ($current_batches as $b) {
 <a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/transcripts'>
 	<img src='/static/transcripts/transcript_white.png'/>
 	Transcripts
+</a>
+<?php } else if (in_array("student",PNApplication::$instance->user_management->people_types)) { ?>
+<a class='application_left_menu_item' href='/dynamic/transcripts/page/student_grades?people=<?php echo PNApplication::$instance->user_management->people_id;?>'>
+	<img src='/static/transcripts/grades_white.png'/>
+	My Grades
 </a>
 <?php } ?>
 <?php

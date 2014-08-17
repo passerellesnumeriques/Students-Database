@@ -24,6 +24,7 @@ class SelectionSection implements NewsSection {
 	public function getCategories() {
 		return array(); // TODO
 	}
+	public function getTagsFilters() { return array(); }
 }
 
 ?>

@@ -32,6 +32,7 @@ class service_publish extends Service {
 		if (isset($input["id"])) {
 			// update
 			$id = $input["id"];
+			SQLQuery::create()->updateByKey("PublishedTranscript", $id, $config);
 			$rows = SQLQuery::create()->select("PublishedTranscriptStudentSubjectGrade")->whereValue("PublishedTranscriptStudentSubjectGrade","id",$id)->execute();
 			SQLQuery::create()->removeRows("PublishedTranscriptStudentSubjectGrade", $rows);
 			$rows = SQLQuery::create()->select("PublishedTranscriptStudentGeneralComment")->whereValue("PublishedTranscriptStudentGeneralComment","id",$id)->execute();

@@ -10,8 +10,19 @@ class TrainingApplicationSection implements ApplicationSectionPlugin {
 	public function getIcon32() { return "/static/curriculum/curriculum_32.png"; }
 	public function getComponentsForURL() { return array("training","transcripts","curriculum"); }
 	public function getMenuURL() { return "/dynamic/training/service/menu"; }
-	public function getDefaultPageURL() { return "/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/list"; }
-	public function canAccess() { return PNApplication::$instance->user_management->has_right("consult_students_list"); }
+	public function getDefaultPageURL() {
+		if (PNApplication::$instance->user_management->has_right("consult_students_list"))
+			return "/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/list";
+		if (in_array("student",PNApplication::$instance->user_management->people_types))
+			return "/dynamic/transcripts/page/student_grades?people=".PNApplication::$instance->user_management->people_id;
+		return "/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/list";
+	}
+	public function canAccess() {
+		if (PNApplication::$instance->user_management->has_right("consult_students_list")) return true;
+		if (in_array("student",PNApplication::$instance->user_management->people_types)) return true;
+		if (in_array("teacher",PNApplication::$instance->user_management->people_types)) return true;
+		return false;
+	}
 	
 }
 ?>

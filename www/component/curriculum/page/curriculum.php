@@ -1,29 +1,43 @@
 <?php 
 class page_curriculum extends Page {
 	
-	public function getRequiredRights() { return array("consult_curriculum"); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		if (!isset($_GET["batch"])) {
-			echo "<img src='".theme::$icons_16["info"]."'/> ";
-			echo "Please select a batch, an academic period, or a class, to display its curriculum";
-			return;
-		}
-		if (isset($_GET["period"])) {
-			$period_id = $_GET["period"];
-			$single_period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
-			$batch_id = $single_period["batch"];
-			$start_date = $single_period["academic_period_start"];
-			$end_date = $single_period["academic_period_end"];
-			$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
-			$periods = array($single_period);
-		} else {
-			$batch_id = $_GET["batch"];
+		if (!PNApplication::$instance->user_management->has_right("consult_curriculum")) {
+			if (!in_array("student",PNApplication::$instance->user_management->people_types)) {
+				PNApplication::error("Access denied");
+				return;
+			}
+			$student = PNApplication::$instance->students->getStudent(PNApplication::$instance->user_management->people_id);
+			$batch_id = $student["batch"];
 			$period_id = null;
 			$periods = PNApplication::$instance->curriculum->getBatchPeriodsWithAcademicPeriods($batch_id);
 			$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
 			$start_date = $batch_info["start_date"];
 			$end_date = $batch_info["end_date"];
+		} else {
+			if (!isset($_GET["batch"])) {
+				echo "<img src='".theme::$icons_16["info"]."'/> ";
+				echo "Please select a batch, an academic period, or a class, to display its curriculum";
+				return;
+			}
+			if (isset($_GET["period"])) {
+				$period_id = $_GET["period"];
+				$single_period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
+				$batch_id = $single_period["batch"];
+				$start_date = $single_period["academic_period_start"];
+				$end_date = $single_period["academic_period_end"];
+				$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
+				$periods = array($single_period);
+			} else {
+				$batch_id = $_GET["batch"];
+				$period_id = null;
+				$periods = PNApplication::$instance->curriculum->getBatchPeriodsWithAcademicPeriods($batch_id);
+				$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
+				$start_date = $batch_info["start_date"];
+				$end_date = $batch_info["end_date"];
+			}
 		}
 		
 		$periods_ids = array();

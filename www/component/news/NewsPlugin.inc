@@ -38,6 +38,11 @@ interface NewsSection {
 	 * @return array categories
 	 */
 	public function getCategories();
+	
+	/**
+	 * @return array tagname=&gt;array(tagvalues)
+	 */
+	public function getTagsFilters();
 
 }
 

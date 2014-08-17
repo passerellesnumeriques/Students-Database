@@ -44,6 +44,13 @@ class service_get_latests extends Service {
 						}
 						$where .= ")";
 					}
+					$filters = $section->getTagsFilters();
+					foreach ($filters as $tagname=>$tagvalues) {
+						$where .= " AND (`tags` NOT REGEXP '.*/(".SQLQuery::escape($tagname).")[^/]*/.*'";
+						foreach ($tagvalues as $val)
+							$where .= " OR `tags` LIKE '%".SQLQuery::escape("/".$tagname.$val."/")."%'";
+						$where .= ")";
+					}
 					$where .= ")";
 					foreach ($section->getCategories() as $cat) {
 						if ($cat->getAccessRight() == 0) continue;
@@ -61,8 +68,15 @@ class service_get_latests extends Service {
 							}
 							$where .= ")";
 						}
+						$filters = $section->getTagsFilters();
+						foreach ($filters as $tagname=>$tagvalues) {
+							$where .= " AND (`tags` NOT REGEXP '.*/(".SQLQuery::escape($tagname).")[^/]*/.*'";
+							foreach ($tagvalues as $val)
+								$where .= " OR `tags` LIKE '%".SQLQuery::escape("/".$tagname.$val."/")."%'";
+							$where .= ")";
+						}
 						$where .= ")";
-					}					
+					}
 				}				
 			}
 		}

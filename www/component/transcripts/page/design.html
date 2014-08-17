@@ -83,6 +83,10 @@
 .transcripts td {
 	text-align: center;
 }
+.transcripts .grades tr.total>td:first-child {
+	text-align: left;
+	padding-left: 5px;
+}
 .transcripts .student_information .name {
 	font-weight: bold;
 }
@@ -163,12 +167,12 @@
 		#IF:nb_hours#<td class='info'>#SUBJECT_HOURS#</td>#ENDIF#
 		#IF:coefficient#<td class='info'>#SUBJECT_COEFFICIENT#</td>#ENDIF#
 		<td style='position:relative' class='grade'>#GRADE#</td>
-		#IF:class_average#<td style='position:relative' class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
+		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
 	</tr>
 	#END_SUBJECT#
 	<tr class='total'>
 		<td class='blank'></td>
-		<td>Total / Average</td>
+		<td>Total</td>
 		#IF:nb_hours#<td>#TOTAL_HOURS#</td>#ENDIF#
 		#IF:coefficient#<td>#TOTAL_COEFFICIENT#</td>#ENDIF#
 		<td>#TOTAL_GRADE#</td>
@@ -177,15 +181,36 @@
 	</tbody>
 </table>
 #END_SUBJECT_CATEGORY#
+#SINGLE_SUBJECT#
+<table class='grades' style='margin-top:10px'>
+		<col class='subject_name_col'/>
+		#IF:nb_hours#<col class='info_col'/>#ENDIF#
+		#IF:coefficient#<col class='info_col'/>#ENDIF#
+		<col class='grade_col'/>
+		#IF:class_average#<col class='grade_col'/>#ENDIF#
+	</colgroup>
+	<tbody>
+	<tr class='subject_row'>
+		<td class='subject_name'>#CATEGORY_NAME# - #SUBJECT_NAME#</td>
+		#IF:nb_hours#<td class='info'>#SUBJECT_HOURS#</td>#ENDIF#
+		#IF:coefficient#<td class='info'>#SUBJECT_COEFFICIENT#</td>#ENDIF#
+		<td style='position:relative' class='grade'>#GRADE#</td>
+		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
+	</tr>
+	</tbody>
+</table>
+#END_SINGLE_SUBJECT#
 <!-- Global results -->
 <table class='grades total'>
 	<colgroup>
 		<col/>
 		<col class='grade_col'/>
+		#IF:class_average#<col class='grade_col'/>#ENDIF#
 	</colgroup>
 	<tr class='total'>
-		<td>Global Average Grade</td>
+		<td>Global Grade Point Average</td>
 		<td>#GLOBAL_GRADE#</td>
+		#IF:class_average#<td>#GLOBAL_CLASS_AVERAGE_GRADE#</td>#ENDIF#
 	</tr>
 </table>
 <!-- General appreciation -->
@@ -207,36 +232,41 @@
 <script type='text/javascript'>
 var cats = document.getElementsByClassName("subject_category");
 var enlarge = false;
+var max_height = 0;
 for (var i = 0; i < cats.length; ++i) {
 	if (cats[i].hasAttribute("enlarge")) continue;
 	var tbody = cats[i].parentNode.parentNode.parentNode;
 	var nb_subjects = 0;
 	for (var j = 0; j < tbody.childNodes.length; ++j) if (tbody.childNodes[j].nodeType == 1) nb_subjects++;
-	nb_subjects -= 2; // remove header and footer
+	nb_subjects -= 1+(i==0?1:0); // remove header and footer
+	cats[i]._w = cats[i].offsetHeight;
 	var size = cats[i].offsetWidth+10;
 	if (size > nb_subjects * 24) {
-		//var h = cats[i].offsetHeight;
-		//cats[i].style.height = (nb_subjects * 28)+"px";
 		cats[i].style.whiteSpace = "normal";
 		cats[i].style.paddingTop = "0px";
-		cats[i].style.marginLeft = "-14px";
-		//cats[i].style.width = (h*2)+"px";
-		//cats[i].style.position = "relative";
-		//cats[i].style.left = "5px";
-		cats[i].setAttribute("enlarge",true);
 		enlarge = true;
-	} else
+		size = cats[i].offsetWidth;
+		var fs = #SUBJECT_CATEGORY_SIZE#;
+		if (size > nb_subjects*28-2) {
+			while (size > nb_subjects*28-2 && fs > 8) {
+				cats[i].style.fontSize = (--fs)+"pt";
+				size = cats[i].offsetWidth;
+			}
+		}
+		if (cats[i].offsetHeight > max_height) max_height = cats[i].offsetHeight;
+		cats[i].style.marginLeft = (0-fs)+"pt";
+		cats[i].setAttribute("enlarge",true);
+	} else {
+		if (cats[i].offsetHeight > max_height) max_height = cats[i].offsetHeight;
 		cats[i].style.height = size+"px";
+	}
 }
 if (enlarge) {
 	var cols = document.getElementsByClassName("subject_category_col");
 	for (var i = 0; i < cols.length; ++i)
-		cols[i].style.width = "54px";
+		cols[i].style.width = max_height+"px";
 	for (var i = 0; i < cats.length; ++i)
-		if (!cats[i].hasAttribute("enlarge")) {
-			cats[i].style.position = "relative";
-			cats[i].style.left = "13px";
-			cats[i].setAttribute("enlarge",true);
-		}
+		if (!cats[i].hasAttribute("enlarge"))
+			cats[i].style.marginLeft = (#SUBJECT_CATEGORY_SIZE#/2)+"pt";
 }
 </script>

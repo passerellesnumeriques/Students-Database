@@ -324,16 +324,17 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 						if (n.category) {
 							for (var j = 0; j < t.sections[i].categories.length; ++j) {
 								if (t.sections[i].categories[j].name == n.category) {
-									s += "<br/>";
+									s += "<div style='margin-top:2px'>";
 									if (t.sections[i].categories[j].icon)
 										s += "<img src='"+t.sections[i].categories[j].icon+"' style='vertical-align:bottom'/> ";
 									s += "<i>"+t.sections[i].categories[j].display_name+"</i>";
+									s += "</div>";
 									break;
 								}
 							}
 						}
 						s += "</td>";
-						if (t.sections[i].icon && !has_only_one_section) s += "<td valign=top style='padding:0px'><img width='32px' height='32px' src='"+t.sections[i].icon+"'/></td>";
+						if (t.sections[i].icon && !has_only_one_section) s += "<td valign=top style='padding:0px;padding-left:2px;'><img width='32px' height='32px' src='"+t.sections[i].icon+"'/></td>";
 						s += "</tr></table>";
 						break;
 					}
@@ -390,7 +391,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		d.timing_text.nodeValue = t._getTimingString(d.news.timestamp);
 	};
 	
-	this.post = function(sections,categories,tags) {
+	this.post = function(sections,categories,tags,note_for_user) {
 		require(["tinymce.min.js","popup_window.js","select.js"], function() {
 			var div = document.createElement("DIV");
 			
@@ -399,6 +400,15 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 			header.style.backgroundColor = "white";
 			header.style.verticalAlign = "middle";
 			div.appendChild(header);
+			if (note_for_user) {
+				if (note_for_user instanceof Element)
+					header.appendChild(note_for_user);
+				else {
+					var note = document.createElement("DIV");
+					note.appendChild(document.createTextNode(note_for_user));
+					header.appendChild(note);
+				}
+			}
 			var secs = [];
 			if (typeof sections == 'string') sections = [sections];
 			if (!sections) {

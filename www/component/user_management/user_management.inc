@@ -13,6 +13,7 @@ class user_management extends Component {
 	public $user_id;
 	/** @var integer people ID of the user logged in */
 	public $people_id;
+	public $people_types;
 	
 	/** @var Event raised when a user logged in */
 	public $logged_in;
@@ -85,13 +86,17 @@ class user_management extends Component {
 			->select("UserPeople")
 			->where("user",$this->user_id)
 			;
+		PNApplication::$instance->people->joinPeople($q, "UserPeople", "people");
 		$people = $q->executeSingleRow();
 		if ($people <> null) {
-			if ($this->domain == PNApplication::$instance->current_domain)
-				$this->people_id = $people["people"];
+			if ($this->domain == PNApplication::$instance->current_domain) {
+				$this->people_id = $people["people_id"];
+				$this->people_types = PNApplication::$instance->people->parseTypes($people["people_types"]);
+			}
 		} else if ($this->domain == PNApplication::$instance->local_domain) {
 			// we have a local user without a People
 			$this->people_id = -1;
+			$this->people_types = array();
 		}
 		
 		$this->logged_in->fire();
@@ -123,6 +128,9 @@ class user_management extends Component {
 		@session_destroy();
 		$this->domain = null;
 		$this->username = null;
+		$this->user_id = -1;
+		$this->people_id = -1;
+		$this->people_types = array();
 		$this->auth_token = null;
 		$this->user_id = null;
 		$this->rights = array();

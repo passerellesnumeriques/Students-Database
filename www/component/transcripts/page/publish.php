@@ -6,6 +6,7 @@ class page_publish extends Page {
 	public function execute() {
 		$period = $_GET["period"];
 		$spe = isset($_GET["specialization"]) ? $_GET["specialization"] : null;
+		$existing = SQLQuery::create()->select("PublishedTranscript")->whereValue("PublishedTranscript","period",$period)->whereValue("PublishedTranscript","specialization",$spe)->execute();
 ?>
 <div style='background-color:white;display:flex;flex-direction:column;'>
 	<div class='info_box'>
@@ -21,6 +22,8 @@ class page_publish extends Page {
 		<form name='publish' onsubmit='return false'>
 		<input type='radio' name='action' value='new' checked='checked'/> as new transcripts with name <input type='text' name='name'/><br/>
 		<?php
+		foreach ($existing as $t)
+			echo "<input type='radio' name='action' value='".$t["id"]."'/> replace ".htmlentities($t["name"])."<br/>";
 		// TODO 
 		?>
 		</form>

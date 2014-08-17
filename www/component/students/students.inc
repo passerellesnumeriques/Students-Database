@@ -159,5 +159,11 @@ class students extends Component {
 			->whereValue("StudentClass", "people", $people_id)
 			->execute();
 	}
+	public function getStudent($people_id) {
+		return SQLQuery::create()
+			->select("Student")
+			->whereValue("Student","people",$people_id)
+			->executeSingleRow();
+	}
 }
 ?>
