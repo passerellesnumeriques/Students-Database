@@ -242,9 +242,9 @@ class CurriculumJSON {
 		$s .= ",category_id:".$subject["category"];
 		$s .= ",period_id:".$subject["period"];
 		$s .= ",specialization_id:".json_encode($subject["specialization"]);
-		$s .= ",hours:".json_encode($subject["hours"]);
+		$s .= ",hours:".($subject["hours"] == null ? "null" : $subject["hours"]);
 		$s .= ",hours_type:".json_encode($subject["hours_type"]);
-		$s .= ",coefficient:".json_encode($subject["coefficient"]);
+		$s .= ",coefficient:".($subject["coefficient"] === null ? "null" : $subject["coefficient"]);
 		$s .= "}";
 		return $s;
 	}
@@ -275,6 +275,8 @@ class CurriculumJSON {
 		$s .= "people_id:".$assignment["people"];
 		$s .= ",subject_id:".$assignment["subject"];
 		$s .= ",class_id:".$assignment["class"];
+		$s .= ",hours:".($assignment["hours"] == null ? "null" : $assignment["hours"]);
+		$s .= ",hours_type:".json_encode($assignment["hours_type"]);
 		$s .= "}";
 		return $s;
 	}

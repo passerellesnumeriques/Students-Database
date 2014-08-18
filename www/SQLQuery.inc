@@ -1975,7 +1975,10 @@ class SQLQuery {
 		}
 		$this->removeKeys($table, $keys);
 	}
-
+	public function removeRow($table, $row) {
+		$this->removeRows($table, array($row));
+	}
+	
 	/** Remove data with given keys
 	 * @param string $table table name
 	 * @param array $keys list of keys identifying the rows to remove 

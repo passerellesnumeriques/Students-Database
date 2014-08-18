@@ -417,5 +417,17 @@ class curriculum extends Component {
 		return $q->execute();
 	}
 	
+	public function getTeachersAssignedTo($subject_id, $class_id = null, $people_info = true) {
+		$q = SQLQuery::create()
+			->select("TeacherAssignment")
+			->whereValue("TeacherAssignment", "subject", $subject_id);
+		if ($class_id <> null) $q->whereValue("TeacherAssignment", "class", $class_id);
+		if ($people_info) {
+			$q->fieldsOfTable("TeacherAssignment");
+			PNApplication::$instance->people->joinPeople($q, "TeacherAssignment", "people");
+		}
+		return $q->execute();
+	}
+	
 }
 ?>

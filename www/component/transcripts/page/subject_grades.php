@@ -73,6 +73,9 @@ class page_subject_grades extends Page {
 			$spe = $subject["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($subject["specialization"]) : null;
 		}
 		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+		
+		// get teachers
+		$teachers = PNApplication::$instance->curriculum->getTeachersAssignedTo($subject_id, $class <> null ? $class["id"] : null);
 
 		// get evaluations
 		if ($subject["only_final_grade"] == null || !$subject["only_final_grade"]) {
@@ -145,7 +148,7 @@ class page_subject_grades extends Page {
 	<div class='page_title' style='flex:none'>
 		<img src='/static/transcripts/grades_32.png'/>
 		Grades
-		<span style='margin-left:10px;font-size:12pt;font-style:italic;'>
+		<div style='margin-left:10px;font-size:12pt;font-style:italic;display:inline-block;'>
 		<a class='black_link' onclick='selectAnotherSubject(this);return false;' id='select_subject'>
 		Subject <b style='font-weight:bold'>
 		<?php echo htmlentities($subject["code"]." - ".$subject["name"]);
@@ -164,7 +167,7 @@ class page_subject_grades extends Page {
 			echo "All classes";
 		?></a>
 		)
-		</span>
+		</div>
 	</div>
 	<?php if ($can_edit && !$edit && $locker <> null) {?>
 	<div style='flex:none;'>
@@ -174,6 +177,15 @@ class page_subject_grades extends Page {
 	</div>
 	<?php } ?>
 	<div style='flex:none;background-color:white;box-shadow: 1px 2px 5px 0px #808080;margin-bottom:5px;padding:5px'>
+		Teacher<?php
+		if (count($teachers) > 0) echo "s";
+		echo ": ";
+		for ($i = 0; $i < count($teachers); $i++) {
+			if ($i > 0) echo ", ";
+			echo htmlentities($teachers[$i]["last_name"])." ".htmlentities($teachers[$i]["first_name"]);
+		} 
+		?>
+		<br/>
 		Maximum grade
 		<?php if ($edit) {?>
 		<span id='max_grade_container'></span>

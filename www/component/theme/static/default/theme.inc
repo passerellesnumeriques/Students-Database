@@ -87,6 +87,7 @@ theme::$icons_10 = array(
 	"save" => 			"/static/theme/default/icons_10/save.gif",
 	"semi_online" => 	"/static/theme/default/icons_10/semi_online.gif",
 	"split" => 			"/static/theme/default/icons_10/split.gif",
+	"time" =>			"/static/theme/default/icons_10/time.png",
 	"up" => 			"/static/theme/default/icons_10/up.png",
 	"warning" => 		"/static/theme/default/icons_10/warning.png",
 );
