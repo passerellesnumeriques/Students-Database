@@ -739,9 +739,10 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	};
 	
 	require("calendar_objects.js",function() {
-		t.calendar_manager.on_event_added.add_listener(function(ev) { t.addEvent(ev); });
-		t.calendar_manager.on_event_removed.add_listener(function(ev) { t.removeEvent(ev); });
+		t.calendar_manager.on_event_added.add_listener(function(ev) { if(window.closing) return; t.addEvent(ev); });
+		t.calendar_manager.on_event_removed.add_listener(function(ev) { if(window.closing) return;t.removeEvent(ev); });
 		t.calendar_manager.on_event_updated.add_listener(function(ev) {
+			if(window.closing) return;
 			t.view.removeEvent(ev.uid);
 			t.view.addEvent(ev);
 		});
