@@ -281,6 +281,15 @@ function initPNApplication() {
 				return false;
 			},
 			getDataUnsavedIds: function() { return this._data_unsaved; },
+			dataSavedStartingWith: function(start) {
+				for (var i = 0; i < this._data_unsaved.length; ++i)
+					if (this._data_unsaved[i].startsWith(start)) {
+						this._data_unsaved.splice(i,1);
+						i--;
+					}
+				if (this._data_unsaved.length == 0)
+					this.onalldatasaved.fire();
+			},
 			/** Mark all data as saved */
 			cancelDataUnsaved: function() { 
 				this._data_unsaved = [];

@@ -566,6 +566,33 @@ class SQLQuery {
 		}
 		return $this;
 	}
+	public function &whereKeyIn($table, $keys) {
+		if (!($table instanceof \datamodel\Table))
+			$table = DataModel::get()->getTable($table);
+		$table_alias = $this->getTableAlias($table->getName());
+		$k = $table->getPrimaryKey();
+		if ($k <> null) $this->whereIn($table_alias, $k->name, $keys);
+		else {
+			$k = $table->getKey();
+			$where = "(";
+			for ($i = 0; $i < count($keys); $i++) {
+				if ($i > 0) $where .= " OR ";
+				$where .= "(";
+				$first = true;
+				foreach ($k as $kname) {
+					if ($first) $first = false; else $where .= " AND ";
+					$where .= "`".$table_alias."`.`".$kname."`";
+					$val = $keys[$i][$kname];
+					if ($val === null) $where .= " IS NULL";
+					else $where .= "='".SQLQuery::escape($val)."'";
+				}
+				$where .= ")";
+			}
+			$where .= ")";
+			$this->where($where);
+		}
+		return $this;
+	}
 	
 	/**
 	 * Returns a string containing the current WHERE clause, and reset it in this SQLQuery (remove it)

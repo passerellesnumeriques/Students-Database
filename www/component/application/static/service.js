@@ -156,6 +156,8 @@ service = {
 	 */
 	generateInput: function(input,done) {
 		if (!done) done = [];
+		var s = "";
+		if (input == null) return "null";
 		if (typeof input == 'object') {
 			if (done.contains(input)) {
 				window.console.error("Recursive Input");
@@ -163,8 +165,6 @@ service = {
 			}
 			done.push(input);
 		}
-		var s = "";
-		if (input == null) return "null";
 		if (input instanceof Array || (typeof input == 'object' && getObjectClassName(input) == "Array")) {
 			s += "[";
 			for (var i = 0; i < input.length; ++i) {
@@ -186,6 +186,9 @@ service = {
 			s += "\""+input.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")+"\"";
 		else
 			s += input;
+		if (typeof input == 'object') {
+			done.remove(input);
+		}
 		return s;
 	}
 };

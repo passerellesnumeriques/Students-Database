@@ -83,6 +83,9 @@
 .transcripts td {
 	text-align: center;
 }
+.transcripts td.comment {
+	font-size: 8pt;
+}
 .transcripts .grades tr.total>td:first-child {
 	text-align: left;
 	padding-left: 5px;
@@ -148,6 +151,7 @@
 		#IF:coefficient#<col class='info_col'/>#ENDIF#
 		<col class='grade_col'/>
 		#IF:class_average#<col class='grade_col'/>#ENDIF#
+		#IF:comment#<col class='comment_col'/>#ENDIF#
 	</colgroup>
 	<tbody>
 	#IF:SUBJECT_CATEGORY[0]#
@@ -158,6 +162,7 @@
 		#IF:coefficient#<td class='title'><div>Coef.</div></td>#ENDIF#
 		<td class='title'><div>Grade</div></td>
 		#IF:class_average#<td class='title'><div>Class<br/>Avg</div></td>#ENDIF#
+		#IF:comment#<td class='title'><div>Comment</div></td>#ENDIF#
 	</tr>
 	#ENDIF#
 	#SUBJECT#
@@ -168,6 +173,7 @@
 		#IF:coefficient#<td class='info'>#SUBJECT_COEFFICIENT#</td>#ENDIF#
 		<td style='position:relative' class='grade'>#GRADE#</td>
 		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
+		#IF:comment#<td class='comment'>#COMMENT#</td>#ENDIF#
 	</tr>
 	#END_SUBJECT#
 	<tr class='total'>
@@ -177,6 +183,7 @@
 		#IF:coefficient#<td>#TOTAL_COEFFICIENT#</td>#ENDIF#
 		<td>#TOTAL_GRADE#</td>
 		#IF:class_average#<td>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
+		#IF:comment#<td></td>#ENDIF#
 	</tr>
 	</tbody>
 </table>

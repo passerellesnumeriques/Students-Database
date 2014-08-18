@@ -271,6 +271,7 @@ foreach ($final_grades as $g) {
 	echo "{";
 	echo "id:".$g["people"];
 	echo ",grade:".($g["grade"] === null ? "null" : $g["grade"]);
+	echo ",comment:".json_encode($g["comment"]);
 	echo "}";
 }
 foreach ($students as $s) {
@@ -282,6 +283,7 @@ foreach ($students as $s) {
 		echo "{";
 		echo "id:".$s["people_id"];
 		echo ",grade:null";
+		echo ",comment:null";
 		echo "}";
 	}
 }
@@ -656,6 +658,16 @@ function finalGradeUnchanged(field) {
 	pnapplication.dataSaved("final_grade_student_"+people_id);
 	getFinalGrade(people_id).grade = field.getCurrentData();
 }
+function commentChanged(field) {
+	var people_id = field.getHTMLElement().parentNode.parentNode.row_id;
+	pnapplication.dataUnsaved("comment_student_"+people_id);
+	getFinalGrade(people_id).comment = field.getCurrentData();
+}
+function commentUnchanged(field) {
+	var people_id = field.getHTMLElement().parentNode.parentNode.row_id;
+	pnapplication.dataSaved("comment_student_"+people_id);
+	getFinalGrade(people_id).comment = field.getCurrentData();
+}
 function evalGradeChanged(field) {
 	var col_row = grades_grid.grid.getContainingRowAndColIds(field.getHTMLElement());
 	if (!col_row) return;
@@ -926,6 +938,24 @@ function save() {
 		else
 			save_evaluations();
 	};
+	var save_comments = function() {
+		if (!pnapplication.hasDataUnsavedStartingWith("comment_student_")) {
+			save_grades();
+			return;
+		}
+		var data = {subject_id:subject_id,students:[]};
+		for (var i = 0; i < final_grades.length; ++i)
+			if (pnapplication.hasDataUnsaved("comment_student_"+final_grades[i].id))
+				data.students.push({people:final_grades[i].id,comment:final_grades[i].comment});
+		service.json("transcripts","save_subject_comments",data,function(res) {
+			if (!res) {
+				unlock_screen(locker);
+				return;
+			}
+			pnapplication.dataSavedStartingWith("comment_student_");
+			save_grades();
+		});
+	};
 	var save_subject_grading = function() {
 		if (pnapplication.isDataUnsaved("subject_max_grade") || pnapplication.isDataUnsaved("subject_passing_grade") || pnapplication.isDataUnsaved("only_final")) {
 			service.json("transcripts","save_subject_grading_info",{id:subject_id,only_final_grade:only_final,max_grade:field_max_grade.getCurrentData(),passing_grade:field_passing_grade.getCurrentData()},function(res) {
@@ -936,11 +966,11 @@ function save() {
 				pnapplication.dataSaved("subject_max_grade");
 				pnapplication.dataSaved("subject_passing_grade");
 				pnapplication.dataSaved("only_final");
-				save_grades();
+				save_comments();
 			});
 			return;
 		}
-		save_grades();
+		save_comments();
 	};
 	save_subject_grading();
 }
@@ -982,6 +1012,11 @@ function importFromFile(event) {
 grades_grid.addColumn(new CustomDataGridColumn(new GridColumn("final_grade","Final Grade", 43, "center", "field_grade",<?php echo $edit && $subject["only_final_grade"] == 1 ? "true" : "false";?>,<?php echo $edit ? "finalGradeChanged" : "null";?>,<?php echo $edit ? "finalGradeUnchanged" : "null";?>,{max:<?php echo json_encode($subject["max_grade"]);?>,passing:<?php echo json_encode($subject["passing_grade"]);?>,system:grading_system}), function(people_id){ return getFinalGrade(people_id).grade; }, true));
 for (var i = 0; i < evaluation_types.length; ++i)
 	createEvaluationType(evaluation_types[i]);
+grades_grid.addColumn(new CustomDataGridColumn(new GridColumn("student_comment","Comment",null,"left","field_text",<?php echo $edit ? "true" : "false";?>,<?php echo $edit ? "commentChanged" : "null";?>,<?php echo $edit ? "commentUnchanged" : "null";?>,{can_be_null:true,max_length:4000,min_size:30}), function(people_id) {
+	var g = getFinalGrade(people_id);
+	if (!g) return null;
+	return g.comment;
+}, true, null));
 
 for (var i = 0; i < students.length; ++i)
 	grades_grid.addObject(students[i].id);

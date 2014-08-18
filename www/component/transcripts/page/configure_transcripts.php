@@ -112,6 +112,7 @@ class page_configure_transcripts extends Page {
 				<br/>
 				<input type='checkbox' <?php echo @$config["coefficient"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('coefficient',this.checked?1:0);"/> Coefficient<br/>
 				<input type='checkbox' <?php echo @$config["class_average"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_average',this.checked?1:0);"/> Class average<br/>
+				<input type='checkbox' <?php echo @$config["comment"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('comment',this.checked?1:0);"/> Comment<br/>
 				<input type='checkbox' <?php echo @$config["general_appreciation"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('general_appreciation',this.checked?1:0);"/> General appreciation<br/>
 			<?php 
 			foreach ($categories as $cat) {

@@ -28,9 +28,6 @@ class service_save_students_final_grade extends Service {
 		}
 		// update final grade of students
 		set_time_limit(120);
-		$list = array();
-		foreach ($input["students"] as $student)
-			array_push($list, array("people"=>$student["people"], "final_grade"=>$student["final_grade"]));
 		if (count($input["students"]) > 0)
 			$component->update_students_final_grade($input["subject_id"], $input["students"]);
 		set_time_limit(120);

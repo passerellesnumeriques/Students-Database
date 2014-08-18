@@ -114,6 +114,49 @@ class transcripts extends Component {
 		if (count($list) > 0)
 			SQLQuery::create()->insertMultiple("StudentSubjectGrade", $list);
 	}
+
+	public function update_students_comments($subject_id, $students_comments) {
+		$students_ids = array();
+		foreach ($students_comments as $s) array_push($students_ids, $s["people"]);
+		$existing = SQLQuery::create()
+			->select("StudentSubjectGrade")
+			->whereValue("StudentSubjectGrade", "subject", $subject_id)
+			->whereIn("StudentSubjectGrade", "people", $students_ids)
+			->execute();
+		$list = array();
+		foreach ($existing as $s) {
+			$found = false;
+			for ($i = 0; $i < count($students_ids); $i++) {
+				if ($students_ids[$i] == $s["people"]) {
+					$found = true;
+					array_splice($students_ids, $i, 1);
+					break;
+				}
+			}
+			if (!$found) continue;
+			$comment = null;
+			foreach ($students_comments as $sg) if ($sg["people"] == $s["people"]) { $comment = $sg["comment"]; break; }
+			array_push($list, array(
+				array(array("people"=>$s["people"],"subject"=>$subject_id)), // key
+				array("comment"=>$comment) // value
+			));
+		}
+		if (count($list) > 0)
+			SQLQuery::create()->updateByKeys("StudentSubjectGrade", $list);
+		// remaining ids are new
+		$list = array();
+		foreach ($students_ids as $people_id) {
+			$comment = null;
+			foreach ($students_comments as $sg) if ($sg["people"] == $people_id) { $comment = $sg["comment"]; break; }
+			array_push($list, array(
+				"people"=>$people_id,
+				"subject"=>$subject_id,
+				"comment"=>$comment
+			));
+		}
+		if (count($list) > 0)
+			SQLQuery::create()->insertMultiple("StudentSubjectGrade", $list);
+	}
 	
 	public function create_evaluation_type($subject_id, $name, $weight) {
 		$id = SQLQuery::create()->insert("CurriculumSubjectEvaluationType", array(
@@ -211,7 +254,10 @@ class transcripts extends Component {
 		$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
 		$types_ids = array();
 		foreach ($types as $type) array_push($types_ids, $type["id"]);
-		$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation", "type", $types_ids)->execute();
+		if (count($types_ids) > 0)
+			$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation", "type", $types_ids)->execute();
+		else
+			$evaluations = array();
 		// remove all previous grades for the given students
 		$keys_types = array();
 		$keys_evals = array();
@@ -247,7 +293,10 @@ class transcripts extends Component {
 		$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
 		$types_ids = array();
 		foreach ($types as $type) array_push($types_ids, $type["id"]);
-		$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation", "type", $types_ids)->execute();
+		if (count($types_ids) > 0)
+			$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation", "type", $types_ids)->execute();
+		else
+			$evaluations = array();
 		// put evaluations inside their respective types
 		foreach ($types as &$type) {
 			$type["evaluations"] = array();
@@ -264,16 +313,18 @@ class transcripts extends Component {
 		foreach ($students as $s) array_push($students_ids, $s["people"]);
 		$evaluations_ids = array();
 		foreach ($evaluations as $eval) array_push($evaluations_ids, $eval["id"]);
-		$students_grades = SQLQuery::create()
-			->select("StudentSubjectEvaluationGrade")
-			->whereIn("StudentSubjectEvaluationGrade", "evaluation", $evaluations_ids)
-			->whereIn("StudentSubjectEvaluationGrade", "people", $students_ids)
-			->execute();
+		if (count($evaluations_ids) > 0 && count($students_ids) > 0)
+			$students_grades = SQLQuery::create()
+				->select("StudentSubjectEvaluationGrade")
+				->whereIn("StudentSubjectEvaluationGrade", "evaluation", $evaluations_ids)
+				->whereIn("StudentSubjectEvaluationGrade", "people", $students_ids)
+				->execute();
+		else
+			$students_grades = array();
 		// compute grades, for each student
 		$types_to_remove = array();
 		$types_to_insert = array();
-		$final_to_remove = array();
-		$final_to_insert = array();
+		$finals = array();
 		foreach ($students as $student) {
 			$final_grade = 0;
 			$final_weights = 0;
@@ -315,13 +366,34 @@ class transcripts extends Component {
 			if ($final_grade !== null)
 				$final_grade /= $final_weights;
 			// set the final grade
-			array_push($final_to_remove, array("people"=>$student["people"],"subject"=>$subject_id));
-			array_push($final_to_insert, array("people"=>$student["people"],"subject"=>$subject_id,"grade"=>$final_grade));
+			array_push($finals, array(array("people"=>$student["people"],"subject"=>$subject_id),array("grade"=>$final_grade)));
 		}
-		SQLQuery::create()->removeKeys("StudentSubjectEvaluationTypeGrade", $types_to_remove);
-		SQLQuery::create()->insertMultiple("StudentSubjectEvaluationTypeGrade", $types_to_insert);
-		SQLQuery::create()->removeKeys("StudentSubjectGrade", $final_to_remove);
-		SQLQuery::create()->insertMultiple("StudentSubjectGrade", $final_to_insert);
+		if (count($types_to_remove) > 0)
+			SQLQuery::create()->removeKeys("StudentSubjectEvaluationTypeGrade", $types_to_remove);
+		if (count($types_to_insert) > 0)
+			SQLQuery::create()->insertMultiple("StudentSubjectEvaluationTypeGrade", $types_to_insert);
+		if (count($finals) > 0) {
+			// look for existing entries
+			$keys = array();
+			foreach ($finals as $f) array_push($keys, $f[0]);
+			if (count($keys) > 0)
+				$existing = SQLQuery::create()->select("StudentSubjectGrade")->whereKeyIn("StudentSubjectGrade",$keys)->execute();
+			$update = array();
+			for ($i = 0; $i < count($finals); $i++) {
+				$found = false;
+				foreach ($existing as $e) if ($e["people"] == $finals[$i][0]["people"] && $e["subject"] == $finals[$i][0]["subject"]) { $found = true; break; }
+				array_push($update, array(array($finals[$i][0]),$finals[$i][1]));
+				array_splice($finals, $i, 1);
+				$i--;
+			}
+			if (count($update) > 0)
+				SQLQuery::create()->updateByKeys("StudentSubjectGrade", $update);
+			if (count($finals) > 0) {
+				$to_insert = array();
+				foreach ($finals as $f) array_push($to_insert, array_merge($f[0],$f[1]));
+				SQLQuery::create()->insertMultiple("StudentSubjectGrade", $to_insert);
+			}
+		}
 	}
 	
 }

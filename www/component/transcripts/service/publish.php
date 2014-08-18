@@ -49,7 +49,8 @@ class service_publish extends Service {
 				"id"=>$id,
 				"subject"=>$sg["subject"],
 				"people"=>$sg["people"],
-				"grade"=>$sg["grade"]
+				"grade"=>$sg["grade"],
+				"comment"=>$sg["comment"]
 			));
 		if (count($to_insert) > 0)
 			SQLQuery::create()->insertMultiple("PublishedTranscriptStudentSubjectGrade", $to_insert);

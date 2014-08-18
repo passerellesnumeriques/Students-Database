@@ -70,6 +70,7 @@ class page_transcripts extends Page {
 #students_list {
 	background-color:white;
 	border-top: 1px solid #A0A0A0;
+	min-width: 175px;
 }
 .student {
 	padding: 2px 1px;
@@ -77,6 +78,7 @@ class page_transcripts extends Page {
 	cursor: default;
 	margin-right: 5px;
 	position:relative;
+	white-space: nowrap;
 }
 .student:hover {
 	background-color: #F0E0C0;

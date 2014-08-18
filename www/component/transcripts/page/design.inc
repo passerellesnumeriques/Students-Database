@@ -113,6 +113,7 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 				case 2: $grade["grade"] = $passing*0.8; break;
 				case 3: $grade["grade"] = null; break;
 			}
+			$grade["comment"] = "Here will be the comment from the teacher";
 			array_push($student_grades, $grade);
 			$count++;
 		}
@@ -155,6 +156,7 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 	processTranscriptCondition($design, "nb_hours", @$config["nb_hours"] == 1);
 	processTranscriptCondition($design, "coefficient", @$config["coefficient"] == 1);
 	processTranscriptCondition($design, "class_average", @$config["class_average"] == 1);
+	processTranscriptCondition($design, "comment", @$config["comment"] == 1);
 	processTranscriptCondition($design, "general_appreciation", @$config["general_appreciation"] == 1);
 
 	$design = str_replace("#SUBJECT_CATEGORY_BACKGROUND#", $config["subject_category_background"], $design);
@@ -259,10 +261,11 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 					}
 					$subj_content = str_replace("#SUBJECT_HOURS#", $hours, $subj_content);
 					$student_grade = null;
-					foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g["grade"]; break; }
+					foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g; break; }
+					$subj_content = str_replace("#COMMENT#", htmlentities($student_grade["comment"]), $subj_content);
 					$id = "grade_subject_".$subject["id"]."_".$student["id"];
-					$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$student_grade</div>", $subj_content);
-					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
+					$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>".$student_grade["grade"]."</div>", $subj_content);
+					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade["grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
 					if (@$config["class_average"] == 1) {
 						$class_av = @$class_averages[$subject["id"]];
 						$id = "class_average_subject_".$subject["id"]."_".$student["id"];
@@ -311,10 +314,11 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 			}
 			$subj_content = str_replace("#SUBJECT_HOURS#", $hours, $subj_content);
 			$student_grade = null;
-			foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g["grade"]; break; }
+			foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g; break; }
+			$subj_content = str_replace("#COMMENT#", htmlentities($student_grade["comment"]), $subj_content);
 			$id = "grade_subject_".$subject["id"]."_".$student["id"];
-			$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>$student_grade</div>", $subj_content);
-			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
+			$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>".$student_grade["grade"]."</div>", $subj_content);
+			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade["grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
 			if (@$config["class_average"] == 1) {
 				$class_av = @$class_averages[$subject["id"]];
 				$id = "class_average_subject_".$subject["id"]."_".$student["id"];
