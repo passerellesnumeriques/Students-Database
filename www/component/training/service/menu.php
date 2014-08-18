@@ -69,6 +69,12 @@ foreach ($current_batches as $b) {
 	Curriculum
 </a>
 <?php } ?>
+<?php if (in_array("teacher",PNApplication::$instance->user_management->people_types)) { ?>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/teacher_assignments?people=<?php echo PNApplication::$instance->user_management->people_id;?>'>
+	<img src='/static/curriculum/curriculum_white.png'/>
+	My Subjects
+</a>
+<?php } ?>
 <?php if (PNApplication::$instance->user_management->has_right("consult_students_grades")) { ?>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/students_grades'>
 	<img src='/static/transcripts/grades_white.png'/>
@@ -88,52 +94,28 @@ foreach ($current_batches as $b) {
 	<img src='/static/transcripts/transcript_white.png'/>
 	Transcripts
 </a>
-<?php } else if (in_array("student",PNApplication::$instance->user_management->people_types)) { ?>
+<?php } else {
+if (in_array("teacher",PNApplication::$instance->user_management->people_types)) { ?>
+<a class='application_left_menu_item' href='/dynamic/transcripts/page/subject_grades'>
+	<img src='/static/transcripts/grades_white.png'/>
+	Grades
+</a>
+<?php }
+if (in_array("student",PNApplication::$instance->user_management->people_types)) { ?>
 <a class='application_left_menu_item' href='/dynamic/transcripts/page/student_grades?people=<?php echo PNApplication::$instance->user_management->people_id;?>'>
 	<img src='/static/transcripts/grades_white.png'/>
 	My Grades
 </a>
 <?php } ?>
-<?php
-/*
-foreach ($current_batches as $b) {
-	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?node=batch".$b["id"]."#/dynamic/transcripts/page/students_grades'>";
-	echo "<img src='/static/curriculum/arrow_right_white.png'/> ";
-	echo "Batch ".htmlentities($b["name"]);
-	echo "</a>";
-} 
-*/
-?>
+<?php } ?>
+<?php if (PNApplication::$instance->user_management->has_right("consult_students_list")) { ?>
 <div class="application_left_menu_separator"></div>
 <div id="search_student_container" style="width:100%;padding:2px 5px 2px 5px;"></div>
 <script type='text/javascript'>
 require("search_student.js", function() {
 	new search_student('search_student_container','training');
 });
-/*
-require("autocomplete.js",function() {
-	var container = document.getElementById('search_student_container');
-	var ac = new autocomplete(container, 3, 'Search a student', function(name, handler) {
-		service.json("students","search_student_by_name", {name:name}, function(res) {
-			if (!res) { handler([]); return; }
-			var items = [];
-			for (var i = 0; i < res.length; ++i) {
-				var item = new autocomplete_item(res[i].people_id, res[i].first_name+' '+res[i].last_name, res[i].first_name+' '+res[i].last_name+" (Batch "+res[i].batch_name+")");
-				items.push(item); 
-			}
-			handler(items);
-		});
-	}, function(item) {
-		ac.reset();
-		window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+item.value,null,95,95);
-	}, 250);
-	setBorderRadius(ac.input,8,8,8,8,8,8,8,8);
-	setBoxShadow(ac.input,-1,2,2,0,'#D8D8F0',true);
-	ac.input.style.background = "#ffffff url('"+theme.icons_16.search+"') no-repeat 3px 1px";
-	ac.input.style.padding = "2px 4px 2px 23px";
-	ac.input.style.width = "130px";
-});*/
-</script>
+<?php } ?>
 <?php 
 	}
 	

@@ -29,10 +29,20 @@ class page_teachers extends Page {
 			else
 				array_push($past_teachers_ids, $people_id);
 		}
-		$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true);
+		$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true, true);
 		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
 
 ?>
+<style type='text/css'>
+.teachers_table {
+	border-spacing: 0px;
+}
+.teacher_row {
+}
+.teacher_row:hover {
+	background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
+}
+</style>
 <div class="page_container" style="width:100%;height:100%;display:flex;flex-direction:column;">
 	<div class="page_title" style="flex:none;">
 		<img src='/static/curriculum/teacher_32.png' style="vertical-align:top"/>
@@ -77,6 +87,13 @@ function new_teacher() {
 <?php 
 	}
 	
+	private function sortPeopleIds($ids, $peoples) {
+		$res = array();
+		foreach ($peoples as $p)
+			if (in_array($p["id"], $ids)) array_push($res, $p["id"]);
+		return $res;
+	}
+	
 	/**
 	 * Create the table of teachers
 	 * @param array $teachers_ids list of teachers
@@ -84,14 +101,15 @@ function new_teacher() {
 	 * @param array $peoples teachers information
 	 */
 	private function buildTeachersList($teachers_ids, $teachers_dates, $peoples) {
+		$teachers_ids = $this->sortPeopleIds($teachers_ids, $peoples);
 ?>
 <div style='background-color:white;padding:10px'>
-<table><tbody>
+<table class='teachers_table'><tbody>
 <?php 
 foreach ($teachers_ids as $people_id) {
 	$people = null;
 	foreach ($peoples as $p) if ($p["id"] == $people_id) { $people = $p; break; }
-	echo "<tr>";
+	echo "<tr class='teacher_row'>";
 	$id = $this->generateID();
 	echo "<td id='$id' style='cursor:pointer' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\"></td>";
 	$this->onload("new profile_picture('$id',50,50,'center','middle').loadPeopleStorage($people_id,".json_encode($people["picture"]).",".json_encode($people["picture_revision"]).");");

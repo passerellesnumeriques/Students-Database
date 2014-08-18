@@ -7,9 +7,11 @@ class curriculum extends Component {
 	public function getPluginImplementations() {
 		require_once("TeacherPeopleTypePlugin.inc");
 		require_once("CurriculumStudentsPlugin.inc");
+		require_once("TeacherAssignmentsPeopleProfilePagePlugin.inc");
 		return array(
 			new TeacherPeopleTypePlugin(),
-			new CurriculumStudentsPlugin()
+			new CurriculumStudentsPlugin(),
+			new TeacherAssignmentsPeopleProfilePagePlugin()
 		);
 	}
 	
@@ -25,6 +27,15 @@ class curriculum extends Component {
 	 */
 	public function getAcademicPeriods() {
 		return SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod", "start")->execute();
+	}
+	
+	public function getCurrentAcademicPeriod() {
+		$now = date("Y-m-d",time());
+		return SQLQuery::create()
+			->select("AcademicPeriod")
+			->where("start",">=",$now)
+			->where("end","<=",$now)
+			->executeSingleRow();
 	}
 	
 	/** Returns all AcademicPeriod from database, together with the name of the AcademicYear they belong to
@@ -427,6 +438,21 @@ class curriculum extends Component {
 			PNApplication::$instance->people->joinPeople($q, "TeacherAssignment", "people");
 		}
 		return $q->execute();
+	}
+	
+	public function amIAssignedTo($subject_id) {
+		return SQLQuery::create()
+			->select("TeacherAssignment")
+			->whereValue("TeacherAssignment", "people", PNApplication::$instance->user_management->people_id)
+			->whereValue("TeacherAssignment", "subject", $subject_id)
+			->executeSingleRow()
+		<> null;
+	}
+	public function getMyAssignments() {
+		return $this->getTeacherAssignments(PNApplication::$instance->user_management->people_id);
+	}
+	public function getTeacherAssignments($people_id) {
+		return SQLQuery::create()->select("TeacherAssignment")->whereValue("TeacherAssignment","people",$people_id)->execute();
 	}
 	
 }

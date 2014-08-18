@@ -553,8 +553,12 @@ class SQLQuery {
 	 * @return SQLQuery this
 	 */
 	public function &whereKey($table, $key) {
-		if (!($table instanceof \datamodel\Table))
-			$table = DataModel::get()->getTable($table);
+		if (!($table instanceof \datamodel\Table)) {
+			if ($this->bypass_security)
+				$table = DataModel::get()->internalGetTable($table);
+			else
+				$table = DataModel::get()->getTable($table);
+		}
 		$table_alias = $this->getTableAlias($table->getName());
 		$k = $table->getPrimaryKey();
 		if ($k <> null) $this->whereValue($table_alias, $k->name, $key);
@@ -567,8 +571,12 @@ class SQLQuery {
 		return $this;
 	}
 	public function &whereKeyIn($table, $keys) {
-		if (!($table instanceof \datamodel\Table))
-			$table = DataModel::get()->getTable($table);
+		if (!($table instanceof \datamodel\Table)) {
+			if ($this->bypass_security)
+				$table = DataModel::get()->internalGetTable($table);
+			else
+				$table = DataModel::get()->getTable($table);
+		}
 		$table_alias = $this->getTableAlias($table->getName());
 		$k = $table->getPrimaryKey();
 		if ($k <> null) $this->whereIn($table_alias, $k->name, $keys);

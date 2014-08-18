@@ -13,9 +13,17 @@ class service_save_students_final_grade extends Service {
 	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
+		// check access
+		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+			if (!PNApplication::$instance->curriculum->amIAssignedTo($input["subject_id"])) {
+				PNApplication::error("Access denied");
+				return;
+			}
+		}
+		
 		set_time_limit(120);
 		SQLQuery::startTransaction();
-		$subject = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $input["subject_id"])->executeSingleRow();
+		$subject = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $input["subject_id"])->executeSingleRow();
 		if ($subject == null) {
 			PNApplication::error("No information about this subject regarding grades");
 			SQLQuery::commitTransaction();

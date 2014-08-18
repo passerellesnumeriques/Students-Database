@@ -15,6 +15,8 @@ class TrainingApplicationSection implements ApplicationSectionPlugin {
 			return "/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/list";
 		if (in_array("student",PNApplication::$instance->user_management->people_types))
 			return "/dynamic/transcripts/page/student_grades?people=".PNApplication::$instance->user_management->people_id;
+		if (in_array("teacher",PNApplication::$instance->user_management->people_types))
+			return "/dynamic/curriculum/page/teacher_assignments?people=".PNApplication::$instance->user_management->people_id;
 		return "/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/list";
 	}
 	public function canAccess() {

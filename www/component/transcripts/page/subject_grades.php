@@ -1,7 +1,7 @@
 <?php 
 class page_subject_grades extends Page {
 	
-	public function getRequiredRights() { return array("consult_students_grades"); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
 		if (!isset($_GET["subject"])) {
@@ -44,20 +44,28 @@ class page_subject_grades extends Page {
 			echo "</div>";
 			return;
 		}
+		
+		// check access
+		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+			if (!PNApplication::$instance->curriculum->amIAssignedTo($_GET["subject"])) {
+				PNApplication::error("Access denied");
+				return;
+			}
+		}
 
 		// get subject
 		$subject_id = $_GET["subject"];
 		$q = PNApplication::$instance->curriculum->getSubjectQuery($subject_id);
 		$q->join("CurriculumSubject", "CurriculumSubjectGrading", array("id"=>"subject"));
-		$subject = $q->executeSingleRow();
+		$subject = $q->byPassSecurity()->executeSingleRow();
 		
 		$edit = false;
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades"); // TODO teacher assigned
+		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades") || PNApplication::$instance->curriculum->amIAssignedTo($subject_id);
 		$locker = null;
 		$lock_id = null;
 		if ($can_edit && isset($_GET["edit"])) {
 			require_once("component/data_model/DataBaseLock.inc");
-			$lock_id = DataBaseLock::lockRow("CurriculumSubjectGrading", $subject["id"], $locker);
+			$lock_id = DataBaseLock::lockRow("CurriculumSubjectGrading", $subject["id"], $locker, true);
 			if ($lock_id <> null)
 				$edit = true;
 		}
@@ -79,12 +87,12 @@ class page_subject_grades extends Page {
 
 		// get evaluations
 		if ($subject["only_final_grade"] == null || !$subject["only_final_grade"]) {
-			$evaluation_types = SQLQuery::create()
+			$evaluation_types = SQLQuery::create()->byPassSecurity()
 				->select("CurriculumSubjectEvaluationType")
 				->where("subject", $subject_id)
 				->execute();
 			foreach ($evaluation_types as &$type) {
-				$type["evaluations"] = SQLQuery::create()
+				$type["evaluations"] = SQLQuery::create()->byPassSecurity()
 					->select("CurriculumSubjectEvaluation")
 					->where("type", $type["id"])
 					->execute();
@@ -112,10 +120,10 @@ class page_subject_grades extends Page {
 		// get students' grades
 		$final_grades = array();
 		if (count($students_ids) > 0)
-			$final_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade","subject",$subject["id"])->whereIn("StudentSubjectGrade","people",$students_ids)->execute();
+			$final_grades = SQLQuery::create()->byPassSecurity()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade","subject",$subject["id"])->whereIn("StudentSubjectGrade","people",$students_ids)->execute();
 		$students_eval_grade = array();
 		if (count($evaluations_ids) > 0 && count($students_ids) > 0)
-			$students_eval_grade = SQLQuery::create()
+			$students_eval_grade = SQLQuery::create()->byPassSecurity()
 				->select("StudentSubjectEvaluationGrade")
 				->whereIn("StudentSubjectEvaluationGrade", "people", $students_ids)
 				->whereIn("StudentSubjectEvaluationGrade", "evaluation", $evaluations_ids)

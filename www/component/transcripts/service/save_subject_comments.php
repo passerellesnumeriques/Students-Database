@@ -13,6 +13,14 @@ class service_save_subject_comments extends Service {
 	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
+		// check access
+		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+			if (!PNApplication::$instance->curriculum->amIAssignedTo($input["subject_id"])) {
+				PNApplication::error("Access denied");
+				return;
+			}
+		}
+		
 		set_time_limit(120);
 		SQLQuery::startTransaction();
 		set_time_limit(120);

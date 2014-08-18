@@ -235,6 +235,9 @@ $model->addTable("TeacherDates")
  	->addDate("start", false, false, "2004-01-01","end")
  	->addDate("end", true, false, "start", null)
  	->addReadAccess("consult_curriculum", true)
+ 	->addReadFilter(function(&$q, $table_alias) {
+ 		$q->whereValue($table_alias,"people",PNApplication::$instance->user_management->people_id);
+ 	})
  	->addWriteAccess("edit_curriculum", true)
  	->addInsertAccess("edit_curriculum", true)
  	->addRemoveAccess("edit_curriculum", true)
@@ -248,11 +251,15 @@ $model->addTable("TeacherAssignment")
 	->addEnum("hours_type", array("Per week","Per period"), true)
 	->setKey(array("class","subject","people"))
  	->addReadAccess("consult_curriculum", true)
+ 	->addReadFilter(function(&$q, $table_alias) {
+ 		$q->whereValue($table_alias,"people",PNApplication::$instance->user_management->people_id);
+ 	})
  	->addWriteAccess("edit_curriculum", true)
  	->addInsertAccess("edit_curriculum", true)
  	->addRemoveAccess("edit_curriculum", true)
  	// TODO news
 	;
+$model->internalGetTable("CurriculumSubject")->addReadAccessFromForeignTable("TeacherAssignment");
 
 $model->addTable("SubjectClassMerge")
 	->addForeignKey("subject", "CurriculumSubject", true, false, true, false, false)
