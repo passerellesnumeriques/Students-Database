@@ -75,6 +75,11 @@ function defaultTranscriptConfig(&$config) {
 	if (@$config["columns_titles_color"] == null) $config["columns_titles_color"] = "#000000";
 	if (@$config["columns_titles_weight"] == null) $config["columns_titles_weight"] = "bold";
 	if (@$config["columns_titles_size"] == null) $config["columns_titles_size"] = "12";
+	if (@$config["general_comment_title_background"] == null) $config["general_comment_title_background"] = "#009DE1";
+	if (@$config["general_comment_title_color"] == null) $config["general_comment_title_color"] = "#FFFFFF";
+	if (@$config["general_comment_title_weight"] == null) $config["general_comment_title_weight"] = "bold";
+	if (@$config["general_comment_title_size"] == null) $config["general_comment_title_size"] = "14";
+	if (@$config["general_comment_size"] == null) $config["general_comment_size"] = "11";
 	if (@$config["total_background"] == null) $config["total_background"] = "#009DE1";
 	if (@$config["total_color"] == null) $config["total_color"] = "#FFFFFF";
 	if (@$config["total_size"] == null) $config["total_size"] = "14";
@@ -160,6 +165,11 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 	$design = str_replace("#COLUMNS_TITLES_COLOR#", $config["columns_titles_color"], $design);
 	$design = str_replace("#COLUMNS_TITLES_WEIGHT#", $config["columns_titles_weight"], $design);
 	$design = str_replace("#COLUMNS_TITLES_SIZE#", $config["columns_titles_size"], $design);
+	$design = str_replace("#GENERAL_COMMENT_TITLE_BACKGROUND#", $config["general_comment_title_background"], $design);
+	$design = str_replace("#GENERAL_COMMENT_TITLE_COLOR#", $config["general_comment_title_color"], $design);
+	$design = str_replace("#GENERAL_COMMENT_TITLE_WEIGHT#", $config["general_comment_title_weight"], $design);
+	$design = str_replace("#GENERAL_COMMENT_TITLE_SIZE#", $config["general_comment_title_size"], $design);
+	$design = str_replace("#GENERAL_COMMENT_SIZE#", $config["general_comment_size"], $design);
 	$design = str_replace("#TOTAL_BACKGROUND#", $config["total_background"], $design);
 	$design = str_replace("#TOTAL_COLOR#", $config["total_color"], $design);
 	$design = str_replace("#TOTAL_SIZE#", $config["total_size"], $design);

@@ -443,7 +443,7 @@ function LoadingFrame(frame_element) {
 		if (this.table.parentNode) {
 			if (typeof animation != 'undefined') {
 				animation.fadeOut(this.table, 200, function() {
-					if (t.table)
+					if (t.table && t.table.parentNode)
 						t.table.parentNode.removeChild(t.table);
 				});
 			} else

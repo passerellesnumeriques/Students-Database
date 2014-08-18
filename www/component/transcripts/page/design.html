@@ -95,8 +95,8 @@
 	margin-top: 8px;
 }
 .transcripts .general_appreciation th {
-	font-size: 14pt;
-	font-weight: bold;
+	font-size: #GENERAL_COMMENT_TITLE_SIZE##pt;
+	font-weight: #GENERAL_COMMENT_TITLE_WEIGHT#;
 	border-bottom: 2px solid black;
 	text-align: center;
 }
@@ -105,7 +105,7 @@
 	align-items: center;
 	justify-content: center;
 	min-height: 55px;
-	font-size: 11pt;
+	font-size: #GENERAL_COMMENT_SIZE#pt;
 }
 .transcripts .signature {
 	font-size: 11pt;
@@ -216,7 +216,7 @@
 <!-- General appreciation -->
 #IF:general_appreciation#
 <table class='general_appreciation' style='width:100%;border-spacing:0px;'>
-	<tr><th style='background-color:#009DE1;color:white'>General Appreciation</th></tr>
+	<tr><th style='background-color:#GENERAL_COMMENT_TITLE_BACKGROUND#;color:#GENERAL_COMMENT_TITLE_COLOR#'>General Appreciation</th></tr>
 	<tr><td>
 	<div>#General Appreciation#</div>
 	</td></tr>
