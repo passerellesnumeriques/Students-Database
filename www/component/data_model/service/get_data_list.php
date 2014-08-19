@@ -128,26 +128,52 @@ class service_get_data_list extends Service {
 					array_push($remaining_filters, $filter);
 			}
 		}
-		foreach ($remaining_filters as &$filter) {
-			$found = false;
-			foreach ($possible as $path) {
-				$from = null;
-				if ($path instanceof DataPath_Join && $path->isReverse())
-					$from = $path->foreign_key->name;
-				$display = DataModel::get()->getTableDataDisplay($path->table->getName());
-				if ($display == null) continue;
-				if ($display->getCategory()->getName() <> $filter["category"]) continue;
-				foreach ($display->getDataDisplay($from, $path->sub_model) as $data) {
-					if ($data->getDisplayName() <> $filter["name"]) continue;
-					$found = true;
-					$filter["datadisplay"] = $data;
-					$filter["datapath"] = $path;
-					$filter["dataaliases"] = $data->buildSQL($q, $path);
-					break;
+		foreach ($filters as &$filter) {
+			do {
+				if (!isset($filter["datadisplay"])) {
+					$found = false;
+					foreach ($possible as $path) {
+						$from = null;
+						if ($path instanceof DataPath_Join && $path->isReverse())
+							$from = $path->foreign_key->name;
+						$display = DataModel::get()->getTableDataDisplay($path->table->getName());
+						if ($display == null) continue;
+						if ($display->getCategory()->getName() <> $filter["category"]) continue;
+						foreach ($display->getDataDisplay($from, $path->sub_model) as $data) {
+							if ($data->getDisplayName() <> $filter["name"]) continue;
+							$found = true;
+							$filter["datadisplay"] = $data;
+							$filter["datapath"] = $path;
+							$filter["dataaliases"] = $data->buildSQL($q, $path);
+							// check if we have other filters on same data
+							foreach ($filters as &$fil) {
+								do {
+									if (!isset($fil["datadisplay"])) {
+										if ($fil["category"] == $display->getCategory()->getName() && $fil["name"] == $data->getDisplayName()) {
+											$fil["datadisplay"] = $data;
+											$fil["datapath"] = $path;
+											$fil["dataaliases"] = $filter["dataaliases"];
+										}
+									}
+									if (!isset($fil["or"])) break;
+									$f = &$fil["or"];
+									unset($fil);
+									$fil = &$f;
+									unset($f);
+								} while (true);				
+							}
+							break;
+						}
+						if ($found) break;
+					}
+					if (!$found) PNApplication::error("Invalid filter: unknown data '".$filter["name"]."' in category '".$filter["category"]."'");
 				}
-				if ($found) break;
-			}
-			if (!$found) PNApplication::error("Invalid filter: unknown data '".$filter["name"]."' in category '".$filter["category"]."'");
+				if (!isset($filter["or"])) break;
+				$f = &$filter["or"];
+				unset($filter);
+				$filter = &$f;
+				unset($f);
+			} while (true);
 		}
 		
 		// apply filters
