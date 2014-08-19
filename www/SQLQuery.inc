@@ -141,6 +141,10 @@ class SQLQuery {
 	public function generateFieldAlias() { return "f".($this->field_alias_counter++); }
 	/** Generates a unique table alias name (useful when building a big list) */
 	public function generateTableAlias() { return "t".($this->table_alias_counter++); }
+	public function avoidAliasCollision($other_query) {
+		$this->field_alias_counter = $other_query->field_alias_counter;
+		$this->table_alias_counter = $other_query->table_alias_counter;
+	}
 	
 #DEV
 	/** Do not generate warnings */

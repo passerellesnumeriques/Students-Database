@@ -64,7 +64,7 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		}
 	}
 
-	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$table_name = $this->joining_key_name == "people" ? "PeopleContact" : "OrganizationContact";
 
 		$keys = array();
@@ -148,7 +148,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return false;
 	}
 
-	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$table_name = $this->joining_key_name == "people" ? "PeopleAddress" : "OrganizationAddress";
 
 		$keys = array();

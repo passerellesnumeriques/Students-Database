@@ -96,7 +96,7 @@ function removeFunction(&$content, $fct_name) {
 		if ($j === false) break;
 		$k = searchEnding($content, $j+1, "{", "}");
 		if ($k === false) break;
-		$content = trim(substr($content,0,$i)).trim(substr($content,$k+1));
+		$content = trim(substr($content,0,$i))."\n".trim(substr($content,$k+1));
 		break;
 	}
 }

@@ -272,7 +272,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 						$data_aliases = array();
 						foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
 							$child->parent = new DataPath_Table($path->table, $path->sub_model);
-							$data_aliases[$data->getDisplayName()] = $data->buildSQL($q, $child, array());
+							$data_aliases[$data->getDisplayName()] = $data->buildSQL($q, $child);
 							$child->parent = $path;
 						}
 					}

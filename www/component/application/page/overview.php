@@ -140,7 +140,7 @@ if (@$_COOKIE["test_deploy"] == "true") {
 			icon="/static/news/news.png"
 			title="Latest Updates"
 		>
-			<div id='updates_container'>
+			<div id='updates_container' style='padding:2px;'>
 				<img src='/static/news/loading.gif' id='updates_loading'/>
 			</div>
 		</div>
@@ -148,7 +148,7 @@ if (@$_COOKIE["test_deploy"] == "true") {
 			icon="/static/news/news.png"
 			title="Latest Activities"
 		>
-			<div id='activities_container'>
+			<div id='activities_container' style='padding:2px;'>
 				<img src='/static/news/loading.gif' id='activities_loading'/>
 			</div>
 		</div>
@@ -176,17 +176,19 @@ function init_calendars() {
 	icon_loading.style.display = 'none';
 	icon_loading.counter = 0;
 	calendars_section.addToolRight(icon_loading);
-	window.top.calendar_manager.on_refresh.add_listener(function() {
+	var refresh_listener = function() {
 		icon_loading.counter++;
 		icon_loading.style.visibility = 'visible';
 		icon_loading.style.display = '';
-	});
-	window.top.calendar_manager.on_refresh_done.add_listener(function() {
+	};
+	var refresh_done_listener = function() {
 		if (--icon_loading.counter == 0) {
 			icon_loading.style.visibility = 'hidden';
 			icon_loading.style.display = 'none';
 		}
-	});
+	};
+	window.top.calendar_manager.on_refresh.add_listener(refresh_listener);
+	window.top.calendar_manager.on_refresh_done.add_listener(refresh_done_listener);
 	require("calendar_view.js",function() {
 		new CalendarView(window.top.calendar_manager, "upcoming", 7, 'calendars_container', function() {
 		});
@@ -233,6 +235,8 @@ function init_calendars() {
 		new_calendar(window.top.calendar_manager.calendars[i]);
 	window.top.calendar_manager.on_calendar_added.add_listener(new_calendar);
 	window.pnapplication.onclose.add_listener(function() {
+		window.top.calendar_manager.on_refresh.remove_listener(refresh_listener);
+		window.top.calendar_manager.on_refresh_done.remove_listener(refresh_done_listener);
 		window.top.calendar_manager.on_calendar_added.remove_listener(new_calendar);
 	});
 }

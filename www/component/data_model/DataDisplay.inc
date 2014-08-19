@@ -80,18 +80,19 @@ abstract class DataDisplay {
 	/** Add any necessary select/join/field to the SQLQuery to retrieve this data
 	 * @param SQLQuery $q the sql
 	 * @param DataPath $path how we reached this data
-	 * @param array $filters list of OR filter, with for each element the data of the filter
 	 * @return array("key"=&gt;key_alias,"data"=&gt;data_alias): if data is null or not specified, the function performSubRequest must be implemented
 	 */
-	public abstract function buildSQL(&$q, $path, $filters);
+	public abstract function buildSQL(&$q, $path);
+	/** TODO doc: Return ["type"] = "where" or "having", ["condition"] = condition
+	 */
+	public abstract function getFilterCondition(&$q, $path, $data_aliases, $filter);
 	/** Perform any necessary sub-requests to retrieve the data, once the first one is already executed, and update the rows and aliases as needed so $rows[x][$sql_aliases["data"]] returns the value for row number x
 	 * @param SQLQuery $original_query the query that was givven in buildSQL
 	 * @param array $rows list of rows that have been retrieved with the original query
 	 * @param array $sql_aliases the value returned by buildSQL
 	 * @param DataPath $path how we reached this data
-	 * @param array $filters same as buildSQL
 	 */
-	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {}
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {}
 	
 	/** Structure to use when creating a new data. This structure will be used in the typed_field, to edit the new data
 	 * @return array|null the associative array will then be converted into JSON, to give it to the typed_field 
@@ -161,93 +162,63 @@ abstract class DataDisplay {
 	}
 	
 	/**
-	 * Utility method to apply common filters in a SQLQuery (adding WHERE)
+	 * Utility method to get common filters' condition in a SQLQuery
 	 * @param string $table_alias alias of the table
 	 * @param \datamodel\Column $col the column
-	 * @param array $filters the filters to apply
-	 * @param SQLQuery $q the sql on which the filters should be applied
+	 * @param array $filter the filter
+	 * @param SQLQuery $q the sql query
 	 */
-	protected function applyColumnFilter($table_alias, $col, $filters, &$q) {
+	protected function getColumnFilterCondition($table_alias, $col, $filter, &$q) {
 		$tf = \PNApplication::$instance->widgets->get_typed_filter($col);
-		$this->applyExpressionFilter("`".$table_alias."`.`".$col->name."`", $tf[0], $filters, $q);
+		$cd = $this->getExpressionFilterCondition("`".$table_alias."`.`".$col->name."`", $tf[0], $filter, $q);
+		if ($cd == null) return null;
+		return array("type"=>"where","condition"=>$cd);
 	}
-	protected function applyExpressionFilter($expression, $filter_type, $filters, &$q, $use_having = false) {
-		if ($filters == null) return;
+	protected function getExpressionFilterCondition($expression, $filter_type, $filter, &$q) {
+		if ($filter == null) return null;
 		switch ($filter_type) {
 			case "filter_text":
-				foreach ($filters as $filter_list) {
-					$w = "";
-					foreach ($filter_list as $filter) {
-						$val = trim($filter["value"]);
-						if ($val == "") continue;
-						if (strlen($w) > 0) $w .= " OR ";
-						$w .= $expression;
-						switch ($filter["type"]) {
-							case "contains": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."%'"; break;
-							case "starts": $w .= " LIKE '".\SQLQuery::escape($filter["value"])."%'"; break;
-							case "ends": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."'"; break;
-							case "exact": $w .= " = '".\SQLQuery::escape($filter["value"])."'"; break;
-						}
-					}
-					if (strlen($w) > 0) {
-						if ($use_having) $q->having($w);
-						else $q->where($w);
-					}
+				$val = trim($filter["value"]);
+				if ($val == "") return null;
+				$w = $expression;
+				switch ($filter["type"]) {
+					case "contains": return $expression." LIKE '%".\SQLQuery::escape($filter["value"])."%'";
+					case "starts": return $expression." LIKE '".\SQLQuery::escape($filter["value"])."%'";
+					case "ends": return $expression." LIKE '%".\SQLQuery::escape($filter["value"])."'";
+					case "exact": return $expression." = '".\SQLQuery::escape($filter["value"])."'";
 				}
-				break;
+				return null;
 			case "filter_enum":
-				foreach ($filters as $filter_list) {
-					$w = "";
-					foreach ($filter_list as $filter) {
-						if (!isset($filter["values"]) || !is_array($filter["values"])) continue;
-						foreach ($filter["values"] as $enum_value) {
-							if ($enum_value == "") continue;
-							if (strlen($w) > 0) $w .= " OR ";
-							$w .= $expression;
-							if ($enum_value == "NULL")
-								$w .= " IS NULL";
-							else if ($enum_value == "NOT_NULL")
-								$w .= " IS NOT NULL";
-							else
-								$w .= "='".\SQLQuery::escape($enum_value)."'";
-						}
-					}
-					if (strlen($w) > 0) {
-						if ($use_having) $q->having($w);
-						else $q->where($w);
-					}
+				if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
+				$w = "";
+				foreach ($filter["values"] as $enum_value) {
+					if ($enum_value == "") continue;
+					if (strlen($w) > 0) $w .= " OR ";
+					$w .= $expression;
+					if ($enum_value == "NULL") $w .= " IS NULL";
+					else if ($enum_value == "NOT_NULL") $w .= " IS NOT NULL";
+					else $w .= "='".\SQLQuery::escape($enum_value)."'";
 				}
-				break;
+				if ($w == "") return null;
+				return $w;
 			case "filter_comparable":
-				foreach ($filters as $filter_list) {
-					$w = "";
-					foreach ($filter_list as $filter) {
-						$val = trim($filter["value"]);
-						if ($val == "" && ($filter["type"] <> "is_set" && $filter["type"] <> "is_not_set")) continue;
-						$cd = "";
-						switch ($filter["type"]) {
-							case "equals": $cd = $expression."='".\SQLQuery::escape($filter["value"])."'"; break;
-							case "not_equals": $cd = $expression."!='".\SQLQuery::escape($filter["value"])."'"; break;
-							case "less": $cd = $expression."<'".\SQLQuery::escape($filter["value"])."'"; break;
-							case "more": $cd = $expression.">'".\SQLQuery::escape($filter["value"])."'"; break;
-							case "less_equals": $cd = $expression."<='".\SQLQuery::escape($filter["value"])."'"; break;
-							case "more_equals": $cd = $expression.">='".\SQLQuery::escape($filter["value"])."'"; break;
-							case "between": if (trim($filter["value_to"])<>"") $cd = "(".$expression.">='".\SQLQuery::escape($filter["value"])."' AND ".$expression."<='".\SQLQuery::escape($filter["value_to"])."')"; break;
-							case "not_between": if (trim($filter["value_to"])<>"") $cd = "(".$expression."<'".\SQLQuery::escape($filter["value"])."' OR ".$expression.">'".\SQLQuery::escape($filter["value_to"])."')"; break;
-							case "is_set": $cd = $expression." IS NOT NULL"; break;
-							case "is_not_set": $cd = $expression." IS NULL"; break;
-						}
-						if (strlen($cd) == 0) continue;
-						if (strlen($w) > 0) $w .= " OR ";
-						$w .= $cd;
-					}
-					if (strlen($w) > 0) {
-						if ($use_having) $q->having($w);
-						else $q->where($w);
-					}
+				$val = trim($filter["value"]);
+				if ($val == "" && ($filter["type"] <> "is_set" && $filter["type"] <> "is_not_set")) return null;
+				switch ($filter["type"]) {
+					case "equals": return $expression."='".\SQLQuery::escape($filter["value"])."'";
+					case "not_equals": return $expression."!='".\SQLQuery::escape($filter["value"])."'";
+					case "less": return $expression."<'".\SQLQuery::escape($filter["value"])."'";
+					case "more": return $expression.">'".\SQLQuery::escape($filter["value"])."'";
+					case "less_equals": return $expression."<='".\SQLQuery::escape($filter["value"])."'";
+					case "more_equals": return $expression.">='".\SQLQuery::escape($filter["value"])."'";
+					case "between": if (trim($filter["value_to"])=="") return null; return "(".$expression.">='".\SQLQuery::escape($filter["value"])."' AND ".$expression."<='".\SQLQuery::escape($filter["value_to"])."')";
+					case "not_between": if (trim($filter["value_to"])=="") return null; return "(".$expression."<'".\SQLQuery::escape($filter["value"])."' OR ".$expression.">'".\SQLQuery::escape($filter["value_to"])."')";
+					case "is_set": return $expression." IS NOT NULL";
+					case "is_not_set": return $expression." IS NULL";
 				}
-				break;
+				return null;
 		}
+		return null;
 	}
 	
 }
@@ -335,7 +306,7 @@ class SimpleDataDisplay extends DataDisplay {
 		return array(array("table"=>$this->getTable()->getName(), "column"=>$this->column_name, "sub_model"=>$sub_model, "lock_each_row"=>true));
 	}
 	
-	public function buildSQL(&$q, $path, $filters) {
+	public function buildSQL(&$q, $path) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		$alias = $q->getFieldAlias($table_alias, $this->column_name);
 		if ($alias == null) {
@@ -365,9 +336,12 @@ class SimpleDataDisplay extends DataDisplay {
 			}
 			$result["key"] = $aliases;
 		}
-		$col = $this->getTable()->getColumnFor($this->column_name, $path->sub_model);
-		$this->applyColumnFilter($table_alias, $col, $filters, $q);
 		return $result;
+	}
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		$table_alias = $q->getTableAlias($path->table->getName());
+		$col = $this->getTable()->getColumnFor($this->column_name, $path->sub_model);
+		return $this->getColumnFilterCondition($table_alias, $col, $filter, $q);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$table_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
@@ -497,7 +471,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		return "?";
 	}
 	
-	public function buildSQL(&$q, $path, $filters) {
+	public function buildSQL(&$q, $path) {
 		// we need to get the key, and the value to display
 		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $path->sub_model);
 		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
@@ -522,29 +496,23 @@ class ChoiceDataDisplay extends DataDisplay {
 			$data_alias = $q->generateFieldAlias();
 			$q->field($table_alias, $foreign_key->name, $data_alias);
 		}
-		
-		if ($filters <> null)
-		foreach ($filters as $filter_list) {
-			$w = "";
-			foreach ($filter_list as $filter) {
-				if (!isset($filter["values"]) || !is_array($filter["values"])) continue;
-				foreach ($filter["values"] as $enum_value) {
-					if ($enum_value == "") continue;
-					if (strlen($w) > 0) $w .= " OR ";
-					$w .= "`".$table_alias."`.`".$foreign_key->name."`";
-					if ($enum_value == "NULL")
-						$w .= " IS NULL";
-					else if ($enum_value == "NOT_NULL")
-						$w .= " IS NOT NULL";
-					else
-						$w .= "='".\SQLQuery::escape($enum_value)."'";
-				}
-			}
-			if (strlen($w) > 0)
-				$q->where($w);
-		}
-		
 		return array("key"=>$key_alias,"data"=>$data_alias);
+	}
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
+		$table_alias = $q->getTableAlias($path->table->getName());
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $path->sub_model);
+		$w = "";
+		foreach ($filter["values"] as $enum_value) {
+			if ($enum_value == "") continue;
+			if (strlen($w) > 0) $w .= " OR ";
+			$w .= "`".$table_alias."`.`".$foreign_key->name."`";
+			if ($enum_value == "NULL") $w .= " IS NULL";
+			else if ($enum_value == "NOT_NULL") $w .= " IS NOT NULL";
+			else $w .= "='".\SQLQuery::escape($enum_value)."'";
+		}
+		if ($w == "") return null;
+		return array("type"=>"where","condition"=>$w);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
@@ -656,7 +624,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		return false;
 	}
 	
-	public function buildSQL(&$q, $path, $filters) {
+	public function buildSQL(&$q, $path) {
 		if ($path instanceof \DataPath_Table) {
 			$this_alias = $q->getTableAlias($path->table->getName());
 			$alias = $q->getFieldAlias($this_alias, $this->joining_key_name);
@@ -682,42 +650,43 @@ class JoiningTableDataDisplay extends DataDisplay {
 		return array("key"=>$alias,"data"=>null);
 	}
 	
-	protected function applyFilters(&$q, $path, $filters, $parent_alias, $key_name) {
-		$where = array();
-		foreach ($filters as $filter_list) {
-			$w = "";
-			foreach ($filter_list as $filter) {
-				if (!isset($filter["values"]) || !is_array($filter["values"])) continue;
-				foreach ($filter["values"] as $enum_value) {
-					if ($enum_value == "") continue;
-					if (strlen($w) > 0) $w .= " OR ";
-					$w .= "`PRIMARY`.`".$this->foreign_key_name."`";
-					if ($enum_value == "NULL")
-						$w .= " IS NULL";
-					else if ($enum_value == "NOT_NULL")
-						$w .= " IS NOT NULL";
-					else
-						$w .= "='".\SQLQuery::escape($enum_value)."'";
-				}
-			}
-			if (strlen($w) > 0) array_push($where, "(".$w.")");
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		$primary_alias = $q->generateTableAlias();
+		$foreign_alias = $q->generateTableAlias();
+		
+		$w = "";
+		if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
+		foreach ($filter["values"] as $enum_value) {
+			if ($enum_value == "") continue;
+			if (strlen($w) > 0) $w .= " OR ";
+			$w .= "`$primary_alias`.`".$this->foreign_key_name."`";
+			if ($enum_value == "NULL") $w .= " IS NULL";
+			else if ($enum_value == "NOT_NULL") $w .= " IS NOT NULL";
+			else $w .= "='".\SQLQuery::escape($enum_value)."'";
 		}
-		if (count($where) > 0) {
-			$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
-			$foreign_table = \DataModel::get()->getTable($foreign_table);
-	
-			$sub_q = \SQLQuery::create()
-				->select(array($path->table->getName()=>"PRIMARY"))
-				->join("PRIMARY", $foreign_table->getName(), array($this->foreign_key_name=>$foreign_table->getPrimaryKey()->name), "FOREIGN_TABLE")
-				->field("PRIMARY", $this->foreign_key_name)
-				;
-			foreach ($where as $w) $sub_q->where($w);
-			
-			$q->whereExistsInSubQuery($sub_q, $parent_alias, $key_name, "PRIMARY", $this->joining_key_name);
-		}
+		if ($w == "") return null;
+		$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
+		$foreign_table = \DataModel::get()->getTable($foreign_table);
+		$parent_alias = $q->getTableAlias($path->parent->table->getName());
+		$key_name = $path->isReverse() ? $path->parent->table->getPrimaryKey()->name : $path->foreign_key->name;
+		
+		$sub_q = \SQLQuery::create()
+			->select(array($path->table->getName()=>$primary_alias))
+			->join($primary_alias, $foreign_table->getName(), array($this->foreign_key_name=>$foreign_table->getPrimaryKey()->name), $foreign_alias)
+			->field($primary_alias, $this->foreign_key_name)
+			->where($w)
+			;
+		
+		$sub_q->where("`$primary_alias`.`".$this->joining_key_name."`=`".$parent_alias."`.`".$key_name."`");
+		// avoid collisions in table aliases
+		$sub_q->avoidAliasCollision($q);
+		$sql = $sub_q->generate();
+		$q->avoidAliasCollision($sub_q);
+		
+		return array("type"=>"where","condition"=>"EXISTS ($sql)");
 	}
 	
-	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$table_name = $path->table->getSQLNameFor($path->sub_model);
 		$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
 		$foreign_table = \DataModel::get()->getTable($foreign_table);
@@ -969,7 +938,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return array("table"=>$col->table->getName(), "column"=>$col->name);
 	}
 	
-	public function buildSQL(&$q, $path, $filters) {
+	public function buildSQL(&$q, $path) {
 		$steps = explode(".", $this->data_path);
 		$current_table = $this->getTable();
 		$current_table_alias = \DataPathSQLBuilder::build($path, $q);
@@ -1032,35 +1001,29 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		$data_alias = $q->generateFieldAlias();
 		$q->field($current_table_alias, $col->name, $data_alias);
 
+		return array("key"=>$key_alias,"data"=>$data_alias,"last_table"=>$current_table_alias,"final_column"=>$col);
+	}
+	
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
 		if ($this->filter_path == null)
-			$this->applyColumnFilter($current_table_alias, $col, $filters, $q);
-		else {
-			// enum filter
-			$foreign_key = $this->getColumn($this->filter_path, $path->sub_model);
-			$table_alias = $q->getTableAlias($foreign_key->table->getName());
-			
-			foreach ($filters as $filter_list) {
-				$w = "";
-				foreach ($filter_list as $filter) {
-					if (!isset($filter["values"]) || !is_array($filter["values"])) continue;
-					foreach ($filter["values"] as $enum_value) {
-						if ($enum_value == "") continue;
-						if (strlen($w) > 0) $w .= " OR ";
-						$w .= "`".$table_alias."`.`".$foreign_key->name."`";
-						if ($enum_value == "NULL")
-							$w .= " IS NULL";
-						else if ($enum_value == "NOT_NULL")
-							$w .= " IS NOT NULL";
-						else
-							$w .= "='".\SQLQuery::escape($enum_value)."'";
-					}
-				}
-				if (strlen($w) > 0)
-					$q->where($w);
-			}
-		}
+			return $this->getColumnFilterCondition($data_aliases["last_table"], $data_aliases["final_column"], $filter, $q);
+		// enum filter
+		if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
+		
+		$foreign_key = $this->getColumn($this->filter_path, $path->sub_model);
+		$table_alias = $q->getTableAlias($foreign_key->table->getName());
 
-		return array("key"=>$key_alias,"data"=>$data_alias);
+		$w = "";
+		foreach ($filter["values"] as $enum_value) {
+			if ($enum_value == "") continue;
+			if (strlen($w) > 0) $w .= " OR ";
+			$w .= "`".$table_alias."`.`".$foreign_key->name."`";
+			if ($enum_value == "NULL") $w .= " IS NULL";
+			else if ($enum_value == "NOT_NULL") $w .= " IS NOT NULL";
+			else $w .= "='".\SQLQuery::escape($enum_value)."'";
+		}
+		if (strlen($w) == 0) return null;
+		return array("type"=>"where","condition"=>$w);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
@@ -1194,7 +1157,7 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 		return array("table"=>$col->table->getName(), "column"=>$col->name);
 	}
 	
-	public function buildSQL(&$q, $path, $filters) {			
+	public function buildSQL(&$q, $path) {			
 		$columns = explode(".", $this->data_path);
 		$last_table = $this->getTable();
 		// go to the table
@@ -1224,28 +1187,23 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 		if ($data_alias == null)
 			$data_alias = $q->generateFieldAlias();
 		$q->field($table_alias, $col->name, $data_alias);
-		//Filter
-		foreach ($filters as $filter_list) {
-			$w = "";
-			foreach ($filter_list as $filter) {
-				if (!isset($filter["values"]) || !is_array($filter["values"])) continue;
-				foreach ($filter["values"] as $enum_value) {
-					if ($enum_value == "") continue;
-					if (strlen($w) > 0) $w .= " OR ";
-					$w .= "`".$root_alias."`.`".$this->foreign_key_name."`";
-					if ($enum_value == "NULL")
-						$w .= " IS NULL";
-					else if ($enum_value == "NOT_NULL")
-						$w .= " IS NOT NULL";
-					else
-						$w .= "='".\SQLQuery::escape($enum_value)."'";
-				}
-			}
-			if (strlen($w) > 0)
-				$q->where($w);
-		}
 	
 		return array("key"=>$key_alias,"data"=>$data_alias);
+	}
+	
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
+		$w = "";
+		foreach ($filter["values"] as $enum_value) {
+			if ($enum_value == "") continue;
+			if (strlen($w) > 0) $w .= " OR ";
+			$w .= "`".$root_alias."`.`".$this->foreign_key_name."`";
+			if ($enum_value == "NULL") $w .= " IS NULL";
+			else if ($enum_value == "NOT_NULL") $w .= " IS NOT NULL";
+			else $w .= "='".\SQLQuery::escape($enum_value)."'";
+		}
+		if (strlen($w) == 0) return null;
+		return array("type"=>"where","condition"=>$w);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
@@ -1295,7 +1253,7 @@ class CalculationDataDisplay extends DataDisplay {
 		return $col;
 	}
 	
-	public function buildSQL(&$q, $path, $filters) {
+	public function buildSQL(&$q, $path) {
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		
@@ -1332,9 +1290,13 @@ class CalculationDataDisplay extends DataDisplay {
 		$alias = $q->generateFieldAlias();
 		$q->expression($expr, $alias);
 		
-		$this->applyExpressionFilter("`".$alias."`", "filter_comparable", $filters, $q, true);
-	
 		return array("key"=>null,"data"=>$alias);
+	}
+	
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		$cd = $this->getExpressionFilterCondition("`".$data_aliases["data"]."`", $filter_type, $filter, $q);
+		if ($cd == null) return null;
+		return array("type"=>"having", "condition"=>$cd);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
@@ -1384,7 +1346,7 @@ class CountLinksDataDisplay extends DataDisplay {
 		return false;
 	}
 
-	public function buildSQL(&$q, $path, $filters) {
+	public function buildSQL(&$q, $path) {
 		$t = $this->getTable();
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
@@ -1400,8 +1362,13 @@ class CountLinksDataDisplay extends DataDisplay {
 			->count();
 		$data_alias = $q->generateFieldAlias();
 		$q->fieldSubQuery($sub_q, $data_alias);
-		$this->applyExpressionFilter("`".$data_alias."`", "filter_comparable", $filters, $q, true);
 		return array("key"=>$key_alias,"data"=>$data_alias);
+	}
+	
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		$cd = $this->getExpressionFilterCondition("`".$data_aliases["data"]."`", $filter_type, $filter, $q);
+		if ($cd == null) return null;
+		return array("type"=>"having", "condition"=>$cd);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
