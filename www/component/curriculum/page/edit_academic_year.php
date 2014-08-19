@@ -5,6 +5,16 @@ class page_edit_academic_year extends Page {
 	
 	public function execute() {
 		$id = @$_GET["id"];
+		if ($id <> null) {
+			require_once("component/data_model/DataBaseLock.inc");
+			$locked_by = null;
+			$lock_id = DataBaseLock::lockRow("AcademicYear", $id, $locked_by);
+			if ($lock_id == null) {
+				echo "<div class='error_box'>$locked_by is already editing this Academic Year. Please retry in few minutes.</div>";
+				return;
+			}
+			DataBaseLock::generateScript($lock_id);
+		}
 		$conf = PNApplication::$instance->getDomainDescriptor();
 		$conf = $conf["curriculum"];
 		if ($id <> null) {

@@ -306,7 +306,14 @@ function initPNApplication() {
 				this.onalldatasaved.add_listener(function() { button.disabled = "disabled"; });
 			}
 		};
-		window.top.pnapplication.registerWindow(window);
+		var f = function() {
+			if (!window.top.pnapplication) {
+				setTimeout(f,25);
+				return;
+			}
+			window.top.pnapplication.registerWindow(window);
+		};
+		f();
 	}
 		
 	var listener = function() {

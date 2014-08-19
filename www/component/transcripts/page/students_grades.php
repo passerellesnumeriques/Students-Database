@@ -229,12 +229,25 @@ function setDisplayCoef(display) {
 		columns[i].grid_column.title.span_coef.style.position = display ? "static" : "absolute";
 	}
 }
+var general_appreciation_lock_id = null;
 function editGeneralAppreciation(button) {
-	button.innerHTML = "<img src='"+theme.icons_16.save+"'/> Save appreciations";
-	button.onclick = function() { saveGeneralAppreciation(this); };
-	var col = grades_grid.grid.getColumnById('student_comment');
-	col.toggleEditable();
-	pnapplication.dataUnsaved('general_appreciation');
+	var locker = lock_screen();
+	service.json("data_model","lock_table",{table:"StudentTranscriptGeneralComment",get_locker:true},function(res) {
+		if (!res) { unlock_screen(locker); return; }
+		if (res.locker) {
+			unlock_screen(locker);
+			error_dialog(res.locker+" is already editing general appreciations, you cannot edit at the same time.");
+			return;
+		}
+		general_appreciation_lock_id = res.lock;
+		databaselock.addLock(res.lock);
+		button.innerHTML = "<img src='"+theme.icons_16.save+"'/> Save appreciations";
+		button.onclick = function() { saveGeneralAppreciation(this); };
+		var col = grades_grid.grid.getColumnById('student_comment');
+		col.toggleEditable();
+		pnapplication.dataUnsaved('general_appreciation');
+		unlock_screen(locker);
+	});
 }
 function saveGeneralAppreciation(button) {
 	var locker = lock_screen(null, "Saving general appreciations...");
@@ -244,13 +257,16 @@ function saveGeneralAppreciation(button) {
 		comments.push({people:students[i].id,comment:cell.getCurrentData()});
 	}
 	service.json("transcripts","save_general_comments",{period:<?php echo $period_id;?>,students:comments},function(res) {
-		unlock_screen(locker);
-		if (!res) return;
-		button.innerHTML = "Edit General Appreciations";
-		button.onclick = function() { editGeneralAppreciation(this); };
-		var col = grades_grid.grid.getColumnById('student_comment');
-		col.toggleEditable();
-		pnapplication.dataSaved('general_appreciation');
+		if (!res) { unlock_screen(locker); return; }
+		databaselock.unlock(general_appreciation_lock_id, function(res) {
+			general_appreciation_lock_id = null;
+			button.innerHTML = "Edit General Appreciations";
+			button.onclick = function() { editGeneralAppreciation(this); };
+			var col = grades_grid.grid.getColumnById('student_comment');
+			col.toggleEditable();
+			pnapplication.dataSaved('general_appreciation');
+			unlock_screen(locker);
+		});
 	});
 }
 </script>

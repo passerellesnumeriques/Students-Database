@@ -1,7 +1,7 @@
 <?php 
 class service_save_subject_evaluations extends Service {
 	
-	public function getRequiredRights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Save subject grading information, including students' grades"; }
 	public function inputDocumentation() {
@@ -16,7 +16,7 @@ class service_save_subject_evaluations extends Service {
 	
 	public function execute(&$component, $input) {
 		// check access
-		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+		if (!PNApplication::$instance->user_management->has_right("edit_students_grades")) {
 			if (!PNApplication::$instance->curriculum->amIAssignedTo($input["subject_id"])) {
 				PNApplication::error("Access denied");
 				return;

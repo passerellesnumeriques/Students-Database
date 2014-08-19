@@ -29,16 +29,13 @@ class students extends Component {
 				return false;
 			}
 			// check the student is not already assigned to a class with a different specialization
-			$different_classes = SQLQuery::create()
-#DEV
-				->noWarning() // TODO
-#END
+			$q = SQLQuery::create()
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
-				->join("Student", "StudentClass", array("people"=>"people"))
-				->join("StudentClass", "AcademicClass", array("class"=>"id"))
-				->where("`AcademicClass`.`specialization` IS NOT NULL AND `AcademicClass`.`specialization`!='".SQLQuery::escape($specialization_id)."'")
-				->execute();
+				->join("Student", "StudentClass", array("people"=>"people"));
+			PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class");
+			$q->where("`AcademicClass`.`specialization` IS NOT NULL AND `AcademicClass`.`specialization`!='".SQLQuery::escape($specialization_id)."'");
+			$different_classes = $q->execute();
 			if (count($different_classes) > 0) {
 				PNApplication::error("This student is already assigned to a class with another specialization");
 				return false;
@@ -54,16 +51,13 @@ class students extends Component {
 				return false;
 			}
 			// check the student is not already assigned to a class with a specialization
-			$different_classes = SQLQuery::create()
-#DEV
-				->noWarning() // TODO
-#END
+			$q = SQLQuery::create()
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
-				->join("Student", "StudentClass", array("people"=>"people"))
-				->join("StudentClass", "AcademicClass", array("class"=>"id"))
-				->where("`AcademicClass`.`specialization` IS NOT NULL")
-				->execute();
+				->join("Student", "StudentClass", array("people"=>"people"));
+			PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class");
+			$q->where("`AcademicClass`.`specialization` IS NOT NULL");
+			$different_classes = $q->execute();
 			if (count($different_classes) > 0) {
 				PNApplication::error("This student is already assigned to a class with a specialization");
 				return false;

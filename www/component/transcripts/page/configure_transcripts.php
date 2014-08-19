@@ -8,7 +8,6 @@ class page_configure_transcripts extends Page {
 			echo "<div class='info_box'>Please select a period, a class, or a specialization within a period</div>";
 			return;
 		}
-		// TODO lock;
 		
 		$batch = PNApplication::$instance->curriculum->getBatch($_GET["batch"]);
 		$period = PNApplication::$instance->curriculum->getBatchPeriod($_GET["period"], true);
@@ -25,8 +24,19 @@ class page_configure_transcripts extends Page {
 			->executeSingleRow();
 		$spes = PNApplication::$instance->curriculum->getBatchPeriodSpecializations($_GET["period"]);
 
-		if ($config === null)
+		require("component/data_model/DataBaseLock.inc");
+		$locked_by = null;
+		if ($config === null) {
 			SQLQuery::create()->insert("TranscriptConfig", array("period"=>$_GET["period"],"specialization"=>null));
+			$lock_id = DataBaseLock::lockRow("TranscriptConfig", array("period"=>$_GET["period"],"specialization"=>null), $locked_by);
+		} else {
+			$lock_id = DataBaseLock::lockRow("TranscriptConfig", array("period"=>$_GET["period"],"specialization"=>null), $locked_by);
+		}
+		if ($lock_id == null) {
+			echo "<div class='error_box'>$locked_by is already editing the transcripts design for this period. You cannot edit it at the same time.</div>";
+			return;
+		}
+		DataBaseLock::generateScript($lock_id);
 		
 		if (count($spes) == 0) {
 			if ($config === null) {

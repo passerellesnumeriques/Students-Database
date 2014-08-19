@@ -118,7 +118,7 @@ function build_period(parent, period) {
 	item.tr.title = "Edit or Remove Academic Year "+parent.academic_year.name;
 	item.tr.onclick = function() {
 		window.top.require("popup_window.js",function() {
-			var popup = new window.top.popup_window("New Academic Year",null,"");
+			var popup = new window.top.popup_window("Academic Year",null,"");
 			var frame = popup.setContentFrame("/dynamic/curriculum/page/edit_academic_year?id="+period.year_id+"&onsave=saved");
 			frame.saved = function() {
 				popup.close();

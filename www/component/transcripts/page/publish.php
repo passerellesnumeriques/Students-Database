@@ -24,7 +24,6 @@ class page_publish extends Page {
 		<?php
 		foreach ($existing as $t)
 			echo "<input type='radio' name='action' value='".$t["id"]."'/> replace ".htmlentities($t["name"])."<br/>";
-		// TODO 
 		?>
 		</form>
 	</div>

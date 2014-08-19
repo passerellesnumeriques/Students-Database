@@ -4,7 +4,6 @@ class page_teachers_assignments extends Page {
 	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function execute() {
-		// TODO lock database
 		$academic_period_id = @$_GET["period"];
 		if ($academic_period_id == null) {
 			// by default, get the current one
@@ -44,6 +43,16 @@ class page_teachers_assignments extends Page {
 		
 		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
 		
+		$locked_by = null;
+		if ($can_edit) {
+			require_once("component/data_model/DataBaseLock.inc");
+			$lock_id = DataBaseLock::lockTable("TeacherAssignment", $locked_by);
+			if ($lock_id == null)
+				$can_edit = false;
+			else
+				DataBaseLock::generateScript($lock_id);
+		}
+		
 		require_once("component/curriculum/CurriculumJSON.inc");
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
@@ -72,6 +81,12 @@ class page_teachers_assignments extends Page {
 			?>
 			</select>
 		</div>
+		<?php
+		if ($locked_by <> null) {
+			echo "<div class='error_box' style='flex:none'>$locked_by is already editing teachers assignment. You cannot edit it at the same time.</div>";
+			$can_edit = false;
+		} 
+		?>
 		<div style="flex:1 1 auto;overflow:auto;display:flex;flex-direction:row">
 		<div style="flex:1 1 auto">
 		<?php 

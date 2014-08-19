@@ -18,35 +18,42 @@ setTimeout(function() {
 }, 1000);
 
 // calendars
-window.top.calendar_manager = new CalendarManager();
-window.top.CalendarsProviders.get(function(provider) {
-	if (!window.top.calendar_manager) return;
-	for (var i = 0; i < provider.calendars.length; ++i)
-		window.top.calendar_manager.addCalendar(provider.calendars[i]);
-	provider.on_calendar_added.add_listener(function(cal){
+function init_top_calendar_manager() {
+	if (!window.top.CalendarsProviders || !window.top.pnapplication) {
+		setTimeout(init_top_calendar_manager,25);
+		return;
+	}
+	window.top.calendar_manager = new CalendarManager();
+	window.top.CalendarsProviders.get(function(provider) {
 		if (!window.top.calendar_manager) return;
-		window.top.calendar_manager.addCalendar(cal);
-	});
-	provider.on_calendar_removed.add_listener(function(cal){
-		if (!window.top.calendar_manager) return;
-		window.top.calendar_manager.removeCalendar(cal);
-	});
-	provider._refresh_interval = setInterval(function() {
-		provider.refreshCalendars();
-	},5*60*1000);
-	provider.refreshCalendars();
-});
-if (!window.top._logout_remove_calendars) {
-	window.top._logout_remove_calendars = function() {
-		if (!window.top.calendar_manager) return;
-		while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(window.top.calendar_manager.calendars[0]);
-		window.top.CalendarsProviders.get(function(provider) {
-			clearInterval(provider._refresh_interval);
+		for (var i = 0; i < provider.calendars.length; ++i)
+			window.top.calendar_manager.addCalendar(provider.calendars[i]);
+		provider.on_calendar_added.add_listener(function(cal){
+			if (!window.top.calendar_manager) return;
+			window.top.calendar_manager.addCalendar(cal);
 		});
-		window.top.calendar_manager = null;
-	};
-	window.top.pnapplication.onlogout.add_listener(window.top._logout_remove_calendars);
+		provider.on_calendar_removed.add_listener(function(cal){
+			if (!window.top.calendar_manager) return;
+			window.top.calendar_manager.removeCalendar(cal);
+		});
+		provider._refresh_interval = setInterval(function() {
+			provider.refreshCalendars();
+		},5*60*1000);
+		provider.refreshCalendars();
+	});
+	if (!window.top._logout_remove_calendars) {
+		window.top._logout_remove_calendars = function() {
+			if (!window.top.calendar_manager) return;
+			while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(window.top.calendar_manager.calendars[0]);
+			window.top.CalendarsProviders.get(function(provider) {
+				clearInterval(provider._refresh_interval);
+			});
+			window.top.calendar_manager = null;
+		};
+		window.top.pnapplication.onlogout.add_listener(window.top._logout_remove_calendars);
+	}
 }
+init_top_calendar_manager();
 document.body.style.overflow = "hidden";
 // connect to Google
 <?php 
