@@ -108,6 +108,24 @@ if (file_exists("data/backups")) {
 	}
 }
 
+uksort($updates,function($v1,$v2){
+	$l1 = explode(".",$v1);
+	$l2 = explode(".",$v2);
+	for ($i = 0; $i < count($l1); $i++) {
+		if ($i >= count($l2)) return 1;
+		if (intval($l1[$i]) < intval($l2[$i])) return -1;
+		if (intval($l1[$i]) > intval($l2[$i])) return 1;
+	}
+	return 0;
+});
+uasort($backups, function($b1,$b2){
+	$t1 = intval($b1["time"]);
+	$t2 = intval($b2["time"]);
+	if ($t1 < $t2) return -1;
+	if ($t1 > $t2) return 1;
+	return 0;
+});
+
 date_default_timezone_set("GMT");
 
 $current_version = file_get_contents("version");
@@ -133,7 +151,7 @@ for ($i = 0; $i < count($updates) || $i < count($backups) || $i == 0; $i++) {
 			echo "</td>";
 		} else {
 			echo "<td>";
-			// TODO remove it
+			echo "<button onclick=\"location.href='/maintenance/?step=remove_update&version=".$version."';\">Remove</button>";
 			echo "</td>";
 		}
 	}

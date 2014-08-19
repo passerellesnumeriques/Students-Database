@@ -170,7 +170,8 @@ if (!window.top.google) {
 	window.top.google_api_loaded = function(){
 		window.top.google.api_loaded = true;
 		window.top.gapi.client.setApiKey(window.top.google._api_key);
-		window.top.google._api_loaded_event.fire();
+		if (window.top.google._api_loaded_event)
+			window.top.google._api_loaded_event.fire();
 		window.top.google._api_loaded_event = null;
 	};
 	window.top.load_google_api = function() {

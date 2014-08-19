@@ -449,7 +449,7 @@ if (window == window.top && !window.top.geography) {
 			var needle_words = prepareMatchScore(needle);
 			var eligibles = [];
 			for (var word in country_data[0]._search.dictionary) {
-				var e = needle_words.contains(word);
+				var e = needle.indexOf(word) >= 0;
 				if (!e) {
 					for (var i = 0; i < needle_words.length && !e; ++i)
 						if (needle_words[i].indexOf(word) >= 0 || word.indexOf(needle_words[i]) >= 0)

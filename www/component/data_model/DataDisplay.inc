@@ -206,7 +206,7 @@ abstract class DataDisplay {
 				if ($val == "" && ($filter["type"] <> "is_set" && $filter["type"] <> "is_not_set")) return null;
 				switch ($filter["type"]) {
 					case "equals": return $expression."='".\SQLQuery::escape($filter["value"])."'";
-					case "not_equals": return $expression."!='".\SQLQuery::escape($filter["value"])."'";
+					case "not_equals": return "(".$expression."!='".\SQLQuery::escape($filter["value"])."' OR ".$expression." IS NULL)";
 					case "less": return $expression."<'".\SQLQuery::escape($filter["value"])."'";
 					case "more": return $expression.">'".\SQLQuery::escape($filter["value"])."'";
 					case "less_equals": return $expression."<='".\SQLQuery::escape($filter["value"])."'";
@@ -645,8 +645,6 @@ class JoiningTableDataDisplay extends DataDisplay {
 			$q->field($parent_alias, $key_name, $alias);
 		}
 
-		$this->applyFilters($q, $path, $filters, $parent_alias, $key_name);
-		
 		return array("key"=>$alias,"data"=>null);
 	}
 	
@@ -1294,7 +1292,7 @@ class CalculationDataDisplay extends DataDisplay {
 	}
 	
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
-		$cd = $this->getExpressionFilterCondition("`".$data_aliases["data"]."`", $filter_type, $filter, $q);
+		$cd = $this->getExpressionFilterCondition("`".$data_aliases["data"]."`", "filter_comparable", $filter, $q);
 		if ($cd == null) return null;
 		return array("type"=>"having", "condition"=>$cd);
 	}
@@ -1366,7 +1364,7 @@ class CountLinksDataDisplay extends DataDisplay {
 	}
 	
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
-		$cd = $this->getExpressionFilterCondition("`".$data_aliases["data"]."`", $filter_type, $filter, $q);
+		$cd = $this->getExpressionFilterCondition("`".$data_aliases["data"]."`", "filter_comparable", $filter, $q);
 		if ($cd == null) return null;
 		return array("type"=>"having", "condition"=>$cd);
 	}
