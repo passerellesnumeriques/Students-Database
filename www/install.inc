@@ -31,6 +31,7 @@ function connectDB() {
 if (isset($_POST["req"])) {
 	switch ($_POST["req"]) {
 		case "check_db":
+			if (!file_exists("data")) mkdir("data");
 			$dir = opendir("data");
 			while (($file = readdir($dir)) <> null) {
 				if ($file == "." || $file == ".." || $file == "init") continue;
@@ -99,9 +100,18 @@ if (isset($_POST["req"])) {
 			PNApplication::$instance->current_domain = $domain;
 			PNApplication::$instance->init();
 			$components = PNApplication::sortComponentsByDependencies();
-			foreach ($components as $c) {
-				if (file_exists("data/init/".$c->name."/init_data.inc"))
-					include("data/init/".$c->name."/init_data.inc");
+			if (!file_exists("data/init")) {
+				// dev mode
+				foreach ($components as $c) {
+					if (file_exists("component/".$c->name."/init_data.inc"))
+						include("component/".$c->name."/init_data.inc");
+				}
+			} else {
+				// production
+				foreach ($components as $c) {
+					if (file_exists("data/init/".$c->name."/init_data.inc"))
+						include("data/init/".$c->name."/init_data.inc");
+				}
 			}
 			if (PNApplication::hasErrors()) {
 				header("HTTP/1.0 200 Error");
