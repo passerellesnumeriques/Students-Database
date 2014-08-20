@@ -108,6 +108,7 @@ class page_excel_upload extends Page {
 					try {
 						$cell = $sheet->getCellByColumnAndRow($col, $row+1);
 						$val = $cell->getCalculatedValue();
+						$val = "/".$cell->getCalculatedValue()."/".$cell->getFormattedValue()."/".$cell->getCoordinate();
 						if (PHPExcel_Shared_Date::isDateTime($cell) && is_numeric($val)) {
 							$val = PHPExcel_Shared_Date::ExcelToPHPObject($cell->getCalculatedValue());
 							$date = getdate($val->getTimestamp());
@@ -120,7 +121,7 @@ class page_excel_upload extends Page {
 								$val = $val->format("Y-m-d H:i:s"); // date time including seconds
 						} else {
 							try {
-								$val = $cell->getFormattedValue();
+								//$val = $cell->getFormattedValue();
 							} catch (Exception $e) {}
 						}
 						if ($val == "#REF!") $val = $cell->getOldCalculatedValue();
