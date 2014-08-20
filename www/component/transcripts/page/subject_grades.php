@@ -872,6 +872,7 @@ function save() {
 			if (res) {
 				for (var i = 0; i < final_grades.length; ++i)
 					pnapplication.dataSaved("final_grade_student_"+final_grades[i].id);
+				pnapplication.cancelDataUnsaved();
 			}
 			unlock_screen(locker);
 		});
@@ -893,6 +894,7 @@ function save() {
 					for (var j = 0; j < data.students[i].grades.length; ++j)
 						pnapplication.dataSaved("student_"+data.students[i].people+"_grade_"+data.students[i].grades[j].evaluation);
 			}
+			pnapplication.cancelDataUnsaved();
 			unlock_screen(locker);
 		});
 	};
