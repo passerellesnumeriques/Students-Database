@@ -51,6 +51,15 @@ function field_date(data,editable,config) {
 field_date.prototype = new typed_field();
 field_date.prototype.constructor = field_date;		
 field_date.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };
+field_date.prototype.compare = function(v1,v2) {
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	v1 = parseSQLDate(v1);
+	v2 = parseSQLDate(v2);
+	if (v1.getTime() < v2.getTime()) return -1;
+	if (v1.getTime() > v2.getTime()) return 1;
+	return 0;
+};
 field_date.prototype.exportCell = function(cell) {
 	var d = this.getCurrentData();
 	if (d == null)

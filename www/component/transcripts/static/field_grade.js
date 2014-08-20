@@ -15,6 +15,17 @@ function field_grade(data,editable,config) {
 field_grade.prototype = new typed_field();
 field_grade.prototype.constructor = field_grade;		
 field_grade.prototype.canBeNull = function() { return true; };
+field_grade.prototype.compare = function(v1,v2) {
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	v1 = parseFloat(v1);
+	if (isNaN(v1)) return 1;
+	v2 = parseFloat(v2);
+	if (isNaN(v2)) return -1;
+	if (v1 < v2) return -1;
+	if (v1 > v2) return 1;
+	return 0;
+};
 field_grade.prototype.init_system = function() {
 	this.steps = [];
 	var i = this.config.system.indexOf('/');

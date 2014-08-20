@@ -16,6 +16,11 @@ field_text.prototype.canBeNull = function() {
 	if ((typeof this.config.min_length != 'undefined') && this.config.min_length == 0) return true;
 	return false;
 };
+field_text.prototype.compare = function(v1,v2) {
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	return v1.localeCompare(v2);
+};
 field_text.prototype.exportCell = function(cell) {
 	var val = this.getCurrentData();
 	if (val == null)

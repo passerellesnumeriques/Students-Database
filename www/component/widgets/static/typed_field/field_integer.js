@@ -10,6 +10,17 @@ function field_integer(data,editable,config) {
 field_integer.prototype = new typed_field();
 field_integer.prototype.constructor = field_integer;		
 field_integer.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };
+field_integer.prototype.compare = function(v1,v2) {
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	v1 = parseInt(v1);
+	if (isNaN(v1)) return 1;
+	v2 = parseInt(v2);
+	if (isNaN(v2)) return -1;
+	if (v1 < v2) return -1;
+	if (v1 > v2) return 1;
+	return 0;
+};
 field_integer.prototype.exportCell = function(cell) {
 	var val = this.getCurrentData();
 	if (val == null)

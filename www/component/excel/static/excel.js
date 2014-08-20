@@ -661,7 +661,7 @@ function ExcelSheetCell(sheet, column, row) {
 			input.onblur = function() {
 				if (!input) return;
 				t.value.innerHTML = input.value;
-				if (indput.parentNode == document.body)
+				if (input.parentNode == document.body)
 					document.body.removeChild(input);
 				t.td.appendChild(t.value);
 				t.td.ondblclick = event;
@@ -937,10 +937,12 @@ function ExcelSheetCursor(sheet) {
 		this.div.style.top = y+"px";
 		this.div.style.left = x+"px";
 		var w = 0, h = 0;
-		for (var i = this.col_start; i <= this.col_end && i < sheet.columns.length; ++i)
-			w += sheet.columns[i].width+1;
-		for (var i = this.row_start; i <= this.row_end && i < sheet.rows.length; ++i)
-			h += sheet.rows[i].height+1;
+		for (var i = this.col_start; i <= this.col_end; ++i)
+			if (sheet.columns[i])
+				w += sheet.columns[i].width+1;
+		for (var i = this.row_start; i <= this.row_end; ++i)
+			if (sheet.rows[i])
+				h += sheet.rows[i].height+1;
 		w-=3; h-=3;
 		this.div.style.width = w+"px";
 		this.div.style.height = h+"px";

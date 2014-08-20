@@ -11,6 +11,17 @@ field_timestamp.prototype.canBeNull = function() {
 	if (this.config.can_be_null) return true;
 	return false;
 };
+field_timestamp.prototype.compare = function(v1,v2) {
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	v1 = parseInt(v1);
+	if (isNaN(v1)) return 1;
+	v2 = parseInt(v2);
+	if (isNaN(v2)) return -1;
+	if (v1 < v2) return -1;
+	if (v1 > v2) return 1;
+	return 0;
+};
 field_timestamp.prototype.exportCell = function(cell) {
 	var t = this.getCurrentData();
 	if (t == null)

@@ -198,7 +198,9 @@ for (var i = 0; i < categories.length; ++i) {
 		title.appendChild(span_coef);
 		title.span_coef = span_coef;
 		var sg = getSubjectGrading(cat_subjects[j].id);
-		columns.push(new CustomDataGridColumn(new GridColumn("subject"+cat_subjects[j].id,title,null,"center","field_grade",false,null,null,{max:sg ? sg.max_grade : 1,passing:sg ? sg.passing_grade : 0.5,system:<?php echo json_encode($grading_systems[$grading_system]);?>}),function(people,subject_id){return getStudentGrade(people.id,subject_id);},true,cat_subjects[j].id,cat_subjects[j].name));
+		var col = new GridColumn("subject"+cat_subjects[j].id,title,null,"center","field_grade",false,null,null,{max:sg ? sg.max_grade : 1,passing:sg ? sg.passing_grade : 0.5,system:<?php echo json_encode($grading_systems[$grading_system]);?>});
+		col.addSorting();
+		columns.push(new CustomDataGridColumn(col,function(people,subject_id){return getStudentGrade(people.id,subject_id);},true,cat_subjects[j].id,cat_subjects[j].name));
 	}
 	grades_grid.addColumnContainer(new CustomDataGridColumnContainer(categories[i].name, columns));
 }

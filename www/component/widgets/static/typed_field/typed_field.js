@@ -115,6 +115,9 @@ typed_field.prototype = {
 	},
 	getPossibleValues: undefined,
 	createValue: undefined, // function(value, name, oncreated)
+	compare: function(v1,v2) {
+		return (""+v1).localeCompare(""+v2);
+	},
 	/**
 	 *  change data
 	 *  @param data new data value

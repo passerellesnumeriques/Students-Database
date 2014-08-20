@@ -153,21 +153,40 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	};
 
 	this.addSorting = function(sort_function) {
-		this.sort_order = 3; // not sorted
+		if (!sort_function) {
+			var t=this;
+			require([["typed_field.js",field_type+".js"]], function() {
+				if (!window[field_type].prototype.compare) return;
+				t.addSorting(window[field_type].prototype.compare);
+			});
+			return;
+		}
+		if (!this.sort_order)
+			this.sort_order = 3; // not sorted
 		this.sort_function = sort_function;
 		var t=this;
 		this.onclick.add_listener(function(){
 			var new_sort = t.sort_order == 1 ? 2 : 1;
 			t._onsort(new_sort);
 		});
+		this._refresh_title();
 	};
 	this.addExternalSorting = function(handler) {
-		this.sort_order = 3; // not sorted
+		if (!this.sort_order)
+			this.sort_order = 3; // not sorted
 		this.sort_handler = handler;
 		this.onclick.add_listener(function(){
 			var new_sort = t.sort_order == 1 ? 2 : 1;
 			t._onsort(new_sort);
 		});
+	};
+	this.sort = function(asc) {
+		if (!this.sort_function && !this.sort_handler) {
+			var t=this;
+			setTimeout(function(){t.sort(asc);},25);
+			return;
+		};
+		this._onsort(asc ? 1 : 2);
 	};
 	
 	this.addFiltering = function() {
@@ -321,12 +340,10 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			}
 		}
 		if (this.sort_function) {
-			// remove all rows
+			// get all rows
 			var rows = [];
-			while (this.grid.table.childNodes.length > 0) {
-				rows.push(this.grid.table.childNodes[0]);
-				this.grid.table.removeChild(this.grid.table.childNodes[0]);
-			}
+			for (var i = 0; i < this.grid.table.childNodes.length; ++i)
+				rows.push(this.grid.table.childNodes[i]);
 			// call sort function
 			var t=this;
 			var col_index = t.grid.columns.indexOf(t);
@@ -340,9 +357,11 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				if (sort_order == 2) res = -res;
 				return res;
 			});
-			// put back rows in the new order
-			for (var i = 0; i < rows.length; ++i)
-				this.grid.table.appendChild(rows[i]);
+			// order rows
+			for (var i = 0; i < rows.length; ++i) {
+				if (this.grid.table.childNodes[i] == rows[i]) continue;
+				this.grid.table.insertBefore(rows[i], this.grid.table.childNodes[i]);
+			}
 		} else
 			this.sort_handler(sort_order);
 		
@@ -966,7 +985,29 @@ function grid(element) {
 				td.className = data.css;
 			td.ondomremoved(function(td) { td.field = null; td.col_id = null; td.data_id = null; });
 		}
-		t.table.appendChild(tr);
+		// check if sorted or not
+		var sorted = false;
+		for (var i = 0; i < t.columns.length; ++i)
+			if (t.columns[i].sort_function && t.columns[i].sort_order != 3) {
+				var new_data = null;
+				for (var col = 0; col < row_data.length; ++col)
+					if (row_data[col].col_id == t.columns[i].id) { new_data = row_data[col].data; break; }
+				for (var row = 0; row < t.table.childNodes.length; ++row) {
+					var rdata = t.table.childNodes[row].row_data;
+					if (!rdata) continue;
+					var data = null;
+					for (var col = 0; col < rdata.length; ++col)
+						if (rdata[col].col_id == t.columns[i].id) { data = rdata[col].data; break; }
+					if (t.columns[i].sort_function(new_data, data) < 0) {
+						sorted = true;
+						t.table.insertBefore(tr, t.table.childNodes[row]);
+						break;
+					}
+				}
+				break;
+			}
+		if (!sorted)
+			t.table.appendChild(tr);
 		layout.invalidate(t.element);
 		tr.ondomremoved(function(tr) { tr.row_data = null; });
 		return tr;
