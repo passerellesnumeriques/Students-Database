@@ -41,7 +41,7 @@ foreach ($current_batches as $b) {
 	<img src='/static/calendar/calendar_white.png'/>
 	Years and Periods
 </a>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/curriculum/page/curriculum'>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/curriculum/page/curriculum'>
 	<img src='/static/curriculum/curriculum_white.png'/>
 	Curriculum
 </a>
@@ -76,21 +76,21 @@ foreach ($current_batches as $b) {
 </a>
 <?php } ?>
 <?php if (PNApplication::$instance->user_management->has_right("consult_students_grades")) { ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/students_grades'>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/students_grades'>
 	<img src='/static/transcripts/grades_white.png'/>
 	Grades
 </a>
-<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/subject_grades' alternate_hrefs='/dynamic/transcripts/page/subject_grades'>
+<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/subject_grades' alternate_hrefs='/dynamic/transcripts/page/subject_grades'>
 	<img src='/static/curriculum/curriculum_white.png'/>
 	By subject
 </a>
 <?php if (PNApplication::$instance->user_management->has_right("edit_transcripts_design")) { ?>
-<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/configure_transcripts'>
+<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/configure_transcripts'>
 	<img src='<?php echo theme::$icons_16["config_white"];?>'/>
 	Design transcripts
 </a>
 <?php } ?>
-<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/transcripts'>
+<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/transcripts'>
 	<img src='/static/transcripts/transcript_white.png'/>
 	Transcripts
 </a>

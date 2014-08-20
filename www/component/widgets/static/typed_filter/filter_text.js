@@ -36,6 +36,10 @@ function filter_text(data, config, editable) {
 		},1);
 	};
 	
+	this.isActive = function() {
+		return input.value.trim().length > 0;
+	};
+	
 	this.focus = function() {
 		input.focus();
 	};

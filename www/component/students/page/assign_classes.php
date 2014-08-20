@@ -45,7 +45,7 @@ class page_assign_classes extends Page {
 				// specialized period
 				foreach ($specializations as $spe) {
 					$list_students = array();
-					foreach ($students as $s) if ($s["specialization"] == $spe["id"]) array_push($list_students, $s);
+					foreach ($students as &$s) if ($s["specialization"] == $spe["id"]) array_push($list_students, $s);
 					$list_classes = array();
 					foreach ($classes as $cl) if ($cl["specialization"] == $spe["id"]) array_push($list_classes, $cl);
 					array_push($sections, array($spe["name"],$list_classes,$list_students));
@@ -72,7 +72,7 @@ class page_assign_classes extends Page {
 				$students = $q_students->execute();
 			}
 			$students_ids = array();
-			foreach ($students as $s) array_push($students_ids, $s["people"]);
+			foreach ($students as &$s) array_push($students_ids, $s["people"]);
 			// get class assignment
 			if (count($students) > 0) {
 				$q = SQLQuery::create()->select("StudentClass");
