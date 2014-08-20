@@ -38,7 +38,7 @@ class page_configure_transcripts extends Page {
 		}
 		DataBaseLock::generateScript($lock_id);
 		
-		if (count($spes) == 0) {
+		if (count($spes) == 0 || $spe == null) {
 			if ($config === null) {
 				$selected_subjects = PNApplication::$instance->curriculum->getSubjects($period["batch"], $period["id"]);
 				$insert = array();
@@ -130,6 +130,7 @@ class page_configure_transcripts extends Page {
 				foreach ($all_subjects as $s) {
 					if ($s["category"] <> $cat["id"]) continue;
 					if ($s["period"] <> $period["id"]) continue;
+					if ($spe <> null && $s["specialization"] <> null && $s["specialization"] <> $spe["id"]) continue;
 					echo "<div style='white-space:nowrap'>";
 					echo "<input type='checkbox' onchange='changeSubject(".$s["id"].",this.checked);'";
 					foreach ($selected_subjects as $ss) if ($s["id"] == $ss["id"]) { echo " checked='checked'"; break; }

@@ -6,7 +6,10 @@ if (!file_exists(dirname(__FILE__)."/install_config.inc")) {
 include("install_config.inc");
 #DEV
 function component_auto_loader($classname) {
-	require_once("component/".$classname."/".$classname.".inc");
+	if ($classname == "DevRequest")
+		require_once("component/development/development.inc");
+	else
+		require_once("component/".$classname."/".$classname.".inc");
 }
 #END
 

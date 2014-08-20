@@ -131,7 +131,7 @@ class page_subject_grades extends Page {
 		
 		// get all subjects and classes available to switch
 		$all_subjects = PNApplication::$instance->curriculum->getSubjects($batch["id"], $period["id"], $spe <> null ? $spe["id"] : null);
-		$all_classes = PNApplication::$instance->curriculum->getAcademicClasses($batch["id"], $period["id"], $spe <> null ? $spe["id"] : null);
+		$all_classes = PNApplication::$instance->curriculum->getAcademicClasses($batch["id"], $period["id"], $subject["specialization"] == null ? false : $subject["specialization"]);
 		
 		// grading systems
 		$grading_systems = include("component/transcripts/GradingSystems.inc");

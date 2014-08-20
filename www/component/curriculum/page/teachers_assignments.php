@@ -41,7 +41,7 @@ class page_teachers_assignments extends Page {
 		require_once("AcademicPeriod.inc");
 		$ap = $academic_period <> null ? new AcademicPeriod($academic_period) : null;
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+		$can_edit = isset($_GET["edit"]) && PNApplication::$instance->user_management->has_right("edit_curriculum");
 		
 		$locked_by = null;
 		if ($can_edit) {
@@ -61,6 +61,15 @@ class page_teachers_assignments extends Page {
 		<div class='page_title' style='flex:none'>
 			<img src='/static/curriculum/teacher_assign_32.png'/>
 			Teachers Assignments
+			<?php 
+			if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
+				if ($can_edit) {
+					echo "<button onclick=\"var u = new window.URL(location.href);delete u.params.edit;location.href=u.toString();\" class='action'><img src='".theme::$icons_16["no_edit"]."'/>Stop Editing</button>";
+				} else {
+					echo "<button onclick=\"var u = new window.URL(location.href);u.params.edit = 'true';location.href=u.toString();\" class='action'><img src='".theme::$icons_16["edit"]."'/>Edit</button>";
+				}
+			}
+			?>
 		</div>
 		<?php
 		if ($ap == null) {
@@ -87,8 +96,8 @@ class page_teachers_assignments extends Page {
 			$can_edit = false;
 		} 
 		?>
-		<div style="flex:1 1 auto;overflow:auto;display:flex;flex-direction:row">
-		<div style="flex:1 1 auto">
+		<div style="flex:1 1 auto;display:flex;flex-direction:row">
+		<div style="flex:1 1 auto;overflow:auto;">
 		<?php 
 		if ($ap <> null)
 		foreach ($ap->batch_periods as $bp) {
@@ -143,7 +152,7 @@ class page_teachers_assignments extends Page {
 		}
 		?>
 		</div>
-		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
+		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white;overflow:auto;' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
 		<div style='background-color:white'>
 		<?php $id = $this->generateID();?>
 		<table class='teachers_table'><tbody id='<?php echo $id;?>'>

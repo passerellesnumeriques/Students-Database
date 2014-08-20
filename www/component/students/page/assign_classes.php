@@ -98,7 +98,8 @@ class page_assign_classes extends Page {
 		$this->requireJavascript("assign_elements.js");
 		$this->requireJavascript("section.js");
 		?>
-		<div id='top_container' style='width:100%;height:100%;overflow-x:auto'>
+		<div style='width:100%;height:100%;overflow-x:auto;display:flex;flex-direction:column;'>
+		<div id='top_container' style='display:flex;flex-direction:row;flex:1 1 auto;'></div> 
 		</div>
 		<script type='text/javascript'>
 		var popup = window.parent.get_popup_window_from_frame(window);
@@ -139,11 +140,11 @@ class page_assign_classes extends Page {
 			$students = $section[2];
 			if ($section_name <> null) {
 				echo "container = document.createElement('DIV');\n";
-				echo "container.style.height = '100%';\n";
+				//echo "container.style.height = '100%';\n";
 				echo "container.style.backgroundColor = '#f0f0f0';\n";
 				echo "sec = new section(null,".json_encode($section_name).",container,false,true);\n";
-				echo "sec.element.style.display = 'inline-block';\n";
-				echo "sec.element.style.margin = '5px';\n";
+				//echo "sec.element.style.display = 'inline-block';\n";
+				//echo "sec.element.style.margin = '5px';\n";
 				echo "document.getElementById('top_container').appendChild(sec.element);\n";
 			} else
 				echo "container = document.getElementById('top_container');\n";

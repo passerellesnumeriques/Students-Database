@@ -286,13 +286,13 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			case 3: // not sorted yet
 				this.span_actions.appendChild(create_action_image(
 					url+"/arrow_up_10.gif",
-					"Sort by descending order",
-					function() { t._onsort(2); }
+					"Sort by ascending order",
+					function() { t._onsort(1); }
 				));
 				this.span_actions.appendChild(create_action_image(
 					url+"/arrow_down_10.gif",
-					"Sort by ascending order",
-					function() { t._onsort(1); }
+					"Sort by descending order",
+					function() { t._onsort(2); }
 				));
 				break;
 			}

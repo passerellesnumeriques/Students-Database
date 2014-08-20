@@ -1,6 +1,33 @@
 function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	this.element = document.createElement("TABLE");
 	var tr,td;
+	var spes = getPeriodSpecializations(subject.period_id);
+	if (spes.length > 0) {
+		this.element.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td = document.createElement("TD"));
+		td.colSpan = 2;
+		this.radios_spes = [];
+		for (var i = 0; i < spes.length; ++i) {
+			var radio = document.createElement("INPUT");
+			radio.name = 'spe';
+			radio.type = 'radio';
+			radio.value = spes[i];
+			if (subject.specialization_id == spes[i]) radio.checked = 'checked';
+			this.radios_spes.push(radio);
+			td.appendChild(radio);
+			td.appendChild(document.createTextNode(" only for Specialization "+getSpecializationName(spes[i])));
+			td.appendChild(document.createElement("BR"));
+		}
+		var radio = document.createElement("INPUT");
+		radio.name = 'spe';
+		radio.type = 'radio';
+		radio.value = 0;
+		if (subject.specialization_id == null) radio.checked = 'checked';
+		this.radios_spes.push(radio);
+		td.appendChild(radio);
+		td.appendChild(document.createTextNode(" common to all specializations"));
+		td.appendChild(document.createElement("BR"));
+	}
 	this.element.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TD"));
 	td.innerHTML = "Code";
@@ -167,9 +194,19 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 			} else
 				this._error(this.tr_coef_error, null);
 		}
+		//specializations
+		var spe_id = null;
+		if (this.radios_spes) {
+			for (var i = 0; i < this.radios_spes.length; ++i)
+				if (this.radios_spes[i].checked) {
+					if (this.radios_spes[i].value > 0)
+						spe_id = this.radios_spes[i].value;
+					break;
+				}
+		}
 		layout.invalidate(this.element);
 		onvalidation(ok);
-		return new CurriculumSubject(subject.id, code, name, subject.category_id, subject.period_id, subject.specialization_id, hours, hours_type, coef);
+		return new CurriculumSubject(subject.id, code, name, subject.category_id, subject.period_id, spe_id, hours, hours_type, coef);
 	};
 	this.validate();
 	

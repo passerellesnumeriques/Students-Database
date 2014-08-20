@@ -157,7 +157,7 @@ class service_what_to_do_for_batch extends Service {
 									}
 							}
 							if (count($students) > 0) {
-								echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class in specialization ".htmlentites($this->getSpecializationName($spe_id))." for period ".htmlentities($p[0]["name"])." of batch ".htmlentities($this->getBatchName())."<br/>";
+								echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class in specialization ".htmlentities($this->getSpecializationName($spe_id))." for period ".htmlentities($p[0]["name"])." of batch ".htmlentities($this->getBatchName())."<br/>";
 							}
 						}
 					}

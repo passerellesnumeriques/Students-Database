@@ -122,7 +122,7 @@ class AcademicPeriod {
 	public function getSubjectsFor($batch_period_id, $spe_id) {
 		$list = array();
 		foreach ($this->subjects as $s)
-			if ($s["period"] == $batch_period_id && $s["specialization"] == $spe_id)
+			if ($s["period"] == $batch_period_id && ($s["specialization"] == null || $s["specialization"] == $spe_id))
 				array_push($list, $s);
 		return $list;
 	}
