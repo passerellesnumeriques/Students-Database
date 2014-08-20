@@ -2,7 +2,7 @@ function initLab(){
      
       $("#lab_button").click(function(){
     
-    /* Step 3 : getting a data from the server using a service */
+    /* Lab1: getting a data from the server using a service */
     
     
     var name="Anna";
@@ -18,7 +18,7 @@ function initLab(){
       });
       
       
-      /* Lab 2 (DataDisplay) : just a simple datalist */
+      /* Lab 2 (DataDisplay) : a simple datalist */
         var dl=new data_list(
                    "lab_list",
                    "LabPeople", null,
@@ -35,8 +35,8 @@ function initLab(){
                    -1,
                    function(list) {
                     // once the data_list has been created we can do things here
+                    list.setTitle('<b>Lab 2 : DataDisplay. Example with data_list</b>');
                    }
            );
         
-        dl.setTitle('<b>Lab 2 (DataDisplay) . Example with data_list</b>');
 }

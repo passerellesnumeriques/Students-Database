@@ -34,8 +34,10 @@ $model->addTableDataDisplay($display);
 /* LabFootballPlayer Display */
 $display = new datamodel\TableDataDisplay("LabFootballPlayer", $category);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("position", "Field Position"));
-$display->addFollowAll();// Allow join towards other tables 
-$display->addJoinFromAll(); // Allow join from other tables 
+$display->addFollow("team");// Allow join towards LabFootballTeam table
+$display->addJoinFrom("people"); // Allow join from labPeople table
+/* note : if you want to allow joining/following for any tables use addFollowAll/addJoinFromAll */
+
 $model->addTableDataDisplay($display);
 
 
