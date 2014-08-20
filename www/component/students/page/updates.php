@@ -7,12 +7,12 @@ class page_updates extends Page {
 		$batches = null;
 		if (isset($_GET["batches"])) {
 			if ($_GET["batches"] == "current") {
-				$title = "Current Students";
+				$title = "for Current Students";
 				$list = PNApplication::$instance->curriculum->getCurrentBatches();
 				$batches = array();
 				foreach ($list as $b) array_push($batches, $b["id"]);
 			} else if ($_GET["batches"] == "alumni") {
-				$title = "Alumni";
+				$title = "for Alumni";
 				$list = PNApplication::$instance->curriculum->getAlumniBatches();
 				$batches = array();
 				foreach ($list as $b) array_push($batches, $b["id"]);
@@ -22,7 +22,7 @@ class page_updates extends Page {
 			$batches = array($_GET["batch"]);
 			$batch = PNApplication::$instance->curriculum->getBatch($_GET["batch"]);
 			$id = $this->generateID();
-			$title = "Batch <span id='$id'>".htmlentities($batch["name"])."</span>";
+			$title = "for Batch <span id='$id'>".htmlentities($batch["name"])."</span>";
 			$this->onload("window.top.datamodel.registerCellSpan(window, 'StudentBatch', 'name', ".$batch["id"].", document.getElementById('$id'));");
 		}
 		
@@ -70,7 +70,10 @@ class page_updates extends Page {
 			$tags .= "]";
 		} else {
 			$tags = "null";
-			$title = "All Students";
+			if (PNApplication::$instance->user_management->has_right("consult_students_list"))
+				$title = "for All Students";
+			else
+				$title = "";
 		}
 		
 		$this->addJavascript("/static/news/news.js");
@@ -78,21 +81,36 @@ class page_updates extends Page {
 		<div id='page' style='width:100%;height:100%;display:flex;flex-direction:column;'>
 			<div class='page_title' style='flex:none;'>
 				<img src='/static/news/news_32.png'/>
-				Updates for <?php echo $title;?>
+				Updates <?php echo $title;?>
 				<?php if (PNApplication::$instance->news->canPostInSection("students")) { ?>
 				<button class='flat icon' title='Post a message' onclick="postMessage();"><img src='/static/news/write_24.png'/></button>
 				<?php } ?>
 			</div>
-			<div id='news_container' style='flex:1 1 auto;overflow:auto;padding:10px;'></div>
+			<div style='flex:1 1 auto;display:flex;flex-direction:row;overflow:auto;'>
+				<div style='flex:1 1 auto;'>
+					<div class='page_section_title2' style='background-color:white'>Updates</div>
+					<div id='updates_container' style='padding:5px'></div>
+				</div>
+				<div style='flex:1 1 auto;'>
+					<div class='page_section_title2' style='background-color:white'>Activities</div>
+					<div id='activities_container' style='padding:5px'></div>
+				</div>
+			</div>
 		</div>
 		<script>
 		var sections = [{name:"students",categories:null,tags:<?php echo $tags?>}];
 		var exclude = [];
-		var news_obj = new news('news_container',sections,exclude,function(n){
+		var updates = new news('updates_container',sections,exclude,'update',function(n){
+		},function(starts){
+		});
+		var activities = new news('activities_container',sections,exclude,'activity',function(n){
 		},function(starts){
 		});
 		function postMessage() {
-			news_obj.post('students',null,<?php echo $post_tags;?>);
+			var div = document.createElement("DIV");
+			div.className = "info_box";
+			div.innerHTML = "<img src='"+theme.icons_16.info+"' style='vertical-align:bottom'/> Messages without category are visible by students:<ul><li>If it is not related to any batch, all students will see it</li><li>Else only students of the selected batches will see it</li></ul>Other messages are not visible by students";
+			updates.post('students',null,<?php echo $post_tags;?>,div);
 		}
 		</script>
 		<?php 

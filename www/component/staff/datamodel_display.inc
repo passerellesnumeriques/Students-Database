@@ -18,11 +18,14 @@ class StaffPositionDataDisplay extends datamodel\DataDisplay {
 	public function isSortable() { return false; }
 	public function isMandatory($sub_model) { return false; }
 	
-	public function buildSQL(&$q, $path, $filters) {
+	public function buildSQL(&$q, $path) {
 		return array("key"=>$q->getFieldAlias("People", "id"),"data"=>null);
 	}
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		return null;
+	}
 	
-	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$ids = array();
 		foreach ($rows as $row) array_push($ids, $row[$sql_aliases["key"]]);
 		if (count($ids) == 0) return;
@@ -56,11 +59,14 @@ class StaffDepartmentDataDisplay extends datamodel\DataDisplay {
 	public function isSortable() { return false; }
 	public function isMandatory($sub_model) { return false; }
 
-	public function buildSQL(&$q, $path, $filters) {
+	public function buildSQL(&$q, $path) {
 		return array("key"=>$q->getFieldAlias("People", "id"),"data"=>null);
 	}
-
-	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path, $filters) {
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		return null;
+	}
+	
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$ids = array();
 		foreach ($rows as $row) array_push($ids, $row[$sql_aliases["key"]]);
 		if (count($ids) == 0) return;

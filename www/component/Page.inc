@@ -159,7 +159,7 @@ abstract class Page {
 			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1].";this._loaded=true;'>";
 			echo "</script>";
 		}
-		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.invalidate(window.document.body); this._loaded = true;'/>";
+		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.invalidate(window.document.body); this._loaded = true;' media='all'/>";
 		pageHeaderEnd($this->onload);
 	}
 
@@ -225,7 +225,7 @@ function pageHeaderStart() {
 	if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search+location.hash);};
 	</script>
 	<script type="text/javascript" src="/static/javascript/utils.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/javascript/lib_jquery/jquery-1.11.1.min.js" onload="this._loaded=true;"></script>
+	<script type="text/javascript" src="/static/javascript/lib_jquery/jquery.min.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript" src="/static/javascript/browser.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript" src="/static/javascript/utils_js.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript" src="/static/javascript/utils_html.js" onload="this._loaded=true;"></script>
@@ -241,7 +241,7 @@ function pageHeaderStart() {
 	<script type="text/javascript" src="/static/data_model/databaselock.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript">
 	javascript_loaded("/static/javascript/utils.js");
-	javascript_loaded("/static/javascript/lib_jquery/jquery-1.11.1.min.js");
+	javascript_loaded("/static/javascript/lib_jquery/jquery.min.js");
 	javascript_loaded("/static/javascript/browser.js");
 	javascript_loaded("/static/javascript/utils_js.js");
 	javascript_loaded("/static/javascript/utils_html.js");

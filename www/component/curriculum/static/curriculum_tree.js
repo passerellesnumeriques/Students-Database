@@ -19,6 +19,12 @@ function _initCurriculumTreeNode(node) {
 	node.item.node = node;
 	node.item.setOnSelect(function() { node._onselect(); });
 	node.parent.item.addItem(node.item);
+	window.to_cleanup.push(node);
+	node.cleanup = function() {
+		this.item.node = null;
+		this.item = null;
+		this.parent = null;
+	};
 }
 CurriculumTreeNode.prototype = {
 	/** {CurriculumTreeNode} parent node */
@@ -50,7 +56,8 @@ CurriculumTreeNode.prototype = {
 		layout.invalidate(document.getElementById('tree_footer').parentNode);
 		
 		// make sure it is visible (scroll if necessary)
-		scrollToSee(this.item.tr);
+		if (this.item.tr)
+			scrollToSee(this.item.tr);
 		
 		// Update frame
 		nodeSelected(this);

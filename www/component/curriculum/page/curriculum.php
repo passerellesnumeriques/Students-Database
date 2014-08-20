@@ -1,29 +1,43 @@
 <?php 
 class page_curriculum extends Page {
 	
-	public function getRequiredRights() { return array("consult_curriculum"); }
+	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		if (!isset($_GET["batch"])) {
-			echo "<img src='".theme::$icons_16["info"]."'/> ";
-			echo "Please select a batch, an academic period, or a class, to display its curriculum";
-			return;
-		}
-		if (isset($_GET["period"])) {
-			$period_id = $_GET["period"];
-			$single_period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
-			$batch_id = $single_period["batch"];
-			$start_date = $single_period["start"];
-			$end_date = $single_period["end"];
-			$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
-			$periods = array($single_period);
-		} else {
-			$batch_id = $_GET["batch"];
+		if (!PNApplication::$instance->user_management->has_right("consult_curriculum")) {
+			if (!in_array("student",PNApplication::$instance->user_management->people_types)) {
+				PNApplication::error("Access denied");
+				return;
+			}
+			$student = PNApplication::$instance->students->getStudent(PNApplication::$instance->user_management->people_id);
+			$batch_id = $student["batch"];
 			$period_id = null;
 			$periods = PNApplication::$instance->curriculum->getBatchPeriodsWithAcademicPeriods($batch_id);
 			$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
 			$start_date = $batch_info["start_date"];
 			$end_date = $batch_info["end_date"];
+		} else {
+			if (!isset($_GET["batch"])) {
+				echo "<img src='".theme::$icons_16["info"]."'/> ";
+				echo "Please select a batch, an academic period, or a class, to display its curriculum";
+				return;
+			}
+			if (isset($_GET["period"])) {
+				$period_id = $_GET["period"];
+				$single_period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
+				$batch_id = $single_period["batch"];
+				$start_date = $single_period["academic_period_start"];
+				$end_date = $single_period["academic_period_end"];
+				$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
+				$periods = array($single_period);
+			} else {
+				$batch_id = $_GET["batch"];
+				$period_id = null;
+				$periods = PNApplication::$instance->curriculum->getBatchPeriodsWithAcademicPeriods($batch_id);
+				$batch_info = PNApplication::$instance->curriculum->getBatch($batch_id);
+				$start_date = $batch_info["start_date"];
+				$end_date = $batch_info["end_date"];
+			}
 		}
 		
 		$periods_ids = array();
@@ -32,6 +46,7 @@ class page_curriculum extends Page {
 		
 		$categories = PNApplication::$instance->curriculum->getSubjectCategories();
 		$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id);
+		$specializations = PNApplication::$instance->curriculum->getSpecializations();
 		
 		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
 		
@@ -201,7 +216,13 @@ class page_curriculum extends Page {
 						}
 						foreach ($categories as $cat) {
 							// Category
-							$cat_id = $this->generateID();
+							$cat_subjects = array();
+							foreach ($subjects as $s)
+								if ($s["period"] == $period["id"] && $s["category"] == $cat["id"] && ($s["specialization"] == null || ($spe <> null && $s["specialization"] == $spe["id"])))
+									array_push($cat_subjects, $s);
+							if (count($cat_subjects) == 0 && !$editing) continue;
+							$cat_id = 'cat_'.$cat["id"].'_period_'.$period['id'];
+							if ($spe <> null) $cat_id .= '_spe_'.$spe["id"];
 							echo "<tr id='$cat_id'>";
 							echo "<td colspan=4 class='category_title' style='padding-left:".(10+$indent*20)."px'>";
 							echo "<img src='/static/curriculum/subjects_16.png'/> ";
@@ -215,10 +236,6 @@ class page_curriculum extends Page {
 							}
 							echo "</td>";
 							echo "</tr>";
-							$cat_subjects = array();
-							foreach ($subjects as $s)
-								if ($s["period"] == $period["id"] && $s["category"] == $cat["id"] && ($spe == null || $s["specialization"] == $spe["id"]))
-									array_push($cat_subjects, $s);
 							foreach ($cat_subjects as $s) {
 								// Subject
 								$script_init .= "addSubjectRow(document.getElementById('$cat_id'),".CurriculumJSON::SubjectJSON($s).");\n";
@@ -277,12 +294,32 @@ class page_curriculum extends Page {
 			echo "{";
 			echo "id:".$period["id"];
 			echo ",academic_period:".$period["academic_period"];
-			echo ",weeks:".$period["weeks"];
-			echo ",weeks_break:".$period["weeks_break"];
+			echo ",weeks:".$period["academic_period_weeks"];
+			echo ",weeks_break:".$period["academic_period_weeks_break"];
+			echo ",specializations:[";
+			$first_spe = true;
+			foreach ($periods_spes as $ps)
+				if ($ps["period"] == $period["id"]) {
+					if ($first_spe) $first_spe = false; else echo ",";
+					echo $ps["id"];
+				}
+			echo "]";
 			echo "}";
 		}
 		?>];
 		var subjects = <?php echo CurriculumJSON::SubjectsJSON($subjects);?>;
+		var specializations = <?php echo json_encode($specializations);?>;
+
+		function getPeriodSpecializations(period_id) {
+			for (var i = 0; i < periods.length; ++i)
+				if (periods[i].id == period_id) return periods[i].specializations;
+			return [];
+		}
+		function getSpecializationName(id) {
+			for (var i = 0; i < specializations.length; ++i)
+				if (specializations[i].id == id) return specializations[i].name;
+			return null;
+		}
 
 		function hoursFloat(s) {
 			s = s.toFixed(2);
@@ -469,7 +506,7 @@ class page_curriculum extends Page {
 						table: "CurriculumSubject",
 						field_period: period_id,
 						field_category: category_id,
-						field_specialization: spe_id,
+						field_specialization: subject.specialization_id,
 						field_code: subject.code,
 						field_name: subject.name,
 						field_hours: subject.hours,
@@ -480,6 +517,13 @@ class page_curriculum extends Page {
 						if (res && res.key) {
 							subject.id = res.key;
 							popup.close();
+							if (subject.specialization_id == null) {
+								var spes = getPeriodSpecializations(subject.period_id);
+								if (spes.length > 0) {
+									location.reload();
+									return;
+								}
+							}
 							subjects.push(subject);
 							addSubjectRow(cat_row,subject);
 						}
@@ -519,7 +563,8 @@ class page_curriculum extends Page {
 						field_name: ns.name,
 						field_hours: ns.hours,
 						field_hours_type: ns.hours_type,
-						field_coefficient: ns.coefficient
+						field_coefficient: ns.coefficient,
+						field_specialization: ns.specialization_id
 					},function(res){
 						popup.unfreeze();
 						if (res && res.key) {
@@ -530,9 +575,13 @@ class page_curriculum extends Page {
 							subject.hours = ns.hours;
 							subject.hours_type = ns.hours_type;
 							subject.coefficient = ns.coefficient; 
-							var new_row = createSubjectRow(cat_row, subject);
-							row.parentNode.insertBefore(new_row, row);
-							row.parentNode.removeChild(row);
+							if (subject.specialization_id == ns.specialization_id) {
+								var new_row = createSubjectRow(cat_row, subject);
+								row.parentNode.insertBefore(new_row, row);
+								row.parentNode.removeChild(row);
+							} else {
+								location.reload();
+							}
 						}
 					});
 				});

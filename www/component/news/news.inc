@@ -16,7 +16,7 @@ class news extends Component {
 		return false;
 	}
 	
-	public function post($section, $category, $tags, $message) {
+	public function post($section, $category, $tags, $type, $message) {
 		require_once("NewsPlugin.inc");
 		$found = false;
 		foreach (PNApplication::$instance->components as $c) {
@@ -59,7 +59,8 @@ class news extends Component {
 				"username"=>PNApplication::$instance->user_management->username,
 				"timestamp"=>$now,
 				"update_timestamp"=>$now,
-				"tags"=>$s
+				"tags"=>$s,
+				"type"=>$type
 			));
 		} catch (Exception $e) {
 			PNApplication::error($e);
@@ -112,7 +113,8 @@ class news extends Component {
 				"username"=>PNApplication::$instance->user_management->username,
 				"timestamp"=>$now,
 				"update_timestamp"=>$now,
-				"tags"=>null
+				"tags"=>null,
+				"type"=>$parent["type"]
 			));
 			// update time of parent
 			SQLQuery::create()->bypassSecurity()->updateByKey("News", $parent_id, array("update_timestamp"=>$now));

@@ -10,7 +10,16 @@ field_timestamp.prototype.canBeNull = function() {
 	if (!this.config) return true;
 	if (this.config.can_be_null) return true;
 	return false;
-};		
+};
+field_timestamp.prototype.exportCell = function(cell) {
+	var t = this.getCurrentData();
+	if (t == null)
+		cell.value = "";
+	else {
+		cell.value = t;
+		cell.format = "timestamp";
+	}
+};
 field_timestamp.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;

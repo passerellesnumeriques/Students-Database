@@ -12,8 +12,8 @@ function debug_status(container) {
 		service.json("development","get_debug_info",{},function(result){
 			require(["popup_window.js","tabs.js"],function(){
 				var content = document.createElement("DIV");
-				content.style.width = (getWindowWidth()-50)+"px";
-				content.style.height = (getWindowHeight()-50)+"px";
+				//content.style.width = (getWindowWidth()-50)+"px";
+				//content.style.height = (getWindowHeight()-50)+"px";
 				var tabs_control = new tabs(content, false);
 				var tab, table, tr, td;
 				
@@ -21,7 +21,7 @@ function debug_status(container) {
 				tab = document.createElement("DIV");
 				tab.style.width = "100%";
 				tab.style.height = "100%";
-				tab.style.overflow = "auto";
+				//tab.style.overflow = "auto";
 				table = document.createElement("TABLE");
 				table.style.border = '1px solid black';
 				table.style.borderCollapse = 'collapse';
@@ -66,7 +66,7 @@ function debug_status(container) {
 				tab = document.createElement("DIV");
 				tab.style.width = "100%";
 				tab.style.height = "100%";
-				tab.style.overflow = "auto";
+				//tab.style.overflow = "auto";
 				table = document.createElement("TABLE");
 				table.style.border = '1px solid black';
 				table.style.borderCollapse = 'collapse';
@@ -151,7 +151,7 @@ function debug_status(container) {
 				tab = document.createElement("DIV");
 				tab.style.width = "100%";
 				tab.style.height = "100%";
-				tab.style.overflow = "auto";
+				//tab.style.overflow = "auto";
 				table = document.createElement("TABLE");
 				table.style.border = '1px solid black';
 				table.style.borderCollapse = 'collapse';

@@ -152,34 +152,37 @@ class Backup {
 		require_once("SQLQuery.inc");
 		$model = DataModel::get();
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		$res = $db->execute("CREATE DATABASE IF NOT EXISTS students_".$local_domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
-		$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = 'students_$local_domain'");
-		$db->execute("USE students_".$local_domain);
-		set_time_limit(600);
-		while (($sql = $db->nextRowArray($res)) <> null)
-			$db->execute($sql[0]);
+		$domains = include("conf/domains");
 		require_once("component/data_model/DataBaseUtilities.inc");
-		$ref = new ReflectionClass("DataModel");
-		$p = $ref->getProperty("tables");
-		$p->setAccessible(true);
-		$tables = $p->getValue($model);
-		foreach ($tables as $table) {
-			if ($table->getModel() instanceof SubDataModel) continue;
+		foreach ($domains as $domain=>$conf) {
+			$res = $db->execute("CREATE DATABASE IF NOT EXISTS students_".$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
+			$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = 'students_$domain'");
+			$db->execute("USE students_".$domain);
 			set_time_limit(600);
-			DataBaseUtilities::createTable($db, $table);
-			if (file_exists("data/recover/db/".$table->getName())) {
-				set_time_limit(30*60);
-				DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName());
-			}
-		}
-		foreach ($tables as $table) {
-			if (!($table->getModel() instanceof SubDataModel)) continue;
-			foreach ($table->getModel()->getExistingInstances() as $sub_model) {
+			while (($sql = $db->nextRowArray($res)) <> null)
+				$db->execute($sql[0]);
+				$ref = new ReflectionClass("DataModel");
+			$p = $ref->getProperty("tables");
+			$p->setAccessible(true);
+			$tables = $p->getValue($model);
+			foreach ($tables as $table) {
+				if ($table->getModel() instanceof SubDataModel) continue;
 				set_time_limit(600);
-				DataBaseUtilities::createTable($db, $table, "_".$sub_model);
-				if (file_exists("data/recover/db/".$table->getName()."_".$sub_model)) {
+				DataBaseUtilities::createTable($db, $table);
+				if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName())) {
 					set_time_limit(30*60);
-					DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName()."_".$sub_model);
+					DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName());
+				}
+			}
+			foreach ($tables as $table) {
+				if (!($table->getModel() instanceof SubDataModel)) continue;
+				foreach ($table->getModel()->getExistingInstances() as $sub_model) {
+					set_time_limit(600);
+					DataBaseUtilities::createTable($db, $table, "_".$sub_model);
+					if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName()."_".$sub_model)) {
+						set_time_limit(30*60);
+						DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName()."_".$sub_model);
+					}
 				}
 			}
 		}

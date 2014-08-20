@@ -15,6 +15,12 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (typeof field_arguments == 'string') field_arguments = eval('('+field_arguments+')');
 	container.editable_cell = this;
+	container.ondomremoved(function() {
+		container.editable_cell = null;
+		t.field = null;
+		t.save_button = null;
+		t.unedit_button = null;
+	});
 	/** {typed_field} the typed field */
 	t.field = null;
 	/** {Element} the save button when in editable mode */ 

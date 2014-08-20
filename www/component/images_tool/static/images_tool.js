@@ -9,6 +9,17 @@ function images_tool() {
 	this._tools = [];
 	this._pictures = [];
 	
+	window.to_cleanup.push(this);
+	this.cleanup = function() {
+		this._tools = null;
+		this._pictures = null;
+		this.container = null;
+		if (this.popup) {
+			this.popup.removeButtons();
+			this.popup = null;
+		}
+	};
+	
 	this.usePopup = function(on_top, onfinish) {
 		this.container = document.createElement("DIV");
 		this.container.style.overflow = "auto";

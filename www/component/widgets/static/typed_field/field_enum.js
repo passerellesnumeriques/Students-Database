@@ -19,6 +19,27 @@ field_enum.prototype.getPossibleValues = function() {
 	}
 	return values;
 };
+field_enum.prototype.exportCell = function(cell) {
+	var val = this.getCurrentData();
+	if (val == null)
+		cell.value = "";
+	else {
+		cell.value = null;
+		for (var i = 0; i < this.config.possible_values.length; ++i) {
+			if (this.config.possible_values[i] instanceof Array) {
+				if (this.config.possible_values[i][0] == val) {
+					cell.value = this.config.possible_values[i][1];
+					break;
+				}
+			} else if (this.config.possible_values[i] == val) {
+				cell.value = val;
+				break;
+			}
+		}
+		if (call.value === null)
+			cell.value = val;
+	}
+};
 field_enum.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;

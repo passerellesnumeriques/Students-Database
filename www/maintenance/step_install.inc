@@ -66,12 +66,13 @@ if (isset($_GET["copy"])) {
 				copy("$src/$s","$dst/$s");
 			}
 		}
-		foreach ($files_dst as $s) {
-			if (is_dir("$dst/$s"))
-				remove_directory("$dst/$s");
-			else
-				unlink("$dst/$s");
-		}
+		if ($dst <> realpath("conf"))
+			foreach ($files_dst as $s) {
+				if (is_dir("$dst/$s"))
+					remove_directory("$dst/$s");
+				else
+					unlink("$dst/$s");
+			}
 	}
 	installDirectory(realpath("maintenance/update/www"),realpath("maintenance/.."),array(realpath("data"),realpath("maintenance/update"),realpath("maintenance/password"),realpath("maintenance_in_progress")));
 	

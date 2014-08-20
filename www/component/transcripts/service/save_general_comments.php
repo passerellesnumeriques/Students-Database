@@ -27,7 +27,8 @@ class service_save_general_comments extends Service {
 		foreach ($students as $s)
 			if (trim($s["comment"]) <> "")
 				array_push($to_insert, array("period"=>$period_id,"people"=>$s["people"],"comment"=>trim($s["comment"])));
-		SQLQuery::create()->insertMultiple("StudentTranscriptGeneralComment", $to_insert);
+		if (count($to_insert) > 0)
+			SQLQuery::create()->insertMultiple("StudentTranscriptGeneralComment", $to_insert);
 		SQLQuery::commitTransaction();
 		echo "true";
 	}

@@ -67,7 +67,7 @@ class page_selection_main_page extends SelectionPage {
 					</div>
 					<div id='updates_section'
 						icon='/static/news/news.png'
-						title='Selection Updates'
+						title='Selection Activities'
 						collapsable='true'
 						style='margin:5px'
 					>
@@ -121,7 +121,7 @@ class page_selection_main_page extends SelectionPage {
 			});
 
 			updates_section = sectionFromHTML('updates_section');
-			new news('updates_container', [{name:"selection",tags:["campaign<?php echo PNApplication::$instance->selection->getCampaignId();?>"]}], [], function(){
+			new news('updates_container', [{name:"selection",tags:["campaign<?php echo PNApplication::$instance->selection->getCampaignId();?>"]}], [], 'activity', function(){
 			}, function(){
 			});
 

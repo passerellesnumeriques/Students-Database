@@ -19,7 +19,7 @@ CurriculumTreeNode_Specialization.prototype.createTitle = function(editable) {
 	var span = document.createElement("SPAN");
 	span.appendChild(document.createTextNode("Specialization "));
 	var spe = this.spe;
-	window.top.datamodel.create_cell("Specialization", null, "name", spe.id, spe.name, "field_text", {can_be_null:false,max_length:100}, editable && can_edit_batches, span, function(value) { spe.name = value; });
+	window.top.datamodel.create_cell(window, "Specialization", null, "name", spe.id, spe.name, "field_text", {can_be_null:false,max_length:100}, editable && can_edit_batches, span, function(value) { spe.name = value; });
 	return span;
 };
 CurriculumTreeNode_Specialization.prototype.createInfo = function() {

@@ -12,7 +12,7 @@ function NewsObject(id, section, category, html, people, user, timestamp, update
 if (typeof require != 'undefined') require("animation.js");
 if (typeof theme != 'undefined') theme.css("news.css");
 
-function news(container, sections, exclude_sections, onready, onrefreshing) {
+function news(container, sections, exclude_sections, news_type, onready, onrefreshing) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	this._main_news = [];
@@ -24,7 +24,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 	this._replies_to_load = [];
 	this.more = function(ondone) {
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
-		service.json("news", "get_more", {olders:t._olders,olders_timestamp:t._olders_timestamp,sections:t._selected_sections,nb:10}, function(res) {
+		service.json("news", "get_more", {type:news_type,olders:t._olders,olders_timestamp:t._olders_timestamp,sections:t._selected_sections,nb:10}, function(res) {
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			if (!res) { if (ondone) ondone(false); return; }
 			if (res.length == 0) { if (ondone) ondone(false); return; }
@@ -81,7 +81,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		if (t.refresh_timeout) clearTimeout(t.refresh_timeout);
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
 		++t._refreshing;
-		service.json("news", "get_latests", {latests:t._latests,latests_timestamp:t._latests_timestamp,sections:t._selected_sections}, function(res) {
+		service.json("news", "get_latests", {type:news_type,latests:t._latests,latests_timestamp:t._latests_timestamp,sections:t._selected_sections}, function(res) {
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			t.refresh_timout = setTimeout(t.refresh, 30000);
 			if (!res) return;
@@ -222,7 +222,9 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		people_name.className = "author";
 		people_name.appendChild(document.createTextNode(n.people.first_name+" "+n.people.last_name));
 		people_name.style.cursor = "pointer";
-		people_name.onclick = function() { location.href = "/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain; };
+		people_name.onclick = function() {
+			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain,null,95,95);
+		};
 		var timing = document.createElement("SPAN"); header.appendChild(timing);
 		timing.className = "time";
 		timing.appendChild(div.timing_text = document.createTextNode(t._getTimingString(n.timestamp)));
@@ -322,16 +324,17 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 						if (n.category) {
 							for (var j = 0; j < t.sections[i].categories.length; ++j) {
 								if (t.sections[i].categories[j].name == n.category) {
-									s += "<br/>";
+									s += "<div style='margin-top:2px'>";
 									if (t.sections[i].categories[j].icon)
 										s += "<img src='"+t.sections[i].categories[j].icon+"' style='vertical-align:bottom'/> ";
 									s += "<i>"+t.sections[i].categories[j].display_name+"</i>";
+									s += "</div>";
 									break;
 								}
 							}
 						}
 						s += "</td>";
-						if (t.sections[i].icon && !has_only_one_section) s += "<td valign=top style='padding:0px'><img width='32px' height='32px' src='"+t.sections[i].icon+"'/></td>";
+						if (t.sections[i].icon && !has_only_one_section) s += "<td valign=top style='padding:0px;padding-left:2px;'><img width='32px' height='32px' src='"+t.sections[i].icon+"'/></td>";
 						s += "</tr></table>";
 						break;
 					}
@@ -388,7 +391,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 		d.timing_text.nodeValue = t._getTimingString(d.news.timestamp);
 	};
 	
-	this.post = function(sections,categories,tags) {
+	this.post = function(sections,categories,tags,note_for_user) {
 		require(["tinymce.min.js","popup_window.js","select.js"], function() {
 			var div = document.createElement("DIV");
 			
@@ -397,6 +400,15 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 			header.style.backgroundColor = "white";
 			header.style.verticalAlign = "middle";
 			div.appendChild(header);
+			if (note_for_user) {
+				if (note_for_user instanceof Element)
+					header.appendChild(note_for_user);
+				else {
+					var note = document.createElement("DIV");
+					note.appendChild(document.createTextNode(note_for_user));
+					header.appendChild(note);
+				}
+			}
 			var secs = [];
 			if (typeof sections == 'string') sections = [sections];
 			if (!sections) {
@@ -500,6 +512,7 @@ function news(container, sections, exclude_sections, onready, onrefreshing) {
 				for (var i = 0; i < tags_cb.length; ++i) if (tags_cb[i].checked) data.tags.push(tags_cb[i].tag_name);
 				var ed = tinymce.get(editor.id);
 				data.message = ed.getContent();
+				data.type = news_type;
 				popup.freeze("Posting message...");
 				service.json("news", "post", data, function(res) {
 					t.refresh();

@@ -1,7 +1,7 @@
 <?php 
 class service_search_student_by_name extends Service {
 	
-	public function getRequiredRights() { return array(); } // TODO
+	public function getRequiredRights() { return array("consult_students_list"); }
 	
 	public function documentation() { echo "Search students matching the given string"; }
 	public function inputDocumentation() { echo "<code>name</code>: string to search"; }

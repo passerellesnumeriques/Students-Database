@@ -10,6 +10,7 @@ class service_get_more extends Service {
 		echo "<li><code>olders_timestamp</code>: timestamp of the olders, or 0 for first request</li>";
 		echo "<li><code>sections</code>: list of sections with categories and tags to get the news</li>";
 		echo "<li><code>nb</code>: number of news to get</li>";
+		echo "<li><code>type</code>: type of news</li>";
 		echo "</ul>";
 	}
 	public function outputDocumentation() { echo "List of NewsObject"; }
@@ -18,6 +19,7 @@ class service_get_more extends Service {
 		require_once("component/news/NewsPlugin.inc");
 		$q = SQLQuery::create()->bypassSecurity()->select("News");
 		$q->whereNull("News", "reply_to");
+		$q->whereValue("News", "type", $input["type"]);
 		if ($input["olders_timestamp"] == 0) {
 			$q->limit(0, intval($input["nb"]));
 		} else {
@@ -49,6 +51,13 @@ class service_get_more extends Service {
 						}
 						$where .= ")";
 					}
+					$filters = $section->getTagsFilters();
+					foreach ($filters as $tagname=>$tagvalues) {
+						$where .= " AND (`tags` NOT REGEXP '.*/(".SQLQuery::escape($tagname).")[^/]*/.*'";
+						foreach ($tagvalues as $val)
+							$where .= " OR `tags` LIKE '%".SQLQuery::escape("/".$tagname.$val."/")."%'";
+						$where .= ")";
+					}
 					$where .= ")";
 					foreach ($section->getCategories() as $cat) {
 						if ($cat->getAccessRight() == 0) continue;
@@ -64,6 +73,13 @@ class service_get_more extends Service {
 								if ($first_tag) $first_tag = false; else $where .= " OR ";
 								$where .= "`tags` LIKE '%".SQLQuery::escape("/".$tag."/")."%'";
 							}
+							$where .= ")";
+						}
+						$filters = $section->getTagsFilters();
+						foreach ($filters as $tagname=>$tagvalues) {
+							$where .= " AND (`tags` NOT REGEXP '.*/(".SQLQuery::escape($tagname).")[^/]*/.*'";
+							foreach ($tagvalues as $val)
+								$where .= " OR `tags` LIKE '%".SQLQuery::escape("/".$tagname.$val."/")."%'";
 							$where .= ")";
 						}
 						$where .= ")";

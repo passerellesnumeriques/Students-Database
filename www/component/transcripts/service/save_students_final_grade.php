@@ -1,7 +1,7 @@
 <?php 
 class service_save_students_final_grade extends Service {
 	
-	public function getRequiredRights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Save final grades of students for a given subject"; }
 	public function inputDocumentation() {
@@ -13,9 +13,17 @@ class service_save_students_final_grade extends Service {
 	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
+		// check access
+		if (!PNApplication::$instance->user_management->has_right("edit_students_grades")) {
+			if (!PNApplication::$instance->curriculum->amIAssignedTo($input["subject_id"])) {
+				PNApplication::error("Access denied");
+				return;
+			}
+		}
+		
 		set_time_limit(120);
 		SQLQuery::startTransaction();
-		$subject = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $input["subject_id"])->executeSingleRow();
+		$subject = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $input["subject_id"])->executeSingleRow();
 		if ($subject == null) {
 			PNApplication::error("No information about this subject regarding grades");
 			SQLQuery::commitTransaction();
@@ -28,9 +36,6 @@ class service_save_students_final_grade extends Service {
 		}
 		// update final grade of students
 		set_time_limit(120);
-		$list = array();
-		foreach ($input["students"] as $student)
-			array_push($list, array("people"=>$student["people"], "final_grade"=>$student["final_grade"]));
 		if (count($input["students"]) > 0)
 			$component->update_students_final_grade($input["subject_id"], $input["students"]);
 		set_time_limit(120);

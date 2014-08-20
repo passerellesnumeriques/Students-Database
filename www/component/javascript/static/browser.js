@@ -540,6 +540,7 @@ function listenEvent(elem, type, handler) {
  * @param {Function} handler the listener to be removed
  */
 function unlistenEvent(elem, type, handler) {
+	if (!elem) return;
 	if (elem == window && !document.createEvent) elem = document;
 	if (elem.removeEventListener)
 		elem.removeEventListener(type,handler,false);
@@ -621,7 +622,7 @@ function addJavascript(url, onload, additional_attributes) {
 			e.data = new Custom_Event();
 			if (onload) e.data.add_listener(onload);
 			if (e.onload) e.data.add_listener(e.onload);
-			e.onload = function() { _scripts_loaded.push(p); this.data.fire(); };
+			e.onload = function() { _scripts_loaded.push(p); this.data.fire(); this.data.cleanup(); this.data = null; };
 			return;
 		}
 	}
@@ -633,9 +634,9 @@ function addJavascript(url, onload, additional_attributes) {
 	s.data = new Custom_Event();
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
-	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); };
+	s.onload = function() { if (_scripts_loaded) _scripts_loaded.push(p); this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; s.onload = null; s.onreadystatechange = null; };
 	//s.onerror = function(ev) { alert("Error loading javascript file: "+this.src); for (var name in ev) alert("Event: "+name+"="+ev[name]); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded') { _scripts_loaded.push(p); this._loaded = true; s.data.fire(); this.onreadystatechange = null; } };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { if (_scripts_loaded) _scripts_loaded.push(p); this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; this.onreadystatechange = null; s.onload = null; } };
 	head.appendChild(s);
 	s.src = p;
 }

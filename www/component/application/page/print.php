@@ -22,8 +22,8 @@ class page_print extends Page {
 	</select>
 	<button class='action' onclick="getIFrameWindow(document.getElementById('print_content')).print();"><img src='<?php echo theme::$icons_16["print"];?>'/> Print</button>
 	</div>
-	<div id='content' style='flex:1 1 auto;overflow:hidden;text-align:center'>
-		<iframe name='print_content' id='print_content' style='border:none' src='/dynamic/application/page/blank'></iframe>
+	<div id='content' style='flex:1 1 auto;overflow:hidden;text-align:center;display:flex;flex-direction:row;justify-content:center;'>
+		<iframe name='print_content' id='print_content' style='border:none;flex:0 1 auto' src='/dynamic/application/page/blank'></iframe>
 	</div>
 </div>
 <script type='text/javascript'>
@@ -52,7 +52,7 @@ function refreshSize() {
 	var frame = document.getElementById('print_content');
 	frame.style.width = size[0]+"pt";
 	//frame.style.height = size[1]+"pt";
-	frame.style.height = "100%";
+	//frame.style.height = "100%";
 }
 
 waitFrameContentReady(document.getElementById('print_content'), function(win) { return win._page_ready; }, function(win) {
@@ -61,9 +61,10 @@ waitFrameContentReady(document.getElementById('print_content'), function(win) { 
 	window.printing_ready = true;
 });
 
-window.setPrintContent = function(container) {
+window.setPrintContent = function(container, onready) {
 	var win = getIFrameWindow(document.getElementById('print_content'));
 	win.document.body.innerHTML = container.innerHTML;
+	win.document.body.style.backgroundColor = "white";
 	var container_win = getWindowFromElement(container);
 	var container_head = container_win.document.getElementsByTagName("HEAD")[0];
 	var head = win.document.getElementsByTagName("HEAD")[0];
@@ -74,6 +75,7 @@ window.setPrintContent = function(container) {
 			link.rel = cl.rel;
 			link.href = cl.href;
 			link.type = cl.type;
+			link.media = "all";
 			head.appendChild(link);
 		}
 	}
@@ -84,6 +86,7 @@ window.setPrintContent = function(container) {
 		node.parentNode.removeChild(node);
 		var n = document.createElement("STYLE");
 		n.type = "text/css";
+		n.media = "all";
 		n.appendChild(document.createTextNode(node.textContent));
 		head.appendChild(n);
 	}
@@ -97,6 +100,9 @@ window.setPrintContent = function(container) {
 		n.textContent = node.textContent;
 		head.appendChild(n);
 	}
+	win.document.body.style.backgroundColor = "white";
+	win.document.body.style.WebkitPrintColorAdjust = "exact";
+	if (onready) onready();
 };
 </script>
 <?php 

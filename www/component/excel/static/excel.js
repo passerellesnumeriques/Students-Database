@@ -921,7 +921,7 @@ function ExcelSheetCursor(sheet) {
 		window.focus();
 		this.div.ondblclick = function(ev) {
 			if (t.row_start == t.row_end && t.col_start == t.col_end) {
-				var cell = t.sheet.getCell(t.col_start,t._row_start);
+				var cell = t.sheet.getCell(t.col_start,t.row_start);
 				if (cell && cell.td && cell.td.ondblclick) cell.td.ondblclick(ev);
 			}
 		};

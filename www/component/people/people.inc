@@ -105,9 +105,11 @@ class people extends Component {
 		return SQLQuery::create()->bypassSecurity($bypass_security)->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
 	}
 	
-	public function getPeoples($peoples_ids,$include_picture_revision=false) {
+	public function getPeoples($peoples_ids,$include_picture_revision=false,$sort = false) {
 		if (count($peoples_ids) == 0) return array();
 		$q = SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids);
+		if ($sort)
+			$q->orderBy("People","last_name")->orderBY("People","first_name");
 		if ($include_picture_revision) {
 			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
 			$q->fieldsOfTable("People");

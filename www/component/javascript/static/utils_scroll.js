@@ -46,6 +46,7 @@ function scrollRight(element, scroll) {
  */
 function getScrollableContainer(element) {
 	var parent = element.parentNode;
+	if (!parent) return null;
 	do {
 		if (parent == document.body) return parent;
 		if (parent.scrollHeight != parent.clientHeight) return parent;
@@ -61,6 +62,7 @@ function getScrollableContainer(element) {
  */
 function scrollToSee(element) {
 	var parent = getScrollableContainer(element);
+	if (!parent) return;
 	var x1 = absoluteLeft(element, parent);
 	var y1 = absoluteTop(element, parent);
 	var x2 = x1+element.offsetWidth;

@@ -15,12 +15,14 @@ class StudentsNewsPlugin implements NewsPlugin {
 class StudentsNewsSection implements NewsSection {
 	
 	public function getName() { return "students"; }
-	public function getDisplayName() { return "Students"; }
+	public function getDisplayName() { return "Training / Education"; }
 	public function getIcon() { return "/static/students/student_32.png"; }
 	public function getAccessRight() {
 		if (PNApplication::$instance->user_management->has_right("edit_curriculum"))
 			return 2;
 		if (PNApplication::$instance->user_management->has_right("consult_students_list"))
+			return 1;
+		if (in_array("student",PNApplication::$instance->user_management->people_types))
 			return 1;
 		return 0;
 	}
@@ -34,6 +36,14 @@ class StudentsNewsSection implements NewsSection {
 		}
 		return $list;
 	}
-	
+	public function getTagsFilters() {
+		if (PNApplication::$instance->user_management->has_right("edit_curriculum")) return array();
+		if (PNApplication::$instance->user_management->has_right("consult_students_list")) return array();
+		if (in_array("student",PNApplication::$instance->user_management->people_types)) {
+			$student = PNApplication::$instance->students->getStudent(PNApplication::$instance->user_management->people_id);
+			return array("batch"=>array($student["batch"]));
+		}
+		return array();
+	}
 }
 ?>

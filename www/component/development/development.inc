@@ -24,6 +24,7 @@ class development extends Component {
 		Component::allowServiceWithoutLogin("development", "check_todo");
 		Component::allowServiceWithoutLogin("development", "check_datamodel");
 		Component::allowServiceWithoutLogin("development", "get_datamodel");
+		Component::allowServiceWithoutLogin("development", "check_libraries_updates");
 		
 		for ($i = 0; $i < 15; $i++) {
 			if ($i >= count($this->requests)) break;

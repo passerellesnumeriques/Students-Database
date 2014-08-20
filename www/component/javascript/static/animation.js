@@ -33,7 +33,7 @@ animation = {
 		var anim = new Animation(element,from,to,duration,new Date().getTime(),handler);
 		this.animations.push(anim);
 		handler(from, element);
-		if (this.animations.length == 1) setTimeout("animation.evolve()",1);
+		if (this.animations.length == 1) setTimeout("if (animation) animation.evolve()",1);
 		return anim;
 	},
 	/** Stop the given animation
@@ -80,7 +80,7 @@ animation = {
 //		var now2 = new Date().getTime();
 //		var next = 50 - (now2-now);
 //		if (next < 0) next = 0;
-		if (this.animations.length > 0) setTimeout("animation.evolve()",1);
+		if (this.animations.length > 0) setTimeout("if (animation) animation.evolve()",1);
 	},
 	
 	/** Implemetation of an animation to modify the opacity of the element
@@ -171,7 +171,7 @@ animation = {
 			setOpacity(appears_elements[i], 0);
 		var anim_in = [];
 		var anim_out = [];
-		listenEvent(window,'mousemove',function(ev) {
+		var listener = function(ev) {
 			var e = getCompatibleMouseEvent(ev);
 			var x = absoluteLeft(onover_element);
 			if (e.x >= x && e.x < x+onover_element.offsetWidth) {
@@ -218,6 +218,8 @@ animation = {
 				},o*100,0);
 				anim_out.push(e,anim_out);
 			}
-		});
+		};
+		listenEvent(window,'mousemove',listener);
+		window.to_cleanup.push({cleanup:function() { unlistenEvent(window,'mousemove',listener); }});
 	}
 };

@@ -16,8 +16,13 @@ class authentication extends Component {
 				require_once("PNPAuthenticationSystem.inc");
 				return new PNPAuthenticationSystem();
 			case "PNC":
+<<<<<<< HEAD
                                require_once("LDAPAuthenticationSystem.inc");
                                return new LDAPAuthenticationSystem("kep.pnc.lan", array("PNC","LAN"));
+=======
+				require_once("LDAPAuthenticationSystem.inc");
+				return new LDAPAuthenticationSystem("kep.pnc.lan", array("PNC","LAN"));
+>>>>>>> aabdab774c539605d911695015d079bd98908d6a
 			default:
 				require_once("FakeAuthenticationSystem.inc");
 				return new FakeAuthenticationSystem();

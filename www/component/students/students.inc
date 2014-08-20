@@ -29,16 +29,13 @@ class students extends Component {
 				return false;
 			}
 			// check the student is not already assigned to a class with a different specialization
-			$different_classes = SQLQuery::create()
-#DEV
-				->noWarning() // TODO
-#END
+			$q = SQLQuery::create()
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
-				->join("Student", "StudentClass", array("people"=>"people"))
-				->join("StudentClass", "AcademicClass", array("class"=>"id"))
-				->where("`AcademicClass`.`specialization` IS NOT NULL AND `AcademicClass`.`specialization`!='".SQLQuery::escape($specialization_id)."'")
-				->execute();
+				->join("Student", "StudentClass", array("people"=>"people"));
+			PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class");
+			$q->where("`AcademicClass`.`specialization` IS NOT NULL AND `AcademicClass`.`specialization`!='".SQLQuery::escape($specialization_id)."'");
+			$different_classes = $q->execute();
 			if (count($different_classes) > 0) {
 				PNApplication::error("This student is already assigned to a class with another specialization");
 				return false;
@@ -54,16 +51,13 @@ class students extends Component {
 				return false;
 			}
 			// check the student is not already assigned to a class with a specialization
-			$different_classes = SQLQuery::create()
-#DEV
-				->noWarning() // TODO
-#END
+			$q = SQLQuery::create()
 				->select("Student")
 				->whereValue("Student", "people", $student_people_id)
-				->join("Student", "StudentClass", array("people"=>"people"))
-				->join("StudentClass", "AcademicClass", array("class"=>"id"))
-				->where("`AcademicClass`.`specialization` IS NOT NULL")
-				->execute();
+				->join("Student", "StudentClass", array("people"=>"people"));
+			PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class");
+			$q->where("`AcademicClass`.`specialization` IS NOT NULL");
+			$different_classes = $q->execute();
 			if (count($different_classes) > 0) {
 				PNApplication::error("This student is already assigned to a class with a specialization");
 				return false;
@@ -118,7 +112,7 @@ class students extends Component {
 				$q->whereValue("Student", "Specialization", $restrict_specialization);
 		}
 		if (!$include_excluded)
-			$q->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["start"]."')");
+			$q->where("(Student.exclusion_date IS NULL OR Student.exclusion_date > '".$period["academic_period_start"]."')");
 		if ($include_people_info) {
 			PNApplication::$instance->people->joinPeople($q, "Student", "people");
 			require_once("component/people/PeopleJSON.inc");
@@ -138,6 +132,32 @@ class students extends Component {
 			PeopleJSON::PeopleSQL($q);
 		}
 		return $q;
+	}
+	
+	public function getStudentsForClasses($classes_ids, $include_people_info = true) {
+		$q = SQLQuery::create()
+			->select("StudentClass")
+			->whereIn("StudentClass", "class", $classes_ids)
+			;
+		if ($include_people_info) {
+			PNApplication::$instance->people->joinPeople($q, "StudentClass", "people");
+			require_once("component/people/PeopleJSON.inc");
+			PeopleJSON::PeopleSQL($q);
+		}
+		return $q->execute();
+	}
+	
+	public function getStudentClasses($people_id) {
+		return SQLQuery::create()
+			->select("StudentClass")
+			->whereValue("StudentClass", "people", $people_id)
+			->execute();
+	}
+	public function getStudent($people_id) {
+		return SQLQuery::create()
+			->select("Student")
+			->whereValue("Student","people",$people_id)
+			->executeSingleRow();
 	}
 }
 ?>

@@ -23,6 +23,15 @@ function filter_comparable(data, config, editable) {
 	this.element.appendChild(this.select_type);
 	if (!editable) this.select_type.disabled = "disabled";
 	
+	this.isActive = function() {
+		if (!t.field1) return true;
+		switch (this.select_type.value) {
+		case "is_set": case "is_not_set": return true;
+		case "between": case "not_between": return t.field1.getCurrentData() != null && t.field2.getCurrentData() != null;
+		default: return t.field1.getCurrentData() != null;
+		}
+	};
+	
 	var t=this;
 	this.select_type.onchange = function() {
 		data.type = this.value;

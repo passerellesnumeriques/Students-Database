@@ -11,7 +11,7 @@ $model->addTable("SelectionCampaign")
 		->addRemoveAccess("manage_selection_campaign",true)
 	 	->onInsert(function($fields,$id,$sub_model_instance) {
 			try {
-				PNApplication::$instance->news->post("selection", null, array("campaign".$id), "Creation of campaign <i>".$fields["name"]."</i>");
+				PNApplication::$instance->news->post("selection", null, array("campaign".$id), "activity", "Creation of campaign <i>".$fields["name"]."</i>");
 			} catch (Exception $e) { PNApplication::error($e); }
 	 	})
 		;

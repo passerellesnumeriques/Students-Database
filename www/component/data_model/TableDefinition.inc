@@ -333,6 +333,9 @@ namespace datamodel {
 		public function fireInsert($fields_values, $id, $sub_model_instance) {
 			$this->oninsert->fire(array($fields_values,$id,$sub_model_instance));
 		}
+		public function hasInsertListeners() {
+			return $this->oninsert->hasListeners();
+		}
 		/**
 		 * @param function $fct takes 2 parameters: row, sub_model_instance
 		 * @return \datamodel\Table
@@ -760,7 +763,7 @@ namespace datamodel {
 				return "INT";
 			if ($this->size <= 64)
 				return "BIGINT";
-			throw new Exception("Size of integer not supported: ".$this->size." bits, maximum is 64 bits");
+			throw new \Exception("Size of integer not supported: ".$this->size." bits, maximum is 64 bits");
 		}
 
 		public function validate($value) {

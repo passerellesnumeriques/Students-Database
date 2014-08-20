@@ -8,7 +8,13 @@
 function typed_field(data,editable,config){
 	this.element = document.createElement("DIV");
 	this.element.style.display = "inline-block";
-	this.element.typed_field = this;
+	if (!window.to_cleanup) window.to_cleanup = [];
+	window.to_cleanup.push(this);
+	this.cleanup = function() {
+		this.element = null;
+		this.originalData = null;
+		this._data = null;
+	};
 	this.originalData = data;
 	this.editable = editable;
 	this.onchange = new Custom_Event();
@@ -76,6 +82,9 @@ typed_field.prototype = {
 	 * @returns the current data (the edited one)
 	 */
 	getCurrentData: function() { return this._data; },
+	exportCell: function(cell) {
+		cell.value = "Export not implemented in typed_field: "+getObjectClassName(this);
+	},
 	/**
 	 * @returns the data from the edited field
 	 */

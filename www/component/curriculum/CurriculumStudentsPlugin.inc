@@ -34,8 +34,8 @@ class CurriculumNewsCategory implements NewsCategory {
 /** Category for batches updates */
 class BatchNewsCategory implements NewsCategory {
 
-	public function getName() { return "batch"; }
-	public function getDisplayName() { return "Batch"; }
+	public function getName() { return "students"; }
+	public function getDisplayName() { return "Students"; }
 	public function getIcon() { return "/static/curriculum/batch_16.png"; }
 	public function getAccessRight() {
 		if (PNApplication::$instance->user_management->has_right("post_batch_message"))

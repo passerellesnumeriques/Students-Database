@@ -37,10 +37,10 @@ theme = {
 		echo "{name:".json_encode($css_name).",path:".json_encode($css_path)."}";
 	} 
 	?>],
-	css: function (name) {
+	css: function (name,onloaded) {
 		for (var i = 0; i < this.css_list.length; ++i)
 			if (this.css_list[i].name == name) {
-				addStylesheet("/static/theme/"+this.css_list[i].path);
+				addStylesheet("/static/theme/"+this.css_list[i].path,onloaded);
 				break;
 			}
 		if (window.parent && window.parent != window && window.parent.theme)

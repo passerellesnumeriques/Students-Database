@@ -19,6 +19,6 @@ class TranscriptsNewsSection implements NewsSection {
 	public function getCategories() {
 		return array();
 	}
-	
+	public function getTagsFilters() { return array(); }
 }
 ?>

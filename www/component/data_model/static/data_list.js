@@ -21,6 +21,17 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (!page_size) page_size = -1;
 	var t=this;
+	window.to_cleanup.push(t);
+	t.cleanup = function() {
+		t.container = null;
+		t.grid = null;
+		t.show_fields = null;
+		t._available_fields = null;
+		t._sort_column = null;
+		t._filters = null;
+		t._action_providers = null;
+		t._col_actions = null;
+	};
 	t.container = container;
 	t.container.className = t.container.className ? "data_list "+t.container.className : "data_list";
 	if (!t.container.id) t.container.id = generateID();
@@ -673,9 +684,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		div.title = "Import additional data from file";
 		img.src = theme.icons_16["_import"];
 		div.onclick = function(ev) { 
-			if (t._import_with_match) return;
+			if (t.grid._import_with_match) return;
 			require("import_with_match.js",function() {
-				new import_with_match(t, ev);
+				new import_with_match(new import_with_match_provider_data_list(t), ev);
 			});
 		};
 		div.appendChild(img);
@@ -955,6 +966,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						menu.showBelowElement(ev.target);
 						t.addFilter(filter);
 						tf.focus();
+						menu.onclose = function() {
+							if (!tf.isActive())
+								t.removeFilter(filter);
+						};
 					});
 				}
 			}, has ? "Edit filters (this column is currently filtered)" : "Filter");
@@ -1506,12 +1521,42 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					t._contextMenuAddFilter(this, function(field, filter) {
 						if (t._filters.length == 0) filters_content.removeAllChildren();
 						t.addFilter(filter);
-						t._createFilter(filter, filters_content);
+						var tf = t._createFilter(filter, filters_content);
 						layout.invalidate(filters_content);
-						t._loadData();
+						if (tf.isActive())
+							t._loadData();
 					});
 				});
 				popup.show();
+				popup.onclose = function() {
+					// check inactive filters
+					var fake = document.createElement("DIV");
+					for (var i = 0; i < t._filters.length; ++i) {
+						var tf = t._createFilter(t._filters[i], fake);
+						var f = t._filters[i];
+						var change = false;
+						while (f.or) {
+							var or = t._createFilter(f.or, fake);
+							if (!or.isActive()) {
+								// remove it
+								change = true;
+								f.or = f.or.or;
+							} else
+								f = f.or;
+						}
+						if (!tf.isActive()) {
+							if (t._filters[i].or) {
+								t._filters[i] = t._filters[i].or;
+								change = true;
+							} else {
+								t.removeFilter(t._filters[i]);
+								change = false;
+							}
+						}
+						if (change)
+							t.onfilterschanged.fire();
+					}
+				};
 			});
 		});
 	};

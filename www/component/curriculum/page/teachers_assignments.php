@@ -4,7 +4,6 @@ class page_teachers_assignments extends Page {
 	public function getRequiredRights() { return array("consult_curriculum"); }
 	
 	public function execute() {
-		// TODO lock database
 		$academic_period_id = @$_GET["period"];
 		if ($academic_period_id == null) {
 			// by default, get the current one
@@ -42,7 +41,17 @@ class page_teachers_assignments extends Page {
 		require_once("AcademicPeriod.inc");
 		$ap = $academic_period <> null ? new AcademicPeriod($academic_period) : null;
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+		$can_edit = isset($_GET["edit"]) && PNApplication::$instance->user_management->has_right("edit_curriculum");
+		
+		$locked_by = null;
+		if ($can_edit) {
+			require_once("component/data_model/DataBaseLock.inc");
+			$lock_id = DataBaseLock::lockTable("TeacherAssignment", $locked_by);
+			if ($lock_id == null)
+				$can_edit = false;
+			else
+				DataBaseLock::generateScript($lock_id);
+		}
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
 		$this->requireJavascript("section.js");
@@ -52,6 +61,15 @@ class page_teachers_assignments extends Page {
 		<div class='page_title' style='flex:none'>
 			<img src='/static/curriculum/teacher_assign_32.png'/>
 			Teachers Assignments
+			<?php 
+			if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
+				if ($can_edit) {
+					echo "<button onclick=\"var u = new window.URL(location.href);delete u.params.edit;location.href=u.toString();\" class='action'><img src='".theme::$icons_16["no_edit"]."'/>Stop Editing</button>";
+				} else {
+					echo "<button onclick=\"var u = new window.URL(location.href);u.params.edit = 'true';location.href=u.toString();\" class='action'><img src='".theme::$icons_16["edit"]."'/>Edit</button>";
+				}
+			}
+			?>
 		</div>
 		<?php
 		if ($ap == null) {
@@ -72,8 +90,14 @@ class page_teachers_assignments extends Page {
 			?>
 			</select>
 		</div>
-		<div style="flex:1 1 auto;overflow:auto;display:flex;flex-direction:row">
-		<div style="flex:1 1 auto">
+		<?php
+		if ($locked_by <> null) {
+			echo "<div class='error_box' style='flex:none'>$locked_by is already editing teachers assignment. You cannot edit it at the same time.</div>";
+			$can_edit = false;
+		} 
+		?>
+		<div style="flex:1 1 auto;display:flex;flex-direction:row">
+		<div style="flex:1 1 auto;overflow:auto;">
 		<?php 
 		if ($ap <> null)
 		foreach ($ap->batch_periods as $bp) {
@@ -102,7 +126,7 @@ class page_teachers_assignments extends Page {
 				} else {
 					$id = $this->generateID();
 					echo "<table class='subjects_table'><tbody id='$id'>";
-					echo "<tr><th>Code</th><th>Subject Description</th><th>Hours</th><th>Class(es)</th><th>Teacher assigned</th></tr>";
+					echo "<tr><th>Code</th><th>Subject Description</th><th>Hours</th><th>Class(es)</th><th>Teacher(s) assigned</th></tr>";
 					echo "</tbody></table>";
 					$subjects_classes = $ap->getMergedClasses($subjects, $classes);
 					$json = "[";
@@ -128,7 +152,7 @@ class page_teachers_assignments extends Page {
 		}
 		?>
 		</div>
-		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
+		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white;overflow:auto;' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
 		<div style='background-color:white'>
 		<?php $id = $this->generateID();?>
 		<table class='teachers_table'><tbody id='<?php echo $id;?>'>
@@ -300,8 +324,8 @@ class page_teachers_assignments extends Page {
 				tr.appendChild(td = document.createElement("TD"));
 				if (!last) td.style.borderBottom = "none";
 				if (!first) td.style.borderTop = "none";
-				var teacher = null;
-				var teacher_assigned = null;
+				var class_teachers = [];
+				var class_teachers_assigned = [];
 				for (var i = 0; i < teachers_assignments.length; ++i) {
 					var ta = teachers_assignments[i];
 					if (ta.subject_id != subject.id) continue;
@@ -309,11 +333,10 @@ class page_teachers_assignments extends Page {
 					for (var j = 0; j < classes.length; ++j)
 						if(classes[j] == ta.class_id) { found = true; break; }
 					if (!found) continue;
-					teacher = getTeacher(ta.people_id);
-					teacher_assigned = ta;
-					break;
+					class_teachers.push(getTeacher(ta.people_id));
+					class_teachers_assigned.push(ta);
 				}
-				if (!teacher) {
+				if (class_teachers.length == 0) {
 					td.innerHTML = "<i style='color:red'>No teacher</i>";
 					<?php if ($can_edit) { ?>
 					var assign = document.createElement("BUTTON");
@@ -343,25 +366,163 @@ class page_teachers_assignments extends Page {
 					};
 					<?php } ?>
 				} else {
-					td.appendChild(document.createTextNode(teacher.first_name+" "+teacher.last_name));
-					<?php if ($can_edit) { ?>
-					var unassign = document.createElement("BUTTON");
-					unassign.className = 'flat small_icon';
-					unassign.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
-					unassign.title = "Unassign teacher";
-					td.appendChild(unassign);
-					var t=this;
-					unassign.onclick = function() {
-						var lock = lock_screen();
-						service.json("curriculum","unassign_teacher",{people_id:teacher.id,subject_id:subject.id,class_id:classes[0]},function(res) {
-							unlock_screen(lock);
-							if (!res) return;
-							teachers_assignments.remove(teacher_assigned);
-							t.update();
-							updateTeacherRow(teacher.id);
-						});
-					};
-					<?php } ?>
+					var remaining_period = subject.hours;
+					if (subject.hours_type == "Per week") remaining_period *= nb_weeks;
+					for (var i = 0; i < class_teachers.length; ++i) {
+						if (i > 0) {
+							td.appendChild(document.createElement("BR"));
+							td.appendChild(document.createTextNode(" + "));
+						}
+						td.appendChild(document.createTextNode(class_teachers[i].first_name+" "+class_teachers[i].last_name));
+						if (class_teachers_assigned[i].hours != null) {
+							td.appendChild(document.createTextNode("("+class_teachers_assigned[i].hours+"h"+(class_teachers_assigned[i].hours_type == "Per week" ? "/week" : "")+")"));
+							if (class_teachers_assigned[i].hours_type == "Per week")
+								remaining_period -= class_teachers_assigned[i].hours*nb_weeks;
+							else
+								remaining_period -= class_teachers_assigned[i].hours;
+						} else
+							remaining_period = 0;
+						<?php if ($can_edit) { ?>
+						var schedule = document.createElement("BUTTON");
+						schedule.className = 'flat small_icon';
+						schedule.innerHTML = "<img src='"+theme.icons_10.time+"'/>";
+						schedule.title = "Change number of hours for this teacher";
+						schedule.teacher = class_teachers[i];
+						schedule.assignment = class_teachers_assigned[i];
+						td.appendChild(schedule);
+						schedule.onclick = function() {
+							var tt=this;
+							require(["popup_window.js",["typed_field.js","field_integer.js"]],function() {
+								var total_per_week;
+								var total_period;
+								if (subject.hours_type == "Per week") {
+									total_per_week = subject.hours;
+									total_period = subject.hours*nb_weeks;
+								} else {
+									total_period = subject.hours;
+									total_per_week = subject.hours/nb_weeks;
+								}
+								var assigned_period = 0;
+								for (var i = 0; i < class_teachers.length; ++i) {
+									if (class_teachers[i].id == tt.teacher.id) continue; // this is the current teacher
+									if (class_teachers[i].hours_type == "Per week")
+										assigned_period += class_teachers_assigned[i].hours*nb_weeks;
+									else
+										assigned_period += class_teachers_assigned[i].hours;
+								}
+								var content = document.createElement("DIV");
+								content.style.padding = "10px";
+								content.innerHTML = "Number of hours teaching hours for ";
+								content.appendChild(document.createTextNode(tt.teacher.first_name+" "+tt.teacher.last_name+":"));
+								content.appendChild(document.createElement("BR"));
+								var current_hours = tt.assignment.hours;
+								var current_hours_type = tt.assignment.hours_type;
+								if (!current_hours) {
+									current_hours = subject.hours;
+									current_hours_type = subject.hours_type;
+								}
+								var max = total_period-assigned_period;
+								if (current_hours_type == "Per week") max /= nb_weeks;
+								var field = new field_integer(current_hours,true,{min:1,max:max,can_be_null:false});
+								content.appendChild(field.getHTMLElement());
+								content.appendChild(document.createTextNode("hour(s)"));
+								var select = document.createElement("SELECT");
+								content.appendChild(select);
+								var o = document.createElement("OPTION");
+								o.value = o.text = "Per week";
+								select.appendChild(o);
+								o = document.createElement("OPTION");
+								o.value = o.text = "Per period";
+								select.appendChild(o);
+								if (current_hours_type == "Per week") select.selectedIndex = 0; else select.selectedIndex = 1;
+								select.onchange = function() {
+									var max = total_period-assigned_period;
+									if (this.value == "Per week") max /= nb_weeks;
+									field.setMaximum(max);
+								};
+								var popup = new popup_window("Teaching hours",null,content);
+								popup.addOkCancelButtons(function() {
+									if (field.hasError()) { alert("Please enter a valid number of hours"); return; }
+									var lock = lock_screen();
+									tt.assignment.hours = field.getCurrentData();
+									tt.assignment.hours_type = select.value;
+									service.json("curriculum","assign_teacher",{people_id:tt.teacher.id,subject_id:subject.id,classes_ids:[classes[0]],hours:field.getCurrentData(),hours_type:select.value},function(res) {
+										t.update();
+										updateTeacherRow(tt.teacher.id);
+										unlock_screen(lock);
+										popup.close();
+									});
+								});
+								popup.show();
+							});
+						};
+						var unassign = document.createElement("BUTTON");
+						unassign.className = 'flat small_icon';
+						unassign.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+						unassign.title = "Unassign teacher";
+						unassign.teacher = class_teachers[i];
+						unassign.assignment = class_teachers_assigned[i];
+						td.appendChild(unassign);
+						var t=this;
+						unassign.onclick = function() {
+							var lock = lock_screen();
+							var tt=this;
+							service.json("curriculum","unassign_teacher",{people_id:tt.teacher.id,subject_id:subject.id,class_id:classes[0]},function(res) {
+								unlock_screen(lock);
+								if (!res) return;
+								teachers_assignments.remove(tt.assignment);
+								t.update();
+								updateTeacherRow(tt.teacher.id);
+							});
+						};
+						<?php } ?>
+					}
+					if (remaining_period > 0) {
+						td.appendChild(document.createElement("BR"));
+						td.appendChild(document.createTextNode(" + "));
+						var span = document.createElement("SPAN");
+						span.style.fontStyle = "italic";
+						span.style.color = "#808080";
+						span.style.whiteSpace = "nowrap";
+						if (subject.hours_type == "Per week")
+							span.innerHTML = (remaining_period/nb_weeks)+"h/week remaining";
+						else
+							span.innerHTML = remaining_period+"h remaining";
+						td.appendChild(span);
+						<?php if ($can_edit) { ?>
+						var assign = document.createElement("BUTTON");
+						assign.className = 'flat small_icon';
+						assign.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+						assign.title = "Assign a teacher for remaining hours";
+						td.appendChild(assign);
+						var t=this;
+						assign.onclick = function() {
+							var button=this;
+							require("context_menu.js",function() {
+								var menu = new context_menu();
+								menu.addTitleItem(null, "Assign Teacher");
+								for (var i = 0; i < teachers.length; ++i) {
+									var found = false;
+									for (var j = 0; j < class_teachers.length; ++j) if (class_teachers[j].id == teachers[i].id) { found = true; break; }
+									if (found) continue;
+									menu.addIconItem(null, teachers[i].first_name+" "+teachers[i].last_name, function(teacher_id) {
+										var lock = lock_screen();
+										var hours = remaining_period;
+										if (subject.hours_type == "Per week") hours /= nb_weeks;
+										service.json("curriculum","assign_teacher",{people_id:teacher_id,subject_id:subject.id,classes_ids:[classes[0]],hours:hours,hours_type:subject.hours_type},function(res) {
+											unlock_screen(lock);
+											if (!res) return;
+											teachers_assignments.push({people_id:teacher_id,subject_id:subject.id,class_id:classes[0],hours:hours,hours_type:subject.hours_type});
+											t.update();
+											updateTeacherRow(teacher_id);
+										});
+									}, teachers[i].id);
+								}
+								menu.showBelowElement(button);
+							});
+						};
+						<?php } ?>
+					}
 				}
 				<?php if ($can_edit) { ?>
 				td.ondragenter = function(event) {
@@ -391,27 +552,59 @@ class page_teachers_assignments extends Page {
 					this.style.backgroundColor = "";
 					this.style.outline = "";
 					var teacher_id = event.dataTransfer.getData("teacher");
-					if (teacher && teacher.id == teacher_id) return; // same teacher
+					for (var i = 0; i < class_teachers.length; ++i) if (class_teachers[i].id == teacher_id) return; // same teacher
 					var lock = lock_screen();
+					var remaining_hours_period = subject.hours;
+					if (subject.hours_type == "Per week")
+						remaining_hours_period *= nb_weeks;
+					var total_hours_period = remaining_hours_period;
+					for (var i = 0; i < class_teachers.length; ++i) {
+						if (class_teachers[i].hours == null) { remaining_hours_period = 0; break; }
+						if (class_teachers[i].hours_type == "Per period")
+							remaining_hours_period -= class_teachers[i].hours;
+						else
+							remaining_hours_period -= class_teachers[i].hours*nb_weeks;
+					}
 					var assign = function() {
-						service.json("curriculum","assign_teacher",{people_id:teacher_id,subject_id:subject.id,classes_ids:[classes[0]]},function(res) {
+						var data = {people_id:teacher_id,subject_id:subject.id,classes_ids:[classes[0]]};
+						var assignment = {people_id:teacher_id,subject_id:subject.id,class_id:classes[0]};
+						if (remaining_hours_period > 0 && remaining_hours_period < total_hours_period) {
+							if (subject.hours_type == "Per week") {
+								data.hours = remaining_hours_period/nb_weeks;
+								data.hours_type = "Per week";
+							} else {
+								data.hours = remaining_hours_period;
+								data.hours_type = "Per period";
+							}
+							assignment.hours = data.hours;
+							assignment.hours_type = data.hours_type;
+						}
+						service.json("curriculum","assign_teacher",data,function(res) {
 							if (res)
-								teachers_assignments.push({people_id:teacher_id,subject_id:subject.id,class_id:classes[0]});
+								teachers_assignments.push(assignment);
 							t.update();
 							updateTeacherRow(teacher_id);
 							unlock_screen(lock);
 						});
 					};					
-					if (teacher) {
-						service.json("curriculum","unassign_teacher",{people_id:teacher.id,subject_id:subject.id,class_id:classes[0]},function(res) {
-							if (!res) {
-								unlock_screen(lock);
-								return;
+					if (class_teachers.length > 0 && remaining_hours_period == 0) {
+						var nb_done = 0;
+						var done = function() {
+							if (++nb_done < class_teachers.length) return;
+							for (var i = 0; i < class_teachers.length; ++i) {
+								teachers_assignments.remove(class_teachers_assigned[i]);
+								updateTeacherRow(class_teachers[i].id);
 							}
-							teachers_assignments.remove(teacher_assigned);
-							updateTeacherRow(teacher.id);
 							assign();
-						});
+						};
+						for (var i = 0; i < class_teachers.length; ++i)
+							service.json("curriculum","unassign_teacher",{people_id:class_teachers[i].id,subject_id:subject.id,class_id:classes[0]},function(res) {
+								if (!res) {
+									unlock_screen(lock);
+									return;
+								}
+								done();
+							});
 					} else
 						assign();
 				};
@@ -463,9 +656,14 @@ class page_teachers_assignments extends Page {
 				for (var i = 0; i < teachers_assignments.length; ++i) {
 					var ta = teachers_assignments[i];
 					if (ta.people_id != teacher.id) continue;
-					var subject = getSubject(ta.subject_id);
-					if (subject.hours_type == "Per week") total += (subject.hours*nb_weeks);
-					else total += subject.hours;
+					if (!ta.hours) {
+						var subject = getSubject(ta.subject_id);
+						if (subject.hours_type == "Per week") total += (subject.hours*nb_weeks);
+						else total += subject.hours;
+					} else {
+						if (ta.hours_type == "Per week") total += ta.hours*nb_weeks;
+						else total += ta.hours;
+					}
 				}
 				td_hours.innerHTML = (total/nb_weeks).toFixed(2)+"h/week x "+nb_weeks+" = "+total+"h";
 				layout.invalidate(td_hours);

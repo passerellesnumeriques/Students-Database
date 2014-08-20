@@ -1,11 +1,24 @@
 layout = {
+	cleanup: function() {
+		if (!this._w) return;
+		if (this._w._layout_interval) clearInterval(this._w._layout_interval);
+		this._w._layout_interval = null;
+		if (layout._process_timeout) clearTimeout(layout._process_timeout);
+		layout._process_timeout = null;
+		this._layout_handlers = null;
+		this._w = null;
+		this._invalidated = null;
+	},
 	// Layout handlers attached to elements
 	_layout_handlers: [],
 	_w: window,
 	addHandler: function(element, handler) {
+		if (!layout._w) return;
 		var w = getWindowFromElement(element);
+		if (!w) return;
 		if (w != layout._w) {
-			w.layout.addHandler(element, handler);
+			if (w.layout)
+				w.layout.addHandler(element, handler);
 			return;
 		}
 		layout._layout_handlers.push({element:element,handler:handler});
@@ -18,6 +31,7 @@ layout = {
 			w.layout.removeHandler(element, handler);
 			return;
 		}
+		if (layout._layout_handlers == null) return;
 		for (var i = 0; i < layout._layout_handlers.length; ++i) {
 			if (layout._layout_handlers[i].element == element && layout._layout_handlers[i].handler == handler) {
 				layout._layout_handlers.splice(i,1);
@@ -36,6 +50,7 @@ layout = {
 	// layout process
 	_invalidated: [],
 	invalidate: function(element) {
+		if (this._invalidated == null) return;
 		if (element == null) {
 			try { throw new Error("null element given to layout.invalidate"); }
 			catch (e) { log_exception(e); return; }
@@ -83,6 +98,7 @@ layout = {
 	_layout_needed: function() {
 		if (layout._process_timeout != null) return;
 		var f = function() {
+			if (window.closing) return;
 			if (layout._last_layout_activity < new Date().getTime() - 1000)
 				layout._layouts_short_time = 0;
 			layout._process_timeout = null;
@@ -201,7 +217,10 @@ layout = {
 				}
 				// if we are in a frame, let's layout the frame
 				var win = getWindowFromDocument(top_elements[i].ownerDocument); 
-				if (win.frameElement) getWindowFromDocument(win.frameElement.ownerDocument).layout.invalidate(win.frameElement);
+				if (win.frameElement) {
+					var win2 = getWindowFromDocument(win.frameElement.ownerDocument);
+					if (win2 && win2.layout) win2.layout.invalidate(win.frameElement);
+				}
 			}
 		}
 		// process the children of the top elements
@@ -446,6 +465,8 @@ layout = {
 		return null;
 	}
 };
+if (!window.to_cleanup) window.to_cleanup = [];
+window.to_cleanup.push(layout);
 
 // call onresize of window when all images are loaded, to trigger re-layout if needed
 var resize_triggered = false;
@@ -492,6 +513,7 @@ if (typeof listenEvent != 'undefined') {
 	listenEvent(window, 'load', _all_images_loaded);
 	_init_images();
 	var listener = function(ev) {
+		if (!layout) return;
 		if (layout._noresize_event) {
 			unlistenEvent(window,'resize',listener);
 			return;

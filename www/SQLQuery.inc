@@ -141,6 +141,10 @@ class SQLQuery {
 	public function generateFieldAlias() { return "f".($this->field_alias_counter++); }
 	/** Generates a unique table alias name (useful when building a big list) */
 	public function generateTableAlias() { return "t".($this->table_alias_counter++); }
+	public function avoidAliasCollision($other_query) {
+		$this->field_alias_counter = $other_query->field_alias_counter;
+		$this->table_alias_counter = $other_query->table_alias_counter;
+	}
 	
 #DEV
 	/** Do not generate warnings */
@@ -553,8 +557,12 @@ class SQLQuery {
 	 * @return SQLQuery this
 	 */
 	public function &whereKey($table, $key) {
-		if (!($table instanceof \datamodel\Table))
-			$table = DataModel::get()->getTable($table);
+		if (!($table instanceof \datamodel\Table)) {
+			if ($this->bypass_security)
+				$table = DataModel::get()->internalGetTable($table);
+			else
+				$table = DataModel::get()->getTable($table);
+		}
 		$table_alias = $this->getTableAlias($table->getName());
 		$k = $table->getPrimaryKey();
 		if ($k <> null) $this->whereValue($table_alias, $k->name, $key);
@@ -563,6 +571,37 @@ class SQLQuery {
 			foreach ($k as $kname) {
 				$this->whereValue($table_alias, $kname, $key[$kname]);
 			}
+		}
+		return $this;
+	}
+	public function &whereKeyIn($table, $keys) {
+		if (!($table instanceof \datamodel\Table)) {
+			if ($this->bypass_security)
+				$table = DataModel::get()->internalGetTable($table);
+			else
+				$table = DataModel::get()->getTable($table);
+		}
+		$table_alias = $this->getTableAlias($table->getName());
+		$k = $table->getPrimaryKey();
+		if ($k <> null) $this->whereIn($table_alias, $k->name, $keys);
+		else {
+			$k = $table->getKey();
+			$where = "(";
+			for ($i = 0; $i < count($keys); $i++) {
+				if ($i > 0) $where .= " OR ";
+				$where .= "(";
+				$first = true;
+				foreach ($k as $kname) {
+					if ($first) $first = false; else $where .= " AND ";
+					$where .= "`".$table_alias."`.`".$kname."`";
+					$val = $keys[$i][$kname];
+					if ($val === null) $where .= " IS NULL";
+					else $where .= "='".SQLQuery::escape($val)."'";
+				}
+				$where .= ")";
+			}
+			$where .= ")";
+			$this->where($where);
 		}
 		return $this;
 	}
@@ -1528,8 +1567,8 @@ class SQLQuery {
 					foreach ($keys as $key) {
 						$kw = "(";
 						foreach ($tkeys as $key_name) {
-							if (strlen($kw) > 0) $kw .= " AND ";
-							$kw .= "`".$table_alias."`.`".$key_name."`!='".SQLQuery::escape($key[$key_name])."'";
+							if (strlen($kw) > 1) $kw .= " AND ";
+							$kw .= "`".$key_name."`='".SQLQuery::escape($key[$key_name])."'";
 						}
 						$kw .= ")";
 						if (strlen($w) > 0) $w .= " OR ";
@@ -1975,7 +2014,10 @@ class SQLQuery {
 		}
 		$this->removeKeys($table, $keys);
 	}
-
+	public function removeRow($table, $row) {
+		$this->removeRows($table, array($row));
+	}
+	
 	/** Remove data with given keys
 	 * @param string $table table name
 	 * @param array $keys list of keys identifying the rows to remove 

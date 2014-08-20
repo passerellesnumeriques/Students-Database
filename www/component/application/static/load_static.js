@@ -145,6 +145,7 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 	};
 	/** Start to load another image */
 	this._nextImage = function() {
+		if (window.closing) return;
 		var slow = false;
 		if (t._slow_when_user_active && window.top.pnapplication && window.top.pnapplication.last_activity > new Date().getTime()-3000) {
 			slow = true;

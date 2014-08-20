@@ -12,7 +12,8 @@ class service_post extends Service {
 		$category = $input["category"];
 		$tags = $input["tags"];
 		$message = $input["message"];
-		$component->post($section, $category, $tags, $message);
+		$type = $input["type"];
+		$component->post($section, $category, $tags, $type, $message);
 	}
 	
 }

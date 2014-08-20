@@ -12,16 +12,28 @@ class page_news extends Page {
 				<?php echo isset($_GET["title"]) ? htmlentities($_GET["title"]) : "Updates";?>
 				<button class='flat icon' title='Post a message' onclick="postMessage();"><img src='/static/news/write_24.png'/></button>
 			</div>
-			<div id='news_container' style='flex:1 1 auto;overflow:auto;padding:10px;'></div>
+			<div style='flex:1 1 auto;display:flex;flex-direction:row;overflow:auto;'>
+				<div style='flex:1 1 auto;'>
+					<div class='page_section_title2' style='background-color:white'>Updates</div>
+					<div id='updates_container' style='padding:5px'></div>
+				</div>
+				<div style='flex:1 1 auto;'>
+					<div class='page_section_title2' style='background-color:white'>Activities</div>
+					<div id='activities_container' style='padding:5px'></div>
+				</div>
+			</div>
 		</div>
 		<script>
 		var sections = <?php echo isset($_GET["sections"]) ? $_GET["sections"] : "[]";?>;
 		var exclude = <?php echo isset($_GET["exclude"]) ? $_GET["exclude"] : "[]"?>;
-		var news_obj = new news('news_container',sections,exclude,function(n){
+		var updates = new news('updates_container',sections,exclude,'update',function(n){
+		},function(starts){
+		});
+		var activities = new news('activities_container',sections,exclude,'activity',function(n){
 		},function(starts){
 		});
 		function postMessage() {
-			news_obj.post();
+			updates.post();
 		}
 		</script>
 		<?php 

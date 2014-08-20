@@ -1,7 +1,7 @@
 <?php 
 class service_save_subject_evaluations extends Service {
 	
-	public function getRequiredRights() { return array(); } // TODO
+	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Save subject grading information, including students' grades"; }
 	public function inputDocumentation() {
@@ -15,9 +15,17 @@ class service_save_subject_evaluations extends Service {
 	}
 	
 	public function execute(&$component, $input) {
+		// check access
+		if (!PNApplication::$instance->user_management->has_right("edit_students_grades")) {
+			if (!PNApplication::$instance->curriculum->amIAssignedTo($input["subject_id"])) {
+				PNApplication::error("Access denied");
+				return;
+			}
+		}
+		
 		set_time_limit(120);
 		SQLQuery::startTransaction();
-		$subject = SQLQuery::create()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $input["subject_id"])->executeSingleRow();
+		$subject = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $input["subject_id"])->executeSingleRow();
 		if ($subject == null) {
 			PNApplication::error("No information about this subject regarding grades");
 			SQLQuery::commitTransaction();
@@ -31,7 +39,7 @@ class service_save_subject_evaluations extends Service {
 		$output_types_ids = array();
 		$output_evaluations_ids = array();
 		// update list of evaluations
-		$existing_types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $input["subject_id"])->execute();
+		$existing_types = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $input["subject_id"])->execute();
 		foreach ($input["types"] as $type) {
 			if ($type["id"] < 0) {
 				// new evaluation type
@@ -47,7 +55,7 @@ class service_save_subject_evaluations extends Service {
 					}
 			}
 			set_time_limit(120);
-			$existing_evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereValue("CurriculumSubjectEvaluation", "type", $type["id"])->execute();
+			$existing_evaluations = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectEvaluation")->whereValue("CurriculumSubjectEvaluation", "type", $type["id"])->execute();
 			foreach ($type["evaluations"] as $eval) {
 				if ($eval["id"] < 0) {
 					// new evaluation

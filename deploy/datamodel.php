@@ -105,6 +105,7 @@ function process_differences(odm,ndm,parent_table,ondone) {
 	process_renamed_tables(odm,ndm,parent_table,function() {
 		if (isDone(odm,ndm,parent_table,ondone)) return;
 		process_tables_same_name(odm,ndm,parent_table,[],function() {
+			if (isDone(odm,ndm,parent_table,ondone)) return;
 			process_remaining(odm,ndm,parent_table,ondone);
 		});
 	}); 
@@ -501,7 +502,7 @@ function finish(odm,ndm) {
 		panel.appendChild(ul);
 	}
 	var button = document.createElement("BUTTON");
-	button.innerHTML = "Confirm all those changes";
+	button.innerHTML = "I confirm all those changes, I made necessary migration scripts if any has functional implications";
 	panel.appendChild(button);
 	button.onclick = function() {
 		panel.innerHTML = "Generating data model migration script...";

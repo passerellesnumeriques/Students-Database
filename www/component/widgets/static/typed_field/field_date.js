@@ -51,6 +51,15 @@ function field_date(data,editable,config) {
 field_date.prototype = new typed_field();
 field_date.prototype.constructor = field_date;		
 field_date.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };
+field_date.prototype.exportCell = function(cell) {
+	var d = this.getCurrentData();
+	if (d == null)
+		cell.value = "";
+	else {
+		cell.value = d;
+		cell.format = "date";
+	}
+};
 field_date.prototype._create = function(data) {
 	this.validate = function() {
 		if (this.config && !this.config.can_be_null && this.getCurrentData() == null)

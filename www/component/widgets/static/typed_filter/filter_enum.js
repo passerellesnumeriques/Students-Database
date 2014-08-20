@@ -39,6 +39,12 @@ function filter_enum(data, config, editable) {
 		if (!editable) t.select.disable();
 	});
 	
+	this.isActive = function() {
+		if (!t.select) return true;
+		if (t.select.getSelection().length == t.select.options.length) return false; // all selected
+		return true;
+	};
+	
 	this.focus = function() {
 		if (!t.select) {
 			setTimeout(t.focus, 25);

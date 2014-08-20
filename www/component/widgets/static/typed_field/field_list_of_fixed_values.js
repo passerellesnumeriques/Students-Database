@@ -16,6 +16,15 @@ field_list_of_fixed_values.prototype._getValue = function(key) {
 	if (value == null) value = "?Invalid Key "+key+"?";
 	return value;
 };
+field_list_of_fixed_values.prototype.exportCell = function(cell) {
+	var val = this.getCurrentData();
+	cell.value = "";
+	if (val)
+		for (var i = 0; i < val.length; ++i) {
+			if (i > 0) cell.value += ", ";
+			cell.value += this._getValue(val[i]);
+		}
+};
 field_list_of_fixed_values.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;

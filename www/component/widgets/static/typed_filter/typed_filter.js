@@ -10,6 +10,7 @@ typed_filter.prototype = {
 	getHTMLElement: function() { return this.element; },
 	getData: function() { return this.data; },
 	can_multiple: false,
+	isActive: function() { return true; },
 	/** Gives the focus to this filter, like the user wants to enter something right now */
 	focus: function() {
 		this.element.focus();

@@ -9,6 +9,7 @@ class service_get_latests extends Service {
 		echo "<li><code>latests</code>: array of latests news id received last request</li>";
 		echo "<li><code>latests_timestamp</code>: timestamp of the latests</li>";
 		echo "<li><code>sections</code>: list of sections with categories and tags to get the news</li>";
+		echo "<li><code>type</code>: type of news</li>";
 		echo "</ul>";
 	}
 	public function outputDocumentation() { echo "List of NewsObject"; }
@@ -19,6 +20,7 @@ class service_get_latests extends Service {
 		$q = SQLQuery::create()->bypassSecurity()->select("News");
 		$q->whereNull("News", "reply_to");
 		$q->where("update_timestamp", ">=", $input["latests_timestamp"]);
+		$q->whereValue("News", "type", $input["type"]);
 		$q->orderBy("News", "update_timestamp", false);
 		
 		$where = "(";
@@ -44,6 +46,13 @@ class service_get_latests extends Service {
 						}
 						$where .= ")";
 					}
+					$filters = $section->getTagsFilters();
+					foreach ($filters as $tagname=>$tagvalues) {
+						$where .= " AND (`tags` NOT REGEXP '.*/(".SQLQuery::escape($tagname).")[^/]*/.*'";
+						foreach ($tagvalues as $val)
+							$where .= " OR `tags` LIKE '%".SQLQuery::escape("/".$tagname.$val."/")."%'";
+						$where .= ")";
+					}
 					$where .= ")";
 					foreach ($section->getCategories() as $cat) {
 						if ($cat->getAccessRight() == 0) continue;
@@ -61,8 +70,15 @@ class service_get_latests extends Service {
 							}
 							$where .= ")";
 						}
+						$filters = $section->getTagsFilters();
+						foreach ($filters as $tagname=>$tagvalues) {
+							$where .= " AND (`tags` NOT REGEXP '.*/(".SQLQuery::escape($tagname).")[^/]*/.*'";
+							foreach ($tagvalues as $val)
+								$where .= " OR `tags` LIKE '%".SQLQuery::escape("/".$tagname.$val."/")."%'";
+							$where .= ")";
+						}
 						$where .= ")";
-					}					
+					}
 				}				
 			}
 		}

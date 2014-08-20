@@ -13,7 +13,7 @@ class page_academic_calendar extends Page {
 		<img src='/static/calendar/calendar_32.png' style="vertical-align:top"/>
 		Academic Calendar: Years and Periods
 	</div>
-	<div id='tree_container' style='background-color:white;flex:1 1 auto;'></div>
+	<div id='tree_container' style='background-color:white;flex:1 1 auto;overflow:auto;'></div>
 	<?php if ($can_edit) { ?>
 	<div class="page_footer" style="flex:none;">
 		<button class='action' onclick='new_year();'>New Academic Year</button>
@@ -118,7 +118,7 @@ function build_period(parent, period) {
 	item.tr.title = "Edit or Remove Academic Year "+parent.academic_year.name;
 	item.tr.onclick = function() {
 		window.top.require("popup_window.js",function() {
-			var popup = new window.top.popup_window("New Academic Year",null,"");
+			var popup = new window.top.popup_window("Academic Year",null,"");
 			var frame = popup.setContentFrame("/dynamic/curriculum/page/edit_academic_year?id="+period.year_id+"&onsave=saved");
 			frame.saved = function() {
 				popup.close();

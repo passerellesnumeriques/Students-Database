@@ -31,6 +31,13 @@ window.databaselock = {
 				this._locks.splice(i,1);
 	},
 	
+	unlock: function(id, handler) {
+		service.json("data_model", "unlock", {lock:id}, function(res) {
+			if (res) databaselock.removeLock(id);
+			handler(res);
+		});
+	},
+	
 	/** List of locks on the application */
 	_locks: [],
 	/** Called when the user is inactive, so that we can release the locks and redirect the user to the home page */

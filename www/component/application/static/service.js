@@ -154,14 +154,22 @@ service = {
 	 * @param {Object} input the javascript object to convert into a JSON string
 	 * @returns {String} the JSON representation of the given object
 	 */
-	generateInput: function(input) {
+	generateInput: function(input,done) {
+		if (!done) done = [];
 		var s = "";
 		if (input == null) return "null";
+		if (typeof input == 'object') {
+			if (done.contains(input)) {
+				window.console.error("Recursive Input");
+				return "{__recursive__:true}";
+			}
+			done.push(input);
+		}
 		if (input instanceof Array || (typeof input == 'object' && getObjectClassName(input) == "Array")) {
 			s += "[";
 			for (var i = 0; i < input.length; ++i) {
 				if (i>0) s += ",";
-				s += service.generateInput(input[i]);
+				s += service.generateInput(input[i],done);
 			}
 			s += "]";
 		} else if (input instanceof Date || (typeof input == 'object' && getObjectClassName(input) == "Date")) {
@@ -171,13 +179,16 @@ service = {
 			var first = true;
 			for (var attr in input) {
 				if (first) first = false; else s += ",";
-				s += "\""+attr + "\":" + service.generateInput(input[attr]);
+				s += "\""+attr + "\":" + service.generateInput(input[attr],done);
 			}
 			s += "}";
 		} else if (typeof input == 'string')
 			s += "\""+input.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")+"\"";
 		else
 			s += input;
+		if (typeof input == 'object') {
+			done.remove(input);
+		}
 		return s;
 	}
 };

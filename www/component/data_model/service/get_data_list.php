@@ -66,8 +66,7 @@ class service_get_data_list extends Service {
 		// retrieve DataDisplay, filters, and build the request
 		$data_aliases = array();
 		$display_data = array();
-		$filters = array();
-		$remaining_filters = $input["filters"];
+		$filters = $input["filters"];
 		for ($i = 0; $i < count($fields); $i++) {
 			$name = $fields[$i]["name"];
 			$path = $paths[$i];
@@ -98,51 +97,115 @@ class service_get_data_list extends Service {
 				return;
 			}
 			array_push($display_data, $data);
-			$f = array();
-			for ($j = 0; $j < count($remaining_filters); $j++) {
-				$filter = $remaining_filters[$j];
-				if ($filter["category"] <> $data->getCategoryName()) continue;
-				if ($filter["name"] <> $data->getDisplayName()) continue;
-				array_splice($remaining_filters, $j, 1);
-				$j--;
-				$fil = array();
-				array_push($fil, $filter["data"]);
-				while (isset($filter["or"])) {
-					$filter = $filter["or"];
-					array_push($fil, $filter["data"]);
-				}
-				array_push($f, $fil);
+			$data_alias = $data->buildSQL($q, $path);
+			array_push($data_aliases, $data_alias);
+			// put datadisplay in filters
+			foreach ($filters as &$filter) {
+				do {
+					if ($filter["category"] == $data->getCategoryName() && $filter["name"] == $data->getDisplayName()) {
+						$filter["datadisplay"] = $data;
+						$filter["datapath"] = $path;
+						$filter["dataaliases"] = $data_alias;
+					}
+					if (!isset($filter["or"])) break;
+					$f = &$filter["or"];
+					unset($filter);
+					$filter = &$f;
+				} while (true);
 			}
-			array_push($filters, $f);
-			array_push($data_aliases, $data->buildSQL($q, $path, $f));
 		}
 		
 		// add filters not related to a displayed data
-		foreach ($remaining_filters as $filter) {
-			$found = false;
-			foreach ($possible as $path) {
-				$from = null;
-				if ($path instanceof DataPath_Join && $path->isReverse())
-					$from = $path->foreign_key->name;
-				$display = DataModel::get()->getTableDataDisplay($path->table->getName());
-				if ($display == null) continue;
-				if ($display->getCategory()->getName() <> $filter["category"]) continue;
-				foreach ($display->getDataDisplay($from, $path->sub_model) as $data) {
-					if ($data->getDisplayName() <> $filter["name"]) continue;
-					$found = true;
-					$fil = array();
-					array_push($fil, $filter["data"]);
-					while (isset($filter["or"])) {
-						$filter = $filter["or"];
-						array_push($fil, $filter["data"]);
-					}
-					$filter_list = array($fil);
-					$data->buildSQL($q, $path, $filter_list);
-					break;
-				}
-				if ($found) break;
+		$remaining_filters = array();
+		foreach ($filters as &$filter) {
+			if (!isset($filter["datadisplay"]))
+				array_push($remaining_filters, $filter);
+			while (isset($filter["or"])) {
+				$f = &$filter["or"];
+				unset($filter);
+				$filter = &$f;
+				if (!isset($filter["datadisplay"]))
+					array_push($remaining_filters, $filter);
 			}
-			if (!$found) PNApplication::error("Invalid filter: unknown data '".$filter["name"]."' in category '".$filter["category"]."'");
+		}
+		foreach ($filters as &$filter) {
+			do {
+				if (!isset($filter["datadisplay"])) {
+					$found = false;
+					foreach ($possible as $path) {
+						$from = null;
+						if ($path instanceof DataPath_Join && $path->isReverse())
+							$from = $path->foreign_key->name;
+						$display = DataModel::get()->getTableDataDisplay($path->table->getName());
+						if ($display == null) continue;
+						if ($display->getCategory()->getName() <> $filter["category"]) continue;
+						foreach ($display->getDataDisplay($from, $path->sub_model) as $data) {
+							if ($data->getDisplayName() <> $filter["name"]) continue;
+							$found = true;
+							$filter["datadisplay"] = $data;
+							$filter["datapath"] = $path;
+							$filter["dataaliases"] = $data->buildSQL($q, $path);
+							// check if we have other filters on same data
+							foreach ($filters as &$fil) {
+								do {
+									if (!isset($fil["datadisplay"])) {
+										if ($fil["category"] == $display->getCategory()->getName() && $fil["name"] == $data->getDisplayName()) {
+											$fil["datadisplay"] = $data;
+											$fil["datapath"] = $path;
+											$fil["dataaliases"] = $filter["dataaliases"];
+										}
+									}
+									if (!isset($fil["or"])) break;
+									$f = &$fil["or"];
+									unset($fil);
+									$fil = &$f;
+									unset($f);
+								} while (true);				
+							}
+							break;
+						}
+						if ($found) break;
+					}
+					if (!$found) PNApplication::error("Invalid filter: unknown data '".$filter["name"]."' in category '".$filter["category"]."'");
+				}
+				if (!isset($filter["or"])) break;
+				$f = &$filter["or"];
+				unset($filter);
+				$filter = &$f;
+				unset($f);
+			} while (true);
+		}
+		
+		// apply filters
+		foreach ($filters as &$filter) {
+			$where = "(";
+			$having = "(";
+			$cd = $filter["datadisplay"]->getFilterCondition($q, $filter["datapath"], $filter["dataaliases"], $filter["data"]);
+			if ($cd <> null) {
+				if ($cd["type"] == "where")
+					$where .= "(".$cd["condition"].")";
+				else if ($cd["type"] == "having")
+					$having .= "(".$cd["condition"].")";
+			}
+			while (isset($filter["or"])) {
+				$cd = $filter["or"]["datadisplay"]->getFilterCondition($q, $filter["or"]["datapath"], $filter["or"]["dataaliases"], $filter["or"]["data"]);
+				if ($cd <> null) {
+					if ($cd["type"] == "where") {
+						if ($where <> "(") $where .= " OR ";
+						$where .= "(".$cd["condition"].")";
+					} else if ($cd["type"] == "having") {
+						if ($having <> "(") $having .= " OR ";
+						$having .= "(".$cd["condition"].")";
+					}
+				}
+				$f = $filter["or"];
+				unset($filter);
+				$filter = $f;
+			}
+			if ($where <> "(")
+				$q->where($where.")");
+			if ($having <> "(")
+				$q->having($having.")");
 		}
 		
 		// handle sort
@@ -186,7 +249,7 @@ class service_get_data_list extends Service {
 		for ($i = 0; $i < count($display_data); $i++) {
 			$data = $display_data[$i];
 			$path = $paths[$i];
-			$data->performSubRequests($q, $res, $data_aliases[$i], $path, $filters[$i]);
+			$data->performSubRequests($q, $res, $data_aliases[$i], $path);
 		}
 		
 		if (!isset($input["export"])) {
