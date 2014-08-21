@@ -15,8 +15,8 @@ class page_configure_transcripts extends Page {
 		if (isset($_GET["specialization"]))
 			$spe = PNApplication::$instance->curriculum->getSpecialization($_GET["specialization"]);
 		
-		$title = "Batch ".htmlentities($batch["name"]).", Period ".htmlentities($period["name"]);
-		if ($spe <> null) $title .= ", Specialization ".htmlentities($spe["name"]);
+		$title = "Batch ".toHTML($batch["name"]).", Period ".toHTML($period["name"]);
+		if ($spe <> null) $title .= ", Specialization ".toHTML($spe["name"]);
 		
 		$config = SQLQuery::create()
 			->select("TranscriptConfig")
@@ -126,7 +126,7 @@ class page_configure_transcripts extends Page {
 				<input type='checkbox' <?php echo @$config["general_appreciation"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('general_appreciation',this.checked?1:0);"/> General appreciation<br/>
 			<?php 
 			foreach ($categories as $cat) {
-				echo "<div class='page_section_title3' style='color:#602000;font-weight:bold;padding-bottom:0px;margin-bottom:0px;'>".htmlentities($cat["name"])."</div>";
+				echo "<div class='page_section_title3' style='color:#602000;font-weight:bold;padding-bottom:0px;margin-bottom:0px;'>".toHTML($cat["name"])."</div>";
 				foreach ($all_subjects as $s) {
 					if ($s["category"] <> $cat["id"]) continue;
 					if ($s["period"] <> $period["id"]) continue;
@@ -134,7 +134,7 @@ class page_configure_transcripts extends Page {
 					echo "<div style='white-space:nowrap'>";
 					echo "<input type='checkbox' onchange='changeSubject(".$s["id"].",this.checked);'";
 					foreach ($selected_subjects as $ss) if ($s["id"] == $ss["id"]) { echo " checked='checked'"; break; }
-					echo "/> ".htmlentities($s["code"])." - ".htmlentities($s["name"]);
+					echo "/> ".toHTML($s["code"])." - ".toHTML($s["name"]);
 					echo "</div>";
 				}
 			}
@@ -149,15 +149,15 @@ class page_configure_transcripts extends Page {
 			<table>
 				<tr>
 					<td>Location</td>
-					<td><input type='text' size=10 value="<?php echo htmlentities(@$config["location"]);?>" onchange="saveTranscriptConfig('location',this.value);"/></td>
+					<td><input type='text' size=10 value="<?php echo toHTML(@$config["location"]);?>" onchange="saveTranscriptConfig('location',this.value);"/></td>
 				</tr>
 				<tr>
 					<td>Signatory Name</td>
-					<td><input type='text' size=10 value="<?php echo htmlentities(@$config["signatory_name"]);?>" onchange="saveTranscriptConfig('signatory_name',this.value);"/></td>
+					<td><input type='text' size=10 value="<?php echo toHTML(@$config["signatory_name"]);?>" onchange="saveTranscriptConfig('signatory_name',this.value);"/></td>
 				</tr>
 				<tr>
 					<td>Signatory Title</td>
-					<td><input type='text' size=10 value="<?php echo htmlentities(@$config["signatory_title"]);?>" onchange="saveTranscriptConfig('signatory_title',this.value);"/></td>
+					<td><input type='text' size=10 value="<?php echo toHTML(@$config["signatory_title"]);?>" onchange="saveTranscriptConfig('signatory_title',this.value);"/></td>
 				</tr>
 			</table>
 			<div class='page_section_title'>
@@ -168,7 +168,7 @@ class page_configure_transcripts extends Page {
 			foreach($grading_systems as $name=>$spec) {
 				echo "<option value=\"".$name."\"";
 				if ($name == $config["grading_system"]) echo " selected='selected'";
-				echo ">".htmlentities($name)."</option>";
+				echo ">".toHTML($name)."</option>";
 			}
 			?>
 			</select>

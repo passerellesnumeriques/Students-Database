@@ -89,7 +89,7 @@ class page_students_grades extends Page {
 		$title .= ", ".$period["name"];
 		if ($spe <> null) $title .= ", Specialization ".$spe["name"];
 		if ($class <> null) $title .= ", Class ".$class["name"];
-		echo htmlentities($title);
+		echo toHTML($title);
 		?>
 		</span>
 	</div>
@@ -110,7 +110,7 @@ class page_students_grades extends Page {
 		foreach($grading_systems as $name=>$spec) {
 			echo "<option value=\"".$spec."\"";
 			if ($name == $grading_system) echo " selected='selected'";
-			echo ">".htmlentities($name)."</option>";
+			echo ">".toHTML($name)."</option>";
 		}
 		?>
 		</select>
@@ -119,6 +119,7 @@ class page_students_grades extends Page {
 		<span style='margin-left:10px'></span>
 		<button class='flat' id='columns_chooser_button'><img src='/static/data_model/table_column.png'/> Choose columns</button>
 		<button class='flat' id='export_button'><img src='<?php echo theme::$icons_16["_export"];?>'/> Export</button>
+		<button class='flat' id='print_button'><img src='<?php echo theme::$icons_16["print"];?>'/> Print</button>
 		</div>
 	</div>
 	<div style='flex:1 1 auto;overflow:auto' id='grades_container'>
@@ -173,6 +174,7 @@ function getStudentComment(people_id) {
 var grades_grid = new people_data_grid('grades_container', function(people) { return people; }, "Student");
 grades_grid.setColumnsChooserButton(document.getElementById('columns_chooser_button'));
 grades_grid.setExportButton(document.getElementById('export_button'),<?php echo json_encode("Grades of ".$title);?>,'Grades');
+grades_grid.setPrintButton(document.getElementById('print_button'));
 grades_grid.grid.makeScrollable();
 for (var i = 0; i < categories.length; ++i) {
 	var cat_subjects = [];
@@ -187,7 +189,7 @@ for (var i = 0; i < categories.length; ++i) {
 		sname.target = "application_frame";
 		sname.appendChild(document.createTextNode(cat_subjects[j].name));
 		sname.className = "black_link";
-		tooltip(sname, "Open grade for subject "+cat_subjects[j].name);
+		tooltip(sname, "Click to open grades of subject <i>"+cat_subjects[j].name+"</i>");
 		title.appendChild(sname);
 		var span_coef = document.createElement("SPAN");
 		span_coef.style.fontWeight = "normal";

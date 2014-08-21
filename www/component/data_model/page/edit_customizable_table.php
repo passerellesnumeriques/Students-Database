@@ -101,13 +101,13 @@ class page_edit_customizable_table extends Page {
 		}
 		</style>
 		<table class='fixed_data'>
-			<tr><?php foreach ($fixed_by_category as $cat=>$list) echo "<th>".htmlentities($cat)."</th>"; ?></tr>
+			<tr><?php foreach ($fixed_by_category as $cat=>$list) echo "<th>".toHTML($cat)."</th>"; ?></tr>
 			<tr>
 				<?php
 				foreach ($fixed_by_category as $cat=>$list) {
 					echo "<td valign=top>";
 					foreach ($list as $data)
-						echo htmlentities($data->getDisplayName())."<br/>";
+						echo toHTML($data->getDisplayName())."<br/>";
 					echo "</td>";
 				}
 				?>

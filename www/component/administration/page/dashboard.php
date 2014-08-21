@@ -59,8 +59,8 @@ foreach (PNApplication::$instance->components as $name=>$c) {
 			echo " href='".$page->getPage()."'";
 			echo ">";
 			echo "<div><img src='".$page->getIcon32()."'/></div>";
-			echo "<div>".htmlentities($page->getTitle())."</div>";
-			echo "<div>".htmlentities($page->getInfoText())."</div>";
+			echo "<div>".toHTML($page->getTitle())."</div>";
+			echo "<div>".toHTML($page->getInfoText())."</div>";
 			echo "</a>";
 		}
 	}

@@ -58,7 +58,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 						<div style='display:inline-block;text-align:center;margin:10px;vertical-align:top'>
 							<div id='subject_<?php echo $subject["id"];?>' style="border:1px solid rgba(0,0,0,0);border-radius:5px;padding:5px;cursor:pointer" onmouseover="this.style.border='1px solid #F0D080';" onmouseout="this.style.border='1px solid rgba(0,0,0,0)';" onclick="popup_frame('/static/selection/exam/exam_subject_16.png', 'Exam Subject', '/dynamic/selection/page/exam/subject?id=<?php echo $subject["id"];?>&readonly=true');">
 								<img src='/static/selection/exam/exam_subject_48.png'/><br/>
-								<span style='font-size:12pt;font-weight:bold'><?php echo htmlentities($subject["name"]);?></span><br/>
+								<span style='font-size:12pt;font-weight:bold'><?php echo toHTML($subject["name"]);?></span><br/>
 							</div>
 							<?php if ($can_edit) { ?>
 							<button class='action' onclick="extractSubject(<?php echo $subject["id"];?>);">Extract...</button>
@@ -73,7 +73,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 								foreach ($list as $e) {
 									echo "<div id='extract_".$e["id"]."' style='flex:none;padding:3px;font-weight:bold;border:1px solid #A0A0A0;border-radius:3px;margin-top:5px;margin-bottom:5px;'>";
 									echo "<a class='black_link' href='#' title='Click to edit' onclick='editExtract(".$e["id"].");return false;'>";
-									echo htmlentities($e["name"]);
+									echo toHTML($e["name"]);
 									echo "</a>";
 									if ($can_edit)
 										echo " <button class='flat small_icon' title='Remove' onclick='removeExtract(".$e["id"].");'><img src='".theme::$icons_10["remove"]."'/></button>";

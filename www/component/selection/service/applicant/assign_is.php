@@ -99,13 +99,13 @@ class service_applicant_assign_is extends Service {
 		// here we need confirmation from the user
 		$data = array("ok"=>array(),"past"=>array(),"future"=>array(),"different"=>array());
 		foreach ($applicants_ok as $a) array_push($data["ok"], $a["people_id"]);
-		$message = "This Information Session is linked to the exam center <i>".htmlentities($is["exam_center_name"])."</i>, meaning the applicants should be assigned to this exam center.<br/>";
+		$message = "This Information Session is linked to the exam center <i>".toHTML($is["exam_center_name"])."</i>, meaning the applicants should be assigned to this exam center.<br/>";
 		$message .= "Among the applicants you want to assign to the new Information Session:<ul>";
 		if (count($applicants_in_past_exam_session) > 0) {
 			$message .= "<li>";
 			$message .= "The following applicants are already assigned to another exam center, and they already had their exam, so they will stay in their current exam center:<ul>";
 			foreach ($applicants_in_past_exam_session as $a) {
-				$message .= "<li>".htmlentities($a["first_name"]." ".$a["last_name"])."</li>";
+				$message .= "<li>".toHTML($a["first_name"]." ".$a["last_name"])."</li>";
 				array_push($data["past"], $a["people_id"]);
 			}
 			$message .= "</ul>";
@@ -115,7 +115,7 @@ class service_applicant_assign_is extends Service {
 			$message .= "<li>";
 			$message .= "The following applicants are already assigned to another exam center, and they are scheduled for an exam session. They will be removed from their exam session to be assigned to the new exam center:<ul>";
 			foreach ($applicants_in_future_exam_session as $a) {
-				$message .= "<li>".htmlentities($a["first_name"]." ".$a["last_name"])."</li>";
+				$message .= "<li>".toHTML($a["first_name"]." ".$a["last_name"])."</li>";
 				array_push($data["future"], $a["people_id"]);
 			}
 			$message .= "</ul>";
@@ -125,7 +125,7 @@ class service_applicant_assign_is extends Service {
 			$message .= "<li>";
 			$message .= "The following applicants are already assigned to another exam center, and will be assigned to the new exam center:<ul>";
 			foreach ($applicants_different_exam_center as $a) {
-				$message .= "<li>".htmlentities($a["first_name"]." ".$a["last_name"])."</li>";
+				$message .= "<li>".toHTML($a["first_name"]." ".$a["last_name"])."</li>";
 				array_push($data["different"], $a["people_id"]);
 			}
 			$message .= "</ul>";

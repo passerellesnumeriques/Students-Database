@@ -41,7 +41,7 @@ class page_people_new_type extends Page {
 				foreach ($all_paths as $p) if ($p->table->getName() == $table_name) { array_push($paths, $p); break; }
 			echo "<div class='section'>";
 			echo "<div class='header'>";
-			if ($screen->getIcon() <> null) echo "<img src='".$screen->getIcon()."'/> ".htmlentities($screen->getName());
+			if ($screen->getIcon() <> null) echo "<img src='".$screen->getIcon()."'/> ".toHTML($screen->getName());
 			echo "</div>";
 			echo "<div>";
 			$screen->generate($this, $paths, $values, array(), "people_new_type");

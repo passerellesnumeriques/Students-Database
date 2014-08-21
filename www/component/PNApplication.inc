@@ -1,5 +1,6 @@
 <?php
 require_once("Component.inc");
+require_once("utilities.inc");
 
 /**
  * PNApplication is the root point, used to:
@@ -113,7 +114,7 @@ class PNApplication {
 			do {
 				foreach ($e->getTrace() as $trace)
 					if (isset($trace["file"]))
-						$message .= "<li>".htmlentities($trace["file"]." line ".$trace["line"])."</li>";
+						$message .= "<li>".toHTML($trace["file"]." line ".$trace["line"])."</li>";
 				$e = $e->getPrevious();
 				if ($e <> null) $message .= "<li><b>CAUSED BY:</b></li>";
 			} while ($e <> null);

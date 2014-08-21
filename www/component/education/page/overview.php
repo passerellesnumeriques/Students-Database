@@ -35,13 +35,13 @@ class page_overview extends Page {
 			else
 				echo "Alumni";
 		} else if (isset($_GET["batch"])) {
-			echo "Batch ".htmlentities($batches[0]["name"]);
+			echo "Batch ".toHTML($batches[0]["name"]);
 			if ($period <> null)
-				echo ", ".htmlentities($period["name"]);
+				echo ", ".toHTML($period["name"]);
 			if ($spe <> null)
-				echo ", Specialization ".htmlentities($spe["name"]);
+				echo ", Specialization ".toHTML($spe["name"]);
 			if ($class <> null)
-				echo ", Class ".htmlentities($class["name"]);
+				echo ", Class ".toHTML($class["name"]);
 		} else {
 			echo "All Students";
 		}

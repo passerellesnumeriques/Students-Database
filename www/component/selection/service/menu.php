@@ -21,7 +21,7 @@ Selection Campaign:<br/>
 foreach ($campaigns as $c) {
 	echo "<option value='".$c["id"]."'";
 	if ($c["id"] == $id) echo " selected='selected'";
-	echo ">".htmlentities($c["name"])."</option>";
+	echo ">".toHTML($c["name"])."</option>";
 }
 ?></select>
 <br/>

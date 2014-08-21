@@ -1771,7 +1771,7 @@ class SQLQuery {
 			if (!$t->acceptInsert($fields_values)) {
 				$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
 				foreach ($fields_values as $field=>$value)
-					$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+					$msg .= " ".toHTML($field)." = ".toHTML($value)."\n";
 				throw new Exception($msg);
 			}
 		}
@@ -1878,7 +1878,7 @@ class SQLQuery {
 				if (!$t->acceptInsert($fields_values)) {
 					$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
 					foreach ($fields_values as $field=>$value)
-						$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+						$msg .= " ".toHTML($field)." = ".toHTML($value)."\n";
 					throw new Exception($msg);
 				}
 			}
@@ -2466,7 +2466,7 @@ class SQLQuery {
 		// where
 		$s .= "<li>WHERE:<ul>";
 		foreach ($this->where as $w)
-			$s .= "<li>".htmlentities($w)."</li>";
+			$s .= "<li>".toHTML($w)."</li>";
 		$s .= "</ul></li>";
 		
 		$s .= "</ul>";

@@ -151,7 +151,7 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 	$design = str_replace("#Signatory Name#", @$config["signatory_name"], $design);
 	$design = str_replace("#Signatory Title#", @$config["signatory_title"], $design);
 	
-	$design = str_replace("#General Appreciation#", htmlentities($student_general_appreciation), $design);
+	$design = str_replace("#General Appreciation#", toHTML($student_general_appreciation), $design);
 	
 	processTranscriptCondition($design, "nb_hours", @$config["nb_hours"] == 1);
 	processTranscriptCondition($design, "coefficient", @$config["coefficient"] == 1);
@@ -195,7 +195,7 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 			$cat = $cats[$category_index][0];
 			$list = $cats[$category_index][1];
 			$cat_content = "".$content;
-			$cat_content = str_replace("#SUBJECT_CATEGORY_NAME#", htmlentities($cat["name"]), $cat_content);
+			$cat_content = str_replace("#SUBJECT_CATEGORY_NAME#", toHTML($cat["name"]), $cat_content);
 			$cat_content = str_replace("#COUNT(SUBJECTS)#", count($list), $cat_content);
 			processTranscriptConditionIndex($cat_content, "SUBJECT_CATEGORY", $category_index, count($cats));
 			$total_hours = 0;
@@ -244,8 +244,8 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 					$subject = $list[$subject_index];
 					$subj_content = substr($cat_content, $k+9, $l-$k-9);
 					processTranscriptConditionIndex($subj_content, "SUBJECT", $subject_index, count($list));
-					$subj_content = str_replace("#SUBJECT_CODE#", htmlentities($subject["code"]), $subj_content);
-					$subj_content = str_replace("#SUBJECT_NAME#", htmlentities($subject["name"]), $subj_content);
+					$subj_content = str_replace("#SUBJECT_CODE#", toHTML($subject["code"]), $subj_content);
+					$subj_content = str_replace("#SUBJECT_NAME#", toHTML($subject["name"]), $subj_content);
 					$subj_content = str_replace("#SUBJECT_COEFFICIENT#", isset($subject["coefficient"]) && isset($subject["max_grade"]) ? $subject["coefficient"] : "", $subj_content);
 					$hours = $subject["hours"];
 					if ($hours !== null) {
@@ -262,7 +262,7 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 					$subj_content = str_replace("#SUBJECT_HOURS#", $hours, $subj_content);
 					$student_grade = null;
 					foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g; break; }
-					$subj_content = str_replace("#COMMENT#", htmlentities($student_grade["comment"]), $subj_content);
+					$subj_content = str_replace("#COMMENT#", toHTML($student_grade["comment"]), $subj_content);
 					$id = "grade_subject_".$subject["id"]."_".$student["id"];
 					$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>".$student_grade["grade"]."</div>", $subj_content);
 					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade["grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";
@@ -296,9 +296,9 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 			$cat = $single[$subject_index][0];
 			$subject = $single[$subject_index][1];
 			$subj_content = "".$content;
-			$subj_content = str_replace("#CATEGORY_NAME#", htmlentities($cat["name"]), $subj_content);
-			$subj_content = str_replace("#SUBJECT_CODE#", htmlentities($subject["code"]), $subj_content);
-			$subj_content = str_replace("#SUBJECT_NAME#", htmlentities($subject["name"]), $subj_content);
+			$subj_content = str_replace("#CATEGORY_NAME#", toHTML($cat["name"]), $subj_content);
+			$subj_content = str_replace("#SUBJECT_CODE#", toHTML($subject["code"]), $subj_content);
+			$subj_content = str_replace("#SUBJECT_NAME#", toHTML($subject["name"]), $subj_content);
 			$subj_content = str_replace("#SUBJECT_COEFFICIENT#", isset($subject["coefficient"]) && isset($subject["max_grade"]) ? $subject["coefficient"] : "", $subj_content);
 			$hours = $subject["hours"];
 			if ($hours !== null) {
@@ -315,7 +315,7 @@ function generateTranscriptFor($config, $categories, $subjects, $period, $studen
 			$subj_content = str_replace("#SUBJECT_HOURS#", $hours, $subj_content);
 			$student_grade = null;
 			foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g; break; }
-			$subj_content = str_replace("#COMMENT#", htmlentities($student_grade["comment"]), $subj_content);
+			$subj_content = str_replace("#COMMENT#", toHTML($student_grade["comment"]), $subj_content);
 			$id = "grade_subject_".$subject["id"]."_".$student["id"];
 			$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>".$student_grade["grade"]."</div>", $subj_content);
 			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade["grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());";

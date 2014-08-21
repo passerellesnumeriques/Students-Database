@@ -432,6 +432,12 @@ custom_data_grid.prototype = {
 			});
 		};
 	},
+	setPrintButton: function(button) {
+		var t=this;
+		button.onclick = function() {
+			t.grid.print();
+		};
+	},
 	
 	_menuColumns: function(button) {
 		var t=this;

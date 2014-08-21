@@ -49,9 +49,11 @@ field_addresses.prototype._create = function(data) {
 	if (typeof this.config.sub_data_index == 'undefined') {
 		if (this.editable) {
 			this.table = document.createElement("TABLE"); this.element.appendChild(this.table);
+			this.table.style.borderSpacing = "0px";
+			this.table.style.borderCollapse = "collapse";
 			var t=this;
 			require("addresses.js",function() {
-				t.control = new addresses(t.table, false, data.type, data.type_id, objectCopy(data.addresses,10), true, true, true);
+				t.control = new addresses(t.table, false, data.type, data.type_id, valueCopy(data.addresses,10), true, true, true);
 				t.control.onchange.add_listener(function() { t._datachange(); });
 			});
 			this.addData = function(new_data) {
@@ -79,6 +81,8 @@ field_addresses.prototype._create = function(data) {
 			};
 		} else {
 			this.table = document.createElement("TABLE"); this.element.appendChild(this.table);
+			this.table.style.borderSpacing = "0px";
+			this.table.style.borderCollapse = "collapse";
 			this.table.appendChild(this.tr = document.createElement("TR"));
 			this._setData = function(data) {
 				while (this.tr.childNodes.length > 0) this.tr.removeChild(this.tr.childNodes[0]);
@@ -88,6 +92,7 @@ field_addresses.prototype._create = function(data) {
 					for (var i = 0; i < data.addresses.length; ++i) {
 						var text = new address_text(data.addresses[i]);
 						var td = document.createElement("TD");
+						td.style.padding = "0px 1px";
 						t.tr.appendChild(td);
 						td.appendChild(text.element);
 						td.style.verticalAlign = "top";
@@ -266,7 +271,7 @@ field_addresses.prototype._create = function(data) {
 				this.addData = function(new_data) {
 					var division_index = this.config.sub_data_index;
 					require("contact_objects.js", function() {
-						var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", "Work");
+						var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", "Home");
 						if (typeof new_data == 'string') {
 							var area = window.top.geography.searchAreaByNameInDivision(t.country_data, division_index, new_data);
 							if (!area)
@@ -343,7 +348,7 @@ field_addresses.prototype._create = function(data) {
 				this.element.appendChild(add_button);
 				add_button.onclick = function(event) {
 					require("contact_objects.js", function() {
-						var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "Work");
+						var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "Home");
 						t._data.addresses.push(address);
 						t.setData(t._data, true);
 					});

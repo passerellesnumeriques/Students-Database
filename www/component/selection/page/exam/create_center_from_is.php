@@ -46,7 +46,7 @@ class page_exam_create_center_from_is extends SelectionPage {
 			<div class='content' style='height:100%'>
 				<table class='grid'>
 					<tr><th></th><th>Information Session</th><th>Hosting Partner</th><?php
-					foreach ($divisions as $div) echo "<th>".htmlentities($div["name"])."</th>"; 
+					foreach ($divisions as $div) echo "<th>".toHTML($div["name"])."</th>"; 
 					?><th>Applicants</th></tr>
 					<?php 
 					foreach ($list as $is) {
@@ -55,11 +55,11 @@ class page_exam_create_center_from_is extends SelectionPage {
 						if ($is["geographic_area"] <> null)
 							echo "<input type='radio' id='radio_is_".$is["is_id"]."' onchange=\"if (this.checked) host_selected(".$is["is_id"].");\"/>";
 						echo "</td>";
-						echo "<td>".htmlentities($is["is_name"])."</td>";
+						echo "<td>".toHTML($is["is_name"])."</td>";
 						if ($is["geographic_area"] == null)
 							echo "<td colspan=".(count($divisions)+1)." style='color:red'>No hosting partner !</td>";
 						else {
-							echo "<td>".htmlentities($is["organization_name"])."</td>";
+							echo "<td>".toHTML($is["organization_name"])."</td>";
 							$host_areas = $this->getAreas($is["geographic_area"], $divisions, $areas);
 							foreach ($host_areas as $a) {
 								echo "<td>".($a <> null ? $a["name"] : "")."</td>";
@@ -82,7 +82,7 @@ class page_exam_create_center_from_is extends SelectionPage {
 			<div class='content' style='height:100%'>
 				<table class='grid'>
 					<tr><th></th><th>Information Session</th><th>Hosting Partner</th><?php
-					foreach ($divisions as $div) echo "<th>".htmlentities($div["name"])."</th>"; 
+					foreach ($divisions as $div) echo "<th>".toHTML($div["name"])."</th>"; 
 					?><th>Applicants</th></tr>
 					<?php 
 					foreach ($list as $is) {
@@ -90,11 +90,11 @@ class page_exam_create_center_from_is extends SelectionPage {
 						echo "<td>";
 						echo "<input type='checkbox' disabled='disabled' id='cb_is_".$is["is_id"]."'/>";
 						echo "</td>";
-						echo "<td>".htmlentities($is["is_name"])."</td>";
+						echo "<td>".toHTML($is["is_name"])."</td>";
 						if ($is["geographic_area"] == null)
 							echo "<td colspan=".(count($divisions)+1)." style='color:red'>No hosting partner !</td>";
 						else {
-							echo "<td>".htmlentities($is["organization_name"])."</td>";
+							echo "<td>".toHTML($is["organization_name"])."</td>";
 							$host_areas = $this->getAreas($is["geographic_area"], $divisions, $areas);
 							foreach ($host_areas as $a) {
 								echo "<td>".($a <> null ? $a["name"] : "")."</td>";

@@ -30,7 +30,7 @@ class page_exam_subject extends SelectionPage {
 			$locked_by = null;
 			$db_lock = $this->performRequiredLocks("ExamSubject",$id,null,$current_campaign, $locked_by);
 			if($db_lock == null) {
-				echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> This subject is currently edited by ".htmlentities($locked_by)."</div>";
+				echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> This subject is currently edited by ".toHTML($locked_by)."</div>";
 				$readonly = true;
 			}
 		}

@@ -143,7 +143,7 @@ class page_curriculum extends Page {
 		<div style="width:100%;height:100%;background-color:white;display:flex;flex-direction:column;">
 			<div class="page_title" style="flex:none">
 				<img src='/static/curriculum/curriculum_32.png'/>
-				Curriculum for Batch <span id='batch_name'><?php echo htmlentities($batch_info["name"]);?></span><?php if ($period_id <> null) echo ", <span id='period_name'>".$single_period["name"]."</span>";?>
+				Curriculum for Batch <span id='batch_name'><?php echo toHTML($batch_info["name"]);?></span><?php if ($period_id <> null) echo ", <span id='period_name'>".$single_period["name"]."</span>";?>
 				<?php if ($can_edit) {
 					if ($editing)
 						echo "<button class='action' onclick=\"window.onuserinactive();\"><img src='".theme::$icons_16["no_edit"]."'/> Stop editing</button>";
@@ -172,7 +172,7 @@ class page_curriculum extends Page {
 						echo "<img src='/static/calendar/calendar_24.png'/> ";
 						$id = $this->generateID();
 						echo "<span id='$id' style='margin-right:10px'>";
-						echo htmlentities($period["name"]);
+						echo toHTML($period["name"]);
 						echo "</span>";
 						$this->onload("window.top.datamodel.registerCellSpan(window,'BatchPeriod','name',".$period["id"].",document.getElementById('$id'));");
 						if ($editing) {
@@ -205,7 +205,7 @@ class page_curriculum extends Page {
 							echo "<img src='/static/curriculum/curriculum_16.png'/> ";
 							$id = $this->generateID();
 							echo "<span id='$id'>";
-							echo htmlentities($spe["name"]);
+							echo toHTML($spe["name"]);
 							echo "</span>";
 							$this->onload("window.top.datamodel.registerCellSpan(window,'Specialization','name',".$spe["id"].",document.getElementById('$id'));");
 							echo "</td>";
@@ -228,7 +228,7 @@ class page_curriculum extends Page {
 							echo "<img src='/static/curriculum/subjects_16.png'/> ";
 							$id = $this->generateID();
 							echo "<span id='$id'>";
-							echo htmlentities($cat["name"]);
+							echo toHTML($cat["name"]);
 							echo "</span>";
 							$this->onload("window.top.datamodel.registerCellSpan(window,'CurriculumSubjectCategory','name',".$cat["id"].",document.getElementById('$id'));");
 							if ($editing) {

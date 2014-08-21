@@ -92,7 +92,7 @@ namespace datamodel {
 				}
 				$has_something = true;
 				$html .= "<tr>";
-				$html .= "<td>".htmlentities($data->getDisplayName())."</td>";
+				$html .= "<td>".toHTML($data->getDisplayName())."</td>";
 				$id = $page->generateID();
 				$html .= "<td id='$id'>";
 				$tf = $data->getTypedField($path->sub_model);

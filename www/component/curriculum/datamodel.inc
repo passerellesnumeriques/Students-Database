@@ -47,31 +47,31 @@ $model->addTable("StudentBatch")
 	->addRemoveAccess("edit_curriculum", true)
    	->onInsert(function($fields,$id,$sub_model_instance) {
   		try {
-  			PNApplication::$instance->news->post("students", "students", array("batch".$id), "activity", "Batch ".htmlentities($fields["name"])." created.");
+  			PNApplication::$instance->news->post("students", "students", array("batch".$id), "activity", "Batch ".toHTML($fields["name"])." created.");
   		} catch (Exception $e) { PNApplication::error($e); }
    	})
    	->onRemove(function($row,$sub_model_instance) {
    		try {
-   			PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Batch ".htmlentities($row["name"])." removed.");
+   			PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Batch ".toHTML($row["name"])." removed.");
    		} catch (Exception $e) { PNApplication::error($e); }
    	})
    	->onBeforeUpdate(function($fields_values,$key,$sub_model_instance) {
    		$row = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$key)->executeSingleRow();
    		if (isset($fields_values["name"]) && $fields_values["name"] <> $row["name"])
    	  		try {
-   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Batch ".htmlentities($row["name"])." renamed to ".htmlentities($fields_values["name"]).".");
+   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Batch ".toHTML($row["name"])." renamed to ".toHTML($fields_values["name"]).".");
    			} catch (Exception $e) { PNApplication::error($e); }
    		if (isset($fields_values["start_date"]) && $fields_values["start_date"] <> $row["start_date"])
    	  		try {
-   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Integration date of Batch ".htmlentities($row["name"])." changed from ".$row["start_date"]." to ".$fields_values["start_date"].".");
+   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Integration date of Batch ".toHTML($row["name"])." changed from ".$row["start_date"]." to ".$fields_values["start_date"].".");
    			} catch (Exception $e) { PNApplication::error($e); }
    		if (isset($fields_values["end_date"]) && $fields_values["end_date"] <> $row["end_date"])
    	  		try {
-   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Graduation date of Batch ".htmlentities($row["name"])." changed from ".$row["end_date"]." to ".$fields_values["end_date"].".");
+   				PNApplication::$instance->news->post("students", "students", array("batch".$row["id"]), "activity", "Graduation date of Batch ".toHTML($row["name"])." changed from ".$row["end_date"]." to ".$fields_values["end_date"].".");
    			} catch (Exception $e) { PNApplication::error($e); }
    	})
  	->setRowDescriptionProvider(function($row) {
- 		return "Batch <i>".htmlentities($row["name"])."</i>";
+ 		return "Batch <i>".toHTML($row["name"])."</i>";
  	})
  	;
  	
@@ -85,7 +85,7 @@ $model->addTable("BatchPeriod")
 	->addRemoveAccess("edit_curriculum", true)
  	->setRowDescriptionProvider(function($row) {
  		$batch_name = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$row["batch"])->field("name")->executeSingleValue();
- 		return "Period <i>".htmlentities($row["name"])."</i> of Batch <i>$batch_name</i>";
+ 		return "Period <i>".toHTML($row["name"])."</i> of Batch <i>$batch_name</i>";
  	})
 	;
  	
@@ -104,7 +104,7 @@ $model->addTable("Specialization")
  	})
  	// TODO other news
  	->setRowDescriptionProvider(function($row) {
- 		return "Specialization <i>".htmlentities($row["name"])."</i>";
+ 		return "Specialization <i>".toHTML($row["name"])."</i>";
  	})
 	;
 
@@ -118,7 +118,7 @@ $model->addTable("BatchPeriodSpecialization")
 		$spe_name = SQLQuery::create()->select("Specialization")->whereValue("Specialization","id",$row["specialization"])->field("name")->executeSingleValue();
 		$period = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","id",$row["period"])->executeSingleRow();
 		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
-		return "Specialization <i>".htmlentities($spe_name)."</i> on Period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
+		return "Specialization <i>".toHTML($spe_name)."</i> on Period <i>".toHTML($period["name"])."</i> of batch <i>".toHTML($batch_name)."</i>";
 	})
 	;
 	
@@ -155,7 +155,7 @@ $model->addTable("AcademicClass")
  	->setRowDescriptionProvider(function($row) {
  		$period = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","id",$row["period"])->executeSingleRow();
 		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
- 		return "Class <i>".htmlentities($row["name"])."</i> during period <i>".htmlentities($period["name"])."</i> of batch <i>".htmlentities($batch_name)."</i>";
+ 		return "Class <i>".toHTML($row["name"])."</i> during period <i>".toHTML($period["name"])."</i> of batch <i>".toHTML($batch_name)."</i>";
  	})
 	;
  	
@@ -176,7 +176,7 @@ $model->addTable("CurriculumSubjectCategory")
  	})
  	// TODO other news
  	->setRowDescriptionProvider(function($row) {
- 		return "Subjects' category ".htmlentities($row["name"]);
+ 		return "Subjects' category ".toHTML($row["name"]);
  	})
 	;
 $model->addTable("CurriculumSubject")
@@ -223,7 +223,7 @@ $model->addTable("CurriculumSubject")
  			->field("BatchPeriod","name","period_name")
  			->field("StudentBatch","name","batch_name")
  			->executeSingleRow();
- 		return "Subject ".htmlentities($row["name"])." in period ".htmlentities($r["period_name"])." of batch ".htmlentities($r["batch_name"]);
+ 		return "Subject ".toHTML($row["name"])." in period ".toHTML($r["period_name"])." of batch ".toHTML($r["batch_name"]);
  	})
  	;
  	

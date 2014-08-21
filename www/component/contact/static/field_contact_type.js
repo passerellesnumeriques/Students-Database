@@ -37,7 +37,7 @@ field_contact_type.prototype._create = function(data) {
 			if (typeof new_data == 'object')
 				contact = new_data;
 			else
-				contact = new Contact(-1,t.config.type,"Work",new_data);
+				contact = new Contact(-1,t.config.type,"Professional",new_data);
 			var finalize = function() {
 				if (t.control)
 					t.control.createContact(contact);

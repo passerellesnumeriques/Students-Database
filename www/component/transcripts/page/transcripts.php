@@ -15,8 +15,8 @@ class page_transcripts extends Page {
 		if (isset($_GET["specialization"]))
 			$spe = PNApplication::$instance->curriculum->getSpecialization($_GET["specialization"]);
 		
-		$title = "Batch ".htmlentities($batch["name"]).", Period ".htmlentities($period["name"]);
-		if ($spe <> null) $title .= ", Specialization ".htmlentities($spe["name"]);
+		$title = "Batch ".toHTML($batch["name"]).", Period ".toHTML($period["name"]);
+		if ($spe <> null) $title .= ", Specialization ".toHTML($spe["name"]);
 		
 		if (isset($_GET["class"])) {
 			$cl = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
@@ -141,7 +141,7 @@ class page_transcripts extends Page {
 			<div style='flex:1 1 auto;overflow-y:auto;' id='students_list'>
 				<?php
 				foreach ($students as $s)
-					echo "<div class='student' onclick='selectStudent(".$s['people_id'].",this,".json_encode($s["last_name"]." ".$s["first_name"], JSON_HEX_APOS).");'>".htmlentities($s["last_name"])." ".htmlentities($s["first_name"])."</div>";
+					echo "<div class='student' onclick='selectStudent(".$s['people_id'].",this,".json_encode($s["last_name"]." ".$s["first_name"], JSON_HEX_APOS).");'>".toHTML($s["last_name"],null,"UTF-8")." ".toHTML($s["first_name"])."</div>";
 				?>
 			</div>
 		</div>
@@ -156,7 +156,7 @@ class page_transcripts extends Page {
 				if (count($published) == 0)
 					echo "<span style='font-style:italic'>There is no transcript published yet</span>";
 				else foreach ($published as $p)
-					echo "<span class='menu_item' onclick='selectTranscript(".$p["id"].",this,".json_encode($p["name"],JSON_HEX_APOS).");'>".htmlentities($p['name'])."</span>";
+					echo "<span class='menu_item' onclick='selectTranscript(".$p["id"].",this,".json_encode($p["name"],JSON_HEX_APOS).");'>".toHTML($p['name'])."</span>";
 				?>
 				</div>
 			</div>

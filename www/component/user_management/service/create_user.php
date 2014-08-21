@@ -31,7 +31,7 @@ class service_create_user extends Service {
 			$people = PNApplication::$instance->people->getPeople($people_id);
 			if ($people == null) {
 				SQLQuery::rollbackTransaction();
-				PNApplication::errorHTML("The user <i>".htmlentities($username)."</i> cannot be created because the given linked people is invalid");
+				PNApplication::errorHTML("The user <i>".toHTML($username)."</i> cannot be created because the given linked people is invalid");
 				echo "false";
 				return;
 			}
@@ -39,14 +39,14 @@ class service_create_user extends Service {
 			if ($exists <> null) {
 				if (!$is_internal) {
 					SQLQuery::rollbackTransaction();
-					PNApplication::errorHTML("The user <i>".htmlentities($username)."</i> already exists");
+					PNApplication::errorHTML("The user <i>".toHTML($username)."</i> already exists");
 					echo "false";
 					return;
 				} else {
 					$internal_exists = SQLQuery::create()->bypassSecurity()->select("InternalUser")->whereValue("InternalUser","username",$username)->executeSingleRow();
 					if ($internal_exists <> null) {
 						SQLQuery::rollbackTransaction();
-						PNApplication::errorHTML("The internal user <i>".htmlentities($username)."</i> already exists");
+						PNApplication::errorHTML("The internal user <i>".toHTML($username)."</i> already exists");
 						echo "false";
 						return;
 					}

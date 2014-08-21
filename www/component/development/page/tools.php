@@ -21,7 +21,7 @@ class page_tools extends Page {
 <br/>
 Server variable:<br/><pre>
 <?php
-echo htmlentities(var_export($_SERVER), true);
+echo toHTML(var_export($_SERVER), true);
 echo "</pre>";
 	}
 	

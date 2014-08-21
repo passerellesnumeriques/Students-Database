@@ -1245,6 +1245,58 @@ function grid(element) {
 			t._selection_changed();
 	};
 	
+	t.print = function() {
+		var container = document.createElement("DIV");
+		var table = document.createElement("TABLE");
+		table.className = "grid";
+		container.appendChild(table);
+		var thead = document.createElement("THEAD");
+		table.appendChild(thead);
+		var tr, td;
+		for (var i = 0; i < t.header_rows.length; ++i) {
+			thead.appendChild(tr = document.createElement("TR"));
+			for (var j = 0; j < t.header_rows[i].childNodes.length; ++j) {
+				var th = t.header_rows[i].childNodes[j];
+				if (!th.col) continue;
+				tr.appendChild(td = document.createElement("TH"));
+				td.colSpan = th.colSpan;
+				td.rowSpan = th.rowSpan;
+				if (th.col.text_title)
+					td.appendChild(document.createTextNode(th.col.text_title));
+				else if (th.col.title instanceof Element)
+					td.innerHTML = th.col.title.outerHTML;
+				else
+					td.innerHTML = th.col.title;
+				td.style.textAlign = th.style.textAlign;
+			}
+		}
+		var tbody = document.createElement("TBODY");
+		table.appendChild(tbody);
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var ttr = t.table.childNodes[i];
+			tbody.appendChild(tr = document.createElement("TR"));
+			tr.className = ttr.className;
+			for (var j = 0; j < ttr.childNodes.length; ++j) {
+				if (j == 0 && t.selectable) continue;
+				var cell = ttr.childNodes[j];
+				tr.appendChild(td = document.createElement("TD"));
+				td.className = cell.className;
+				if (!cell.field) {
+					td.innerHTML = cell.innerHTML;
+					if (cell.style && cell.style.textAlign)
+						td.style.textAlign = cell.style.textAlign;
+				} else if (cell.col_id) {
+					var col = t.getColumnById(cell.col_id);
+					var f = new window[col.field_type](cell.field.getCurrentData(),false,col.field_args);
+					td.appendChild(f.getHTMLElement());
+					td.style.textAlign = col.align;
+					f.fillWidth();
+				}
+			}
+		}
+		printContent(container);
+	};
+	
 	/* --- internal functions --- */
 	t._createTable = function() {
 		t.grid_element = document.createElement("DIV");

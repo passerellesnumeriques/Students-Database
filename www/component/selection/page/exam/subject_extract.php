@@ -56,23 +56,23 @@ class page_exam_subject_extract extends SelectionPage {
 		}
 		
 		if ($locked_by <> null) {
-			echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".htmlentities($locked_by)." is currently working on this subject so you cannot edit it at the same time</div>";
+			echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".toHTML($locked_by)." is currently working on this subject so you cannot edit it at the same time</div>";
 		}
 		
 		?>
 		<div style="display:inline-block;background-color:white">
 			<div style="text-align:center;">
 			<?php if ($edit) { ?>
-			<input style="font-size:18pt;margin:3px;width:300px;" id='extract_name' type='text' maxlength='100' value="<?php if ($extract <> null) echo htmlentities($extract["name"]);?>"/>
+			<input style="font-size:18pt;margin:3px;width:300px;" id='extract_name' type='text' maxlength='100' value="<?php if ($extract <> null) echo toHTML($extract["name"]);?>"/>
 			<?php } else { ?>
-			<span style="font-size:18pt;"><?php echo htmlentities($extract["name"]);?></span>
+			<span style="font-size:18pt;"><?php echo toHTML($extract["name"]);?></span>
 			<?php } ?>
 			</div>
 			<div style="margin:10px;width:300px;">
 				<?php foreach ($available_parts as $part) {?>
 				<div>
 					<input id='part_<?php echo $part["id"];?>' type="checkbox"<?php if (in_array($part["id"], $selected_parts)) echo " checked='checked'"; if (!$edit) echo " disabled='disabled'";?> onchange="pnapplication.dataUnsaved('extract');"/>
-					Part <?php echo $part["index"];?> - <?php echo htmlentities($part["name"]);?>
+					Part <?php echo $part["index"];?> - <?php echo toHTML($part["name"]);?>
 				</div>
 				<?php } ?>
 			</div>

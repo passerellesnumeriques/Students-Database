@@ -375,8 +375,8 @@ function partnerRow(table, partner, editable, onchange) {
 		td.className = "partner_name black_link";
 		td.title = "Click to see partner details";
 		var name_node = document.createTextNode(partner.organization.name);
-		window.top.datamodel.registerCellText(window, "Organization", "name", partner.organization.id, name_node);
 		td.appendChild(name_node);
+		window.top.datamodel.registerCellText(window, "Organization", "name", partner.organization.id, name_node);
 		var t=this;
 		td.onclick = function(){
 			window.top.popup_frame("/static/contact/organization.png","Organization Profile","/dynamic/contact/page/organization_profile?organization="+partner.organization.id+"&onready=orgready", null, null, null, function(frame) {

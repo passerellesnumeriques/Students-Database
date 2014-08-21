@@ -31,7 +31,7 @@ class service_menu extends Service {
 foreach ($current_batches as $b) {
 	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?node=batch".$b["id"]."#/dynamic/students/page/list'>";
 	echo "<img src='/static/curriculum/arrow_right_white.png'/> ";
-	echo "Batch ".htmlentities($b["name"]);
+	echo "Batch ".toHTML($b["name"]);
 	echo "</a>";
 } 
 */
@@ -50,7 +50,7 @@ foreach ($current_batches as $b) {
 foreach ($current_batches as $b) {
 	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?node=batch".$b["id"]."#/dynamic/curriculum/page/curriculum'>";
 	echo "<img src='/static/curriculum/arrow_right_white.png'/> ";
-	echo "Batch ".htmlentities($b["name"]);
+	echo "Batch ".toHTML($b["name"]);
 	echo "</a>";
 } 
 */

@@ -46,10 +46,10 @@ class page_profile extends Page {
 <?php 
 foreach ($pages as $p) {
 	echo "<div";
-	echo " icon=\"".htmlentities($p->getIcon())."\"";
-	echo " text=\"".htmlentities($p->getName())."\"";
+	echo " icon=\"".toHTML($p->getIcon())."\"";
+	echo " text=\"".toHTML($p->getName())."\"";
 	echo " link=\"".$p->getURL($people_id).($sub_models <> null ? "&sub_models=".urlencode(json_encode($sub_models)) : "")."\"";
-	echo " tooltip=\"".htmlentities($p->getTooltip())."\"";
+	echo " tooltip=\"".toHTML($p->getTooltip())."\"";
 	echo "></div>";
 }
 ?>

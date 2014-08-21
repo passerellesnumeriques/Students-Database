@@ -670,7 +670,7 @@ namespace datamodel {
 			foreach ($this->columns as $col) {
 				if ($first) $first = false; else $s .= ", ";
 				$s .= $col->name."=";
-				if (isset($row[$col->name])) $s .= htmlentities($row[$col->name]);
+				if (isset($row[$col->name])) $s .= toHTML($row[$col->name]);
 				else $s .= "NULL";
 			}
 			return $s;
@@ -1015,7 +1015,7 @@ namespace datamodel {
 		}
 
 		public function get_sql_type() {
-			return "INT(".$this->size.") NOT NULL AUTO_INCREMENT";
+			return parent::get_sql_type()." NOT NULL AUTO_INCREMENT";
 		}
 	}
 	

@@ -37,7 +37,7 @@ class page_subject_grades extends Page {
 			echo "<option value=''></option>";
 			foreach ($subjects as $s) {
 				echo "<option value='".$s["id"]."'>";
-				echo htmlentities($s["code"]." - ".$s["name"]);
+				echo toHTML($s["code"]." - ".$s["name"]);
 				echo "</option>";
 			}
 			echo "</select>";
@@ -159,18 +159,18 @@ class page_subject_grades extends Page {
 		<div style='margin-left:10px;font-size:12pt;font-style:italic;display:inline-block;'>
 		<a class='black_link' onclick='selectAnotherSubject(this);return false;' id='select_subject'>
 		Subject <b style='font-weight:bold'>
-		<?php echo htmlentities($subject["code"]." - ".$subject["name"]);
+		<?php echo toHTML($subject["code"]." - ".$subject["name"]);
 		?></b></a>
 		<?php
 		echo " (";
-		echo "Batch ".htmlentities($batch["name"]);
-		echo ", ".htmlentities($period["name"]);
-		if ($spe <> null) echo ", Specialization ".htmlentities($spe["name"]);
+		echo "Batch ".toHTML($batch["name"]);
+		echo ", ".toHTML($period["name"]);
+		if ($spe <> null) echo ", Specialization ".toHTML($spe["name"]);
 		?>,
 		<a class='black_link' onclick='selectAnotherClass(this);return false;' id='select_class'>
 		<?php 
 		if ($class <> null)
-			echo "Class ".htmlentities($class["name"]);
+			echo "Class ".toHTML($class["name"]);
 		else
 			echo "All classes";
 		?></a>
@@ -190,7 +190,7 @@ class page_subject_grades extends Page {
 		echo ": ";
 		for ($i = 0; $i < count($teachers); $i++) {
 			if ($i > 0) echo ", ";
-			echo htmlentities($teachers[$i]["last_name"])." ".htmlentities($teachers[$i]["first_name"]);
+			echo toHTML($teachers[$i]["last_name"])." ".toHTML($teachers[$i]["first_name"]);
 		} 
 		?>
 		<br/>
@@ -213,7 +213,7 @@ class page_subject_grades extends Page {
 		foreach($grading_systems as $name=>$spec) {
 			echo "<option value=\"".$spec."\"";
 			if ($name == $grading_system) echo " selected='selected'";
-			echo ">".htmlentities($name)."</option>";
+			echo ">".toHTML($name)."</option>";
 		}
 		?>
 		</select>

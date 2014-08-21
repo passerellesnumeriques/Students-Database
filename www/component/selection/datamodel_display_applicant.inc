@@ -53,6 +53,7 @@ $display = new ApplicantTableDataDisplay($category);
 $display->addDataDisplay(new ApplicantID_DataDisplay());
 require_once("component/contact/datamodel_display.inc");
 $display->addDataDisplay(new OrganizationDataDisplay("high_school", "High School", array("Selection"), array("High School"), true, null));
+$display->addDataDisplay(new OrganizationDataDisplay("ngo", "Following NGO", array("Selection"), array("NGO"), true, null));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("information_session", "name", "Information Session", false, true));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", "Exam Center", false, false));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center_room", "name", "Exam Center Room", false, false));
@@ -73,7 +74,7 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 		$html = "";
 		switch ($data->getDisplayName()) {
 			case "Information Session":
-				if ($can_edit) {
+				if ($can_edit && !$is_new) {
 					$html .= "<td>";
 					$html .= "<button class='flat small' title='Change Information Session' onclick='changeIS(this);return false;'><img src='".theme::make_icon("/static/selection/is/is_16.png", theme::$icons_10["_import"])."'/></button>";
 					$html .= "</td>";

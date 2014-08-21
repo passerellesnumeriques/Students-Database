@@ -159,7 +159,7 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 		$id = $page->generateID();
 		$html .= "<div id='$id'";
 		if ($s[0] <> null) $html .= " icon='".$s[0]."'";
-		$html .= " title=\"".htmlentities($s[1])."\"";
+		$html .= " title=\"".toHTML($s[1])."\"";
 		$html .= " collapsable='false' css='soft' style='display:inline-block;margin:10px;vertical-align:top'>";
 		$html .= $s[2];
 		$html .= $s[3];
@@ -236,7 +236,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 	// generate screens
 	foreach ($avail_screens as $s) {
 		// get data from database if not new
-		//echo "<br/>Values: ".htmlentities(var_export($values,true))."<br/>";
+		//echo "<br/>Values: ".toHTML(var_export($values,true))."<br/>";
 		foreach ($s[1] as $child) {
 			$key_value = getKeyValue($path->table, $values);
 			//echo "<br/>Key for ".$child->table->getName()." (".$path->table->getName()."): ".var_export($key_value,true)."<br/>";
@@ -297,7 +297,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 				//}
 			}
 		}
-		//echo "<br/>Values: ".htmlentities(var_export($values,true))."<br/>";
+		//echo "<br/>Values: ".toHTML(var_export($values,true))."<br/>";
 		$ob = ob_get_contents();
 		ob_clean();
 		$s[0]->generate($page, $s[1], $values, $prefilled_values, $structure_name);

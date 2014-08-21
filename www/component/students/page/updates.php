@@ -22,7 +22,7 @@ class page_updates extends Page {
 			$batches = array($_GET["batch"]);
 			$batch = PNApplication::$instance->curriculum->getBatch($_GET["batch"]);
 			$id = $this->generateID();
-			$title = "for Batch <span id='$id'>".htmlentities($batch["name"])."</span>";
+			$title = "for Batch <span id='$id'>".toHTML($batch["name"])."</span>";
 			$this->onload("window.top.datamodel.registerCellSpan(window, 'StudentBatch', 'name', ".$batch["id"].", document.getElementById('$id'));");
 		}
 		
@@ -35,11 +35,11 @@ class page_updates extends Page {
 				$batch = PNApplication::$instance->curriculum->getBatch($_GET["batch"]);
 				$period = PNApplication::$instance->curriculum->getBatchPeriod($_GET["period"]);
 				$id = $this->generateID();
-				$title .= ", Period <span id='$id'>".htmlentities($period["name"])."</span>";
+				$title .= ", Period <span id='$id'>".toHTML($period["name"])."</span>";
 				$this->onload("window.top.datamodel.registerCellSpan(window, 'BatchPeriod', 'name', ".$period["id"].", document.getElementById('$id'));");
 				$cl = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
 				$id = $this->generateID();
-				$title .= ", Class <span id='$id'>".htmlentities($cl["name"])."</span>";
+				$title .= ", Class <span id='$id'>".toHTML($cl["name"])."</span>";
 				$this->onload("window.top.datamodel.registerCellSpan(window, 'AcademicClass', 'name', ".$cl["id"].", document.getElementById('$id'));");
 				$tags .= "'class".$cl["id"]."'";
 				$post_tags = "{\"batch".$batch["id"]."\":".json_encode("Batch ".$batch["name"]);
@@ -51,7 +51,7 @@ class page_updates extends Page {
 				$batch = PNApplication::$instance->curriculum->getBatch($_GET["batch"]);
 				$period = PNApplication::$instance->curriculum->getBatchPeriod($_GET["period"]);
 				$id = $this->generateID();
-				$title .= ", Period <span id='$id'>".htmlentities($period["name"])."</span>";
+				$title .= ", Period <span id='$id'>".toHTML($period["name"])."</span>";
 				$this->onload("window.top.datamodel.registerCellSpan(window, 'BatchPeriod', 'name', ".$period["id"].", document.getElementById('$id'));");
 				$tags .= "'period".$period["id"]."'";
 				$post_tags = "{\"batch".$batch["id"]."\":".json_encode("Batch ".$batch["name"]);

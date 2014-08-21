@@ -23,14 +23,14 @@ class page_new_class extends Page {
 						<?php
 						$list = SQLQuery::create()->select("Specialization")->execute();
 						foreach ($list as $spe)
-							echo "<option value='".$spe["id"]."'>".htmlentities($spe["name"])."</option>";
+							echo "<option value='".$spe["id"]."'>".toHTML($spe["name"])."</option>";
 						?>
 					</select>
 				</td>
 			</tr>
 			<tr>
 				<td>From period</td>
-				<td><?php echo htmlentities($period["name"]);?></td>
+				<td><?php echo toHTML($period["name"]);?></td>
 			</tr>
 			<tr>
 				<td>To period</td>

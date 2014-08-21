@@ -210,7 +210,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	/** Called when the user clicks on "Add address". */
 	this.createAddress = function(){
 		require("contact_objects.js", function() {
-			var address = new PostalAddress(-1,null,null,null,null,null,null,null,"Work");
+			var address = new PostalAddress(-1,null,null,null,null,null,null,null,"Home");
 			if (type_id != null && type_id > 0) {
 				service.json("contact","add_address",{
 					type:type,
@@ -304,8 +304,8 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 				t.context.onclose = function() {t.context = null;};
 			}
 			t.context.clearItems();
-			t._addAddressTypeToContextMenu(container, "Family", address);
 			t._addAddressTypeToContextMenu(container, "Home", address);
+			t._addAddressTypeToContextMenu(container, "Family", address);
 			t._addAddressTypeToContextMenu(container, "Birthplace", address);
 			t._addAddressTypeToContextMenu(container, "Work", address);
 			t._addAddressTypeToContextMenu(container, "Other:", address);

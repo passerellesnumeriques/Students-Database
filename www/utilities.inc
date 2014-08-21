@@ -14,4 +14,7 @@ function capitalizeWordsFirstLetter($s) {
 	}
 	return $s;
 }
+function toHTML($s) {
+	return htmlentities($s,null,"UTF-8");
+}
 ?>

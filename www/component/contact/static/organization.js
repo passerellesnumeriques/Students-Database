@@ -403,12 +403,12 @@ function organization(container, org, existing_types, can_edit) {
 		};
 		var first_name = document.createTextNode(point.first_name);
 		var last_name = document.createTextNode(point.last_name);
-		window.top.datamodel.registerCellText(window, "People", "first_name", point.people_id, first_name);
-		window.top.datamodel.registerCellText(window, "People", "last_name", point.people_id, last_name);
 		td.appendChild(first_name);
 		td.appendChild(document.createTextNode(" "));
 		td.appendChild(last_name);
 		td.appendChild(link);
+		window.top.datamodel.registerCellText(window, "People", "first_name", point.people_id, first_name);
+		window.top.datamodel.registerCellText(window, "People", "last_name", point.people_id, last_name);
 		if(can_edit){
 			var remove_button = document.createElement("BUTTON");
 			td.appendChild(remove_button);

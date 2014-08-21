@@ -141,7 +141,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 			},
 			function(text){
 				require("contact_objects.js",function(){
-					if(text) t.createContact(new Contact(-1, contact_type, "Work", text));
+					if(text) t.createContact(new Contact(-1, contact_type, "Professional", text));
 				});
 			}
 		);
@@ -248,9 +248,9 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 				t.context.onclose = function() {t.context = null;};
 			}
 			t.context.clearItems();
-			t._addCategoryContextMenuItem(container, "Work", contact);
-			t._addCategoryContextMenuItem(container, "Home", contact);
-			t._addCategoryContextMenuItem(container, "Custom", contact);
+			t._addCategoryContextMenuItem(container, "Professional", contact);
+			t._addCategoryContextMenuItem(container, "Personal", contact);
+			t._addCategoryContextMenuItem(container, "Other", contact);
 			
 			t.context.showBelowElement(container);
 		});
@@ -267,7 +267,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		item.innerHTML = data;
 		
 		if(contact.sub_type == data) item.style.fontWeight ='bold';
-		if(data == "Custom"){
+		if(data == "Other"){
 			var input = document.createElement("INPUT");
 			input.type = 'text';
 			input.maxLength = 10;

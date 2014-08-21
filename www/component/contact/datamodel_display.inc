@@ -469,7 +469,7 @@ class ContactPointDataScreen implements datamodel\SimpleDataScreen {
 				->execute();
 			foreach ($rows as $row) {
 				$id = $page->generateID();
-				echo "Designation for ".htmlentities($row["name"]).": ";
+				echo "Designation for ".toHTML($row["name"]).": ";
 				echo "<span id='$id'></span>";
 				if ($can_edit) {
 					$page->requireJavascript("editable_cell.js");
