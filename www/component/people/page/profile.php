@@ -70,6 +70,27 @@ require_once("component/data_model/page/utils.inc");
 datamodel_cell_inline($this, "cell", "span_first_name", false, "People", "first_name", "people_id", null, "first_name", "function(){layout.invalidate(profile_header.header);}");
 datamodel_cell_inline($this, "cell", "span_last_name", false, "People", "last_name", "people_id", null, "last_name", "function(){layout.invalidate(profile_header.header);}");
 ?>
+
+var popup = window.parent.get_popup_window_from_frame(window);
+var page = document.getElementById('profile_page');
+function adaptPopup() {
+	if (popup.content.nodeName != "IFRAME") {
+		setTimeout(adaptPopup,1);
+		return;
+	}
+	var close_button = document.createElement("BUTTON");
+	close_button.className = "flat icon";
+	close_button.innerHTML = "<img src='"+theme.icons_16.close+"'/>";
+	close_button.onclick = function() { popup.close(); };
+	profile_header.addRightControl(close_button, "Close profile");
+	popup.hideTitleBar();
+	setBorderRadius(page,5,5,5,5,0,0,0,0);
+	setBorderRadius(profile_header.header,5,5,5,5,0,0,0,0);
+	setBorderRadius(profile_header.header_title,5,5,0,0,0,0,0,0);
+	setBorderRadius(profile_header.header_right,0,0,5,5,0,0,0,0);
+	setBorderRadius(window.frameElement,5,5,5,5,5,5,5,5);
+}
+adaptPopup();
 </script>
 <?php 
 	}

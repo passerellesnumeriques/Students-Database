@@ -728,6 +728,10 @@ function popup_window(title,icon,content,hide_close_button) {
 			do_close();
 	};
 	t.hide = function() { t.close(); };
+	
+	t.hideTitleBar = function() {
+		t.header.style.display = "none";
+	};
 }
 
 /**
