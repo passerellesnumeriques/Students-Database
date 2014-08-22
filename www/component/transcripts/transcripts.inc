@@ -391,9 +391,11 @@ class transcripts extends Component {
 			for ($i = 0; $i < count($finals); $i++) {
 				$found = false;
 				foreach ($existing as $e) if ($e["people"] == $finals[$i][0]["people"] && $e["subject"] == $finals[$i][0]["subject"]) { $found = true; break; }
-				array_push($update, array(array($finals[$i][0]),$finals[$i][1]));
-				array_splice($finals, $i, 1);
-				$i--;
+				if ($found) {
+					array_push($update, array(array($finals[$i][0]),$finals[$i][1]));
+					array_splice($finals, $i, 1);
+					$i--;
+				}
 			}
 			if (count($update) > 0)
 				SQLQuery::create()->bypassSecurity()->updateByKeys("StudentSubjectGrade", $update);

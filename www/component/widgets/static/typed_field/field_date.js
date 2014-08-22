@@ -32,6 +32,9 @@ function field_date(data,editable,config) {
 				};
 				window.top.datamodel.addCellChangeListener(window, table,t.config.minimum_cell,row_key, listener);
 				window.top.datamodel.getCellValue(table,t.config.minimum_cell,row_key,listener);
+				t.element.ondomremoved.add_listener(function() {
+					window.top.datamodel.removeCellChangeListener(listener);
+				});
 			}, 1);
 		if (t.config && t.config.maximum_cell)
 			setTimeout(function() {
@@ -45,6 +48,9 @@ function field_date(data,editable,config) {
 				};
 				window.top.datamodel.addCellChangeListener(window, table,t.config.maximum_cell,row_key, listener);
 				window.top.datamodel.getCellValue(table,t.config.maximum_cell,row_key,listener);
+				t.element.ondomremoved.add_listener(function() {
+					window.top.datamodel.removeCellChangeListener(listener);
+				});
 			}, 1);
 	};
 }

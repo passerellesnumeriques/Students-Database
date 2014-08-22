@@ -377,7 +377,7 @@ class page_curriculum extends Page {
 				button.className = "flat small_icon";
 				button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
 				button.title = "Remove this subject";
-				button.onclick = function(event) { remove_subject(subject.id,tr); stopEventPropagation(event); return false; };
+				button.onclick = function(event) { remove_subject(subject,tr); stopEventPropagation(event); return false; };
 				animation.appearsOnOver(td,button);
 				td.appendChild(button);
 			}
@@ -604,9 +604,13 @@ class page_curriculum extends Page {
 			});
 		}
 
-		function remove_subject(id,row) {
-			window.top.datamodel.confirm_remove("CurriculumSubject",id,function() {
+		function remove_subject(subject,row) {
+			window.top.datamodel.confirm_remove("CurriculumSubject",subject.id,function() {
 				row.parentNode.removeChild(row);
+				subjects.remove(subject);
+				var period;
+				for (var i = 0; i < periods.length; ++i) if (periods[i].id == subject.period_id) { period = periods[i]; break; }
+				refreshTotal(period);
 			});
 		}
 

@@ -938,6 +938,13 @@ function save() {
 				if (eval_grades[i].evaluation < 0)
 					for (var k = 0; k < res.evaluations.length; ++k)
 						if (eval_grades[i].evalution == res.evaluations[k].input_id) { eval_grades[i].evaluation = res.evaluations[k].output_id; break; }
+			// update evaluations' ids in the columns ids
+			for (var i = 0; i < grades_grid.grid.columns.length; ++i) {
+				var col = grades_grid.grid.columns[i];
+				if (!col.id.startsWith("eval_")) continue;
+				for (var k = 0; k < res.evaluations.length; ++k)
+					if (col.id == "eval_"+res.evaluations[k].input_id) { col.id = "eval_"+res.evaluations[k].output_id; break; }
+			}
 			// save students' grades
 			save_evaluations_grades();
 		});
