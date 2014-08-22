@@ -102,7 +102,7 @@ foreach ($changes as $change) {
 				$rename_columns_sm[$change["parent_table"]][$change["table"]][$change["old_column_name"]] = $change["new_column_name"];
 			}
 			break;
-		case "column_spec": break;
+		case "column_spec":
 			if ($change["parent_table"] == null) {
 				if (!isset($rename_columns_root[$change["new_table_name"]])) $rename_columns_root[$change["new_table_name"]] = array();
 				$rename_columns_root[$change["new_table_name"]][$change["old_spec"]["name"]] = $change["new_spec"]["name"];
@@ -121,7 +121,7 @@ foreach ($new_tables_root as $table) {
 	fwrite($f, "DataBaseUtilities::createTable(\$db_system, \$table);\n");
 }
 foreach ($new_tables_sm as $parent_table=>$tables) {
-	fwrite($f, "\$sm = DataModel::get()->getSubModel(\".$parent_table.\");\n");
+	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
 	foreach ($tables as $table) {
 		fwrite($f, "\$table = \$sm->internalGetTable(\"".$table."\");\n");
 		fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model)\n");
@@ -133,7 +133,7 @@ foreach ($removed_tables_root as $table) {
 	fwrite($f, "\$db_system->execute(\"DROP TABLE `".$table."`\");\n");
 }
 foreach ($removed_tables_sm as $parent_table=>$tables) {
-	fwrite($f, "\$sm = DataModel::get()->getSubModel(\".$parent_table.\");\n");
+	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
 	foreach ($tables as $table) {
 		fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model)\n");
 		fwrite($f, "\t\$db_system->execute(\"DROP TABLE `".$table."_\".\$sub_model.\"`\");\n");
@@ -144,7 +144,7 @@ foreach ($rename_tables_root as $rename) {
 	fwrite($f, "\$db_system->execute(\"RENAME TABLE `".$rename[0]."` TO `".$rename[1]."`\");\n");
 }
 foreach ($rename_tables_sm as $parent_table=>$renames) {
-	fwrite($f, "\$sm = DataModel::get()->getSubModel(\".$parent_table.\");\n");
+	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
 	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
 	foreach ($renames as $from=>$to) {
 		fwrite($f, "\t\$db_system->execute(\"RENAME TABLE `".$from."_\".\$sub_model.\"` TO `".$to."_\".\$sub_model.\"`\");\n");
@@ -157,8 +157,8 @@ foreach ($new_columns_root as $table_name=>$new_cols) {
 	foreach ($new_cols as $col_name)
 		fwrite($f, "\$db_system->execute(\"ALTER TABLE `$table_name` ADD COLUMN \".\$table->internalGetColumn(\"$col_name\")->get_sql());\n");
 }
-foreach ($new_columns_sm as $parent_table->$new_columns) {
-	fwrite($f, "\$sm = DataModel::get()->getSubModel(\".$parent_table.\");\n");
+foreach ($new_columns_sm as $parent_table=>$new_columns) {
+	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
 	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
 	foreach ($new_columns as $table_name=>$new_cols) {
 		fwrite($f, "\t\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
@@ -175,7 +175,7 @@ foreach ($removed_columns_root as $table_name=>$cols) {
 	fwrite($f, "\$db_system->execute(\"$sql\");");
 }
 foreach ($removed_columns_sm as $parent_table=>$to_remove) {
-	fwrite($f, "\$sm = DataModel::get()->getSubModel(\".$parent_table.\");\n");
+	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
 	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
 	foreach ($to_remove as $table_name=>$cols) {
 		$sql = "ALTER TABLE `".$table_name."_\".\$sub_model.\"`";
@@ -195,7 +195,7 @@ foreach ($rename_columns_root as $table_name=>$renames) {
 	fwrite($f, "\$db_system->execute(\"$sql\");");
 }
 foreach ($rename_columns_sm as $parent_table=>$list) {
-	fwrite($f, "\$sm = DataModel::get()->getSubModel(\".$parent_table.\");\n");
+	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
 	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
 	foreach ($list as $table_name=>$renames) {
 		fwrite($f, "\t\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
