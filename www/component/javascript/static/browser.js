@@ -132,6 +132,30 @@ if (typeof document.getElementsByClassName!='function') {
         return ei;
     };
 }
+if (typeof Element.prototype.getElementsByClassName!='function') {
+    Element.prototype.getElementsByClassName = function() {
+        var elms = this.getElementsByTagName('*');
+        var ei = new Array();
+        for (var i=0;i<elms.length;i++) {
+            if (elms[i].getAttribute('class')) {
+                ecl = elms[i].getAttribute('class').split(' ');
+                for (var j=0;j<ecl.length;j++) {
+                    if (ecl[j].toLowerCase() == arguments[0].toLowerCase()) {
+                        ei.push(elms[i]);
+                    }
+                }
+            } else if (elms[i].className) {
+                ecl = elms[i].className.split(' ');
+                for (var j=0;j<ecl.length;j++) {
+                    if (ecl[j].toLowerCase() == arguments[0].toLowerCase()) {
+                        ei.push(elms[i]);
+                    }
+                }
+            }
+        }
+        return ei;
+    };
+}
 /** Return the document object of the given frame
  * @param {Element} frame iframe
  * @returns {document} the document of the iframe 

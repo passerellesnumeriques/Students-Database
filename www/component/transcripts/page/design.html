@@ -116,7 +116,7 @@
 	margin-top: 10px;
 }
 </style>
-<div class='transcripts'>
+<div class='transcripts' id='#ID#'>
 <!-- Header / Title -->
 <div class='title'>
 	<div style='display:inline-block;width:120px'>
@@ -237,7 +237,7 @@
 </div>
 </div>
 <script type='text/javascript'>
-var cats = document.getElementsByClassName("subject_category");
+var cats = document.getElementById('#ID#').getElementsByClassName("subject_category");
 var enlarge = false;
 var max_height = 0;
 for (var i = 0; i < cats.length; ++i) {

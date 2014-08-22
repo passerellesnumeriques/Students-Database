@@ -216,7 +216,7 @@ class page_configure_transcripts extends Page {
 		</div>
 		<div style='flex:1 1 auto;overflow:auto;text-align:center'>
 			<div id='design' style='text-align:left;background-color:white;border-radius:5px;display:inline-block;box-shadow: 2px 2px 2px 0px #808080;width:630px;height:810px;margin-bottom:5px;'>
-				<?php generateTranscriptFor($config,$categories,$selected_subjects,$period);?>
+				<?php generateTranscriptFor($this->generateID(), $config,$categories,$selected_subjects,$period);?>
 			</div>
 		</div>
 	</div>
