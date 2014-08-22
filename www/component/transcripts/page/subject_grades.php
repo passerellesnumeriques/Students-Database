@@ -926,7 +926,12 @@ function save() {
 			for (var j = 0; j < evaluation_types.length; ++j)
 				if (evaluation_types[j].id < 0)
 					for (var i = 0; i < res.types.length; ++i)
-						if (evaluation_types[j].id == res.types[i].input_id) { evaluation_types[j].id = res.types[i].output_id; break; }
+						if (evaluation_types[j].id == res.types[i].input_id) {
+							evaluation_types[j].id = res.types[i].output_id;
+							var col = grades_grid.grid.getColumnById('total_eval_type_'+res.types[i].input_id);
+							col.setId('total_eval_type_'+res.types[i].output_id);
+							break;
+						}
 			// update evaluations' ids
 			for (var i = 0; i < evaluation_types.length; ++i)
 				for (var j = 0; j < evaluation_types[i].evaluations.length; ++j)
@@ -943,7 +948,7 @@ function save() {
 				var col = grades_grid.grid.columns[i];
 				if (!col.id.startsWith("eval_")) continue;
 				for (var k = 0; k < res.evaluations.length; ++k)
-					if (col.id == "eval_"+res.evaluations[k].input_id) { col.id = "eval_"+res.evaluations[k].output_id; break; }
+					if (col.id == "eval_"+res.evaluations[k].input_id) { col.setId("eval_"+res.evaluations[k].output_id); break; }
 			}
 			// save students' grades
 			save_evaluations_grades();

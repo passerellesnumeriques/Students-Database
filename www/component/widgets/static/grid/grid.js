@@ -138,6 +138,20 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		this._refresh_title();
 	};
 	
+	this.setId = function(id) {
+		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
+			var tr = this.grid.table.childNodes[i];
+			// change in row_data
+			if (tr.row_data)
+				for (var j = 0; j < tr.row_data.length; ++j)
+					if (tr.row_data[j].col_id == this.id) { tr.row_data[j].col_id = id; break; }
+			// change in td
+			for (var j = 0; j < tr.childNodes.length; ++j)
+				if (tr.childNodes[j].col_id == this.id) { tr.childNodes[j].col_id = id; break; }
+		}
+		this.id = id;
+	};
+	
 	this.addAction = function(action) {
 		this.actions.push(action);
 		this._refresh_title();
