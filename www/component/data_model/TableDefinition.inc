@@ -395,6 +395,11 @@ namespace datamodel {
 			}
 			return $this;
 		}
+		public function getIndexes() {
+			$list = array();
+			foreach ($this->indexes as $name=>$cols) $list[$name] = $cols;
+			return $list;
+		}
 
 
 		public function &addReadAccess($right_name, $right_value) {

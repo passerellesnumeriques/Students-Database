@@ -14,7 +14,7 @@ $model->addTableDataDisplay($display);
 
 $display = new datamodel\TableDataDisplay("Family", $category);
 $display->addJoinToPrimary();
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("nb_children", "Children"));
+//$display->addDataDisplay(new datamodel\SimpleDataDisplay("nb_children", "Children"));
 $model->addTableDataDisplay($display);
 
 ?>
