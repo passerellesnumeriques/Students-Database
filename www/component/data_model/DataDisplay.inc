@@ -1191,6 +1191,7 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
 		if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
+		$root_alias = $q->getTableAlias($this->getTable()->getName());
 		$w = "";
 		foreach ($filter["values"] as $enum_value) {
 			if ($enum_value == "") continue;
