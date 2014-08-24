@@ -10,5 +10,7 @@ class family extends Component {
 		);
 	}
 	
+	// TODO when adding a member who is already in a family: merge 2 families!
+	
 }
 ?>

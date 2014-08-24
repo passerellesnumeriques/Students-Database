@@ -94,7 +94,7 @@ function adaptPopup() {
 	setBorderRadius(profile_header.header_right,0,0,5,5,0,0,0,0);
 	setBorderRadius(window.frameElement,5,5,5,5,5,5,5,5);
 }
-adaptPopup();
+if (popup) adaptPopup();
 </script>
 <?php 
 	}
