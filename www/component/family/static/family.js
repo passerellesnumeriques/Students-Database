@@ -178,7 +178,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				if (member.people && fixed_people_id == member.people.people_id)
 					remove.disabled = "disabled";
 				require([["typed_field.js","field_integer.js"]], function() {
-					tr.rank = new field_integer(member.child_rank ? member.child_rank : null, true, {min:1,can_be_null:false});
+					tr.rank = new field_integer(member.child_rank ? parseInt(member.child_rank) : null, true, {min:1,can_be_null:false});
 					td_rank.appendChild(tr.rank.getHTMLElement());
 					tr.rank.onchange.add_listener(function() {
 						t._orderChildren(title_row, tr);

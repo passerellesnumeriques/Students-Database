@@ -50,7 +50,7 @@ class page_roles extends Page {
 	</table>
 </div>
 <div class='page_footer' style='flex:none'>
-	<button class="action" onclick="new_role();"><img src='<?php echo theme::make_icon("/static/user_management/role.png",theme::$icons_10["add"]);?>'/> New Role</button>
+	<button class="action green" onclick="new_role();"><img src='<?php echo theme::make_icon("/static/user_management/role.png",theme::$icons_10["add"]);?>'/> New Role</button>
 </div>
 </div>
 	

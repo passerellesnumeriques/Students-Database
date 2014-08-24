@@ -365,7 +365,7 @@ namespace datamodel {
 			return $this->onupdate->hasListeners();
 		}
 		/**
-		 * @param function $fct takes 3 parameters: &amp;fields_values, key, sub_model_instance
+		 * @param function $fct takes 3 parameters: fields_values, key, sub_model_instance
 		 * @return \datamodel\Table
 		 */
 		public function onBeforeUpdate($fct) {

@@ -154,7 +154,7 @@ class page_edit_customizable_table extends Page {
 				</tr>
 				<tr id='buttons_row'>
 					<td colspan=4 align=center>
-						<button class='action' onclick="addData();"><img src='<?php echo theme::$icons_16["add"];?>'/> Add new data</button>
+						<button class='action green' onclick="addData();"><img src='<?php echo theme::$icons_16["add_white"];?>'/> Add new data</button>
 						<button class='action' onclick="save();"><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
 					</td>
 			</table>

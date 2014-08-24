@@ -83,7 +83,7 @@ class page_exam_subject extends SelectionPage {
 			<table><tbody id="table"></tbody></table>
 			<?php if (!$readonly) {?>
 			<div style="margin:5px">
-				<button class='action' onclick='newPart();'><img src='<?php echo theme::$icons_16["add"];?>'/> New part</button>
+				<button class='action green' onclick='newPart();'><img src='<?php echo theme::$icons_16["add_white"];?>'/> New part</button>
 			</div>
 			<?php } ?>
 		</div>

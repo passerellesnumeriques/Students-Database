@@ -607,7 +607,8 @@ class page_curriculum extends Page {
 		function remove_subject(subject,row) {
 			window.top.datamodel.confirm_remove("CurriculumSubject",subject.id,function() {
 				row.parentNode.removeChild(row);
-				subjects.remove(subject);
+				for (var i = 0; i < subjects.length; ++i)
+					if (subjects[i].id == subject.id) { subjects.splice(i,1); break; }
 				var period;
 				for (var i = 0; i < periods.length; ++i) if (periods[i].id == subject.period_id) { period = periods[i]; break; }
 				refreshTotal(period);

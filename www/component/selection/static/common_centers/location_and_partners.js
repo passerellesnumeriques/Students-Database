@@ -189,7 +189,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		} else {
 			// show the map
 			this._map_container.style.visibility = "visible";
-			this._map_container.style.position = "static";
+			this._map_container.style.position = "relative";
 			this._map_container.style.top = "";
 			var t=this;
 			var update_map = function() {

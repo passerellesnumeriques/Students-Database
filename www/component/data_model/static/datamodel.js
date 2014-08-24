@@ -242,9 +242,12 @@ datamodel = {
 			}
 		}
 		// we don't have, we need to request to the server
-		service.json("data_model","get_cell",{table:table,column:column,row_key:row_key},function(res) {
-			handler(res.value);
-		});
+		if (row_key > 0)
+			service.json("data_model","get_cell",{table:table,column:column,row_key:row_key},function(res) {
+				handler(res.value);
+			});
+		else
+			return null;
 	},
 	
 	/** Called when a window is closed
@@ -277,17 +280,20 @@ datamodel = {
 		}
 	},
 	
-	create_cell: function(win, table, sub_model, column, row_key, value, field_type, field_cfg, editable, container, onchange) {
+	create_cell: function(win, table, sub_model, column, row_key, value, field_type, field_cfg, editable, container, onchange, oncreated) {
 		var js = [["typed_field.js",field_type+".js"]];
 		if (editable) js.push("editable_cell.js");
 		win.require(js, function() {
 			if (row_key > 0 && editable)
-				new win.editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, field_type, field_cfg, value,null,onchange);
+				new win.editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, field_type, field_cfg, value,null,onchange,function(ec){
+					if (oncreated) oncreated(ec.editable_field.field);
+				});
 			else {
 				var field = new win[field_type](value,editable,field_cfg);
 				container.appendChild(field.getHTMLElement());
 				if (onchange) field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
 				field.register_datamodel_cell(table,column,row_key);
+				if (oncreated) oncreated(field);
 			}
 		});
 	},

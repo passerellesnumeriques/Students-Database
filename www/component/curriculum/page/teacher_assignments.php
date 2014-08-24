@@ -22,7 +22,10 @@ class page_teacher_assignments extends Page {
 		$current_period = PNApplication::$instance->curriculum->getCurrentAcademicPeriod();
 		$periods_ids = array();
 		foreach ($assigned as $a) if (!in_array($a["period"], $periods_ids)) array_push($periods_ids, $a["period"]);
-		$batch_periods = PNApplication::$instance->curriculum->getBatchPeriodsById($periods_ids);
+		if (count($periods_ids) > 0)
+			$batch_periods = PNApplication::$instance->curriculum->getBatchPeriodsById($periods_ids);
+		else
+			$batch_periods = array();
 		$all_periods = PNApplication::$instance->curriculum->getAcademicPeriods();
 		$all_years = PNApplication::$instance->curriculum->getAcademicYears();
 		

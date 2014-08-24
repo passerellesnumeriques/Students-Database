@@ -269,7 +269,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 						button_post.innerHTML = "Post Reply";
 						div.appendChild(button_post);
 						var button_cancel = document.createElement("BUTTON");
-						button_cancel.className = "action";
+						button_cancel.className = "action red";
 						button_cancel.innerHTML = "Cancel";
 						div.appendChild(button_cancel);
 						button_post.onclick = function() {

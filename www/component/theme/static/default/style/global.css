@@ -203,13 +203,22 @@ button.action:disabled:hover {
     border: 1px solid rgba(255,255,255,0);
     box-shadow: 1px 1px 1px rgba(170,170,170,0);
 }
-button.action.important {
+button.action.green {
     background: linear-gradient(to bottom, #34db98, #099960);
 }
-button.action.important:hover {
+button.action.green:hover {
 	background: linear-gradient(to bottom, #44eba8, #19a970);
 }
-button.action.important:disabled {
+button.action.green:disabled {
+    background: #C0C0C0;
+}
+button.action.red {
+    background: linear-gradient(to bottom, #f06060, #a02020);
+}
+button.action.red:hover {
+	background: linear-gradient(to bottom, #f07070, #b03030);
+}
+button.action.red:disabled {
     background: #C0C0C0;
 }
 

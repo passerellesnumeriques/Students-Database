@@ -145,7 +145,7 @@ class page_interview_criteria extends SelectionPage {
 		}
 
 		<?php if ($can_edit) {?>
-		criteria_section.addButton(null,"Add Criterion","action",newCriterion);
+		criteria_section.addButton(null,"Add Criterion","action green",newCriterion);
 		pnapplication.autoDisableSaveButton(criteria_section.addButton(theme.icons_16.save, "Save", "action", saveCriteria));
 		pnapplication.autoDisableSaveButton(criteria_section.addButton(null,"Cancel Modifications","action",function() {
 			pnapplication.cancelDataUnsaved();

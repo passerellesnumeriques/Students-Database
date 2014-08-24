@@ -124,5 +124,24 @@ class news extends Component {
 			return false;
 		}
 	}
+	
+	public function getRecentPost($section, $category, $html) {
+		$now = time();
+		return SQLQuery::create()
+			->bypassSecurity()
+			->select("News")
+			->whereValue("News", "section", $section)
+			->whereValue("News", "category", $category)
+			->whereValue("News", "domain", PNApplication::$instance->user_management->domain)
+			->whereValue("News", "username", PNApplication::$instance->user_management->username)
+			->where("`update_timestamp` > ".($now-10*60))
+			->where("`html` LIKE '".str_replace("\\","\\\\",str_replace("'","\\'", str_replace("\"","\\\"", $html)))."'")
+			->orderBy("News", "update_timestamp", false)
+			->limit(0,1)
+			->executeSingleRow();
+	}
+	public function updatePost($id, $html) {
+		SQLQuery::create()->bypassSecurity()->updateByKey("News", $id, array("html"=>$html,"update_timestamp"=>time()));
+	}
 }
 ?>

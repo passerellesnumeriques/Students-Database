@@ -60,22 +60,96 @@ var teacher_dates = [<?php
 	}
 ?>];
 
-function add_teacher_dates(dates) {
+function add_teacher_dates(dates, before_tr) {
 	if (!dates) {
 		dates = {id:teacher_dates_id_counter--,people:people_id,start:null,end:null};
 		teacher_dates.push(dates);
 	}
 	var table = document.getElementById('teacher_dates_table');
-	var tr = document.createElement("TR"); table.insertBefore(tr, table.childNodes[table.childNodes.length-1]);
+	if (!before_tr) before_tr = table.childNodes[table.childNodes.length-1];
+	var tr = document.createElement("TR"); table.insertBefore(tr, before_tr);
 	var td;
+	var field_start = null, field_end = null;
 	tr.appendChild(td = document.createElement("TD"));
 	td.appendChild(document.createTextNode("Started on "));
 	tr.appendChild(td = document.createElement("TD"));
-	window.top.datamodel.create_cell(window, "TeacherDates",null,"start",dates.id,dates.start,"field_date", {can_be_null:false,minimum:"2004-01-01", maximum_cell:"end"}, can_edit_teacher_dates,td,function(value){dates.start = value;});
+	window.top.datamodel.create_cell(window, "TeacherDates",null,"start",dates.id,dates.start,"field_date", {can_be_null:false,minimum:"2004-01-01", maximum_cell:"end"}, can_edit_teacher_dates,td,function(value){dates.start = value;},function(f) {field_start=f;});
 	tr.appendChild(td = document.createElement("TD"));
 	td.appendChild(document.createTextNode("Ended on "));
 	tr.appendChild(td = document.createElement("TD"));
-	window.top.datamodel.create_cell(window, "TeacherDates",null,"end",dates.id,dates.end,"field_date", {can_be_null:true,minimum_cell:"start"}, can_edit_teacher_dates,td,function(value){dates.end = value;});
+	window.top.datamodel.create_cell(window, "TeacherDates",null,"end",dates.id,dates.end,"field_date", {can_be_null:true,minimum_cell:"start"}, can_edit_teacher_dates,td,function(value){dates.end = value;},function(f){field_end=f;});
+	if (people_id != -1 && dates.id < 0) {
+		tr.appendChild(td = document.createElement("TD"));
+		var save_button = document.createElement("BUTTON");
+		save_button.className = "flat";
+		save_button.innerHTML = "<img src='"+theme.icons_16.save+"'/> Save";
+		td.appendChild(save_button);
+		var cancel_button = document.createElement("BUTTON");
+		cancel_button.className = "flat";
+		cancel_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Cancel";
+		td.appendChild(cancel_button);
+		cancel_button.onclick = function() {
+			if (field_start) field_start.unregister_datamodel_cell();
+			if (field_end) field_end.unregister_datamodel_cell();
+			teacher_dates.remove(dates);
+			tr.parentNode.removeChild(tr);
+		};
+		save_button.onclick = function() {
+			var start = field_start.getCurrentData();
+			if (!start) { alert("Please specify a starting date"); return; }
+			var end = field_end.getCurrentData();
+			if (!end)
+				for (var i = 0; i < teacher_dates.length; ++i)
+					if (teacher_dates[i].id > 0 && !teacher_dates[i].end) { alert("Only one end date can be empty"); return; }
+			var locker = lock_screen(null,"Saving new dates...");
+			service.json("data_model","save_entity",{table:"TeacherDates",sub_model:null,field_people:people_id,field_start:start,field_end:end},function(res) {
+				unlock_screen(locker);
+				if (res && res.key) {
+					field_start.unregister_datamodel_cell();
+					field_end.unregister_datamodel_cell();
+					dates.id = res.key;
+					dates.start = start;
+					dates.end = end;
+					var next = tr.nextSibling;
+					tr.parentNode.removeChild(tr);
+					add_teacher_dates(dates, next);
+				}
+			});
+		};
+	} else {
+		if (people_id == -1<?php if ($can_edit) echo " || true";?>) {
+			tr.appendChild(td = document.createElement("TD"));
+			var remove_button = document.createElement("BUTTON");
+			remove_button.className = "flat small_icon";
+			remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+			td.appendChild(remove_button);
+			remove_button.onclick = function() {
+				if (people_id == -1) {
+					if (teacher_dates.length < 2) { alert("At least one date must remain"); return; }
+				} else {
+					if (dates.id > 0) {
+						var nb = 0;
+						for (var i = 0; i < teacher_dates.length; ++i) if (teacher_dates[i].id > 0) nb++;
+						if (nb < 2) { alert("At least one date must remain"); return; }
+					}
+				}
+				var removed = function() {
+					if (field_start) field_start.unregister_datamodel_cell();
+					if (field_end) field_end.unregister_datamodel_cell();
+					teacher_dates.remove(dates);
+					tr.parentNode.removeChild(tr);
+				};
+				if (people_id == -1) removed();
+				else {
+					var locker = lock_screen(null,"Removing dates...");
+					service.json("data_model","remove_row",{table:"TeacherDates",row_key:dates.id},function(res) {
+						unlock_screen(locker);
+						if (res) removed();
+					});
+				}
+			};
+		}
+	}
 }
 
 function validateTeacherDates() {

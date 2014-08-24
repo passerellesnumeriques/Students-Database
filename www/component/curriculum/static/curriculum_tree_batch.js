@@ -50,8 +50,8 @@ CurriculumTreeNode_Batch.prototype.createInfo = function() {
 		};
 		div.appendChild(button);
 		button = document.createElement("BUTTON");
-		button.className = "action important";
-		button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
+		button.className = "action red";
+		button.innerHTML = "<img src='"+theme.icons_16.remove_white+"'/> Remove";
 		button.batch = batch;
 		button.onclick = function() {
 			removeBatch(this.batch);

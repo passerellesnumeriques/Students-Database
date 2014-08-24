@@ -85,7 +85,7 @@ $model->addTable("BatchPeriod")
 	->addRemoveAccess("edit_curriculum", true)
  	->setRowDescriptionProvider(function($row) {
  		$batch_name = SQLQuery::create()->bypassSecurity()->select("StudentBatch")->whereValue("StudentBatch","id",$row["batch"])->field("name")->executeSingleValue();
- 		return "Period <i>".toHTML($row["name"])."</i> of Batch <i>$batch_name</i>";
+ 		return "Period <i>".toHTML($row["name"])."</i> of Batch <i>".toHTML($batch_name)."</i>";
  	})
 	;
  	
@@ -99,10 +99,16 @@ $model->addTable("Specialization")
 	->addRemoveAccess("edit_curriculum", true)
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			PNApplication::$instance->news->post("students", "curriculum", null, "activity", "Specialization ".$fields["name"]." created.");
+			PNApplication::$instance->news->post("students", "curriculum", null, "activity", "Specialization ".toHTML($fields["name"])." created.");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
- 	// TODO other news
+ 	->onRemove(function($row, $sub_model_instance){
+ 		PNApplication::$instance->news->post("students", "curriculum", null, "activity", "Specialization ".toHTML($row["name"])." removed.");
+ 	})
+ 	->onBeforeUpdate(function($fields_values, $key, $sub_model_instance){
+ 		$prev_name = SQLQuery::create()->bypassSecurity()->select("Specialization")->where("id",$key)->field("name")->executeSingleValue();
+ 		PNApplication::$instance->news->post("students", "curriculum", null, "activity", "Specialization ".toHTML($prev_name)." renamed into ".toHTML($fields_values["name"]));
+ 	})
  	->setRowDescriptionProvider(function($row) {
  		return "Specialization <i>".toHTML($row["name"])."</i>";
  	})
@@ -143,15 +149,31 @@ $model->addTable("AcademicClass")
 				->field("StudentBatch", "id", "batch_id")
 				->executeSingleRow()
 				;
-			$message = "Class <i>".$fields["name"]."</i> created for period ".$period["period_name"]." of batch ".$period["batch_name"];
+			$message = "Class <i>".toHTML($fields["name"])."</i> created for period ".toHTML($period["period_name"])." of batch ".toHTML($period["batch_name"]);
 			if (isset($fields["specialization"]) && $fields["specialization"] <> null) {
 				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
-				$message .= " with specialization ".$spe;
+				$message .= " with specialization ".toHTML($spe);
 			}
 			PNApplication::$instance->news->post("students", "students", array("batch".$period["batch_id"],"period".$fields["period"]), "activity", $message);
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
- 	// TODO other news
+ 	->onRemove(function($row,$sm){
+ 		$period = SQLQuery::create()->bypassSecurity()
+	 		->select("BatchPeriod")
+	 		->whereValue("BatchPeriod","id",$row["period"])
+	 		->field("BatchPeriod","name","period_name")
+	 		->join("BatchPeriod", "StudentBatch", array("batch"=>"id"))
+	 		->field("StudentBatch", "name", "batch_name")
+	 		->field("StudentBatch", "id", "batch_id")
+	 		->executeSingleRow()
+	 		;
+ 		$message = "Class <i>".toHTML($row["name"])."</i> removed for period ".toHTML($period["period_name"])." of batch ".toHTML($period["batch_name"]);
+ 		if (isset($row["specialization"]) && $row["specialization"] <> null) {
+ 			$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $row["specialization"])->field("Specialization","name")->executeSingleValue();
+ 			$message .= " with specialization ".toHTML($spe);
+ 		}
+ 		PNApplication::$instance->news->post("students", "students", array("batch".$period["batch_id"],"period".$row["period"]), "activity", $message);
+ 	})
  	->setRowDescriptionProvider(function($row) {
  		$period = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","id",$row["period"])->executeSingleRow();
 		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
@@ -171,7 +193,7 @@ $model->addTable("CurriculumSubjectCategory")
 	->addRemoveAccess("edit_curriculum", true)
  	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
-			PNApplication::$instance->news->post("students", "curriculum", null, "activity", "Category of subject <i>".$fields["name"]."</i> created for the curricula.");
+			PNApplication::$instance->news->post("students", "curriculum", null, "activity", "Category of subjects <i>".toHTML($fields["name"])."</i> created for the curricula.");
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
  	// TODO other news
@@ -206,15 +228,48 @@ $model->addTable("CurriculumSubject")
 				->field("StudentBatch", "id", "batch_id")
 				->executeSingleRow()
 				;
-			$message = "Subject <i>".$fields["name"]."</i> (code <i>".$fields["code"]."</i>) created in category ".$category." for period ".$period["period_name"]." of batch ".$period["batch_name"];
+			$message = "Subject <i>".toHTML($fields["name"])."</i> (code <i>".toHTML($fields["code"])."</i>) created in category ".toHTML($category)." for period ".toHTML($period["period_name"])." of batch ".toHTML($period["batch_name"]);
 			if (isset($fields["specialization"]) && $fields["specialization"] <> null) {
 				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
-				$message .= " in specialization ".$spe;
+				$message .= " in specialization ".toHTML($spe);
 			}
 			PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch_id"],"period".$fields["period"]), "activity", $message);
 		} catch (Exception $e) { PNApplication::error($e); }
  	})
- 	// TODO other news
+ 	->onRemove(function($row,$sm){
+ 		$period = SQLQuery::create()->bypassSecurity()
+	 		->select("BatchPeriod")
+	 		->whereValue("BatchPeriod","id",$row["period"])
+	 		->field("BatchPeriod","name","period_name")
+	 		->join("BatchPeriod", "StudentBatch", array("batch"=>"id"))
+	 		->field("StudentBatch", "name", "batch_name")
+	 		->field("StudentBatch", "id", "batch_id")
+	 		->executeSingleRow()
+	 		;
+ 		$message = "Subject <i>".toHTML($row["name"])."</i> (code <i>".toHTML($row["code"])."</i>) removed for period ".toHTML($period["period_name"])." of batch ".toHTML($period["batch_name"]);
+ 		PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch_id"],"period".$row["period"]), "activity", $message);
+ 	})
+ 	->onBeforeUpdate(function($fields_values, $key, $sub_model_instance){
+ 		$prev = SQLQuery::create()->bypassSecurity()->select("CurriculumSubject")->whereValue("CurriculumSubject","id",$key)->executeSingleRow();
+ 		$period = SQLQuery::create()->bypassSecurity()
+	 		->select("BatchPeriod")
+	 		->whereValue("BatchPeriod","id",$prev["period"])
+	 		->executeSingleRow()
+	 		;
+ 		$message = "";
+ 		if (isset($fields_values["code"]) && $fields_values["code"] <> $prev["code"])
+ 			$message .= "<li>Code changed to <i>".toHTML($fields_values["code"])."</i></li>";
+ 		if (isset($fields_values["name"]) && $fields_values["name"] <> $prev["name"])
+ 			$message .= "<li>Name changed to <i>".toHTML($fields_values["name"])."</i></li>";
+ 		if ((isset($fields_values["hours"]) && isset($fields_values["hours_type"])) && ($fields_values["hours"] <> $prev["hours"] || $fields_values["hours_type"] <> $prev["hours_type"]))
+ 			$message .= "<li>Number of hours changed from ".$prev["hours"]." ".$prev["hours_type"]." to ".$fields_values["hours"]." ".$fields_values["hours_type"]."</li>";
+ 		if (isset($fields_values["coefficient"]) && $fields_values["coefficient"] <> $prev["coefficient"])
+ 			$message .= "<li>Coefficient changed from ".$prev["coefficient"]." to ".$fields_values["coefficient"]."</li>";
+ 		if ($message <> "") {
+ 			$message = "Subject <i>".toHTML($prev["name"])."</i> (code <i>".toHTML($prev["code"])."</i>) updated:<ul>".$message."</ul>";
+ 			PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch"],"period".$prev["period"]), "activity", $message);
+ 		}
+ 	})
  	->setRowDescriptionProvider(function($row) {
  		$r = SQLQuery::create()
  			->select("BatchPeriod")
@@ -241,6 +296,33 @@ $model->addTable("TeacherDates")
  	->addWriteAccess("edit_curriculum", true)
  	->addInsertAccess("edit_curriculum", true)
  	->addRemoveAccess("edit_curriculum", true)
+ 	->onInsert(function($fields_values,$id,$sm){
+ 		$people_id = $fields_values["people"];
+ 		$people = PNApplication::$instance->people->getPeople($people_id, true);
+ 		$dates = SQLQuery::create()->bypassSecurity()->select("TeacherDates")->whereValue("TeacherDates","people",$people_id)->execute();
+ 		if (count($dates) == 1) {
+ 			PNApplication::$instance->news->post("students","curriculum",null,"activity","New teacher: <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>");
+ 		} else {
+ 			PNApplication::$instance->news->post("students","curriculum",null,"activity","New dates for teacher <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>: from ".$fields_values["start"].($fields_values["end"] <> null ? " to ".$fields_values["end"] : ""));
+ 		}
+ 	})
+ 	->onBeforeUpdate(function($fields_values,$id,$sm){
+ 		$prev = SQLQuery::create()->bypassSecurity()->select("TeacherDates")->whereValue("TeacherDates","id",$id)->executeSingleRow();
+ 		$people = PNApplication::$instance->people->getPeople($prev["people"], true);
+ 		$message = "Update teaching dates of <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>: ";
+ 		$first = true;
+ 		if (isset($fields_values["start"]) && $fields_values["start"] <> $prev["start"]) {
+ 			$first = false;
+ 			$message .= "started on ".$fields_values["start"]." instead of ".$prev["start"];
+ 		}
+ 		if (isset($fields_values["end"]) && $fields_values["end"] <> $prev["end"]) {
+ 			if ($first) $first = false; else $message .= ", ";
+ 			if ($prev["end"] == null) $message .= "ended on ".$fields_values["end"];
+ 			else if ($fields_values["end"] == null) $message .= "still teaching today (previously ended on ".$prev["end"].")";
+ 			else $message .= "ended on ".$fields_values["end"]." instead of ".$prev["end"];
+ 		}
+ 		PNApplication::$instance->news->post("students","curriculum",null,"activity",$message);
+ 	})
  	;
 
 $model->addTable("TeacherAssignment")

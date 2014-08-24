@@ -73,9 +73,9 @@ new data_list(
 		});
 	
 		var remove_button = document.createElement("BUTTON");
-		remove_button.className = "action important";
+		remove_button.className = "action red";
 		remove_button.disabled = "disabled";
-		remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove selected students";
+		remove_button.innerHTML = "<img src='"+theme.icons_16.remove_white+"'/> Remove selected students";
 		remove_button.onclick = function() {
 			var sel = list.grid.getSelectionByRowId();
 			if (!sel || sel.length == 0) return;
@@ -266,6 +266,8 @@ function refreshToDo(ondone) {
 		if (res && res.length > 0) {
 			if (!to_do_div) {
 				to_do_div = document.createElement("DIV");
+				to_do_div.style.maxHeight = "50px";
+				to_do_div.style.overflow = "auto";
 				to_do_div.className = "warning_footer";
 				window.students_list.addFooter(to_do_div);
 			}

@@ -102,8 +102,8 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 			this._createDivisionRow(i);
 		
 		var add_button = document.createElement('BUTTON');
-		add_button.className = 'action';
-		add_button.innerHTML = "<img src='"+theme.icons_16.add+"'/> Append a new division";
+		add_button.className = 'action green';
+		add_button.innerHTML = "<img src='"+theme.icons_16.add_white+"'/> Append a new division";
 		add_button.onclick = function(){
 			input_dialog(theme.icons_16.question,
 				"Add a new division",

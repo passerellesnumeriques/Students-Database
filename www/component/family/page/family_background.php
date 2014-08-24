@@ -57,7 +57,7 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 				save_button.disabled = "disabled";
 				sec.addToolBottom(save_button);
 				var cancel_button = document.createElement("BUTTON");
-				cancel_button.innerHTML = "<img src='"+theme.icons_16.cancel+"'/> Cancel changes";
+				cancel_button.innerHTML = "<img src='"+theme.icons_16.undo+"'/> Cancel changes";
 				cancel_button.disabled = "disabled";
 				cancel_button.className = "action";
 				sec.addToolBottom(cancel_button);

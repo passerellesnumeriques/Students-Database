@@ -67,7 +67,7 @@ class page_teachers extends Page {
 	</div>
 	<?php if ($can_edit) {?>
 	<div class="page_footer" style="flex:none;">
-		<button class='action' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
+		<button class='action green' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
 	</div>
 	<?php } ?>
 </div>
