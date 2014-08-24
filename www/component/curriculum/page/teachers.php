@@ -59,7 +59,7 @@ class page_teachers extends Page {
 		<div id='past_teachers'
 			title='Previous Teachers'
 			collapsable='true'
-			collapsed='true'
+			collapsed='false'
 			style='margin:10px'
 		>
 		<?php $this->buildTeachersList($past_teachers_ids, $teachers, $peoples);?>

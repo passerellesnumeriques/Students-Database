@@ -1995,6 +1995,7 @@ class SQLQuery {
 	 * @param array $rows rows previously retrieved by a SELECT, from which we can extract the keys 
 	 */
 	public function removeRows($table, $rows) {
+		if (count($rows) == 0) return;
 		$keys = array();
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
@@ -2110,7 +2111,7 @@ class SQLQuery {
 						$dm_table = DataModel::get()->getTableFromSQLName($table_name, $this->bypass_security);
 						if ($dm_table->hasRemoveListeners()) {
 							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
-							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$where);
+							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$w);
 							while (($row = SQLQuery::db()->nextRow($res)) <> null)
 								$dm_table->fireRemove($row, $sub_model);
 						}

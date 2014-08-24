@@ -21,7 +21,7 @@ class page_administration extends Page {
 <script type='text/javascript'>
 function lostEntities() {
 	var container = document.getElementById('lost_entities');
-	container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
+	container.innerHTML = "<img src='"+theme.icons_16.loading+"'/> This may take a while because we need to analyze deeply the database... Please be patient...";
 	service.json("data_model","find_lost_entities",{},function(list) {
 		if (!list || list.length == 0) {
 			container.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> No lost data.";

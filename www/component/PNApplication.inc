@@ -198,7 +198,17 @@ class PNApplication {
 			echo "],";
 		}
 		echo "\"result\":";
-		if ($result === null) echo "null"; else echo $result;
+		if ($result === null) echo "null";
+		else {
+			if (count(PNApplication::$errors) == 0)
+				echo $result;
+			else {
+				// check the result is a valid JSON, as it may be corrupted due to errors
+				$res = json_normalize($result);
+				$res = json_decode($res, true);
+				echo json_encode($res);
+			}
+		}
 		echo "}";
 	}
 

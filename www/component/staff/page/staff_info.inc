@@ -8,6 +8,8 @@ function staff_info(&$page, $people_id, $container_id) {
 	
 	$table = DataModel::get()->getTable("StaffPosition");
 	
+	$can_edit = $people_id == -1 || PNApplication::$instance->user_management->has_right("manage_staff");
+	
 	require_once("component/data_model/page/utils.inc");
 	
 	$fct_name = $page->generateID();
@@ -62,6 +64,7 @@ function staff_info(&$page, $people_id, $container_id) {
 			tr.appendChild(th = document.createElement("TH")); th.innerHTML = "End Date";
 			tr.appendChild(th = document.createElement("TH"));
 			table.appendChild(t.table = document.createElement("TBODY"));
+			<?php if ($can_edit) { ?>
 			var foot = document.createElement("TFOOT"); table.appendChild(foot);
 			foot.appendChild(tr = document.createElement("TR"));
 			tr.appendChild(th = document.createElement("TD"));
@@ -73,6 +76,26 @@ function staff_info(&$page, $people_id, $container_id) {
 			a.innerHTML = "Add new position";
 			a.onclick = function() { t.newPosition(); };
 			th.appendChild(a);
+			if (this.people_id > 0) {
+				foot.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(th = document.createElement("TD"));
+				th.colSpan = 4;
+				var button = document.createElement("BUTTON");
+				button.className = "action red";
+				button.innerHTML = "Never been a PN Staff";
+				th.appendChild(button);
+				button.onclick = function() {
+					popup_frame(null,"Remove Staff","/dynamic/people/page/remove_people_type?people="+t.people_id+"&type=staff&ontyperemoved=type_removed&onpeopleremoved=people_removed",null,null,null,function(frame,pop){
+						frame.people_removed = function() {
+							require("popup_window.js",function() {
+								get_popup_window_from_frame(window).close();
+							});
+						};
+						frame.type_removed = function() { location.reload(); };
+					});
+				};
+			}
+			<?php } ?>
 			t.setPositions(t.positions);
 		};
 
@@ -121,9 +144,7 @@ function staff_info(&$page, $people_id, $container_id) {
 					check_valid();
 				});
 			} else {
-				require("editable_cell.js",function(){
-					new editable_cell(td_position, "StaffPosition", "position", position.id, 'field_text', {max_length:100}, position.position).fillContainer();
-				});
+				window.top.datamodel.create_cell(window, "StaffPosition", null, "position", position.id, position.position, 'field_text', {max_length:100}, <?php echo $can_edit ? "true" : "false";?>, td_position, function(p){position.position=p;}, function(f){f.fillWidth();});
 			}
 			var td_department = document.createElement("TD");
 			tr.appendChild(td_department);
@@ -137,12 +158,10 @@ function staff_info(&$page, $people_id, $container_id) {
 					check_valid();
 				});
 			} else {
-				require("editable_cell.js",function(){
-					var values = [];
-					for (var i = 0; i < t.departments.length; ++i)
-						values.push([t.departments[i].id,t.departments[i].name]);
-					new editable_cell(td_department, "StaffPosition", "department", position.id, 'field_enum', {possible_values:values,can_be_null:true}, position.department).fillContainer();
-				});
+				var values = [];
+				for (var i = 0; i < t.departments.length; ++i)
+					values.push([t.departments[i].id,t.departments[i].name]);
+				window.top.datamodel.create_cell(window, "StaffPosition", null, "department", position.id, position.department, 'field_enum', {possible_values:values,can_be_null:true}, <?php echo $can_edit ? "true" : "false";?>, td_department, function(d){position.department=d;}, function(f){f.fillWidth();});
 			}
 			var td_start = document.createElement("TD");
 			tr.appendChild(td_start);
@@ -155,9 +174,7 @@ function staff_info(&$page, $people_id, $container_id) {
 					check_valid();
 				});
 			} else {
-				require("editable_cell.js",function(){
-					new editable_cell(td_start, "StaffPosition", "start", position.id, 'field_date', {}, position.start);
-				});
+				window.top.datamodel.create_cell(window, "StaffPosition", null, "start", position.id, position.start, 'field_date', {}, <?php echo $can_edit ? "true" : "false";?>, td_start, function(d){position.start=d;});
 			}
 			var td_end = document.createElement("TD");
 			tr.appendChild(td_end);
@@ -170,16 +187,16 @@ function staff_info(&$page, $people_id, $container_id) {
 					check_valid();
 				});
 			} else {
-				require("editable_cell.js",function(){
-					new editable_cell(td_end, "StaffPosition", "end", position.id, 'field_date', {can_be_null:true}, position.end);
-				});
+				window.top.datamodel.create_cell(window, "StaffPosition", null, "end", position.id, position.end, 'field_date', {can_be_null:true}, <?php echo $can_edit ? "true" : "false";?>, td_end, function(d){position.end=d;});
 			}
+			<?php if ($can_edit) { ?>
 			var td_remove = document.createElement("TD");
 			tr.appendChild(td_remove);
 			var remove = document.createElement("BUTTON");
 			remove.className = "flat icon";
 			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
 			remove.onclick = function() {
+				if (t.positions.length == 1) { alert("You must keep at least one position"); return; }
 				confirm_dialog("Remove this position ?",function(yes) {
 					if (!yes) return;
 					t.positions.remove(position);
@@ -191,6 +208,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				});
 			};
 			td_remove.appendChild(remove);
+			<?php } ?>
 		};
 
 		this._create();

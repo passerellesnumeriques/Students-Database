@@ -43,5 +43,10 @@ class ContactPointPeopleTypePlugin implements PeopleTypePlugin {
 	}
 	
 	public function getBuiltinDefaultUserRoles($people) { return array(); }
+	
+	public function remove($people_id) {
+		$rows = SQLQuery::create()->bypassSecurity()->select("ContactPoint")->whereValue("ContactPoint","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("ContactPoint", $rows);
+	}
 }
 ?>

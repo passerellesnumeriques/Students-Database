@@ -26,5 +26,25 @@ class StudentPeopleTypePlugin implements PeopleTypePlugin {
 	}
 	
 	public function getBuiltinDefaultUserRoles($people) { return array("Student"); }
+	
+	public function remove($people_id) {
+		$rows = SQLQuery::create()->bypassSecurity()->select("Student")->whereValue("Student","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("Student", $rows);
+		$rows = SQLQuery::create()->bypassSecurity()->select("StudentClass")->whereValue("StudentClass","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("StudentClass", $rows);
+		// TODO better: we should be able to know all tables having links to students...
+		$rows = SQLQuery::create()->bypassSecurity()->select("StudentSubjectEvaluationTypeGrade")->whereValue("StudentSubjectEvaluationTypeGrade","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("StudentSubjectEvaluationTypeGrade", $rows);
+		$rows = SQLQuery::create()->bypassSecurity()->select("StudentSubjectEvaluationGrade")->whereValue("StudentSubjectEvaluationGrade","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("StudentSubjectEvaluationGrade", $rows);
+		$rows = SQLQuery::create()->bypassSecurity()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("StudentSubjectGrade", $rows);
+		$rows = SQLQuery::create()->bypassSecurity()->select("StudentTranscriptGeneralComment")->whereValue("StudentTranscriptGeneralComment","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("StudentTranscriptGeneralComment", $rows);
+		$rows = SQLQuery::create()->bypassSecurity()->select("PublishedTranscriptStudentSubjectGrade")->whereValue("PublishedTranscriptStudentSubjectGrade","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("PublishedTranscriptStudentSubjectGrade", $rows);
+		$rows = SQLQuery::create()->bypassSecurity()->select("PublishedTranscriptStudentGeneralComment")->whereValue("PublishedTranscriptStudentGeneralComment","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("PublishedTranscriptStudentGeneralComment", $rows);
+	}
 }
 ?>

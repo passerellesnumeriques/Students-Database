@@ -32,15 +32,31 @@ class TeacherDataScreen implements datamodel\SimpleDataScreen {
 		if ($people_id <> -1) {
 			$dates = SQLQuery::create()->select("TeacherDates")->whereValue("TeacherDates", "people", $people_id)->orderBy("TeacherDates", "start")->execute();
 			$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+			$assignments = SQLQuery::create()
+				->select("TeacherAssignment")
+				->whereValue("TeacherAssignment","people",$people_id)
+				->join("TeacherAssignment","CurriculumSubject",array("subject"=>"id"))
+				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
+				->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"))
+				->join("AcademicPeriod","AcademicYear",array("year"=>"id"))
+				->field("CurriculumSubject","name","subject_name")
+				->field("AcademicPeriod","start","start")
+				->field("AcademicPeriod","end","end")
+				->field("AcademicPeriod","name","period_name")
+				->field("AcademicYear","name","year_name")
+				->execute();
 		}
 ?>
 <table><tbody id='teacher_dates_table'><tr>
-		<td colspan=4>
-			<?php if ($can_edit) {?>
-			<a href='#' style='color:#808080;font-style:italic;' onclick='add_teacher_dates();return false;'>Add dates</a>
-			<?php } ?>
-		</td>
-	</tr></tbody></table>
+	<td colspan=4>
+		<?php if ($can_edit) {?>
+		<a href='#' style='color:#808080;font-style:italic;' onclick='add_teacher_dates();return false;'>Add dates</a>
+		<?php } ?>
+	</td>
+</tr></tbody></table>
+<?php if ($can_edit && $people_id <> -1 && count($assignments) == 0) {?>
+<button class='action red' onclick='removeTeacher();'>Never been a teacher</button>
+<?php } ?>
 <script type='text/javascript'>
 var people_id = <?php echo $people_id;?>;
 var can_edit_teacher_dates = <?php echo $people_id == -1 || PNApplication::$instance->user_management->has_right("edit_curriculum") ? "true" : "false"; ?>;
@@ -59,6 +75,7 @@ var teacher_dates = [<?php
 		}
 	}
 ?>];
+<?php if ($people_id <> -1) echo "var assignments=".json_encode($assignments).";"; ?>
 
 function add_teacher_dates(dates, before_tr) {
 	if (!dates) {
@@ -73,11 +90,11 @@ function add_teacher_dates(dates, before_tr) {
 	tr.appendChild(td = document.createElement("TD"));
 	td.appendChild(document.createTextNode("Started on "));
 	tr.appendChild(td = document.createElement("TD"));
-	window.top.datamodel.create_cell(window, "TeacherDates",null,"start",dates.id,dates.start,"field_date", {can_be_null:false,minimum:"2004-01-01", maximum_cell:"end"}, can_edit_teacher_dates,td,function(value){dates.start = value;},function(f) {field_start=f;});
+	window.top.datamodel.create_cell(window, "TeacherDates",null,"start",dates.id,dates.start,"field_date", {can_be_null:false,minimum:"2004-01-01", maximum_cell:"end"}, can_edit_teacher_dates,td,function(value){dates.start = value;},function(f) {field_start=f;},function(new_date,ec){return checkNewStart(dates,new_date,ec);});
 	tr.appendChild(td = document.createElement("TD"));
 	td.appendChild(document.createTextNode("Ended on "));
 	tr.appendChild(td = document.createElement("TD"));
-	window.top.datamodel.create_cell(window, "TeacherDates",null,"end",dates.id,dates.end,"field_date", {can_be_null:true,minimum_cell:"start"}, can_edit_teacher_dates,td,function(value){dates.end = value;},function(f){field_end=f;});
+	window.top.datamodel.create_cell(window, "TeacherDates",null,"end",dates.id,dates.end,"field_date", {can_be_null:true,minimum_cell:"start"}, can_edit_teacher_dates,td,function(value){dates.end = value;},function(f){field_end=f;},function(new_date,ec){return checkNewEnd(dates,new_date,ec);});
 	if (people_id != -1 && dates.id < 0) {
 		tr.appendChild(td = document.createElement("TD"));
 		var save_button = document.createElement("BUTTON");
@@ -101,6 +118,13 @@ function add_teacher_dates(dates, before_tr) {
 			if (!end)
 				for (var i = 0; i < teacher_dates.length; ++i)
 					if (teacher_dates[i].id > 0 && !teacher_dates[i].end) { alert("Only one end date can be empty"); return; }
+			var a = valueCopy(teacher_dates,0);
+			a.remove(dates);
+			var d = valueCopy(dates,10);
+			d.start = start;
+			d.end = end;
+			a.push(d);
+			if (!validateAssignments(a)) return;
 			var locker = lock_screen(null,"Saving new dates...");
 			service.json("data_model","save_entity",{table:"TeacherDates",sub_model:null,field_people:people_id,field_start:start,field_end:end},function(res) {
 				unlock_screen(locker);
@@ -141,6 +165,9 @@ function add_teacher_dates(dates, before_tr) {
 				};
 				if (people_id == -1) removed();
 				else {
+					var a = valueCopy(teacher_dates,0);
+					a.remove(dates);
+					if (!validateAssignments(a)) return;
 					var locker = lock_screen(null,"Removing dates...");
 					service.json("data_model","remove_row",{table:"TeacherDates",row_key:dates.id},function(res) {
 						unlock_screen(locker);
@@ -161,6 +188,66 @@ function validateTeacherDates() {
 			no_end_found = true;
 		}
 	}
+}
+function validateAssignments(new_dates) {
+	var assignments_out = [];
+	for (var i = 0; i < assignments.length; i++) {
+		var start = parseSQLDate(assignments[i].start);
+		var end = parseSQLDate(assignments[i].end);
+		var found = false;
+		for (var j = 0; j < new_dates.length; ++j) {
+			var s = parseSQLDate(new_dates[j].start);
+			var e = new_dates[j].end ? parseSQLDate(new_dates[j].end) : null;
+			if (e) {
+				if (s.getTime() < start.getTime() && e.getTime() > start.getTime()) { found = true; break; }
+				if (s.getTime() >= start.getTime() && s.getTime() <= end.getTime()) { found = true; break; }
+			} else {
+				if (s.getTime() < end.getTime()) { found = true; break; }
+			}
+		}
+		if (!found) assignments_out.push(assignments[i]);
+	}
+	if (assignments_out.length == 0) return true;
+	var msg = "Invalid dates: this teacher is assigned to the following subjects:\n";
+	for (var i = 0; i < assignments_out.length; ++i) {
+		var a = assignments_out[i];
+		msg += " - "+a.subject_name+" in academic year "+a.year_name+", period "+a.period_name+"\n";
+	} 
+	msg += "You must either unassign those subjects, or specify dates including those periods";
+	alert(msg);
+	return false;
+}
+function checkNewStart(dates, new_start, ec) {
+	var a = valueCopy(teacher_dates,0);
+	a.remove(dates);
+	var d = valueCopy(dates, 10);
+	d.start = new_start;
+	a.push(d);
+	if (validateAssignments(a)) return new_start;
+	dates.start = ec.editable_field.field.getOriginalData();
+	ec.editable_field.field.setData(dates.start);
+	return dates.start;
+}
+function checkNewEnd(dates, new_end, ec) {
+	var a = valueCopy(teacher_dates,0);
+	a.remove(dates);
+	var d = valueCopy(dates, 10);
+	d.end = new_end;
+	a.push(d);
+	if (validateAssignments(a)) return new_end;
+	dates.end = ec.editable_field.field.getOriginalData();
+	ec.editable_field.field.setData(dates.end);
+	return dates.end;
+}
+function removeTeacher() {
+	popup_frame(null,"Remove Teacher","/dynamic/people/page/remove_people_type?people="+people_id+"&type=teacher&ontyperemoved=type_removed&onpeopleremoved=people_removed",null,null,null,function(frame,pop){
+		frame.people_removed = function() {
+			require("popup_window.js",function() {
+				get_popup_window_from_frame(window).close();
+			});
+		};
+		frame.type_removed = function() { location.reload(); };
+	});
 }
 
 if (people_id == -1) add_teacher_dates();

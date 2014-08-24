@@ -42,7 +42,10 @@ function valueCopy(value, obj_depth) {
 		if (value instanceof Array || getObjectClassName(value) == "Array") {
 			var a = [];
 			for (var i = 0; i < value.length; ++i)
-				a.push(valueCopy(value[i], obj_depth-1));
+				if (obj_depth > 0)
+					a.push(valueCopy(value[i], obj_depth-1));
+				else
+					a.push(value[i]);
 			return a;
 		}
 		return objectCopy(value, obj_depth);

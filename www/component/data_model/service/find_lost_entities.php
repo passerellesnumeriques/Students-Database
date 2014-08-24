@@ -140,6 +140,7 @@ class service_find_lost_entities extends Service {
 				foreach ($found as $f) if ($f[$ft->getPrimaryKey()->name] == $key) { $has_link = false; break; }
 				if ($has_link) {
 					// remove rows
+					set_time_limit(300+count($rows));
 					for ($i = 0; $i < count($rows); $i++) {
 						if ($rows[$i][$col->name] == $key) {
 							array_splice($rows, $i, 1);
@@ -181,13 +182,14 @@ class service_find_lost_entities extends Service {
 						$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($new_sub_models)->whereIn($ft->getName(), $col->name, $keys)->execute();
 						$no_link = array();
 						foreach ($found as $f) array_push($no_link, $f);
-						$this->findLinked($ft, $sub_models, $no_link, $tables_done);
+						$this->findLinked($ft, $new_sub_models, $no_link, $tables_done);
 						foreach ($found as $f) {
 							set_time_limit(300);
 							$has_link = true;
 							foreach ($no_link as $n) if ($n == $f) { $has_link = false; break; }
 							if ($has_link) {
 								// we can remove the row
+								set_time_limit(300+count($rows));
 								for ($i = 0; $i < count($rows); $i++) {
 									if ($rows[$i][$pk->name] == $f[$col->name]) {
 										array_splice($rows, $i, 1);

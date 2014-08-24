@@ -43,5 +43,11 @@ class StaffPeopleTypePlugin implements PeopleTypePlugin {
 		}
 		return $list;
 	}
+	
+	public function remove($people_id) {
+		$rows = SQLQuery::create()->bypassSecurity()->select("StaffPosition")->whereValue("StaffPosition","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("StaffPosition", $rows);
+		SQLQuery::create()->bypassSecurity()->removeKey("Staff", $people_id);
+	}
 }
 ?>

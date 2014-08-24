@@ -26,5 +26,12 @@ class TeacherPeopleTypePlugin implements PeopleTypePlugin {
 	}
 	
 	public function getBuiltinDefaultUserRoles($people) { return array("Teacher"); }
+	
+	public function remove($people_id) {
+		$rows = SQLQuery::create()->bypassSecurity()->select("TeacherDates")->whereValue("TeacherDates","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("TeacherDates", $rows);
+		$rows = SQLQuery::create()->bypassSecurity()->select("TeacherAssignment")->whereValue("TeacherAssignment","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("TeacherAssignment", $rows);
+	}
 }
 ?>

@@ -268,10 +268,10 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @method popup_window#addYesNoButtons
 	 * @param {function} onyes handler to be called when the Yes button is pressed. 
 	 */
-	t.addYesNoButtons = function(onyes) {
+	t.addYesNoButtons = function(onyes,onno) {
 		t.addIconTextButton(theme.icons_16.yes, "Yes", 'yes', onyes);
-		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { t.close(); });
-		t.onEscape(function() { t.close(); });
+		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { if (onno && onno()) t.close(); });
+		t.onEscape(function() { if (onno && onno()) t.close(); });
 	};
 	
 	t.onEnter = function(onenter) {

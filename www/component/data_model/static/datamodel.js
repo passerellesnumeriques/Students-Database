@@ -280,12 +280,12 @@ datamodel = {
 		}
 	},
 	
-	create_cell: function(win, table, sub_model, column, row_key, value, field_type, field_cfg, editable, container, onchange, oncreated) {
+	create_cell: function(win, table, sub_model, column, row_key, value, field_type, field_cfg, editable, container, onchange, oncreated, onsave) {
 		var js = [["typed_field.js",field_type+".js"]];
 		if (editable) js.push("editable_cell.js");
 		win.require(js, function() {
 			if (row_key > 0 && editable)
-				new win.editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, field_type, field_cfg, value,null,onchange,function(ec){
+				new win.editable_cell(container, table+(sub_model ? "_"+sub_model : ""), column, row_key, field_type, field_cfg, value,onsave,onchange,function(ec){
 					if (oncreated) oncreated(ec.editable_field.field);
 				});
 			else {

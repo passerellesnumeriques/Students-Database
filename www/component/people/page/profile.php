@@ -25,6 +25,10 @@ class page_profile extends Page {
 			->field("People", "types", "people_types")
 			;
 		$people = $q->executeSingleRow();
+		if ($people == null) {
+			PNApplication::error("This person does not exist in the database");
+			return;
+		}
 		$types = PNApplication::$instance->people->parseTypes($people["people_types"]);
 		
 		$pages = array();

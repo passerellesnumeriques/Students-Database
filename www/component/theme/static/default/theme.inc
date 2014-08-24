@@ -103,6 +103,7 @@ theme::$icons_32 = array(
 	"_import" => 		"/static/theme/default/icons_32/import.png",
 	"info" =>			"/static/theme/default/icons_32/info.png",
 	"loading" => 		"/static/theme/default/icons_32/loading.gif",
+	"question" => 		"/static/theme/default/icons_32/help.png",
 );
 
 ?>
