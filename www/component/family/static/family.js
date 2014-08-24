@@ -214,67 +214,163 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		td.onmouseout = function() { this.style.textDecoration = ""; };
 		td.style.cursor = "pointer";
 		var td_people = td;
-		if (member.people && !member.people_create) {
-			var span_last_name = document.createElement("SPAN");
-			span_last_name.appendChild(document.createTextNode(member.people.last_name));
-			window.top.datamodel.registerCellSpan(window, "People", "last_name", member.people.people_id, span_last_name);
-			var span_first_name = document.createElement("SPAN");
-			span_first_name.appendChild(document.createTextNode(member.people.first_name));
-			window.top.datamodel.registerCellSpan(window, "People", "first_name", member.people.people_id, span_first_name);
-			td.appendChild(span_last_name);
-			td.appendChild(document.createTextNode(" "));
-			td.appendChild(span_first_name);
-			td.onclick = function() {
-				popup_frame(null,"Family Member","/dynamic/people/page/profile?people="+member.people.people_id,null,80,80);
-			};
-		} else {
-			td.style.fontStyle = "italic";
-			td.style.color = "#808080";
-			td.innerHTML = "unknown";
-			if (can_edit) {
-				td.onclick = function() {
-					var data = {};
-					if (member.people_create) {
-						data.prefilled_data = [];
+		tr.appendChild(td = document.createElement("TD"));
+		var td_gender = td;
+		tr.appendChild(td = document.createElement("TD"));
+		var td_age = td;
+		var create_people = function() {
+			var data = {};
+			if (member.people_create) {
+				data.prefilled_data = [];
+				for (var i = 0; i < member.people_create.length; ++i) {
+					var path = new DataPath(member.people_create[i].path);
+					for (var j = 0; j < member.people_create[i].value.length; ++j) {
+						var pd = {table:path.lastElement().table,data:member.people_create[i].value[j].name,value:member.people_create[i].value[j].value};
+						data.prefilled_data.push(pd);
+					}
+				}
+			}
+			popup_frame(null, "New Family Member", "/dynamic/people/page/popup_create_people?multiple=false&donotcreate=oncreated&types=family_member", data, 80, 80, function(frame,pop){
+				frame.oncreated = function(peoples) {
+					if (t.onchange) t.onchange();
+					require("datadisplay.js", function() {
+						member.people_create = peoples[0];
+						member.people = {people_id:-1,first_name:"",last_name:"",sex:null,birthdate:null};
 						for (var i = 0; i < member.people_create.length; ++i) {
 							var path = new DataPath(member.people_create[i].path);
+							if (path.lastElement().table != "People") continue;
 							for (var j = 0; j < member.people_create[i].value.length; ++j) {
-								var pd = {table:path.lastElement().table,data:member.people_create[i].value[j].name,value:member.people_create[i].value[j].value};
-								data.prefilled_data.push(pd);
+								if (member.people_create[i].value[j].name == "First Name") member.people.first_name = member.people_create[i].value[j].value;
+								else if (member.people_create[i].value[j].name == "Last Name") member.people.last_name = member.people_create[i].value[j].value;
+								else if (member.people_create[i].value[j].name == "Gender") member.people.sex = member.people_create[i].value[j].value;
+								else if (member.people_create[i].value[j].name == "Birth Date") member.people.birth = member.people_create[i].value[j].value;
 							}
 						}
-					}
-					popup_frame(null, "New Family Member", "/dynamic/people/page/popup_create_people?multiple=false&donotcreate=oncreated&types=family_member", data, 80, 80, function(frame,pop){
-						frame.oncreated = function(peoples) {
-							require("datadisplay.js", function() {
-								member.people_create = peoples[0];
-								member.people = {people_id:-1,first_name:"",last_name:"",sex:null};
-								for (var i = 0; i < member.people_create.length; ++i) {
-									var path = new DataPath(member.people_create[i].path);
-									if (path.lastElement().table != "People") continue;
-									for (var j = 0; j < member.people_create[i].value.length; ++j) {
-										if (member.people_create[i].value[j].name == "First Name") member.people.first_name = member.people_create[i].value[j].value;
-										else if (member.people_create[i].value[j].name == "Last Name") member.people.last_name = member.people_create[i].value[j].value;
-										else if (member.people_create[i].value[j].name == "Gender") member.people.sex = member.people_create[i].value[j].value;
-									}
-								}
-								td_people.removeAllChildren();
-								td.style.color = "";
-								td.style.fontStyle = "";
-								td_people.appendChild(document.createTextNode(member.people.last_name+" "+member.people.first_name));
-							});
+						td_people.removeAllChildren();
+						td_people.style.color = "";
+						td_people.style.fontStyle = "";
+						td_people.appendChild(document.createTextNode(member.people.last_name+" "+member.people.first_name));
+						td_gender.removeAllChildren();
+						td_gender.innerHTML = member.people.sex ? member.people.sex : "";
+						if (!member.people.birthdate)
+							td_age.innerHTML = "";
+						else {
+							var now = new Date();
+							var birth = parseSQLDate(member.people.birthdate);
+							var age = now.getFullYear()-birth.getFullYear();
+							if (now.getMonth() < birth.getMonth() || (now.getMonth() == birth.getMonth() && now.getDate() < birth.getDate()))
+								age--;
+							td_age.innerHTML = age;
+						}
+						var remove = document.createElement("BUTTON");
+						remove.className = "flat small_icon";
+						remove.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+						remove.title = "Remove this person ant put as unknown";
+						td_people.appendChild(remove);
+						remove.onclick = function(ev) {
+							stopEventPropagation(ev);
+							member.people_create = null;
+							td_people.style.fontStyle = "italic";
+							td_people.style.color = "#808080";
+							td_people.innerHTML = "unknown";
+							td_people.onclick = create_people;
+							td_age.removeAllChildren();
+							td_gender.removeAllChildren();
+							return false;
 						};
 					});
 				};
+			});
+		};
+		if (member.people && !member.people_create) {
+			var span_last_name = document.createElement("SPAN");
+			span_last_name.appendChild(document.createTextNode(member.people.last_name));
+			td_people.appendChild(span_last_name);
+			window.top.datamodel.registerCellSpan(window, "People", "last_name", member.people.people_id, span_last_name);
+			td_people.appendChild(document.createTextNode(" "));
+			var span_first_name = document.createElement("SPAN");
+			span_first_name.appendChild(document.createTextNode(member.people.first_name));
+			td_people.appendChild(span_first_name);
+			window.top.datamodel.registerCellSpan(window, "People", "first_name", member.people.people_id, span_first_name);
+			td_people.onclick = function() {
+				popup_frame(null,"Family Member","/dynamic/people/page/profile?people="+member.people.people_id,null,80,80);
+			};
+			if (member.people.people_id != fixed_people_id && can_edit) {
+				var remove = document.createElement("BUTTON");
+				remove.className = "flat small_icon";
+				remove.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+				remove.title = "Remove this person ant put as unknown";
+				td_people.appendChild(remove);
+				remove.onclick = function(ev) {
+					stopEventPropagation(ev);
+					popup_frame(null,"Remove Family Member","/dynamic/people/page/remove_people_type?people="+member.people.people_id+"&type=family_member&ontyperemoved=removed&onpeopleremoved=removed",null,null,null,function(frame,pop){
+						frame.removed = function() {
+							for (var i = 0; i < members.length; ++i)
+								if (members[i].people && members[i].people.people_id == member.people.people_id) {
+									members.splice(i,1);
+									break;
+								}
+							member.people = null;
+							td_people.style.fontStyle = "italic";
+							td_people.style.color = "#808080";
+							td_people.innerHTML = "unknown";
+							td_people.onclick = create_people;
+							td_age.removeAllChildren();
+							td_gender.removeAllChildren();
+						};
+					});
+					return false;
+				};
+			}
+		} else {
+			td_people.style.fontStyle = "italic";
+			td_people.style.color = "#808080";
+			td_people.innerHTML = "unknown";
+			if (can_edit) {
+				td_people.onclick = create_people;
 			} else {
-				td.onmouseover = null;
-				td.onmouseout = null;
-				td.style.curosr = "";
+				td_people.onmouseover = null;
+				td_people.onmouseout = null;
+				td_people.style.curosr = "";
 			}
 		}
-		// living with family
-		tr.appendChild(td = document.createElement("TD"));
-		this._addBooleanSelect(td, member, "living_with_family");
+		// gender
+		td_gender.style.textAlign = "center";
+		if (member.people && !member.people_create) {
+			var span = document.createElement("SPAN");
+			span.appendChild(document.createTextNode(member.people.sex));
+			td_gender.appendChild(span);
+			window.top.datamodel.registerCellSpan(window, "People", "sex", member.people.people_id, span);
+		} else {
+		}
+		// age
+		td_age.style.textAlign = "center";
+		if (member.people && !member.people_create) {
+			var span = document.createElement("SPAN");
+			var age = "";
+			if (member.people.birthdate) {
+				var now = new Date();
+				var birth = parseSQLDate(member.people.birthdate);
+				age = now.getFullYear()-birth.getFullYear();
+				if (now.getMonth() < birth.getMonth() || (now.getMonth() == birth.getMonth() && now.getDate() < birth.getDate()))
+					age--;
+			}
+			span.appendChild(document.createTextNode(age));
+			td_age.appendChild(span);
+			window.top.datamodel.addCellChangeListener(window, "People", "birth", member.people.people_id, function(value) {
+				if (!value)
+					span.innerHTML = "";
+				else {
+					var now = new Date();
+					var birth = parseSQLDate(value);
+					var age = now.getFullYear()-birth.getFullYear();
+					if (now.getMonth() < birth.getMonth() || (now.getMonth() == birth.getMonth() && now.getDate() < birth.getDate()))
+						age--;
+					span.innerHTML = age;
+				}
+			});
+		} else {
+		}
 		// occupation
 		tr.appendChild(td = document.createElement("TD"));
 		if (can_edit) {
@@ -290,7 +386,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				t._addSelect(td_occ, member, "occupation_type", [{value:null,text:"?"},{value:"Regular",text:"Regular"},{value:"Irregular",text:"Irregular"}]);
 			});
 		} else {
-			td.appendChild(document.createTextNode((member.occupation ? member.occupation : "?")+" (Type: "+(member.occupation_type ? member.occupation_type : "?")+")"));
+			td.appendChild(document.createTextNode((member.occupation ? member.occupation : "")+(member.occupation_type ? ","+member.occupation_type : "")));
 		}
 		// education level
 		tr.appendChild(td = document.createElement("TD"));
@@ -308,8 +404,14 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			if (member.education_level)
 				td.appendChild(document.createTextNode(member.education_level));
 			else
-				td.innerHTML = "?";
+				td.innerHTML = "";
 		}
+		// living with family
+		tr.appendChild(td = document.createElement("TD"));
+		this._addBooleanSelect(td, member, "living_with_family");
+		// last update
+		tr.appendChild(td = document.createElement("TD"));
+		td.innerHTML = member.entry_date ? member.entry_date : "";
 		return tr;
 	};
 	this._addColumnsTitles = function() {
@@ -320,11 +422,19 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Name";
 		tr.appendChild(td = document.createElement("TH"));
-		td.innerHTML = "Living with family";
+		td.innerHTML = "Gender";
+		td.style.fontSize = "9pt";
 		tr.appendChild(td = document.createElement("TH"));
-		td.innerHTML = "Occupation";
+		td.innerHTML = "Age";
+		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Occupation, Type";
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Education level";
+		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Living<br/>w/family";
+		td.style.fontSize = "9pt";
+		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Last<br/>Update";
 		return tr;
 	};
 	this._addTitleRow = function(title) {

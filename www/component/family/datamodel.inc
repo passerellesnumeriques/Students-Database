@@ -21,6 +21,7 @@ $model->addTable("FamilyMember")
 	->addBoolean("living_with_family", true)
 	->addInteger("child_rank", 8, 1) // ? should we put it ?
 	->addReadAccessFromForeignTable("People")
+	->addRemoveAccessFromForeignTable("People")
 	;
 
 ?>

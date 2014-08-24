@@ -110,7 +110,7 @@ field_integer.prototype._create = function(data) {
 		this.fillWidth = function() {
 			_fw = true;
 			this.element.style.width = "100%";
-			if (typeof input.setMinimumSize != 'undefined') input.setMinimumSize(-1);
+			if (typeof t.input.setMinimumSize != 'undefined') t.input.setMinimumSize(-1);
 		};
 		if (t.config) {
 			var prev = data;

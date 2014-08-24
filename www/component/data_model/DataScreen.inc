@@ -110,7 +110,13 @@ namespace datamodel {
 					$row = $q->executeSingleRow();
 					if ($keys["key"] <> null)
 						$key_value = $row[$keys["key"]];
-					$value = @$row[$keys["data"]];
+					if ($keys["data"] <> null)
+						$value = @$row[$keys["data"]];
+					else {
+						$rows = array($row);
+						$data->performSubRequests($q, $rows, $keys, $path);
+						$value = @$rows[0][$keys["data"]];
+					}
 				}
 				if (!$is_new)
 					$key_value = $data->getKeyFromTableKey($key_value);

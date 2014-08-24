@@ -2451,7 +2451,14 @@ class SQLQuery {
 				$first = true;
 				foreach ($j[2] as $f1=>$f2) {
 					if ($first) $first = false; else $s .= ", ";
-					$s .= $f1."=".$f2;
+					if ($f1 == null) {
+						$ff = true;
+						foreach ($f2 as $name=>$val) {
+							if ($ff) $ff = false; else $s .= " AND ";
+							$s .= "`".$j[1]."`.`$name`='$val'";
+						}
+					} else
+						$s .= $f1."=".$f2;
 				}
 				$s .= "</li>";
 			}
