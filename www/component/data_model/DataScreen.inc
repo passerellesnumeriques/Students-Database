@@ -45,8 +45,8 @@ namespace datamodel {
 			$path = $paths[0];
 			$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
 			//var_dump($values);
-			$key_value = getKeyValue($path->table, $values);
-			$is_new = $key_value == null || intval($key_value) < 0;
+			//$key_value = getKeyValue($path->table, $values);
+			$is_new = $structure_name <> null;
 			$fixed_columns = array_merge($values->getColumns($path->table->getName()));
 			echo $this->generateDataTable($page, $path, $this->display->getDataDisplay($from, $path->sub_model), $fixed_columns, $values, $prefilled_values, $structure_name, $is_new);
 		}
@@ -96,6 +96,7 @@ namespace datamodel {
 				$id = $page->generateID();
 				$html .= "<td id='$id'>";
 				$tf = $data->getTypedField($path->sub_model);
+				$kv = $key_value;
 				if ($values->hasDataValue($path->table->getName(), $data))
 					$value = $values->getDataValue($path->table->getName(), $data);
 				else if ($is_new && $prefilled_values->hasDataValue($path->table->getName(), $data))
@@ -109,7 +110,7 @@ namespace datamodel {
 					$keys = $data->buildSQL($q, $path);
 					$row = $q->executeSingleRow();
 					if ($keys["key"] <> null)
-						$key_value = $row[$keys["key"]];
+						$kv = $row[$keys["key"]];
 					if ($keys["data"] <> null)
 						$value = @$row[$keys["data"]];
 					else {
@@ -119,7 +120,7 @@ namespace datamodel {
 					}
 				}
 				if (!$is_new)
-					$key_value = $data->getKeyFromTableKey($key_value);
+					$kv = $data->getKeyFromTableKey($kv);
 				$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 				$page->requireJavascript($tf[0].".js");
 				// check can really edit the columns
@@ -138,7 +139,7 @@ namespace datamodel {
 					$page->addJavascript("/static/data_model/datadisplay.js");
 					$page->addJavascript("/static/data_model/editable_field.js");
 					$page->addJavascript("/static/data_model/editable_datadisplay.js");
-					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($key_value).", ".json_encode($value).");\n";
+					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($value).");\n";
 					$script .= "field.editable_field.fillContainer();\n";
 				} else {
 					$script .= "field = new ".$tf[0]."(".json_encode($value).",false,".$tf[1].");\n";
