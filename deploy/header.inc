@@ -7,7 +7,7 @@
 </head>
 <body>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;'>
-	<div class='section'>
+	<div class='section' style='max-width:99%'>
 		<div class='header' style='flex:none;display:flex;flex-direction:column;justify-content:center;align-items:center;'>
 			<div>PN Students Management Software - Deployment</div>
 		</div>
