@@ -170,6 +170,7 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 }
 
 function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$sections, $structure_name) {
+	if ($path->sub_model == "@link") return;
 	$parent_display = DataModel::get()->getTableDataDisplay($path->table->getName());
 	if ($parent_display == null) return;
 	$screens = DataModel::get()->getDataScreens();
@@ -183,6 +184,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 			$found = false;
 			for ($i = 0; $i < count($path->children); $i++) {
 				$child = $path->children[$i];
+				if ($child->sub_model == "@link") continue;
 				if ($child->table->getName() == $table_name) {
 					array_push($children, $child);
 					$found = true;
@@ -198,10 +200,11 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 	
 	// create generic screens for remaining paths
 	foreach ($path->children as $child) {
+		if ($child->sub_model == "@link") continue;
 		$display = DataModel::get()->getTableDataDisplay($child->table->getName());
 		if ($display == null) continue;
 		if ($child->isReverse()) {
-			if (!$parent_display->canJoinToPrimary()) continue;
+			if ($path->table->getPrimaryKey() <> null && !$parent_display->canJoinToPrimary()) continue;
 			if (!$display->canJoinFrom($child->foreign_key->name)) continue;
 			$columns = $display->getNeededColumnsToJoinFrom($child->foreign_key->name);
 			if ($columns <> null) {
@@ -215,19 +218,8 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 				if (!$display->checkJoinFrom($child->foreign_key->name, $cv)) continue;
 			}
 		} else {
-			if (!$parent_display->canJoinFrom($child->foreign_key->name)) continue;
+			if (!$parent_display->canFollow($child->foreign_key->name)) continue;
 			if (!$display->canJoinToPrimary()) continue;
-			$columns = $parent_display->getNeededColumnsToJoinFrom($child->foreign_key->name);
-			if ($columns <> null) {
-				$cv = array();
-				foreach ($columns as $cname) {
-					$v = null;
-					if ($values->hasColumnValue($path->table->getName(), $cname))
-						$v = $values->getColumnValue($path->table->getName(), $cname);
-					$cv[$cname] = $v;
-				}
-				if (!$parent_display->checkJoinFrom($child->foreign_key->name, $cv)) continue;
-			}
 		}
 		$screen = new datamodel\GenericDataScreen($display);
 		array_push($avail_screens, array($screen, array($child)));

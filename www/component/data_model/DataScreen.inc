@@ -66,8 +66,9 @@ namespace datamodel {
 		 * @return string
 		 */
 		protected function generateDataTable(&$page, $path, $list, $fixed_columns, $values, $prefilled_values, $structure_name, $is_new) {
+			if ($path->sub_model == "@link") return;
 			$script = "";
-			$html = "<table>";
+			$html = "<table class='data_screen'><tbody>";
 			$has_something = false;
 			$readonly = false;
 			if (!$is_new) {
@@ -151,7 +152,7 @@ namespace datamodel {
 				$html .= "</tr>";
 			}
 			if (!$has_something) return "";
-			$html .= "</table>";
+			$html .= "</tbody></table>";
 			$html .= "<script type='text/javascript'>\n";
 			$html .= "var field;\n";
 			if ($structure_name <> null) {

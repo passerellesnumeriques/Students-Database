@@ -251,7 +251,7 @@ class SubDataModel extends DataModel {
 	public function &getParentModel() { return $this->parent_model; }
 	public function getParentTable() { return $this->parent_table; }
 	
-	public function addSubModelLink($sub_model_table, $root_table) {
+	public function addSubModelLink($sub_model_table, $root_table, $needed_columns_to_join = null, $join_check_function = null) {
 		$t = $this->internalGetTable($sub_model_table);
 		// check we have a foreign key
 		if ($t == null) { PNApplication::error("Invalid table: ".$sub_model_table); return; }
@@ -270,7 +270,7 @@ class SubDataModel extends DataModel {
 			;
 		$fake_category = new datamodel\DataDisplayCategory("");
 		$display = new datamodel\TableDataDisplay("smlink_".$sub_model_table."_".$root_table, $fake_category);
-		$display->addJoinFromAll();
+		$display->addJoinFrom("root",$needed_columns_to_join,$join_check_function);
 		$display->addFollowAll();
 		$this->parent_model->addTableDataDisplay($display);
 		

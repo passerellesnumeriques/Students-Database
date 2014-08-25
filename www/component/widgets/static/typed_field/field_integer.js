@@ -86,7 +86,7 @@ field_integer.prototype._create = function(data) {
 			t.setData(val);
 		};
 		listenEvent(t.input, 'focus', function() { t.onfocus.fire(); });
-		require("input_utils.js",function(){inputAutoresize(t.input);});
+		require("input_utils.js",function(){inputAutoresize(t.input);if (_fw) t.input.setMinimumSize(-1);});
 		this.element.appendChild(t.input);
 		this._getEditedData = function() {
 			var value = getValueFromInput();

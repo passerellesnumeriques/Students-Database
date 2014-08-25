@@ -283,13 +283,16 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 		return $this->possible_values[$sub_model];
 	}
 	public function getTypedField($sub_model) {
-		$tf = parent::getTypedField($sub_model);
-		$tf[1] = substr($tf[1],0,strlen($tf[1])-1);
-		$tf[1] .= ",creators:".json_encode($this->accepted_creators);
-		$tf[1] .= ",types:".json_encode($this->restrict_types);
-		$tf[1] .= "}";
-		$tf[0] = "field_organization";
-		return $tf;
+		if ($sub_model <> "@link") {
+			$tf = parent::getTypedField($sub_model);
+			$tf[1] = substr($tf[1],0,strlen($tf[1])-1);
+			$tf[1] .= ",creators:".json_encode($this->accepted_creators);
+			$tf[1] .= ",types:".json_encode($this->restrict_types);
+			$tf[1] .= "}";
+			$tf[0] = "field_organization";
+			return $tf;
+		}
+		return parent::getTypedField($sub_model);
 	}
 }
 

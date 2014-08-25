@@ -298,6 +298,23 @@ a.black_link:hover, .black_link:hover {
     right: 5px;
 }
 
+table.data_screen {
+	border-spacing: 0px;
+	border-collapse: collapse;
+	empty-cells: show;
+	width: 100%;
+}
+table.data_screen>tbody>tr>td {
+	border-bottom: 1px solid #E8E8FF;
+	font-size: 12px;
+}
+table.data_screen>tbody>tr>td:first-child {
+	font-weight: bold;
+}
+table.data_screen>tbody>tr>td:last-child {
+	
+}
+
 /* Information sections: help, warning, error... */
 .help {
 	background-color: #D8D8FF;

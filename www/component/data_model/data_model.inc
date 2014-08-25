@@ -65,7 +65,7 @@ class data_model extends Component {
 		}
 		foreach ($path->children as $c) {
 			if ($c->isReverse()) {
-				if ($display == null || !$display->canJoinToPrimary()) continue;
+				if ($display == null || ($path->table->getPrimaryKey() <> null && !$display->canJoinToPrimary())) continue;
 				$fd = DataModel::get()->getTableDataDisplay($c->table->getName());
 				if ($fd == null) continue;
 				if (!$fd->canJoinFrom($c->foreign_key->name)) continue;
@@ -90,7 +90,7 @@ class data_model extends Component {
 			} else if (!in_array($c->foreign_key->name, $handled)) {
 				if ($display == null || !$display->canFollow($c->foreign_key->name)) continue;
 				$display_foreign = DataModel::get()->getTableDataDisplay($c->table->getName());
-				if ($display_foreign && !$display_foreign->canJoinToPrimary()) continue;
+				if ($display_foreign <> null && $c->table->getPrimaryKey() <> null && !$display_foreign->canJoinToPrimary()) continue;
 				$this->browse($c, null, $list, $known_columns, $for_new_data, $tables_done);
 			}
 		}

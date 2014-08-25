@@ -36,6 +36,9 @@ $sm->addTable("ApplicantMoreInfo")//This table contains all the custom data (bas
 	->setPrimary("people")//The primary key is the people_id
 	;
 
-$sm->addSubModelLink("Applicant","People");
+$sm->addSubModelLink("Applicant","People",array("types"),function($columns){
+	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
+	return in_array("applicant",$types);
+});
 
 ?>
