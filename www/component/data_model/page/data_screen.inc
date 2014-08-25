@@ -171,6 +171,35 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 
 function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$sections, $structure_name) {
 	if ($path->sub_model == "@link") return;
+	// try to resolve sub models in children
+	for ($i = 0; $i < count($path->children); $i++) {
+		$child = $path->children[$i];
+		if ($child->sub_model == "@link") {
+			$root_tables = $child->table->getModel()->getLinkedRootTables();
+			if (count($root_tables) == 0) continue;
+			foreach ($root_tables as $root_table) {
+				$t = DataModel::get()->internalGetTable($root_table);
+				if ($values->hasColumnValue($root_table, $t->getPrimaryKey()->name)) {
+					$root_key = $values->getColumnValue($root_table, $t->getPrimaryKey()->name);
+					$sub_model_table_name = $child->table->getModel()->getLinkedSubModelTable($root_table);
+					$link_table_name = "smlink_".$sub_model_table_name."_".$root_table;
+					$sm = null;
+					if ($values->hasColumnValue($link_table_name, "sm")) {
+						$sm = $values->getColumnValue($link_table_name, "sm");
+					} else {
+						$sm = SQLQuery::create()->bypassSecurity()
+							->select($link_table_name)
+							->whereValue($link_table_name, "root", $root_key)
+							->field("sm")
+							->executeSingleValue();
+						$values->addTableColumnValue($link_table_name, "sm", $sm);
+					}
+					if ($sm <> null) $child->sub_model = $sm;
+					break;
+				}
+			}
+		}
+	}
 	$parent_display = DataModel::get()->getTableDataDisplay($path->table->getName());
 	if ($parent_display == null) return;
 	$screens = DataModel::get()->getDataScreens();

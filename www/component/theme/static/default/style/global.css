@@ -309,10 +309,13 @@ table.data_screen>tbody>tr>td {
 	font-size: 12px;
 }
 table.data_screen>tbody>tr>td:first-child {
-	font-weight: bold;
+	padding-left: 3px;
+	padding-right: 2px;
 }
 table.data_screen>tbody>tr>td:last-child {
-	
+	font-weight: bold;
+	padding-left: 2px;
+	padding-right: 5px;
 }
 
 /* Information sections: help, warning, error... */

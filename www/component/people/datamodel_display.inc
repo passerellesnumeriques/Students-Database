@@ -26,7 +26,7 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 			// existing people => add the picture
 			$picture_container_id = $page->generateID();
 			$people_id = $values->getColumnValue("People", "id");
-			echo "<table><tr><td valign=top align=center><div id='$picture_container_id'></div><button id='change_picture' disabled='disabled'>Change picture</button></td><td valign=top>";
+			echo "<table style='border-spacing:0px;'><tr><td valign=top align=center style='padding:2px 0px 0px 2px'><div id='$picture_container_id'></div><button id='change_picture' disabled='disabled'>Change picture</button></td><td valign=top style='padding-left:0px;padding-right:0px'>";
 			parent::generate($page, $paths, $values, $prefilled_values, $structure_name);
 			echo "</td></tr></table>";
 			$page->requireJavascript("profile_picture.js");

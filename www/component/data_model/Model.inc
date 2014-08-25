@@ -289,6 +289,14 @@ class SubDataModel extends DataModel {
 	public function getLinkedRootTable($sub_model_table_name) {
 		return @$this->links_to_parent[$sub_model_table_name];
 	}
+	public function getLinkedRootTables() {
+		return array_values($this->links_to_parent);
+	}
+	public function getLinkedSubModelTable($root_table) {
+		foreach ($this->links_to_parent as $sm_table=>$rt)
+			if ($rt == $root_table) return $sm_table;
+		return null;
+	}
 	
 	public function createTables($key) {
 		if (SQLQuery::isTransactionStarted()) {
