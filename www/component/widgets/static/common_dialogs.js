@@ -46,6 +46,23 @@ function confirm_dialog(message, handler) {
 	});
 }
 
+function choice_buttons_dialog(message, choices, handler) {
+	require("popup_window.js",function() {
+		var content = document.createElement("DIV");
+		content.style.padding = "5px";
+		if (typeof message == 'string') content.innerHTML = message;
+		else content.appendChild(message);
+		var p = new popup_window("Question", theme.icons_16.question, content, true);
+		for (var i = 0; i < choices.length; ++i) {
+			p.addIconTextButton(null, choices[i], "choice_"+i, function(choice_index) {
+				handler(choice_index);
+				p.close();
+			},i);
+		}
+		p.show();
+	});
+}
+
 /**
  * Ask the user to input a value in a popup window.
  * @param {string} icon url of the icon

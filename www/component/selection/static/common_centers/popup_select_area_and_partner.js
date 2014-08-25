@@ -132,7 +132,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		t._create_partner_button.className = "action green";
 		t._create_partner_button.innerHTML = "Create Partner";
 		t._create_partner_button.onclick = function(){
-			var p = new popup_window("New Organization", theme.icons_16.add, "");
+			var p = new popup_window("New Organization", theme.build_icon("/static/contact/organization.png",theme.icons_10.add), "");
 			//The partner is created with a prefilled address, which t.geographic_area is the current one
 			var frame = p.setContentFrame("/dynamic/contact/page/organization_profile?creator=Selection&organization=-1&address_country_id="+t._country_id+"&address_area_id="+t.geographic_area);
 			p.addOkCancelButtons(function(){

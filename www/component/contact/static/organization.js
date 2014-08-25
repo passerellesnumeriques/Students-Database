@@ -697,8 +697,69 @@ function organization(container, org, existing_types, can_edit) {
 												a.additional = components.join(", ");
 											// finally, add the address
 											// TODO first check it does not exist yet
-											if (a.geographic_area.id > 0 || a.street_number != null || a.street != null)
+											if (a.geographic_area.id > 0 || a.street_number != null || a.street != null) {
+												if (a.geographic_area.id > 0) {
+													var existings = t._addresses_widget.getAddresses();
+													var same = [];
+													for (var i = 0; i < existings.length; ++i) {
+														if (existings[i].geographic_area.id > 0) {
+															if (existings[i].geographic_area.id == a.geographic_area.id)
+																same.push(existings[i]);
+															else {
+																var path = [];
+																var p = window.top.geography.searchArea(country_data, existings[i].geographic_area.id);
+																p = window.top.geography.getParentArea(country_data, p);
+																while (p != null) {
+																	path.push(p.area_id);
+																	p = window.top.geography.getParentArea(country_data, p);
+																}
+																if (path.length > 0) {
+																	var path2 = [];
+																	p = window.top.geography.searchArea(country_data, a.geographic_area.id);
+																	p = window.top.geography.getParentArea(country_data, p);
+																	while (p != null) {
+																		path2.push(p.area_id);
+																		p = window.top.geography.getParentArea(country_data, p);
+																	}
+																	if (path2.length > 0) {
+																		for (var j = 0; j < path.length; ++j)
+																			if (path2.contains(path[j])) { same.push(existings[i]); break; }
+																	}
+																}
+															}
+														}
+													}
+													if (same.length > 0) {
+														var msg = "The new address from Google in "+a.geographic_area.text+" is similar to ";
+														var choices = ["Yes, create a new address","No, do not import this address"];
+														if (same.length == 1) {
+															msg += "the existing address in "+same[0].geographic_area.text+"<br/>";
+															choices.push("Replace the existing one");
+														} else {
+															msg += "the following existing addresses:<ul>";
+															for (var i = 0; i < same.length; ++i)
+																msg += "<li>"+same[i].geographic_area.text+"</li>";
+															msg += "</ul>";
+														}
+														msg += "Do you want to import it ?";
+														choice_buttons_dialog(msg, choices, function(choice_index) {
+															if (choice_index == 1) { the_end(); return; } // No
+															if (choice_index == 0) {
+																// Yes
+																t._addresses_widget.addAddress(a,false);
+																the_end();
+																return;
+															}
+															// Replace
+															t._addresses_widget.removeAddress(same[0]);
+															t._addresses_widget.addAddress(a,false);
+															the_end();
+														});
+														return;
+													}
+												}
 												t._addresses_widget.addAddress(a,false);
+											}
 											the_end();
 										});
 									});
