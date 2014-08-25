@@ -110,10 +110,11 @@ class page_configure_transcripts extends Page {
 		</div>
 	</div>
 	<div style='flex:1 1 auto;display:flex;flex-direction:row'>
-		<div style='flex:none;overflow:auto;background-color:white;box-shadow:2px 2px 2px 0px #808080;margin-right:5px;min-width:230px;width:230px;'>
-			<div class='page_section_title'>
-				Information to include
-			</div>
+		<div style='flex:none;overflow:auto;box-shadow:2px 2px 2px 0px #808080;margin-right:5px;min-width:230px;width:230px;'>
+			<div style='background-color:white;margin-bottom:5px;box-shadow: 0px 2px 2px #D0D0D0;'>
+				<div class='page_section_title'>
+					Information to include
+				</div>
 				<input type='checkbox' <?php echo @$config["nb_hours"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('nb_hours',this.checked?1:0);"/> Nb of hours
 				<select onchange="saveTranscriptConfig('hours_type',this.value);">
 					<option value="Per week" <?php if (@$config["hours_type"] == "Per week") echo "selected='selected'";?>>Per week</option>
@@ -124,94 +125,111 @@ class page_configure_transcripts extends Page {
 				<input type='checkbox' <?php echo @$config["class_average"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_average',this.checked?1:0);"/> Class average<br/>
 				<input type='checkbox' <?php echo @$config["comment"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('comment',this.checked?1:0);"/> Comment<br/>
 				<input type='checkbox' <?php echo @$config["general_appreciation"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('general_appreciation',this.checked?1:0);"/> General appreciation<br/>
-			<?php 
-			foreach ($categories as $cat) {
-				echo "<div class='page_section_title3' style='color:#602000;font-weight:bold;padding-bottom:0px;margin-bottom:0px;'>".toHTML($cat["name"])."</div>";
-				foreach ($all_subjects as $s) {
-					if ($s["category"] <> $cat["id"]) continue;
-					if ($s["period"] <> $period["id"]) continue;
-					if ($spe <> null && $s["specialization"] <> null && $s["specialization"] <> $spe["id"]) continue;
-					echo "<div style='white-space:nowrap'>";
-					echo "<input type='checkbox' onchange='changeSubject(".$s["id"].",this.checked);'";
-					foreach ($selected_subjects as $ss) if ($s["id"] == $ss["id"]) { echo " checked='checked'"; break; }
-					echo "/> ".toHTML($s["code"])." - ".toHTML($s["name"]);
-					echo "</div>";
+			</div>
+			<div style='background-color:white;margin-bottom:5px;box-shadow: 0px 2px 2px #D0D0D0;'>
+				<div class='page_section_title'>
+					Subjects
+				</div>
+				<?php 
+				foreach ($categories as $cat) {
+					$cat_subjects = array();
+					foreach ($all_subjects as $s) {
+						if ($s["category"] <> $cat["id"]) continue;
+						if ($s["period"] <> $period["id"]) continue;
+						if ($spe <> null && $s["specialization"] <> null && $s["specialization"] <> $spe["id"]) continue;
+						array_push($cat_subjects, $s);
+					}
+					if (count($cat_subjects) == 0) continue;
+					echo "<div class='page_section_title3' style='color:#602000;font-weight:bold;padding-bottom:0px;margin-bottom:0px;'>".toHTML($cat["name"])."</div>";
+					echo "<table style='border-spacing:0px;'>";
+					foreach ($cat_subjects as $s) {
+						echo "<tr style='font-size:8pt;'>";
+						echo "<td style='padding:0px;'><input type='checkbox' onchange='changeSubject(".$s["id"].",this.checked);'";
+						foreach ($selected_subjects as $ss) if ($s["id"] == $ss["id"]) { echo " checked='checked'"; break; }
+						echo "/></td><td style='padding:0px;'>".toHTML($s["code"])." - ".toHTML($s["name"])."</td>";
+						echo "</tr>";
+					}
+					echo "</table>";
 				}
-			}
-			?>
-			<div class='page_section_title3' style='font-weight:bold;padding-bottom:0px;margin-bottom:0px;'>From other periods</div>
-			<div id='other_subjects'>
+				?>
+				<div class='page_section_title3' style='font-weight:bold;padding-bottom:0px;margin-bottom:0px;'>From other periods</div>
+				<div id='other_subjects'>
+				</div>
+				<button onclick="addSubject(this);" class="flat" style="color:#808080;font-style:italic;text-decoration:underline;">Add subject</button>
 			</div>
-			<button onclick="addSubject(this);" class="flat" style="color:#808080;font-style:italic;text-decoration:underline;">Add subject</button>
-			<div class='page_section_title2'>
-				Signature
+			<div style='background-color:white;margin-bottom:5px;box-shadow: 0px 2px 2px #D0D0D0;'>
+				<div class='page_section_title'>
+					Signature
+				</div>
+				<table>
+					<tr>
+						<td>Location</td>
+						<td><input type='text' size=10 value="<?php echo toHTML(@$config["location"]);?>" onchange="saveTranscriptConfig('location',this.value);"/></td>
+					</tr>
+					<tr>
+						<td>Signatory Name</td>
+						<td><input type='text' size=10 value="<?php echo toHTML(@$config["signatory_name"]);?>" onchange="saveTranscriptConfig('signatory_name',this.value);"/></td>
+					</tr>
+					<tr>
+						<td>Signatory Title</td>
+						<td><input type='text' size=10 value="<?php echo toHTML(@$config["signatory_title"]);?>" onchange="saveTranscriptConfig('signatory_title',this.value);"/></td>
+					</tr>
+				</table>
 			</div>
-			<table>
-				<tr>
-					<td>Location</td>
-					<td><input type='text' size=10 value="<?php echo toHTML(@$config["location"]);?>" onchange="saveTranscriptConfig('location',this.value);"/></td>
-				</tr>
-				<tr>
-					<td>Signatory Name</td>
-					<td><input type='text' size=10 value="<?php echo toHTML(@$config["signatory_name"]);?>" onchange="saveTranscriptConfig('signatory_name',this.value);"/></td>
-				</tr>
-				<tr>
-					<td>Signatory Title</td>
-					<td><input type='text' size=10 value="<?php echo toHTML(@$config["signatory_title"]);?>" onchange="saveTranscriptConfig('signatory_title',this.value);"/></td>
-				</tr>
-			</table>
-			<div class='page_section_title'>
-				Display settings
-			</div>
-			<b>Grading system</b> <select onchange="saveTranscriptConfig('grading_system',this.options[this.selectedIndex].value);">
-			<?php
-			foreach($grading_systems as $name=>$spec) {
-				echo "<option value=\"".$name."\"";
-				if ($name == $config["grading_system"]) echo " selected='selected'";
-				echo ">".toHTML($name)."</option>";
-			}
-			?>
-			</select>
-			<div style='font-weight:bold'>Subject Category</div>
-			<div style='padding-left:15px'>
-				Background: <span id='subject_category_background' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('subject_category_background',<?php echo json_encode($config["subject_category_background"]);?>).onchange = function(cw) { saveTranscriptConfig('subject_category_background',cw.color); };</script>
-				Text: <span id='subject_category_color' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('subject_category_color',<?php echo json_encode($config["subject_category_color"]);?>).onchange = function(cw) { saveTranscriptConfig('subject_category_color',cw.color); };</script><br/>
-				Size: <select onchange="saveTranscriptConfig('subject_category_size',this.value);">
-					<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["subject_category_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
+			<div style='background-color:white;margin-bottom:5px;box-shadow: 0px 2px 2px #D0D0D0;'>
+				<div class='page_section_title'>
+					Colors and text
+				</div>
+				<b>Grading system</b> <select onchange="saveTranscriptConfig('grading_system',this.options[this.selectedIndex].value);">
+				<?php
+				foreach($grading_systems as $name=>$spec) {
+					echo "<option value=\"".$name."\"";
+					if ($name == $config["grading_system"]) echo " selected='selected'";
+					echo ">".toHTML($name)."</option>";
+				}
+				?>
 				</select>
-				<input type='checkbox'<?php if ($config["subject_category_weight"] == "bold") echo " checked='checked'";?> onchange="saveTranscriptConfig('subject_category_weight',this.checked?'bold':'normal');"/> Bold 
-			</div>
-			<div style='font-weight:bold'>Columns Titles</div>
-			<div style='padding-left:15px'>
-				Background: <span id='columns_titles_background' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('columns_titles_background',<?php echo json_encode($config["columns_titles_background"]);?>).onchange = function(cw) { saveTranscriptConfig('columns_titles_background',cw.color); };</script>
-				Text: <span id='columns_titles_color' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('columns_titles_color',<?php echo json_encode($config["columns_titles_color"]);?>).onchange = function(cw) { saveTranscriptConfig('columns_titles_color',cw.color); };</script><br/>
-				Size: <select onchange="saveTranscriptConfig('columns_titles_size',this.value);">
-					<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["columns_titles_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
-				</select>
-				<input type='checkbox'<?php if ($config["columns_titles_weight"] == "bold") echo " checked='checked'";?> onchange="saveTranscriptConfig('columns_titles_weight',this.checked?'bold':'normal');"/> Bold 
-			</div>
-			<div style='font-weight:bold'>Total Rows</div>
-			<div style='padding-left:15px'>
-				Background: <span id='total_background' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('total_background',<?php echo json_encode($config["total_background"]);?>).onchange = function(cw) { saveTranscriptConfig('total_background',cw.color); };</script>
-				Text: <span id='total_color' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('total_color',<?php echo json_encode($config["total_color"]);?>).onchange = function(cw) { saveTranscriptConfig('total_color',cw.color); };</script><br/>
-				Size: <select onchange="saveTranscriptConfig('total_size',this.value);">
-					<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["total_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
-				</select><br/>
-			</div>
-			<div style='font-weight:bold'>General Appreciation Title</div>
-			<div style='padding-left:15px'>
-				Background: <span id='general_comment_title_background' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('general_comment_title_background',<?php echo json_encode($config["general_comment_title_background"]);?>).onchange = function(cw) { saveTranscriptConfig('general_comment_title_background',cw.color); };</script>
-				Text: <span id='general_comment_title_color' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('general_comment_title_color',<?php echo json_encode($config["general_comment_title_color"]);?>).onchange = function(cw) { saveTranscriptConfig('general_comment_title_color',cw.color); };</script><br/>
-				Size: <select onchange="saveTranscriptConfig('general_comment_title_size',this.value);">
-					<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["general_comment_title_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
-				</select>
-				<input type='checkbox'<?php if ($config["general_comment_title_weight"] == "bold") echo " checked='checked'";?> onchange="saveTranscriptConfig('general_comment_title_weight',this.checked?'bold':'normal');"/> Bold 
-			</div>
-			<div style='font-weight:bold'>General Appreciation Text</div>
-			<div style='padding-left:15px'>
-				Size: <select onchange="saveTranscriptConfig('general_comment_size',this.value);">
-					<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["general_comment_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
-				</select>
+				<div style='font-weight:bold'>Subject Category</div>
+				<div style='padding-left:15px'>
+					Background: <span id='subject_category_background' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('subject_category_background',<?php echo json_encode($config["subject_category_background"]);?>).onchange = function(cw) { saveTranscriptConfig('subject_category_background',cw.color); };</script>
+					Text: <span id='subject_category_color' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('subject_category_color',<?php echo json_encode($config["subject_category_color"]);?>).onchange = function(cw) { saveTranscriptConfig('subject_category_color',cw.color); };</script><br/>
+					Size: <select onchange="saveTranscriptConfig('subject_category_size',this.value);">
+						<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["subject_category_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
+					</select>
+					<input type='checkbox'<?php if ($config["subject_category_weight"] == "bold") echo " checked='checked'";?> onchange="saveTranscriptConfig('subject_category_weight',this.checked?'bold':'normal');"/> Bold 
+				</div>
+				<div style='font-weight:bold'>Columns Titles</div>
+				<div style='padding-left:15px'>
+					Background: <span id='columns_titles_background' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('columns_titles_background',<?php echo json_encode($config["columns_titles_background"]);?>).onchange = function(cw) { saveTranscriptConfig('columns_titles_background',cw.color); };</script>
+					Text: <span id='columns_titles_color' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('columns_titles_color',<?php echo json_encode($config["columns_titles_color"]);?>).onchange = function(cw) { saveTranscriptConfig('columns_titles_color',cw.color); };</script><br/>
+					Size: <select onchange="saveTranscriptConfig('columns_titles_size',this.value);">
+						<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["columns_titles_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
+					</select>
+					<input type='checkbox'<?php if ($config["columns_titles_weight"] == "bold") echo " checked='checked'";?> onchange="saveTranscriptConfig('columns_titles_weight',this.checked?'bold':'normal');"/> Bold 
+				</div>
+				<div style='font-weight:bold'>Total Rows</div>
+				<div style='padding-left:15px'>
+					Background: <span id='total_background' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('total_background',<?php echo json_encode($config["total_background"]);?>).onchange = function(cw) { saveTranscriptConfig('total_background',cw.color); };</script>
+					Text: <span id='total_color' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('total_color',<?php echo json_encode($config["total_color"]);?>).onchange = function(cw) { saveTranscriptConfig('total_color',cw.color); };</script><br/>
+					Size: <select onchange="saveTranscriptConfig('total_size',this.value);">
+						<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["total_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
+					</select><br/>
+				</div>
+				<div style='font-weight:bold'>General Appreciation Title</div>
+				<div style='padding-left:15px'>
+					Background: <span id='general_comment_title_background' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('general_comment_title_background',<?php echo json_encode($config["general_comment_title_background"]);?>).onchange = function(cw) { saveTranscriptConfig('general_comment_title_background',cw.color); };</script>
+					Text: <span id='general_comment_title_color' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('general_comment_title_color',<?php echo json_encode($config["general_comment_title_color"]);?>).onchange = function(cw) { saveTranscriptConfig('general_comment_title_color',cw.color); };</script><br/>
+					Size: <select onchange="saveTranscriptConfig('general_comment_title_size',this.value);">
+						<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["general_comment_title_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
+					</select>
+					<input type='checkbox'<?php if ($config["general_comment_title_weight"] == "bold") echo " checked='checked'";?> onchange="saveTranscriptConfig('general_comment_title_weight',this.checked?'bold':'normal');"/> Bold 
+				</div>
+				<div style='font-weight:bold'>General Appreciation Text</div>
+				<div style='padding-left:15px'>
+					Size: <select onchange="saveTranscriptConfig('general_comment_size',this.value);">
+						<?php foreach (array("8","9","10","11","12","14","16","18","20","22","24") as $size) echo "<option value='$size'".($config["general_comment_size"] == $size ? " selected='selected'" : "").">$size</option>";?>
+					</select>
+				</div>
 			</div>
 		</div>
 		<div style='flex:1 1 auto;overflow:auto;text-align:center'>

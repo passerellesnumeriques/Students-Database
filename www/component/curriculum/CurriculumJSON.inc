@@ -209,6 +209,7 @@ class CurriculumJSON {
 		$s = "{";
 		$s .= "id:".$category["id"];
 		$s .= ",name:".json_encode($category["name"]);
+		$s .= ",obsolete:".json_encode($category["obsolete"]);
 		$s .= "}";
 		return $s;
 	}

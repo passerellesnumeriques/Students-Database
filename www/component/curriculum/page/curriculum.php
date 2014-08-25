@@ -221,6 +221,7 @@ class page_curriculum extends Page {
 								if ($s["period"] == $period["id"] && $s["category"] == $cat["id"] && ($s["specialization"] == null || ($spe <> null && $s["specialization"] == $spe["id"])))
 									array_push($cat_subjects, $s);
 							if (count($cat_subjects) == 0 && !$editing) continue;
+							if (count($cat_subjects) == 0 && $cat["obsolete"] <> null && strtotime($cat["obsolete"]) < strtotime($period["academic_period_start"])) continue;
 							$cat_id = 'cat_'.$cat["id"].'_period_'.$period['id'];
 							if ($spe <> null) $cat_id .= '_spe_'.$spe["id"];
 							echo "<tr id='$cat_id'>";
@@ -421,6 +422,7 @@ class page_curriculum extends Page {
 		function edit_categories() {
 			require(["popup_window.js","editable_cell.js","animation.js","curriculum_objects.js"],function() {
 				var content = document.createElement("TABLE");
+				var popup = new popup_window("Edit Subject Categories", theme.build_icon("/static/curriculum/subjects_16.png",theme.icons_10.edit), content);
 				content.style.padding = "10px";
 				var remove_category = function(button) {
 					window.top.datamodel.confirm_remove("CurriculumSubjectCategory",button.cat.id,function(){
@@ -440,6 +442,76 @@ class page_curriculum extends Page {
 					?>
 					cell.fillContainer();
 					tr.appendChild(td = document.createElement("TD"));
+					var cb = document.createElement("INPUT");
+					cb.type = "checkbox";
+					td.appendChild(cb);
+					td.appendChild(document.createTextNode(" obsolete since "));
+					var span_date = document.createElement("SPAN");
+					td.appendChild(span_date);
+					if (cat.obsolete) {
+						cb.checked = "checked";
+						window.top.datamodel.create_cell(window, "CurriculumSubjectCategory", null, "obsolete", cat.id, cat.obsolete, "field_date", "{can_be_null:false}", true, span_date);
+					}
+					cb.cat = cat;
+					cb.span_date = span_date;
+					cb.onchange = function() {
+						var cat = this.cat;
+						var cb = this;
+						var span_date = this.span_date;
+						if (this.checked) {
+							require(["date_picker.js","context_menu.js"],function(){
+								var menu = new context_menu();
+								new date_picker(null,null,null,function(picker){
+									var date = picker.getDate();
+									picker.onchange = function(picker, d) {
+										date = d;
+									};
+									picker.getElement().style.border = 'none';
+									menu.addItem(picker.getElement());
+									picker.getElement().onclick = null;
+									menu.element.className = menu.element.className+" popup_date_picker";
+									menu.showBelowElement(cb);
+									menu.onclose = function() {
+										confirm_dialog("Are you sure you want to make category <i>"+cat.name+"</i> obsolete starting on "+dateToSQL(date)+" ?",function(yes) {
+											if (!yes) {
+												cb.checked = "";
+												return;
+											}
+											popup.freeze();
+											var d = dateToSQL(date);
+											service.json("data_model","save_entity",{table:"CurriculumSubjectCategory",sub_model:null,key:cat.id,lock:-1,field_obsolete:d},function(res){
+												popup.unfreeze();
+												if (!res) {
+													cb.checked = "";
+													return;
+												}
+												cat.obsolete = d;
+												window.top.datamodel.create_cell(window, "CurriculumSubjectCategory", null, "obsolete", cat.id, cat.obsolete, "field_date", "{can_be_null:false}", true, span_date);
+											});
+										});
+									};
+								});
+							});
+						} else {
+							confirm_dialog("Are you sure you want to put back category <i>"+cat.name+"</i> as actual (not obsolete anymore) ?",function(yes) {
+								if (!yes) {
+									cb.checked = "checked";
+									return;
+								}
+								popup.freeze();
+								service.json("data_model","save_entity",{table:"CurriculumSubjectCategory",sub_model:null,key:cat.id,lock:-1,field_obsolete:null},function(res){
+									popup.unfreeze();
+									if (!res) {
+										cb.checked = "checked";
+										return;
+									}
+									cat.obsolete = null;
+									span_date.removeAllChildren();
+								});
+							});
+						}
+					};
+					tr.appendChild(td = document.createElement("TD"));
 					var button = document.createElement("BUTTON");
 					button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
 					button.className = "flat small";
@@ -448,7 +520,6 @@ class page_curriculum extends Page {
 					td.appendChild(button);
 					button.onclick = function() { remove_category(this); };
 				}
-				var popup = new popup_window("Edit Subject Categories", theme.build_icon("/static/curriculum/subjects_16.png",theme.icons_10.edit), content);
 				popup.addIconTextButton(theme.build_icon("/static/curriculum/subjects_16.png",theme.icons_10.add), "New Category...", 'new_cat', function() {
 					input_dialog(theme.build_icon("/static/curriculum/subjects_16.png",theme.icons_10.add),"New Category","Name of the new category","",100,
 						function(name){
