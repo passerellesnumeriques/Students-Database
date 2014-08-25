@@ -1020,7 +1020,7 @@ namespace datamodel {
 		}
 
 		public function get_sql_type() {
-			return parent::get_sql_type()." NOT NULL AUTO_INCREMENT";
+			return parent::get_sql_type()." AUTO_INCREMENT";
 		}
 	}
 	
