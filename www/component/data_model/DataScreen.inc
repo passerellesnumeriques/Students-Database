@@ -96,7 +96,8 @@ namespace datamodel {
 				$id = $page->generateID();
 				$html .= "<td id='$id'>";
 				$tf = $data->getTypedField($path->sub_model);
-				$kv = $key_value;
+				if (!$is_new)
+					$kv = $key_value;
 				if ($values->hasDataValue($path->table->getName(), $data))
 					$value = $values->getDataValue($path->table->getName(), $data);
 				else if ($is_new && $prefilled_values->hasDataValue($path->table->getName(), $data))

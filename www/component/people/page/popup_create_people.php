@@ -107,7 +107,7 @@ class page_popup_create_people extends Page {
 				foreach ($list as $p)
 					echo "<option value='".$p["id"]."'>".$p["last_name"]." ".$p["first_name"]."</option>";
 				echo "</select>";
-				echo "<button onclick=\"var people_id=document.getElementById('id_".$type->getId()."').value;location.href='/dynamic/people/page/people_new_type?people='+people_id+'&type=".$types[0]."&ondone=".$_GET["ondone"]."';\"><img src='".theme::$icons_16["right"]."'/> Create as ".toHTML($types_descr)."</button>";
+				echo "<button onclick=\"var people_id=document.getElementById('id_".$type->getId()."').value;postData('/dynamic/people/page/people_new_type?people='+people_id+'&type=".$types[0]."&ondone=".$_GET["ondone"]."',data,window);\"><img src='".theme::$icons_16["right"]."'/> Create as ".toHTML($types_descr)."</button>";
 			}
 			echo "<br/>";
 		}

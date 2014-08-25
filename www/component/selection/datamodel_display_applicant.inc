@@ -18,18 +18,20 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 	
 	public function getDataDisplay($come_from, $sub_model) {
 		$list = parent::getDataDisplay($come_from, $sub_model);
-		// add the exam/extract results
-		$subjects = SQLQuery::create()->select("ExamSubject")->selectSubModel("SelectionCampaign", $sub_model)->execute();
-		foreach ($subjects as $subject) {
-			$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$subject["name"], "ApplicantExamSubject>applicant(exam_subject=".$subject["id"].").score");
-			$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
-			array_push($list, $data_display);
-		}
-		$extracts = SQLQuery::create()->select("ExamSubjectExtract")->selectSubModel("SelectionCampaign", $sub_model)->execute();
-		foreach ($extracts as $extract) {
-			$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$extract["name"], "ApplicantExamExtract>applicant(exam_extract=".$extract["id"].").score");
-			$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
-			array_push($list, $data_display);
+		if ($sub_model <> "@link") {
+			// add the exam/extract results
+			$subjects = SQLQuery::create()->select("ExamSubject")->selectSubModel("SelectionCampaign", $sub_model)->execute();
+			foreach ($subjects as $subject) {
+				$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$subject["name"], "ApplicantExamSubject>applicant(exam_subject=".$subject["id"].").score");
+				$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+				array_push($list, $data_display);
+			}
+			$extracts = SQLQuery::create()->select("ExamSubjectExtract")->selectSubModel("SelectionCampaign", $sub_model)->execute();
+			foreach ($extracts as $extract) {
+				$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$extract["name"], "ApplicantExamExtract>applicant(exam_extract=".$extract["id"].").score");
+				$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+				array_push($list, $data_display);
+			}
 		}
 		return $list;
 	}

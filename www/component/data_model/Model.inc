@@ -45,7 +45,9 @@ class DataModel {
 	 * @return \datamodel\Table
 	 */
 	public function &addTable($name) {
+#DEV
 		if (isset($this->tables[$name])) throw new Exception("Table ".$name." already defined in the data model");
+#ENDIF
 		$table = new \datamodel\Table($this, $name);
 		$this->tables[$name] = &$table;
 #DEV
@@ -87,7 +89,7 @@ class DataModel {
 	public function &getSubModel($key_table) {
 		for ($i = 0; $i < count($this->sub_models); $i++)
 			if ($this->sub_models[$i]->getParentTable() == $key_table)
-			return $this->sub_models[$i];
+				return $this->sub_models[$i];
 	}
 	
 	/** Returns the table if access is allowed.
@@ -239,6 +241,7 @@ class DataModel {
 class SubDataModel extends DataModel {
 	private $parent_model;
 	private $parent_table;
+	private $links_to_parent = array();
 	
 	public function __construct(&$parent, $parent_table) {
 		$this->parent_model = &$parent;
@@ -247,6 +250,45 @@ class SubDataModel extends DataModel {
 	
 	public function &getParentModel() { return $this->parent_model; }
 	public function getParentTable() { return $this->parent_table; }
+	
+	public function addSubModelLink($sub_model_table, $root_table) {
+		$t = $this->internalGetTable($sub_model_table);
+		// check we have a foreign key
+		if ($t == null) { PNApplication::error("Invalid table: ".$sub_model_table); return; }
+		$fk = null;
+		foreach ($t->internalGetColumns(null,false) as $col)
+			if ($col instanceof datamodel\ForeignKey)
+				if ($col->foreign_table == $root_table) { $fk = $col; break; }
+		if ($fk == null) { PNApplication::error("Invalid sub model link: table ".$sub_model_table." does not have a foreign key to table ".$root_table); return; }
+		// add the link table
+		$link_table = $this->parent_model->addTable("smlink_".$sub_model_table."_".$root_table)
+			->addForeignKey("root", $root_table, true, false, true, false, false)
+			->addForeignKey("sm", $this->parent_table, true, false, true, false, false)
+			->setKey(array("root","sm"))
+			->addIndex("root")
+			->allowReadAccess()
+			;
+		$fake_category = new datamodel\DataDisplayCategory("");
+		$display = new datamodel\TableDataDisplay("smlink_".$sub_model_table."_".$root_table, $fake_category);
+		$display->addJoinFromAll();
+		$display->addFollowAll();
+		$this->parent_model->addTableDataDisplay($display);
+		
+		$this->links_to_parent[$sub_model_table] = $root_table;
+		// listen to events
+		new SubModelLinkListener($t, $fk, $link_table);
+	}
+	
+	public function hasLink($sub_model_table_name, $root_table_name) {
+		if (!isset($this->links_to_parent[$sub_model_table_name])) return false;
+		return $this->links_to_parent[$sub_model_table_name] == $root_table_name;
+	}
+	public function hasLinkOnSubModelTable($table_name) {
+		return array_key_exists($table_name, $this->links_to_parent);
+	}
+	public function getLinkedRootTable($sub_model_table_name) {
+		return @$this->links_to_parent[$sub_model_table_name];
+	}
 	
 	public function createTables($key) {
 		if (SQLQuery::isTransactionStarted()) {
@@ -297,6 +339,36 @@ class SubDataModel extends DataModel {
 	public function getTableDataDisplay($table_name) { return $this->parent_model->getTableDataDisplay($table_name); }
 	public function addDataScreen($screen) { $this->parent_model->addDataScreen($screen); }
 	public function getDataScreens() { return $this->parent_model->getDataScreens(); }
+	
+}
+
+class SubModelLinkListener {
+	
+	public function __construct($sub_model_table, $sub_model_foreign_key, $link_table) {
+		$this->link_table = $link_table;
+		$this->sub_model_foreign_key = $sub_model_foreign_key;
+		$sub_model_table->onInsert(array($this,"onInsert"));
+		$sub_model_table->onRemove(array($this,"onRemove"));
+	}
+	
+	/** @var datamodel\Table $link_table */
+	private $link_table;
+	/** @var datamodel\ForeignKey $sub_model_foreign_key */
+	private $sub_model_foreign_key;
+	
+	public function onInsert($fields_values, $id, $sub_model_instance) {
+		SQLQuery::create()->bypassSecurity()->insert($this->link_table->getName(), array(
+			"root"=>$fields_values[$this->sub_model_foreign_key->name],
+			"sm"=>$sub_model_instance
+		));
+	}
+	
+	public function onRemove($row, $sub_model_instance) {
+		SQLQuery::create()->bypassSecurity()->removeKey($this->link_table->getName(), array(
+			"root"=>$row[$this->sub_model_foreign_key->name],
+			"sm"=>$sub_model_instance
+		));
+	}
 	
 }
 ?>

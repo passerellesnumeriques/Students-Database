@@ -36,4 +36,6 @@ $sm->addTable("ApplicantMoreInfo")//This table contains all the custom data (bas
 	->setPrimary("people")//The primary key is the people_id
 	;
 
+$sm->addSubModelLink("Applicant","People");
+
 ?>
