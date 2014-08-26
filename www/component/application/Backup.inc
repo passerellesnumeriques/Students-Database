@@ -166,23 +166,42 @@ class Backup {
 			$p = $ref->getProperty("tables");
 			$p->setAccessible(true);
 			$tables = $p->getValue($model);
+			$sub_models_keys = array();
 			foreach ($tables as $table) {
-				if ($table->getModel() instanceof SubDataModel) continue;
 				set_time_limit(600);
 				DataBaseUtilities::createTable($db, $table);
 				if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName())) {
 					set_time_limit(30*60);
 					DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName());
+					foreach ($table->_key_submodels as $sm) {
+						$keys = SQLQuery::create()
+							->bypassSecurity()
+#DEV
+							->noWarning()
+#END
+							->select($table->getName())->field($table->getPrimaryKey()->name)->executeSingleField();
+						$sub_models_keys[$table->getName()] = $keys;
+						foreach ($keys as $key) $sm->createTables($key);
+					}
 				}
 			}
-			foreach ($tables as $table) {
-				if (!($table->getModel() instanceof SubDataModel)) continue;
-				foreach ($table->getModel()->getExistingInstances() as $sub_model) {
-					set_time_limit(600);
-					DataBaseUtilities::createTable($db, $table, "_".$sub_model);
-					if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName()."_".$sub_model)) {
-						set_time_limit(30*60);
-						DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName()."_".$sub_model);
+			$p = $ref->getProperty("sub_models");
+			$p->setAccessible(true);
+			$sub_models = $p->getValue($model);
+			foreach ($sub_models as $sm) {
+				if (!isset($sub_models_keys[$sm->getParentTable()])) continue;
+				$p = $ref->getProperty("tables");
+				$p->setAccessible(true);
+				$tables = $p->getValue($sm);
+				foreach ($tables as $table) {
+					foreach ($sub_models_keys[$sm->getParentTable()] as $sub_model) {
+						if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName()."_".$sub_model)) {
+							set_time_limit(600);
+							$db->execute("DROP TABLE IF EXISTS `".($table->getName()."_".$sub_model)."`");
+							DataBaseUtilities::createTable($db, $table, "_".$sub_model);
+							set_time_limit(30*60);
+							DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName()."_".$sub_model);
+						}
 					}
 				}
 			}

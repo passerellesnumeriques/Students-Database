@@ -6,7 +6,7 @@ class service_recover extends Service {
 	public function outputDocumentation() {}
 	public function execute(&$component, $input) {
 		require_once("component/application/Backup.inc");
-		Backup::recoverBackup($_GET["time"], $_GET["version"]);
+		Backup::recoverBackup($input["time"], $input["version"]);
 		echo "true";
 	}
 }

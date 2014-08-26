@@ -149,9 +149,11 @@ field_decimal.prototype._create = function(data) {
 	} else {
 		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));
 		this._setData = function(data) {
-			var s = data == null ? "" : data;
-			if (this.text.nodeValue == s) return;
-			this.text.nodeValue = s;
+			if (typeof data == 'string') data = parseFloat(data);
+			if (isNaN(data)) data = null;
+			if (data == null && this.config && !this.config.can_be_null) data = 0;
+			if (data === null) this.text.nodeValue = "";
+			else this.text.nodeValue = data.toFixed(this.config.decimal_digits);
 		};
 		this.signal_error = function(error) {
 			this.error = error;

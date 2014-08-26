@@ -75,11 +75,12 @@ class data_model extends Component {
 					foreach ($cols as $colname) {
 						foreach ($known_columns as $table=>$tcols) {
 							if ($table <> $path->table->getName()) continue;
-							foreach ($tcols as $tc=>$tv)
+							foreach ($tcols as $tc=>$tv) {
 								if ($tc == $colname) {
 									$values[$tc] = $tv;
 									break;								
 								}
+							}
 						}
 					}
 					if (count($values) == count($cols)) {

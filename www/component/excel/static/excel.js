@@ -393,6 +393,9 @@ function getExcelColumnIndex(name) {
 	return i;
 }
 
+Excel.prototype.getExcelColumnName = getExcelColumnName;
+Excel.prototype.getExcelColumnIndex = getExcelColumnIndex;
+
 function ExcelSheetColumn(sheet, index) {
 	this.sheet = sheet;
 	this.index = index;
@@ -553,6 +556,28 @@ function ExcelSheetRow(sheet, index) {
 	this._init();
 }
 
+function ExcelCellSizeRefresher() {
+	this.todo = [];
+	this.toRefresh = function(cell) {
+		if (this.todo.contains(cell)) return;
+		this.todo.push(cell);
+		if (this.todo.length == 1)
+			setTimeout(function() { window.excelCellSizeRefresher.doit(); },1);
+	};
+	this.doit = function() {
+		var list = this.todo;
+		this.todo = [];
+		var sizes = [];
+		for (var i = 0; i < list.length; ++i)
+			sizes.push(list[i]._calculateRefreshSize());
+		for (var i = 0; i < list.length; ++i) {
+			list[i].value.style.width = (sizes[i][0])+"px";
+			list[i].value.style.height = (sizes[i][1]+1)+"px";
+		}
+	};
+}
+window.excelCellSizeRefresher = new ExcelCellSizeRefresher();
+
 function ExcelSheetCell(sheet, column, row) {
 	this.sheet = sheet;
 	this.column = column;
@@ -571,6 +596,9 @@ function ExcelSheetCell(sheet, column, row) {
 	};
 
 	this._refreshSize = function() {
+		window.excelCellSizeRefresher.toRefresh(this);
+	};
+	this._calculateRefreshSize = function() {
 		var w = this.sheet.columns[this.column].width;
 		if (this.td.colSpan)
 			for (var i = 2; i <= this.td.colSpan; ++i)
@@ -585,8 +613,7 @@ function ExcelSheetCell(sheet, column, row) {
 		border = this.td.offsetHeight; // excluding margin
 		border -= this.td.clientHeight; // remove content height + the padding => remaining is border
 		h -= border;
-		this.value.style.width = (w)+"px";
-		this.value.style.height = (h+1)+"px";
+		return [w,h];
 	};
 	
 	this._init = function() {

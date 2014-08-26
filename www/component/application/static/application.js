@@ -100,6 +100,7 @@ function initPNApplication() {
 					if (name != "closing" && name != "name" && name != "frameElement" &&
 						name != "self" && name != "parent" && name != "top" &&
 						name != "history" && name != "navigator" &&
+						!name.startsWith("webkit") &&
 						typeof window.top[name] == 'undefined' &&
 						typeof Window.prototype[name] == 'undefined' &&
 						name != "id" && name != "_domRemoved")
