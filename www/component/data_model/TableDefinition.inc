@@ -244,7 +244,7 @@ namespace datamodel {
 #DEV
 			if ($c == null) throw new \Exception("Unknown column '".$name."' in table '".$this->name."': setPrimary");
 			if (!$c->unique) throw new \Exception("Column '".$name."' in table '".$this->name."' cannot be a primary: it is not unique");
-#ENDIF
+#END
 			$this->primary_key = $c;
 			return $this;
 		}
