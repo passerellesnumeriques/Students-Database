@@ -257,9 +257,7 @@ function results_grid(subject,applicants,grid_height) {
             }
          }
          
-         
          });
-      
       
        /* Removing questions columns */
        t._removeQuestionsColumns();
@@ -347,7 +345,7 @@ t._getAnswers=function(){
 t._fillResultsRows=function()
    {
         //DEBUG
-          console.log(t.applicants_exam);
+          //console.log(t.applicants_exam);
       
       /* for each row (one applicant) */
       for (var row_id=0;row_id<t.applicants_exam.applicants_answers.length;++row_id) {
@@ -367,9 +365,11 @@ t._fillResultsRows=function()
                //DEBUG
 		//console.log('filling col results id:'+'p'+part.exam_subject_part+'q'+answer.exam_subject_question);
                var cell_field=t.grid_res.getCellFieldById(row_id,'p'+part.exam_subject_part+'q'+answer.exam_subject_question);
+               ////DEBUG
+               //console.log(cell_field);
   
                //DEBUG
-		//console.log(answer);
+		console.log(answer);
                cell_field.setData(answer.score);
           
             }   
