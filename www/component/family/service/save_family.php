@@ -25,37 +25,37 @@ class service_save_family extends Service {
 			$family["id"] = SQLQuery::create()->bypassSecurity()->insert("Family", $family);
 		}
 		// 2- save members
-		foreach ($input["members"] as &$member) {
+		for ($i = 0; $i < count($input["members"]); $i++) {
 			// create people if necessary
-			if (isset($member["people_create"])) {
-				$create = array("root"=>"People","sub_model"=>null,"paths"=>$member["people_create"]);
+			if (isset($input["members"][$i]["people_create"])) {
+				$create = array("root"=>"People","sub_model"=>null,"paths"=>$input["members"][$i]["people_create"]);
 				$output = Service::internalExecution("data_model", "create_data", $create);
-				unset($member["people_create"]);
+				unset($input["members"][$i]["people_create"]);
 				$q = PNApplication::$instance->people->getPeoplesSQLQuery(array($output["key"]));
 				$q->bypassSecurity();
 				require_once("component/people/PeopleJSON.inc");
 				PeopleJSON::PeopleSQL($q, false);
-				$member["people"] = $q->executeSingleRow();
+				$input["members"][$i]["people"] = $q->executeSingleRow();
 			}
-			$people = @$member["people"];
+			$people = @$input["members"][$i]["people"];
 			if ($people <> null)
-				$member["people"] = $people["people_id"];
+				$input["members"][$i]["people"] = $people["people_id"];
 			else
-				$member["people"] = null;
-			$member["entry_date"] = date("Y-m-d");
-			$member["family"] = $family["id"];
-			if (isset($member["id"]) && intval($member["id"]) > 0) {
+				$input["members"][$i]["people"] = null;
+			$input["members"][$i]["entry_date"] = date("Y-m-d");
+			$input["members"][$i]["family"] = $family["id"];
+			if (isset($input["members"][$i]["id"]) && intval($input["members"][$i]["id"]) > 0) {
 				// update
-				$id = $member["id"];
-				unset($member["id"]);
-				SQLQuery::create()->bypassSecurity()->updateByKey("FamilyMember", $id, $member);
+				$id = $input["members"][$i]["id"];
+				unset($input["members"][$i]["id"]);
+				SQLQuery::create()->bypassSecurity()->updateByKey("FamilyMember", $id, $input["members"][$i]);
 				$member["id"] = $id;
 			} else {
 				// new one
-				unset($member["id"]);
-				$member["id"] = SQLQuery::create()->bypassSecurity()->insert("FamilyMember", $member);
+				unset($input["members"][$i]["id"]);
+				$input["members"][$i]["id"] = SQLQuery::create()->bypassSecurity()->insert("FamilyMember", $input["members"][$i]);
 			}
-			if ($people <> null) $member["people"] = $people;
+			if ($people <> null) $input["members"][$i]["people"] = $people;
 		}
 		if (!PNApplication::hasErrors()) {
 			SQLQuery::commitTransaction();
