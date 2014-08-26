@@ -22,6 +22,7 @@ if (strpos($path, "..") !== FALSE) die("Access denied");
 global $pn_app_version;
 #DEV
 $pn_app_version = file_get_contents(dirname(__FILE__)."/version");
+#END
 #PROD
 #$pn_app_version = "##VERSION##"; 
 #END

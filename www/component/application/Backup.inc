@@ -131,7 +131,7 @@ class Backup {
 	}
 	
 	
-	public static function recoverBackup($time) {
+	public static function recoverBackup($time, $version = null) {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
 		if (PNApplication::$instance == null) {
@@ -141,13 +141,14 @@ class Backup {
 			PNApplication::$instance->init();
 		}
 		global $pn_app_version;
-		if (!is_dir("data/backups/$pn_app_version/$time")) throw new Exception("Backup does not exist");
+		if ($version == null) $version = $pn_app_version;
+		if (!is_dir("data/backups/$version/$time")) throw new Exception("Backup does not exist");
 		if (file_exists("data/recover")) self::removeDirectory("data/recover");
 		mkdir("data/recover");
 		// recover database
 		mkdir("data/recover/db");
 		require_once("component/application/service/deploy_utils.inc");
-		unzipFile(realpath("data/backups/$pn_app_version/$time/db.zip"), realpath("data/recover/db"));
+		unzipFile(realpath("data/backups/$version/$time/db.zip"), realpath("data/recover/db"));
 		require_once("component/data_model/Model.inc");
 		require_once("SQLQuery.inc");
 		$model = DataModel::get();
@@ -190,15 +191,15 @@ class Backup {
 		@mkdir("data/$local_domain");
 		// recover custom tables
 		if (file_exists("data/$local_domain/custom_tables")) self::removeDirectory("data/$local_domain/custom_tables");
-		if (file_exists("data/backups/$pn_app_version/$time/custom_tables.zip")) {
+		if (file_exists("data/backups/$version/$time/custom_tables.zip")) {
 			mkdir("data/$local_domain/custom_tables");
-			unzipFile(realpath("data/backups/$pn_app_version/$time/custom_tables.zip"), realpath("data/$local_domain/custom_tables"));
+			unzipFile(realpath("data/backups/$version/$time/custom_tables.zip"), realpath("data/$local_domain/custom_tables"));
 		}
 		// recover storage		
 		if (file_exists("data/$local_domain/storage")) self::removeDirectory("data/$local_domain/storage");
 		mkdir("data/$local_domain/storage");
 		set_time_limit(60*60);
-		unzipFile(realpath("data/backups/$pn_app_version/$time/storage.zip"), realpath("data/$local_domain/storage"));
+		unzipFile(realpath("data/backups/$version/$time/storage.zip"), realpath("data/$local_domain/storage"));
 		if (file_exists("data/$local_domain/storage/empty")) rmdir("data/$local_domain/storage/empty");
 	}
 	

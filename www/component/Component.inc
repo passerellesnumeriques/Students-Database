@@ -268,6 +268,7 @@ abstract class Component {
 		if (!file_exists("component/".$this->name."/writable_rights.inc")) return array();
 		return include("component/".$this->name."/writable_rights.inc");
 	}
+#END
 #PROD
 #	public abstract function getReadableRights();
 #	public abstract function getWritableRights();

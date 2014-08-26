@@ -52,7 +52,8 @@ class service_create_db extends Service {
 // 				DataBaseModel::update_model($model);
 // 			} else
 // 				PNApplication::error("Failed to get the list of tables)");
-		}		
+		}
+		echo "true";	
 	}
 	
 }

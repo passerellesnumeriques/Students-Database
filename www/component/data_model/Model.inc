@@ -47,7 +47,7 @@ class DataModel {
 	public function &addTable($name) {
 #DEV
 		if (isset($this->tables[$name])) throw new Exception("Table ".$name." already defined in the data model");
-#ENDIF
+#END
 		$table = new \datamodel\Table($this, $name);
 		$this->tables[$name] = &$table;
 #DEV

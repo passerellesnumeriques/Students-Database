@@ -212,6 +212,7 @@ function pageHeaderStart() {
 #DEV
 	require_once("component/Component.inc");
 	require_once("component/theme/theme.inc");
+#END
 #PROD
 #require_once("component/PNApplication.inc");
 #END

@@ -13,17 +13,21 @@ function optimize_php($path) {
 		$line = trim($line);
 		if ($line == "") continue;
 		if ($line == "#DEV") {
+			if ($mode <> null) die("Found tag #DEV while still in #".$mode." in ".$path);
 			$mode = "DEV";
 			continue;
 		} else if ($line == "#PROD") {
+			if ($mode <> null) die("Found tag #PROD while still in #".$mode." in ".$path);
 			$mode = "PROD";
 			continue;
 		} else if ($line == "#END") {
+			if ($mode == null) die("Found tag #END without opening #DEV or #PROD in ".$path);
 			$mode = null;
 			continue;
 		}
 		if ($mode == "DEV") continue;
 		if ($mode == "PROD") {
+			if (substr($line,0,1) <> "#") die("Lines inside #PROD must start with a # in ".$path.": ".$line);
 			$line = substr($line,1); // remove the leading #
 			// replace strings
 			$line = str_replace("##VERSION##", $_POST["version"], $line);
