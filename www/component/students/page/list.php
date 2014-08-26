@@ -73,13 +73,13 @@ new data_list(
 		});
 	
 		var remove_button = document.createElement("BUTTON");
-		remove_button.className = "action important";
+		remove_button.className = "action red";
 		remove_button.disabled = "disabled";
-		remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove selected students";
+		remove_button.innerHTML = "<img src='"+theme.icons_16.remove_white+"'/> Remove selected students";
 		remove_button.onclick = function() {
 			var sel = list.grid.getSelectionByRowId();
 			if (!sel || sel.length == 0) return;
-			confirm_dialog("Are you sure you want to remove those students ?<br/><br/><img src='"+theme.icons_16.warning+"' style='vertical-align:bottom;'/> All information related to those students will be removed from the database!<br/><br/>If a student is out of PN, please use the 'Exclude student' functionality on his/her profile page, instead of removing all its information from the database.", function(yes) {
+			confirm_dialog("Are you sure you want to remove those students ?<br/><br/><img src='"+theme.icons_16.warning+"' style='vertical-align:bottom;'/> All information related to those students will be removed from the database!<br/><br/><b>If a student is out of PN, please use the <i>Exclude student</i> functionality on his/her profile page, but do not remove all its information from the database.</b>", function(yes) {
 				if (yes) {
 					var lock_div = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Blocking students from being modified by another user...");
 					// get people ids
@@ -98,47 +98,26 @@ new data_list(
 								unlock_screen(lock_div); 
 								return; 
 							}
-							// ask new confirmation
-							service.json("data_model","get_data",{table:"People",data:["First Name","Last Name"],keys:ids}, function(peoples) {
-								var msg = "The following students are going to be removed:<ul>";
-								for (var i = 0; i < peoples.length; ++i)
-									msg += "<li>"+peoples[i][0]+" "+peoples[i][1]+"</li>";
-								msg += "</ul>";
-								msg += "<br/>Please confirm it is correct.";
-								unlock_screen(lock_div);
-								confirm_dialog(msg, function(yes) {
-									if (!yes) {
+							var next = function(pos) {
+								popup_frame(null,"Remove Student","/dynamic/people/page/remove_people_type?people="+ids[pos]+"&type=student&ontyperemoved=removed&onpeopleremoved=removed&oncancel=removed",null,null,null,function(frame,pop){
+									frame.removed = function() {
+										if (pos < ids.length-1) {
+											next(pos+1);
+											return;
+										}
 										service.json("data_model", "unlock", {locks:locks_people}, function(res){});
 										service.json("data_model", "unlock", {locks:locks_student}, function(res){});
 										for (var i = 0; i < locks_people.length; ++i)
 											databaselock.removeLock(locks_people[i]);
 										for (var i = 0; i < locks_student.length; ++i)
 											databaselock.removeLock(locks_student[i]);
-										return;
-									}
-									lock_div = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing students...");
-									// removing students
-									var next = function(pos) {
-										set_lock_screen_content(lock_div, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing students... ("+(pos+1)+"/"+ids.length+")");
-										service.json("data_model", "remove_row", {table:"People",row_key:ids[pos]}, function(res) {
-											if (pos < ids.length-1) {
-												next(pos+1);
-												return;
-											}
-											set_lock_screen_content(lock_div, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Finalizing the operation...");
-											service.json("data_model", "unlock", {locks:locks_people}, function(res){});
-											service.json("data_model", "unlock", {locks:locks_student}, function(res){});
-											for (var i = 0; i < locks_people.length; ++i)
-												databaselock.removeLock(locks_people[i]);
-											for (var i = 0; i < locks_student.length; ++i)
-												databaselock.removeLock(locks_student[i]);
-											unlock_screen(lock_div);
-											list.reloadData();
-										});
+										list.reloadData();
 									};
-									next(0);
 								});
-							});
+															
+							};
+							unlock_screen(lock_div);
+							next(0);
 						});
 					});
 				}
@@ -266,6 +245,8 @@ function refreshToDo(ondone) {
 		if (res && res.length > 0) {
 			if (!to_do_div) {
 				to_do_div = document.createElement("DIV");
+				to_do_div.style.maxHeight = "50px";
+				to_do_div.style.overflow = "auto";
 				to_do_div.className = "warning_footer";
 				window.students_list.addFooter(to_do_div);
 			}

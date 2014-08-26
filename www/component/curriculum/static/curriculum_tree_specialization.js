@@ -35,7 +35,7 @@ CurriculumTreeNode_Specialization.prototype.createInfo = function() {
 		};
 		div.appendChild(button);
 		button = document.createElement("BUTTON");
-		button.className = "action important";
+		button.className = "action green";
 		button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
 		button.title = "Create a new class";
 		button.node = this;

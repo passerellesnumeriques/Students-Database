@@ -131,7 +131,7 @@ function linkEditCoordinatesWithMap(edit_coordinates, map) {
 	this._init = function() {
 		this._buttons = document.createElement("DIV");
 		var reset_button = document.createElement("BUTTON");
-		reset_button.className = "action important";
+		reset_button.className = "action red";
 		reset_button.innerHTML = "Reset";
 		reset_button.onclick = function() { edit_coordinates.setCoordinates(null,null,null,null); };
 		this._buttons.appendChild(reset_button);

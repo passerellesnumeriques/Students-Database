@@ -4,6 +4,7 @@ theme::$icons_16 = array(
 	"add_white" => 		"/static/theme/default/icons_16/add_white.png",
 	"back" => 			"/static/theme/default/icons_16/left.png",
 	"cancel" => 		"/static/theme/default/icons_16/close.png",
+	"cancel_white" =>	"/static/theme/default/icons_16/cancel_white.png",
 	"close" => 			"/static/theme/default/icons_16/close.png",
 	"color" => 			"/static/theme/default/icons_16/color.png",
 	"config" => 		"/static/theme/default/icons_16/config.png",
@@ -36,6 +37,7 @@ theme::$icons_16 = array(
 	"ok" => 			"/static/theme/default/icons_16/ok.png",
 	"print" => 			"/static/theme/default/icons_16/print.png",
 	"question" => 		"/static/theme/default/icons_16/question.png",
+	"redo" => 			"/static/theme/default/icons_16/redo.png",
 	"remove" => 		"/static/theme/default/icons_16/trash.png",
 	"remove_white" => 	"/static/theme/default/icons_16/remove_white.png",
 	"refresh" => 		"/static/theme/default/icons_16/refresh.png",
@@ -47,6 +49,7 @@ theme::$icons_16 = array(
 	"show" =>	 		"/static/theme/default/icons_16/visible.png",
 	"tree_collapse" =>	"/static/theme/default/icons_16/tree_collapse.png",
 	"tree_expand" =>	"/static/theme/default/icons_16/tree_expand.png",
+	"undo" => 			"/static/theme/default/icons_16/undo.png",
 	"unlink" => 		"/static/theme/default/icons_16/unlink.png",
 	"up" => 			"/static/theme/default/icons_16/up.png",
 	"visible" => 		"/static/theme/default/icons_16/visible.png",
@@ -100,6 +103,7 @@ theme::$icons_32 = array(
 	"_import" => 		"/static/theme/default/icons_32/import.png",
 	"info" =>			"/static/theme/default/icons_32/info.png",
 	"loading" => 		"/static/theme/default/icons_32/loading.gif",
+	"question" => 		"/static/theme/default/icons_32/help.png",
 );
 
 ?>

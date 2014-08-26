@@ -59,7 +59,7 @@ CurriculumTreeNode_BatchPeriod.prototype.createInfo = function() {
 		buttons.appendChild(button);
 		if (this.period.available_specializations.length == 0) {
 			button = document.createElement("BUTTON");
-			button.className = "action important";
+			button.className = "action green";
 			button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
 			button.title = "Create a new class in period "+this.period.name;
 			button.node = this;

@@ -9,6 +9,18 @@ class service_find_lost_entities extends Service {
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");
+		$tables_done = array();
+		$tables_limits = array();
+		foreach (DataModel::get()->internalGetTables() as $table) {
+			if ($table->isRoot()) continue;
+			if ($table->getModel() instanceof SubDataModel) {
+				foreach ($table->getModel()->getExistingInstances() as $sm) {
+					$tables_limits[$table->getName()."_".$sm] = SQLQuery::create()->bypassSecurity()->select($table->getName())->selectSubModelForTable($table, $sm)->count()->executeSingleValue();
+				}
+			} else {
+				$tables_limits[$table->getName()] = SQLQuery::create()->bypassSecurity()->select($table->getName())->count()->executeSingleValue();
+			}
+		}
 		echo "[";
 		$first = true;
 		foreach (DataModel::get()->internalGetTables() as $table) {
@@ -21,7 +33,7 @@ class service_find_lost_entities extends Service {
 					if (count($rows) == 0) continue;
 					$sub_models = array();
 					$sub_models[$table->getModel()->getParentTable()] = $sm;
-					$this->findLinked($table, $sub_models, $rows, array());
+					$this->findLinked($table, $sub_models, $rows, $tables_done, $tables_limits);
 					if (count($rows) == 0) continue;
 					if ($first) $first = false; else echo ",";
 					$this->printRows($table, $sm, $rows);
@@ -29,7 +41,7 @@ class service_find_lost_entities extends Service {
 			} else {
 				$rows = SQLQuery::create()->bypassSecurity()->select($table->getName())->execute();
 				if (count($rows) == 0) continue;
-				$this->findLinked($table, array(), $rows, array());
+				$this->findLinked($table, array(), $rows, $tables_done, $tables_limits);
 				if (count($rows) == 0) continue;
 				if ($first) $first = false; else echo ",";
 				$this->printRows($table, null, $rows);
@@ -45,11 +57,37 @@ class service_find_lost_entities extends Service {
 	 * @param array $rows rows to check
 	 * @param array $tables_done list of tables already analyzed, to avoid infinite recursivity
 	 */
-	private function findLinked($table, $sub_models, &$rows, $tables_done) {
-		set_time_limit(300);
-		if (in_array($table->getSQLName($sub_models), $tables_done)) return;
+	private function findLinked($table, $sub_models, &$rows, $tables_done, $tables_limits) {
+		set_time_limit(300+count($rows)/100);
+		$table_sql_name = $table->getSQLName($sub_models);
+		if (isset($tables_done[$table_sql_name])) {
+			if ($tables_done[$table_sql_name] == "all") {
+				array_splice($rows, 0, count($rows));
+				return;
+			}
+			for ($i = 0; $i < count($rows); $i++) {
+				$k = $this->getRowKey($table, $rows[$i]);
+				if (in_array($k, $tables_done[$table_sql_name])) {
+					array_splice($rows, $i, 1);
+					$i--;
+				} else
+					array_push($tables_done[$table_sql_name], $k);
+			}
+			if (count($tables_done[$table_sql_name]) >= $tables_limits[$table_sql_name])
+				$tables_done[$table_sql_name] = "all";
+		}
 		if (count($rows) == 0) return;
-		array_push($tables_done, $table->getSQLName($sub_models));
+		if (!isset($tables_done[$table_sql_name])) {
+			if (count($rows) >= $tables_limits[$table_sql_name])
+				$tables_done[$table_sql_name] = "all";
+			else {
+				$tables_done[$table_sql_name] = array();
+				set_time_limit(300+count($rows)/100);
+				foreach ($rows as $row)
+					array_push($tables_done[$table_sql_name], $this->getRowKey($table, $row));
+			}
+		}
+		set_time_limit(300);
 		$sm = null;
 		if ($table->getModel() instanceof SubDataModel)
 			$sm = $sub_models[$table->getModel()->getParentTable()];
@@ -59,11 +97,12 @@ class service_find_lost_entities extends Service {
 			if (!($col instanceof \datamodel\ForeignKey)) continue;
 			$ft = DataModel::get()->internalGetTable($col->foreign_table);
 			if (!$ft->isRoot()) continue;
+			set_time_limit(300+count($rows)/100);
 			$keys = array();
 			foreach ($rows as $r) if ($r[$col->name] <> null) array_push($keys, $r[$col->name]);
 			if (count($keys) == 0) continue;
 			$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($sub_models)->whereIn($ft->getName(), $ft->getPrimaryKey()->name, $keys)->field($ft->getName(), $ft->getPrimaryKey()->name)->executeSingleField();
-			set_time_limit(300);
+			set_time_limit(300+count($rows)/100);
 			for ($i = 0; $i < count($rows); $i++) {
 				if (in_array($rows[$i][$col->name], $found)) {
 					// ok, we have a link
@@ -75,6 +114,7 @@ class service_find_lost_entities extends Service {
 			if (count($rows) == 0) return; // we are done
 		}
 		// look for tables having a foreign key to this table
+		set_time_limit(300);
 		$pk = $table->getPrimaryKey();
 		if ($pk <> null) {
 			foreach ($table->getModel()->internalGetTables() as $ft) {
@@ -97,12 +137,13 @@ class service_find_lost_entities extends Service {
 						if (!($col instanceof \datamodel\ForeignKey)) continue;
 						if ($col->foreign_table <> $table->getName()) continue;
 						// we have a foreign key here
+						set_time_limit(300+count($rows)/100);
 						$keys = array();
 						foreach ($rows as $r) array_push($keys, $r[$pk->name]);
 						$new_sub_models = array_merge($sub_models);
 						if ($ft_sm <> null) $new_sub_models[$ft->getModel()->getParentTable()] = $ft_sm;
 						$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($new_sub_models)->whereIn($ft->getName(), $col->name, $keys)->field($ft->getName(), $col->name)->executeSingleField();
-						set_time_limit(300);						
+						set_time_limit(300+count($rows)/100);					
 						for ($i = 0; $i < count($rows); $i++) {
 							if (in_array($rows[$i][$pk->name], $found)) {
 								// ok, we have a link
@@ -124,22 +165,25 @@ class service_find_lost_entities extends Service {
 			if (!($col instanceof \datamodel\ForeignKey)) continue;
 			$ft = DataModel::get()->internalGetTable($col->foreign_table);
 			if ($ft->isRoot()) continue;
+			set_time_limit(300+count($rows)/100);
 			$keys = array();
 			foreach ($rows as $r) if ($r[$col->name] <> null) array_push($keys, $r[$col->name]);
 			if (count($keys) == 0) continue;
 			$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($sub_models)->whereIn($ft->getName(), $ft->getPrimaryKey()->name, $keys)->execute();
 			if (count($found) == 0) continue;
+			set_time_limit(300+count($found)/100);
 			$keys_found = array();
 			foreach ($found as $f) array_push($keys_found, $f[$ft->getPrimaryKey()->name]);
-			$this->findLinked($ft, $sub_models, $found, $tables_done);
+			$this->findLinked($ft, $sub_models, $found, $tables_done, $tables_limits);
 			// found are the rows which didn't find any link
 			// so keys_found which are not anymore in found are rows which have link
 			foreach ($keys_found as $key) {
-				set_time_limit(300);
+				set_time_limit(300+count($found)/100);
 				$has_link = true;
 				foreach ($found as $f) if ($f[$ft->getPrimaryKey()->name] == $key) { $has_link = false; break; }
 				if ($has_link) {
 					// remove rows
+					set_time_limit(300+count($rows)/100);
 					for ($i = 0; $i < count($rows); $i++) {
 						if ($rows[$i][$col->name] == $key) {
 							array_splice($rows, $i, 1);
@@ -152,6 +196,7 @@ class service_find_lost_entities extends Service {
 			}
 		}
 		// look for tables having a foreign key to this table
+		set_time_limit(300);
 		$pk = $table->getPrimaryKey();
 		if ($pk <> null) {
 			foreach (DataModel::get()->internalGetTables() as $ft) {
@@ -174,20 +219,23 @@ class service_find_lost_entities extends Service {
 						if (!($col instanceof \datamodel\ForeignKey)) continue;
 						if ($col->foreign_table <> $table->getName()) continue;
 						// we have a foreign key here
+						set_time_limit(300+count($rows)/100);
 						$keys = array();
 						foreach ($rows as $r) array_push($keys, $r[$pk->name]);
 						$new_sub_models = array_merge($sub_models);
 						if ($ft_sm <> null) $new_sub_models[$ft->getModel()->getParentTable()] = $ft_sm;
 						$found = SQLQuery::create()->bypassSecurity()->select($ft->getName())->selectSubModels($new_sub_models)->whereIn($ft->getName(), $col->name, $keys)->execute();
+						set_time_limit(300+count($found)/100);
 						$no_link = array();
 						foreach ($found as $f) array_push($no_link, $f);
-						$this->findLinked($ft, $sub_models, $no_link, $tables_done);
+						$this->findLinked($ft, $new_sub_models, $no_link, $tables_done, $tables_limits);
 						foreach ($found as $f) {
 							set_time_limit(300);
 							$has_link = true;
 							foreach ($no_link as $n) if ($n == $f) { $has_link = false; break; }
 							if ($has_link) {
 								// we can remove the row
+								set_time_limit(300+count($rows)/100);
 								for ($i = 0; $i < count($rows); $i++) {
 									if ($rows[$i][$pk->name] == $f[$col->name]) {
 										array_splice($rows, $i, 1);
@@ -202,6 +250,19 @@ class service_find_lost_entities extends Service {
 				}
 			}
 		}
+	}
+	
+	private function getRowKey($table, $row) {
+		$pk = $table->getPrimaryKey();
+		if ($pk <> null)
+			return $row[$pk->name];
+		$cols = $table->getKey();
+		$key = "";
+		for ($i = 0; $i < count($cols); $i++) {
+			if ($i > 0) $key .= "-";
+			$key .= ($row[$cols[$i]] === null ? "null" : $row[$cols[$i]]);
+		}
+		return $key;
 	}
 	
 	/**

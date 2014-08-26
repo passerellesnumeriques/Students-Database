@@ -409,48 +409,54 @@ class ChoiceDataDisplay extends DataDisplay {
 		return $this->possible_values[$sub_model];
 	}
 	public function getTypedField($sub_model) {
-		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
-		$cfg = "{";
-		$cfg .= "possible_values:[";
-		$res = $this->get_possible_values($sub_model);
-		$first = true;
-		foreach ($res as $row) {
-			if ($first) $first = false; else $cfg .= ",";
-			$cfg .= "[";
-			$cfg .= json_encode($row["KEY"]);
-			$cfg .= ",".json_encode($row["VALUE"]);
+		if ($sub_model <> "@link") {
+			$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+			$cfg = "{";
+			$cfg .= "possible_values:[";
+			$res = $this->get_possible_values($sub_model);
+			$first = true;
+			foreach ($res as $row) {
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= "[";
+				$cfg .= json_encode($row["KEY"]);
+				$cfg .= ",".json_encode($row["VALUE"]);
+				$cfg .= "]";
+			}
 			$cfg .= "]";
+			$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
+			$cfg .= "}";
+			return array("field_enum", $cfg);
 		}
-		$cfg .= "]";
-		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
-		$cfg .= "}";
-		return array("field_enum", $cfg);
+		return array("field_text","{can_be_null:true}");
 	}
 	public function getHorizontalAlign() { return $this->horiz_align; }
 	
 	public function getTypedFilter($sub_model) {
-		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
-		$cfg = "{";
-		$cfg .= "possible_values:[";
-		$res = $this->get_possible_values($sub_model);
-		$first = true;
-		foreach ($res as $row) {
-			if ($first) $first = false; else $cfg .= ",";
-			$cfg .= "[";
-			$cfg .= json_encode($row["KEY"]);
-			$cfg .= ",".json_encode($row["VALUE"]);
+		if ($sub_model <> "@link") {
+			$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+			$cfg = "{";
+			$cfg .= "possible_values:[";
+			$res = $this->get_possible_values($sub_model);
+			$first = true;
+			foreach ($res as $row) {
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= "[";
+				$cfg .= json_encode($row["KEY"]);
+				$cfg .= ",".json_encode($row["VALUE"]);
+				$cfg .= "]";
+			}
 			$cfg .= "]";
+			$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
+			$cfg .= "}";
+			return array("filter_enum", $cfg);
 		}
-		$cfg .= "]";
-		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
-		$cfg .= "}";
-		return array("filter_enum", $cfg);
+		return null;
 	}
 	
 	public function isEditable() { return $this->editable; }
 	public function isEditableForNewData() { return $this->editable_for_new; }
 	public function getEditLocks($sub_model) {
-		if (!$this->editable) return array();
+		if (!$this->editable || $sub_model == "@link") return array();
 		return array(
 			array("table"=>$this->getTable()->getSQLNameFor($sub_model))
 		);
@@ -485,16 +491,29 @@ class ChoiceDataDisplay extends DataDisplay {
 			$q->join($table_alias, $t->getName(), array($foreign_key->name=>$t->getPrimaryKey()->name), $alias);
 		}
 		// get the key and data
-		$col_name = $this->getTable()->getPrimaryKey()->name;
-		$key_alias = $q->getFieldAlias($table_alias, $col_name);
-		if ($key_alias == null) {
-			$key_alias = $q->generateFieldAlias();
-			$q->field($table_alias, $col_name, $key_alias);
-		}
-		$data_alias = $q->getFieldAlias($table_alias, $foreign_key->name);
-		if ($data_alias == null) {
-			$data_alias = $q->generateFieldAlias();
-			$q->field($table_alias, $foreign_key->name, $data_alias);
+		if ($path->sub_model <> null && isset($path->sub_model_from_link)) {
+			$key_alias = $q->getFieldAlias($t->getName(), $t->getPrimaryKey()->name);
+			if ($key_alias == null) {
+				$key_alias = $q->generateFieldAlias();
+				$q->field($alias, $t->getPrimaryKey()->name, $key_alias);
+			}
+			$data_alias = $q->getFieldAlias($t->getName(), $this->foreign_column_name);
+			if ($data_alias == null) {
+				$data_alias = $q->generateFieldAlias();
+				$q->field($t->getName(), $this->foreign_column_name, $data_alias);
+			}
+		} else {
+			$col_name = $this->getTable()->getPrimaryKey()->name;
+			$key_alias = $q->getFieldAlias($table_alias, $col_name);
+			if ($key_alias == null) {
+				$key_alias = $q->generateFieldAlias();
+				$q->field($table_alias, $col_name, $key_alias);
+			}
+			$data_alias = $q->getFieldAlias($table_alias, $foreign_key->name);
+			if ($data_alias == null) {
+				$data_alias = $q->generateFieldAlias();
+				$q->field($table_alias, $foreign_key->name, $data_alias);
+			}
 		}
 		return array("key"=>$key_alias,"data"=>$data_alias);
 	}
@@ -572,32 +591,39 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	
 	public function getTypedField($sub_model) {
-		$list = $this->get_possible_values($sub_model);
-		$values = "[";
-		$first = true;
-		foreach ($list as $v) {
-			if ($first) $first = false; else $values .= ",";
-			$values .= "[".json_encode($v["KEY"]).",".json_encode($v["VALUE"])."]";
+		if ($sub_model <> "@link") {
+			$list = $this->get_possible_values($sub_model);
+			$values = "[";
+			$first = true;
+			foreach ($list as $v) {
+				if ($first) $first = false; else $values .= ",";
+				$values .= "[".json_encode($v["KEY"]).",".json_encode($v["VALUE"])."]";
+			}
+			$values .= "]";
+			return array("field_list_of_fixed_values", "{possible_values:$values}");
 		}
-		$values .= "]";
-		return array("field_list_of_fixed_values", "{possible_values:$values}");
+		// TODO
+		return array("field_text","{can_be_null:true}");
 	}
 	public function getTypedFilter($sub_model) {
-		$cfg = "{";
-		$cfg .= "possible_values:[";
-		$res = $this->get_possible_values($sub_model);
-		$first = true;
-		foreach ($res as $row) {
-			if ($first) $first = false; else $cfg .= ",";
-			$cfg .= "[";
-			$cfg .= json_encode($row["KEY"]);
-			$cfg .= ",".json_encode($row["VALUE"]);
+		if ($sub_model <> "@link") {
+			$cfg = "{";
+			$cfg .= "possible_values:[";
+			$res = $this->get_possible_values($sub_model);
+			$first = true;
+			foreach ($res as $row) {
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= "[";
+				$cfg .= json_encode($row["KEY"]);
+				$cfg .= ",".json_encode($row["VALUE"]);
+				$cfg .= "]";
+			}
 			$cfg .= "]";
+			$cfg .= ",can_be_null:true";
+			$cfg .= "}";
+			return array("filter_enum", $cfg);
 		}
-		$cfg .= "]";
-		$cfg .= ",can_be_null:true";
-		$cfg .= "}";
-		return array("filter_enum", $cfg);
+		return null;
 	}
 	public function exportValue($value, $sub_model) {
 		if ($value == null || $value == "") return "";
@@ -835,7 +861,9 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	}
 	
 	public function getTypedField($sub_model) {
-		return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($this->data_path, $sub_model));
+		if ($sub_model <> "@link")
+			return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($this->data_path, $sub_model));
+		return array("field_text","{can_be_null:true}");
 	}
 	public function getHorizontalAlign(){ return $this->horiz_align; }
 	
@@ -911,24 +939,27 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return $this->possible_values[$sub_model];
 	}
 	public function getTypedFilter($sub_model) {
-		if ($this->filter_path == null)
-			return \PNApplication::$instance->widgets->get_typed_filter($this->getColumn($this->data_path, $sub_model));
-		$foreign_key = $this->getColumn($this->filter_path, $sub_model);
-		$cfg = "{";
-		$cfg .= "possible_values:[";
-		$res = $this->get_possible_values($sub_model);
-		$first = true;
-		foreach ($res as $row) {
-			if ($first) $first = false; else $cfg .= ",";
-			$cfg .= "[";
-			$cfg .= json_encode($row["KEY"]);
-			$cfg .= ",".json_encode($row["VALUE"]);
+		if ($sub_model <> "@link") {
+			if ($this->filter_path == null)
+				return \PNApplication::$instance->widgets->get_typed_filter($this->getColumn($this->data_path, $sub_model));
+			$foreign_key = $this->getColumn($this->filter_path, $sub_model);
+			$cfg = "{";
+			$cfg .= "possible_values:[";
+			$res = $this->get_possible_values($sub_model);
+			$first = true;
+			foreach ($res as $row) {
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= "[";
+				$cfg .= json_encode($row["KEY"]);
+				$cfg .= ",".json_encode($row["VALUE"]);
+				$cfg .= "]";
+			}
 			$cfg .= "]";
+			$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
+			$cfg .= "}";
+			return array("filter_enum", $cfg);
 		}
-		$cfg .= "]";
-		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
-		$cfg .= "}";
-		return array("filter_enum", $cfg);
+		return null;
 	}
 	
 	public function getSingleCell() { 
@@ -1078,7 +1109,9 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	}
 	
 	public function getTypedField($sub_model) {
-		return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($sub_model));
+		if ($sub_model <> "@link")
+			return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($sub_model));
+		return array("field_text","{can_be_null:true}");
 	}
 	
 	public function isEditable() {
@@ -1132,22 +1165,25 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	}
 	
 	public function getTypedFilter($sub_model) {
-		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
-		$cfg = "{";
-		$cfg .= "possible_values:[";
-		$res = $this->getPossibleValues($sub_model);
-		$first = true;
-		foreach ($res as $row) {
-			if ($first) $first = false; else $cfg .= ",";
-			$cfg .= "[";
-			$cfg .= json_encode($row["KEY"]);
-			$cfg .= ",".json_encode($row["VALUE"]);
+		if ($sub_model <> "@link") {
+			$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+			$cfg = "{";
+			$cfg .= "possible_values:[";
+			$res = $this->getPossibleValues($sub_model);
+			$first = true;
+			foreach ($res as $row) {
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= "[";
+				$cfg .= json_encode($row["KEY"]);
+				$cfg .= ",".json_encode($row["VALUE"]);
+				$cfg .= "]";
+			}
 			$cfg .= "]";
+			$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
+			$cfg .= "}";
+			return array("filter_enum", $cfg);
 		}
-		$cfg .= "]";
-		$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
-		$cfg .= "}";
-		return array("filter_enum", $cfg);
+		return null;
 	}
 	
 	public function getSingleCell() {
@@ -1191,6 +1227,7 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
 		if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
+		$root_alias = $q->getTableAlias($this->getTable()->getName());
 		$w = "";
 		foreach ($filter["values"] as $enum_value) {
 			if ($enum_value == "") continue;

@@ -34,6 +34,9 @@ function optimize_php($path) {
 		if ($line == "") continue;
 		$s .= $line."\n";
 	}
+	if ($mode <> null) {
+		die("Missing end of tag #".$mode." in ".$path);
+	}
 	$f = fopen($path, "w");
 	if (!$f) die("Unable to write in file ".$path);
 	fwrite($f, $s);

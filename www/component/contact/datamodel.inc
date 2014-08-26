@@ -3,7 +3,7 @@
 $model->addTable("Contact")
 	->addPrimaryKey("id")
 	->addEnum("type",array("email","phone","IM"),true,false)
-	->addString("sub_type",10,0,true,false)
+	->addString("sub_type",30,0,true,false)
 	->addString("contact",100,1,false,false)
 	->addReadAccessFromForeignTable("OrganizationContact") // no need to check again
 	->addReadAccessFromForeignTable("PeopleContact") // no need to check again

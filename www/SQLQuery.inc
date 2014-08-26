@@ -1771,7 +1771,7 @@ class SQLQuery {
 			if (!$t->acceptInsert($fields_values)) {
 				$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
 				foreach ($fields_values as $field=>$value)
-					$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+					$msg .= " ".toHTML($field)." = ".toHTML($value)."\n";
 				throw new Exception($msg);
 			}
 		}
@@ -1878,7 +1878,7 @@ class SQLQuery {
 				if (!$t->acceptInsert($fields_values)) {
 					$msg = "Access denied: add data to table ".$t->getName()." denied for those values:\n";
 					foreach ($fields_values as $field=>$value)
-						$msg .= " ".htmlentities($field)." = ".htmlentities($value)."\n";
+						$msg .= " ".toHTML($field)." = ".toHTML($value)."\n";
 					throw new Exception($msg);
 				}
 			}
@@ -1995,6 +1995,7 @@ class SQLQuery {
 	 * @param array $rows rows previously retrieved by a SELECT, from which we can extract the keys 
 	 */
 	public function removeRows($table, $rows) {
+		if (count($rows) == 0) return;
 		$keys = array();
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
@@ -2110,7 +2111,7 @@ class SQLQuery {
 						$dm_table = DataModel::get()->getTableFromSQLName($table_name, $this->bypass_security);
 						if ($dm_table->hasRemoveListeners()) {
 							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
-							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$where);
+							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$w);
 							while (($row = SQLQuery::db()->nextRow($res)) <> null)
 								$dm_table->fireRemove($row, $sub_model);
 						}
@@ -2450,7 +2451,14 @@ class SQLQuery {
 				$first = true;
 				foreach ($j[2] as $f1=>$f2) {
 					if ($first) $first = false; else $s .= ", ";
-					$s .= $f1."=".$f2;
+					if ($f1 == null) {
+						$ff = true;
+						foreach ($f2 as $name=>$val) {
+							if ($ff) $ff = false; else $s .= " AND ";
+							$s .= "`".$j[1]."`.`$name`='$val'";
+						}
+					} else
+						$s .= $f1."=".$f2;
 				}
 				$s .= "</li>";
 			}
@@ -2466,7 +2474,7 @@ class SQLQuery {
 		// where
 		$s .= "<li>WHERE:<ul>";
 		foreach ($this->where as $w)
-			$s .= "<li>".htmlentities($w)."</li>";
+			$s .= "<li>".toHTML($w)."</li>";
 		$s .= "</ul></li>";
 		
 		$s .= "</ul>";

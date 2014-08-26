@@ -34,7 +34,7 @@ class page_exam_subjects extends SelectionPage {
 			</div>
 			<div class="page_footer" style="flex:none;<?php if (!$can_edit) echo "display:none;"?>">
 				<?php if ($can_edit) {?>
-				<button class='action' onclick="newSubject();"><img src='<?php echo theme::make_icon("/static/selection/exam/subject_white.png",theme::$icons_10['add'],"right_bottom");?>'/> New Subject</button>
+				<button class='action green' onclick="newSubject();"><img src='<?php echo theme::make_icon("/static/selection/exam/subject_white.png",theme::$icons_10['add'],"right_bottom");?>'/> New Subject</button>
 				<button class='action' onclick="copySubject();"><img src='<?php echo theme::$icons_16['copy'];?>'/> Copy a subject from previous campaign</button>
 				<?php } ?>
 			</div>
@@ -131,8 +131,8 @@ class page_exam_subjects extends SelectionPage {
 				<?php if ($can_edit) { ?>
 				var remove_button = document.createElement("BUTTON");
 				this.actions_container.appendChild(remove_button);
-				remove_button.className = "action important";
-				remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove this subject";
+				remove_button.className = "action red";
+				remove_button.innerHTML = "<img src='"+theme.icons_16.remove_white+"'/> Remove this subject";
 				// TODO disable remove button if already some grades, or eligibility rules associated to it
 				remove_button.onclick = function() {
 					confirm_dialog("Are you sure you want to remove this exam ?",

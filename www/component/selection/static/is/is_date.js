@@ -188,7 +188,7 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			pop.show();
 		};
 		var remove_button = document.createElement("BUTTON");
-		remove_button.className = "action important";
+		remove_button.className = "action red";
 		remove_button.onclick = function(){
 			// var locker = lock_screen();
 			if (event_id == null || event_id <= 0)
@@ -197,7 +197,7 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 				window.pnapplication.dataUnsaved("SelectionISDate");
 			t._resetTableAndEvent();
 		};
-		remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"' /> Unset date";
+		remove_button.innerHTML = "<img src = '"+theme.icons_16.remove_white+"' /> Unset date";
 		if(t._event.start != null)
 			t.section.addToolBottom(remove_button);
 	};

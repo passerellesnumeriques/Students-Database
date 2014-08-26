@@ -5,9 +5,74 @@ class page_administration extends Page {
 	
 	public function execute() {
 		$this->requireJavascript("section.js");
+		$this->onload("sectionFromHTML('section_status');");
 		$this->onload("sectionFromHTML('section_lost_entities');");
 		$this->onload("sectionFromHTML('section_invalid_keys');");
 ?>
+<div id='section_status' title='Database Status' collapsable='true' style='margin:10px'>
+	<div style='padding:5px;background-color:white;'>
+		<?php
+		$status = array(); 
+		foreach (PNApplication::$instance->getDomains() as $domain=>$conf) {
+			$res = SQLQuery::getDataBaseAccessWithoutSecurity()->execute("SHOW TABLE STATUS IN `students_$domain`");
+			$rows = array();
+			while (($row = SQLQuery::getDataBaseAccessWithoutSecurity()->nextRow($res)) <> null)
+				array_push($rows, $row);
+			$status[$domain] = $rows;
+		}
+		echo "<div class='page_section_title2'>General Status</div>";
+		foreach ($status as $domain=>$rows) {
+			$size = 0;
+			foreach ($rows as $row) $size += intval($row["Data_length"])+intval($row["Index_length"]);
+			echo "Database of $domain: ".$this->size($size)."<br/>";
+		}
+		echo "<div class='page_section_title2'>Status per table</div>";
+		foreach ($status as $domain=>$rows) {
+			echo "<div class='page_section_title3'>Domain $domain</div>";
+			echo "<table>";
+			echo "<tr><th>Table</th><th>Rows</th><th>Data size</th><th>Indexes size</th><th>Auto increment</th></tr>";
+			foreach ($rows as $row) {
+				echo "<tr>";
+				echo "<td>".toHTML($row["Name"])."</td>";
+				echo "<td>".$row["Rows"]."</td>";
+				echo "<td>".$this->size($row["Data_length"])."</td>";
+				echo "<td>".$this->size($row["Index_length"])."</td>";
+				$ai = $row["Auto_increment"];
+				if ($ai == null) echo "<td></td>";
+				else {
+					require_once("component/data_model/Model.inc");
+					$table = null;
+					foreach (DataModel::get()->internalGetTables() as $t) {
+						if ($t->getModel() instanceof SubDataModel) {
+							$n = strtolower($t->getName());
+							$n2 = strtolower($row["Name"]);
+							if (substr($n2,0,strlen($n)+1) == $n."_") { $table = $t; break; }
+						} else {
+							if (strtolower($t->getName()) == strtolower($row["Name"])) { $table = $t; break; }
+						}
+					}
+					if ($table == null) $color = "black";
+					else {
+						$pk = $table->getPrimaryKey();
+						$bits = $pk->size;
+						$r = $ai;
+						while ($bits > 3 && $r > 0) {
+							$r = floor($r/2);
+							$bits--;
+						}
+						if ($r == 0) $color = "green";
+						else if (floor($r/2) == 0) $color = "orange";
+						else $color = "red";
+					}
+					echo "<td style='color:$color'>$ai</td>";
+				}
+				echo "</tr>";
+			}
+			echo "</table>";
+		}
+		?>
+	</div>
+</div>
 <div id='section_lost_entities' title='Lost data' collapsable='true' style='margin:10px'>
 	<div id='lost_entities'>
 		<button onclick="lostEntities();" class='action'>Search for lost entities</button>
@@ -21,7 +86,7 @@ class page_administration extends Page {
 <script type='text/javascript'>
 function lostEntities() {
 	var container = document.getElementById('lost_entities');
-	container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
+	container.innerHTML = "<img src='"+theme.icons_16.loading+"'/> This may take a while because we need to analyze deeply the database... Please be patient...";
 	service.json("data_model","find_lost_entities",{},function(list) {
 		if (!list || list.length == 0) {
 			container.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> No lost data.";
@@ -80,6 +145,12 @@ function invalidKeys() {
 </script>
 <?php 
 	}
-	
+
+	function size($size) {
+		if ($size >= 1024*1024*1024) return number_format($size/(1024*1024*1024),2)." GB";
+		if ($size >= 1024*1024) return number_format($size/(1024*1024),2)." MB";
+		if ($size >= 1024) return number_format($size/(1024),2)." KB";
+		return $size." B";
+	}
 }
 ?>

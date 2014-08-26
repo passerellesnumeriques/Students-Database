@@ -45,7 +45,7 @@ class page_app_admin extends Page {
 		I will use the <b>username <i>maintenance</i></b> with the password <input name='pass1' type='password' size=15/>.<br/>
 		Please re-type the maintenance password to confirm:  <input name='pass2' type='password' size=15/><br/>
 		</form>
-		<button class='action important' onclick="startMaintenance();">Start</button>
+		<button class='action red' onclick="startMaintenance();">Start</button>
 	</div>
 </div>
 <div id='section_backup' title='Backups and Remote access' collapsable='true' style='margin-top:10px'>

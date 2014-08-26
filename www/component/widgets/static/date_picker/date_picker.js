@@ -77,8 +77,10 @@ function date_picker(date, minimum, maximum, onready) {
 			if (t.onchange) t.onchange(t, t.cal.getDate());
 			return false;
 		};
-		if (onready) onready(t);
 
 		t.setDate = function(date) { t.cal.setDate(date); t.select.selectDate(date); };
+		t.getDate = function() { return t.cal.getDate(); };
+
+		if (onready) onready(t);
 	});
 }

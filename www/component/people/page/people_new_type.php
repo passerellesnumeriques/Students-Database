@@ -25,6 +25,31 @@ class page_people_new_type extends Page {
 		
 		require_once("component/data_model/page/data_screen.inc");
 		$values = new DataValues();
+		$input = json_decode($_POST["input"], true);
+		foreach ($input["fixed_columns"] as $v)
+			$values->addTableColumnValue($v["table"], $v["column"], $v["value"]);
+		foreach ($input["fixed_data"] as $v)
+			$values->addTableDataValue($v["table"], $v["data"], $v["value"]);
+		$prefilled_values = new DataValues();
+		foreach ($input["prefilled_data"] as $v)
+			$prefilled_values->addTableDataValue($v["table"], $v["data"], $v["value"]);
+		foreach ($input["precreated"] as $pc) {
+			$cat = DataModel::get()->getDataCategory($pc["category"]);
+			if ($cat == null) continue;
+			foreach ($cat->getTables() as $table_name) {
+				$display = DataModel::get()->getTableDataDisplay($table_name);
+				$data = $display->getDataDisplayByName($pc["data"], null, @$pc["sub_model"]);
+				if ($data <> null) {
+					// found it
+					if (isset($pc["forced"]) && $pc["forced"])
+						$values->addTableDataValue($table_name, $pc["data"], $pc["value"]);
+					else
+						$prefilled_values->addTableDataValue($table_name, $pc["data"], $pc["value"]);
+					break;
+				}
+			}
+		}
+		
 		$people = SQLQuery::create()->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
 		foreach ($people as $col=>$val) {
 			if ($col == "types") $val .= "/".$new_type."/";
@@ -41,10 +66,10 @@ class page_people_new_type extends Page {
 				foreach ($all_paths as $p) if ($p->table->getName() == $table_name) { array_push($paths, $p); break; }
 			echo "<div class='section'>";
 			echo "<div class='header'>";
-			if ($screen->getIcon() <> null) echo "<img src='".$screen->getIcon()."'/> ".htmlentities($screen->getName());
+			if ($screen->getIcon() <> null) echo "<img src='".$screen->getIcon()."'/> ".toHTML($screen->getName());
 			echo "</div>";
 			echo "<div>";
-			$screen->generate($this, $paths, $values, array(), "people_new_type");
+			$screen->generate($this, $paths, $values, $prefilled_values, "people_new_type");
 			echo "</div>";
 			echo "</div>";
 		}

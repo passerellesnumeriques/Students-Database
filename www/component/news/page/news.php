@@ -9,7 +9,7 @@ class page_news extends Page {
 		<div id='page' style='width:100%;height:100%;display:flex;flex-direction:column;'>
 			<div class='page_title' style='flex:none;'>
 				<img src='/static/news/news_32.png'/>
-				<?php echo isset($_GET["title"]) ? htmlentities($_GET["title"]) : "Updates";?>
+				<?php echo isset($_GET["title"]) ? toHTML($_GET["title"]) : "Updates";?>
 				<button class='flat icon' title='Post a message' onclick="postMessage();"><img src='/static/news/write_24.png'/></button>
 			</div>
 			<div style='flex:1 1 auto;display:flex;flex-direction:row;overflow:auto;'>

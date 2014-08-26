@@ -63,7 +63,7 @@ class page_import_subjects extends Page {
 		foreach ($available_subjects as $spe=>$subjects) {
 			if ($spe <> null) {
 				foreach ($specializations as $spec) if ($spec["id"] == $spe) { $sp = $spec; break; }
-				echo "<tr><td colspan=6 style='background-color:#C0FFC0;font-weight:bold;text-align:center'>Specialization ".htmlentities($sp["name"])."</td></tr>";
+				echo "<tr><td colspan=6 style='background-color:#C0FFC0;font-weight:bold;text-align:center'>Specialization ".toHTML($sp["name"])."</td></tr>";
 			}
 			foreach ($subjects as $subject) {
 				$found = false;
@@ -75,8 +75,8 @@ class page_import_subjects extends Page {
 				else echo " onchange='checkboxChanged(this);'";
 				echo "/>";
 				echo "</td>";
-				echo "<td>".htmlentities($subject["code"])."</td>";
-				echo "<td>".htmlentities($subject["name"])."</td>";
+				echo "<td>".toHTML($subject["code"])."</td>";
+				echo "<td>".toHTML($subject["name"])."</td>";
 				echo "<td>";
 				if ($subject["hours"]) {
 					echo $subject["hours"]."h/";
@@ -90,7 +90,7 @@ class page_import_subjects extends Page {
 				echo "<td>";
 				foreach ($periods as $p) if ($p["id"] == $subject["period"]) { $period = $p; break; }
 				foreach ($batches as $b) if ($b["id"] == $period["batch"]) { $batch = $b; break; }
-				echo "Batch ".htmlentities($batch["name"]).", ".htmlentities($period["name"]);
+				echo "Batch ".toHTML($batch["name"]).", ".toHTML($period["name"]);
 				echo "</td>";
 				echo "</tr>";
 			}

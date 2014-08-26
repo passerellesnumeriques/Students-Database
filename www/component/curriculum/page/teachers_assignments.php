@@ -84,7 +84,7 @@ class page_teachers_assignments extends Page {
 				echo "<option value='".$period["id"]."'";
 				if ($period["id"] == $academic_period_id) echo " selected='selected'";
 				$year = $this->getAcademicYear($period["year"], $years);
-				echo ">Academic Year ".htmlentities($year["name"]).", ".htmlentities($period["name"]);
+				echo ">Academic Year ".toHTML($year["name"]).", ".toHTML($period["name"]);
 				echo "</option>";
 			} 
 			?>
@@ -103,7 +103,7 @@ class page_teachers_assignments extends Page {
 		foreach ($ap->batch_periods as $bp) {
 			echo "<div style='background-color:white;margin-left:5px;' class='section'>";
 			echo "<div class='page_section_title'>";
-			echo "Batch ".htmlentities($bp["batch_name"]).", ".htmlentities($bp["name"]);
+			echo "Batch ".toHTML($bp["batch_name"]).", ".toHTML($bp["name"]);
 			echo "</div>";
 			$bp_subjects = $ap->getSubjectsForBatch($bp["id"]);
 			if (count($bp_subjects) == 0)
@@ -116,7 +116,7 @@ class page_teachers_assignments extends Page {
 			}
 			foreach ($spes as $spe_id) {
 				if ($spe_id <> null)
-					echo "<div class='page_section_title2'><img src='/static/curriculum/curriculum_16.png'/> Specialization ".htmlentities($ap->getSpecializationName($spe_id))."</div>";
+					echo "<div class='page_section_title2'><img src='/static/curriculum/curriculum_16.png'/> Specialization ".toHTML($ap->getSpecializationName($spe_id))."</div>";
 				$classes = $ap->getClassesFor($bp["id"], $spe_id);
 				$subjects = $ap->getSubjectsFor($bp["id"], $spe_id);
 				if (count($classes) == 0) {

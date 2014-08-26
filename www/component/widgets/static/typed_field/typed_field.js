@@ -115,6 +115,9 @@ typed_field.prototype = {
 	},
 	getPossibleValues: undefined,
 	createValue: undefined, // function(value, name, oncreated)
+	compare: function(v1,v2) {
+		return (""+v1).localeCompare(""+v2);
+	},
 	/**
 	 *  change data
 	 *  @param data new data value
@@ -154,6 +157,9 @@ typed_field.prototype = {
 			t.onchange.remove_listener(listener);
 		});
 	},
+	unregister_datamodel_cell: function() {
+		window.top.datamodel.unregisterCellWidget(this.element);
+	},
 	register_datamodel_datadisplay: function(data_display, data_key) {
 		var t=this;
 		window.top.datamodel.registerDataWidget(window, data_display, data_key, this.element, function(){
@@ -166,6 +172,9 @@ typed_field.prototype = {
 		}, function(listener) {
 			t.onchange.remove_listener(listener);
 		});
+	},
+	unregister_datamodel_datadisplay: function() {
+		window.top.datamodel.unregisterDataWidget(this.element);
 	}
 };
 typed_field.prototype.constructor = typed_field;

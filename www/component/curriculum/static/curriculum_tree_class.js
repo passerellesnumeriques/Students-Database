@@ -23,14 +23,6 @@ CurriculumTreeNode_Class.prototype.createInfo = function() {
 	var div = document.createElement("DIV");
 	if (window.can_edit_batches) {
 		var button = document.createElement("BUTTON");
-		button.className = "action important";
-		button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Remove";
-		button.node = this;
-		button.onclick = function() {
-			removeClass(this.node);
-		};	
-		div.appendChild(button);
-		button = document.createElement("BUTTON");
 		button.className = "action";
 		button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit";
 		button.title = "Rename Class";
@@ -55,6 +47,14 @@ CurriculumTreeNode_Class.prototype.createInfo = function() {
 				}
 			);
 		};
+		div.appendChild(button);
+		button = document.createElement("BUTTON");
+		button.className = "action red";
+		button.innerHTML = "<img src='"+theme.icons_16.remove_white+"'/> Remove";
+		button.node = this;
+		button.onclick = function() {
+			removeClass(this.node);
+		};	
 		div.appendChild(button);
 	}
 	return div;

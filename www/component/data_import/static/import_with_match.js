@@ -65,6 +65,7 @@ function import_with_match(provider, ev, show_after_grid) {
 	
 	this.uploadFile = function(ev) {
 		var locker = lock_screen(null,"Initializing...");
+		t.excel_frame.src = "/dynamic/data_import/page/excel_upload?button=_upload";
 		require("upload.js", function() {
 			unlock_screen(locker);
 			var pb = null;

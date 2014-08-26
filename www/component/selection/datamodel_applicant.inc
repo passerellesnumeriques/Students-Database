@@ -11,6 +11,7 @@ $sm->addTable("Applicant")
 	->addString("custom_exclusion",255,0,true,false)//This field can be filled up by user
 	->addBoolean("excluded",false)
 	->addForeignKey("high_school", "Organization", false, false, true)
+	->addForeignKey("ngo", "Organization", false, false, true)
 	->addForeignKey("information_session", "InformationSession", false, false, true, true, false)//An applicant can be assigned to an information session
 	->addForeignKey("exam_center", "ExamCenter", false, false, true, true, false)//An applicant can be assigned to an exam center (maybe after importing applicant data
 	->addForeignKey("exam_center_room", "ExamCenterRoom", false, false, true, true, false) //An applicant can be assigned to an exam center room after(maybe after importing applicant data
@@ -34,5 +35,10 @@ $sm->addTable("ApplicantMoreInfo")//This table contains all the custom data (bas
 	->addRemoveAccess("edit_applicants",true)
 	->setPrimary("people")//The primary key is the people_id
 	;
+
+$sm->addSubModelLink("Applicant","People",array("types"),function($columns){
+	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
+	return in_array("applicant",$types);
+});
 
 ?>

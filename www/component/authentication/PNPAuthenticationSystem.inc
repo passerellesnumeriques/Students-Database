@@ -36,7 +36,7 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 		curl_close($c);
 		$xml = @simplexml_load_string($result);
 		if ($xml === false || $xml === null) {
-			$error = "Invalid response from remote system: ".htmlentities($result);
+			$error = "Invalid response from remote system: ".toHTML($result);
 			return null;
 		}
 		if ($xml->getName() <> "authentication") {

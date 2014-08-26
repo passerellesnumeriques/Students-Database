@@ -62,6 +62,13 @@ function absoluteTop(e,relative) {
 		// absolute position to the document
 		var top = e.offsetTop;
 		while (e.offsetParent) {
+			var p = e.parentNode;
+			while (p != e.offsetParent) {
+				top -= p.scrollTop;
+				p = p.parentNode;
+			}
+			top -= e.offsetParent.scrollTop;
+			if (e.nodeName == 'BODY') break;
 			e = e.offsetParent;
 			top += e.offsetTop;
 		}

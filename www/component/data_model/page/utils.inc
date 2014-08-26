@@ -29,7 +29,7 @@ function datamodel_cell_here(&$page, $editable, $table, $column, $key, $value, $
 		echo "new editable_cell('$id',".json_encode($table).",".json_encode($column).",".json_encode($key).",".json_encode($typed_field[0]).",".$typed_field[1].",".json_encode($value).");";
 		echo "</script>";
 	} else {
-		echo htmlentities($value);
+		echo toHTML($value);
 	}
 }
 

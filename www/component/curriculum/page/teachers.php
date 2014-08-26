@@ -59,7 +59,7 @@ class page_teachers extends Page {
 		<div id='past_teachers'
 			title='Previous Teachers'
 			collapsable='true'
-			collapsed='true'
+			collapsed='false'
 			style='margin:10px'
 		>
 		<?php $this->buildTeachersList($past_teachers_ids, $teachers, $peoples);?>
@@ -67,7 +67,7 @@ class page_teachers extends Page {
 	</div>
 	<?php if ($can_edit) {?>
 	<div class="page_footer" style="flex:none;">
-		<button class='action' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
+		<button class='action green' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
 	</div>
 	<?php } ?>
 </div>
@@ -115,10 +115,10 @@ foreach ($teachers_ids as $people_id) {
 	$this->onload("new profile_picture('$id',50,50,'center','middle').loadPeopleStorage($people_id,".json_encode($people["picture"]).",".json_encode($people["picture_revision"]).");");
 	echo "<td style='cursor:pointer' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\">";
 	$id = $this->generateID();
-	echo "<div id='$id'>".htmlentities($people["first_name"])."</div>";
+	echo "<div id='$id'>".toHTML($people["first_name"])."</div>";
 	$this->onload("window.top.datamodel.registerCellSpan(window,'People','first_name',$people_id,document.getElementById('$id'));");
 	$id = $this->generateID();
-	echo "<div id='$id'>".htmlentities($people["last_name"])."</div>";
+	echo "<div id='$id'>".toHTML($people["last_name"])."</div>";
 	$this->onload("window.top.datamodel.registerCellSpan(window,'People','last_name',$people_id,document.getElementById('$id'));");
 	echo "</td>";
 	echo "</tr>";

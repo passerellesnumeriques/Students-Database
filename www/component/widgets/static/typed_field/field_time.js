@@ -12,6 +12,15 @@ function field_time(data,editable,config) {
 field_time.prototype = new typed_field();
 field_time.prototype.constructor = field_time;		
 field_time.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };
+field_time.prototype.compare = function(v1,v2) {
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	v1 = parseTimeStringToMinutes(v1);
+	v2 = parseTimeStringToMinutes(v2);
+	if (v1 < v2) return -1;
+	if (v1 > v2) return 1;
+	return 0;
+};
 field_time.prototype.exportCell = function(cell) {
 	var t = this.getCurrentData();
 	if (t == null)

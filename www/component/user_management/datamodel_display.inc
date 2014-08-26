@@ -32,7 +32,7 @@ class UserDataScreen extends datamodel\GenericDataScreen {
 						$can_reset = true;
 				}
 				if ($can_reset) {
-					echo "<button class='action important' onclick='resetPassword();'><img src='/static/user_management/reset_password.png'/> Reset Password</button>";
+					echo "<button class='action red' onclick='resetPassword();'><img src='/static/user_management/reset_password.png'/> Reset Password</button>";
 					?>
 					<script type='text/javascript'>
 					function resetPassword() {

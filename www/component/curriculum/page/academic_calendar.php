@@ -16,7 +16,7 @@ class page_academic_calendar extends Page {
 	<div id='tree_container' style='background-color:white;flex:1 1 auto;overflow:auto;'></div>
 	<?php if ($can_edit) { ?>
 	<div class="page_footer" style="flex:none;">
-		<button class='action' onclick='new_year();'>New Academic Year</button>
+		<button class='action green' onclick='new_year();'>New Academic Year</button>
 	</div>
 	<?php } ?>
 </div>

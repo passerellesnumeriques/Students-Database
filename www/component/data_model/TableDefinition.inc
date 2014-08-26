@@ -240,11 +240,11 @@ namespace datamodel {
 
 		public function &setPrimary($name) {
 			$c = null;
-			foreach ($this->columns as $col) if ($col->name == $name) {
-				$c = $col; break;
-			}
+			foreach ($this->columns as $col) if ($col->name == $name) { $c = $col; break; }
+#DEV
 			if ($c == null) throw new \Exception("Unknown column '".$name."' in table '".$this->name."': setPrimary");
 			if (!$c->unique) throw new \Exception("Column '".$name."' in table '".$this->name."' cannot be a primary: it is not unique");
+#END
 			$this->primary_key = $c;
 			return $this;
 		}
@@ -303,7 +303,7 @@ namespace datamodel {
 
 		/** Add an enum column, with the given possible values */
 		public function &addEnum($name, $values, $can_be_null = true, $unique = false) {
-		$c = new ColumnEnum($this, $name, $values, $can_be_null, $unique);
+			$c = new ColumnEnum($this, $name, $values, $can_be_null, $unique);
 			array_push($this->columns, $c);
 			return $this;
 		}
@@ -365,7 +365,7 @@ namespace datamodel {
 			return $this->onupdate->hasListeners();
 		}
 		/**
-		 * @param function $fct takes 3 parameters: &amp;fields_values, key, sub_model_instance
+		 * @param function $fct takes 3 parameters: fields_values, key, sub_model_instance
 		 * @return \datamodel\Table
 		 */
 		public function onBeforeUpdate($fct) {
@@ -394,6 +394,11 @@ namespace datamodel {
 				array_push($this->indexes, $a);
 			}
 			return $this;
+		}
+		public function getIndexes() {
+			$list = array();
+			foreach ($this->indexes as $name=>$cols) $list[$name] = $cols;
+			return $list;
 		}
 
 
@@ -670,7 +675,7 @@ namespace datamodel {
 			foreach ($this->columns as $col) {
 				if ($first) $first = false; else $s .= ", ";
 				$s .= $col->name."=";
-				if (isset($row[$col->name])) $s .= htmlentities($row[$col->name]);
+				if (isset($row[$col->name])) $s .= toHTML($row[$col->name]);
 				else $s .= "NULL";
 			}
 			return $s;
@@ -1015,7 +1020,7 @@ namespace datamodel {
 		}
 
 		public function get_sql_type() {
-			return "INT(".$this->size.") NOT NULL AUTO_INCREMENT";
+			return parent::get_sql_type()." AUTO_INCREMENT";
 		}
 	}
 	
@@ -1042,38 +1047,17 @@ namespace datamodel {
 			$this->remove_foreign_when_primary_removed = $remove_foreign_when_primary_removed;
 			$this->remove_primary_when_foreign_removed = $remove_primary_when_foreign_removed;
 			$this->multiple = $multiple;
-			try { $ft = $table->getModel()->internalGetTable($foreign_table);
-			}
-			catch (\Exception $e) {
-				$ft = null;
-			}
+			try { $ft = $table->getModel()->internalGetTable($foreign_table); }
+			catch (\Exception $e) { $ft = null; }
 			if ($ft == null && $table->getModel() instanceof \SubDataModel)
-				try { $ft = $table->getModel()->getParentModel()->internalGetTable($foreign_table);
-			}
-			catch (\Exception $e) {
-				$ft = null;
-			}
+				try { $ft = $table->getModel()->getParentModel()->internalGetTable($foreign_table); }
+				catch (\Exception $e) { $ft = null; }
 			if ($ft == null) {
 				\PNApplication::error("Invalid foreign key '".$name."' in table '".$table->getName()."': foreign table '".$foreign_table."' does not exist");
 				$size = 32;
 			} else
 				$size = $ft->getPrimaryKey()->size;
 			parent::__construct($table, $name, $size, null, null, $can_be_null === null ? !$remove_foreign_when_primary_removed : $can_be_null, $unique);
-		}
-
-		public function get_sql_type() {
-			try { $ft = $this->table->getModel()->internalGetTable($this->foreign_table);
-			}
-			catch (\Exception $e) {
-				$ft = null;
-			}
-			if ($ft == null && $this->table->getModel() instanceof \SubDataModel)
-				try { $ft = $this->table->getModel()->getParentModel()->internalGetTable($this->foreign_table);
-			}
-			catch (\Exception $e) {
-				$ft = null;
-			}
-			return "INT(".$ft->getPrimaryKey()->size.")";
 		}
 
 		public function validate($value) {

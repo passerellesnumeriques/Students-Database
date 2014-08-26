@@ -77,11 +77,45 @@ class page_popup_create_people extends Page {
 			else echo "data.multiple = false; go();";
 		}
 		echo "</script>";
-		echo "<div style='padding:10px;background-color:white'>";
-		echo "Create ".$types_descr.":<br/>";
-		echo " &nbsp; <a href='#' onclick='go();return false;'>Create only one</a><br/>";
-		echo " &nbsp; <a href='#' onclick='data.multiple = true; go();return false;'>Create several together</a><br/>";
-		echo "</div>";
+		?>
+		<div style='padding:10px;background-color:white'>
+		Create <?php echo toHTML($types_descr)?><br/>
+		&nbsp; <a href='#' onclick='go();return false;'>Create a new one</a><br/>
+		&nbsp; <a href='#' onclick='data.multiple = true; go();return false;'>Create several together</a><br/>
+		<?php if (count($types) == 1) { ?>
+		&nbsp; Create from an existing person:
+		<div style='padding-left:30px'>
+		<?php
+		require_once("component/people/PeopleTypePlugin.inc");
+		$possible_types = array();
+		foreach (PNApplication::$instance->components as $c) {
+			if ($c == $this) continue;
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof PeopleTypePlugin)) continue;
+				if (in_array($pi->getId(), $types)) continue;
+				if (!$pi->canWrite()) continue;
+				array_push($possible_types, $pi);
+			}
+		}
+		
+		foreach ($possible_types as $type) {
+			$list = SQLQuery::create()->select("People")->where("`types` LIKE '%/".$type->getId()."/%'")->limit(0, 501)->orderBy("People","last_name")->orderBy("People","first_name")->execute();
+			if (count($list) == 0) continue;
+			echo "This is an existing ".$type->getName().": ";
+			if (count($list) <= 500) {
+				echo "<select id='id_".$type->getId()."'>";
+				foreach ($list as $p)
+					echo "<option value='".$p["id"]."'>".$p["last_name"]." ".$p["first_name"]."</option>";
+				echo "</select>";
+				echo "<button onclick=\"var people_id=document.getElementById('id_".$type->getId()."').value;postData('/dynamic/people/page/people_new_type?people='+people_id+'&type=".$types[0]."&ondone=".$_GET["ondone"]."',data,window);\"><img src='".theme::$icons_16["right"]."'/> Create as ".toHTML($types_descr)."</button>";
+			}
+			echo "<br/>";
+		}
+		?>
+		</div>
+		<?php } ?>
+		</div>
+		<?php 
 	}
 	
 }

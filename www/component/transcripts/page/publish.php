@@ -23,7 +23,7 @@ class page_publish extends Page {
 		<input type='radio' name='action' value='new' checked='checked'/> as new transcripts with name <input type='text' name='name'/><br/>
 		<?php
 		foreach ($existing as $t)
-			echo "<input type='radio' name='action' value='".$t["id"]."'/> replace ".htmlentities($t["name"])."<br/>";
+			echo "<input type='radio' name='action' value='".$t["id"]."'/> replace ".toHTML($t["name"])."<br/>";
 		?>
 		</form>
 	</div>

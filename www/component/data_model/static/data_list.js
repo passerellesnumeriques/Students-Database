@@ -516,7 +516,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	};
 	
 	t.print = function() {
-		printContent(t.header.nextSibling);
+		if (t.header.nextSibling == t.grid_container)
+			t.grid.print();
+		else
+			printContent(t.header.nextSibling);
 	};
 	
 	t.orderBy = function(field_category, field_name, field_sub_index, asc) {

@@ -109,14 +109,17 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param {string} id id of the button, that can be used to refer it later on
 	 * @param {function} onclick onclick event handler
 	 */
-	t.addButton = function(html, id, onclick) {
+	t.addButton = function(html, id, onclick, onclick_param) {
 		var b = (t.popup ? t.popup.ownerDocument : document).createElement("BUTTON");
 		if (typeof html == 'string')
 			b.innerHTML = html;
 		else
 			b.appendChild(html);
 		b.id = id;
-		b.onclick = onclick;
+		if (onclick_param)
+			b.onclick = function() { onclick(onclick_param); };
+		else
+			b.onclick = onclick;
 		t.buttons.push(b);
 		if (t.footer) {
 			t.footer.appendChild(b);
@@ -143,7 +146,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.popup.appendChild(t.footer);
 		layout.invalidate(t.footer);
 	};
-	t.addIconTextButton = function(icon, text, id, onclick) {
+	t.addIconTextButton = function(icon, text, id, onclick, onclick_param) {
 		var span = document.createElement("SPAN");
 		if (icon) {
 			var img = document.createElement("IMG");
@@ -153,7 +156,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			span.appendChild(img);
 		}
 		span.appendChild(document.createTextNode(text));
-		t.addButton(span, id, onclick);
+		t.addButton(span, id, onclick, onclick_param);
 	};
 	/** Disable the given button.
 	 * @method popup_window#disableButton
@@ -268,10 +271,10 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @method popup_window#addYesNoButtons
 	 * @param {function} onyes handler to be called when the Yes button is pressed. 
 	 */
-	t.addYesNoButtons = function(onyes) {
+	t.addYesNoButtons = function(onyes,onno) {
 		t.addIconTextButton(theme.icons_16.yes, "Yes", 'yes', onyes);
-		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { t.close(); });
-		t.onEscape(function() { t.close(); });
+		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { if (!onno || onno()) t.close(); });
+		t.onEscape(function() { if (!onno || onno()) t.close(); });
 	};
 	
 	t.onEnter = function(onenter) {
@@ -728,6 +731,10 @@ function popup_window(title,icon,content,hide_close_button) {
 			do_close();
 	};
 	t.hide = function() { t.close(); };
+	
+	t.hideTitleBar = function() {
+		t.header.style.display = "none";
+	};
 }
 
 /**

@@ -148,6 +148,7 @@ for ($i = 0; $i < count($updates) || $i < count($backups) || $i == 0; $i++) {
 			echo "<input type='hidden' name='version' value='".$version."'/>";
 			echo " <input type='submit' value='Install it!'/>";
 			echo "</form>";
+			echo "<button onclick=\"location.href='/maintenance/?step=remove_update&version=".$version."';\">Remove</button>";
 			echo "</td>";
 		} else {
 			echo "<td>";

@@ -22,7 +22,7 @@ class page_applicant_list extends SelectionPage {
 				<span id='nb_selected'>0 applicant selected</span>: 
 				<button class='action' id='button_assign_is' disabled='disabled' onclick='assignIS(this);'>Assign to Information Session</button>
 				<button class='action' id='button_assign_exam_center' disabled='disabled' onclick='assignExamCenter(this);'>Assign to Exam Center</button>
-				<button class='action important' id='button_exclude' disabled='disabled' onclick="alert('TODO');">Exclude from the process</button>
+				<button class='action red' id='button_exclude' disabled='disabled' onclick="alert('TODO');">Exclude from the process</button>
 			</div>
 			<?php } ?>
 		</div>

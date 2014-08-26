@@ -45,8 +45,8 @@ namespace datamodel {
 			$path = $paths[0];
 			$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
 			//var_dump($values);
-			$key_value = getKeyValue($path->table, $values);
-			$is_new = $key_value == null || intval($key_value) < 0;
+			//$key_value = getKeyValue($path->table, $values);
+			$is_new = $structure_name <> null;
 			$fixed_columns = array_merge($values->getColumns($path->table->getName()));
 			echo $this->generateDataTable($page, $path, $this->display->getDataDisplay($from, $path->sub_model), $fixed_columns, $values, $prefilled_values, $structure_name, $is_new);
 		}
@@ -66,8 +66,9 @@ namespace datamodel {
 		 * @return string
 		 */
 		protected function generateDataTable(&$page, $path, $list, $fixed_columns, $values, $prefilled_values, $structure_name, $is_new) {
+			if ($path->sub_model == "@link") return;
 			$script = "";
-			$html = "<table>";
+			$html = "<table class='data_screen'><tbody>";
 			$has_something = false;
 			$readonly = false;
 			if (!$is_new) {
@@ -92,10 +93,12 @@ namespace datamodel {
 				}
 				$has_something = true;
 				$html .= "<tr>";
-				$html .= "<td>".htmlentities($data->getDisplayName())."</td>";
+				$html .= "<td>".toHTML($data->getDisplayName())."</td>";
 				$id = $page->generateID();
 				$html .= "<td id='$id'>";
 				$tf = $data->getTypedField($path->sub_model);
+				if (!$is_new)
+					$kv = $key_value;
 				if ($values->hasDataValue($path->table->getName(), $data))
 					$value = $values->getDataValue($path->table->getName(), $data);
 				else if ($is_new && $prefilled_values->hasDataValue($path->table->getName(), $data))
@@ -109,11 +112,17 @@ namespace datamodel {
 					$keys = $data->buildSQL($q, $path);
 					$row = $q->executeSingleRow();
 					if ($keys["key"] <> null)
-						$key_value = $row[$keys["key"]];
-					$value = @$row[$keys["data"]];
+						$kv = $row[$keys["key"]];
+					if ($keys["data"] <> null)
+						$value = @$row[$keys["data"]];
+					else {
+						$rows = array($row);
+						$data->performSubRequests($q, $rows, $keys, $path);
+						$value = @$rows[0][$keys["data"]];
+					}
 				}
 				if (!$is_new)
-					$key_value = $data->getKeyFromTableKey($key_value);
+					$kv = $data->getKeyFromTableKey($kv);
 				$page->addJavascript("/static/widgets/typed_field/typed_field.js");
 				$page->requireJavascript($tf[0].".js");
 				// check can really edit the columns
@@ -132,7 +141,7 @@ namespace datamodel {
 					$page->addJavascript("/static/data_model/datadisplay.js");
 					$page->addJavascript("/static/data_model/editable_field.js");
 					$page->addJavascript("/static/data_model/editable_datadisplay.js");
-					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($key_value).", ".json_encode($value).");\n";
+					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($value).");\n";
 					$script .= "field.editable_field.fillContainer();\n";
 				} else {
 					$script .= "field = new ".$tf[0]."(".json_encode($value).",false,".$tf[1].");\n";
@@ -143,7 +152,7 @@ namespace datamodel {
 				$html .= "</tr>";
 			}
 			if (!$has_something) return "";
-			$html .= "</table>";
+			$html .= "</tbody></table>";
 			$html .= "<script type='text/javascript'>\n";
 			$html .= "var field;\n";
 			if ($structure_name <> null) {

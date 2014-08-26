@@ -9,7 +9,7 @@ $model->addTable("PNDepartment")
 	->addInsertAccess("manage_staff", true)
 	->addRemoveAccess("manage_staff", true)
 	->setRowDescriptionProvider(function($row) {
-		return "Department ".htmlentities($row["name"]);
+		return "Department ".toHTML($row["name"]);
 	})
 	;
 $model->addTable("PNDepartmentDefaultRoles")

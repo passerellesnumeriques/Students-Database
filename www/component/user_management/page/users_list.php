@@ -13,7 +13,7 @@ class page_users_list extends Page {
 	<?php if (PNApplication::$instance->user_management->has_right("manage_users")) {?>
 	<div class='page_footer' style='flex:none'>
 		<button class='action' onclick='synchUsers();'><img src='<?php echo theme::$icons_16["_import"];?>'/> Synchronize Users</button>
-		<button class='action' onclick='newUser();'><img src='<?php echo theme::make_icon("/static/user_management/user_16.png",theme::$icons_10["add"]);?>'/> New User</button>
+		<button class='action green' onclick='newUser();'><img src='<?php echo theme::make_icon("/static/user_management/user_16.png",theme::$icons_10["add"]);?>'/> New User</button>
 	</div>
 	<?php }?>
 </div>

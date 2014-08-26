@@ -83,8 +83,8 @@ class page_overview extends Page {
 			else
 			echo "<div class='section_box disabled'>";
 			echo "<div><img src=\"".$section->getIcon32()."\"/></div>";
-			echo "<div>".htmlentities($section->getName())."</div>";
-			echo "<div>".htmlentities($section->getDescription())."</div>";
+			echo "<div>".toHTML($section->getName())."</div>";
+			echo "<div>".toHTML($section->getDescription())."</div>";
 			if ($section->canAccess())
 				echo "</a>";
 			else {

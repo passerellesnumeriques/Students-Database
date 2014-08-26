@@ -12,7 +12,18 @@ function field_decimal(data,editable,config) {
 }
 field_decimal.prototype = new typed_field();
 field_decimal.prototype.constructor = field_decimal;		
-field_decimal.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };		
+field_decimal.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };
+field_decimal.prototype.compare = function(v1,v2) {
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	v1 = parseFloat(v1);
+	if (isNaN(v1)) return 1;
+	v2 = parseFloat(v2);
+	if (isNaN(v2)) return -1;
+	if (v1 < v2) return -1;
+	if (v1 > v2) return 1;
+	return 0;
+};
 field_decimal.prototype.exportCell = function(cell) {
 	var val = this.getCurrentData();
 	if (val == null)

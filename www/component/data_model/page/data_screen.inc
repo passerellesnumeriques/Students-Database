@@ -159,7 +159,7 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 		$id = $page->generateID();
 		$html .= "<div id='$id'";
 		if ($s[0] <> null) $html .= " icon='".$s[0]."'";
-		$html .= " title=\"".htmlentities($s[1])."\"";
+		$html .= " title=\"".toHTML($s[1])."\"";
 		$html .= " collapsable='false' css='soft' style='display:inline-block;margin:10px;vertical-align:top'>";
 		$html .= $s[2];
 		$html .= $s[3];
@@ -170,6 +170,36 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 }
 
 function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$sections, $structure_name) {
+	if ($path->sub_model == "@link") return;
+	// try to resolve sub models in children
+	for ($i = 0; $i < count($path->children); $i++) {
+		$child = $path->children[$i];
+		if ($child->sub_model == "@link") {
+			$root_tables = $child->table->getModel()->getLinkedRootTables();
+			if (count($root_tables) == 0) continue;
+			foreach ($root_tables as $root_table) {
+				$t = DataModel::get()->internalGetTable($root_table);
+				if ($values->hasColumnValue($root_table, $t->getPrimaryKey()->name)) {
+					$root_key = $values->getColumnValue($root_table, $t->getPrimaryKey()->name);
+					$sub_model_table_name = $child->table->getModel()->getLinkedSubModelTable($root_table);
+					$link_table_name = "smlink_".$sub_model_table_name."_".$root_table;
+					$sm = null;
+					if ($values->hasColumnValue($link_table_name, "sm")) {
+						$sm = $values->getColumnValue($link_table_name, "sm");
+					} else {
+						$sm = SQLQuery::create()->bypassSecurity()
+							->select($link_table_name)
+							->whereValue($link_table_name, "root", $root_key)
+							->field("sm")
+							->executeSingleValue();
+						$values->addTableColumnValue($link_table_name, "sm", $sm);
+					}
+					if ($sm <> null) $child->sub_model = $sm;
+					break;
+				}
+			}
+		}
+	}
 	$parent_display = DataModel::get()->getTableDataDisplay($path->table->getName());
 	if ($parent_display == null) return;
 	$screens = DataModel::get()->getDataScreens();
@@ -183,6 +213,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 			$found = false;
 			for ($i = 0; $i < count($path->children); $i++) {
 				$child = $path->children[$i];
+				if ($child->sub_model == "@link") continue;
 				if ($child->table->getName() == $table_name) {
 					array_push($children, $child);
 					$found = true;
@@ -198,10 +229,11 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 	
 	// create generic screens for remaining paths
 	foreach ($path->children as $child) {
+		if ($child->sub_model == "@link") continue;
 		$display = DataModel::get()->getTableDataDisplay($child->table->getName());
 		if ($display == null) continue;
 		if ($child->isReverse()) {
-			if (!$parent_display->canJoinToPrimary()) continue;
+			if ($path->table->getPrimaryKey() <> null && !$parent_display->canJoinToPrimary()) continue;
 			if (!$display->canJoinFrom($child->foreign_key->name)) continue;
 			$columns = $display->getNeededColumnsToJoinFrom($child->foreign_key->name);
 			if ($columns <> null) {
@@ -215,19 +247,8 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 				if (!$display->checkJoinFrom($child->foreign_key->name, $cv)) continue;
 			}
 		} else {
-			if (!$parent_display->canJoinFrom($child->foreign_key->name)) continue;
+			if (!$parent_display->canFollow($child->foreign_key->name)) continue;
 			if (!$display->canJoinToPrimary()) continue;
-			$columns = $parent_display->getNeededColumnsToJoinFrom($child->foreign_key->name);
-			if ($columns <> null) {
-				$cv = array();
-				foreach ($columns as $cname) {
-					$v = null;
-					if ($values->hasColumnValue($path->table->getName(), $cname))
-						$v = $values->getColumnValue($path->table->getName(), $cname);
-					$cv[$cname] = $v;
-				}
-				if (!$parent_display->checkJoinFrom($child->foreign_key->name, $cv)) continue;
-			}
 		}
 		$screen = new datamodel\GenericDataScreen($display);
 		array_push($avail_screens, array($screen, array($child)));
@@ -236,7 +257,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 	// generate screens
 	foreach ($avail_screens as $s) {
 		// get data from database if not new
-		//echo "<br/>Values: ".htmlentities(var_export($values,true))."<br/>";
+		//echo "<br/>Values: ".toHTML(var_export($values,true))."<br/>";
 		foreach ($s[1] as $child) {
 			$key_value = getKeyValue($path->table, $values);
 			//echo "<br/>Key for ".$child->table->getName()." (".$path->table->getName()."): ".var_export($key_value,true)."<br/>";
@@ -297,7 +318,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 				//}
 			}
 		}
-		//echo "<br/>Values: ".htmlentities(var_export($values,true))."<br/>";
+		//echo "<br/>Values: ".toHTML(var_export($values,true))."<br/>";
 		$ob = ob_get_contents();
 		ob_clean();
 		$s[0]->generate($page, $s[1], $values, $prefilled_values, $structure_name);

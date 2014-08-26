@@ -149,9 +149,13 @@ class DataPathBuilder {
 						$p = $p->parent;
 					}
 					if ($sm == null) {
-						// we don't have any sub model here
-						// stop // TODO all sub models?
-						continue;
+						if ($t->getModel()->hasLink($t->getName(), $path->table->getName())) {
+							// we have a link to go to the sub model !
+							$sm = "@link";
+						} else {
+							// we don't have any sub model here => stop
+							continue;
+						}
 					}
 				}
 			}

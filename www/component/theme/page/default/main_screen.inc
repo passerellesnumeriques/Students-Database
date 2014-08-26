@@ -199,7 +199,7 @@ global $pn_app_version;
 						echo " page=\"".$section->getDefaultPageURL()."\"";
 						echo ">";
 						echo "<img src=\"".$section->getIcon16White()."\"/>";
-						echo htmlentities($section->getName());
+						echo toHTML($section->getName());
 						echo "</div>";
 					}
 					?>

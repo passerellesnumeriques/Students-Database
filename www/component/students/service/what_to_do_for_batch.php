@@ -15,13 +15,13 @@ class service_what_to_do_for_batch extends Service {
 		// no student in batch
 		$student = SQLQuery::create()->select("Student")->whereValue("Student","batch",$this->batch_id)->limit(0, 1)->executeSingleRow();
 		if ($student == null) {
-			echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> No student in batch ".htmlentities($this->getBatchName())."<br/>";
+			echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> No student in batch ".toHTML($this->getBatchName())."<br/>";
 		}
 		
 		// no periods in batch
 		$periods = PNApplication::$instance->curriculum->getBatchPeriods($this->batch_id);
 		if (count($periods) == 0) {
-			echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> No period defined in batch ".htmlentities($this->getBatchName())."<br/>";
+			echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> No period defined in batch ".toHTML($this->getBatchName())."<br/>";
 		}
 
 		if (count($periods) > 0) {
@@ -52,11 +52,11 @@ class service_what_to_do_for_batch extends Service {
 				}
 			}
 			if (count($problems) > 0) {
-				echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> Batch ".htmlentities($this->getBatchName()).": No class in ";
+				echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> Batch ".toHTML($this->getBatchName()).": No class in ";
 				$first = true;
 				foreach ($problems as $period_name=>$spe_list) {
 					if ($first) $first = false; else echo ", ";
-					echo htmlentities($period_name);
+					echo toHTML($period_name);
 					if (count($spe_list) > 0) {
 						echo " (specialization";
 						if (count($spe_list) > 1) echo "s";
@@ -64,7 +64,7 @@ class service_what_to_do_for_batch extends Service {
 						$first_spe = true;
 						foreach ($spe_list as $spe_name) {
 							if ($first_spe) $first_spe = false; else echo ",";
-							echo htmlentities($spe_name);
+							echo toHTML($spe_name);
 						}
 						echo ")";
 					}
@@ -124,7 +124,7 @@ class service_what_to_do_for_batch extends Service {
 								}
 						}
 						if (count($students) > 0) {
-							echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class for period ".htmlentities($p[0]["name"])." of batch ".htmlentities($this->getBatchName())."<br/>";
+							echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class for period ".toHTML($p[0]["name"])." of batch ".toHTML($this->getBatchName())."<br/>";
 						}
 					}
 				} else {
@@ -135,7 +135,7 @@ class service_what_to_do_for_batch extends Service {
 							if ($s["specialization"] == null && ($s["exclusion_date"] == null || datamodel\ColumnDate::toTimestamp($s["exclusion_date"]) > datamodel\ColumnDate::toTimestamp($p[1]["start"])))
 								array_push($students, $s["people"]);
 						if (count($students) > 0) {
-							echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a specialization for batch ".htmlentities($this->getBatchName())."<br/>";
+							echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a specialization for batch ".toHTML($this->getBatchName())."<br/>";
 						}
 					}
 					foreach ($spe_list as $spe_id) {
@@ -157,7 +157,7 @@ class service_what_to_do_for_batch extends Service {
 									}
 							}
 							if (count($students) > 0) {
-								echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class in specialization ".htmlentities($this->getSpecializationName($spe_id))." for period ".htmlentities($p[0]["name"])." of batch ".htmlentities($this->getBatchName())."<br/>";
+								echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class in specialization ".toHTML($this->getSpecializationName($spe_id))." for period ".toHTML($p[0]["name"])." of batch ".toHTML($this->getBatchName())."<br/>";
 							}
 						}
 					}

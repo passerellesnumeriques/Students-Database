@@ -26,6 +26,7 @@ foreach ($peoples as $people) {
 ?>];
 <?php if (isset($input["donotcreate"])) {
 	echo "window.frameElement.".$input["donotcreate"]."(peoples);";
+	echo "window.popup.close();";
 } else { ?>
 var problems = [];
 var success = [];

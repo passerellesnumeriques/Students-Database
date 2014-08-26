@@ -37,7 +37,7 @@ class page_subject_grades extends Page {
 			echo "<option value=''></option>";
 			foreach ($subjects as $s) {
 				echo "<option value='".$s["id"]."'>";
-				echo htmlentities($s["code"]." - ".$s["name"]);
+				echo toHTML($s["code"]." - ".$s["name"]);
 				echo "</option>";
 			}
 			echo "</select>";
@@ -159,18 +159,18 @@ class page_subject_grades extends Page {
 		<div style='margin-left:10px;font-size:12pt;font-style:italic;display:inline-block;'>
 		<a class='black_link' onclick='selectAnotherSubject(this);return false;' id='select_subject'>
 		Subject <b style='font-weight:bold'>
-		<?php echo htmlentities($subject["code"]." - ".$subject["name"]);
+		<?php echo toHTML($subject["code"]." - ".$subject["name"]);
 		?></b></a>
 		<?php
 		echo " (";
-		echo "Batch ".htmlentities($batch["name"]);
-		echo ", ".htmlentities($period["name"]);
-		if ($spe <> null) echo ", Specialization ".htmlentities($spe["name"]);
+		echo "Batch ".toHTML($batch["name"]);
+		echo ", ".toHTML($period["name"]);
+		if ($spe <> null) echo ", Specialization ".toHTML($spe["name"]);
 		?>,
 		<a class='black_link' onclick='selectAnotherClass(this);return false;' id='select_class'>
 		<?php 
 		if ($class <> null)
-			echo "Class ".htmlentities($class["name"]);
+			echo "Class ".toHTML($class["name"]);
 		else
 			echo "All classes";
 		?></a>
@@ -190,7 +190,7 @@ class page_subject_grades extends Page {
 		echo ": ";
 		for ($i = 0; $i < count($teachers); $i++) {
 			if ($i > 0) echo ", ";
-			echo htmlentities($teachers[$i]["last_name"])." ".htmlentities($teachers[$i]["first_name"]);
+			echo toHTML($teachers[$i]["last_name"])." ".toHTML($teachers[$i]["first_name"]);
 		} 
 		?>
 		<br/>
@@ -213,7 +213,7 @@ class page_subject_grades extends Page {
 		foreach($grading_systems as $name=>$spec) {
 			echo "<option value=\"".$spec."\"";
 			if ($name == $grading_system) echo " selected='selected'";
-			echo ">".htmlentities($name)."</option>";
+			echo ">".toHTML($name)."</option>";
 		}
 		?>
 		</select>
@@ -872,6 +872,7 @@ function save() {
 			if (res) {
 				for (var i = 0; i < final_grades.length; ++i)
 					pnapplication.dataSaved("final_grade_student_"+final_grades[i].id);
+				pnapplication.cancelDataUnsaved();
 			}
 			unlock_screen(locker);
 		});
@@ -893,6 +894,7 @@ function save() {
 					for (var j = 0; j < data.students[i].grades.length; ++j)
 						pnapplication.dataSaved("student_"+data.students[i].people+"_grade_"+data.students[i].grades[j].evaluation);
 			}
+			pnapplication.cancelDataUnsaved();
 			unlock_screen(locker);
 		});
 	};
@@ -924,7 +926,12 @@ function save() {
 			for (var j = 0; j < evaluation_types.length; ++j)
 				if (evaluation_types[j].id < 0)
 					for (var i = 0; i < res.types.length; ++i)
-						if (evaluation_types[j].id == res.types[i].input_id) { evaluation_types[j].id = res.types[i].output_id; break; }
+						if (evaluation_types[j].id == res.types[i].input_id) {
+							evaluation_types[j].id = res.types[i].output_id;
+							var col = grades_grid.grid.getColumnById('total_eval_type_'+res.types[i].input_id);
+							col.setId('total_eval_type_'+res.types[i].output_id);
+							break;
+						}
 			// update evaluations' ids
 			for (var i = 0; i < evaluation_types.length; ++i)
 				for (var j = 0; j < evaluation_types[i].evaluations.length; ++j)
@@ -936,6 +943,13 @@ function save() {
 				if (eval_grades[i].evaluation < 0)
 					for (var k = 0; k < res.evaluations.length; ++k)
 						if (eval_grades[i].evalution == res.evaluations[k].input_id) { eval_grades[i].evaluation = res.evaluations[k].output_id; break; }
+			// update evaluations' ids in the columns ids
+			for (var i = 0; i < grades_grid.grid.columns.length; ++i) {
+				var col = grades_grid.grid.columns[i];
+				if (!col.id.startsWith("eval_")) continue;
+				for (var k = 0; k < res.evaluations.length; ++k)
+					if (col.id == "eval_"+res.evaluations[k].input_id) { col.setId("eval_"+res.evaluations[k].output_id); break; }
+			}
 			// save students' grades
 			save_evaluations_grades();
 		});

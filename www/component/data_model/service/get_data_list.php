@@ -74,8 +74,7 @@ class service_get_data_list extends Service {
 			$display = $model->getTableDataDisplay($path->table->getName());
 			if ($path instanceof DataPath_Join && $path->isReverse()) {
 				$from = $path->foreign_key->name;
-				// TODO $needed_columns = $display->getNeededColumnsToJoinFrom($from);
-								
+				// TODO $needed_columns = $display->getNeededColumnsToJoinFrom($from);			
 			}
 			if ($display == null) {
 				PNApplication::error("No display specified on table ".$path->table->getName()." for path ".$fields[$i]["path"]);
@@ -97,6 +96,38 @@ class service_get_data_list extends Service {
 				return;
 			}
 			array_push($display_data, $data);
+			if ($path->sub_model == "@link") {
+				$sm = $path->table->getModel();
+				$p = $path;
+				do {
+					$linked = $sm->getLinkedRootTable($p->table->getName());
+					if ($linked <> null) break;
+					$p = $p->parent;
+					if ($p <> null && $p->sub_model <> "@link") $p = null;
+				} while ($p <> null);
+				if ($p <> null) {
+					$linked_table_alias = $q->getTableAlias($linked);
+					$linked_table = DataModel::get()->internalGetTable($linked);
+					$key_alias = $q->getFieldAlias($linked, $linked_table->getPrimaryKey()->name);
+					if ($key_alias == null) {
+						$key_alias = $q->generateFieldAlias();
+						$q->field($linked_table_alias, $linked_table->getPrimaryKey()->name, $key_alias);
+					}
+					$link_table_alias = $q->getTableAlias("smlink_".$p->table->getName()."_".$linked);
+					if ($link_table_alias == null) {
+						$link_table_alias = $q->generateTableAlias();
+						$q->join($linked_table_alias, "smlink_".$p->table->getName()."_".$linked, array($linked_table->getPrimaryKey()->name=>"root"), $link_table_alias);
+					}
+					$sm_alias = $q->getFieldAlias("smlink_".$p->table->getName()."_".$linked, "sm");
+					if ($sm_alias == null) {
+						$sm_alias = $q->generateFieldAlias();
+						$q->field($link_table_alias, "sm", $sm_alias);
+					}
+					array_push($data_aliases, array("sub_model_key"=>$sm_alias,"root_key"=>$key_alias,"sub_model_table"=>$p->table->getName(),"root_table"=>$linked));
+				} else
+					array_push($data_aliases, null);
+				continue;
+			}
 			$data_alias = $data->buildSQL($q, $path);
 			array_push($data_aliases, $data_alias);
 			// put datadisplay in filters
@@ -246,10 +277,75 @@ class service_get_data_list extends Service {
 		$res = $q->execute();
 		
 		// handle necessary sub requests
+		$sub_models_linked = array();
 		for ($i = 0; $i < count($display_data); $i++) {
 			$data = $display_data[$i];
 			$path = $paths[$i];
+			if ($path->sub_model == "@link") {
+				$sm_table = $path->table->getModel()->getParentTable();
+				if (!isset($sub_models_linked[$sm_table]))
+					$sub_models_linked[$sm_table] = array();
+				if (!isset($sub_models_linked[$sm_table][$data_aliases[$i]["sub_model_key"]]))
+					$sub_models_linked[$sm_table][$data_aliases[$i]["sub_model_key"]] = array();
+				if (!isset($sub_models_linked[$sm_table][$data_aliases[$i]["sub_model_key"]][$data_aliases[$i]["sub_model_table"]]))
+					$sub_models_linked[$sm_table][$data_aliases[$i]["sub_model_key"]][$data_aliases[$i]["sub_model_table"]] = array("root_key"=>$data_aliases[$i]["root_key"],"indexes"=>array());
+				array_push($sub_models_linked[$sm_table][$data_aliases[$i]["sub_model_key"]][$data_aliases[$i]["sub_model_table"]]["indexes"], $i);
+				continue;
+			}
 			$data->performSubRequests($q, $res, $data_aliases[$i], $path);
+		}
+		foreach ($sub_models_linked as $sm_table=>$sm_keys) {
+			foreach ($sm_keys as $sm_key_alias=>$entry_tables) {
+				$instances = array();
+				foreach ($res as $row)
+					if (isset($row[$sm_key_alias]) && !in_array($row[$sm_key_alias], $instances))
+						array_push($instances, $row[$sm_key_alias]);
+				foreach ($entry_tables as $entry_table=>$info) {
+					$root_key_alias = $info["root_key"];
+					$indexes = $info["indexes"];
+					foreach ($instances as $sm_instance) {
+						$link_keys = array();
+						foreach ($res as $row) if ($row[$sm_key_alias] == $sm_instance && !in_array($row[$root_key_alias], $link_keys)) array_push($link_keys, $row[$root_key_alias]);
+						$sq = SQLQuery::create();
+						$sq->avoidAliasCollision($q);
+						$entry_table_alias = $sq->generateTableAlias();
+						$sq->select(array($entry_table=>$entry_table_alias));
+						$sq->selectSubModel($sm_table, $sm_instance);
+						$sm_table = DataModel::get()->getTable($entry_table);
+						$root_table = $sm_table->getModel()->getLinkedRootTable($entry_table);
+						$fk = null;
+						foreach ($sm_table->internalGetColumnsFor($sm_instance) as $col)
+							if (($col instanceof datamodel\ForeignKey) && $col->foreign_table == $root_table) { $fk = $col; break; }
+						$sq->whereIn($entry_table_alias, $fk->name, $link_keys);
+						$sq->field($entry_table_alias, $fk->name, "SM_ENTRY_KEY");
+						$sm_data_aliases = array();
+						foreach ($indexes as $i) {
+							$data = $display_data[$i];
+							$path = $paths[$i];
+							$path->sub_model_from_link = true;
+							$path->sub_model = $sm_instance;
+							$data_alias = $data->buildSQL($sq, $path);
+							$sm_data_aliases[$i] = $data_alias;
+							$data_aliases[$i] = array("key"=>"SM_KEY_".$i, "data"=>"SM_DATA_".$i);
+						}
+						$sm_res = $sq->execute();
+						$q->avoidAliasCollision($sq);
+						foreach ($sm_res as $row) {
+							$key = $row["SM_ENTRY_KEY"];
+							for ($i = 0; $i < count($res); $i++) {
+								if ($res[$i][$root_key_alias] == $key) {
+									foreach ($indexes as $ind) {
+										$a = $sm_data_aliases[$ind];
+										$res[$i]["SM_KEY_".$ind] = $row[$a["key"]];
+										$res[$i]["SM_DATA_".$ind] = $row[$a["data"]]; 
+									}
+								}
+							}
+						}
+						// TODO sub requests of sub requests...
+					}
+				}
+			}
 		}
 		
 		if (!isset($input["export"])) {

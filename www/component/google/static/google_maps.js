@@ -75,12 +75,12 @@ function GoogleMap(container, onready) {
 				// we are going outside, let's do it step by step
 				var lat = new_center.lat() < cur_south ? cur_south+(cur_north-cur_south)/10 : new_center.lat() > cur_north ? cur_north-(cur_north-cur_south)/10 : new_center.lat();
 				var lng = new_center.lng() < cur_west ? cur_west+(cur_east-cur_west)/10 : new_center.lng() > cur_east ? cur_east-(cur_east-cur_west)/10 : new_center.lng();
-				this.map.setCenter(new window.top.google.maps.LatLng(lat,lng));
+				t.onNextIdle(function() {
+					t.fitToBounds(south, west, north, east);
+				},1000);
+				this.map.panTo(new window.top.google.maps.LatLng(lat,lng));
 				if (cur_zoom > 1 && (new_center.lat() < lat-cur_width/2 || new_center.lat() > lat+cur_width/2 || new_center.lng() < lng-cur_height/2 || new_center.lng() > lng+(cur_height/2)))
 					this.map.setZoom(cur_zoom-1);
-				this._current_move = setTimeout(function() {
-					t.fitToBounds(south, west, north, east);
-				},300);
 				return;
 			}
 			var new_width = north-south;
@@ -89,24 +89,42 @@ function GoogleMap(container, onready) {
 				// we are zooming in
 				if (new_width < cur_width*0.1 || new_height < cur_height*0.1) {
 					// we are zooming a lot, let's do it in several step
-					this.map.setCenter(new_center);
-					t.map.setZoom(cur_zoom+1);
-					this._current_move = setTimeout(function() {
+					t.onNextIdle(function() {
 						t.fitToBounds(south,west,north,east);
-					},300);
+					},1000);
+					t.map.setZoom(cur_zoom+1);
+					t.map.setCenter(new_center);
 					return;
+				} else {
+					//t.onNextIdle(function() {
+					//	t.map.fitBounds(t.createBounds(south, west, north, east));
+					//},300);
+					//t.map.panToBounds(t.createBounds(south, west, north, east));
+					//return;
 				}
 			} else if (new_width > cur_width && new_height > cur_height) {
 				// we are zooming out
 				if (new_width > cur_width*2 || new_height > cur_height*2) {
 					// we are zooming a lot, let's do it in several step
-					this.map.setCenter(new_center);
-					t.map.setZoom(cur_zoom-1);
-					this._current_move = setTimeout(function() {
+					t.onNextIdle(function() {
 						t.fitToBounds(south,west,north,east);
-					},300);
+					},1000);
+					t.map.setZoom(cur_zoom-1);
+					t.map.setCenter(new_center);
 					return;
+				} else {
+					//t.onNextIdle(function() {
+					//	t.map.fitBounds(t.createBounds(south, west, north, east));
+					//},300);
+					//t.map.panToBounds(t.createBounds(south, west, north, east));
+					//return;
 				}
+			} else {
+				//t.onNextIdle(function() {
+				//	t.map.fitBounds(t.createBounds(south, west, north, east));
+				//},300);
+				//t.map.panToBounds(t.createBounds(south, west, north, east));
+				//return;
 			}
 		}
 		this.map.fitBounds(this.createBounds(south, west, north, east));
@@ -200,6 +218,22 @@ function GoogleMap(container, onready) {
 		return m;
 	};
 	
+	this.onNextIdle = function(listener, timeout) {
+		window.top.google.maps.event.addListenerOnce(this.map, 'idle', function() {
+			var done = false;
+			window.top.google.maps.event.addListenerOnce(t.map, 'tilesloaded', function() {
+				if (done) return;
+				done = true;
+				listener();
+			});
+			if (timeout) setTimeout(function() {
+				if (done) return;
+				done = true;
+				listener();
+			},timeout);
+		});
+	};
+	
 	this._init = function() {
 		loadGoogleMaps(function() {
 			t.map = new window.top.google.maps.Map(container, { 
@@ -238,7 +272,9 @@ function GoogleMap(container, onready) {
 				init_map(window.open("/static/google/google_big_map.html"));
 			};
 			t.map.controls[window.top.google.maps.ControlPosition.RIGHT_TOP].push(div);
-			onready(t);
+			window.top.google.maps.event.addListenerOnce(t.map, "tilesloaded", function() {
+				onready(t);
+			});
 		});
 	};
 	this._init();

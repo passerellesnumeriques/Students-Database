@@ -19,7 +19,7 @@ class service_menu extends Service {
 					echo " href='".$page->getPage()."'";
 					echo ">";
 					echo "<img src='".$page->getIcon16()."'/> ";
-					echo htmlentities($page->getTitle());
+					echo toHTML($page->getTitle());
 				}
 			}
 		}

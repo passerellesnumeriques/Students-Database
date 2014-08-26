@@ -203,13 +203,22 @@ button.action:disabled:hover {
     border: 1px solid rgba(255,255,255,0);
     box-shadow: 1px 1px 1px rgba(170,170,170,0);
 }
-button.action.important {
+button.action.green {
     background: linear-gradient(to bottom, #34db98, #099960);
 }
-button.action.important:hover {
+button.action.green:hover {
 	background: linear-gradient(to bottom, #44eba8, #19a970);
 }
-button.action.important:disabled {
+button.action.green:disabled {
+    background: #C0C0C0;
+}
+button.action.red {
+    background: linear-gradient(to bottom, #f06060, #a02020);
+}
+button.action.red:hover {
+	background: linear-gradient(to bottom, #f07070, #b03030);
+}
+button.action.red:disabled {
     background: #C0C0C0;
 }
 
@@ -287,6 +296,26 @@ a.black_link:hover, .black_link:hover {
 }
 .tooltip_right.tooltip_veryright:before {
     right: 5px;
+}
+
+table.data_screen {
+	border-spacing: 0px;
+	border-collapse: collapse;
+	empty-cells: show;
+	width: 100%;
+}
+table.data_screen>tbody>tr>td {
+	border-bottom: 1px solid #E8E8FF;
+	font-size: 12px;
+}
+table.data_screen>tbody>tr>td:first-child {
+	padding-left: 3px;
+	padding-right: 2px;
+}
+table.data_screen>tbody>tr>td:last-child {
+	font-weight: bold;
+	padding-left: 2px;
+	padding-right: 5px;
 }
 
 /* Information sections: help, warning, error... */

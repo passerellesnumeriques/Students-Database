@@ -150,6 +150,9 @@ if (!window.top.google) {
 			require("google_maps.js", function() {
 				setTimeout(function() {
 					new GoogleMap(map_container, function(m) {
+						onready(m);
+						container.removeChild(loading);
+						/*
 						var check = function() {
 							if (map_container.childNodes.length > 0 && map_container.childNodes[0].className == "gm-style") {
 								var gm = map_container.childNodes[0];
@@ -162,6 +165,7 @@ if (!window.top.google) {
 							setTimeout(check, 25);
 						};
 						check();
+						*/
 					});
 				},1);
 			});

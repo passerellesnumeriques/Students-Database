@@ -45,7 +45,7 @@ class page_synch_users extends Page {
 				echo "The following users do not exist anymore in ".$domain.":<ul>";
 				foreach ($current as $user) {
 					echo "<li>";
-					echo "<b>".htmlentities($user["username"])."</b>";
+					echo "<b>".toHTML($user["username"])."</b>";
 					echo "<br/>";
 					echo "<input type='radio' value='keep' name='".$user["username"]."' checked='checked'/> Keep it<br/>";
 					echo "<input type='radio' value='remove' name='".$user["username"]."'/> Remove it (information about it will be kept, be this user won't be able to login anymore)<br/>";
@@ -68,7 +68,7 @@ class page_synch_users extends Page {
 				echo "The following users are currently internal to the software, but they are now present in the authentication system:<ul>";
 				foreach ($internal_to_as as $user) {
 					echo "<li>";
-					echo "<b>".htmlentities($user["username"])."</b>";
+					echo "<b>".toHTML($user["username"])."</b>";
 					echo "<br/>";
 					echo "<input type='radio' value='keep_internal' name='".$user["username"]."' checked='checked'/> Keep it internal<br/>";
 					echo "<input type='radio' value='move_to_as' name='".$user["username"]."'/> Use the authentication system now, and remove it from internal users<br/>";
@@ -84,7 +84,7 @@ class page_synch_users extends Page {
 				echo "The following users exist in ".$domain." but not yet in the software:<ul>";
 				foreach ($list as $user) {
 					echo "<li>";
-					echo "<b>".htmlentities($user["username"])."</b>";
+					echo "<b>".toHTML($user["username"])."</b>";
 					if (isset($user["info"])) {
 						if (isset($user["info"]["People"])) {
 							if (isset($user["info"]["People"]["first_name"]) && isset($user["info"]["People"]["last_name"])) {
@@ -100,7 +100,7 @@ class page_synch_users extends Page {
 						echo " member of ";
 						for ($i = 0; $i < count($user["groups"]); $i++) {
 							if ($i > 0) echo ",";
-							echo htmlentities($user["groups"][$i]);
+							echo toHTML($user["groups"][$i]);
 						}
 					}
 					echo "<br/>";
@@ -122,7 +122,7 @@ class page_synch_users extends Page {
 					echo "<select name='type_".$user["username"]."'>";
 					foreach ($people_types as $type) {
 						if (!$type->isStandalone()) continue;
-						echo "<option value=".json_encode($type->getId()).($type->getId() == "user" ? " selected='selected'" : "").">".htmlentities($type->getName())."</option>";
+						echo "<option value=".json_encode($type->getId()).($type->getId() == "user" ? " selected='selected'" : "").">".toHTML($type->getName())."</option>";
 					}
 					echo "</select>";
 					echo "</li>";

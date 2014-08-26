@@ -22,7 +22,7 @@ curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
 curl_setopt($c, CURLOPT_TIMEOUT, 25);
-set_time_limit(45);
+set_time_limit(90);
 $result = curl_exec($c);
 if ($result == false) die("<span style='color:red'>Error downloading ".$url.": ".curl_error($c)."</span>");
 echo $result;

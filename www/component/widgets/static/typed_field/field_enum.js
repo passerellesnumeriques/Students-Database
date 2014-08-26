@@ -19,6 +19,18 @@ field_enum.prototype.getPossibleValues = function() {
 	}
 	return values;
 };
+field_enum.prototype.compare = function(v1,v2) {
+	for (var i = 0; i < this.config.possible_values.length; ++i)
+		if (this.config.possible_values[i] instanceof Array) {
+			if (this.config.possible_values[i][0] == v1)
+				v1 = this.config.possible_values[i][1];
+			if (this.config.possible_values[i][0] == v2)
+				v2 = this.config.possible_values[i][1];
+		}
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	return v1.localeCompare(v2);
+};
 field_enum.prototype.exportCell = function(cell) {
 	var val = this.getCurrentData();
 	if (val == null)

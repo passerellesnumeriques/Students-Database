@@ -287,17 +287,23 @@ if (!window.top.CalendarsProviders) {
 			}
 		}
 	};
-	window.top.pnapplication.onlogout.add_listener(function() {
-		for (var i = 0; i < window.top.CalendarsProviders._providers.length; ++i) {
-			var prev_calendars = window.top.CalendarsProviders._providers[i].calendars;
-			window.top.CalendarsProviders._providers[i].calendars = [];
-			for (var j = 0; j < prev_calendars.length; ++j)
-				window.top.CalendarsProviders._providers[i].on_calendar_removed.fire(prev_calendars[j]);
+	var listen_login_logout = function() {
+		if (!window.top.pnapplication) {
+			setTimeout(listen_login_logout, 20);
 		}
-	});
-	window.top.pnapplication.onlogin.add_listener(function() {
-		window.top.CalendarsProviders._refresh(true);
-	});
+		window.top.pnapplication.onlogout.add_listener(function() {
+			for (var i = 0; i < window.top.CalendarsProviders._providers.length; ++i) {
+				var prev_calendars = window.top.CalendarsProviders._providers[i].calendars;
+				window.top.CalendarsProviders._providers[i].calendars = [];
+				for (var j = 0; j < prev_calendars.length; ++j)
+					window.top.CalendarsProviders._providers[i].on_calendar_removed.fire(prev_calendars[j]);
+			}
+		});
+		window.top.pnapplication.onlogin.add_listener(function() {
+			window.top.CalendarsProviders._refresh(true);
+		});
+	};
+	listen_login_logout();
 	setTimeout(function() { window.top.CalendarsProviders._refresh(); }, 60*1000);
 }
 

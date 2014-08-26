@@ -31,7 +31,11 @@ function field_date(data,editable,config) {
 					}
 				};
 				window.top.datamodel.addCellChangeListener(window, table,t.config.minimum_cell,row_key, listener);
-				window.top.datamodel.getCellValue(table,t.config.minimum_cell,row_key,listener);
+				if (row_key > 0 && t.editable)
+					window.top.datamodel.getCellValue(table,t.config.minimum_cell,row_key,listener);
+				t.element.ondomremoved(function() {
+					window.top.datamodel.removeCellChangeListener(listener);
+				});
 			}, 1);
 		if (t.config && t.config.maximum_cell)
 			setTimeout(function() {
@@ -44,13 +48,26 @@ function field_date(data,editable,config) {
 					}
 				};
 				window.top.datamodel.addCellChangeListener(window, table,t.config.maximum_cell,row_key, listener);
-				window.top.datamodel.getCellValue(table,t.config.maximum_cell,row_key,listener);
+				if (row_key > 0 && t.editable)
+					window.top.datamodel.getCellValue(table,t.config.maximum_cell,row_key,listener);
+				t.element.ondomremoved(function() {
+					window.top.datamodel.removeCellChangeListener(listener);
+				});
 			}, 1);
 	};
 }
 field_date.prototype = new typed_field();
 field_date.prototype.constructor = field_date;		
 field_date.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };
+field_date.prototype.compare = function(v1,v2) {
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	v1 = parseSQLDate(v1);
+	v2 = parseSQLDate(v2);
+	if (v1.getTime() < v2.getTime()) return -1;
+	if (v1.getTime() > v2.getTime()) return 1;
+	return 0;
+};
 field_date.prototype.exportCell = function(cell) {
 	var d = this.getCurrentData();
 	if (d == null)
@@ -104,6 +121,12 @@ field_date.prototype._create = function(data) {
 
 		this._timeoutSetData = null;
 		this._setData = function(data) {
+			var d = parseSQLDate(data);
+			var d2 = dateToSQL(d);
+			if (d2 != data) {
+				this.setData(d2);
+				return;
+			}
 			if (t.select)
 				t.select.selectDate(parseSQLDate(data));
 			else {

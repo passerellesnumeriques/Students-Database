@@ -90,7 +90,7 @@ function isDone(odm,ndm,parent_table,ondone) {
 			changes.push({type:'add_table',table:ndm.tables[i],parent_table:parent_table});
 		ondone();
 		return true;
-}
+	}
 	if (ndm.tables.length == 0) {
 		// no more table in the new model, remaining ones are removed
 		for (var i = 0; i < odm.tables.length; ++i)
@@ -101,12 +101,18 @@ function isDone(odm,ndm,parent_table,ondone) {
 	return false;
 }
 function process_differences(odm,ndm,parent_table,ondone) {
-	if (isDone(odm,ndm,parent_table,ondone)) return;
+	var odm_ = objectCopy(odm,100);
+	var ndm_ = objectCopy(ndm,100);
+	var end = function() {
+		process_keys_and_indexes(odm_,ndm_,parent_table);
+		ondone();
+	};
+	if (isDone(odm,ndm,parent_table,end)) return;
 	process_renamed_tables(odm,ndm,parent_table,function() {
-		if (isDone(odm,ndm,parent_table,ondone)) return;
+		if (isDone(odm,ndm,parent_table,end)) return;
 		process_tables_same_name(odm,ndm,parent_table,[],function() {
-			if (isDone(odm,ndm,parent_table,ondone)) return;
-			process_remaining(odm,ndm,parent_table,ondone);
+			if (isDone(odm,ndm,parent_table,end)) return;
+			process_remaining(odm,ndm,parent_table,end);
 		});
 	}); 
 }
@@ -392,7 +398,7 @@ function process_column_change(odm,i,ii,ndm,j,jj,parent_table,ondone) {
 	button_no.innerHTML = "No, the column is a new one, and we should remove data from previous one";
 	panel.appendChild(button_no);
 	button_confirm.onclick = function() {
-		changes.push({type:'column_spec',old_table_name:odm.tables[i].name,new_table_name:odm.tables[j].name,old_spec:odm.tables[i].columns[jj],new_spec:ndm.tables[j].columns[jj],parent_table:parent_table});
+		changes.push({type:'column_spec',old_table_name:odm.tables[i].name,new_table_name:odm.tables[j].name,old_spec:odm.tables[i].columns[ii],new_spec:ndm.tables[j].columns[jj],parent_table:parent_table});
 		odm.tables[i].columns.splice(ii,1);
 		ndm.tables[j].columns.splice(jj,1);
 		ondone();
@@ -489,6 +495,41 @@ function ask_remaining_columns(odm,i,ndm,j,parent_table,ondone) {
 		ul2.appendChild(li);
 	}
 }
+function process_keys_and_indexes(odm,ndm,parent_table) {
+	for (var i = 0; i < odm.tables.length; ++i) {
+		var otable = odm.tables[i];
+		var removed = false;
+		for (var j = 0; j < changes.length; ++j) if (changes[j].type == "remove_table" && changes[j].table_name == otable.name) { removed = true; break; }
+		if (removed) continue;
+		var ntable_name = otable.name;
+		for (var j = 0; j < changes.length; ++j) if (changes[j].type == "rename_table" && changes[j].old_table_name == otable.name) { ntable_name = changes[j].new_table_name; break; }
+		var ntable;
+		for (var j = 0; j < ndm.tables.length; ++j) if (ndm.tables[j].name == ntable_name) { ntable = ndm.tables[j]; break; }
+		if (objectEquals(otable.key,ntable.key) == false) {
+			changes.push({type:"index_removed",parent_table:parent_table,table:ntable_name,index_name:(typeof otable.key == 'string' ? "PRIMARY" : "table_key"),key:otable.key});
+			changes.push({type:"index_added",parent_table:parent_table,table:ntable_name,index_name:(typeof ntable.key == 'string' ? "PRIMARY" : "table_key"),key:ntable.key});
+		}
+		for (var j = 0; j < otable.indexes.length; ++j) {
+			var found = false;
+			for (var k = 0; k < ntable.indexes.length; ++k) {
+				if (ntable.indexes[k].length != otable.indexes[j].length) continue;
+				var same = true;
+				for (var l = 0; l < ntable.indexes[k].length; ++l) if (ntable.indexes[k][l] != otable.indexes[j][l]) { same = false; break; }
+				if (!same) continue;
+				found = true;
+				ntable.indexes.splice(k,1);
+				break;
+			}
+			if (!found)
+				changes.push({type:"index_removed",parent_table:parent_table,table:ntable_name,index_name:otable.indexes[j][0]});
+		}
+		for (j = 0; j < ntable.indexes.length; ++j) {
+			var name = ntable.indexes[j][0];
+			ntable.indexes[j].splice(0,1);
+			changes.push({type:"index_added",parent_table:parent_table,table:ntable_name,index_name:name,columns:ntable.indexes[j]});
+		}
+	}
+}
 
 
 function finish(odm,ndm) {
@@ -540,6 +581,44 @@ function createChangeDescription(change,odm,ndm) {
 	case "remove_column": li.innerHTML = "Column <i>"+change.column+"</i> has been removed from table <i>"+change.table+"</i>, <img src='/static/theme/default/icons_16/warning.png'/> all data in it will be lost"; break;
 	case "rename_column": li.innerHTML = "Column <i>"+change.old_column_name+"</i> of table <i>"+change.old_table_name+"</i> became column <i>"+change.new_column_name+"</i> of table <i>"+change.new_table_name+"</i>"; break;
 	case "column_spec": li.innerHTML = "Column <i>"+change.old_spec.name+"</i> of table <i>"+change.old_table_name+"</i> changed its specification"; if(change.new_spec.name != change.old_spec.name) li.innerHTML += " and will be column <i>"+change.new_spec.name+"</i> of table <i>"+change.new_table_name+"</i>"; else if (change.new_table_name != change.old_table_name) li.innerHTML += " and will be in table <i>"+change.new_table_name+"</i>"; break;
+	case "index_removed":
+		if (change.index_name == "PRIMARY")
+			li.innerHTML = "Primary key <i>"+change.key+"</i> removed from table <i>"+change.table+"</i>";
+		else if (change.index_name == "table_key") {
+			var s = "";
+			for (var i = 0; i < change.key.length; ++i) {
+				if (i > 0) s += ", ";
+				s += change.key[i];
+			} 
+			li.innerHTML = "Key index on columns <i>"+s+"</i> removed from table <i>"+change.table+"</i>";
+		} else {
+			var s = "";
+			for (var i = 0; i < change.columns.length; ++i) {
+				if (i > 0) s += ", ";
+				s += change.columns[i];
+			} 
+			li.innerHTML = "Index on columns <i>"+s+"</i> remove from table <i>"+change.table+"</i>";
+		}
+		break;
+	case "index_added":
+		if (change.index_name == "PRIMARY")
+			li.innerHTML = "Primary key <i>"+change.key+"</i> added to table <i>"+change.table+"</i>";
+		else if (change.index_name == "table_key") {
+			var s = "";
+			for (var i = 0; i < change.key.length; ++i) {
+				if (i > 0) s += ", ";
+				s += change.key[i];
+			} 
+			li.innerHTML = "Key index on columns <i>"+s+"</i> added to table <i>"+change.table+"</i>";
+		} else {
+			var s = "";
+			for (var i = 0; i < change.columns.length; ++i) {
+				if (i > 0) s += ", ";
+				s += change.columns[i];
+			} 
+			li.innerHTML = "Index on columns <i>"+s+"</i> added to table <i>"+change.table+"</i>";
+		}
+		break;
 	default: li.innerHTML = "<img src='/static/theme/default/icons_16/error.png'/> Unknown change: "+change.type; break;
 	}
 	return li;

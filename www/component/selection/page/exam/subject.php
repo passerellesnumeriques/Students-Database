@@ -30,7 +30,7 @@ class page_exam_subject extends SelectionPage {
 			$locked_by = null;
 			$db_lock = $this->performRequiredLocks("ExamSubject",$id,null,$current_campaign, $locked_by);
 			if($db_lock == null) {
-				echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> This subject is currently edited by ".htmlentities($locked_by)."</div>";
+				echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> This subject is currently edited by ".toHTML($locked_by)."</div>";
 				$readonly = true;
 			}
 		}
@@ -83,7 +83,7 @@ class page_exam_subject extends SelectionPage {
 			<table><tbody id="table"></tbody></table>
 			<?php if (!$readonly) {?>
 			<div style="margin:5px">
-				<button class='action' onclick='newPart();'><img src='<?php echo theme::$icons_16["add"];?>'/> New part</button>
+				<button class='action green' onclick='newPart();'><img src='<?php echo theme::$icons_16["add_white"];?>'/> New part</button>
 			</div>
 			<?php } ?>
 		</div>

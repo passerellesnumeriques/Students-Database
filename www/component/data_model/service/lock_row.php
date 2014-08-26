@@ -29,7 +29,7 @@ class service_lock_row extends Service {
 		$locked_by = null;
 		$lock = DataBaseLock::lockRow($table->getSQLNameFor($sm), $key, $locked_by);
 		if ($lock == null) {
-			PNApplication::error("This row is already locked by ".$locked_by);
+			PNApplication::error("This is already edited by ".$locked_by.", you cannot edit it at the samt time.");
 			return;
 		}
 		echo "{lock:".json_encode($lock)."}";

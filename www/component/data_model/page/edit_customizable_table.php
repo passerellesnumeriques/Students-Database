@@ -101,13 +101,13 @@ class page_edit_customizable_table extends Page {
 		}
 		</style>
 		<table class='fixed_data'>
-			<tr><?php foreach ($fixed_by_category as $cat=>$list) echo "<th>".htmlentities($cat)."</th>"; ?></tr>
+			<tr><?php foreach ($fixed_by_category as $cat=>$list) echo "<th>".toHTML($cat)."</th>"; ?></tr>
 			<tr>
 				<?php
 				foreach ($fixed_by_category as $cat=>$list) {
 					echo "<td valign=top>";
 					foreach ($list as $data)
-						echo htmlentities($data->getDisplayName())."<br/>";
+						echo toHTML($data->getDisplayName())."<br/>";
 					echo "</td>";
 				}
 				?>
@@ -154,7 +154,7 @@ class page_edit_customizable_table extends Page {
 				</tr>
 				<tr id='buttons_row'>
 					<td colspan=4 align=center>
-						<button class='action' onclick="addData();"><img src='<?php echo theme::$icons_16["add"];?>'/> Add new data</button>
+						<button class='action green' onclick="addData();"><img src='<?php echo theme::$icons_16["add_white"];?>'/> Add new data</button>
 						<button class='action' onclick="save();"><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
 					</td>
 			</table>

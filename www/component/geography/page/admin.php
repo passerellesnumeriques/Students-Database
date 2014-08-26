@@ -20,7 +20,7 @@ class page_admin extends Page {
 		$countries = PNApplication::$instance->geography->getCountriesList();
 		echo "select_country.add('',\"<i>Select a Country</i>\");\n";
 		foreach ($countries as $c)
-			echo "select_country.add(".$c["country_id"].",\"<img src='/static/geography/flags/".strtolower($c["country_code"]).".png' style='vertical-align:bottom'/> ".htmlentities($c["country_name"])."\");\n";
+			echo "select_country.add(".$c["country_id"].",\"<img src='/static/geography/flags/".strtolower($c["country_code"]).".png' style='vertical-align:bottom'/> ".toHTML($c["country_name"])."\");\n";
 		?>
 		select_country.onchange = function() {
 			document.getElementById('geography_page_content').src = '/dynamic/geography/page/set_geography_area?country='+select_country.getSelectedValue();

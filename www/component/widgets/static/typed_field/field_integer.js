@@ -10,6 +10,17 @@ function field_integer(data,editable,config) {
 field_integer.prototype = new typed_field();
 field_integer.prototype.constructor = field_integer;		
 field_integer.prototype.canBeNull = function() { return this.config && this.config.can_be_null; };
+field_integer.prototype.compare = function(v1,v2) {
+	if (v1 == null) return v2 == null ? 0 : -1;
+	if (v2 == null) return 1;
+	v1 = parseInt(v1);
+	if (isNaN(v1)) return 1;
+	v2 = parseInt(v2);
+	if (isNaN(v2)) return -1;
+	if (v1 < v2) return -1;
+	if (v1 > v2) return 1;
+	return 0;
+};
 field_integer.prototype.exportCell = function(cell) {
 	var val = this.getCurrentData();
 	if (val == null)
@@ -75,7 +86,8 @@ field_integer.prototype._create = function(data) {
 			t.setData(val);
 		};
 		listenEvent(t.input, 'focus', function() { t.onfocus.fire(); });
-		require("input_utils.js",function(){inputAutoresize(t.input);});
+		var _fw = false;
+		require("input_utils.js",function(){inputAutoresize(t.input);if (_fw) t.input.setMinimumSize(-1);});
 		this.element.appendChild(t.input);
 		this._getEditedData = function() {
 			var value = getValueFromInput();
@@ -99,7 +111,7 @@ field_integer.prototype._create = function(data) {
 		this.fillWidth = function() {
 			_fw = true;
 			this.element.style.width = "100%";
-			if (typeof input.setMinimumSize != 'undefined') input.setMinimumSize(-1);
+			if (typeof t.input.setMinimumSize != 'undefined') t.input.setMinimumSize(-1);
 		};
 		if (t.config) {
 			var prev = data;

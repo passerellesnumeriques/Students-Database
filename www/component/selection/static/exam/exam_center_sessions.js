@@ -343,7 +343,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		this._header.appendChild(document.createTextNode(" session(s) scheduled. "));
 		if (can_edit) {
 			var button_new_session = document.createElement("BUTTON");
-			button_new_session.className = "action";
+			button_new_session.className = "action green";
 			button_new_session.innerHTML = "Schedule new session";
 			this._header.appendChild(button_new_session);
 			button_new_session.t = this;
@@ -459,7 +459,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		rooms_container.appendChild(this._section_rooms.element);
 		if (can_edit) {
 			var button_new = document.createElement("BUTTON");
-			button_new.className = "action";
+			button_new.className = "action green";
 			button_new.innerHTML = "New Room";
 			this._section_rooms.addToolBottom(button_new);
 			button_new.t = this;
@@ -578,7 +578,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 				});
 			});
 			// add remove button
-			not_assigned_header.addSelectionAction("<img src='/static/selection/common_centers/remove_applicant_from_center.png'/> Remove", "action important", "Remove selected applicants from this exam center", function() {
+			not_assigned_header.addSelectionAction("<img src='/static/selection/common_centers/remove_applicant_from_center.png'/> Remove", "action red", "Remove selected applicants from this exam center", function() {
 				confirm_dialog("Are you sure those applicants will not come to this exam center ?", function(yes) {
 					if (yes) {
 						var applicants = t.not_assigned.getSelection();

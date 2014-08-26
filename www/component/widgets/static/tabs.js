@@ -18,6 +18,8 @@ function tabs(container, fill_tab_content) {
 		};
 		t.tabs.push(tab);
 		t._build_tab_header(tab);
+		tab.content.style.display = "none";
+		t.content.appendChild(tab.content);
 		if (t.selected == -1)
 			t.select(t.tabs.length-1);
 		t._layout();
@@ -48,10 +50,10 @@ function tabs(container, fill_tab_content) {
 	t.select = function(index) {
 		if (t.selected != -1) {
 			t.tabs[t.selected].header.className = "tab_header";
-			t.content.removeChild(t.tabs[t.selected].content);
+			t.tabs[t.selected].content.style.display = "none";
 		}
 		t.tabs[index].header.className = "tab_header selected";
-		t.content.appendChild(t.tabs[index].content);
+		t.tabs[index].content.style.display = "";
 		t.selected = index;
 		layout.invalidate(t.tabs[index].content);
 		if (t.onselect) t.onselect(t);

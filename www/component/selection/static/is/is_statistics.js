@@ -23,11 +23,21 @@ function is_statistics(container, separate_boys_girls, can_edit, boys_expected, 
 			figures.girls_expected = 0;
 			figures.girls_real = 0;
 		} else {
-			figures.girls_expected = t.field_int_32.getCurrentData();
-			figures.girls_real = t.field_int_33.getCurrentData();
+			if (can_edit) {
+				figures.girls_expected = t.field_int_32.getCurrentData();
+				figures.girls_real = t.field_int_33.getCurrentData();
+			} else {
+				figures.girls_expected = girls_expected;
+				figures.girls_real = girls_real;
+			}
 		}
-		figures.boys_expected = t.field_int_22.getCurrentData();
-		figures.boys_real = t.field_int_23.getCurrentData();
+		if (can_edit) {
+			figures.boys_expected = t.field_int_22.getCurrentData();
+			figures.boys_real = t.field_int_23.getCurrentData();
+		} else {
+			figures.boys_expected = boys_expected;
+			figures.boys_real = boys_real;
+		}
 		return figures;
 	};
 	

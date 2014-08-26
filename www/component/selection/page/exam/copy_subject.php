@@ -22,7 +22,7 @@ class page_exam_copy_subject extends SelectionPage {
 		echo "Please select the subject to copy:";
 		echo "<ul>";
 		foreach($all_campaigns as $c) {
-			echo "<li>".htmlentities($c["name"]);
+			echo "<li>".toHTML($c["name"]);
 			echo "<ul>";
 			$subjects = SQLQuery::create()
 				->select("ExamSubject")
@@ -31,7 +31,7 @@ class page_exam_copy_subject extends SelectionPage {
 			foreach ($subjects as $s) {
 				echo "<li>";
 				echo "<a href='/dynamic/selection/page/exam/subject?id=".$s["id"]."&campaign_id=".$c["id"]."'>";
-				echo htmlentities($s["name"]);
+				echo toHTML($s["name"]);
 				echo "</a>";
 				echo "</li>";
 			}

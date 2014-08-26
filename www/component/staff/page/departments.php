@@ -35,7 +35,7 @@ class page_departments extends Page {
 			<table>
 				<tr id='row_header'><th>Department Name</th><th>Default Roles</th></tr>
 				<tr id='row_footer'><td colspan=2 align=center>
-					<button class='action' onclick='newDepartment();'><img src='<?php echo theme::$icons_16["add"];?>'/> New Department</button>
+					<button class='action green' onclick='newDepartment();'><img src='<?php echo theme::$icons_16["add_white"];?>'/> New Department</button>
 				</td></tr>
 			</table>
 		</div>
