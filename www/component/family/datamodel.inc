@@ -4,7 +4,7 @@
 $model->addTable("Family")
 	->addPrimaryKey("id")
 	->addDate("entry_date", false, false)
-	->addEnum("parents_situation", array("Married","Separated","Divorced","Widower"))
+	->addEnum("parents_situation", array("Married","Separated","Divorced","Widower"),true)
 	->addReadAccessFromForeignTable("FamilyMember");
 	;
 
