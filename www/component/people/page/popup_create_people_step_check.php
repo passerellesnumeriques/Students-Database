@@ -137,10 +137,10 @@ class page_popup_create_people_step_check extends Page {
 			echo "<div style='background-color:white'>";
 			echo "<form name='to_check'>";
 			echo "The following people have been found in the database:<ul>";
-			for ($i = 0; $i < count($to_check); $i++) {
-				$people = $to_check[$i][0];
-				$same = $to_check[$i][1];
-				$similars = $to_check[$i][2];
+			for ($itc = 0; $itc < count($to_check); $itc++) {
+				$people = $to_check[$itc][0];
+				$same = $to_check[$itc][1];
+				$similars = $to_check[$itc][2];
 				foreach ($people as $path) {
 					$i = strrpos($path["path"], "<");
 					$j = strrpos($path["path"], ">");
@@ -162,7 +162,7 @@ class page_popup_create_people_step_check extends Page {
 						foreach ($similars as $similar)
 							$this->similarPeople("may be the same as", $similar, $path, $table, $li_id, $sub_models);
 						echo "</ul>";
-						echo "<a href='#' onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);peoples.push(window._new_peoples[$i]);window.oneDone();return false;\">"; // TODO
+						echo "<a href='#' onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);peoples.push(window._new_peoples[$itc]);window.oneDone();return false;\">";
 						echo "This is a new person, I want to create it";
 						echo "</a>";
 						echo "</li>";
