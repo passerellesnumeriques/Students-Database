@@ -20,6 +20,7 @@ $model->addTable("FamilyMember")
 	->addEnum("occupation_type", array("Regular","Irregular"), true, false)
 	->addBoolean("living_with_family", true)
 	->addInteger("child_rank", 8, 1) // ? should we put it ?
+	->addString("comment",250,0,true,false)
 	->addReadAccessFromForeignTable("People")
 	->addRemoveAccessFromForeignTable("People")
 	;

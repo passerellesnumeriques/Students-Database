@@ -82,7 +82,7 @@ class page_popup_create_people extends Page {
 		Create <?php echo toHTML($types_descr)?><br/>
 		&nbsp; <a href='#' onclick='go();return false;'>Create a new one</a><br/>
 		&nbsp; <a href='#' onclick='data.multiple = true; go();return false;'>Create several together</a><br/>
-		<?php if (count($types) == 1) { ?>
+		<?php if (count($types) == 1 && !isset($_GET["not_from_existing"])) { ?>
 		&nbsp; Create from an existing person:
 		<div style='padding-left:30px'>
 		<?php
@@ -101,6 +101,7 @@ class page_popup_create_people extends Page {
 		foreach ($possible_types as $type) {
 			$list = SQLQuery::create()->select("People")->where("`types` LIKE '%/".$type->getId()."/%'")->limit(0, 501)->orderBy("People","last_name")->orderBy("People","first_name")->execute();
 			if (count($list) == 0) continue;
+			echo "<div style='white-space:nowrap;'>";
 			echo "This is an existing ".$type->getName().": ";
 			if (count($list) <= 500) {
 				echo "<select id='id_".$type->getId()."'>";
@@ -109,7 +110,7 @@ class page_popup_create_people extends Page {
 				echo "</select>";
 				echo "<button onclick=\"var people_id=document.getElementById('id_".$type->getId()."').value;postData('/dynamic/people/page/people_new_type?people='+people_id+'&type=".$types[0]."&ondone=".$_GET["ondone"]."',data,window);\"><img src='".theme::$icons_16["right"]."'/> Create as ".toHTML($types_descr)."</button>";
 			}
-			echo "<br/>";
+			echo "</div>";
 		}
 		?>
 		</div>

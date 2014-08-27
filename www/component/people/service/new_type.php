@@ -13,6 +13,8 @@ class service_new_type extends Service {
 	public function execute(&$component, $input) {
 		$people_id = $input["people"];
 		$type = $input["type"];
+		$sub_models = @$input["sub_models"];
+		if ($sub_models == null) $sub_models = array();
 		SQLQuery::startTransaction();
 		$component->addPeopleType($people_id, $type);
 		
@@ -29,7 +31,7 @@ class service_new_type extends Service {
 		}
 		
 		require_once("component/data_model/DataPath.inc");
-		$all_paths = DataPathBuilder::searchFrom("People", null, false, array());
+		$all_paths = DataPathBuilder::searchFrom("People", null, false, $sub_models);
 		
 		foreach ($screens as $screen) {
 			$paths = array();
@@ -40,7 +42,7 @@ class service_new_type extends Service {
 				$paths[$i]->columns = array();
 				$paths[$i]->value = array();
 				$paths[$i]->children = array();
-				foreach ($paths[$i]->table->internalGetColumns() as $col)
+				foreach ($paths[$i]->table->internalGetColumns($sub_models) as $col)
 					if ($col instanceof \datamodel\ForeignKey)
 						if ($col->foreign_table == "People")
 							$paths[$i]->columns[$col->name] = $people_id;

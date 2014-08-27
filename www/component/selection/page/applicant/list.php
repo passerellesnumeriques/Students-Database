@@ -74,7 +74,7 @@ class page_applicant_list extends SelectionPage {
 					create_applicant.onclick = function() {
 						window.top.require("popup_window.js",function() {
 							var p = new window.top.popup_window('New Applicant', theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add), "");
-							var frame = p.setContentFrame("/dynamic/people/page/popup_create_people?types=applicant&ondone=reload_list", null, get_creation_data());
+							var frame = p.setContentFrame("/dynamic/people/page/popup_create_people?types=applicant&not_from_existing=true&ondone=reload_list", null, get_creation_data());
 							frame.reload_list = reload_list;
 							p.show();
 						});

@@ -86,8 +86,8 @@ function popup_window(title,icon,content,hide_close_button) {
 					return win.layout && win._page_ready;
 				}, function() {
 					if (!t.popup) return; // already closed
-					t.content.style.width = "";
-					t.content.style.height = "";
+					//t.content.style.width = "";
+					//t.content.style.height = "";
 					t._setSizeType(t._size_type);
 					if (onload) onload(frame);
 				});

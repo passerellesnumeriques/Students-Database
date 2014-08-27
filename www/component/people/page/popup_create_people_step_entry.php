@@ -28,7 +28,7 @@ class page_popup_create_people_step_entry extends Page {
 			win.popup_there = function() {
 				var popup = window.top.get_popup_window_from_frame(win);
 				popup.addNextButton(function() {
-					popup.freeze("Checking information...");
+					popup.freeze("We are checking if the new people are already in the database...");
 					var peoples = [];
 					for (var i = 0; i < grid.getNbRows(); ++i) {
 						var row = grid.getRow(i);
@@ -139,7 +139,7 @@ class page_popup_create_people_step_entry extends Page {
 			var structure = <?php echo $structure_name;?>;
 			var popup = window.parent.get_popup_window_from_frame(window);
 			popup.addNextButton(function() {
-				popup.freeze("Checking information...");
+				popup.freeze("We are checking if the new people are already in the database...");
 				var people = [];
 				var error = null;
 				for (var i = 0; i < structure.length; ++i) {

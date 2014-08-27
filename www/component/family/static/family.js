@@ -243,7 +243,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 								if (member.people_create[i].value[j].name == "First Name") member.people.first_name = member.people_create[i].value[j].value;
 								else if (member.people_create[i].value[j].name == "Last Name") member.people.last_name = member.people_create[i].value[j].value;
 								else if (member.people_create[i].value[j].name == "Gender") member.people.sex = member.people_create[i].value[j].value;
-								else if (member.people_create[i].value[j].name == "Birth Date") member.people.birth = member.people_create[i].value[j].value;
+								else if (member.people_create[i].value[j].name == "Birth Date") member.people.birthdate = member.people_create[i].value[j].value;
 							}
 						}
 						td_people.removeAllChildren();
@@ -390,25 +390,50 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		}
 		// education level
 		tr.appendChild(td = document.createElement("TD"));
-		if (can_edit) {
-			var td_educ = td;
-			require([["typed_field.js","field_text.js"]],function() {
-				var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100});
-				td_educ.appendChild(f.getHTMLElement());
-				f.onchange.add_listener(function() {
-					member.education_level = f.getCurrentData();
-					if (t.onchange) t.onchange();
-				});
-			});
+		if (member.people && member.people.people_types.indexOf("/student/")>=0) {
+			// PN student
+			td.innerHTML = "<img src='/static/application/logo_16.png' style='vertical-align:bottom'/> PN Student";
 		} else {
-			if (member.education_level)
-				td.appendChild(document.createTextNode(member.education_level));
-			else
-				td.innerHTML = "";
+			if (can_edit) {
+				var td_educ = td;
+				require([["typed_field.js","field_text.js"]],function() {
+					var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100});
+					td_educ.appendChild(f.getHTMLElement());
+					f.onchange.add_listener(function() {
+						member.education_level = f.getCurrentData();
+						if (t.onchange) t.onchange();
+					});
+				});
+			} else {
+				if (member.education_level)
+					td.appendChild(document.createTextNode(member.education_level));
+				else
+					td.innerHTML = "";
+			}
 		}
 		// living with family
 		tr.appendChild(td = document.createElement("TD"));
 		this._addBooleanSelect(td, member, "living_with_family");
+		// comment
+		tr.appendChild(td = document.createElement("TD"));
+		if (can_edit) {
+			var td_comment = td;
+			require([["typed_field.js","field_text.js"]],function() {
+				var f = new field_text(member.comment, true, {min_length:0,can_be_null:true,max_length:250});
+				td_comment.appendChild(f.getHTMLElement());
+				f.onchange.add_listener(function() {
+					member.comment = f.getCurrentData();
+					if (t.onchange) t.onchange();
+				});
+			});
+		} else {
+			td.appendChild(document.createTextNode(member.comment ? member.comment : ""));
+		}
+		if (member.people && member.people.people_types.indexOf("/applicant/") >= 0) {
+			var i = document.createElement("I");
+			i.appendChild(document.createTextNode("Note: applied to selection process"));
+			td.appendChild(i);
+		}
 		// last update
 		tr.appendChild(td = document.createElement("TD"));
 		td.innerHTML = member.entry_date ? member.entry_date : "";
@@ -433,6 +458,8 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Living<br/>w/family";
 		td.style.fontSize = "9pt";
+		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Comment";
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Last<br/>Update";
 		return tr;
