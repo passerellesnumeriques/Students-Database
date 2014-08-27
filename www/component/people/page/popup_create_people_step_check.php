@@ -63,8 +63,8 @@ class page_popup_create_people_step_check extends Page {
 		$q->where("(".$w.")");
 		$matching_peoples = $q->execute();
 		for ($i = count($matching_peoples)-1; $i >= 0; $i--) {
-			$matching_peoples[$i]["first_name"] = strtolower(latinize($matching_peoples[$i]["first_name"]));
-			$matching_peoples[$i]["last_name"] = strtolower(latinize($matching_peoples[$i]["last_name"]));
+			$matching_peoples[$i]["fn"] = strtolower(latinize($matching_peoples[$i]["first_name"]));
+			$matching_peoples[$i]["ln"] = strtolower(latinize($matching_peoples[$i]["last_name"]));
 		}
 		$ok = array();
 		$to_check = array();
@@ -88,13 +88,13 @@ class page_popup_create_people_step_check extends Page {
 					// search same
 					$same = null;
 					foreach ($matching_peoples as $mp)
-						if ($mp["first_name"] == $fn && $mp["last_name"] == $ln) { $same = $mp; break; }
+						if ($mp["fn"] == $fn && $mp["ln"] == $ln) { $same = $mp; break; }
 					$similars = array();
 					if ($same == null) {
 						// search similar
 						foreach ($matching_peoples as $mp) {
-							if (!str_similar($fn, $mp["first_name"])) continue;
-							if (!str_similar($ln, $mp["last_name"])) continue;
+							if (!str_similar($fn, $mp["fn"])) continue;
+							if (!str_similar($ln, $mp["ln"])) continue;
 							array_push($similars, $mp);
 						}
 					} 
