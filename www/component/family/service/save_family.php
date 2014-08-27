@@ -49,7 +49,7 @@ class service_save_family extends Service {
 				$id = $input["members"][$i]["id"];
 				unset($input["members"][$i]["id"]);
 				SQLQuery::create()->bypassSecurity()->updateByKey("FamilyMember", $id, $input["members"][$i]);
-				$member["id"] = $id;
+				$input["members"][$i]["id"] = $id;
 			} else {
 				// new one
 				unset($input["members"][$i]["id"]);
