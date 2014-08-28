@@ -15,7 +15,7 @@ if (isset($c["north"]) && !empty($c["north"]))
 	echo "{north:".$c["north"].",south:".$c["south"].",east:".$c["east"].",west:".$c["west"]."}";
 else
 	echo "null";
-?>
+?>;
 
 // load geographic information about local country
 setTimeout(function() {
