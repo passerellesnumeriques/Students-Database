@@ -228,7 +228,8 @@ case "dynamic":
 	}
 #DEV
 	@session_start();
-	$_SESSION["app"]->development->requests = PNApplication::$instance->development->requests;
+	if (isset($_SESSION["app"]))
+		$_SESSION["app"]->development->requests = PNApplication::$instance->development->requests;
 	$dev->end_time = microtime(true);
 	session_write_close();
 #END

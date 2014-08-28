@@ -68,7 +68,7 @@ class page_role_rights extends Page {
 			$final = array();
 			foreach ($res as $r) $final[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 			// add implications
-			PNApplication::$instance->user_management->compute_rights_implications($final, $all_rights);
+			PNApplication::$instance->user_management->compute_rights_implications($final);
 		} else {
 			$final = array();
 			foreach ($all_rights as $name=>$r) $final[$name] = $r->get_highest_value();

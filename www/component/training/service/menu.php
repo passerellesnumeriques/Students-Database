@@ -20,6 +20,10 @@ class service_menu extends Service {
 	<img src='/static/students/students_white.png'/>
 	Students List
 </a>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/map' style='padding-left:20px'>
+	<img src='/static/contact/map_white.png'/>
+	Map
+</a>
 <?php } else { ?>
 <a class='application_left_menu_item' href='/dynamic/students/page/updates'>
 	<img src='/static/news/news_white.png'/>

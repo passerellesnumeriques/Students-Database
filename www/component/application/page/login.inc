@@ -1,7 +1,7 @@
 <?php
 global $need_app_loading;
-if (isset($_GET["destroy_session"])) {
-	session_destroy();
+if (isset($_GET["destroy_session"]) && !isset($_POST["domain"])) {
+	@session_destroy();
 }
 if (isset($_GET["uninstall"])) {
 	unlink("install_config.inc");
@@ -16,7 +16,7 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 		if (isset($_POST["tz_offset"]))
 			PNApplication::$instance->timezone_offset = $_POST["tz_offset"];
 		$error = PNApplication::$instance->user_management->login($_POST["domain"], $_POST["username"], $_POST["password"]);
-		if ($error === null) {
+		if ($error === null && !PNApplication::hasErrors()) {
 			echo "<script type='text/javascript'>";
 			echo "window.top.set_loading_message('Starting application...');";
 			echo "window.top.pnapplication.logged_in = true;";
