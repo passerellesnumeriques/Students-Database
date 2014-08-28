@@ -21,7 +21,7 @@ function EditCoordinatesWithMap(container, coordinates, onready) {
 	map_container.style.height = "300px";
 	this.element.appendChild(map_container);
 	window.top.google.loadGoogleMap(map_container, function(m) {
-		t.map = gm;
+		t.map = m;
 		check_ready();
 	});
 }

@@ -124,8 +124,8 @@ field_date.prototype._create = function(data) {
 			var d = parseSQLDate(data);
 			var d2 = dateToSQL(d);
 			if (d2 != data) {
-				this.setData(d2);
-				return;
+				setTimeout(function(){t.setData(d2);},1);
+				data = d2;
 			}
 			if (t.select)
 				t.select.selectDate(parseSQLDate(data));
