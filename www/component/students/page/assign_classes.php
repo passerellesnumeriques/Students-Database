@@ -16,6 +16,8 @@ class page_assign_classes extends Page {
 			// we are on a period
 			// get all students for this period
 			$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false);
+			$q_students->orderBy("People", "last_name");
+			$q_students->orderBy("People", "first_name");
 			$students = $q_students->execute();
 			$students_ids = array();
 			foreach ($students as $s) array_push($students_ids, $s["people"]);
@@ -64,11 +66,15 @@ class page_assign_classes extends Page {
 				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id, $class["specialization"]);
 				// get students from the specialization
 				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $class["specialization"]);
+				$q_students->orderBy("People", "last_name");
+				$q_students->orderBy("People", "first_name");
 				$students = $q_students->execute();
 			} else {
 				// not specialized class
 				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id);
 				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false);
+				$q_students->orderBy("People", "last_name");
+				$q_students->orderBy("People", "first_name");
 				$students = $q_students->execute();
 			}
 			$students_ids = array();
@@ -108,7 +114,7 @@ class page_assign_classes extends Page {
 		popup.addCloseButton();
 
 		function display_people(people, container) {
-			container.appendChild(document.createTextNode(people.first_name+" "+people.last_name));
+			container.appendChild(document.createTextNode(people.last_name+" "+people.first_name));
 		}
 		
 		var assign, container, sec;

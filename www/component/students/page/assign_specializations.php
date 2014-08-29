@@ -14,6 +14,8 @@ class page_assign_specializations extends Page {
 			;
 		PNApplication::$instance->people->joinPeople($q, "Student", "people");
 		PeopleJSON::PeopleSQL($q);
+		$q->orderBy("People", "last_name");
+		$q->orderBy("People", "first_name");
 		$students = $q->execute();
 		$specializations = PNApplication::$instance->curriculum->getBatchSpecializationsWithName($batch_id);
 		// search students already assign to a class with specialization, and who cannot be moved to another
@@ -41,7 +43,7 @@ class page_assign_specializations extends Page {
 		popup.disableButton('save');
 
 		function display_people(people, container) {
-			container.appendChild(document.createTextNode(people.first_name+" "+people.last_name));
+			container.appendChild(document.createTextNode(people.last_name+" "+people.first_name));
 		}
 
 		var specializations = <?php echo CurriculumJSON::SpecializationsJSONFromDB($specializations);?>;
