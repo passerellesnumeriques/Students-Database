@@ -101,7 +101,17 @@ function assign_elements(container, sections_css, non_assigned_icon, element_dis
 			div.innerHTML = "<img src='"+theme.icons_16.info+"' style='vertical-align:bottom'/> "+html;
 			html = div;
 		}
-		this.header.appendChild(div);
+		this.header.appendChild(html);
+	};
+	
+	this.addUnassignedButton = function(icon, text, onclick) {
+		var button = document.createElement("BUTTON");
+		button.innerHTML = (icon ? "<img src='"+icon+"'/> " : "")+text;
+		button.onclick = onclick;
+		this._non_assigned.section.addToolBottom(button);
+	};
+	this.selectUnassigned = function(elements) {
+		this._non_assigned.selectElements(elements);
 	};
 	
 	this._init = function() {
@@ -137,7 +147,7 @@ function assign_elements(container, sections_css, non_assigned_icon, element_dis
 		t._init();
 	});
 }
-function assign_elements_section(assign,icon,title,css, element_display_provider) {
+function assign_elements_section(assign,icon,title,css,element_display_provider) {
 	var t=this;
 	
 	this._elements = [];
@@ -227,6 +237,14 @@ function assign_elements_section(assign,icon,title,css, element_display_provider
 			t._elements[i].element.current = t._elements[i].element.original;
 	};
 	
+	this.selectElements = function(elements) {
+		for (var i = 0; i < t._elements.length; ++i)
+			if (elements.contains(t._elements[i].element.element))
+				t._elements[i].cb.checked = "checked";
+			else
+				t._elements[i].cb.checked = "";
+	};
+	
 	this._init = function() {
 		var span = document.createElement("DIV");
 		this.cb = document.createElement("INPUT");
@@ -246,7 +264,7 @@ function assign_elements_section(assign,icon,title,css, element_display_provider
 		this.content = document.createElement("DIV");
 		this.section = new section(icon, span, this.content, false, true, css);
 		this.section.element.style.flex = "none";
-		
+
 		this.content.ondragover = function(event) {
 			if (event.dataTransfer.types.contains("assign_element_"+assign.id)) {
 				var element_id = event.dataTransfer.getData("assign_element_"+assign.id);

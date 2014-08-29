@@ -51,6 +51,15 @@ class curriculum extends Component {
 			->execute();
 	}
 	
+	public function getPreviousAcademicPeriod($before_date) {
+		return SQLQuery::create()
+			->select("AcademicPeriod")
+			->where("start","<",$before_date)
+			->orderBy("AcademicPeriod", "start", false)
+			->limit(0,1)
+			->executeSingleRow();
+	}
+	
 	/** Retrieve the AcademicPeriod corresponding to the given BatchPeriod
 	 * @param integer $batch_period_id BatchPeriod ID
 	 * @return array the row from the AcademicPeriod table
@@ -61,6 +70,13 @@ class curriculum extends Component {
 			->whereValue("BatchPeriod","id",$batch_period_id)
 			->join("BatchPeriod", "AcademicPeriod", array("academic_period"=>"id"))
 			->fieldsOfTable("AcademicPeriod")
+			->executeSingleRow();
+	}
+	public function getBatchPeriodFromAcademicPeriod($batch_id, $academic_period_id) {
+		return SQLQuery::create()
+			->select("BatchPeriod")
+			->whereValue("BatchPeriod", "batch", $batch_id)
+			->whereValue("BatchPeriod", "academic_period", $academic_period_id)
 			->executeSingleRow();
 	}
 	/** Retrieve the AcademicPeriod joined with the given BatchPeriod

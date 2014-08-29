@@ -101,6 +101,20 @@ class page_assign_classes extends Page {
 			array_push($sections, array(null, $classes, $students));
 		}
 		
+		// get previous period if any, and students assignments
+		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
+		$previous_academic_period = PNApplication::$instance->curriculum->getPreviousAcademicPeriod($period["academic_period_start"]);
+		$previous_classes = null;
+		if ($previous_academic_period <> null) {
+			$previous_batch_period = PNApplication::$instance->curriculum->getBatchPeriodFromAcademicPeriod($period["batch"], $previous_academic_period["id"]);
+			if ($previous_batch_period <> null) {
+				$previous_classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($previous_batch_period["id"]);
+				$previous_classes_ids = array();
+				foreach ($previous_classes as $pc) array_push($previous_classes_ids, $pc["id"]);
+				$previous_classes_students = SQLQuery::create()->select("StudentClass")->whereIn("StudentClass","class",$previous_classes_ids)->execute();
+			}
+		}
+		
 		$this->requireJavascript("assign_elements.js");
 		$this->requireJavascript("section.js");
 		?>
@@ -125,6 +139,36 @@ class page_assign_classes extends Page {
 			for (var i = 0; i < classes.length; ++i)
 				if (classes[i].id == id) return classes[i].name;
 			return "";
+		}
+		var students = <?php echo PeopleJSON::Peoples($students);?>;
+		function getStudent(id) {
+			for (var i = 0; i < students.length; ++i) if (students[i].id == id) return students[i];
+			return null;
+		}
+
+		var previous_classes = <?php echo json_encode($previous_classes);?>;
+		<?php
+		if ($previous_classes <> null && count($previous_classes) > 0)
+			echo "var previous_assignments = ".json_encode($previous_classes_students).";"; 
+		?>
+
+		function fromPreviousPeriod(button, assign) {
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				for (var i = 0; i < previous_classes.length; ++i) {
+					menu.addIconItem(null, "Class "+previous_classes[i].name, function(class_id) {
+						var elements = [];
+						for (var i = 0; i < previous_assignments.length; ++i)
+							if (previous_assignments[i]["class"] == class_id) {
+								var student = getStudent(previous_assignments[i]["people"]);
+								if (student != null)
+									elements.push(student);
+							}
+						assign.selectUnassigned(elements);
+					}, previous_classes[i].id);
+				}
+				menu.showBelowElement(button);
+			});
 		}
 
 		function changed() {
@@ -160,8 +204,9 @@ class page_assign_classes extends Page {
 				echo "\tclasses.push({id:".$cl["id"].",name:".json_encode($cl["name"])."});\n";
 			}
 			foreach ($students as &$s) {
-				echo "\tassign.addElement(".PeopleJSON::People($s).",".json_encode($s["class"]).",true);\n";
+				echo "\tassign.addElement(getStudent(".$s["people_id"]."),".json_encode($s["class"]).",true);\n";
 			}
+			echo "\tif (previous_classes) assign.addUnassignedButton(null,'From '+".json_encode($previous_batch_period["name"]).",function(){fromPreviousPeriod(this,assign);});\n";
 			echo "\tassign.onchange.add_listener(changed);\n";
 			echo "\tlayout.invalidate(assign.container);\n";
 			echo "});\n";
