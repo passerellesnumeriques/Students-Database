@@ -44,17 +44,13 @@ function images_tool_crop() {
 				// ratio = w/h => w = ratio*h
 				var w = ratio*rect.height;
 				w -= rect.width;
-				if (w <= 0) w=1;
 				rect.x -= Math.floor(w/2);
-				if (rect.x < 0) rect.x = 0;
 				rect.width += Math.floor(w);
 			} else {
 				// reduce the height
 				var h = rect.width/ratio;
 				h -= rect.height;
-				if (h <= 0) h=1;
 				rect.y -= Math.floor(h/2);
-				if (rect.y < 0) rect.y = 0;
 				rect.height += Math.floor(h);
 			}
 		} else {
@@ -64,17 +60,13 @@ function images_tool_crop() {
 				// ratio = w/h => ratio*h = w*h/h => h = w*h/h/ratio => h = w/ratio
 				var h = rect.width/ratio;
 				h -= rect.height;
-				if (h <= 0) h=1;
 				rect.y -= Math.floor(h/2);
-				if (rect.y < 0) rect.y = 0;
 				rect.height += Math.floor(h);
 			} else {
 				// reduce the width
 				var w = ratio*rect.height;
 				w -= rect.width;
-				if (w <= 0) w=1;
 				rect.x -= Math.floor(w/2);
-				if (rect.x < 0) rect.x = 0;
 				rect.width += Math.floor(w);
 			}
 		}
