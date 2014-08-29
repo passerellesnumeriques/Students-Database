@@ -5,7 +5,7 @@ if (typeof require != 'undefined'){
 var applicant_picture;
 
 /* Main */
-function initResultsEdit(session_id,room_id,subjects){
+function initResultsEdit(session_id,room_id,subjects,set_correct_answer){
 
    
    /* Profile picture */
@@ -32,7 +32,7 @@ function initResultsEdit(session_id,room_id,subjects){
        
        for (var j=0; j<subjects.length; ++j){
           /* create the results_grid  */
-          var g = new results_grid(subjects[j],applicants,'250px');
+          var g = new results_grid(subjects[j],applicants,'250px',set_correct_answer);
          
           /* update ApplicantInfoBox on new row selection event */
           g.onRowApplicantSelection(updateApplicantInfoBox);
@@ -77,8 +77,6 @@ function updateApplicantInfoBox(people)
    /* Getting applicant picture */
    
    applicant_picture.loadPeopleObject(people,function(){
-   
-   
    
       /* The people fields we want to display */
    var fields = {first_name:"First Name",middle_name:"Middle Name",khmer_first_name:"Khmer first name",khmer_last_name:"Khmer last name",last_name:"Last Name",sex:"Gender",birthdate:"Birth"}; 

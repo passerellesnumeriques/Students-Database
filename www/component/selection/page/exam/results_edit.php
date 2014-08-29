@@ -21,7 +21,7 @@ class page_exam_results_edit extends SelectionPage {
 		$this->addJavascript("/static/selection/exam/results_grid.js");
 		$this->addJavascript("/static/selection/exam/exam_objects.js");
 		require_once("component/selection/SelectionExamJSON.inc");
-		$this->onload("initResultsEdit(".$input["session_id"].",".$input["room_id"].",".SelectionExamJSON::ExamSubjectsFullJSON().")");
+		$this->onload("initResultsEdit(".$input["session_id"].",".$input["room_id"].",".SelectionExamJSON::ExamSubjectsFullJSON().",".PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer").")");
 
 	?>
 	      <!-- TODO : css clean up (merge with the right css file)-->
