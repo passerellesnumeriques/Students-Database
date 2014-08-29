@@ -23,8 +23,6 @@ while (($filename = readdir($dir)) <> null) {
 		$v = substr($v,$i+4);
 		if ($v == $version) unlink("data/updates/$filename");
 	}
-	if ($i !== false) array_push($paths, array(substr($v,0,$i),substr($v,$i+4)));
-	else $updates[$v] = null;
 }
 closedir($dir);
 
