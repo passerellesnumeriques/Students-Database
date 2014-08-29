@@ -1,15 +1,3 @@
-function windowScreenPosition(e) {
-	var x = absoluteLeft(e);
-	var y = absoluteTop(e);
-	var p = e.parentNode;
-	while (p && typeof p.scrollLeft != 'undefined') {
-		x -= p.scrollLeft;
-		y -= p.scrollTop;
-		if (p.nodeName == "BODY") break;
-		p = p.parentNode;
-	}
-	return {x:x,y:y};
-}
 /**
  * Return the absolute position of the left edge, relative to the given element or to the document
  * @param {Element} e the element to get the absolute position
