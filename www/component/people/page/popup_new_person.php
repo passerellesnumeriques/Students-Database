@@ -6,7 +6,7 @@ class page_popup_new_person extends Page {
 	public function execute() {
 		$this->requireJavascript("form.js");
 ?>
-<div style='background-color:white;padding:10px'>
+<div style='background-color:white;padding:10px;'>
 <form name='form' onsubmit='return false'>
 
 <input type='radio' name='type' value='new_person' checked='checked'/> This is a new person<br/>
@@ -25,17 +25,25 @@ foreach (PNApplication::$instance->components as $c) {
 }
 
 foreach ($types as $type) {
-	$list = SQLQuery::create()->select("People")->where("`types` LIKE '%/".$type->getId()."/%'")->limit(0, 501)->orderBy("People","last_name")->orderBy("People","first_name")->execute();
+	$list = SQLQuery::create()
+		->select("People")
+		->where("`types` LIKE '%/".$type->getId()."/%'")
+		->where("`types` NOT LIKE '%/".$_GET["type"]."/%'")
+		->limit(0, 2001) // TODO ?
+		->orderBy("People","last_name")
+		->orderBy("People","first_name")
+		->execute();
 	if (count($list) == 0) continue;
+	echo "<div style='white-space:nowrap'>";
 	echo "<input type='radio' name='type' value='".$type->getId()."'/> ";
 	echo "This is an existing ".$type->getName().": ";
-	if (count($list) <= 500) {
+	if (count($list) <= 2000) {
 		echo "<select name='id_".$type->getId()."'>";
 		foreach ($list as $p)
 			echo "<option value='".$p["id"]."'>".$p["last_name"]." ".$p["first_name"]."</option>";
 		echo "</select>";
 	}
-	echo "<br/>";
+	echo "</div>";
 }
 ?>
 </form>

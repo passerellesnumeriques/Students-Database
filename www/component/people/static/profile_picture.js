@@ -25,6 +25,17 @@ function profile_picture(container, width, height, halign, valign) {
 		var resize_ratio = 1;
 		var h = t.picture.naturalHeight;
 		var w = t.picture.naturalWidth;
+		var p = container.parentNode;
+		while (p && p.nodeName != "BODY") p = p.parentNode;
+		if (!p) {
+			if (!recall) recall = 0;
+			if (recall < 1000) {
+				setTimeout(function() {
+					t.adjustPicture(recall+1);
+				},10+recall);
+				return;
+			}
+		}
 		if (w == 0 || h == 0) {
 			if (!recall) recall = 0;
 			if (recall >= 10) return;

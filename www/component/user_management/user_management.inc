@@ -363,6 +363,21 @@ class user_management extends Component {
 			foreach ($c->getReadableRights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
 			foreach ($c->getWritableRights() as $cat) foreach ($cat->rights as $r) $this->all_rights[$r->name] = $r;
 		}
+#DEV
+		foreach ($this->all_rights as $name=>$right) {
+			try {
+				foreach ($right->implies as $if_value=>$implications) {
+					if (!is_array($implications)) throw new Exception("Invalid implications: expected is an array");
+					foreach ($implications as $rname=>$rvalue) {
+						if (!isset($this->all_rights[$rname]))
+							throw new Exception("Invalid right '$rname' in implications");
+					}
+				}
+			} catch (Exception $e) {
+				PNApplication::error("Error in user right '$name': ".$e->getMessage());
+			}
+		}
+#END
 	}
 	
 	private function load_user_rights() {
@@ -446,7 +461,6 @@ class user_management extends Component {
 	/**
 	 * Add implied rights to the given list
 	 * @param Right[] $rights [right_name=>right_value] list of current rights, where will be added the implied rights
-	 * @param Right[] $all_rights all the existing rights already populated
 	 */
 	public function compute_rights_implications(&$rights) {
 		$changed = false;
@@ -459,11 +473,11 @@ class user_management extends Component {
 					unset($rights[$name]);
 					continue;
 				}
-				foreach ($right->implies as $if_value=>$implications)
-					if ($value == $if_value)
+				foreach ($right->implies as $if_value=>$implications) {
+					if ($value <> $if_value) continue;
 					foreach ($implications as $rname=>$rvalue) {
 						if (isset($rights[$rname])) {
-							$higher = $this->all_rights[$rname]->get_higher_value($rights[$name], $rvalue);
+							$higher = $this->all_rights[$rname]->get_higher_value($rights[$rname], $rvalue);
 							if ($rights[$rname] !== $higher) {
 								$rights[$rname] = $higher;
 								$changed = true;
@@ -477,6 +491,7 @@ class user_management extends Component {
 							}
 						}
 					}
+				}
 			}
 		} while ($changed);
 	}

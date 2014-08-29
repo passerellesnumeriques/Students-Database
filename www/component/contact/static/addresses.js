@@ -155,7 +155,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 											table: "PostalAddress",
 											key: edit.address.id,
 											lock: lock_id,
-											field_country: edit.address.country,
+											field_country: edit.address.country_id,
 											field_geographic_area: edit.address.geographic_area ? edit.address.geographic_area.id : null,
 											field_street: edit.address.street,
 											field_street_number: edit.address.street_number,

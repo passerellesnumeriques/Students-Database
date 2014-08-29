@@ -47,53 +47,10 @@ class page_map extends SelectionPage {
 <div style='width:100%;height:100%' id='map_container'>
 </div>
 <script type='text/javascript'>
-function mymarker(lat, lng, color, content) {
-	this._lat = lat;
-	this._lng = lng;
-	this._color = color;
-	this._content = content;
-}
 setTimeout(function() {
 	window.top.google.loadGoogleMap(document.getElementById('map_container'),function(map){
 		// init to country
 		window.top.geography.getCountry(window.top.default_country_id,function(country) {
-			mymarker.prototype = new window.top.google.maps.OverlayView();
-			mymarker.prototype.onAdd = function() {
-				var div = document.createElement("DIV");
-				div.style.position = "absolute";
-				var content = document.createElement("DIV");
-				content.style.backgroundColor = this._color;
-				setBorderRadius(content,3,3,3,3,3,3,3,3);
-				content.appendChild(this._content);
-				div.appendChild(content);
-				this._arrow = document.createElement("DIV");
-				this._arrow.style.position = "absolute";
-				this._arrow.style.display = "inline-block";
-				this._arrow.style.borderLeft = "7px solid transparent";
-				this._arrow.style.borderRight = "7px solid transparent";
-				this._arrow.style.borderTop = "7px solid "+this._color;
-				this._arrow.style.bottom = "0px";
-				div.appendChild(this._arrow);
-				content.style.marginBottom = "7px";
-				this._div = div;
-				this.getPanes().floatPane.appendChild(div);
-			};
-			mymarker.prototype.draw = function() {
-				var overlayProjection = this.getProjection();
-				var pos = overlayProjection.fromLatLngToDivPixel(this.getPosition());
-				this._div.style.top = (pos.y-this._div.offsetHeight)+"px";
-				this._div.style.left = (pos.x-this._div.offsetWidth/2)+"px";
-				this._arrow.style.left = (this._div.offsetWidth/2-7)+"px";
-			};
-			mymarker.prototype.onRemove = function() {
-				this._div.parentNode.removeChild(this._div);
-				this._div = null;
-			};
-			mymarker.prototype.getPosition = function() {
-				return new window.top.google.maps.LatLng(this._lat, this._lng);
-			};
-			mymarker.prototype.lat = function() { return this._lat; };
-			mymarker.prototype.lng = function() { return this._lng; };
 			var content;
 			<?php
 			foreach ($markers as $marker) {
@@ -112,7 +69,7 @@ setTimeout(function() {
 				echo "content.style.padding = '1px';\n";
 				echo "content.style.fontSize = '8pt';\n";
 				echo "content.innerHTML='<b>'+".json_encode($marker["name"])."+'</b><br/>'+".json_encode($marker["text"]).";\n";
-				echo "map.addShape(new mymarker(".$marker["lat"].", ".$marker["lng"].",".json_encode($marker["color"]).",content));\n";
+				echo "map.addShape(new PNMapMarker(".$marker["lat"].", ".$marker["lng"].",".json_encode($marker["color"]).",content));\n";
 			}
 			?>
 			if (country.north) {

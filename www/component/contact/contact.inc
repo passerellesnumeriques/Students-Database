@@ -309,5 +309,17 @@ class contact extends Component {
 		ContactJSON::OrganizationContactPointSQL($q);
 		return $q->execute();
 	}
+	
+	public function getPeoplesAddresses($peoples_ids) {
+		$q = SQLQuery::create()
+			->select("PeopleAddress")
+			->whereIn("PeopleAddress", "people", $peoples_ids)
+			->join("PeopleAddress", "PostalAddress", array("address"=>"id"))
+			->field("PeopleAddress", "people", "address_people_id")
+			;
+		require_once("component/contact/ContactJSON.inc");
+		ContactJSON::PostalAddressSQL($q);
+		return $q->execute();
+	}
 }
 ?>

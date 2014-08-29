@@ -170,6 +170,13 @@ $model->addTable("PublishedTranscript")
 	->addWriteAccess("edit_transcripts_design", true)
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
+	->onInsert(function($fields,$id,$sub_model_instance) {
+		try {
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($fields["period"]);
+			$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+			PNApplication::$instance->news->post("students", "transcripts", array("batch".$batch["id"],"period".$period["id"]), "activity", "Transcript published for Batch ".toHTML($batch["name"]).", period ".toHTML($period["name"]));
+		} catch (Exception $e) { PNApplication::error($e); }
+	})
 	;
 
 $model->addTable("PublishedTranscriptStudentSubjectGrade")

@@ -70,6 +70,7 @@ class service_get_static_resources extends Service {
 			$this->orderComponentsRecurse($dep, $result);
 		array_push($result, $c);
 	}
+#END
 #PROD
 #	private function getOrderedComponents() {
 #		return PNApplication::getOrderedComponentsNames();

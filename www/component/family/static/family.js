@@ -243,7 +243,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 								if (member.people_create[i].value[j].name == "First Name") member.people.first_name = member.people_create[i].value[j].value;
 								else if (member.people_create[i].value[j].name == "Last Name") member.people.last_name = member.people_create[i].value[j].value;
 								else if (member.people_create[i].value[j].name == "Gender") member.people.sex = member.people_create[i].value[j].value;
-								else if (member.people_create[i].value[j].name == "Birth Date") member.people.birth = member.people_create[i].value[j].value;
+								else if (member.people_create[i].value[j].name == "Birth Date") member.people.birthdate = member.people_create[i].value[j].value;
 							}
 						}
 						td_people.removeAllChildren();
@@ -390,29 +390,78 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		}
 		// education level
 		tr.appendChild(td = document.createElement("TD"));
-		if (can_edit) {
-			var td_educ = td;
-			require([["typed_field.js","field_text.js"]],function() {
-				var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100});
-				td_educ.appendChild(f.getHTMLElement());
-				f.onchange.add_listener(function() {
-					member.education_level = f.getCurrentData();
-					if (t.onchange) t.onchange();
-				});
-			});
+		if (member.people && member.people.people_types.indexOf("/student/")>=0) {
+			// PN student
+			td.innerHTML = "<img src='/static/application/logo_16.png' style='vertical-align:bottom'/> PN Student";
 		} else {
-			if (member.education_level)
-				td.appendChild(document.createTextNode(member.education_level));
-			else
-				td.innerHTML = "";
+			if (can_edit) {
+				var td_educ = td;
+				require([["typed_field.js","field_text.js"]],function() {
+					var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100});
+					td_educ.appendChild(f.getHTMLElement());
+					f.onchange.add_listener(function() {
+						member.education_level = f.getCurrentData();
+						if (t.onchange) t.onchange();
+					});
+				});
+			} else {
+				if (member.education_level)
+					td.appendChild(document.createTextNode(member.education_level));
+				else
+					td.innerHTML = "";
+			}
 		}
 		// living with family
 		tr.appendChild(td = document.createElement("TD"));
 		this._addBooleanSelect(td, member, "living_with_family");
+		if (!can_edit) td.style.textAlign = "center";
+		// comment
+		tr.appendChild(td = document.createElement("TD"));
+		if (member.people && member.people.people_types.indexOf("/applicant/") >= 0 && member.people.people_types.indexOf("/student/") < 0) {
+			var i = document.createElement("I");
+			i.style.fontSize = "8pt";
+			i.appendChild(document.createTextNode(" Note: applied to selection process "));
+			td.appendChild(i);
+		}
+		if (can_edit) {
+			var td_comment = td;
+			require([["typed_field.js","field_text.js"]],function() {
+				var f = new field_text(member.comment, true, {min_length:0,can_be_null:true,max_length:250});
+				td_comment.appendChild(f.getHTMLElement());
+				f.onchange.add_listener(function() {
+					member.comment = f.getCurrentData();
+					if (t.onchange) t.onchange();
+				});
+			});
+		} else {
+			td.appendChild(document.createTextNode(member.comment ? member.comment : ""));
+		}
 		// last update
 		tr.appendChild(td = document.createElement("TD"));
 		td.innerHTML = member.entry_date ? member.entry_date : "";
 		return tr;
+	};
+	this._addParentsSituation = function() {
+		var tr = document.createElement("TR"); this.table.appendChild(tr);
+		var td = document.createElement("TD"); tr.appendChild(td);
+		td.colSpan = 9;
+		td.innerHTML = "Parents situation: ";
+		if (can_edit) {
+			var select = document.createElement("SELECT");
+			var o;
+			o = document.createElement("OPTION"); o.value = null; o.text = ""; select.add(o);
+			o = document.createElement("OPTION"); o.value = "Married"; o.text = "Married"; select.add(o);
+			o = document.createElement("OPTION"); o.value = "Separated"; o.text = "Separated"; select.add(o);
+			o = document.createElement("OPTION"); o.value = "Divorced"; o.text = "Divorced"; select.add(o);
+			o = document.createElement("OPTION"); o.value = "Widower"; o.text = "Widower"; select.add(o);
+			td.appendChild(select);
+			select.value = this.family.parents_situation;
+			select.onchange = function() {
+				t.family.parents_situation = this.value;
+				if (t.onchange) t.onchange();
+			};
+		} else
+			td.appendChild(document.createTextNode(this.family.parents_situation ? this.family.parents_situation : ""));
 	};
 	this._addColumnsTitles = function() {
 		var tr, td;
@@ -428,12 +477,17 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		td.innerHTML = "Age";
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Occupation, Type";
+		td.style.padding = "1px 6px";
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Education level";
+		td.style.padding = "1px 6px";
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Living<br/>w/family";
 		td.style.fontSize = "9pt";
 		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Comment";
+		tr.appendChild(td = document.createElement("TH"));
+		td.style.fontSize = "9pt";
 		td.innerHTML = "Last<br/>Update";
 		return tr;
 	};
@@ -441,7 +495,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		var tr = document.createElement("TR"); this.table.appendChild(tr);
 		tr.is_title = true;
 		var td = document.createElement("TD"); tr.appendChild(td);
-		td.colSpan = 5;
+		td.colSpan = 9;
 		td.className = "page_section_title3";
 		if (typeof title == 'string')
 			td.appendChild(document.createTextNode(title));
@@ -481,6 +535,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		for (var i = 0; i < this.members.length; ++i) if (this.members[i].member_type == "Mother") { member = this.members[i]; break; }
 		if (member == null) { member = {member_type:"Mother"}; this.members.push(member); }
 		this._addMemberRow(member, title_parents);
+		this._addParentsSituation();
 		
 		var span = document.createElement("SPAN");
 		span.innerHTML = "Others (Guardians...) ";

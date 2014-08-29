@@ -29,7 +29,8 @@ class service_init_data extends Service {
 	 					include("component/".$c->name."/init_data.inc");
 	 			}
  			}
-		}		
+		}
+		echo "true";
 	}
 	
 }

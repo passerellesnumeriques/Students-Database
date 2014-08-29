@@ -4,8 +4,10 @@ class transcripts extends Component {
 
 	public function getPluginImplementations() {
 		require_once("GradesPeopleProfilePagePlugin.inc");
+		require_once("TranscriptsNewsPlugin.inc");
 		return array(
-			new GradesPeopleProfilePagePlugin()
+			new GradesPeopleProfilePagePlugin(),
+			new TranscriptsStudentsPlugin()
 		);
 	}
 	

@@ -146,6 +146,8 @@ if (!window.top.google) {
 			map_container.style.position = "absolute";
 			map_container.style.left = "0px";
 			map_container.style.top = "0px";
+			map_container.style.width = "100%";
+			map_container.style.height = "100%";
 			container.appendChild(map_container);
 			require("google_maps.js", function() {
 				setTimeout(function() {

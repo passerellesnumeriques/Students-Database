@@ -22,6 +22,7 @@ if (strpos($path, "..") !== FALSE) die("Access denied");
 global $pn_app_version;
 #DEV
 $pn_app_version = file_get_contents(dirname(__FILE__)."/version");
+#END
 #PROD
 #$pn_app_version = "##VERSION##"; 
 #END
@@ -227,7 +228,8 @@ case "dynamic":
 	}
 #DEV
 	@session_start();
-	$_SESSION["app"]->development->requests = PNApplication::$instance->development->requests;
+	if (isset($_SESSION["app"]))
+		$_SESSION["app"]->development->requests = PNApplication::$instance->development->requests;
 	$dev->end_time = microtime(true);
 	session_write_close();
 #END

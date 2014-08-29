@@ -4,7 +4,7 @@
 $model->addTable("Family")
 	->addPrimaryKey("id")
 	->addDate("entry_date", false, false)
-	->addEnum("parents_situation", array("Married","Separated","Divorced","Widower"))
+	->addEnum("parents_situation", array("Married","Separated","Divorced","Widower"),true)
 	->addReadAccessFromForeignTable("FamilyMember");
 	;
 
@@ -20,6 +20,7 @@ $model->addTable("FamilyMember")
 	->addEnum("occupation_type", array("Regular","Irregular"), true, false)
 	->addBoolean("living_with_family", true)
 	->addInteger("child_rank", 8, 1) // ? should we put it ?
+	->addString("comment",250,0,true,false)
 	->addReadAccessFromForeignTable("People")
 	->addRemoveAccessFromForeignTable("People")
 	;

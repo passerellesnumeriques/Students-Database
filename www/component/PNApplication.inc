@@ -219,6 +219,7 @@ class PNApplication {
 		global $local_domain;
 #DEV
 		$this->local_domain = isset($_GET["testing"]) ? "Test" : $local_domain;
+#END
 #PROD
 #		$this->local_domain = $local_domain;
 #END
@@ -234,6 +235,7 @@ class PNApplication {
 		foreach ($components_names as $name) $this->createComponent($name);
 		$done = array();
 		foreach ($this->components as $c) $this->initComponent($c, $done);
+#END
 #PROD
 # ##CREATE_COMPONENTS##
 #foreach (self::getOrderedComponentsNames() as $c) $this->components[$c]->init();
@@ -248,6 +250,7 @@ class PNApplication {
 #DEV
 		$done = array();
 		foreach ($this->components as $c) $this->initRequestForComponent($c, $done);
+#END
 #PROD
 #foreach (self::getOrderedComponentsNames() as $c) $this->components[$c]->initRequest();
 #END
@@ -308,6 +311,7 @@ class PNApplication {
 			PNApplication::internalSortComponentsByDependencies(PNApplication::$instance->components[$dep], $list);
 		array_push($list, $c);
 	}
+#END
 #PROD
 #public static function sortComponentsByDependencies() {
 #$list = array();

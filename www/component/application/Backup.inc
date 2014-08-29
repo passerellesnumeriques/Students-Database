@@ -131,7 +131,7 @@ class Backup {
 	}
 	
 	
-	public static function recoverBackup($time) {
+	public static function recoverBackup($time, $version = null) {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
 		if (PNApplication::$instance == null) {
@@ -141,13 +141,14 @@ class Backup {
 			PNApplication::$instance->init();
 		}
 		global $pn_app_version;
-		if (!is_dir("data/backups/$pn_app_version/$time")) throw new Exception("Backup does not exist");
+		if ($version == null) $version = $pn_app_version;
+		if (!is_dir("data/backups/$version/$time")) throw new Exception("Backup does not exist");
 		if (file_exists("data/recover")) self::removeDirectory("data/recover");
 		mkdir("data/recover");
 		// recover database
 		mkdir("data/recover/db");
 		require_once("component/application/service/deploy_utils.inc");
-		unzipFile(realpath("data/backups/$pn_app_version/$time/db.zip"), realpath("data/recover/db"));
+		unzipFile(realpath("data/backups/$version/$time/db.zip"), realpath("data/recover/db"));
 		require_once("component/data_model/Model.inc");
 		require_once("SQLQuery.inc");
 		$model = DataModel::get();
@@ -165,23 +166,42 @@ class Backup {
 			$p = $ref->getProperty("tables");
 			$p->setAccessible(true);
 			$tables = $p->getValue($model);
+			$sub_models_keys = array();
 			foreach ($tables as $table) {
-				if ($table->getModel() instanceof SubDataModel) continue;
 				set_time_limit(600);
 				DataBaseUtilities::createTable($db, $table);
 				if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName())) {
 					set_time_limit(30*60);
 					DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName());
+					foreach ($table->_key_submodels as $sm) {
+						$keys = SQLQuery::create()
+							->bypassSecurity()
+#DEV
+							->noWarning()
+#END
+							->select($table->getName())->field($table->getPrimaryKey()->name)->executeSingleField();
+						$sub_models_keys[$table->getName()] = $keys;
+						foreach ($keys as $key) $sm->createTables($key);
+					}
 				}
 			}
-			foreach ($tables as $table) {
-				if (!($table->getModel() instanceof SubDataModel)) continue;
-				foreach ($table->getModel()->getExistingInstances() as $sub_model) {
-					set_time_limit(600);
-					DataBaseUtilities::createTable($db, $table, "_".$sub_model);
-					if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName()."_".$sub_model)) {
-						set_time_limit(30*60);
-						DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName()."_".$sub_model);
+			$p = $ref->getProperty("sub_models");
+			$p->setAccessible(true);
+			$sub_models = $p->getValue($model);
+			foreach ($sub_models as $sm) {
+				if (!isset($sub_models_keys[$sm->getParentTable()])) continue;
+				$p = $ref->getProperty("tables");
+				$p->setAccessible(true);
+				$tables = $p->getValue($sm);
+				foreach ($tables as $table) {
+					foreach ($sub_models_keys[$sm->getParentTable()] as $sub_model) {
+						if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName()."_".$sub_model)) {
+							set_time_limit(600);
+							$db->execute("DROP TABLE IF EXISTS `".($table->getName()."_".$sub_model)."`");
+							DataBaseUtilities::createTable($db, $table, "_".$sub_model);
+							set_time_limit(30*60);
+							DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName()."_".$sub_model);
+						}
 					}
 				}
 			}
@@ -190,15 +210,15 @@ class Backup {
 		@mkdir("data/$local_domain");
 		// recover custom tables
 		if (file_exists("data/$local_domain/custom_tables")) self::removeDirectory("data/$local_domain/custom_tables");
-		if (file_exists("data/backups/$pn_app_version/$time/custom_tables.zip")) {
+		if (file_exists("data/backups/$version/$time/custom_tables.zip")) {
 			mkdir("data/$local_domain/custom_tables");
-			unzipFile(realpath("data/backups/$pn_app_version/$time/custom_tables.zip"), realpath("data/$local_domain/custom_tables"));
+			unzipFile(realpath("data/backups/$version/$time/custom_tables.zip"), realpath("data/$local_domain/custom_tables"));
 		}
 		// recover storage		
 		if (file_exists("data/$local_domain/storage")) self::removeDirectory("data/$local_domain/storage");
 		mkdir("data/$local_domain/storage");
 		set_time_limit(60*60);
-		unzipFile(realpath("data/backups/$pn_app_version/$time/storage.zip"), realpath("data/$local_domain/storage"));
+		unzipFile(realpath("data/backups/$version/$time/storage.zip"), realpath("data/$local_domain/storage"));
 		if (file_exists("data/$local_domain/storage/empty")) rmdir("data/$local_domain/storage/empty");
 	}
 	
