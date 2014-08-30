@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="Document.cs" />
     <Compile Include="DocumentOpener.cs" />
+    <Compile Include="JavaScript.cs" />
     <Compile Include="OperationWindow.cs">
       <SubType>Form</SubType>
     </Compile>

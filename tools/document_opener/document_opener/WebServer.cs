@@ -14,10 +14,27 @@ namespace document_opener
         private TcpListener tcpListener;
         private Thread listenThread;
 
+        public static int[] possible_ports = new int[] { 127,128,129,130,131,132,133,134,270,271,272,273,274,275,466,467,468,469,470 };
+
         public WebServer()
         {
-            this.tcpListener = new TcpListener(IPAddress.Any, 103);
+            for (int i = 0; i < possible_ports.Length; ++i)
+            {
+                try
+                {
+                    this.tcpListener = new TcpListener(IPAddress.Loopback, possible_ports[i]);
+                    this.tcpListener.Start();
+                    Console.Out.WriteLine("HTTP Server launched on " + IPAddress.Loopback.ToString() + ":" + possible_ports[i]);
+                    break;
+                }
+                catch (System.Net.Sockets.SocketException e)
+                {
+                    if (e.ErrorCode == 10048) continue;
+                    throw e;
+                }
+            }
             this.listenThread = new Thread(new ThreadStart(ListenForClients));
+            this.listenThread.Name = "HTTP Server Listener";
             this.listenThread.Start();
         }
 
@@ -29,18 +46,19 @@ namespace document_opener
 
         private void ListenForClients()
         {
-            this.tcpListener.Start();
-
             while (true)
             {
                 try
                 {
+                    Console.Out.WriteLine("Waiting for clients...");
                     //blocks until a client has connected to the server
                     TcpClient client = this.tcpListener.AcceptTcpClient();
+                    Console.Out.WriteLine("New client: " + client.Client.ToString());
 
                     //create a thread to handle communication 
                     //with connected client
                     Thread clientThread = new Thread(new ParameterizedThreadStart(HandleClientComm));
+                    clientThread.Name = "HTTP Client";
                     clientThread.Start(client);
                 }
                 catch (Exception e)
@@ -56,7 +74,12 @@ namespace document_opener
             try
             {
                 IPEndPoint remoteIpEndPoint = tcpClient.Client.RemoteEndPoint as IPEndPoint;
-                if (remoteIpEndPoint.Address.ToString() != "127.0.0.1") { tcpClient.Close(); return; }
+                Console.Out.WriteLine("Client end point: " + remoteIpEndPoint.ToString());
+                if (remoteIpEndPoint.Address.ToString() != "127.0.0.1") {
+                    Console.Out.WriteLine("Invalid client address: " + remoteIpEndPoint.Address.ToString());
+                    tcpClient.Close();
+                    return;
+                }
 
                 NetworkStream clientStream = tcpClient.GetStream();
 
@@ -64,6 +87,7 @@ namespace document_opener
                 string line = reader.ReadLine();
                 if (line.StartsWith("GET "))
                 {
+                    Console.Out.WriteLine("GET received: "+line);
                     int i = line.IndexOf(" ", 4);
                     string path = line.Substring(4, i - 4);
                     LinkedList<string> headers = new LinkedList<string>();
@@ -85,194 +109,73 @@ namespace document_opener
                     }
                     else if (path == "/javascript")
                     {
+                        writer.WriteLine("Content-Type: text/javascript");
+                        writer.WriteLine("Content-Length: " + JavaScript.js.Length);
+                        writer.WriteLine();
+                        writer.Write(JavaScript.js);
                     }
-                    else if (path.StartsWith("/document?"))
-                    {
-                        string s = path.Substring(10);
-                        string[] ss = s.Split(new char[] { '&' });
-                        Dictionary<string, string> parameters = new Dictionary<string, string>();
-                        for (i = 0; i < ss.Length; ++i)
-                        {
-                            int j = ss[i].IndexOf('=');
-                            parameters.Add(ss[i].Substring(0, j), ss[i].Substring(j + 1));
-                        }
-                    }
-
                     writer.Flush();
+                } else if (line.StartsWith("POST ")) {
+                    Console.Out.WriteLine("POST received: " + line);
+                    int i = line.IndexOf(" ", 5);
+                    string path = line.Substring(5, i - 5);
+                    LinkedList<string> headers = new LinkedList<string>();
+                    // read all lines
+                    int body_size = 0;
+                    while ((line = reader.ReadLine()).Length > 0)
+                    {
+                        if (line.ToLower().StartsWith("content-length:"))
+                        {
+                            string s = line.Substring(15).Trim();
+                            body_size = Int32.Parse(s);
+                        }
+                        headers.AddLast(line);
+                    }
+                    
+                    // read body
+                    string body;
+                    if (body_size == 0)
+                        body = "";
+                    else
+                    {
+                        char[] buffer = new char[body_size];
+                        reader.Read(buffer, 0, body_size);
+                        body = new string(buffer);
+                    }
+                    Console.Out.WriteLine("Body: "+body);
+                    string[] ss = body.Split(new char[] { '&' });
+                    Dictionary<string, string> parameters = new Dictionary<string, string>();
+                    for (i = 0; i < ss.Length; ++i)
+                    {
+                        int j = ss[i].IndexOf('=');
+                        string value = ss[i].Substring(j + 1);
+                        value = Uri.UnescapeDataString(value);
+                        parameters.Add(ss[i].Substring(0, j), value);
+                    }
 
-/*
                     StreamWriter writer = new StreamWriter(clientStream);
                     writer.WriteLine("HTTP/1.1 200 OK");
                     writer.WriteLine("Connection: close");
                     writer.WriteLine("Content-Transfer-Encoding: 8bit");
-                    if (path == "/screenshot.jpg")
-                    {
-                        writer.WriteLine("Content-Type: image/jpeg");
-                        MemoryStream memoryStream = ScreenShot.take();
-                        writer.WriteLine("Content-Length: " + memoryStream.Length);
-                        writer.WriteLine("");
-                        writer.Flush();
-                        memoryStream.Position = 0;
-                        memoryStream.WriteTo(clientStream);
-                        memoryStream.Dispose();
-                        writer.Flush();
+                    if (path == "/open_document") {
+                        Console.Out.WriteLine("Open Document");
+                        new Document(parameters["server"], UInt16.Parse(parameters["port"]), parameters["session_name"], parameters["session_id"], parameters["pn_version"], parameters["doc"], parameters["version"], parameters["id"], parameters.ContainsKey("revision") ? parameters["revision"] : null, parameters["filename"], parameters["readonly"] != "false" ? true : false);
                     }
-                    else if (path == "/processes.txt")
-                    {
-                        writer.WriteLine("Content-Type: text/plain");
-                        Process[] processes = Process.GetProcesses();
-                        string s = "";
-                        foreach (Process p in processes)
-                        {
-                            string ps = "";
-                            try
-                            {
-                                ps += p.Id;
-                                ps += " ";
-                                TimeSpan span = (DateTime.Now - p.StartTime);
-                                ps += (int)span.TotalSeconds;
-                                ps += " ";
-                                ps += p.ProcessName;
-                                ps += "||";
-                                try
-                                {
-                                    string wmiQuery = string.Format("select * from Win32_Process where ProcessId='{0}'", p.Id);
-                                    ManagementObjectSearcher searcher = new ManagementObjectSearcher(wmiQuery);
-                                    ManagementObjectCollection retObjectCollection = searcher.Get();
-                                    foreach (ManagementObject retObject in retObjectCollection)
-                                    {
-                                        string[] argList = new string[] { string.Empty, string.Empty };
-                                        int returnVal = Convert.ToInt32(retObject.InvokeMethod("GetOwner", argList));
-                                        if (returnVal == 0)
-                                        {
-                                            ps += argList[1] + "\\" + argList[0];
-                                        }
-                                        ps += "||";
-                                        ps += retObject["CommandLine"];
-                                    }
-                                } catch (Exception ex) {}
-                                ps += "\n";
-                                s += ps;
-                            }
-                            catch (Exception err) { }
-                        }
-                        writer.WriteLine("Content-Length: " + s.Length);
-                        writer.WriteLine("");
-                        writer.Write(s);
-                        writer.Flush();
-                    }
-                    else if (path.StartsWith("/kill"))
-                    {
-                        string s = path.Substring(5);
-                        int pid = Convert.ToInt32(s);
-                        Process[] processes = Process.GetProcesses();
-                        Boolean ok = false;
-                        foreach (Process p in processes)
-                        {
-                            if (p.Id == pid)
-                            {
-                                try
-                                {
-                                    p.Kill();
-                                    ok = true;
-                                }
-                                catch (Exception err) { ok = false; }
-                                break;
-                            }
-                        }
-                        writer.WriteLine("Content-Type: text/plain");
-                        writer.WriteLine("Content-Length: 2");
-                        writer.WriteLine("");
-                        writer.Write(ok ? "OK" : "KO");
-                        writer.Flush();
-                    }
-                    else if (path.StartsWith("/msg."))
-                    {
-                        string message = path.Substring(5);
-                        message = Uri.UnescapeDataString(message);
-                        UserMessage.show(message);
-                        writer.WriteLine("Content-Type: text/plain");
-                        writer.WriteLine("Content-Length: 0");
-                        writer.WriteLine("");
-                        writer.Flush();
-                    }
-                    else if (path == "/shutdown")
-                    {
-                        writer.WriteLine("Content-Type: text/plain");
-                        writer.WriteLine("Content-Length: 0");
-                        writer.WriteLine("");
-                        writer.Flush();
-                        //Computer.ShutdownSoft();
-                        Computer.ShutdownHard();
-                    }
-                    else if (path == "/version")
-                    {
-                        writer.WriteLine("Content-Type: text/plain");
-                        writer.WriteLine("Content-Length: " + PNService.Version.version.Length);
-                        writer.WriteLine("");
-                        writer.Write(PNService.Version.version);
-                        writer.Flush();
-                    }
-                    else if (path == "/info")
-                    {
-                        string info = "";
-                        info += "Drives<br/>";
-                        info += "------<br/>";
-                        info += Infos.getDrivesInfo();
-                        writer.WriteLine("Content-Type: text/plain");
-                        writer.WriteLine("Content-Length: "+info.Length);
-                        writer.WriteLine("");
-                        writer.Write(info);
-                        writer.Flush();
-                    }
-                    else if (path == "/log")
-                    {
-                        writer.WriteLine("Content-Type: text/plain");
-                        writer.WriteLine("Content-Length: " + Log.content.Length);
-                        writer.WriteLine("");
-                        writer.Write(Log.content);
-                        writer.Flush();
-                    }
-                    else if (path == "/recover_pass")
-                    {
-                        Computer.RecoverAdminPass();
-                        writer.WriteLine("Content-Type: text/plain");
-                        writer.WriteLine("Content-Length: 0");
-                        writer.WriteLine("");
-                        writer.Flush();
-                    }
-                    else if (path == "/test")
-                    {
-                        writer.WriteLine("Content-Type: text/plain");
-                        string s = "";
-                        s += "IP: " + remoteIpEndPoint.Address.ToString() + "\n";
-                        s += "Port: " + remoteIpEndPoint.Port + "\n";
-                        foreach (string h in headers)
-                            s += h + "\n";
-                        writer.WriteLine("Content-Length: " + s.Length);
-                        writer.WriteLine("");
-                        writer.Write(s);
-                        writer.Flush();
-                    }
-                    else
-                    {
-                        // unknown path
-                        writer.WriteLine("Content-Length: 0");
-                        writer.WriteLine("");
-                        writer.Flush();
-                    }*/
+                    writer.Flush();
                 }
                 else
                 {
                     StreamWriter writer = new StreamWriter(clientStream);
                     writer.WriteLine("Unknown command");
                     writer.Flush();
-                }                
-                    
+                }
+                Console.Out.WriteLine("Close client");
                 tcpClient.Close();
             }
             catch (Exception e)
             {
+                Console.Out.WriteLine("Communication error with client: " + e.Message);
+                Console.Out.WriteLine(" Exception in: " + e.StackTrace);
                 //Log.log("Communicating with client", e);
                 try { tcpClient.Close(); }
                 catch (Exception e2) { }

@@ -1,0 +1,25 @@
+.documents {
+	border: 1px solid #C0C0C0;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+	padding: 5px;
+	background-color: white;
+}
+.documents.overview {
+	cursor: pointer;
+}
+.documents.overview:hover {
+	box-shadow: 0px 0px 4px 1px #C0C0C0;
+}
+.documents_details {
+	border: 1px solid #C0C0C0;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+	padding: 5px;
+	background-color: white;
+	box-shadow: 2px 2px 2px 0px #C0C0C0;
+}
+.documents_table>tbody>tr>td:nth-child(2) {
+	white-space: nowrap;
+	font-size: 9pt;
+}

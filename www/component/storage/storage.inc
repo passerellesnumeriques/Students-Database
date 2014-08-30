@@ -187,9 +187,14 @@ class storage extends Component {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 	}
 	
-	function joinRevision(&$q, $join_from, $join_key, $revision_alias) {
+	function joinRevision(&$q, $join_from, $join_key, $revision_alias = null) {
 		$q->join($join_from, "Storage", array($join_key=>"id"));
-		$q->field("Storage", "revision", $revision_alias);
+		if ($revision_alias <> null)
+			$q->field("Storage", "revision", $revision_alias);
+	}
+	
+	function convertTempFile($id, $type) {
+		SQLQuery::create()->bypassSecurity()->updateByKey("Storage", $id, array("type"=>$type,"expire"=>null));
 	}
 	
 	/** return true if this is the final call (either form sent, or no file uploaded), or false if this is an asynchronous upload */
@@ -199,7 +204,7 @@ class storage extends Component {
 		if ($fn) {
 			// AJAX call
 			$data = file_get_contents('php://input');
-			$id = $this->store_data("temp",$data, isset($headers['X_FILETYPE']) ? $headers['X_FILETYPE'] : null, time()+$expire_seconds);
+			$id = $this->store_data("temp",$data, isset($headers['X_FILETYPE']) ? $headers['X_FILETYPE'] : null, $expire_seconds);
 			if ($id == null) return true;
 			array_push($ids, $id);
 			array_push($names, $fn);

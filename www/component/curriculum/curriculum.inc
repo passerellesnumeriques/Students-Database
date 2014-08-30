@@ -8,10 +8,12 @@ class curriculum extends Component {
 		require_once("TeacherPeopleTypePlugin.inc");
 		require_once("CurriculumStudentsPlugin.inc");
 		require_once("TeacherAssignmentsPeopleProfilePagePlugin.inc");
+		require_once("CurriculumDocumentsPlugin.inc");
 		return array(
 			new TeacherPeopleTypePlugin(),
 			new CurriculumStudentsPlugin(),
-			new TeacherAssignmentsPeopleProfilePagePlugin()
+			new TeacherAssignmentsPeopleProfilePagePlugin(),
+			new CurriculumAttachedDocumentsPlugin()
 		);
 	}
 	

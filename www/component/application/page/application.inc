@@ -16,6 +16,16 @@ if (isset($c["north"]) && !empty($c["north"]))
 else
 	echo "null";
 ?>;
+window.top.php_session_cookie_name = <?php echo json_encode(ini_get("session.name"));?>;
+window.top.php_session_id = getCookie(window.top.php_session_cookie_name);
+window.top.php_server = new URL(location.href);
+window.top.php_server_port = window.top.php_server.port;
+window.top.php_server = window.top.php_server.host;
+window.top.pn_version = getCookie("pnversion");
+window.top.require("documents.js",function(){
+	window.top.pndocuments.connected_port = -1;
+	window.top.pndocuments.connect();
+});
 
 // load geographic information about local country
 setTimeout(function() {

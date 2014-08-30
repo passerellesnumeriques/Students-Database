@@ -142,6 +142,11 @@ class page_curriculum extends Page {
 		</style>
 		<div style="width:100%;height:100%;background-color:white;display:flex;flex-direction:column;">
 			<div class="page_title" style="flex:none">
+				<div style='float:right'>
+					<?php 
+					PNApplication::$instance->documents->insertDivForAttachedDocuments($this, "StudentBatch",null,$batch_id,"curriculum","medium","overview");
+					?>
+				</div>
 				<img src='/static/curriculum/curriculum_32.png'/>
 				Curriculum for Batch <span id='batch_name'><?php echo toHTML($batch_info["name"]);?></span><?php if ($period_id <> null) echo ", <span id='period_name'>".$single_period["name"]."</span>";?>
 				<?php if ($can_edit) {

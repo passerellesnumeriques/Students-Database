@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.text = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -41,14 +43,35 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
+            this.pictureBox1.UseWaitCursor = true;
+            // 
+            // progressBar
+            // 
+            this.progressBar.Location = new System.Drawing.Point(68, 41);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(336, 16);
+            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.progressBar.TabIndex = 1;
+            this.progressBar.Visible = false;
+            // 
+            // text
+            // 
+            this.text.AutoEllipsis = true;
+            this.text.Location = new System.Drawing.Point(68, 18);
+            this.text.Name = "text";
+            this.text.Size = new System.Drawing.Size(339, 16);
+            this.text.TabIndex = 2;
+            this.text.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // OperationWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(419, 113);
+            this.ClientSize = new System.Drawing.Size(419, 76);
             this.ControlBox = false;
+            this.Controls.Add(this.text);
+            this.Controls.Add(this.progressBar);
             this.Controls.Add(this.pictureBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.MaximizeBox = false;
@@ -70,5 +93,7 @@
         #endregion
 
         private System.Windows.Forms.PictureBox pictureBox1;
+        public System.Windows.Forms.ProgressBar progressBar;
+        public System.Windows.Forms.Label text;
     }
 }
