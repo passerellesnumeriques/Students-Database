@@ -9,6 +9,7 @@ $model->addTable("DocumentVersion")
 	->addForeignKey("document", "Document", true, false, true)
 	->addForeignKey("file", "Storage", true, false, false)
 	->addTimestamp("timestamp",false,false)
+	->addForeignKey("user", "Users", false, false, true)
 	;
 $model->addTable("AttachedDocument")
 	->addForeignKey("document", "Document", true, true, false, false, true)

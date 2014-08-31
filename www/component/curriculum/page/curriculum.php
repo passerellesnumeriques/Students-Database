@@ -144,7 +144,7 @@ class page_curriculum extends Page {
 			<div class="page_title" style="flex:none">
 				<div style='float:right'>
 					<?php 
-					PNApplication::$instance->documents->insertDivForAttachedDocuments($this, "StudentBatch",null,$batch_id,"curriculum","medium","overview");
+					PNApplication::$instance->documents->insertDivForAttachedDocuments($this, "StudentBatch",null,$batch_id,"curriculum","medium","top");
 					?>
 				</div>
 				<img src='/static/curriculum/curriculum_32.png'/>

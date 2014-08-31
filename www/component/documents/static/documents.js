@@ -46,21 +46,286 @@ window.top.pndocuments = {
 	},
 	connected_port: -1,
 	opener: null,
-	attachFiles: function(click_event, table, sub_model, key, type, docs_table) {
+	attachFiles: function(click_event, table, sub_model, key, type, onfileadded) {
 		var upl = new upload('/dynamic/documents/service/add_files?table='+table+(sub_model ? "&sub_model="+sub_model : "")+"&key="+encodeURIComponent(key)+"&type="+type, true, true);
 		upl.ondonefile = function(file, output, errors) {
 			if (output && output.length > 0)
-				for (var i = 0; i < output.length; ++i)
-					window.top.pndocuments.addDocumentToTable(docs_table, output[i].id, output[i].type, output[i].name, [output[i].version],true,true);
+				for (var i = 0; i < output.length; ++i) {
+					output[i].versions[0].people = window.top.my_people;
+					onfileadded(output[i]);
+				}
 		};
 		upl.addUploadPopup();
 		upl.openDialog(click_event);
 	},
-	addDocumentToTable: function(table, doc_id, doc_type, doc_name, doc_versions, can_write, can_remove) {
-		var tr = document.createElement("TR");
-		table.appendChild(tr);
-		var td;
+	download: function(storage_id, storage_revision, filename) {
+		var form = document.createElement("FORM");
+		var input;
+		form.action = "/dynamic/storage/service/get?id="+storage_id+(storage_revision?"&revision="+storage_revision:"");
+		form.method = 'POST';
+		form.appendChild(input = document.createElement("INPUT"));
+		input.type = 'hidden';
+		input.name = 'download';
+		input.value = filename;
+		if (window.top._download_form) window.top.document.body.removeChild(window.top._download_form);
+		if (window.top._download_frame) window.top.document.body.removeChild(window.top._download_frame);
+		var frame = window.top.document.createElement("IFRAME");
+		frame.style.position = "absolute";
+		frame.style.top = "-10000px";
+		frame.style.visibility = "hidden";
+		frame.name = "_download";
+		form.target = "_download";
+		window.top._download_frame = frame;
+		window.top._download_form = form;
+		window.top.document.body.appendChild(frame);
+		window.top.document.body.appendChild(form);
+		form.submit();
+		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The download will start soon...",[{action:"close"}],5000));
+	},
+	open: function(document_id, version_id, storage_id, storage_revision, filename, readonly) {
+		var locker = lock_screen(null, "Opening document...");
+		window.top.pndocuments.connect(function(port) {
+			if (port == -1) {
+				unlock_screen(locker);
+				error_dialog("You need the software <b>PN Document Opener</b> to open or edit files.<br/>You can download this software <a href='/dynamic/documents/page/download_opener' target='_blank'>here</a><br/><br/>If you already installed it, please launch it.<br/><br/>Without this software, you can still download and upload files.");
+				return;
+			}
+			window.top.pndocuments.opener.openDocument(document_id, version_id, storage_id, storage_revision, filename, readonly);
+			unlock_screen(locker);
+		});
+	}
+};
+window.top.require("upload.js");
+}
+
+function AttachedDocuments(container, table, sub_model, key, type, can_add_remove, can_edit, title_size, orientation) {
+	if (typeof container == 'string') container = document.getElementById(container);
+	this.table = table;
+	this.sub_model = sub_model;
+	this.key = key;
+	this.type = type;
+	this.can_add_remove = can_add_remove;
+	this.can_edit = can_edit;
+	this._init(container);
+	switch (title_size) {
+	case "small":
+		this.title_icon.src = "/static/documents/documents_16.png";
+		this.title_text.style.fontSize = "10pt";
+		this.title_div.style.padding = "2px";
+		break;
+	case "medium":
+		this.title_icon.src = "/static/documents/documents_24.png";
+		this.title_text.style.fontSize = "14pt";
+		this.title_div.style.padding = "5px";
+		break;
+	case "large":
+		this.title_icon.src = "/static/documents/documents_32.png";
+		this.title_text.style.fontSize = "16pt";
+		this.title_div.style.padding = "5px";
+		break;
+	}
+	switch (orientation) {
+	case "top":
+		setBorderRadius(this.title_div,5,5,5,5,0,0,0,0);
+		break;
+	case "bottom":
+		setBorderRadius(this.title_div,0,0,0,0,5,5,5,5);
+		break;
+	case "full":
+		setBorderRadius(this.title_div,5,5,5,5,0,0,0,0);
+		break;
+	}
+	container.appendChild(this.title_div);
+	if (orientation != "full") {
+		addClassName(this.title_div, "overview");
+		this.docs_div.style.display = "none";
+		document.body.appendChild(this.docs_div);
+		var t=this;
+		this.title_div.onclick = function() {
+			if (this._anim1) animation.stop(this._anim1);
+			if (this._anim2) animation.stop(this._anim2);
+			this._anim1 = null;
+			this._anim2 = null;
+			if (!this._opened) {
+				t.docs_div.style.width = "";
+				t.docs_div.style.height = "";
+				t.docs_div.style.position = "absolute";
+				t.docs_div.style.display = "block";
+				t.docs_div.style.overflow = "";
+				if (getWidth(t.docs_div) < getWidth(this)) setWidth(t.docs_div, getWidth(this));
+				var h = t.docs_div.offsetHeight;
+				t.docs_div.style.height = "0px";
+				t.docs_div.style.overflow = "hidden";
+				t.docs_div.style.top = (absoluteTop(this)+this.offsetHeight-1)+"px";
+				t.docs_div.style.left = (absoluteLeft(this)+this.offsetWidth-getWidth(t.docs_div))+"px";
+				this._anim1 = animation.create(t.docs_div,0,h,500,function(value,element){
+					element.style.height = Math.floor(value)+"px";
+				});
+				this._anim2 = animation.fadeIn(t.docs_div,500);
+				this._opened = true;
+			} else {
+				this._anim1 = animation.create(t.docs_div,getHeight(t.docs_div),0,500,function(value,element){
+					element.style.height = Math.floor(value)+"px";
+				});
+				this._anim2 = animation.fadeOut(t.docs_div,500);
+				this._opened = false;
+			}
+		};
+		this._resizeDocList = function() {
+			if (!this.title_div._opened) return;
+			this.docs_div.style.width = "";
+			this.docs_div.style.height = "";
+			if (getWidth(this.docs_div) < getWidth(this.title_div)) setWidth(this.docs_div, getWidth(this.title_div));
+			this.docs_div.style.top = (absoluteTop(this.title_div)+this.title_div.offsetHeight-1)+"px";
+			this.docs_div.style.left = (absoluteLeft(this.title_div)+this.title_div.offsetWidth-getWidth(this.docs_div))+"px";
+		};
+	} else {
+		container.appendChild(this.docs_table);
+	}
+}
+AttachedDocuments.prototype = {
+	table: null, sub_model: null, key: null, type: null,
+	can_add_remove: false, can_edit: false,
+	title_div: null, title_icon: null, title_text: null,
+	docs_div: null,
+	docs_table: null, docs_tbody: null,
+	documents: [],
+	addDocument: function(doc) {
+		this.documents.push(doc);
+		this.title_text.innerHTML = (this.documents.length)+" document"+(this.documents.length>1?"s":"");
+		var tr,td,tr2;
+		this.docs_tbody.appendChild(tr = document.createElement("TR"));
+		this.docs_tbody.appendChild(tr2 = document.createElement("TR"));
+		tr._doc = doc;
 		tr.appendChild(td = document.createElement("TD"));
+		td.innerHTML = "<img src='/static/documents/files/"+this.getDocumentIcon(doc.versions[0].type,doc.name)+"'/>";
+		tr.appendChild(td = document.createElement("TD"));
+		td.className = "document_name";
+		var link = document.createElement("A");
+		link.className = "black_link";
+		link.href = "#";
+		link.appendChild(document.createTextNode(doc.name));
+		var t=this;
+		link.onclick = function() {
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				menu.addIconItem(theme.icons_16.see, "Open file (read-only)", function() {
+					window.top.pndocuments.open(doc.id, doc.versions[0].id, doc.versions[0].storage_id,doc.versions[0].revision,doc.name,true);
+				});
+				menu.addIconItem("/static/storage/download.png", "Download file", function() {
+					window.top.pndocuments.download(doc.versions[0].storage_id,doc.versions[0].revision,doc.name);
+				});
+				if (t.can_edit)
+					menu.addIconItem(theme.icons_16.edit, "Edit file", function() {
+						window.top.pndocuments.open(doc.id, doc.versions[0].id, doc.versions[0].storage_id,doc.versions[0].revision,doc.name,false);
+					});
+				if (t.can_add_remove)
+					menu.addIconItem(theme.icons_16.remove, "Remove file", function() {
+						// TODO
+					});
+				// TODO history/versions
+				menu.showBelowElement(link);
+			});
+		};
+		td.appendChild(link);
+		tr2.appendChild(td = document.createElement("TD"));
+		tr2.appendChild(td = document.createElement("TD"));
+		td.className = "document_info";
+		this._fillDocInfo(doc,td);
+		this._resizeDocList();
+	},
+	_fillDocInfo: function(doc,td) {
+		td.removeAllChildren();
+		if (doc.lock == null) {
+			removeClassName(td, "editing");
+			td.appendChild(document.createTextNode("Last version by "+doc.versions[0].people.first_name+" "+doc.versions[0].people.last_name+" on "+new Date(doc.versions[0].time*1000).toLocaleString()));
+		} else {
+			addClassName(td, "editing");
+			td.appendChild(document.createTextNode("Currently edited by "+doc.lock));
+		}
+	},
+	_loadDocuments: function() {
+		setOpacity(this.title_div, 0.75);
+		this.title_text.innerHTML = "<span style='color:#808080;font-style:italic'>Loading...</span>";
+		var t=this;
+		service.json("documents","get_documents_list",{table:this.table,sub_model:this.sub_model,key:this.key,type:this.type},function(res) {
+			setOpacity(t.title_div,1);
+			if (!res || res.length == 0)
+				t.title_text.innerHTML = "No document";
+			else
+				for (var i = 0; i < res.length; ++i)
+					t.addDocument(res[i]);
+			setTimeout(function(){t._updateDocuments();},15000);
+		});
+	},
+	_updateDocuments: function() {
+		if (window.closing || !this.docs_table || !this.docs_table.parentNode) return;
+		var t=this;
+		service.json("documents","get_documents_list",{table:this.table,sub_model:this.sub_model,key:this.key,type:this.type},function(res) {
+			for (var i = 0; i < t.docs_tbody.childNodes.length; i += 2) {
+				var tr = t.docs_tbody.childNodes[i];
+				var tr2 = t.docs_tbody.childNodes[i+1];
+				var doc = null;
+				for (var j = 0; j < res.length; ++j)
+					if (res[j].id == tr._doc.id) { doc = res[j]; res.splice(j,1); break; }
+				if (doc == null) {
+					// document was removed
+					t.docs_tbody.removeChild(tr);
+					t.docs_tbody.removeChild(tr2);
+					i -= 2;
+					t.documents.remove(tr._doc);
+					tr._doc = null;
+					continue;
+				}
+				if (doc.versions[0].time != tr._doc.versions[0].time || doc.lock != tr._doc.lock) {
+					// last version changed
+					var td = tr2.childNodes[1];
+					t._fillDocInfo(doc,td);
+				}
+				tr._doc.versions = doc.versions;
+				tr._doc.lock = doc.lock;
+			}
+			// add new documents
+			for (var i = 0; i < res.length; ++i)
+				t.addDocument(res[i]);
+			// update title
+			if (t.documents.length == 0)
+				t.title_text.innerHTML = "No document";
+			else
+				t.title_text.innerHTML = t.documents.length+" document"+(t.documents.length>1?"s":"");
+			setTimeout(function(){t._updateDocuments();},15000);
+		});
+	},
+	_resizeDocList: function() {},
+	_init: function() {
+		theme.css("documents.css");
+		this.title_div = document.createElement("DIV");
+		this.title_div.className = "documents_title";
+		this.title_icon = document.createElement("IMG");
+		this.title_text = document.createElement("SPAN");
+		this.title_div.appendChild(this.title_icon);
+		this.title_div.appendChild(this.title_text);
+		this.docs_div = document.createElement("DIV");
+		this.docs_div.className = "documents_details";
+		this.docs_table = document.createElement("TABLE");
+		this.docs_tbody = document.createElement("TBODY");
+		this.docs_table.appendChild(this.docs_tbody);
+		this.docs_table.className = "documents_table";
+		this.docs_div.appendChild(this.docs_table);
+		if (this.can_add_remove) {
+			var button = document.createElement("BUTTON");
+			button.className = "action green";
+			button.innerHTML = "Add Files...";
+			var t=this;
+			button.onclick = function(ev) {
+				window.top.pndocuments.attachFiles(ev,t.table,t.sub_model,t.key,t.type,function(doc){ t.addDocument(doc); });
+			};
+			this.docs_div.appendChild(button);
+		}
+		this._loadDocuments();
+	},
+	getDocumentIcon: function(doc_type, doc_name) {
+		if (doc_type == null) doc_type = "";
 		var icon = "file.png";
 		if (doc_type.startsWith("image/"))
 			icon = "picture.png";
@@ -102,74 +367,6 @@ window.top.pndocuments = {
 			else if (ext == "exe")
 				icon = "exe.gif";
 		}
-		td.innerHTML = "<img src='/static/documents/files/"+icon+"'/>";
-		tr.appendChild(td = document.createElement("TD"));
-		var link = document.createElement("A");
-		link.className = "black_link";
-		link.href = "#";
-		link.appendChild(document.createTextNode(doc_name));
-		link.onclick = function() {
-			require("context_menu.js",function() {
-				var menu = new context_menu();
-				menu.addIconItem(theme.icons_16.see, "Open file (read-only)", function() {
-					window.top.pndocuments.open(doc_id, doc_versions[0].id, doc_versions[0].file,doc_versions[0].revision,doc_name,true);
-				});
-				menu.addIconItem("/static/storage/download.png", "Download file", function() {
-					window.top.pndocuments.download(doc_versions[0].file,doc_versions[0].revision,doc_name);
-				});
-				if (can_write)
-					menu.addIconItem(theme.icons_16.edit, "Edit file", function() {
-						window.top.pndocuments.open(doc_id, doc_versions[0].id, doc_versions[0].file,doc_versions[0].revision,doc_name,false);
-					});
-				if (can_remove)
-					menu.addIconItem(theme.icons_16.remove, "Remove file", function() {
-						// TODO
-					});
-				// TODO history/versions
-				menu.showBelowElement(link);
-			});
-		};
-		td.appendChild(link);
-		var elem = table.ownerDocument.getElementById(table.getAttribute("elem_id"));
-		if (elem.resize)
-			elem.resize();
-	},
-	download: function(storage_id, storage_revision, filename) {
-		var form = document.createElement("FORM");
-		var input;
-		form.action = "/dynamic/storage/service/get?id="+storage_id+(storage_revision?"&revision="+storage_revision:"");
-		form.method = 'POST';
-		form.appendChild(input = document.createElement("INPUT"));
-		input.type = 'hidden';
-		input.name = 'download';
-		input.value = filename;
-		if (window.top._download_form) window.top.document.body.removeChild(window.top._download_form);
-		if (window.top._download_frame) window.top.document.body.removeChild(window.top._download_frame);
-		var frame = window.top.document.createElement("IFRAME");
-		frame.style.position = "absolute";
-		frame.style.top = "-10000px";
-		frame.style.visibility = "hidden";
-		frame.name = "_download";
-		form.target = "_download";
-		window.top._download_frame = frame;
-		window.top._download_form = form;
-		window.top.document.body.appendChild(frame);
-		window.top.document.body.appendChild(form);
-		form.submit();
-		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The download will start soon...",[{action:"close"}],5000));
-	},
-	open: function(document_id, version_id, storage_id, storage_revision, filename, readonly) {
-		var locker = lock_screen(null, "Opening document...");
-		window.top.pndocuments.connect(function(port) {
-			if (port == -1) {
-				unlock_screen(locker);
-				error_dialog("You need the software <b>PN Document Opener</b> to open or edit files.<br/>You can download it <a href='/dynamic/documents/page/download_opener' target='_blank'>here</a><br/>If you already installed it, it is not running, so please launch it.");
-				return;
-			}
-			window.top.pndocuments.opener.openDocument(document_id, version_id, storage_id, storage_revision, filename, readonly);
-			unlock_screen(locker);
-		});
+		return icon;
 	}
 };
-window.top.require("upload.js");
-}

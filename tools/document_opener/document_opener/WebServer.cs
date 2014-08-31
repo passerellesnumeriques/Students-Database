@@ -53,7 +53,7 @@ namespace document_opener
                     Console.Out.WriteLine("Waiting for clients...");
                     //blocks until a client has connected to the server
                     TcpClient client = this.tcpListener.AcceptTcpClient();
-                    Console.Out.WriteLine("New client: " + client.Client.ToString());
+                    Console.Out.WriteLine("New client: " + client.Client.RemoteEndPoint.ToString());
 
                     //create a thread to handle communication 
                     //with connected client
@@ -61,7 +61,7 @@ namespace document_opener
                     clientThread.Name = "HTTP Client";
                     clientThread.Start(client);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     //Log.log("Accepting clients", e);
                 }
@@ -74,9 +74,8 @@ namespace document_opener
             try
             {
                 IPEndPoint remoteIpEndPoint = tcpClient.Client.RemoteEndPoint as IPEndPoint;
-                Console.Out.WriteLine("Client end point: " + remoteIpEndPoint.ToString());
                 if (remoteIpEndPoint.Address.ToString() != "127.0.0.1") {
-                    Console.Out.WriteLine("Invalid client address: " + remoteIpEndPoint.Address.ToString());
+                    Console.Out.WriteLine("Rejected client address: " + remoteIpEndPoint.Address.ToString());
                     tcpClient.Close();
                     return;
                 }
@@ -87,7 +86,6 @@ namespace document_opener
                 string line = reader.ReadLine();
                 if (line.StartsWith("GET "))
                 {
-                    Console.Out.WriteLine("GET received: "+line);
                     int i = line.IndexOf(" ", 4);
                     string path = line.Substring(4, i - 4);
                     LinkedList<string> headers = new LinkedList<string>();
@@ -116,7 +114,6 @@ namespace document_opener
                     }
                     writer.Flush();
                 } else if (line.StartsWith("POST ")) {
-                    Console.Out.WriteLine("POST received: " + line);
                     int i = line.IndexOf(" ", 5);
                     string path = line.Substring(5, i - 5);
                     LinkedList<string> headers = new LinkedList<string>();
@@ -142,7 +139,6 @@ namespace document_opener
                         reader.Read(buffer, 0, body_size);
                         body = new string(buffer);
                     }
-                    Console.Out.WriteLine("Body: "+body);
                     string[] ss = body.Split(new char[] { '&' });
                     Dictionary<string, string> parameters = new Dictionary<string, string>();
                     for (i = 0; i < ss.Length; ++i)
@@ -172,13 +168,10 @@ namespace document_opener
                 Console.Out.WriteLine("Close client");
                 tcpClient.Close();
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.Out.WriteLine("Communication error with client: " + e.Message);
-                Console.Out.WriteLine(" Exception in: " + e.StackTrace);
-                //Log.log("Communicating with client", e);
                 try { tcpClient.Close(); }
-                catch (Exception e2) { }
+                catch (Exception) { }
             }
         }
     }
