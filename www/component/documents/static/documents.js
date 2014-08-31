@@ -18,6 +18,11 @@ window.top.pndocuments = {
 				for (var j = 0; j < scripts.length; ++j)
 					if (scripts[j]._port != this._port) head.removeChild(scripts[j]);
 				window.top.pndocuments.opener = new window.top.PNDocumentOpener(this._port, window.top.php_server, window.top.php_server_port, window.top.php_session_cookie_name, window.top.php_session_id, window.top.pn_version);
+				if (window.top.pndocuments.opener.version != window.top.pndocuments._opener_latest_version) {
+					window.top.pndocuments._connected_port = -1;
+					if (listener) listener(-1);
+					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+				}
 				this._loaded = true;
 				if (listener) listener(this._port);
 			};
@@ -46,6 +51,9 @@ window.top.pndocuments = {
 	},
 	connected_port: -1,
 	opener: null,
+	updateOpener: function() {
+		window.top.pndocuments.opener.update();
+	},
 	attachFiles: function(click_event, table, sub_model, key, type, onfileadded) {
 		var upl = new upload('/dynamic/documents/service/add_files?table='+table+(sub_model ? "&sub_model="+sub_model : "")+"&key="+encodeURIComponent(key)+"&type="+type, true, true);
 		upl.ondonefile = function(file, output, errors) {
@@ -87,7 +95,7 @@ window.top.pndocuments = {
 		window.top.pndocuments.connect(function(port) {
 			if (port == -1) {
 				unlock_screen(locker);
-				error_dialog("You need the software <b>PN Document Opener</b> to open or edit files.<br/>You can download this software <a href='/dynamic/documents/page/download_opener' target='_blank'>here</a><br/><br/>If you already installed it, please launch it.<br/><br/>Without this software, you can still download and upload files.");
+				error_dialog("You need the software <b>PN Document Opener</b> to open or edit files.<br/>You can download this software <a href='/dynamic/documents/service/download_document_opener' target='_blank'>here</a><br/><br/>If you already installed it, please launch it.<br/><br/>Without this software, you can still download and upload files.");
 				return;
 			}
 			window.top.pndocuments.opener.openDocument(document_id, version_id, storage_id, storage_revision, filename, readonly);

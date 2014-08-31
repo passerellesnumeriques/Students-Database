@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "document_opener", "document_opener.csproj", "{2766A507-0079-4D88-BED1-B9939A64CD0C}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SetupPNDocumentOpener", "..\SetupPNDocumentOpener\SetupPNDocumentOpener.vdproj", "{ECC646BE-8DCE-4F7F-B66D-53EF840ED983}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,8 @@ Global
 		{2766A507-0079-4D88-BED1-B9939A64CD0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2766A507-0079-4D88-BED1-B9939A64CD0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2766A507-0079-4D88-BED1-B9939A64CD0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECC646BE-8DCE-4F7F-B66D-53EF840ED983}.Debug|Any CPU.ActiveCfg = Debug
+		{ECC646BE-8DCE-4F7F-B66D-53EF840ED983}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

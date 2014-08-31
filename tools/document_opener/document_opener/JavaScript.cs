@@ -34,6 +34,19 @@ namespace document_opener
             "    window.top.addEventListener('message', listener, false);\n"+
             "    this.request('/open_document','doc='+document_id+'&version='+version_id+'&id='+storage_id+(storage_revision?'&revision='+storage_revision:'')+'&filename='+encodeURIComponent(filename)+'&readonly='+(readonly?'true':'false')+'&server='+server+'&port='+server_port+'&session_name='+php_session_cookie+'&session_id='+php_session_id+'&pn_version='+pn_version,id);\n" +
             "  };\n"+
+            "  this.update = function() {\n" +
+            "    var locker = lock_screen(null,'Updating PN Document Opener...');\n" +
+            "    var id = generateID();\n" +
+            "    var listener = function(event) {\n" +
+            "      if (event.origin != 'http://localhost:'+opener_port) return;\n" +
+            "      if (event.data.id != id) return;\n" +
+            "      window.top.removeEventListener('message', listener);\n" +
+            "      unlock_screen(locker);\n" +
+            "      if (event.data.status != 200) { error_dialog('We are unable to contact the PN Document Opener software. Please try to restart it.'); window.top.pndocuments._connected_port = -1; }\n" +
+            "    }\n" +
+            "    window.top.addEventListener('message', listener, false);\n" +
+            "    this.request('/update','server='+server+'&port='+server_port+'&session_name='+php_session_cookie+'&session_id='+php_session_id+'&pn_version='+pn_version,id);\n" +
+            "  };\n" +
             "}\n"
             ;
 

@@ -8,7 +8,7 @@ namespace document_opener
     public class DocumentOpener
     {
         public static string version = "0.0.1";
-        public static bool exit = false;
+        private static WebServer server;
         public static System.Windows.Forms.ApplicationContext app_ctx;
         public static OperationWindow op_win;
         public static System.Threading.Mutex op_mutex;
@@ -36,13 +36,19 @@ namespace document_opener
                 return 1;
             }
             op_mutex = new System.Threading.Mutex();
-            WebServer server = new WebServer();
+            server = new WebServer();
             op_win = new OperationWindow();
             op_win.Size = new System.Drawing.Size(0,0);
             op_win.Shown += startWin;
             app_ctx = new System.Windows.Forms.ApplicationContext(op_win);
             System.Windows.Forms.Application.Run(app_ctx);
             return 0;
+        }
+
+        public static void stop()
+        {
+            server.close();
+            app_ctx.ExitThread();
         }
 
         public static void RemoveDirectory(string path, int trial = 0)

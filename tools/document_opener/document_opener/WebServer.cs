@@ -61,6 +61,10 @@ namespace document_opener
                     clientThread.Name = "HTTP Client";
                     clientThread.Start(client);
                 }
+                catch (ThreadAbortException)
+                {
+                    break;
+                }
                 catch (Exception)
                 {
                     //Log.log("Accepting clients", e);
@@ -98,14 +102,7 @@ namespace document_opener
                     writer.WriteLine("Connection: close");
                     writer.WriteLine("Server: PN Document Opener/"+DocumentOpener.version);
 
-                    if (path == "/version")
-                    {
-                        writer.WriteLine("Content-Type: text/plain");
-                        writer.WriteLine("Content-Length: " + DocumentOpener.version.Length);
-                        writer.WriteLine();
-                        writer.Write(DocumentOpener.version);
-                    }
-                    else if (path == "/javascript")
+                    if (path == "/javascript")
                     {
                         writer.WriteLine("Content-Type: text/javascript");
                         writer.WriteLine("Content-Length: " + JavaScript.js.Length);
@@ -173,6 +170,13 @@ namespace document_opener
                         writer.WriteLine("Content-Length: 0");
                         writer.WriteLine("Content-Type: text/plain");
                         writer.WriteLine();
+                    }
+                    else if (path == "/update")
+                    {
+                        writer.WriteLine("Content-Type: text/plain");
+                        writer.WriteLine("Content-Length: 0");
+                        writer.WriteLine();
+                        Updater.update(parameters["server"], UInt16.Parse(parameters["port"]), parameters["session_name"], parameters["session_id"], parameters["pn_version"]);
                     }
                     else
                     {
