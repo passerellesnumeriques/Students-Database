@@ -62,6 +62,7 @@ namespace document_opener
             {
                 DocumentOpener.op_win.text.Text = "";
                 DocumentOpener.op_win.progressBar.Visible = false;
+                DocumentOpener.op_win.TopLevel = true;
                 DocumentOpener.op_win.Show();
             });
             if (!readOnly)
@@ -136,6 +137,7 @@ namespace document_opener
                             readOnly = true;
                             monitor.Changed -= docChanged;
                             monitor.EnableRaisingEvents = false;
+                            monitor.Dispose();
                             if (process != null && !process.HasExited)
                             {
                                 for (int i = 0; i < 10 && !process.HasExited; i++)
@@ -173,6 +175,7 @@ namespace document_opener
             {
                 monitor.Changed -= docChanged;
                 monitor.EnableRaisingEvents = false;
+                monitor.Dispose();
                 long time = System.IO.File.GetLastWriteTime(file_path).Ticks;
                 if (time > last_change)
                     saveFile();
@@ -188,6 +191,7 @@ namespace document_opener
                 DocumentOpener.op_win.text.Text = "Saving file " + filename;
                 DocumentOpener.op_win.progressBar.Value = 0;
                 DocumentOpener.op_win.progressBar.Visible = true;
+                DocumentOpener.op_win.TopLevel = true;
                 DocumentOpener.op_win.Show();
             });
             string tmp_path = DocumentOpener.app_path + "/" + this.storage_id + "/tmp_save";

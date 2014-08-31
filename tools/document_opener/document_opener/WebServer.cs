@@ -96,7 +96,7 @@ namespace document_opener
                     StreamWriter writer = new StreamWriter(clientStream);
                     writer.WriteLine("HTTP/1.1 200 OK");
                     writer.WriteLine("Connection: close");
-                    writer.WriteLine("Content-Transfer-Encoding: 8bit");
+                    writer.WriteLine("Server: PN Document Opener/"+DocumentOpener.version);
 
                     if (path == "/version")
                     {
@@ -111,6 +111,19 @@ namespace document_opener
                         writer.WriteLine("Content-Length: " + JavaScript.js.Length);
                         writer.WriteLine();
                         writer.Write(JavaScript.js);
+                    }
+                    else if (path == "/frame")
+                    {
+                        writer.WriteLine("Content-Type: text/html");
+                        writer.WriteLine("Content-Length: " + JavaScript.frame.Length);
+                        writer.WriteLine();
+                        writer.Write(JavaScript.frame);
+                    }
+                    else
+                    {
+                        writer.WriteLine("Content-Length: 0");
+                        writer.WriteLine("Content-Type: text/plain");
+                        writer.WriteLine();
                     }
                     writer.Flush();
                 } else if (line.StartsWith("POST ")) {
@@ -152,10 +165,20 @@ namespace document_opener
                     StreamWriter writer = new StreamWriter(clientStream);
                     writer.WriteLine("HTTP/1.1 200 OK");
                     writer.WriteLine("Connection: close");
-                    writer.WriteLine("Content-Transfer-Encoding: 8bit");
-                    if (path == "/open_document") {
+                    writer.WriteLine("Server: PN Document Opener/" + DocumentOpener.version);
+                    if (path == "/open_document")
+                    {
                         Console.Out.WriteLine("Open Document");
                         new Document(parameters["server"], UInt16.Parse(parameters["port"]), parameters["session_name"], parameters["session_id"], parameters["pn_version"], parameters["doc"], parameters["version"], parameters["id"], parameters.ContainsKey("revision") ? parameters["revision"] : null, parameters["filename"], parameters["readonly"] != "false" ? true : false);
+                        writer.WriteLine("Content-Length: 0");
+                        writer.WriteLine("Content-Type: text/plain");
+                        writer.WriteLine();
+                    }
+                    else
+                    {
+                        writer.WriteLine("Content-Length: 0");
+                        writer.WriteLine("Content-Type: text/plain");
+                        writer.WriteLine();
                     }
                     writer.Flush();
                 }
