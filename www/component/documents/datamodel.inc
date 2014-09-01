@@ -7,7 +7,7 @@ $model->addTable("Document")
 $model->addTable("DocumentVersion")
 	->addPrimaryKey("id")
 	->addForeignKey("document", "Document", true, false, true)
-	->addForeignKey("file", "Storage", true, false, false)
+	->addForeignKey("file", "Storage", true, true, false)
 	->addTimestamp("timestamp",false,false)
 	->addForeignKey("user", "Users", false, false, true)
 	;

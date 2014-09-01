@@ -527,6 +527,7 @@ if (typeof listenEvent != 'undefined') {
 var _layout_add_css = window.addStylesheet;
 window.addStylesheet = function(url, onload) {
 	_layout_add_css(url, function() {
+		if (!document.body || window.closing) return;
 		layout.invalidate(document.body);
 		if (onload) onload();
 	});

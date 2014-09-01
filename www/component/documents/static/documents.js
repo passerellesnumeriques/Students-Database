@@ -66,6 +66,27 @@ window.top.pndocuments = {
 		upl.addUploadPopup();
 		upl.openDialog(click_event);
 	},
+	uploadNewVersion: function(click_event, document_id, ondone) {
+		service.json("documents","lock?id="+document_id,null,function(res) {
+			if (!res) return;
+			if (typeof res.locked != 'undefined') {
+				error_dialog("This file is currently edited by "+res.locked+".");
+				return;
+			}
+			var upl = new upload("/dynamic/documents/service/save_file?id="+document_id, false, true);
+			upl.ondonefile = function(file, output, errors) {
+				if (output != "OK") {
+					window.top.status_manager.add_status(new window.top.StatusMessageError(null, output, 10000));
+					return;
+				}
+				service.json("documents","unlock?id="+document_id,null,function(res){
+					if (ondone) ondone();
+				});
+			};
+			upl.addUploadPopup();
+			upl.openDialog(click_event);
+		});
+	},
 	download: function(storage_id, storage_revision, filename) {
 		var form = document.createElement("FORM");
 		var input;
@@ -220,16 +241,27 @@ AttachedDocuments.prototype = {
 				menu.addIconItem(theme.icons_16.see, "Open file (read-only)", function() {
 					window.top.pndocuments.open(doc.id, doc.versions[0].id, doc.versions[0].storage_id,doc.versions[0].revision,doc.name,true);
 				});
-				menu.addIconItem("/static/storage/download.png", "Download file", function() {
-					window.top.pndocuments.download(doc.versions[0].storage_id,doc.versions[0].revision,doc.name);
-				});
 				if (t.can_edit)
 					menu.addIconItem(theme.icons_16.edit, "Edit file", function() {
 						window.top.pndocuments.open(doc.id, doc.versions[0].id, doc.versions[0].storage_id,doc.versions[0].revision,doc.name,false);
 					});
+				menu.addIconItem("/static/storage/download.png", "Download file", function() {
+					window.top.pndocuments.download(doc.versions[0].storage_id,doc.versions[0].revision,doc.name);
+				});
+				if (t.can_edit)
+					menu.addIconItem("/static/storage/upload.png", "Upload new version", function(ev) {
+						window.top.pndocuments.uploadNewVersion(ev, doc.id, function() {
+							t._updateDocuments(true);
+						});
+					});
 				if (t.can_add_remove)
 					menu.addIconItem(theme.icons_16.remove, "Remove file", function() {
-						// TODO
+						confirm_dialog("Are you sure to remove file "+doc.name+" ?", function(yes) {
+							if (!yes) return;
+							service.json("documents","remove",{id:doc.id},function(res) {
+								if (res) t.removeDocument(doc);
+							});
+						});
 					});
 				// TODO history/versions
 				menu.showBelowElement(link);
@@ -240,6 +272,24 @@ AttachedDocuments.prototype = {
 		tr2.appendChild(td = document.createElement("TD"));
 		td.className = "document_info";
 		this._fillDocInfo(doc,td);
+		this._resizeDocList();
+	},
+	removeDocument: function(doc) {
+		this.documents.remove(doc);
+		for (var i = 0; i < this.docs_tbody.childNodes.length; i += 2) {
+			var tr = this.docs_tbody.childNodes[i];
+			if (tr._doc.id == doc.id) {
+				var tr2 = this.docs_tbody.childNodes[i+1];
+				this.docs_tbody.removeChild(tr);
+				this.docs_tbody.removeChild(tr2);
+				tr._doc = null;
+			}
+		}
+		// update title
+		if (this.documents.length == 0)
+			this.title_text.innerHTML = "No document";
+		else
+			this.title_text.innerHTML = this.documents.length+" document"+(this.documents.length>1?"s":"");
 		this._resizeDocList();
 	},
 	_fillDocInfo: function(doc,td) {
@@ -266,10 +316,11 @@ AttachedDocuments.prototype = {
 			setTimeout(function(){t._updateDocuments();},15000);
 		});
 	},
-	_updateDocuments: function() {
+	_updateDocuments: function(custom_update) {
 		if (window.closing || !this.docs_table || !this.docs_table.parentNode) return;
 		var t=this;
 		service.json("documents","get_documents_list",{table:this.table,sub_model:this.sub_model,key:this.key,type:this.type},function(res) {
+			var removed = [];
 			for (var i = 0; i < t.docs_tbody.childNodes.length; i += 2) {
 				var tr = t.docs_tbody.childNodes[i];
 				var tr2 = t.docs_tbody.childNodes[i+1];
@@ -278,11 +329,7 @@ AttachedDocuments.prototype = {
 					if (res[j].id == tr._doc.id) { doc = res[j]; res.splice(j,1); break; }
 				if (doc == null) {
 					// document was removed
-					t.docs_tbody.removeChild(tr);
-					t.docs_tbody.removeChild(tr2);
-					i -= 2;
-					t.documents.remove(tr._doc);
-					tr._doc = null;
+					removed.push(tr._doc);
 					continue;
 				}
 				if (doc.versions[0].time != tr._doc.versions[0].time || doc.lock != tr._doc.lock) {
@@ -301,7 +348,10 @@ AttachedDocuments.prototype = {
 				t.title_text.innerHTML = "No document";
 			else
 				t.title_text.innerHTML = t.documents.length+" document"+(t.documents.length>1?"s":"");
-			setTimeout(function(){t._updateDocuments();},15000);
+			for (var i = 0; i < removed.length; ++i)
+				t.removeDocument(removed[i]);
+			if (!custom_update)
+				setTimeout(function(){t._updateDocuments();},15000);
 		});
 	},
 	_resizeDocList: function() {},

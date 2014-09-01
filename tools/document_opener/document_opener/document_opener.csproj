@@ -61,7 +61,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Document.cs" />
+    <Compile Include="DocumentDownload.cs" />
+    <Compile Include="DocumentLock.cs" />
+    <Compile Include="DocumentLockUpdater.cs" />
     <Compile Include="DocumentOpener.cs" />
+    <Compile Include="DocumentUpload.cs" />
     <Compile Include="JavaScript.cs" />
     <Compile Include="OperationWindow.cs">
       <SubType>Form</SubType>
@@ -75,6 +79,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ServerRequest.cs" />
     <Compile Include="Updater.cs" />
     <Compile Include="WebServer.cs" />
   </ItemGroup>

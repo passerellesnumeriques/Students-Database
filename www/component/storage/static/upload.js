@@ -215,7 +215,7 @@ function upload(target, multiple, async) {
 				var output = null;
 				if (xhr.status != 200)
 					errors.push("Error returned by the server: "+xhr.status+" "+xhr.statusText);
-				else {
+				else if (xhr.getResponseHeader("Content-Type").startsWith("application/json")) {
 					try {
 						var json = eval("("+xhr.responseText+")");
 						if (json.errors)
@@ -225,7 +225,8 @@ function upload(target, multiple, async) {
 					} catch (e) {
 						errors.push("Invalid response: "+e+"<br/>"+xhr.responseText);
 					}
-				}
+				} else
+					output = xhr.responseText;
 				for (var j = 0; j < errors.length; ++j)
 					window.top.status_manager.add_status(new window.top.StatusMessageError(null, errors[j], 10000));
 				received.push(output);

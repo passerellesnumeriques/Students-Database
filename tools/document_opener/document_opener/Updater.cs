@@ -41,13 +41,13 @@ namespace document_opener
     {
         public DownloadUpdate(string host, int port, string session_name, string session_id, string pn_version)
         {
-            if (System.IO.File.Exists(DocumentOpener.app_path + "/setup.msi"))
-                System.IO.File.Delete(DocumentOpener.app_path + "/setup.msi");
-            System.IO.File.Create(DocumentOpener.app_path + "/setup.msi").Close();
+            if (System.IO.File.Exists(DocumentOpener.app_path + "/setup.exe"))
+                System.IO.File.Delete(DocumentOpener.app_path + "/setup.exe");
+            System.IO.File.Create(DocumentOpener.app_path + "/setup.exe").Close();
 
             try
             {
-                this.file = System.IO.File.OpenWrite(DocumentOpener.app_path + "/setup.msi");
+                this.file = System.IO.File.OpenWrite(DocumentOpener.app_path + "/setup.exe");
             }
             catch (Exception e)
             {
@@ -66,22 +66,13 @@ namespace document_opener
                 download_succeed,
                 download_failed
             );
-            while (error == null)
-            {
-                if (!launched)
-                    Thread.Sleep(250);
-                else
-                {
-                    Thread.Sleep(250);
-                    break;
-                }
-            }
+            while (error == null && !launched)
+                Thread.Sleep(250);
             request = null;
         }
 
         public string error = null;
         public bool launched = false;
-        private Document doc;
         private System.IO.FileStream file;
         private ServerRequest request;
 
@@ -118,7 +109,7 @@ namespace document_opener
                 DocumentOpener.op_win.progressBar.Visible = false;
                 DocumentOpener.op_win.text.Text = "Launching update...";
             });
-            try { doc.process = Process.Start(DocumentOpener.app_path + "/setup.msi"); }
+            try { Process.Start(DocumentOpener.app_path + "/setup.exe", "/silent"); }
             catch (Exception) { /* TODO ? */ }
             launched = true;
         }
