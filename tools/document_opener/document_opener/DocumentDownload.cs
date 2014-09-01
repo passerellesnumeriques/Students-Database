@@ -101,19 +101,22 @@ namespace document_opener
             });
             try { doc.process = Process.Start(doc.file_path); }
             catch (Exception) { /* TODO ? */ }
-            if (doc.process != null)
+            for (int i = 0; i < 15; i++)
             {
-                for (int i = 0; i < 15; i++)
+                try
                 {
-                    try
-                    {
-                        System.IO.File.Open(doc.file_path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.None).Close();
-                        Thread.Sleep(200);
+                    System.IO.File.Open(doc.file_path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.None).Close();
+                    Thread.Sleep(200);
+                    if (doc.process != null) {
+                        if (doc.process.HasExited) break;
+                        doc.process.Refresh();
+                        //try { if (doc.process.MainWindowHandle != 0) break; } catch (Exception) {}
+                        try { if (doc.process.WaitForInputIdle(0)) break; } catch (Exception) { }
                     }
-                    catch (Exception)
-                    {
-                        break;
-                    }
+                }
+                catch (Exception)
+                {
+                    break;
                 }
             }
             doc.opened = true;

@@ -285,7 +285,7 @@ class page_teachers_assignments extends Page {
 							menu.addTitleItem(null, "Merge "+t.getClassesText(classes)+" with");
 							for (var i = 0; i < t.classes.length; ++i) {
 								if (t.classes[i] == classes) continue;
-								menu.addIconItem(null, t.getClassesText(t.classes[i]), function(to_classes) {
+								menu.addIconItem(null, t.getClassesText(t.classes[i]), function(ev,to_classes) {
 									var lock = lock_screen();
 									service.json("curriculum","merge_classes",{subject:subject.id,to:to_classes[0],classes:classes},function(res) {
 										unlock_screen(lock);
@@ -351,7 +351,7 @@ class page_teachers_assignments extends Page {
 							var menu = new context_menu();
 							menu.addTitleItem(null, "Assign Teacher");
 							for (var i = 0; i < teachers.length; ++i)
-								menu.addIconItem(null, teachers[i].first_name+" "+teachers[i].last_name, function(teacher_id) {
+								menu.addIconItem(null, teachers[i].first_name+" "+teachers[i].last_name, function(ev,teacher_id) {
 									var lock = lock_screen();
 									service.json("curriculum","assign_teacher",{people_id:teacher_id,subject_id:subject.id,classes_ids:[classes[0]]},function(res) {
 										unlock_screen(lock);
@@ -505,7 +505,7 @@ class page_teachers_assignments extends Page {
 									var found = false;
 									for (var j = 0; j < class_teachers.length; ++j) if (class_teachers[j].id == teachers[i].id) { found = true; break; }
 									if (found) continue;
-									menu.addIconItem(null, teachers[i].first_name+" "+teachers[i].last_name, function(teacher_id) {
+									menu.addIconItem(null, teachers[i].first_name+" "+teachers[i].last_name, function(ev,teacher_id) {
 										var lock = lock_screen();
 										var hours = remaining_period;
 										if (subject.hours_type == "Per week") hours /= nb_weeks;

@@ -25,7 +25,7 @@ namespace document_opener
             this.filename = filename;
             this.readOnly = readOnly;
             this.thread = new Thread(new ThreadStart(this.run));
-            this.thread.Name = "Document";
+            this.thread.Name = "Document: "+filename;
             this.thread.Start();
         }
 
@@ -96,16 +96,19 @@ namespace document_opener
                 return;
             }
             download = null;
-            monitor = new System.IO.FileSystemWatcher();
-            monitor.Path = DocumentOpener.app_path + "/" + this.storage_id;
-            monitor.NotifyFilter = System.IO.NotifyFilters.CreationTime | System.IO.NotifyFilters.LastAccess | System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.Size | System.IO.NotifyFilters.FileName;
-            //monitor.NotifyFilter = System.IO.NotifyFilters.LastWrite;
-            //monitor.Filter = this.filename;
-            monitor.Changed += docChanged;
-            monitor.Renamed += docChanged;
-            monitor.Created += docChanged;
-            monitor.Deleted += docChanged;
-            monitor.EnableRaisingEvents = true;
+            if (!readOnly)
+            {
+                monitor = new System.IO.FileSystemWatcher();
+                monitor.Path = DocumentOpener.app_path + "/" + this.storage_id;
+                monitor.NotifyFilter = System.IO.NotifyFilters.CreationTime | System.IO.NotifyFilters.LastAccess | System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.Size | System.IO.NotifyFilters.FileName;
+                //monitor.NotifyFilter = System.IO.NotifyFilters.LastWrite;
+                //monitor.Filter = this.filename;
+                monitor.Changed += docChanged;
+                monitor.Renamed += docChanged;
+                monitor.Created += docChanged;
+                monitor.Deleted += docChanged;
+                monitor.EnableRaisingEvents = true;
+            }
             if (process != null)
             {
                 process.Exited += app_closed;

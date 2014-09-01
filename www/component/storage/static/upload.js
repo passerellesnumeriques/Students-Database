@@ -9,6 +9,7 @@ function upload(target, multiple, async) {
 	t.onprogressfile = null;
 	t.ondonefile = null;
 	t.ondone = null;
+	t.oncancelled = null;
 	
 	t.openDialog = function(click_event, accept) {
 		document.body.appendChild(t.form = document.createElement("FORM"));
@@ -88,10 +89,15 @@ function upload(target, multiple, async) {
 		if (!icon) icon = "/static/storage/upload.png";
 		if (!title) title = "Uploading files";
 		require("popup_window.js");
+		var popup = null;
+		var prev_oncancelled = t.oncancelled;
+		t.oncancelled = function() {
+			if (popup) popup.close();
+			if (prev_oncancelled) prev_oncancelled();
+		};
 		var prev_onstart = t.onstart;
 		var progress_table = document.createElement("TABLE");
 		var progress_bars = [];
-		var popup = null;
 		t.onstart = function(files, callback) {
 			require("popup_window.js",function() {
 				popup = new popup_window(title, icon, progress_table);
@@ -105,9 +111,9 @@ function upload(target, multiple, async) {
 					tr.appendChild(td);
 					layout.invalidate(progress_table);
 					progress_bars = [];
-					prev_onstart(files, function() {
+					prev_onstart(files, function(cancel) {
 						progress_table.removeChild(tr);
-						callback();
+						callback(cancel);
 					});
 				} else
 					callback();
@@ -201,7 +207,13 @@ function upload(target, multiple, async) {
 			}
 		}
 		if (t.onstart)
-			t.onstart(files, function() { t.sendFiles(files); });
+			t.onstart(files, function(cancel) {
+				if (cancel) {
+					if (t.oncancelled) t.oncancelled();
+					return;
+				}
+				t.sendFiles(files); 
+			});
 		else
 			t.sendFiles(files);
 	};

@@ -9,11 +9,31 @@ window.top.pndocuments = {
 		}
 		var head = window.top.document.getElementsByTagName("HEAD")[0];
 		var scripts = [];
-		for (var i = 0; i < window.top.pndocuments._possible_ports.length; ++i) {
-			var s = window.top.document.createElement("SCRIPT");
-			s.type = "text/javascript";
-			s._port = window.top.pndocuments._possible_ports[i];
-			s.onload = function() {
+		var onload = function() {
+			window.top.pndocuments._connected_port = this._port;
+			for (var j = 0; j < scripts.length; ++j)
+				if (scripts[j]._port != this._port) head.removeChild(scripts[j]);
+			window.top.pndocuments.opener = new window.top.PNDocumentOpener(this._port, window.top.php_server, window.top.php_server_port, window.top.php_session_cookie_name, window.top.php_session_id, window.top.pn_version);
+			if (window.top.pndocuments.opener.version != window.top.pndocuments._opener_latest_version) {
+				window.top.pndocuments._connected_port = -1;
+				if (listener) listener(-1);
+				window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+				return;
+			}
+			this._loaded = true;
+			if (listener) listener(this._port);
+		};
+		var onerror = function() {
+			if (this.parentNode == head)
+				head.removeChild(this);
+			scripts.remove(this);
+			if (scripts.length == 0) {
+				if (listener) listener(-1);
+			}
+		};
+		var onreadystatechanged = function() { 
+			if (this.readyState == 'loaded') { 
+				this.onreadystatechange = null; 
 				window.top.pndocuments._connected_port = this._port;
 				for (var j = 0; j < scripts.length; ++j)
 					if (scripts[j]._port != this._port) head.removeChild(scripts[j]);
@@ -22,32 +42,42 @@ window.top.pndocuments = {
 					window.top.pndocuments._connected_port = -1;
 					if (listener) listener(-1);
 					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+					return;
 				}
-				this._loaded = true;
+				this._loaded = true; 
 				if (listener) listener(this._port);
-			};
-			s.onerror = function() {
-				if (this.parentNode == head)
-					head.removeChild(this);
-				scripts.remove(this);
-				if (scripts.length == 0) {
-					if (listener) listener(-1);
+			} 
+		};
+		// first try with first port
+		var prev_listener = listener;
+		listener = function(port) {
+			listener = prev_listener;
+			if (port == -1) {
+				// try with other ports
+				for (var i = 1; i < window.top.pndocuments._possible_ports.length; ++i) {
+					var s = window.top.document.createElement("SCRIPT");
+					s.type = "text/javascript";
+					s._port = window.top.pndocuments._possible_ports[i];
+					s.onload = onload;
+					s.onerror = onerror;
+					s.onreadystatechange = onreadystatechanged;
+					scripts.push(s);
+					head.appendChild(s);
+					s.src = "http://localhost:"+window.top.pndocuments._possible_ports[i]+"/javascript";
 				}
-			};
-			s.onreadystatechange = function() { 
-				if (this.readyState == 'loaded') { 
-					window.top.pndocuments._connected_port = this._port;
-					for (var j = 0; j < scripts.length; ++j)
-						if (scripts[j]._port != this._port) head.removeChild(scripts[j]);
-					this._loaded = true; 
-					this.onreadystatechange = null; 
-					if (listener) listener(this._port);
-				} 
-			};
-			scripts.push(s);
-			head.appendChild(s);
-			s.src = "http://localhost:"+window.top.pndocuments._possible_ports[i]+"/javascript";
-		}
+				return;
+			}
+			if (listener) listener(port);
+		};
+		var s = window.top.document.createElement("SCRIPT");
+		s.type = "text/javascript";
+		s._port = window.top.pndocuments._possible_ports[0];
+		s.onload = onload;
+		s.onerror = onerror;
+		s.onreadystatechange = onreadystatechanged;
+		scripts.push(s);
+		head.appendChild(s);
+		s.src = "http://localhost:"+window.top.pndocuments._possible_ports[0]+"/javascript";
 	},
 	connected_port: -1,
 	opener: null,
@@ -66,26 +96,37 @@ window.top.pndocuments = {
 		upl.addUploadPopup();
 		upl.openDialog(click_event);
 	},
-	uploadNewVersion: function(click_event, document_id, ondone) {
-		service.json("documents","lock?id="+document_id,null,function(res) {
-			if (!res) return;
-			if (typeof res.locked != 'undefined') {
-				error_dialog("This file is currently edited by "+res.locked+".");
-				return;
-			}
-			var upl = new upload("/dynamic/documents/service/save_file?id="+document_id, false, true);
-			upl.ondonefile = function(file, output, errors) {
-				if (output != "OK") {
-					window.top.status_manager.add_status(new window.top.StatusMessageError(null, output, 10000));
-					return;
-				}
-				service.json("documents","unlock?id="+document_id,null,function(res){
-					if (ondone) ondone();
+	uploadNewVersion: function(click_event, doc, ondone) {
+		var upl = new upload("/dynamic/documents/service/save_file?id="+doc.id, false, true);
+		upl.onstart = function(files, callback) {
+			var lock_and_start = function() {
+				service.json("documents","lock?id="+doc.id,null,function(res) {
+					if (!res) { callback(true); return; }
+					if (typeof res.locked != 'undefined') {
+						error_dialog("This file is currently edited by "+res.locked+".");
+						callback(true);
+						return;
+					}
+					callback(false);
 				});
 			};
-			upl.addUploadPopup();
-			upl.openDialog(click_event);
-		});
+			if (files[0].name == doc.name) { lock_and_start(); return; }
+			confirm_dialog("The file <i>"+files[0].name+"</i> does not match with current name <i>"+doc.name+"</i>. Are you sure this is the correct file ?", function(yes){
+				if (!yes) { callback(true); return; }
+				lock_and_start();
+			});
+		};
+		upl.ondonefile = function(file, output, errors) {
+			if (output != "OK") {
+				window.top.status_manager.add_status(new window.top.StatusMessageError(null, output, 10000));
+				return;
+			}
+			service.json("documents","unlock?id="+doc.id,null,function(res){
+				if (ondone) ondone();
+			});
+		};
+		upl.addUploadPopup();
+		upl.openDialog(click_event);
 	},
 	download: function(storage_id, storage_revision, filename) {
 		var form = document.createElement("FORM");
@@ -250,7 +291,7 @@ AttachedDocuments.prototype = {
 				});
 				if (t.can_edit)
 					menu.addIconItem("/static/storage/upload.png", "Upload new version", function(ev) {
-						window.top.pndocuments.uploadNewVersion(ev, doc.id, function() {
+						window.top.pndocuments.uploadNewVersion(ev, doc, function() {
 							t._updateDocuments(true);
 						});
 					});
