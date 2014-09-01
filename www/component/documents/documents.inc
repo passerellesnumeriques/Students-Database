@@ -19,7 +19,10 @@ class documents extends Component {
 	
 	public function insertDivForAttachedDocuments(&$page, $table, $sub_model, $key, $type, $div_size, $div_orientation) {
 		$pi = $this->getAttachedDocumentsPlugin($table, $type);
-		if ($pi == null) return;
+		if ($pi == null) {
+			PNApplication::error("Invalid table or type for documents");
+			return;
+		}
 		if (!$pi->canRead($key, $sub_model)) return;
 		$id = $page->generateID();
 		echo "<div id='$id'></div>";

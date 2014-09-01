@@ -270,7 +270,7 @@ function AttachedDocuments(container, table, sub_model, key, type, can_add_remov
 			this.docs_div.style.left = (absoluteLeft(this.title_div)+this.title_div.offsetWidth-getWidth(this.docs_div))+"px";
 		};
 	} else {
-		container.appendChild(this.docs_table);
+		container.appendChild(this.docs_div);
 	}
 }
 AttachedDocuments.prototype = {
@@ -357,7 +357,7 @@ AttachedDocuments.prototype = {
 		td.removeAllChildren();
 		if (doc.lock == null) {
 			removeClassName(td, "editing");
-			td.appendChild(document.createTextNode("Last version by "+doc.versions[0].people.first_name+" "+doc.versions[0].people.last_name+" on "+new Date(doc.versions[0].time*1000).toLocaleString()));
+			td.appendChild(document.createTextNode("Latest version by "+doc.versions[0].people.first_name+" "+doc.versions[0].people.last_name+" on "+new Date(doc.versions[0].time*1000).toLocaleString()));
 		} else {
 			addClassName(td, "editing");
 			td.appendChild(document.createTextNode("Currently edited by "+doc.lock));
@@ -421,7 +421,7 @@ AttachedDocuments.prototype = {
 		this.title_div = document.createElement("DIV");
 		this.title_div.className = "documents_title";
 		this.title_icon = document.createElement("IMG");
-		this.title_text = document.createElement("SPAN");
+		this.title_text = document.createElement("DIV");
 		this.title_div.appendChild(this.title_icon);
 		this.title_div.appendChild(this.title_text);
 		this.docs_div = document.createElement("DIV");

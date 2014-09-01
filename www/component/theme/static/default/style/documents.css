@@ -7,6 +7,10 @@
 .documents_title img {
 	vertical-align: bottom;
 }
+.documents_title div {
+	display: flex;
+	align-items: center;
+}
 .documents_title.overview {
 	cursor: pointer;
 }
