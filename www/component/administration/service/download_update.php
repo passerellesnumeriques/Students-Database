@@ -65,6 +65,7 @@ class service_download_update extends Service {
 		$f2 = fopen($path.".checksum","r");
 		//$pos = 0;
 		do {
+			set_time_limit(60);
 			$s = fread($f, 1024);
 			while (strlen($s) < 1024) {
 				$s2 = fread($f, 1024-strlen($s));
