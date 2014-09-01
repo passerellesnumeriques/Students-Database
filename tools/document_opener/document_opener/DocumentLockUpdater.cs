@@ -39,6 +39,7 @@ namespace document_opener
                     if (exit) break;
                     else Thread.Sleep(1000);
             }
+            this.doc = null;
         }
 
         public void stop()

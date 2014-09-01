@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "PN Document Opener"
-#define MyAppVersion "0.0.1"
+#define MyAppVersion "0.0.4"
 #define MyAppPublisher "Passerelles numériques"
 #define MyAppExeName "PNDocumentOpener.exe"
 

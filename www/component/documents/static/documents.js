@@ -1,7 +1,7 @@
 if (!window.top.pndocuments) {
 window.top.pndocuments = {
 	_possible_ports: [127,128,129,130,131,132,133,134,270,271,272,273,274,275,466,467,468,469,470],
-	_opener_latest_version: "0.0.1",
+	_opener_latest_version: "0.0.4",
 	connect: function(listener) {
 		if (window.top.pndocuments._connected_port > 0) {
 			if (listener) listener(window.top.pndocuments._connected_port);
@@ -11,13 +11,14 @@ window.top.pndocuments = {
 		var scripts = [];
 		var onload = function() {
 			window.top.pndocuments._connected_port = this._port;
+			window.top.pndocuments._opener_script = this;
 			for (var j = 0; j < scripts.length; ++j)
 				if (scripts[j]._port != this._port) head.removeChild(scripts[j]);
 			window.top.pndocuments.opener = new window.top.PNDocumentOpener(this._port, window.top.php_server, window.top.php_server_port, window.top.php_session_cookie_name, window.top.php_session_id, window.top.pn_version);
 			if (window.top.pndocuments.opener.version != window.top.pndocuments._opener_latest_version) {
 				window.top.pndocuments._connected_port = -1;
 				if (listener) listener(-1);
-				window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+				window.top.pndocuments.update_status = window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
 				return;
 			}
 			this._loaded = true;
@@ -35,13 +36,14 @@ window.top.pndocuments = {
 			if (this.readyState == 'loaded') { 
 				this.onreadystatechange = null; 
 				window.top.pndocuments._connected_port = this._port;
+				window.top.pndocuments._opener_script = this;
 				for (var j = 0; j < scripts.length; ++j)
 					if (scripts[j]._port != this._port) head.removeChild(scripts[j]);
 				window.top.pndocuments.opener = new window.top.PNDocumentOpener(this._port, window.top.php_server, window.top.php_server_port, window.top.php_session_cookie_name, window.top.php_session_id, window.top.pn_version);
 				if (window.top.pndocuments.opener.version != window.top.pndocuments._opener_latest_version) {
 					window.top.pndocuments._connected_port = -1;
 					if (listener) listener(-1);
-					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+					window.top.pndocuments.update_status = window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
 					return;
 				}
 				this._loaded = true; 
@@ -81,8 +83,26 @@ window.top.pndocuments = {
 	},
 	connected_port: -1,
 	opener: null,
+	_opener_script: null,
 	updateOpener: function() {
-		window.top.pndocuments.opener.update();
+		window.top.status_manager.remove_status(window.top.pndocuments.update_status);
+		window.top.pndocuments.opener.update(function() {
+			window.top.pndocuments.opener = null;
+			if (window.top.pndocuments._opener_script != null)
+				window.top.pndocuments._opener_script.parentNode.removeChild(window.top.pndocuments._opener_script);
+			var trial = 0;
+			var check = function() {
+				window.top.pndocuments.connect(function(port) {
+					if (port == -1) {
+						if (++trial < 100)
+							setTimeout(check, 2000);
+						return;
+					}
+					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"PN Document Opener successfully updated !",[{action:"close"}],10000));
+				});
+			};
+			setTimeout(check,2000);
+		});
 	},
 	attachFiles: function(click_event, table, sub_model, key, type, onfileadded) {
 		var upl = new upload('/dynamic/documents/service/add_files?table='+table+(sub_model ? "&sub_model="+sub_model : "")+"&key="+encodeURIComponent(key)+"&type="+type, true, true);

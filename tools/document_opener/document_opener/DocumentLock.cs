@@ -69,6 +69,7 @@ namespace document_opener
                 unlock_succeed,
                 unlock_failed
             );
+            this.doc = null;
         }
         public void unlock_progress(byte[] buffer, int len, int total, int pos) { }
         public void unlock_succeed() { }

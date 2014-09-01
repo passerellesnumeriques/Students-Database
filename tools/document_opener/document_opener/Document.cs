@@ -93,6 +93,7 @@ namespace document_opener
             if (download.error != null)
             {
                 MessageBox.Show(download.error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
+                download = null;
                 return;
             }
             download = null;
@@ -111,17 +112,10 @@ namespace document_opener
             }
             if (process != null)
             {
-                process.Exited += app_closed;
-                try
-                {
-                    int code = process.ExitCode;
+                if (process.HasExited)
                     app_closed(null, null);
-                }
-                catch (InvalidOperationException)
-                {
-                    // application still runngin
-                    Thread.Sleep(250);
-                }
+                else
+                    process.Exited += app_closed;
             }
             while (!closed)
             {
@@ -141,6 +135,7 @@ namespace document_opener
                             monitor.Changed -= docChanged;
                             monitor.EnableRaisingEvents = false;
                             monitor.Dispose();
+                            monitor = null;
                             if (process != null && !process.HasExited)
                             {
                                 for (int i = 0; i < 10 && !process.HasExited; i++)
@@ -159,6 +154,10 @@ namespace document_opener
             while (!closed) Thread.Sleep(100);
             if (doc_lock != null)
                 doc_lock.unlock();
+            doc_lock = null;
+            monitor = null;
+            thread = null;
+            process = null;
         }
         public void docChanged(object source, System.IO.FileSystemEventArgs e)
         {
@@ -179,6 +178,8 @@ namespace document_opener
                 monitor.Changed -= docChanged;
                 monitor.EnableRaisingEvents = false;
                 monitor.Dispose();
+                monitor = null;
+                readOnly = true;
                 long time = System.IO.File.GetLastWriteTime(file_path).Ticks;
                 if (time > last_change)
                     saveFile();
@@ -186,8 +187,21 @@ namespace document_opener
             DocumentOpener.RemoveDirectory(DocumentOpener.app_path + "/" + this.storage_id);
             closed = true;
         }
+        private bool saving = false;
+        private bool new_save_scheduled = false;
+        private NotifyIcon icon = null;
+        private int save_count = 0;
         private void saveFile()
         {
+            if (saving)
+            {
+                if (new_save_scheduled) return;
+                new_save_scheduled = true;
+                new System.Threading.Timer(new System.Threading.TimerCallback(delegate { saveFile(); }), null, 1000, System.Threading.Timeout.Infinite);
+                return;
+            }
+            saving = true;
+            new_save_scheduled = false;
             DocumentOpener.op_mutex.WaitOne();
             DocumentOpener.op_win.Invoke((MethodInvoker)delegate
             {
@@ -197,7 +211,7 @@ namespace document_opener
                 DocumentOpener.op_win.TopLevel = true;
                 DocumentOpener.op_win.Show();
             });
-            string tmp_path = DocumentOpener.app_path + "/" + this.storage_id + "/tmp_save";
+            string tmp_path = DocumentOpener.app_path + "/" + this.storage_id + "/tmp_save."+(save_count++);
             System.IO.FileInfo tmp_info;
             long time;
             try
@@ -205,7 +219,7 @@ namespace document_opener
                 time = System.IO.File.GetLastWriteTime(file_path).Ticks;
                 for (int i = 0; i < 10; i++)
                 {
-                    try { System.IO.File.Copy(file_path, tmp_path, true); break; }
+                    try { copyCool(file_path, tmp_path); break; }
                     catch (Exception e)
                     {
                         if (i == 9) throw e;
@@ -222,6 +236,7 @@ namespace document_opener
                 });
                 DocumentOpener.op_mutex.ReleaseMutex();
                 MessageBox.Show("Error saving file: unable to read content of the file (" + e.Message + ")", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
+                saving = false;
                 return;
             }
             DocumentOpener.op_win.Invoke((MethodInvoker)delegate
@@ -240,25 +255,60 @@ namespace document_opener
                 DocumentOpener.op_win.Hide();
             });
             DocumentOpener.op_mutex.ReleaseMutex();
+            saving = false;
             if (up.error != null)
                 MessageBox.Show(up.error, "PN Document Opener - Error while saving to server", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly);
             else
             {
-                DocumentOpener.op_win.Invoke((MethodInvoker)delegate
+                if (icon == null)
                 {
-                    var item = new NotifyIcon();
-                    item.Visible = true;
-                    item.Icon = System.Drawing.SystemIcons.Information;
-                    item.ShowBalloonTip(3000, "PN Documents", "File "+filename+" successfully saved to the server.", ToolTipIcon.Info);
-                    new System.Threading.Timer((TimerCallback)delegate
+                    icon = new NotifyIcon();
+                    DocumentOpener.op_win.Invoke((MethodInvoker)delegate
                     {
-                        DocumentOpener.op_win.Invoke((MethodInvoker)delegate
+                        icon.Icon = System.Drawing.SystemIcons.Information;
+                        icon.Visible = true;
+                        icon.ShowBalloonTip(3000, "PN Documents", "File " + filename + " successfully saved to the server.", ToolTipIcon.Info);
+                        icon.BalloonTipClosed += delegate
                         {
-                            item.Visible = false;
-                            item.Dispose();
-                        });
-                    }, null, 3000, System.Threading.Timeout.Infinite);
-                });
+                            NotifyIcon i = icon; icon = null;
+                            if (i != null)
+                            {
+                                i.Visible = false;
+                                i.Dispose();
+                            }
+                        };
+                        new System.Threading.Timer(delegate {
+                            NotifyIcon i = icon; icon = null;
+                            if (i != null)
+                            {
+                                i.Visible = false;
+                                i.Dispose();
+                            }
+                        }, null, 3000, Timeout.Infinite);
+                    });
+                }
+            }
+        }
+        private void copyCool(string src, string dst)
+        {
+            System.IO.FileStream dst_stream = null, src_stream = null;
+            try
+            {
+                if (System.IO.File.Exists(dst)) System.IO.File.Delete(dst);
+                dst_stream = System.IO.File.Create(dst);
+                byte[] buffer = new byte[128 * 1024];
+                src_stream = System.IO.File.Open(src, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Delete | System.IO.FileShare.ReadWrite);
+                do
+                {
+                    int nb = src_stream.Read(buffer, 0, buffer.Length);
+                    if (nb == 0) break;
+                    dst_stream.Write(buffer, 0, nb);
+                } while (true);
+            }
+            finally
+            {
+                if (src_stream != null) try { src_stream.Close(); } catch (Exception) { }
+                if (dst_stream != null) try { dst_stream.Close(); } catch (Exception) { }
             }
         }
     }

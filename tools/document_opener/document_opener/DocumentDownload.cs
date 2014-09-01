@@ -56,6 +56,7 @@ namespace document_opener
                 }
             }
             request = null;
+            this.doc = null;
         }
 
         public string error = null;
