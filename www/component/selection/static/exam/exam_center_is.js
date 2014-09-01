@@ -23,7 +23,7 @@ function exam_center_is(container, all_is, linked_is, can_edit) {
 					var menu = new context_menu();
 					for (var i = 0; i < all_is.length; ++i) {
 						if (t.linked_ids.contains(all_is[i].id)) continue;
-						menu.addIconItem(null, all_is[i].name, function(is_id) {
+						menu.addIconItem(null, all_is[i].name, function(ev,is_id) {
 							t.linkIS(is_id);
 						}, all_is[i].id);
 					}

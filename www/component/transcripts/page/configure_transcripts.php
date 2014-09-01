@@ -290,7 +290,7 @@ function addSubject(button) {
 		var menu = new context_menu();
 		for (var i = 0; i < other_subjects.length; ++i) {
 			if (added_subjects.contains(other_subjects[i].id)) continue;
-			menu.addIconItem(null,other_subjects[i].code + " - " + other_subjects[i].name, function(s) {
+			menu.addIconItem(null,other_subjects[i].code + " - " + other_subjects[i].name, function(ev,s) {
 				added_subjects.push(s.id);
 				appendSubject(s);
 				changeSubject(s.id, true);

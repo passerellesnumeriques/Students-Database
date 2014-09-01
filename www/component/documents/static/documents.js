@@ -1,7 +1,7 @@
 if (!window.top.pndocuments) {
 window.top.pndocuments = {
 	_possible_ports: [127,128,129,130,131,132,133,134,270,271,272,273,274,275,466,467,468,469,470],
-	_opener_latest_version: "0.0.1",
+	_opener_latest_version: "0.0.4",
 	connect: function(listener) {
 		if (window.top.pndocuments._connected_port > 0) {
 			if (listener) listener(window.top.pndocuments._connected_port);
@@ -9,50 +9,100 @@ window.top.pndocuments = {
 		}
 		var head = window.top.document.getElementsByTagName("HEAD")[0];
 		var scripts = [];
-		for (var i = 0; i < window.top.pndocuments._possible_ports.length; ++i) {
-			var s = window.top.document.createElement("SCRIPT");
-			s.type = "text/javascript";
-			s._port = window.top.pndocuments._possible_ports[i];
-			s.onload = function() {
+		var onload = function() {
+			window.top.pndocuments._connected_port = this._port;
+			window.top.pndocuments._opener_script = this;
+			for (var j = 0; j < scripts.length; ++j)
+				if (scripts[j]._port != this._port) head.removeChild(scripts[j]);
+			window.top.pndocuments.opener = new window.top.PNDocumentOpener(this._port, window.top.php_server, window.top.php_server_port, window.top.php_session_cookie_name, window.top.php_session_id, window.top.pn_version);
+			if (window.top.pndocuments.opener.version != window.top.pndocuments._opener_latest_version) {
+				window.top.pndocuments._connected_port = -1;
+				if (listener) listener(-1);
+				window.top.pndocuments.update_status = window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+				return;
+			}
+			this._loaded = true;
+			if (listener) listener(this._port);
+		};
+		var onerror = function() {
+			if (this.parentNode == head)
+				head.removeChild(this);
+			scripts.remove(this);
+			if (scripts.length == 0) {
+				if (listener) listener(-1);
+			}
+		};
+		var onreadystatechanged = function() { 
+			if (this.readyState == 'loaded') { 
+				this.onreadystatechange = null; 
 				window.top.pndocuments._connected_port = this._port;
+				window.top.pndocuments._opener_script = this;
 				for (var j = 0; j < scripts.length; ++j)
 					if (scripts[j]._port != this._port) head.removeChild(scripts[j]);
 				window.top.pndocuments.opener = new window.top.PNDocumentOpener(this._port, window.top.php_server, window.top.php_server_port, window.top.php_session_cookie_name, window.top.php_session_id, window.top.pn_version);
 				if (window.top.pndocuments.opener.version != window.top.pndocuments._opener_latest_version) {
 					window.top.pndocuments._connected_port = -1;
 					if (listener) listener(-1);
-					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+					window.top.pndocuments.update_status = window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+					return;
 				}
-				this._loaded = true;
+				this._loaded = true; 
 				if (listener) listener(this._port);
-			};
-			s.onerror = function() {
-				if (this.parentNode == head)
-					head.removeChild(this);
-				scripts.remove(this);
-				if (scripts.length == 0) {
-					if (listener) listener(-1);
+			} 
+		};
+		// first try with first port
+		var prev_listener = listener;
+		listener = function(port) {
+			listener = prev_listener;
+			if (port == -1) {
+				// try with other ports
+				for (var i = 1; i < window.top.pndocuments._possible_ports.length; ++i) {
+					var s = window.top.document.createElement("SCRIPT");
+					s.type = "text/javascript";
+					s._port = window.top.pndocuments._possible_ports[i];
+					s.onload = onload;
+					s.onerror = onerror;
+					s.onreadystatechange = onreadystatechanged;
+					scripts.push(s);
+					head.appendChild(s);
+					s.src = "http://localhost:"+window.top.pndocuments._possible_ports[i]+"/javascript";
 				}
-			};
-			s.onreadystatechange = function() { 
-				if (this.readyState == 'loaded') { 
-					window.top.pndocuments._connected_port = this._port;
-					for (var j = 0; j < scripts.length; ++j)
-						if (scripts[j]._port != this._port) head.removeChild(scripts[j]);
-					this._loaded = true; 
-					this.onreadystatechange = null; 
-					if (listener) listener(this._port);
-				} 
-			};
-			scripts.push(s);
-			head.appendChild(s);
-			s.src = "http://localhost:"+window.top.pndocuments._possible_ports[i]+"/javascript";
-		}
+				return;
+			}
+			if (listener) listener(port);
+		};
+		var s = window.top.document.createElement("SCRIPT");
+		s.type = "text/javascript";
+		s._port = window.top.pndocuments._possible_ports[0];
+		s.onload = onload;
+		s.onerror = onerror;
+		s.onreadystatechange = onreadystatechanged;
+		scripts.push(s);
+		head.appendChild(s);
+		s.src = "http://localhost:"+window.top.pndocuments._possible_ports[0]+"/javascript";
 	},
 	connected_port: -1,
 	opener: null,
+	_opener_script: null,
 	updateOpener: function() {
-		window.top.pndocuments.opener.update();
+		window.top.status_manager.remove_status(window.top.pndocuments.update_status);
+		window.top.pndocuments.opener.update(function() {
+			window.top.pndocuments.opener = null;
+			if (window.top.pndocuments._opener_script != null)
+				window.top.pndocuments._opener_script.parentNode.removeChild(window.top.pndocuments._opener_script);
+			var trial = 0;
+			var check = function() {
+				window.top.pndocuments.connect(function(port) {
+					if (port == -1) {
+						if (++trial < 100)
+							setTimeout(check, 2000);
+						return;
+					}
+					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"PN Document Opener successfully updated !",[{action:"close"}],10000));
+				});
+			};
+			setTimeout(check,2000);
+		});
 	},
 	attachFiles: function(click_event, table, sub_model, key, type, onfileadded) {
 		var upl = new upload('/dynamic/documents/service/add_files?table='+table+(sub_model ? "&sub_model="+sub_model : "")+"&key="+encodeURIComponent(key)+"&type="+type, true, true);
@@ -62,6 +112,38 @@ window.top.pndocuments = {
 					output[i].versions[0].people = window.top.my_people;
 					onfileadded(output[i]);
 				}
+		};
+		upl.addUploadPopup();
+		upl.openDialog(click_event);
+	},
+	uploadNewVersion: function(click_event, doc, ondone) {
+		var upl = new upload("/dynamic/documents/service/save_file?id="+doc.id, false, true);
+		upl.onstart = function(files, callback) {
+			var lock_and_start = function() {
+				service.json("documents","lock?id="+doc.id,null,function(res) {
+					if (!res) { callback(true); return; }
+					if (typeof res.locked != 'undefined') {
+						error_dialog("This file is currently edited by "+res.locked+".");
+						callback(true);
+						return;
+					}
+					callback(false);
+				});
+			};
+			if (files[0].name == doc.name) { lock_and_start(); return; }
+			confirm_dialog("The file <i>"+files[0].name+"</i> does not match with current name <i>"+doc.name+"</i>. Are you sure this is the correct file ?", function(yes){
+				if (!yes) { callback(true); return; }
+				lock_and_start();
+			});
+		};
+		upl.ondonefile = function(file, output, errors) {
+			if (output != "OK") {
+				window.top.status_manager.add_status(new window.top.StatusMessageError(null, output, 10000));
+				return;
+			}
+			service.json("documents","unlock?id="+doc.id,null,function(res){
+				if (ondone) ondone();
+			});
 		};
 		upl.addUploadPopup();
 		upl.openDialog(click_event);
@@ -188,7 +270,7 @@ function AttachedDocuments(container, table, sub_model, key, type, can_add_remov
 			this.docs_div.style.left = (absoluteLeft(this.title_div)+this.title_div.offsetWidth-getWidth(this.docs_div))+"px";
 		};
 	} else {
-		container.appendChild(this.docs_table);
+		container.appendChild(this.docs_div);
 	}
 }
 AttachedDocuments.prototype = {
@@ -220,16 +302,27 @@ AttachedDocuments.prototype = {
 				menu.addIconItem(theme.icons_16.see, "Open file (read-only)", function() {
 					window.top.pndocuments.open(doc.id, doc.versions[0].id, doc.versions[0].storage_id,doc.versions[0].revision,doc.name,true);
 				});
-				menu.addIconItem("/static/storage/download.png", "Download file", function() {
-					window.top.pndocuments.download(doc.versions[0].storage_id,doc.versions[0].revision,doc.name);
-				});
 				if (t.can_edit)
 					menu.addIconItem(theme.icons_16.edit, "Edit file", function() {
 						window.top.pndocuments.open(doc.id, doc.versions[0].id, doc.versions[0].storage_id,doc.versions[0].revision,doc.name,false);
 					});
+				menu.addIconItem("/static/storage/download.png", "Download file", function() {
+					window.top.pndocuments.download(doc.versions[0].storage_id,doc.versions[0].revision,doc.name);
+				});
+				if (t.can_edit)
+					menu.addIconItem("/static/storage/upload.png", "Upload new version", function(ev) {
+						window.top.pndocuments.uploadNewVersion(ev, doc, function() {
+							t._updateDocuments(true);
+						});
+					});
 				if (t.can_add_remove)
 					menu.addIconItem(theme.icons_16.remove, "Remove file", function() {
-						// TODO
+						confirm_dialog("Are you sure to remove file "+doc.name+" ?", function(yes) {
+							if (!yes) return;
+							service.json("documents","remove",{id:doc.id},function(res) {
+								if (res) t.removeDocument(doc);
+							});
+						});
 					});
 				// TODO history/versions
 				menu.showBelowElement(link);
@@ -242,11 +335,29 @@ AttachedDocuments.prototype = {
 		this._fillDocInfo(doc,td);
 		this._resizeDocList();
 	},
+	removeDocument: function(doc) {
+		this.documents.remove(doc);
+		for (var i = 0; i < this.docs_tbody.childNodes.length; i += 2) {
+			var tr = this.docs_tbody.childNodes[i];
+			if (tr._doc.id == doc.id) {
+				var tr2 = this.docs_tbody.childNodes[i+1];
+				this.docs_tbody.removeChild(tr);
+				this.docs_tbody.removeChild(tr2);
+				tr._doc = null;
+			}
+		}
+		// update title
+		if (this.documents.length == 0)
+			this.title_text.innerHTML = "No document";
+		else
+			this.title_text.innerHTML = this.documents.length+" document"+(this.documents.length>1?"s":"");
+		this._resizeDocList();
+	},
 	_fillDocInfo: function(doc,td) {
 		td.removeAllChildren();
 		if (doc.lock == null) {
 			removeClassName(td, "editing");
-			td.appendChild(document.createTextNode("Last version by "+doc.versions[0].people.first_name+" "+doc.versions[0].people.last_name+" on "+new Date(doc.versions[0].time*1000).toLocaleString()));
+			td.appendChild(document.createTextNode("Latest version by "+doc.versions[0].people.first_name+" "+doc.versions[0].people.last_name+" on "+new Date(doc.versions[0].time*1000).toLocaleString()));
 		} else {
 			addClassName(td, "editing");
 			td.appendChild(document.createTextNode("Currently edited by "+doc.lock));
@@ -266,10 +377,11 @@ AttachedDocuments.prototype = {
 			setTimeout(function(){t._updateDocuments();},15000);
 		});
 	},
-	_updateDocuments: function() {
+	_updateDocuments: function(custom_update) {
 		if (window.closing || !this.docs_table || !this.docs_table.parentNode) return;
 		var t=this;
 		service.json("documents","get_documents_list",{table:this.table,sub_model:this.sub_model,key:this.key,type:this.type},function(res) {
+			var removed = [];
 			for (var i = 0; i < t.docs_tbody.childNodes.length; i += 2) {
 				var tr = t.docs_tbody.childNodes[i];
 				var tr2 = t.docs_tbody.childNodes[i+1];
@@ -278,11 +390,7 @@ AttachedDocuments.prototype = {
 					if (res[j].id == tr._doc.id) { doc = res[j]; res.splice(j,1); break; }
 				if (doc == null) {
 					// document was removed
-					t.docs_tbody.removeChild(tr);
-					t.docs_tbody.removeChild(tr2);
-					i -= 2;
-					t.documents.remove(tr._doc);
-					tr._doc = null;
+					removed.push(tr._doc);
 					continue;
 				}
 				if (doc.versions[0].time != tr._doc.versions[0].time || doc.lock != tr._doc.lock) {
@@ -301,7 +409,10 @@ AttachedDocuments.prototype = {
 				t.title_text.innerHTML = "No document";
 			else
 				t.title_text.innerHTML = t.documents.length+" document"+(t.documents.length>1?"s":"");
-			setTimeout(function(){t._updateDocuments();},15000);
+			for (var i = 0; i < removed.length; ++i)
+				t.removeDocument(removed[i]);
+			if (!custom_update)
+				setTimeout(function(){t._updateDocuments();},15000);
 		});
 	},
 	_resizeDocList: function() {},
@@ -310,7 +421,7 @@ AttachedDocuments.prototype = {
 		this.title_div = document.createElement("DIV");
 		this.title_div.className = "documents_title";
 		this.title_icon = document.createElement("IMG");
-		this.title_text = document.createElement("SPAN");
+		this.title_text = document.createElement("DIV");
 		this.title_div.appendChild(this.title_icon);
 		this.title_div.appendChild(this.title_text);
 		this.docs_div = document.createElement("DIV");

@@ -1482,7 +1482,7 @@ function import_area_coordinates(container, area, division_index, country, count
 						require("context_menu.js", function() {
 							var menu = new context_menu();
 							for (var i = 0; i < all_sub_areas.length; ++i) {
-								var item = menu.addIconItem(null, all_sub_areas[i].area_name, function(i) {
+								var item = menu.addIconItem(null, all_sub_areas[i].area_name, function(ev,i) {
 									var d = typeof division_index == 'undefined' ? 0 : division_index+1;
 									dialog_coordinates(country, country_data, division_index+1, country_data[d].areas.indexOf(all_sub_areas[i]));
 								}, i);

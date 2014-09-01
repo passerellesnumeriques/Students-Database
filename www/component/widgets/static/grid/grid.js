@@ -411,6 +411,7 @@ function grid(element) {
 			listener();
 			return;
 		}
+		
 		t._loaded_listeners.push(listener);
 	};
 	t.addColumnContainer = function(column_container, index) {

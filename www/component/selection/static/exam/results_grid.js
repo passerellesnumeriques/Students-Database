@@ -9,12 +9,14 @@ if (typeof require != 'undefined'){
 /* results_grid : class to manage the exam subject results
  * @param {object} subject  : exam subject
  * @param {array} applicants : array of applicants objects
- * @param {String} grid_height : the height of the inside grid 
+ * @param {String} grid_height : the height of the inside grid
+ * @param {boolean} set_correct_answer : Set the correct answer of an exam subject question, and correct automatically applicants' answers
 */
 
-function results_grid(subject,applicants,grid_height) {
-   var t=this;
+function results_grid(subject,applicants,grid_height,set_correct_answer) {
    
+   
+   var t=this;
    
     /* html elements */   
    t.elt = {
@@ -25,11 +27,12 @@ function results_grid(subject,applicants,grid_height) {
       
    t.subject=subject;
    t.applicants = applicants;
+   t.set_correct_answer=set_correct_answer;
    
    t.grid_res=new grid (t.elt.grid); // creating grid   
    t.index_applicant=-1; // index of selected applicant
    t.applicants_exam=null;
-   
+   t.rows_ready=false;
 
    /* Getting current applicant
     * return people object matching the applicant
@@ -77,6 +80,7 @@ function results_grid(subject,applicants,grid_height) {
    
    t._init=function(){
       
+      
       /* Appending html elements into main container */
       t.elt.container.appendChild(t.elt.grid);
       t.elt.container.appendChild(t.elt.footer);
@@ -92,25 +96,21 @@ function results_grid(subject,applicants,grid_height) {
       t._createVersionColumn();
     }
       
-      /* creating all the columns (one for each question) */
-      t._createQuestionsColumns();
+      
+      /* Setting the screen according to the mode defined by set_correct_answer */
+      if (t.set_correct_answer) 
+         t._answerScreen();
+      else
+         t._scoreScreen(true);
       
        /* add the applicants rows (one for each applicant) */
       t._createRowsApplicants();
-      
-      /* creating footer toolbar */
-      t._createFooterToolbar();
       
       /* set grid height */
       $(t.elt.grid).height(grid_height);
       
       /* Clear previously set grid width css property (from grid.css) */
       $(t.elt.grid).find("table.grid").css("width","");
-
-      /* Inserting some cell wrappers (in order to set table columns width) */
-      /*t.grid_res.onallrowsready(function(){
-            t._fixColumnsWidth();
-          });*/
       
       layout.invalidate(t.elt.container);
    }
@@ -169,7 +169,7 @@ function results_grid(subject,applicants,grid_height) {
    }
    
    /* remove Questions Columns */
-      t._removeQuestionsColumns=function(){
+      t._removeColumns=function(){
             
          var nb_cols=t.grid_res.getNbColumns();
          
@@ -177,36 +177,59 @@ function results_grid(subject,applicants,grid_height) {
             t.grid_res.removeColumn(1);
   }
   
-   /* Creating results columns */
-   t._createResultsColumns=function(){
+     /* toggle Questions Columns editability
+     */
+      t._toggleEditableColumns=function(){
+            
+         var nb_cols=t.grid_res.getNbColumns();
+         
+         for(var i=1;i<nb_cols;++i)  
+            t.grid_res.getColumn(i).toggleEditable();
+  }
+  
+  
+   /* Creating results columns
+    * @param {boolean} editable
+   */
+   t._createResultsColumns=function(editable){
       
+   /* field decimal for displaying */
+     var field_args={
+         can_be_null:true,
+         integer_digits:3,
+         decimal_digits:2,
+         };
+         
+      /* Total Exam Column */
+      var total_exam=new GridColumn('total_exam','Total',null,'center','field_decimal',editable,null,null,field_args,'#');
+      t.grid_res.addColumn(total_exam);
+      
+      // for each parts 
       for(var i=0;i<subject.parts.length;++i)
      {
         var part=subject.parts[i];
         var sub_cols=[];
         
+        // for each question
         for (var j=0;j<part.questions.length;++j)
         {
            var question=part.questions[j];
-           
-           /* field decimal for displaying */
-           var field_args={
-	       can_be_null:true,
-	       integer_digits:3,
-	       decimal_digits:2,
-	       };
             
            /* create the new result Column */
-           var col_result=new GridColumn('p'+part.id+'q'+question.id,'Question '+question.index,null,'center','field_decimal',false,null,null,field_args,'#')
-           ////DEBUG
-           //console.log('creating col results id:'+'p'+part.id+'q'+question.id);
-           
+           var col_result=new GridColumn('p'+part.id+'q'+question.id,'Question '+question.index,null,'center','field_decimal',editable,null,null,field_args,'#');
+      
            sub_cols.push(col_result);
 
         }
         
+        /* total part column */
+        /* create the new result Column */
+           var total_part=new GridColumn('total_p'+part.id,'Total',null,'center','field_decimal',editable,null,null,field_args,'#');
+           sub_cols.push(total_part);
+        
         /* push columns into the ColumContainer */
         t.grid_res.addColumnContainer(new GridColumnContainer(part.name,sub_cols,'#'));
+        
      }
      
    }
@@ -218,64 +241,9 @@ function results_grid(subject,applicants,grid_height) {
         $.each(t.applicants,function(index,obj) {
           /* creating applicant row */
           t.grid_res.addRow(index,[{col_id:'col_applic',data_id:'#',data:obj.applicant_id}]);
-         
         });
    }  
    
-   /* creating footer toolbar */
-   t._createFooterToolbar=function(){
-   
-      /* creating footer content elements */   
-      var foot_content={
-          button_wrapper :$("<div class='button_wrapper'></div>")[0],
-          button_valid: $("<button class='action'>Validate</button>")[0]
-      }
-       
-     /* Append the elements  */
-     foot_content.button_wrapper.appendChild(foot_content.button_valid);
-     t.elt.footer.appendChild(foot_content.button_wrapper);
-     
-     /* Click on validate button */
-      $(foot_content.button_valid).click(function(){
-         
-      /* getting applicants answer */
-      t._getAnswers();
-      
-      
-      /* getting results from applicants answers */
-      service.json("selection","applicant/get_results",{applicants_exam:t.applicants_exam,subject:t.subject},function(res){
-         
-         /* updating t.applicants_exam object with computed scores from server side */
-         for(var i=0;i<res.length;++i)
-         {
-            var applicant_exam=res[i];
-            t.applicants_exam.applicants_answers[i].score=applicant_exam.score;
-            for(var j=0;j<applicant_exam.parts.length;++j)
-            {
-               var part=applicant_exam.parts[j];
-               t.applicants_exam.applicants_answers[i].parts[j].score=part.score;
-                for(var k=0;k<part.answers.length;++k)
-                {
-                  var answer=part.answers[k];
-                  t.applicants_exam.applicants_answers[i].parts[j].answers[k].score=answer.score;
-                }
-            }
-         }
-         
-         });
-      
-      
-       /* Removing questions columns */
-       t._removeQuestionsColumns();
-       
-       /* Creating results columns */
-        t._createResultsColumns();
-        
-        /* Filling with results */
-        t._fillResultsRows();
-
-       });
-   }
    
 
 /* Get applicants answer */
@@ -345,31 +313,196 @@ t._getAnswers=function(){
 /* Fill rows with applicants results scores */
 t._fillResultsRows=function()
    {
+      if (!t.applicants_exam) {
+        return;
+      }
+      
       /* for each row (one applicant) */
       for (var row_id=0;row_id<t.applicants_exam.applicants_answers.length;++row_id) {
          var applicant_answers=t.applicants_exam.applicants_answers[row_id];
+         
+         //total exam
+         var cell_field=t.grid_res.getCellFieldById(row_id,'total_exam');
+         cell_field.setData(applicant_answers.score);
          
          // for each part
          for(var i=0;i<applicant_answers.parts.length;++i)
          {
             var part=applicant_answers.parts[i];
+
             // for each answer
             for (var j=0;j<part.answers.length;++j)
             {
+              
                var answer=part.answers[j];
-               //DEBUG
-		//console.log('filling col results id:'+'p'+part.exam_subject_part+'q'+answer.exam_subject_question);
                var cell_field=t.grid_res.getCellFieldById(row_id,'p'+part.exam_subject_part+'q'+answer.exam_subject_question);
-               //DEBUG
-		//console.log('cell field:'+cell_field);
-                // DEBUG : don't know why no cell_field has been gotten TODO
                cell_field.setData(answer.score);
-          
-            }   
+            }
+            
+            // total part
+            var cell_field=t.grid_res.getCellFieldById(row_id,'total_p'+part.exam_subject_part);
+            cell_field.setData(part.score);
+            
          }
-      
       }
    }
+   
+   
+   /* Creating screen for entering answers */
+   t._answerScreen=function()
+   {
+      
+      t.clearScreen();
+      
+      /* creating all the columns (one for each question) */
+      t._createQuestionsColumns();
+      
+      
+      /* footer of answerScreen */
+      
+      /* creating footer content elements */   
+      var foot_content={
+          button_wrapper :$("<div class='button_wrapper'></div>")[0],
+          button_valid: $("<button class='action'>Validate</button>")[0],
+          button_set_scores: $("<button class='action' style='background:black'>Manual Mode</button>")[0]   
+      }
+       
+     /* Append the elements  */
+     foot_content.button_wrapper.appendChild(foot_content.button_valid);
+     foot_content.button_wrapper.appendChild(foot_content.button_set_scores);
+     
+     t.elt.footer.appendChild(foot_content.button_wrapper);
+     
+     /* Click on validate button */
+      $(foot_content.button_valid).click(function(){
+         
+      /* getting applicants answer */
+      t._getAnswers();
+      
+      
+      /* getting results from applicants answers */
+      service.json("selection","applicant/get_results",{applicants_exam:t.applicants_exam,subject:t.subject},function(res){
+         
+         
+         /* updating t.applicants_exam object with computed scores from server side */
+         for(var i=0;i<res.length;++i)
+         {
+            var applicant_exam=res[i];
+            t.applicants_exam.applicants_answers[i].score=applicant_exam.score;
+            for(var j=0;j<applicant_exam.parts.length;++j)
+            {
+               var part=applicant_exam.parts[j];
+               t.applicants_exam.applicants_answers[i].parts[j].score=part.score;
+                for(var k=0;k<part.answers.length;++k)
+                {
+                  var answer=part.answers[k];
+                  t.applicants_exam.applicants_answers[i].parts[j].answers[k].score=answer.score;
+                }
+            }
+         }
+         
+      /* Displaying results */
+      t._scoreScreen(false);   
+         
+         });
+       });
+      
+       /* Click on 'set scores' button */
+      $(foot_content.button_set_scores).click(function(){
+         
+         t._scoreScreen(true);
+         
+      });
+      
+   }
+
+   /* creating screen for displaying or entering scores
+   * @param {boolean} editable
+   */
+   t._scoreScreen=function(editable){
+      
+      t.clearScreen();
+      
+      t._createResultsColumns(editable);
+      
+      /* Wait for all rows ready before filling with results */
+      
+         t.grid_res.onallrowsready(function(){
+                 /* Filling with results */
+                   t._fillResultsRows();
+             });
+
+
+      /* footer of scoreScreen */
+        
+      var foot_content={
+          button_wrapper :$("<div class='button_wrapper'></div>")[0],
+          button_edit_save: $("<button class='action'></button>")[0],
+          button_back: $("<button class='action' style='background:black'>Back</button>")[0]   
+      }
+       
+     /* Append the elements  */
+    
+    /* editable/save button */
+     foot_content.button_wrapper.appendChild(foot_content.button_edit_save);
+     if (editable)
+      $(foot_content.button_edit_save).html("Save").css( "background", "red" );
+     else
+      $(foot_content.button_edit_save).html("Edit").css( "background", "" );
+     
+     /* click on edit/save button */
+     $(foot_content.button_edit_save).click(function(){
+      
+         if ($(this).html()=="Save") {
+            // sending scores to server
+            //TODO (service to send scores )
+            
+            
+            
+            /* Go back to Edit mode */
+           $(this).html("Edit").css( "background", "" );
+         }
+         else
+            /* Go back to Save mode */
+           $(this).html("Save").css( "background", "red" );
+         
+
+         /* toggle columns editable mode */
+         t._toggleEditableColumns()
+     }
+      );
+     
+     /* back to answers screen button */
+     if (!editable) {
+       foot_content.button_wrapper.appendChild(foot_content.button_back);
+       /* back button */
+       $(foot_content.button_back).click(function(){
+         
+         t._answerScreen();
+         
+      });
+       
+     }
+     
+     
+     t.elt.footer.appendChild(foot_content.button_wrapper);
+     
+     
+      
+   }
+   
+   /* clearing grid screen */
+   t.clearScreen=function()
+   {
+      /* removing columns */
+      t._removeColumns();
+      
+      /* remove footer button(s) */
+      while (t.elt.footer.firstChild) 
+        t.elt.footer.removeChild(t.elt.footer.firstChild);
+      
+   }
+   
    
    /* Initialization */
    t._init();

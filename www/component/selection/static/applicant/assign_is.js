@@ -6,7 +6,7 @@ function assign_is(button, applicants_ids, onchanged) {
 			unlock_screen(lock);
 			var menu = new context_menu();
 			for (var i = 0; i < list.length; ++i) {
-				menu.addIconItem(null, list[i].name, function(id) {
+				menu.addIconItem(null, list[i].name, function(ev,id) {
 					var lock = lock_screen(null, "Assigning applicant"+(applicants_ids.length > 1 ? "s":"")+" to Information Session...");
 					var confirm_data = null;
 					var call_service = function() {

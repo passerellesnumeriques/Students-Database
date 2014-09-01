@@ -156,7 +156,7 @@ class page_assign_classes extends Page {
 			require("context_menu.js",function() {
 				var menu = new context_menu();
 				for (var i = 0; i < previous_classes.length; ++i) {
-					menu.addIconItem(null, "Class "+previous_classes[i].name, function(class_id) {
+					menu.addIconItem(null, "Class "+previous_classes[i].name, function(ev,class_id) {
 						var elements = [];
 						for (var i = 0; i < previous_assignments.length; ++i)
 							if (previous_assignments[i]["class"] == class_id) {

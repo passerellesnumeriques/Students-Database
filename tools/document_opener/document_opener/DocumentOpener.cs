@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace document_opener
 {
     public class DocumentOpener
     {
-        public static string version = "0.0.1";
+        public static string version = "0.0.4";
         private static WebServer server;
         public static System.Windows.Forms.ApplicationContext app_ctx;
         public static OperationWindow op_win;
@@ -63,6 +62,7 @@ namespace document_opener
                     RemoveDirectory(list[i]);
             }
             catch (Exception e) { error += "Unable to remove sub-directories: "+e.Message+"\r\n"; }
+            bool has_setup = false;
             try
             {
                 list = System.IO.Directory.GetFiles(path);
@@ -73,7 +73,7 @@ namespace document_opener
                         System.IO.File.SetAttributes(list[i], System.IO.FileAttributes.Normal);
                         System.IO.File.Delete(list[i]);
                     }
-                    catch (Exception e) { error += "Unable to remove file "+list[i]+": "+e.Message+"\r\n"; }
+                    catch (Exception e) { if (list[i].EndsWith("setup.exe")) has_setup = true; else error += "Unable to remove file " + list[i] + ": " + e.Message + "\r\n"; }
                 }
             }
             catch (Exception e) { error += "Unable to list files: " + e.Message+"\r\n";  }
@@ -86,7 +86,8 @@ namespace document_opener
             {
                 if (trial >= 50)
                 {
-                    System.Windows.Forms.MessageBox.Show("Unable to remove directory " + path+"\r\nErrors encountered are:\r\n"+error, "PN Document Opener - Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error, System.Windows.Forms.MessageBoxDefaultButton.Button1, System.Windows.Forms.MessageBoxOptions.DefaultDesktopOnly);
+                    if (!has_setup)
+                        System.Windows.Forms.MessageBox.Show("Unable to remove directory " + path+"\r\nErrors encountered are:\r\n"+error, "PN Document Opener - Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error, System.Windows.Forms.MessageBoxDefaultButton.Button1, System.Windows.Forms.MessageBoxOptions.DefaultDesktopOnly);
                     return;
                 }
                 System.Threading.Thread.Sleep(100);

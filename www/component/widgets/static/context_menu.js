@@ -87,7 +87,7 @@ function context_menu(menu) {
 			div.appendChild(img);
 		}
 		div.appendChild(document.createTextNode(text));
-		div.onclick = function() { if (onclick) onclick(onclick_parameter); };
+		div.onclick = function(ev) { if (onclick) onclick(ev, onclick_parameter); };
 		div.className = "context_menu_item";
 		t.addItem(div);
 		return div;
