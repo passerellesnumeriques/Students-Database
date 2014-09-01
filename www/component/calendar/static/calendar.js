@@ -581,6 +581,7 @@ function PNCalendarsProvider() {
 		service.json("calendar", "get_my_calendars", {}, function(calendars) {
 			t.connectionStatus("");
 			if (!calendars) return;
+			if (!PNCalendar) return;
 			var list = [];
 			for (var i = 0; i < calendars.length; ++i)
 				list.push(new PNCalendar(t, calendars[i].id, calendars[i].name, calendars[i].color, calendars[i].show, calendars[i].writable, calendars[i].icon));

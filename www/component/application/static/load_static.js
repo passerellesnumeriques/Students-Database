@@ -175,7 +175,7 @@ function load_static_resources(container, bgcolor, border_color, active_color, i
 		i._bg = true;
 		i.data = image;
 		i.onload = function() { window.top.pn_application_static.loading_images.remove(this.data); t._images_loading--; t.loaded(this.data.size); t._nextImage(); try { document.body.removeChild(this); } catch (e){} };
-		i.onerror = function() { t._images_loading--; t.loaded(this.data); t._nextImage(); document.body.removeChild(this); };
+		i.onerror = function() { t._images_loading--; t.loaded(this.data); t._nextImage(); if (this.parentNode == document.body) document.body.removeChild(this); };
 		i.src = image.url;
 		i.style.position = "fixed";
 		i.style.top = "-10000px";

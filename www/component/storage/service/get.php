@@ -20,6 +20,7 @@ class service_get extends Service {
 	
 	public function execute(&$component, $input) {
 		$id = $_GET["id"];
+		if (isset($_POST["download"])) $_GET["filename"] = $_POST["download"];
 		if ($this->file == null || $this->id <> $id) {
 			$this->id = $id;
 			$this->file = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id)->executeSingleRow();
@@ -33,10 +34,12 @@ class service_get extends Service {
 			return;
 		}
 		if (!isset($_GET["revision"]) || $_GET["revision"] <> $this->file["revision"]) {
-			header("Location: ?id=".$id."&revision=".$this->file["revision"]);
+			header("Location: ?id=".$id."&revision=".$this->file["revision"].(isset($_GET["filename"]) ? "&filename=".urlencode($_GET["filename"]) : ""));
 			return;
 		}
 		include("cache.inc");
+		if (isset($_GET["filename"]))
+			header("Content-Disposition: attachment; filename=\"".str_replace("\"","\\\"",$_GET["filename"])."\"");
 		$path = $component->get_data_path($id);
 		header("Content-Length: ".filesize($path));
 		readfile($path);

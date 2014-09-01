@@ -555,7 +555,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 							if (list.length >= t.rooms[j].capacity) continue; // already full
 							// add the room as a possible assignment
 							var text = "Session on "+getDateString(t.sessions[i].start)+" at "+getTimeString(t.sessions[i].start)+" in room "+t.rooms[j].name;
-							menu.addIconItem(null, text, function(o) {
+							menu.addIconItem(null, text, function(ev,o) {
 								var applicants = t.not_assigned.getSelection();
 								var doit = function() {
 									for (var i = 0; i < applicants.length; ++i)

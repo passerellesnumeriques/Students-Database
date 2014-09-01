@@ -17,7 +17,7 @@ class PeopleJSON {
 		self::PeopleSQL($q);
 		$row = $q->executeSingleRow();
 		if($row <> null)
-			return self::People($q, $row);
+			return self::People($row);
 		else 
 			return null;
 	}
@@ -29,7 +29,7 @@ class PeopleJSON {
 		PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
 		self::PeopleSQL($q);
 		$rows = $q->execute();
-		return self::Peoples($q, $rows);
+		return self::Peoples($rows);
 	}
 	
 	/**

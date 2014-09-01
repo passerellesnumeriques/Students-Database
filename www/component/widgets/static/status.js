@@ -53,6 +53,7 @@ function StatusManager() {
 	this.add_status= function(status) {
 		this.status.push(status);
 		this.status_ui.update(this.status);
+		return status;
 	};
 	this.remove_status= function(status) {
 		if (typeof status == 'string' || typeof status == 'number') status = this.get_status(status);

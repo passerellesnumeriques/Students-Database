@@ -453,7 +453,7 @@ function selectAnotherSubject(link) {
 	require("context_menu.js", function() {
 		var menu = new context_menu();
 		for (var i = 0; i < subjects.length; ++i)
-			menu.addIconItem(null, subjects[i].code+" - "+subjects[i].name, function(p) {
+			menu.addIconItem(null, subjects[i].code+" - "+subjects[i].name, function(ev,p) {
 				w.location.href = "/dynamic/transcripts/page/subject_grades?subject="+p.subject_id+(typeof p.class_id != 'undefined' ? "&class="+p.class_id : "");
 			}, {subject_id:subjects[i].id<?php if ($class <> null) echo ",class_id:".$class["id"];?>});
 		menu.showBelowElement(link);
@@ -464,7 +464,7 @@ function selectAnotherClass(link) {
 	require("context_menu.js", function() {
 		var menu = new context_menu();
 		for (var i = 0; i < classes.length; ++i)
-			menu.addIconItem(null, classes[i].name, function(class_id) {
+			menu.addIconItem(null, classes[i].name, function(ev,class_id) {
 				w.location.href = "/dynamic/transcripts/page/subject_grades?subject=<?php echo $subject["id"];?>&class="+class_id;
 			}, classes[i].id);
 		menu.addIconItem(null, "All classes", function() {
@@ -845,7 +845,7 @@ function newEvaluation(button) {
 		else {
 			menu.addTitleItem(null, "Which Evaluation Type ?");
 			for (var i = 0; i < evaluation_types.length; ++i) {
-				menu.addIconItem(null, evaluation_types[i].name, function(type) {
+				menu.addIconItem(null, evaluation_types[i].name, function(ev,type) {
 					evaluationDialog(type,{id:new_evaluation_id--,name:"",max_grade:100,weight:1},true);
 				}, evaluation_types[i]);
 			}

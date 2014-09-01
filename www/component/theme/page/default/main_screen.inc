@@ -222,7 +222,7 @@ global $pn_app_version;
 <script type='text/javascript'>
 user_picture = document.getElementById('user_picture');
 require("profile_picture.js",function() {
-	new profile_picture(user_picture, 25, 25, "center", "middle").loadPeopleID(<?php echo PNApplication::$instance->user_management->people_id;?>);
+	new profile_picture(user_picture, 25, 25, "center", "middle").loadPeopleObject(window.top.my_people);
 });
 tooltip(user_picture, "Your profile");
 

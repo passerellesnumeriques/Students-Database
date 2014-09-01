@@ -162,6 +162,13 @@ class storage extends Component {
 	function new_revision($id) {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `revision`=`revision`+1 WHERE `id`=".$id);
 	}
+	function update_file($id, $data) {
+		$path = $this->get_data_path($id);
+		$f = fopen($path, "w");
+		fwrite($f, $data);
+		fclose($f);
+		$this->new_revision($id);
+	}
 	
 	function set_expire($id, $new_expire) {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `Storage` SET `expire`=".($new_expire == null ? "NULL" : $new_expire)." WHERE `id`=".$id);
@@ -187,9 +194,17 @@ class storage extends Component {
 		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
 	}
 	
-	function joinRevision(&$q, $join_from, $join_key, $revision_alias) {
+	function joinRevision(&$q, $join_from, $join_key, $revision_alias = null) {
 		$q->join($join_from, "Storage", array($join_key=>"id"));
-		$q->field("Storage", "revision", $revision_alias);
+		if ($revision_alias <> null)
+			$q->field("Storage", "revision", $revision_alias);
+	}
+	function getFileType($id) {
+		return SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage","id",$id)->field("type")->executeSingleField();
+	}
+	
+	function convertTempFile($id, $type) {
+		SQLQuery::create()->bypassSecurity()->updateByKey("Storage", $id, array("type"=>$type,"expire"=>null));
 	}
 	
 	/** return true if this is the final call (either form sent, or no file uploaded), or false if this is an asynchronous upload */
@@ -199,7 +214,7 @@ class storage extends Component {
 		if ($fn) {
 			// AJAX call
 			$data = file_get_contents('php://input');
-			$id = $this->store_data("temp",$data, isset($headers['X_FILETYPE']) ? $headers['X_FILETYPE'] : null, time()+$expire_seconds);
+			$id = $this->store_data("temp",$data, isset($headers['X_FILETYPE']) ? $headers['X_FILETYPE'] : null, $expire_seconds);
 			if ($id == null) return true;
 			array_push($ids, $id);
 			array_push($names, $fn);
@@ -235,6 +250,12 @@ class storage extends Component {
 			}
 		}
 		return true;
+	}
+
+	function custom_upload($type, $expire_seconds) {
+		$data = file_get_contents('php://input');
+		$id = $this->store_data("temp",$data,$type,$expire_seconds);
+		return $id;
 	}
 	
 }

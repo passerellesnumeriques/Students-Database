@@ -18,6 +18,7 @@ require_once("utilities.inc");
  * @property data_model $data_model
  * @property development $development
  * @property discipline $discipline
+ * @property documents $documents
  * @property excel $excel
  * @property facebook $facebook
  * @property geography $geography

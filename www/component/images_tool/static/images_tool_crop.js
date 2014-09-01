@@ -487,7 +487,7 @@ function crop_rectangle(pic) {
 		this.div_top_left.onmousedown = function(ev) {
 			move_start = objectCopy(pic.crop_rect,2);
 			move = function(x,y) {
-				var pic_pos = windowScreenPosition(pic.original_canvas);
+				var pic_pos = {x:absoluteLeft(pic.original_canvas),y:absoluteTop(pic.original_canvas)};
 				x -= pic_pos.x;
 				if (x < 0) x = 0;
 				y -= pic_pos.y;
@@ -513,7 +513,7 @@ function crop_rectangle(pic) {
 		this.div_top_right.onmousedown = function(ev) {
 			move_start = objectCopy(pic.crop_rect,2);
 			move = function(x,y) {
-				var pic_pos = windowScreenPosition(pic.original_canvas);
+				var pic_pos = {x:absoluteLeft(pic.original_canvas),y:absoluteTop(pic.original_canvas)};
 				x -= pic_pos.x;
 				if (x < 0) x = 0;
 				y -= pic_pos.y;
@@ -535,7 +535,7 @@ function crop_rectangle(pic) {
 		this.div_bottom_left.onmousedown = function(ev) {
 			move_start = objectCopy(pic.crop_rect,2);
 			move = function(x,y) {
-				var pic_pos = windowScreenPosition(pic.original_canvas);
+				var pic_pos = {x:absoluteLeft(pic.original_canvas),y:absoluteTop(pic.original_canvas)};
 				x -= pic_pos.x;
 				if (x < 0) x = 0;
 				y -= pic_pos.y;
@@ -557,7 +557,7 @@ function crop_rectangle(pic) {
 		this.div_bottom_right.onmousedown = function(ev) {
 			move_start = objectCopy(pic.crop_rect,2);
 			move = function(x,y) {
-				var pic_pos = windowScreenPosition(pic.original_canvas);
+				var pic_pos = {x:absoluteLeft(pic.original_canvas),y:absoluteTop(pic.original_canvas)};
 				x -= pic_pos.x;
 				if (x < 0) x = 0;
 				y -= pic_pos.y;
@@ -579,8 +579,8 @@ function crop_rectangle(pic) {
 	pic.original_canvas.onmousedown = function(ev) {
 		if (!t.div_top) return;
 		var e = getCompatibleMouseEvent(ev);
-		var top_pos = windowScreenPosition(t.div_top);
-		var bottom_pos = windowScreenPosition(t.div_bottom);
+		var top_pos = {x:absoluteLeft(t.div_top),y:absoluteTop(t.div_top)};
+		var bottom_pos = {x:absoluteLeft(t.div_bottom),y:absoluteTop(t.div_bottom)};
 		if (e.x >= top_pos.x && e.x < top_pos.x+t.div_top.offsetWidth &&
 			e.y >= top_pos.y && e.y <= bottom_pos.y) {
 			var px = e.x;

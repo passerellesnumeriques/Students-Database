@@ -539,10 +539,26 @@ class user_management extends Component {
 		$q->join($users_alias, "UserPeople", array("id"=>"user"));
 		PNApplication::$instance->people->joinPeople($q, "UserPeople","people");
 	}
+	public function joinPeople(&$q, $from_table, $user_id_column) {
+		$q->join($from_table, "UserPeople", array($user_id_column=>"user"));
+		PNApplication::$instance->people->joinPeople($q, "UserPeople","people");
+	}
 	public function joinUserToPeople(&$q) {
 		$people_alias = $q->getTableAlias("People");
 		$q->join($people_alias, "UserPeople", array("id"=>"people"));
 		$this->joinUser($q, "UserPeople", "user");
+	}
+	
+	public function getUserFullName($domain, $username) {
+		$q = SQLQuery::create()->bypassSecurity()
+			->select("Users")
+			->whereValue("Users","domain",$domain)
+			->whereValue("Users","username",$username)
+			->join("Users","UserPeople",array("id"=>"user"));
+		PNApplication::$instance->people->joinPeople($q, "UserPeople","people");
+		$res = $q->executeSingleRow();
+		if ($res == null) return "?";
+		return $res["first_name"]." ".$res["last_name"];
 	}
 	
 	public function assignDefaultRoles($user_id, $people_id) {

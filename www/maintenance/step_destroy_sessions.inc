@@ -118,7 +118,7 @@ uksort($updates,function($v1,$v2){
 	}
 	return 0;
 });
-uasort($backups, function($b1,$b2){
+usort($backups, function($b1,$b2){
 	$t1 = intval($b1["time"]);
 	$t2 = intval($b2["time"]);
 	if ($t1 < $t2) return -1;

@@ -44,6 +44,7 @@ theme::$icons_16 = array(
 	"right" => 			"/static/theme/default/icons_16/right.png",
 	"save" => 			"/static/theme/default/icons_16/save.png",
 	"saving" =>			"/static/theme/default/icons_16/saving.gif",
+	"see" =>			"/static/theme/default/icons_16/visible.png",
 	"search" => 		"/static/theme/default/icons_16/search.png",
 	"settings" =>		"/static/theme/default/icons_16/settings.png",
 	"show" =>	 		"/static/theme/default/icons_16/visible.png",
