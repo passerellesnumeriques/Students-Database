@@ -33,22 +33,24 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 		}
 		$family_alias = $q->generateFieldAlias();
 		$q->field($table_alias, "family", $family_alias);
-		return array("key"=>$family_alias,"data"=>null);
+		$key_alias = $q->generateFieldAlias();
+		$q->field($table_alias, "id", $key_alias);
+		return array("family"=>$family_alias,"key"=>$key_alias,"data"=>null);
 	}
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
 		// TODO
 	}
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$families = array();
-		foreach ($rows as $row) if ($row[$sql_aliases["key"]] <> null && !in_array($row[$sql_aliases["key"]],$families)) array_push($families,$row[$sql_aliases["key"]]);
+		foreach ($rows as $row) if ($row[$sql_aliases["family"]] <> null && !in_array($row[$sql_aliases["family"]],$families)) array_push($families,$row[$sql_aliases["key"]]);
 		if (count($families) > 0)
 			$families = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereIn("FamilyMember","family",$families)->whereValue("FamilyMember","member_type","Child")->groupBy("FamilyMember","family")->countOneField("FamilyMember","family","nb_children")->field("FamilyMember","family","family")->execute();
 		$alias = $original_query->generateFieldAlias();
 		for ($i = 0; $i < count($rows); $i++) {
-			if ($rows[$i][$sql_aliases["key"]] == null) $rows[$i][$alias] = null;
+			if ($rows[$i][$sql_aliases["family"]] == null) $rows[$i][$alias] = null;
 			else {
 				$nb = 0;
-				foreach ($families as $f) if ($f["family"] == $rows[$i][$sql_aliases["key"]]) { $nb = $f["nb_children"]; break; }
+				foreach ($families as $f) if ($f["family"] == $rows[$i][$sql_aliases["family"]]) { $nb = $f["nb_children"]; break; }
 				if ($nb > 0) $nb--;
 				$rows[$i][$alias] = $nb;
 			}
@@ -103,9 +105,11 @@ class ChildRank extends datamodel\DataDisplay {
 		}
 		$family_alias = $q->generateFieldAlias();
 		$q->field($table_alias, "family", $family_alias);
+		$key_alias = $q->generateFieldAlias();
+		$q->field($table_alias, "id", $key_alias);
 		$child_rank_alias = $q->generateFieldAlias();
 		$q->field($table_alias, "child_rank", $child_rank_alias);
-		return array("key"=>$family_alias,"data"=>$child_rank_alias);
+		return array("family"=>$family_alias,"key"=>$key_alias,"data"=>$child_rank_alias);
 	}
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
 		// TODO
@@ -176,7 +180,7 @@ class ParentsSituation extends datamodel\DataDisplay {
 			// create new family
 			$id = SQLQuery::create()->bypassSecurity()->insert("Family", array("parents_situation"=>$value,"entry_date"=>date("Y-m-d")));
 			// insert child
-			SQLQuery::create()->bypassSecurity()->insert("FamilyMember", array("family"=>$family_id,"people"=>$people_id,"member_type"=>"Child","entry_date"=>date("Y-m-d")));
+			SQLQuery::create()->bypassSecurity()->insert("FamilyMember", array("family"=>$id,"people"=>$people_id,"member_type"=>"Child","entry_date"=>date("Y-m-d")));
 			return;
 		}
 		SQLQuery::create()->bypassSecurity()->updateByKey("Family", $id, array("parents_situation"=>$value));
@@ -206,16 +210,18 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 			$table_alias = $q->generateTableAlias();
 			$q->join($parent_table_alias, "FamilyMember", array("id"=>"people",null=>array("member_type"=>"Child")), $table_alias);
 		}
+		$family_alias = $q->generateFieldAlias();
+		$q->field($table_alias, "family", $family_alias);
 		$key_alias = $q->generateFieldAlias();
-		$q->field($table_alias, "family", $key_alias);
-		return array("key"=>$key_alias,"data"=>null);
+		$q->field($table_alias, "id", $key_alias);
+		return array("key"=>$key_alias,"data"=>null,"family"=>$family_alias);
 	}
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$families_ids = array();
-		foreach ($rows as $r) if (!in_array($r[$sql_aliases["key"]], $families_ids)) array_push($families_ids, $r[$sql_aliases["key"]]);
+		foreach ($rows as $r) if (!in_array($r[$sql_aliases["family"]], $families_ids)) array_push($families_ids, $r[$sql_aliases["family"]]);
 		$q = SQLQuery::create()->bypassSecurity()
 			->select("FamilyMember")
-			->whereIn("FamilyMember","id",$families_ids)
+			->whereIn("FamilyMember","family",$families_ids)
 			->whereValue("FamilyMember","member_type",$this->type)
 			->fieldsOfTable("FamilyMember");
 		PNApplication::$instance->people->joinPeople($q, "FamilyMember", "people", false);
@@ -225,7 +231,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 		for ($i = 0; $i < count($rows); $i++) {
 			$rows[$i][$alias] = null;
 			foreach ($res as $r)
-				if ($r["family"] == $rows[$i][$sql_aliases["key"]]) {
+				if ($r["family"] == $rows[$i][$sql_aliases["family"]]) {
 					$rows[$i][$alias] = $r;
 					break;
 				}
@@ -253,6 +259,21 @@ class ParentsSubDataDisplay extends datamodel\SubDataDisplay {
 $display->addDataDisplay(new ParentDataDisplay($category, "Father"));
 $display->addDataDisplay(new ParentDataDisplay($category, "Mother"));
 $model->addTableDataDisplay($display);
+
+class FamilyBackgroundDataScreen extends datamodel\GenericDataScreen {
+	protected function endDataRow($data, $value, $is_new, $can_edit) {
+		$html = "";
+		switch ($data->getDisplayName()) {
+			case "Child Rank":
+				if ($is_new) {
+					$html .= "<td><img src='".theme::$icons_10["info"]."' title='The number of siblings is mandatory if you specify a child rank'/></td>";
+				}
+				break;
+		}
+		return $html;
+	}
+}
+$model->addDataScreen(new FamilyBackgroundDataScreen($display));
 
 $display = new datamodel\TableDataDisplay("Family", $category);
 $display->addJoinToPrimary();

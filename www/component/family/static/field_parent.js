@@ -8,7 +8,23 @@ field_parent.prototype.constructor = field_parent;
 field_parent.prototype.canBeNull = function() { return true; };
 field_parent.prototype._create = function(data) {
 	if (typeof this.config.sub_data_index == 'undefined') {
-		// TODO
+		this._setData = function(data) {
+			var text = "";
+			if (data) {
+				if (data.first_name)
+					text = data.last_name + " " + data.first_name;
+				if (data.occupation) {
+					if (text.length > 0) text += ", ";
+					text += data.occupation;
+				}
+				if (data.education_level) {
+					if (text.length > 0) text += ", ";
+					text += data.education_level;
+				}
+			}
+			this.element.removeAllChildren();
+			this.element.appendChild(document.createTextNode(text));
+		};
 	} else {
 		this._setData = function(data) {
 			this.element.removeAllChildren();

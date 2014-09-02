@@ -13,12 +13,13 @@ function latinize($s) {
 }
 
 function str_similar($s1, $s2) {
+	$l = strlen($s1);
+	if ($l < 2 || strlen($s2) < 2) return $s1 == $s2;
 	if (strpos($s1, $s2) !== false) return true;
 	if (strpos($s2, $s1) !== false) return true;
 	if (strpos($s2, substr($s1,1)) !== false) return true;
-	$l = strlen($s1);
 	if (strpos($s2, substr($s1,0,$l-1)) !== false) return true;
-	for ($i = 1; $i < strlen($s1)-1; $i++) {
+	for ($i = 1; $i < $l-1; $i++) {
 		if (strpos($s2, substr($s1,0,$i)) !== false && strpos($s2,substr($s1,$i+1)) !== false) return true;
 	}
 	return false;

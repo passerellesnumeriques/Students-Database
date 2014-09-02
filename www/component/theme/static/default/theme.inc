@@ -76,6 +76,7 @@ theme::$icons_10 = array(
 	"error" => 			"/static/theme/default/icons_10/error.png",
 	"forbidden" =>		"/static/theme/default/icons_10/forbidden_10.png",
 	"_import" =>		"/static/theme/default/icons_10/import.png",
+	"info" => 			"/static/theme/default/icons_10/info.png",
 	"loading" =>		"/static/theme/default/icons_10/loading.gif",
 	"merge" =>			"/static/theme/default/icons_10/merge.gif",
 	"no_connection" => 	"/static/theme/default/icons_10/no_connection.gif",
