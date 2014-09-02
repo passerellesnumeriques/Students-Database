@@ -16,8 +16,11 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 		this.entities_highlight = [];
 		for (var i = 0; i < this.entities.length; ++i) {
 			var div = document.createElement("DIV");
+			div.style.borderBottom = "1px solid #A0A0A0";
 			var highlight = document.createElement("DIV");
 			var link = document.createElement("A");
+			link.style.fontWeight = "bold";
+			link.style.fontSize = "9pt";
 			link.appendChild(document.createTextNode(this.getEntityName(this.entities[i])));
 			link.className = "black_link";
 			link.href = "#";
@@ -39,7 +42,10 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 				div.appendChild(d);
 				var cb = document.createElement("INPUT");
 				cb.type = "checkbox";
+				cb.style.margin = "0px";
 				cb.style.marginLeft = "5px";
+				cb.style.marginRight = "2px";
+				cb.style.verticalAlign = "bottom";
 				checkboxes.push(cb);
 				markers.push(null);
 				d.appendChild(cb);
@@ -93,10 +99,30 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 					this.entities_markers[i][j] = null;
 				}
 			}
-			if (shown)
+			if (shown) {
 				this.entities_highlight[i].style.background = "linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%)";
-			else
+				this.entities_highlight[i].markers = this.entities_markers[i]; 
+				this.entities_highlight[i].onmouseover = function() {
+					this.style.background = "#C0F0C0";
+					for (var i = 0; i < this.markers.length; ++i) {
+						if (!this.markers[i]) continue;
+						this.markers[i].setColor("#C0F0C0");
+						this.markers[i].bringToFront();
+					}
+				};
+				this.entities_highlight[i].onmouseout = function() {
+					this.style.background = "linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%)";
+					for (var i = 0; i < this.markers.length; ++i) {
+						if (!this.markers[i]) continue;
+						this.markers[i].setColor("#C0C0F0");
+						this.markers[i].cancelBringToFront();
+					}
+				};
+			} else {
 				this.entities_highlight[i].style.background = "#FFFFFF";
+				this.entities_highlight[i].onmouseover = null;
+				this.entities_highlight[i].onmouseout = null;
+			}
 		}
 		this.map.fitToShapes();
 	};

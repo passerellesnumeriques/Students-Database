@@ -360,6 +360,32 @@ loadGoogleMaps(function() {
 		this._lat = lat;
 		this._lng = lng;
 	};
+	PNMapMarker.prototype.setColor = function(color) {
+		this._color = color;
+		if (this._div) {
+			this._div.childNodes[0].style.backgroundColor = color;
+			var ctx = this._arrow.getContext("2d");
+			ctx.fillStyle = color;
+			ctx.beginPath();
+			ctx.moveTo(0,0);
+			ctx.lineTo(7,6);
+			ctx.lineTo(14,0);
+			ctx.closePath();
+			ctx.fill();
+			ctx.strokeStyle = "1px solid black";
+			ctx.beginPath();
+			ctx.moveTo(0,0);
+			ctx.lineTo(7,6);
+			ctx.lineTo(14,0);
+			ctx.stroke();
+		}
+	};
+	PNMapMarker.prototype.bringToFront = function() {
+		if (this._div) this._div.style.zIndex = 10;
+	};
+	PNMapMarker.prototype.cancelBringToFront = function() {
+		if (this._div) this._div.style.zIndex = "";
+	};
 });
 
 function maxGoogleBounds(b1,b2) {
