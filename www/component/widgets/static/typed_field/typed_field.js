@@ -108,7 +108,7 @@ typed_field.prototype = {
 			setTimeout(function () { t.setData(data, same_change); },1);
 			return;
 		}
-		this._setData(data);
+		data = this._setData(data);
 		this._datachange(same_change);
 		this._data = data;
 		this.validate();
@@ -122,7 +122,7 @@ typed_field.prototype = {
 	 *  change data
 	 *  @param data new data value
 	 */
-	_setData: function(data) {},
+	_setData: function(data) { alert("Function _setData not implemented in typed_field "+getObjectClassName(this)); return data; },
 	/**
 	 * highlight the field to signal an error
 	 * @param {Boolean} error if true, the field is highlighted, else it is not
@@ -149,8 +149,7 @@ typed_field.prototype = {
 		window.top.datamodel.registerCellWidget(window, table, column, row_key, this.element, function(){
 			return t._getEditedData();
 		},function(data){
-			t._setData(data);
-			t._data = data;
+			t._data = t._setData(data);
 		},function(listener) {
 			t.onchange.add_listener(listener);
 		},function(listener) {
@@ -165,8 +164,7 @@ typed_field.prototype = {
 		window.top.datamodel.registerDataWidget(window, data_display, data_key, this.element, function(){
 			return t._getEditedData();
 		},function(data){
-			t._setData(data);
-			t._data = data;
+			t._data = t._setData(data);
 		},function(listener) {
 			t.onchange.add_listener(listener);
 		}, function(listener) {

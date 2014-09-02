@@ -33,5 +33,6 @@ field_boolean.prototype._create = function(data) {
 		if (typeof data == 'string') data = (data == "true" || data == "1" || data.trim().toLowerCase() == "yes" || data.trim().toLowerCase() == "y");
 		else if (typeof data == 'number') data = (data == 1);
 		t.input.checked = data ? "checked" : "";
+		return data;
 	};
 };

@@ -198,6 +198,10 @@ function upload(target, multiple, async) {
 		t.FileDragHover(e);
 		// fetch FileList object
 		var files = e.target.files || e.dataTransfer.files;
+		t.startUploadFiles(files);
+	};
+	
+	t.startUploadFiles = function(files) {
 		if (files.length == 0) return;
 		if (t.area_hidden) {
 			t.area_hidden = false;

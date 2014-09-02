@@ -183,6 +183,7 @@ field_grade.prototype._create = function(data) {
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
 			input.value = data != null ? this.get_value_from_system(data) : "";
+			return data;
 		};
 		this._getEditedData = function() {
 			if (input.value == "") return null;
@@ -229,6 +230,7 @@ field_grade.prototype._create = function(data) {
 				this.element.style.left = "0px";
 				this.element.style.backgroundColor = this.getGradeColor(grade);
 			}
+			return grade;
 		};
 		this._setData(data);
 	}

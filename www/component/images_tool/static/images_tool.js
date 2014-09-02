@@ -150,7 +150,7 @@ function images_tool() {
 		}
 	};
 	
-	this.launchUpload = function(click_event, multiple) {
+	this.launchUpload = function(click_event, multiple, files) {
 		t.upl = new upload("/dynamic/storage/service/store_temp_image?max_size=800", multiple, true);
 		var table, tr, td;
 		table = document.createElement("TABLE");
@@ -365,7 +365,10 @@ function images_tool() {
 		t.upl.ondone = function() {
 			global_upload_progress.done();
 		};
-		t.upl.openDialog(click_event, "image/*");
+		if (!files)
+			t.upl.openDialog(click_event, "image/*");
+		else
+			t.upl.startUploadFiles(files);
 	};
 	
 	this._init_table = function() {

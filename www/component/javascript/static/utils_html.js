@@ -229,10 +229,10 @@ function createTooltip(element, content) {
 		if (w < 44) {
 			x = x-22+Math.floor(w/2);
 			if (x >= ww) x = ww-1;
-			if (x < 0) {
-				x = 0;
-				content.className = "tooltip_right tooltip_veryright";
-			}
+		}
+		if (x < 0) {
+			x = 0;
+			content.className = "tooltip_right tooltip_veryright";
 		}
 		content.style.right = x+"px";
 	}

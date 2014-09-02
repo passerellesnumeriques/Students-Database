@@ -61,10 +61,13 @@ field_time.prototype._create = function(data) {
 			return getTimeFromInput();
 		};
 		this._setData = function(data) {
-			if (data == null) data = "";
-			else if (typeof data == 'number') data = getMinutesTimeString(data);
-			else data = getMinutesTimeString(parseTimeStringToMinutes(data));
-			input.value = data;
+			if (data == null) input.value = "";
+			else {
+				if (typeof data == 'number') data = getMinutesTimeString(data);
+				else data = getMinutesTimeString(parseTimeStringToMinutes(data));
+				input.value = data;
+			}
+			return data;
 		};
 		this.signal_error = function(error) {
 			this.error = error;
@@ -75,9 +78,10 @@ field_time.prototype._create = function(data) {
 		this._setData = function(data) {
 			var text;
 			if (data == null) text = "";
-			else if (typeof data == 'number') text = getMinutesTimeString(data);
-			else text = getMinutesTimeString(parseTimeStringToMinutes(data));
+			else if (typeof data == 'number') text = data = getMinutesTimeString(data);
+			else text = data = getMinutesTimeString(parseTimeStringToMinutes(data));
 			this.text.nodeValue = text;
+			return data;
 		};
 		this.getCurrentMinutes = function() {
 			var s = this.text.nodeValue;

@@ -24,9 +24,10 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 	public function generate(&$page, $paths, $values, $prefilled_values, $structure_name) {
 		if ($values->hasColumnValue("People", "id")) {
 			// existing people => add the picture
+			$picture_td_id = $page->generateID();
 			$picture_container_id = $page->generateID();
 			$people_id = $values->getColumnValue("People", "id");
-			echo "<table style='border-spacing:0px;'><tr><td valign=top align=center style='padding:2px 0px 0px 2px'><div id='$picture_container_id'></div><button id='change_picture' disabled='disabled'>Change picture</button></td><td valign=top style='padding-left:0px;padding-right:0px'>";
+			echo "<table style='border-spacing:0px;'><tr><td id='$picture_td_id' valign=top align=center style='padding:2px 0px 0px 2px'><div id='$picture_container_id'></div><button id='change_picture' disabled='disabled'>Change picture</button></td><td valign=top style='padding-left:0px;padding-right:0px'>";
 			parent::generate($page, $paths, $values, $prefilled_values, $structure_name);
 			echo "</td></tr></table>";
 			$page->requireJavascript("profile_picture.js");
@@ -67,6 +68,40 @@ class PeopleScreen extends datamodel\GenericDataScreen {
 						tool.launchUpload(ev, false);
 					};
 				});
+				var td_picture = document.getElementById('<?php echo $picture_td_id;?>');
+				td_picture.ondragenter = function(event) {
+					if (event.dataTransfer.types.contains("Files")) {
+						this.style.backgroundColor = "#D0D0D0";
+						this.style.outline = "5px dotted #808080";
+						event.dataTransfer.dropEffect = "copy";
+						event.preventDefault();
+						return true;
+					}
+				};
+				td_picture.ondragover = function(event) {
+					if (event.dataTransfer.types.contains("Files")) {
+						this.style.backgroundColor = "#D0D0D0";
+						this.style.outline = "5px dotted #808080";
+						event.dataTransfer.dropEffect = "copy";
+						event.preventDefault();
+						return false;
+					}
+				};
+				td_picture.ondragleave = function(event) {
+					this.style.backgroundColor = "";
+					this.style.outline = "";
+				};
+				td_picture.ondrop = function(event) {
+					this.style.backgroundColor = "";
+					this.style.outline = "";
+					if (event.dataTransfer.types.contains("Files")) {
+						if (event.dataTransfer.files.length == 0) return;
+						var first_file = event.dataTransfer.files[0];
+						tool.launchUpload(null, false, [first_file]);
+					}
+					event.preventDefault();
+					return false;
+				};
 				</script>
 				<?php
 			} 

@@ -61,14 +61,21 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
 		if ($value === null) return;
 		$people_id = $joining_key_value_for_new_data;
-		// create new family
-		$id = SQLQuery::create()->bypassSecurity()->insert("Family", array("entry_date"=>date("Y-m-d")));
-		// create children
+		$id = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereValue("FamilyMember","people",$people_id)->whereValue("FamilyMember","member_type","Child")->field("id")->executeSingleValue();
+		if ($id == null) {
+			// create new family
+			$id = SQLQuery::create()->bypassSecurity()->insert("Family", array("entry_date"=>date("Y-m-d")));
+		}
+		$existing = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereValue("FamilyMember","family",$id)->whereValue("FamilyMember","member_type","Child")->execute();
+		// create missing children
+		$nb = intval($value);
 		$children = array();
-		array_push($children, array("family"=>$id,"member_type"=>"Child","people"=>$people_id,"entry_date"=>date("Y-m-d")));
-		for ($i = 0; $i < intval($value); $i++)
+		if (count($existing) < $nb+1)
+			array_push($children, array("family"=>$id,"member_type"=>"Child","people"=>$people_id,"entry_date"=>date("Y-m-d")));
+		for ($i = 0; $i < $nb-count($existing); $i++)
 			array_push($children, array("family"=>$id,"member_type"=>"Child","people"=>null,"entry_date"=>date("Y-m-d")));
-		SQLQuery::create()->bypassSecurity()->insertMultiple("FamilyMember", $children);
+		if (count($children) > 0)
+			SQLQuery::create()->bypassSecurity()->insertMultiple("FamilyMember", $children);
 	}
 	
 }
@@ -110,12 +117,141 @@ class ChildRank extends datamodel\DataDisplay {
 		if ($value === null) return;
 		$people_id = $joining_key_value_for_new_data;
 		$id = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereValue("FamilyMember","people",$people_id)->whereValue("FamilyMember","member_type","Child")->field("id")->executeSingleValue();
-		if ($id == null) return;
+		if ($id == null) {
+			// create new family
+			$family_id = SQLQuery::create()->bypassSecurity()->insert("Family", array("entry_date"=>date("Y-m-d")));
+			// insert child
+			SQLQuery::create()->bypassSecurity()->insert("FamilyMember", array("family"=>$family_id,"people"=>$people_id,"member_type"=>"Child","child_rank"=>$value,"entry_date"=>date("Y-m-d")));
+			return;
+		}
 		SQLQuery::create()->bypassSecurity()->updateByKey("FamilyMember", $id, array("child_rank"=>$value));
 	}
 	
 }
 $display->addDataDisplay(new ChildRank($category));
+class ParentsSituation extends datamodel\DataDisplay {
+	public function __construct($category) {
+		$this->setTableAndCategory(DataModel::get()->internalGetTable("FamilyMember"), $category);
+	}
+	public function getDisplayName() { return "Parents Situation"; }
+	public function getHandledColumns() { return array(); }
+	public function getTypedField($sub_model) {
+		return PNApplication::$instance->widgets->get_typed_field(DataModel::get()->internalGetTable("Family")->internalGetColumn("parents_situation"));
+	}
+	public function getTypedFilter($sub_model) {
+		return PNApplication::$instance->widgets->get_typed_filter(DataModel::get()->internalGetTable("Family")->internalGetColumn("parents_situation"));
+	}
+	public function getHorizontalAlign() { return "center"; }
+	public function isEditable() { return false; }
+	public function isEditableForNewData() { return true; }
+	public function getEditLocks($sub_model) { return array(); }
+	public function isSortable() { return true; }
+	public function isMandatory($sub_model) { return false; }
+	public function buildSQL(&$q, $path) {
+		$table_alias = $q->getTableAlias("FamilyMember");
+		if ($table_alias == null) {
+			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);
+			$table_alias = $q->generateTableAlias();
+			$q->join($parent_table_alias, "FamilyMember", array("id"=>"people",null=>array("member_type"=>"Child")), $table_alias);
+		}
+		$family_alias = $q->generateTableAlias();
+		$q->join($table_alias, "Family", array("family"=>"id"), $family_alias);
+		$key_alias = $q->generateFieldAlias();
+		$q->field($family_alias, "id", $key_alias);
+		$data_alias = $q->generateFieldAlias();
+		$q->field($family_alias, "parents_situation", $data_alias);
+		return array("key"=>$key_alias,"data"=>$data_alias,"table"=>$family_alias);
+	}
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		return $this->getColumnFilterCondition($data_aliases["table"], DataModel::get()->internalGetTable("Family")->internalGetColumn("parents_situation"), $filter, $q);
+	}
+	
+	public function getNewData() { return null; }
+	
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+		if ($value === null) return;
+		$people_id = $joining_key_value_for_new_data;
+		$id = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereValue("FamilyMember","people",$people_id)->whereValue("FamilyMember","member_type","Child")->field("family")->executeSingleValue();
+		if ($id == null) {
+			// create new family
+			$id = SQLQuery::create()->bypassSecurity()->insert("Family", array("parents_situation"=>$value,"entry_date"=>date("Y-m-d")));
+			// insert child
+			SQLQuery::create()->bypassSecurity()->insert("FamilyMember", array("family"=>$family_id,"people"=>$people_id,"member_type"=>"Child","entry_date"=>date("Y-m-d")));
+			return;
+		}
+		SQLQuery::create()->bypassSecurity()->updateByKey("Family", $id, array("parents_situation"=>$value));
+	}
+}
+$display->addDataDisplay(new ParentsSituation($category));
+class ParentDataDisplay extends datamodel\DataDisplay {
+	public function getSubDataDisplay() { return new ParentsSubDataDisplay($this); }
+	public function __construct($category, $type) {
+		$this->type = $type;
+		$this->setTableAndCategory(DataModel::get()->internalGetTable("FamilyMember"), $category);
+	}
+	private $type;
+	public function getDisplayName() { return $this->type; }
+	public function getHandledColumns() { return array(); }
+	public function getTypedField($sub_model) {
+		return array("field_parent","{}");
+	}
+	public function isEditable() { return false; }
+	public function getEditLocks($sub_model) { return array(); }
+	public function isSortable() { return false; }
+	public function isMandatory($sub_model) { return false; }
+	public function buildSQL(&$q, $path) {
+		$table_alias = $q->getTableAlias("FamilyMember");
+		if ($table_alias == null) {
+			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);
+			$table_alias = $q->generateTableAlias();
+			$q->join($parent_table_alias, "FamilyMember", array("id"=>"people",null=>array("member_type"=>"Child")), $table_alias);
+		}
+		$key_alias = $q->generateFieldAlias();
+		$q->field($table_alias, "family", $key_alias);
+		return array("key"=>$key_alias,"data"=>null);
+	}
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
+		$families_ids = array();
+		foreach ($rows as $r) if (!in_array($r[$sql_aliases["key"]], $families_ids)) array_push($families_ids, $r[$sql_aliases["key"]]);
+		$q = SQLQuery::create()->bypassSecurity()
+			->select("FamilyMember")
+			->whereIn("FamilyMember","id",$families_ids)
+			->whereValue("FamilyMember","member_type",$this->type)
+			->fieldsOfTable("FamilyMember");
+		PNApplication::$instance->people->joinPeople($q, "FamilyMember", "people", false);
+		$res = $q->execute();
+		$alias = $original_query->generateFieldAlias();
+		$sql_aliases["data"] = $alias;
+		for ($i = 0; $i < count($rows); $i++) {
+			$rows[$i][$alias] = null;
+			foreach ($res as $r)
+				if ($r["family"] == $rows[$i][$sql_aliases["key"]]) {
+					$rows[$i][$alias] = $r;
+					break;
+				}
+		}
+	}
+	
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		return null;
+	}
+	
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+	}
+}
+class ParentsSubDataDisplay extends datamodel\SubDataDisplay {
+	public function getDisplayNames() {
+		return array(
+			"Last Name",
+			"First Name",
+			"Age",
+			"Occupation",
+			"Education Level"
+		);
+	}
+}
+$display->addDataDisplay(new ParentDataDisplay($category, "Father"));
+$display->addDataDisplay(new ParentDataDisplay($category, "Mother"));
 $model->addTableDataDisplay($display);
 
 $display = new datamodel\TableDataDisplay("Family", $category);

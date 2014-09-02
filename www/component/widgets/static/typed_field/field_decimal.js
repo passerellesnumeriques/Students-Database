@@ -6,8 +6,7 @@
 function field_decimal(data,editable,config) {
 	if (typeof data == 'string') data = parseFloat(data);
 	if (isNaN(data)) data = null;
-	if (data == "") data = null;
-	if (config && !config.can_be_null && data == "") data = 0;
+	if (config && !config.can_be_null && data == null) data = 0;
 	typed_field.call(this, data, editable, config);
 }
 field_decimal.prototype = new typed_field();
@@ -98,10 +97,11 @@ field_decimal.prototype._create = function(data) {
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
-			if (data == null && t.config && !t.config.can_be_null) data = 0;
+			if (data === null && t.config && !t.config.can_be_null) data = 0;
 			if (data === null) t.input.value = "";
 			else t.input.value = data.toFixed(t.config.decimal_digits);
 			if (typeof t.input.autoresize != 'undefined') t.input.autoresize();
+			return data;
 		};
 		this.signal_error = function(error) {
 			this.error = error;
@@ -149,12 +149,13 @@ field_decimal.prototype._create = function(data) {
 	} else {
 		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));
 		this._setData = function(data) {
-                       if (typeof data == 'string') data = parseFloat(data);
-                       if (isNaN(data)) data = null;
-                       if (data == null && this.config && !this.config.can_be_null) data = 0;
-                       if (data === null) this.text.nodeValue = "";
-                       else this.text.nodeValue = data.toFixed(this.config.decimal_digits);
-               };
+			if (typeof data == 'string') data = parseFloat(data);
+			if (isNaN(data)) data = null;
+			if (data === null && this.config && !this.config.can_be_null) data = 0;
+			if (data === null) this.text.nodeValue = "";
+			else this.text.nodeValue = data.toFixed(this.config.decimal_digits);
+			return data;
+		};
 		this.signal_error = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";

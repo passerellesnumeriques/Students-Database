@@ -122,11 +122,7 @@ field_date.prototype._create = function(data) {
 		this._timeoutSetData = null;
 		this._setData = function(data) {
 			var d = parseSQLDate(data);
-			var d2 = dateToSQL(d);
-			if (d2 != data) {
-				setTimeout(function(){t.setData(d2);},1);
-				data = d2;
-			}
+			data = dateToSQL(d);
 			if (t.select)
 				t.select.selectDate(parseSQLDate(data));
 			else {
@@ -134,6 +130,7 @@ field_date.prototype._create = function(data) {
 				t._set_date = data;
 				t._timeoutSetData = setTimeout(function() { t._timeoutSetData = null; t._setData(data); }, 10);
 			}
+			return data;
 		};
 		this.setMinimum = function(min) {
 			if (!min) {
@@ -176,6 +173,7 @@ field_date.prototype._create = function(data) {
 				this.element.style.fontStyle = 'normal';
 				this.element.innerHTML = data;
 			}
+			return data;
 		};
 		this._setData(data);
 		this.signal_error = function(error) {

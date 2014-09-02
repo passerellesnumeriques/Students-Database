@@ -65,6 +65,7 @@ field_timestamp.prototype._create = function(data) {
 				if (t._field_date) t._field_date.setData(d);
 				if (t._field_time) t._field_time.setData(d.getMinutes()+d.getHours()*60);
 			}
+			return data;
 		};
 		this._getEditedData = function() {
 			if (!t._field_date) return t._data;
@@ -95,9 +96,10 @@ field_timestamp.prototype._create = function(data) {
 			var text;
 			if (data == null) text = "";
 			else {
+				var ms = data;
 				if (this.config && this.config.data_is_seconds)
-					data *= 1000;
-				var d = new Date(data);
+					ms *= 1000;
+				var d = new Date(ms);
 				text = getDayShortName(d.getDay(), true)+" "+d.getDate()+" "+getMonthName(d.getMonth()+1)+" "+d.getFullYear();
 				if (this.config && this.config.show_time) {
 					var hours = d.getHours();
@@ -107,6 +109,7 @@ field_timestamp.prototype._create = function(data) {
 				}
 			}
 			this.element.appendChild(document.createTextNode(text));
+			return data;
 		};
 		this._setData(data);
 		this.signal_error = function(error) {

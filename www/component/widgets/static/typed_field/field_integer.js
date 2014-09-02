@@ -4,7 +4,9 @@
  * @param config can contain: <code>min</code>, <code>max</code>, <code>can_be_null</code>
  */
 function field_integer(data,editable,config) {
-	if (data == null) data = "";
+	if (typeof data == 'string') data = parseInt(data);
+	if (isNaN(data)) data = null;
+	if (config && !config.can_be_null && data == null) data = 0;
 	typed_field.call(this, data, editable, config);
 }
 field_integer.prototype = new typed_field();
@@ -95,8 +97,13 @@ field_integer.prototype._create = function(data) {
 			return parseInt(value);
 		};
 		this._setData = function(data) {
-			if (data == null) t.input.value = "";
+			if (typeof data == 'string') data = parseInt(data);
+			if (isNaN(data)) data = null;
+			if (t.config && !t.config.can_be_null && data === null) data = 0;
+			if (data === null) t.input.value = "";
 			else t.input.value = data;
+			if (typeof t.input.autoresize != 'undefined') t.input.autoresize();
+			return data;
 		};
 		this.signal_error = function(error) {
 			this.error = error;
@@ -139,16 +146,12 @@ field_integer.prototype._create = function(data) {
 	} else {
 		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));
 		this._setData = function(data) {
-			var s = data == null ? "" : data;
-			if (this.text.nodeValue == s) return;
-			this.text.nodeValue = s;
-			if (this.element.childNodes.length > 1)
-				this.element.removeChild(this.element.childNodes[1]);
-			if (s.length == 0) {
-				var e = document.createElement("I");
-				e.innerHTML = "&nbsp; &nbsp;";
-				this.element.appendChild(e);
-			}
+			if (typeof data == 'string') data = parseInt(data);
+			if (isNaN(data)) data = null;
+			if (this.config && !this.config.can_be_null && data === null) data = 0;
+			if (data === null) this.text.nodeValue = "";
+			else this.text.nodeValue = data;
+			return data;
 		};
 		this.signal_error = function(error) {
 			this.error = error;

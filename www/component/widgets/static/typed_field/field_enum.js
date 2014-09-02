@@ -86,11 +86,14 @@ field_enum.prototype._create = function(data) {
 			return select.options[select.selectedIndex].value; 
 		};
 		this._setData = function(data) {
+			var found = false;
 			for (var i = 0; i < select.options.length; ++i)
 				if (select.options[i].value == data) {
 					select.selectedIndex = i;
 					break;
 				}
+			if (!found) return this._data;
+			return data;
 		};
 		this.signal_error = function(error) {
 			this.error = error;
@@ -144,6 +147,7 @@ field_enum.prototype._create = function(data) {
 		//this.element.style.height = "100%";
 		this._setData = function(data) {
 			this.text.nodeValue = this.get_text_from_data(data);
+			return data;
 		};
 		this.signal_error = function(error) {
 			this.error = error;

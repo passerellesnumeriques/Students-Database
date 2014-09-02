@@ -78,7 +78,7 @@ class data_model extends Component {
 							foreach ($tcols as $tc=>$tv) {
 								if ($tc == $colname) {
 									$values[$tc] = $tv;
-									break;								
+									break;			
 								}
 							}
 						}

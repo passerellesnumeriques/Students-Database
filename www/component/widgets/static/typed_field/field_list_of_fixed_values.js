@@ -113,6 +113,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 			if (data != null)
 				for (var i = 0; i < data.length; ++i)
 					this._addElement(data[i]);
+			return data;
 		};
 		this._setData(data);
 	} else {
@@ -132,6 +133,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 			}
 			this.element.removeAllChildren();
 			this.element.appendChild(document.createTextNode(s));
+			return data;
 		};
 		this._setData(data);
 	}

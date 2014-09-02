@@ -1350,6 +1350,7 @@ function grid(element) {
 			if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
 			parent.appendChild(f.getHTMLElement());
 			ondone(f);
+			layout.invalidate(parent);
 		});
 	};
 	

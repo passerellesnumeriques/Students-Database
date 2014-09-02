@@ -264,7 +264,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			var col_index = t.grid.getColumnIndex(col);
 			for (var i = 0; i < t.grid.getNbRows(); ++i) {
 				var found_field = t.grid.getCellField(i, found_col_index);
+				if (found_field == null) continue; // no data
 				var new_field = t.grid.getCellField(i, col_index);
+				if (new_field == null) continue; // no data
 				var data_id = t.grid.getCellDataId(i, found_col_index);
 				t.grid.setCellDataId(i, col_index, data_id);
 				new_field.setData(found_field.getCurrentData());

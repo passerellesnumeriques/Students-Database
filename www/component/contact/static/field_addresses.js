@@ -86,7 +86,7 @@ field_addresses.prototype._create = function(data) {
 			this.table.appendChild(this.tr = document.createElement("TR"));
 			this._setData = function(data) {
 				while (this.tr.childNodes.length > 0) this.tr.removeChild(this.tr.childNodes[0]);
-				if (data == null) return;
+				if (data == null) return null;
 				var t=this;
 				require("address_text.js",function() {
 					for (var i = 0; i < data.addresses.length; ++i) {
@@ -97,8 +97,10 @@ field_addresses.prototype._create = function(data) {
 						td.appendChild(text.element);
 						td.style.verticalAlign = "top";
 						if (t.tr.childNodes.length > 1) td.style.borderLeft = "1px solid #808080";
+						layout.invalidate(t.element);
 					}
 				});
+				return data;
 			};
 			this._setData(data);
 		}
@@ -117,7 +119,7 @@ field_addresses.prototype._create = function(data) {
 		this._setData = function(data) {
 			this.element.onclick = function(event) { stopEventPropagation(event); return false; };
 			while (this.element.childNodes.length > 0) this.element.removeChild(this.element.childNodes[0]);
-			if (data == null) return;
+			if (data == null) return null;
 			for (var i = 0; i < data.addresses.length; ++i) {
 				var addr = data.addresses[i];
 				var area = addr.geographic_area;
@@ -260,103 +262,104 @@ field_addresses.prototype._create = function(data) {
 					}
 				}
 			}
-			if (t.editable) {
-				this.getNbData = function() {
-					return t._data.addresses.length;
-				};
-				this.resetData = function() {
-					t._data.addresses = [];
-					t.setData(t._data, true);
-				};
-				this.addData = function(new_data) {
-					var division_index = this.config.sub_data_index;
-					require("contact_objects.js", function() {
-						var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", "Home");
-						if (typeof new_data == 'string') {
-							var area = window.top.geography.searchAreaByNameInDivision(t.country_data, division_index, new_data);
-							if (!area)
-								area = window.top.geography.searchAreaByNameInDivisionBestMatch(t.country_data, division_index, new_data);
-							if (area) {
-								// found
-								address.geographic_area.country_id = window.top.default_country_id;
-								address.geographic_area.id = area.area_id;
-								address.geographic_area.division_id = window.top.geography.getAreaDivisionId(t.country_data, area);
-								t._data.addresses.push(address);
-								t.setData(t._data, true);
-							} else {
-								// not found
-								// TODO ?
-							}
+			return data;
+		}
+		if (t.editable) {
+			this.getNbData = function() {
+				return t._data.addresses.length;
+			};
+			this.resetData = function() {
+				t._data.addresses = [];
+				t.setData(t._data, true);
+			};
+			this.addData = function(new_data) {
+				var division_index = this.config.sub_data_index;
+				require("contact_objects.js", function() {
+					var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", "Home");
+					if (typeof new_data == 'string') {
+						var area = window.top.geography.searchAreaByNameInDivision(t.country_data, division_index, new_data);
+						if (!area)
+							area = window.top.geography.searchAreaByNameInDivisionBestMatch(t.country_data, division_index, new_data);
+						if (area) {
+							// found
+							address.geographic_area.country_id = window.top.default_country_id;
+							address.geographic_area.id = area.area_id;
+							address.geographic_area.division_id = window.top.geography.getAreaDivisionId(t.country_data, area);
+							t._data.addresses.push(address);
+							t.setData(t._data, true);
 						} else {
+							// not found
 							// TODO ?
 						}
-					});
-				};
-				this.getDataIndex = function(index) {
-					var addr = t._data.addresses[index];
-					var area_id = addr.geographic_area.id;
-					if (area_id == null || area_id <= 0) return null;
-					var area = window.top.geography.searchArea(t.country_data, area_id);
-					var division_index = window.top.geography.getAreaDivisionIndex(t.country_data, area);
-					if (division_index < t.config.sub_data_index) return null;
-					while (division_index > t.config.sub_data_index) {
-						area = window.top.geography.getParentArea(t.country_data, area);
-						division_index--;
-					}
-					return area;
-				};
-				this.setDataIndex = function(index, new_data) {
-					var division_index = this.config.sub_data_index;
-					var address = t._data.addresses[index];
-					if (typeof new_data == 'string') { // by name
-						if (division_index > 0 && address.geographic_area.id && address.geographic_area.id > 0) {
-							// restrict search in parent
-							var parent = window.top.geography.searchArea(t.country_data, address.geographic_area.id);
-							var div = window.top.geography.getAreaDivisionIndex(t.country_data, parent);
-							while (div > division_index-1) {
-								parent = window.top.geography.getParentArea(t.country_data, parent);
-								div--;
-							}
-							var a = window.top.geography.searchAreaByNameInParent(t.country_data, parent.area_id, division_index, new_data);
-							if (!a)
-								a = window.top.geography.searchAreaByNameInParentBestMatch(t.country_data, parent.area_id, division_index, new_data);
-							new_data = a;
-						} else {
-							var a = window.top.geography.searchAreaByNameInDivision(t.country_data, division_index, new_data);
-							if (!a)
-								a = window.top.geography.searchAreaByNameInDivisionBestMatch(t.country_data, division_index, new_data);
-							new_data = a;
-						}
-					} else if (typeof new_data == 'number') // by id
-						new_data = window.top.geography.searchArea(t.country_data, new_data);
-					else if (new_data && typeof new_data.area_id == 'undefined') // invalid data
-						return; // error ?
-					if (new_data) {
-						address.geographic_area.country_id = window.top.default_country_id;
-						address.geographic_area.id = new_data.area_id;
-						address.geographic_area.division_id = window.top.geography.getAreaDivisionId(t.country_data, new_data);
-						t.setData(t._data, true);
 					} else {
 						// TODO ?
 					}
-				};
+				});
+			};
+			this.getDataIndex = function(index) {
+				var addr = t._data.addresses[index];
+				var area_id = addr.geographic_area.id;
+				if (area_id == null || area_id <= 0) return null;
+				var area = window.top.geography.searchArea(t.country_data, area_id);
+				var division_index = window.top.geography.getAreaDivisionIndex(t.country_data, area);
+				if (division_index < t.config.sub_data_index) return null;
+				while (division_index > t.config.sub_data_index) {
+					area = window.top.geography.getParentArea(t.country_data, area);
+					division_index--;
+				}
+				return area;
+			};
+			this.setDataIndex = function(index, new_data) {
+				var division_index = this.config.sub_data_index;
+				var address = t._data.addresses[index];
+				if (typeof new_data == 'string') { // by name
+					if (division_index > 0 && address.geographic_area.id && address.geographic_area.id > 0) {
+						// restrict search in parent
+						var parent = window.top.geography.searchArea(t.country_data, address.geographic_area.id);
+						var div = window.top.geography.getAreaDivisionIndex(t.country_data, parent);
+						while (div > division_index-1) {
+							parent = window.top.geography.getParentArea(t.country_data, parent);
+							div--;
+						}
+						var a = window.top.geography.searchAreaByNameInParent(t.country_data, parent.area_id, division_index, new_data);
+						if (!a)
+							a = window.top.geography.searchAreaByNameInParentBestMatch(t.country_data, parent.area_id, division_index, new_data);
+						new_data = a;
+					} else {
+						var a = window.top.geography.searchAreaByNameInDivision(t.country_data, division_index, new_data);
+						if (!a)
+							a = window.top.geography.searchAreaByNameInDivisionBestMatch(t.country_data, division_index, new_data);
+						new_data = a;
+					}
+				} else if (typeof new_data == 'number') // by id
+					new_data = window.top.geography.searchArea(t.country_data, new_data);
+				else if (new_data && typeof new_data.area_id == 'undefined') // invalid data
+					return; // error ?
+				if (new_data) {
+					address.geographic_area.country_id = window.top.default_country_id;
+					address.geographic_area.id = new_data.area_id;
+					address.geographic_area.division_id = window.top.geography.getAreaDivisionId(t.country_data, new_data);
+					t.setData(t._data, true);
+				} else {
+					// TODO ?
+				}
+			};
 
-				var add_button = document.createElement("BUTTON");
-				add_button.className = "flat small_icon";
-				add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
-				add_button.title = "Add new address";
-				this.element.appendChild(add_button);
-				add_button.onclick = function(event) {
-					require("contact_objects.js", function() {
-						var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "Home");
-						t._data.addresses.push(address);
-						t.setData(t._data, true);
-					});
-					stopEventPropagation(event);
-					return false;
-				};
-			}
-		};
+			var add_button = document.createElement("BUTTON");
+			add_button.className = "flat small_icon";
+			add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+			add_button.title = "Add new address";
+			this.element.appendChild(add_button);
+			add_button.onclick = function(event) {
+				require("contact_objects.js", function() {
+					var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "Home");
+					t._data.addresses.push(address);
+					t.setData(t._data, true);
+				});
+				stopEventPropagation(event);
+				return false;
+			};
+		}
 		this._setData(data);
 	}
 };

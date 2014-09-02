@@ -72,9 +72,10 @@ field_text.prototype._create = function(data) {
 			return data; 
 		};
 		this._setData = function(data) {
-			if (data == null) data = "";
-			input.value = data;
+			if (data == null) input.value = "";
+			else input.value = data;
 			if (input.autoresize) input.autoresize();
+			return data;
 		};
 		this._fillWidth = this.fillWidth;
 		this.fillWidth = function() {
@@ -103,6 +104,7 @@ field_text.prototype._create = function(data) {
 			} else {
 				if (this.element.childNodes.length == 2) this.element.removeChild(this.element.childNodes[1]);
 			}
+			return data;
 		};
 		this._setData(data);
 		this.signal_error = function(error) {

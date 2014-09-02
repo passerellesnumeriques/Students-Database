@@ -15,5 +15,6 @@ field_html.prototype._create = function(data) {
 			this.element.innerHTML = data;
 		else if (data != null)
 			this.element.appendChild(data);
+		return data;
 	};
 };

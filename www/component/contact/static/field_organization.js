@@ -130,10 +130,11 @@ field_organization.prototype._create = function(data) {
 						break;
 					}
 				if (!found) {
-					this._data = null;
 					this.select.selectedIndex = 0;
+					return null;
 				}
 			}
+			return data;
 		};
 		this.validate = function() {
 			if (this.selectedIndex == 0 && !this.config.can_be_null)
@@ -168,6 +169,7 @@ field_organization.prototype._create = function(data) {
 			if (name == null) name = "";
 			this.element.removeAllChildren();
 			this.element.appendChild(document.createTextNode(name));
+			return data;
 		};
 	}
 	this._setData(data);

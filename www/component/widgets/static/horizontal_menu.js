@@ -52,6 +52,7 @@ function horizontal_menu(menu, valign) {
 		var total = 0;
 		for (var i = 0; i < t.items.length; ++i) {
 			if (t.items[i].always_in_menu) continue; // skip if this item is only for context menu
+			if (t.items[i].element._in_context_menu) continue;
 			t.items[i].element.style.display = 'inline-block';
 			t.items[i].element.style.whiteSpace = 'nowrap';
 			menu.appendChild(t.items[i].element);
@@ -93,16 +94,21 @@ function horizontal_menu(menu, valign) {
 			var m = new context_menu();
 			for (var i = 0; i < t.items.length; ++i) {
 				if (t.items[i].element.parentNode == menu) continue;
-				t.items[i].element.previousClassName = t.items[i].element.className; 
+				t.items[i].element.previousClassName = t.items[i].element.className;
+				t.items[i].element.previousMargin = t.items[i].element.style.margin;
+				t.items[i].element.style.margin = "0px";
 				t.items[i].element.className = 'context_menu_item';
 				t.items[i].element.style.display = 'block';
+				t.items[i].element._in_context_menu = true;
 				m.addItem(t.items[i].element);
 			}
 			m.showBelowElement(t.more_item);
 			m.onclose = function() {
 				for (var i = 0; i < t.items.length; ++i) {
 					if (t.items[i].element.parentNode == menu) continue;
-					t.items[i].element.className = t.items[i].element.previousClassName; 
+					t.items[i].element.className = t.items[i].element.previousClassName;
+					t.items[i].element.style.margin = t.items[i].element.previousMargin;
+					t.items[i].element._in_context_menu = false;
 				}
 			};
 		});

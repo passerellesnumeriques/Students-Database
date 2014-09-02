@@ -234,8 +234,8 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		container.appendChild(t.header);
 		container.appendChild(t.frame);
 		require("horizontal_menu.js",function(){
-			var div = document.createElement("DIV");
-			div.className = "button";
+			var div = document.createElement("BUTTON");
+			div.className = "flat";
 			div.innerHTML = "<img src='"+theme.icons_16.more_menu+"'/> More";
 			t.header_menu.appendChild(div);
 			new horizontal_menu(t.header_menu, menu_valign);
