@@ -214,7 +214,7 @@ class storage extends Component {
 		if ($fn) {
 			// AJAX call
 			$data = file_get_contents('php://input');
-			$id = $this->store_data("temp",$data, isset($headers['X_FILETYPE']) ? $headers['X_FILETYPE'] : null, $expire_seconds);
+			$id = $this->store_data("temp",$data, isset($headers['X_FILETYPE']) ? $headers['X_FILETYPE'] : null, time()+$expire_seconds);
 			if ($id == null) return true;
 			array_push($ids, $id);
 			array_push($names, $fn);
