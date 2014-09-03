@@ -28,7 +28,7 @@ field_contact_type.prototype._create = function(data) {
 			case "phone": contact_type_name = "Phone"; break;
 			case "IM": contact_type_name = "Instant Messaging"; break;
 			}
-			t.control = new contact_type(t.config.type, contact_type_name, data.type, data.type_id, data.contacts, true, true, true, null, null);
+			t.control = new contact_type(t.config.type, contact_type_name, data.type, data.type_id, data.contacts, true, true, true, true, null, null);
 			t.control.onchange.add_listener(function() { t._datachange(); });
 			t.element.appendChild(t.control.table);
 		});

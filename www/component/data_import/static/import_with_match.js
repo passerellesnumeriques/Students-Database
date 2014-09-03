@@ -157,17 +157,25 @@ function import_with_match(provider, ev, show_after_grid) {
 			var table = document.createElement("TABLE");
 			table.style.display = "inline-block";
 			table.style.verticalAlign = "top";
-			table.innerHTML = "<tr id='import_wizard_match_header'><th></th><th>Excel Column</th><th>Data Column</th></tr>";
+			table.style.border = "1px solid #A0A0C0";
+			table.style.marginRight = "1px";
+			table.style.marginTop = "1px";
+			setBorderRadius(table,3,3,3,3,3,3,3,3);
+			table.innerHTML = "<tr id='import_wizard_match_header'><th></th><th colspan=2>Excel Column</th><th>Data Column</th></tr>";
 			t.import_wizard.appendChild(table);
 			var table2 = document.createElement("TABLE");
 			table2.style.display = "inline-block";
 			table2.style.verticalAlign = "top";
-			table2.innerHTML = "<tr id='import_wizard_import_header'><th></th><th>Excel Column</th><th>Data Column</th></tr>";
+			table2.style.border = "1px solid #A0A0C0";
+			table2.style.marginTop = "1px";
+			setBorderRadius(table2,3,3,3,3,3,3,3,3);
+			table2.innerHTML = "<tr id='import_wizard_import_header'><th></th><th colspan=2>Excel Column</th><th>Data Column</th></tr>";
 			t.import_wizard.appendChild(table2);
 			var span = document.createElement("SPAN");
 			span.style.whiteSpace = "nowrap";
 			t.import_wizard.appendChild(span);
-			span.appendChild(document.createTextNode("How many rows are containing the titles ? "));
+			span.style.fontSize = "8pt";
+			span.appendChild(document.createTextNode("How many rows to skip at the beginning (before the data to match/import) ? "));
 			t._header_rows = new field_integer(0,true,{min:0,max:win.excel.getActiveSheet().rows.length});
 			span.appendChild(t._header_rows.getHTMLElement());
 			t._header_rows.onchange.add_listener(function() {
@@ -203,6 +211,11 @@ function import_with_match(provider, ev, show_after_grid) {
 					select_excel_column.add(o);
 				}
 				td.appendChild(select_excel_column);
+				tr.appendChild(td);
+				td = document.createElement("TD");
+				td.style.textAlign = "right";
+				td.style.fontSize = "8pt";
+				td.innerHTML = " with ";
 				tr.appendChild(td);
 				td = document.createElement("TD");
 				var select_data = document.createElement("SELECT");
@@ -303,6 +316,11 @@ function import_with_match(provider, ev, show_after_grid) {
 					select_excel_column.add(o);
 				}
 				td.appendChild(select_excel_column);
+				tr.appendChild(td);
+				td = document.createElement("TD");
+				td.style.textAlign = "right";
+				td.style.fontSize = "8pt";
+				td.innerHTML = " into ";
 				tr.appendChild(td);
 				td = document.createElement("TD");
 				var select_data = document.createElement("SELECT");
@@ -464,9 +482,9 @@ function import_with_match(provider, ev, show_after_grid) {
 					var excel_value = sheet.getCell(t._import[i].excel_column, row).getValue();
 					if (!excel_value) continue;
 					if (field.addData)
-						field.addData(excel_value);
+						field.addData(excel_value,true);
 					else
-						field.setData(excel_value);
+						field.setData(excel_value,false,true);
 				}
 			}
 		};

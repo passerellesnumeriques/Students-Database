@@ -48,13 +48,10 @@ field_addresses.prototype.constructor = field_addresses;
 field_addresses.prototype._create = function(data) {
 	if (typeof this.config.sub_data_index == 'undefined') {
 		if (this.editable) {
-			this.table = document.createElement("TABLE"); this.element.appendChild(this.table);
-			this.table.style.borderSpacing = "0px";
-			this.table.style.borderCollapse = "collapse";
 			var t=this;
 			require("addresses.js",function() {
-				t.control = new addresses(t.table, false, data.type, data.type_id, valueCopy(data.addresses,10), true, true, true);
-				t.control.onchange.add_listener(function() { t._datachange(); });
+				t.control = new addresses(t.element, false, data.type, data.type_id, valueCopy(data.addresses,10), true, true, true);
+				t.control.onchange.add_listener(function() { t._data.addresses = t.originalData.addresses = valueCopy(t.control.getAddresses(),10); });
 			});
 			this.addData = function(new_data) {
 				var finalize = function(address) {
@@ -93,10 +90,17 @@ field_addresses.prototype._create = function(data) {
 						var text = new address_text(data.addresses[i]);
 						var td = document.createElement("TD");
 						td.style.padding = "0px 1px";
+						td.style.whiteSpace = "nowrap";
+						td.style.color = "#808080";
+						td.appendChild(document.createTextNode(data.addresses[i].address_type));
+						t.tr.appendChild(td);
+						if (t.tr.childNodes.length > 1) td.style.borderLeft = "1px solid #808080";
+						td = document.createElement("TD");
+						td.style.padding = "0px 1px";
+						td.style.whiteSpace = "nowrap";
 						t.tr.appendChild(td);
 						td.appendChild(text.element);
 						td.style.verticalAlign = "top";
-						if (t.tr.childNodes.length > 1) td.style.borderLeft = "1px solid #808080";
 						layout.invalidate(t.element);
 					}
 				});

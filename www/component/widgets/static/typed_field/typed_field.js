@@ -101,14 +101,14 @@ typed_field.prototype = {
 	 *  change data
 	 *  @param data new data value
 	 */
-	setData: function(data, same_change) {
+	setData: function(data, same_change, from_input) {
 		if (!same_change && objectEquals(data, this._data)) return; // no change
 		if (this._in_change_event) {
 			var t=this;
 			setTimeout(function () { t.setData(data, same_change); },1);
 			return;
 		}
-		data = this._setData(data);
+		data = this._setData(data, from_input);
 		this._datachange(same_change);
 		this._data = data;
 		this.validate();
@@ -183,8 +183,8 @@ function typed_field_multiple(data, editable, config) {
 typed_field_multiple.prototype = new typed_field();
 typed_field_multiple.prototype.constructor = typed_field_multiple;		
 typed_field_multiple.prototype.isMultiple = function() { return true; };
-typed_field_multiple.prototype.addData = function(new_data) { alert("Function addData not implemented in typed_field_multiple: "+getObjectClassName(this)); };
+typed_field_multiple.prototype.addData = function(new_data, from_input) { alert("Function addData not implemented in typed_field_multiple: "+getObjectClassName(this)); };
 typed_field_multiple.prototype.getNbData = function() { alert("Function getNbData not implemented in typed_field_multiple: "+getObjectClassName(this)); };
 typed_field_multiple.prototype.resetData = function() { alert("Function resetData not implemented in typed_field_multiple: "+getObjectClassName(this)); };
 typed_field_multiple.prototype.getDataIndex = function(index) { alert("Function getDataIndex not implemented in typed_field_multiple: "+getObjectClassName(this)); };
-typed_field_multiple.prototype.setDataIndex = function(index, value) { alert("Function setDataIndex not implemented in typed_field_multiple: "+getObjectClassName(this)); };
+typed_field_multiple.prototype.setDataIndex = function(index, value, from_input) { alert("Function setDataIndex not implemented in typed_field_multiple: "+getObjectClassName(this)); };

@@ -74,6 +74,10 @@ field_grade.prototype.get_value_from_system = function(grade) {
 	do {
 		var step_grade = this.get_step_grade(step);
 		var next_step_grade = this.get_step_grade(step+1);
+		if (this.config.max) {
+			step_grade = step_grade*100/this.config.max;
+			next_step_grade = next_step_grade*100/this.config.max;
+		}
 		var step_value = this.steps[step].value;
 		var next_step_value = this.steps[step+1].value;
 		if (grade >= step_grade && grade <= next_step_grade) {
@@ -95,6 +99,10 @@ field_grade.prototype.get_grade_from_system = function(value) {
 	do {
 		var step_grade = this.get_step_grade(step);
 		var next_step_grade = this.get_step_grade(step+1);
+		if (this.config.max) {
+			step_grade = step_grade*100/this.config.max;
+			next_step_grade = next_step_grade*100/this.config.max;
+		}
 		var step_value = this.steps[step].value;
 		var next_step_value = this.steps[step+1].value;
 		if (step_value < next_step_value) {
@@ -114,9 +122,9 @@ field_grade.prototype.get_grade_from_system = function(value) {
 	return 0;
 };
 field_grade.prototype.getGradeColor = function(grade) {
-	return grade == null ? "#C0C0C0" :
-		grade < this.config.passing ? "#FF8080" :
-		grade <= this.config.passing+(25*(this.config.max-this.config.passing)/100) ? "#FFC000" :
+	return grade === null ? "#C0C0C0" :
+		grade < this.config.passing*100/this.config.max ? "#FF8080" :
+		grade <= (this.config.passing+(25*(this.config.max-this.config.passing)/100))*100/this.config.max ? "#FFC000" :
 		"#80FF80";
 };
 field_grade.prototype.exportCell = function(cell) {
@@ -179,9 +187,10 @@ field_grade.prototype._create = function(data) {
 		};
 		this.element.appendChild(input);
 		
-		this._setData = function(data) {
+		this._setData = function(data, from_input) {
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
+			if (from_input && data !== null) data = this.get_grade_from_system(data);
 			input.value = data != null ? this.get_value_from_system(data) : "";
 			return data;
 		};
@@ -204,20 +213,21 @@ field_grade.prototype._create = function(data) {
 		this.validate = function() {
 			var grade = this._getEditedData();
 			if (grade < 0) this.signal_error("Must be minimum "+this.get_value_from_system(0));
-			else if (grade > t.config.max) this.signal_error("Must be maximum "+this.get_value_from_system(t.config.max));
+			else if (grade > 100) this.signal_error("Must be maximum "+this.get_value_from_system(t.config.max));
 			else this.signal_error(null);
 			this.element.style.backgroundColor =
 				grade == null ? "#C0C0C0" :
-				grade < t.config.passing ? "#FFA0A0" :
-				grade <= t.config.passing+(25*(t.config.max-t.config.passing)/100) ? "#FFC000" :
+				grade < t.config.passing*100/t.config.max ? "#FFA0A0" :
+				grade <= (t.config.passing+(25*(t.config.max-t.config.passing)/100))*100/t.config.max ? "#FFC000" :
 				"#A0FFA0";
 			input.style.backgroundColor = this.element.style.backgroundColor;
 		};
 		this._setData(data);
 		this.validate();
 	} else {
-		this._setData = function(grade) {
-			var display_value = grade != null ? this.get_value_from_system(grade) : "";
+		this._setData = function(grade, from_input) {
+			if (from_input && grade !== null) grade = this.get_grade_from_system(grade);
+			var display_value = grade !== null ? this.get_value_from_system(grade) : "";
 			this.element.removeAllChildren();
 			this.element.appendChild(document.createTextNode(display_value));
 			if (typeof this.config.color == 'undefined' || this.config.color) {

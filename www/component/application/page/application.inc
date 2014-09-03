@@ -78,6 +78,8 @@ function init_top_calendar_manager() {
 init_top_calendar_manager();
 document.body.style.overflow = "hidden";
 // connect to Google
+window.top.require("google.js");
+window.top.require("google_maps.js");
 <?php 
 $google_account = PNApplication::$instance->google->getConnectedAccount();
 if ($google_account <> null)

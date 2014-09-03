@@ -39,10 +39,11 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		this.table.appendChild(this.thead = document.createElement("thead"));
 		this.table.appendChild(this.tbody = document.createElement("tbody"));
 		this.table.appendChild(this.tfoot = document.createElement("tfoot"));
+		this.table.style.borderCollapse = "collapse";
+		this.table.style.borderSpacing = "0px";
 		
 		if (header) {
 			this.table.style.border = "1px solid #808080";
-			this.table.style.borderSpacing = "0";
 			this.table.style.marginBottom = "3px";
 			setBorderRadius(this.table, 5, 5, 5, 5, 5, 5, 5, 5);
 			var tr_head = document.createElement("tr");
@@ -55,13 +56,14 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			setBorderRadius(th_head, 5, 5, 5, 5, 0, 0, 0, 0);
 			tr_head.appendChild(th_head);
 			this.thead.appendChild(tr_head);
-		}
+		} else
+			this.thead.style.display = "none";
 		for(var i = 0; i < this.addresses.length; i++)
 			this._createAddressRow(this.addresses[i]);
 		
 		if (can_add){
-			var td_foot_1 = document.createElement('td');
-			var td_foot_2 = document.createElement('td');
+			var td_foot_1 = document.createElement('td'); td_foot_1.style.padding = "0px";
+			var td_foot_2 = document.createElement('td'); td_foot_2.style.padding = "0px";
 			var tr_foot = document.createElement('tr');
 			var button = document.createElement("BUTTON");
 			td_foot_2.appendChild(button);
@@ -79,7 +81,8 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			tr_foot.appendChild(td_foot_1);
 			tr_foot.appendChild(td_foot_2);
 			this.tfoot.appendChild(tr_foot);
-		}
+		} else
+			this.tfoot.style.display = "none";
 		
 		if (onready) onready(this);
 	};
@@ -108,6 +111,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		td_category.style.paddingRight = '5px';
 		tr.appendChild(td_category);
 		var td_data = document.createElement("td");
+		td_data.style.whiteSpace = "nowrap";
 		var div_data = document.createElement("div");
 		div_data.style.display = 'inline-block';
 		div_data.style.verticalAlign = "middle";
@@ -121,12 +125,12 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 				if (type_id == null || type_id < 0 || can_edit) {
 					div_data.onmouseover = function() {
 						text.element.style.textDecoration = 'underline';
-						text.element.cursor = 'pointer';
+						text.element.style.cursor = 'pointer';
 						text.element.border = "1px solid #C0C0F0";
 					};
 					div_data.onmouseout = function () {
 						text.element.style.textDecoration = '';
-						text.element.cursor = '';
+						text.element.style.cursor = '';
 					};
 					div_data.address = address;
 					div_data.onclick = function(ev,is_new) {
@@ -241,9 +245,12 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 */
 	this._addRemoveButton = function (address, container){
 		var remove_button = document.createElement('img');
-		remove_button.src = theme.icons_16.remove;
-		remove_button.onmouseover = function(e){this.src = theme.icons_16.remove_black; stopEventPropagation(e);};
-		remove_button.onmouseout = function(e){this.src = theme.icons_16.remove; stopEventPropagation(e);};
+		remove_button.src = header ? theme.icons_16.remove : theme.icons_10.remove;
+		remove_button.title = "Remove this address";
+		if (header) {
+			remove_button.onmouseover = function(e){this.src = theme.icons_16.remove_black; stopEventPropagation(e);};
+			remove_button.onmouseout = function(e){this.src = theme.icons_16.remove; stopEventPropagation(e);};
+		}
 		remove_button.style.cursor = 'pointer';
 		// remove_button.style.verticalAlign = 'bottom';
 		remove_button.onclick = function(ev){

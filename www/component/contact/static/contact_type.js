@@ -15,10 +15,12 @@ if (typeof require != 'undefined') {
  * @param {Function} ontypechanged called when the sub_type of a contact is changed
  * @param {Function} onready called when the UI control is ready
  */
-function contact_type(contact_type, contact_type_name, owner_type, owner_id, contacts, can_edit, can_add, can_remove, ontypechanged, onready) {
+function contact_type(contact_type, contact_type_name, owner_type, owner_id, contacts, can_edit, can_add, can_remove, small, ontypechanged, onready) {
 	/** table containing all contacts */
 	this.table = document.createElement("TABLE");
 	this.table.style.backgroundColor = "white";
+	this.table.style.borderCollapse = "collapse";
+	this.table.style.borderSpacing = "0px";
 	this.table.appendChild(this.colgroup = document.createElement("COLGROUP"));
 	/** colgroup epement of the table, allowing to specify fixed column width */ 
 	this.colgroup.appendChild(this.col1 = document.createElement("COL"));
@@ -34,8 +36,8 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	this.onchange = new Custom_Event();
 	var t=this;
 	if (can_add) {
-		var td_foot_1 = document.createElement('td');
-		var td_foot_2 = document.createElement('td');
+		var td_foot_1 = document.createElement('td'); td_foot_1.style.padding = "0px";
+		var td_foot_2 = document.createElement('td'); td_foot_2.style.padding = "0px";
 		var tr_foot = document.createElement('tr');
 		td_foot_1.style.paddingRight = "5px";
 		var button = document.createElement("BUTTON");
@@ -54,7 +56,8 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		tr_foot.appendChild(td_foot_1);
 		tr_foot.appendChild(td_foot_2);
 		this.tfoot.appendChild(tr_foot);
-	}
+	} else
+		this.tfoot.style.display = "none";
 	
 	/**
 	 * Add a contact
@@ -183,9 +186,12 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 */
 	this.addRemoveButton = function (contact, container, edit){
 		var remove_button = document.createElement('img');
-		remove_button.src = theme.icons_16.remove;
-		remove_button.onmouseover = function(e){this.src = theme.icons_16.remove_black; stopEventPropagation(e);};
-		remove_button.onmouseout = function(e){this.src = theme.icons_16.remove; stopEventPropagation(e);};
+		remove_button.src = small ? theme.icons_10.remove : theme.icons_16.remove;
+		remove_button.title = "Remove this contact";
+		if (!small) {
+			remove_button.onmouseover = function(e){this.src = theme.icons_16.remove_black; stopEventPropagation(e);};
+			remove_button.onmouseout = function(e){this.src = theme.icons_16.remove; stopEventPropagation(e);};
+		}
 		remove_button.style.cursor = 'pointer';
 		remove_button.style.verticalAlign = 'bottom';
 		remove_button.onclick = function(){
@@ -231,7 +237,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		container.innerHTML = contact.sub_type;
 		if(can_edit){
 			container.style.cursor = "pointer";
-			container.onclick = function(){t._showCategoryContextMenu(container,contact);};
+			container.onclick = function(ev){t._showCategoryContextMenu(container,contact);stopEventPropagation(ev);};
 			setTimeout(function(){if (ontypechanged) ontypechanged();},1);
 		}
 	};

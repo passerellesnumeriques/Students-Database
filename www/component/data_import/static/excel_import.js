@@ -544,15 +544,15 @@ function excel_import(popup, container, onready) {
 							for (var i = 0; i < nb; ++i) {
 								var d = f.getDataIndex(i);
 								if (!d) {
-									f.setDataIndex(i, value);
+									f.setDataIndex(i, value, true);
 									set = true;
 									break;
 								}
 							}
 							if (!set)
-								f.addData(value);
+								f.addData(value,true);
 						} else
-							f.addData(value);
+							f.addData(value,true);
 					}
 				} else {
 					if (typeof f.getPossibleValues != 'undefined' && value != null && value.trim().length > 0) {
@@ -573,7 +573,7 @@ function excel_import(popup, container, onready) {
 						else
 							value = values[i];
 					}
-					f.setData(value);
+					f.setData(value,false,true);
 				}
 			}
 		// resolve ambiguous values by field

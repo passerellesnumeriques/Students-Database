@@ -346,7 +346,7 @@ class transcripts extends Component {
 						$type_grade = null;
 						break;
 					} else {
-						$type_grade += $eg["grade"] * 100 / $eval["max_grade"] * $eval["weight"];
+						$type_grade += $eg["grade"] * $eval["weight"];
 						$type_weights += $eval["weight"];
 					}
 				}
@@ -354,7 +354,7 @@ class transcripts extends Component {
 				if ($type_grade === null) {
 					$final_grade = null;
 				} else {
-					$type_grade = $type_grade * $subject_info["max_grade"] / 100 / $type_weights;
+					$type_grade = $type_grade / $type_weights;
 					if ($final_grade !== null) {
 						$final_grade += $type_grade * $type["weight"];
 						$final_weights += $type["weight"];

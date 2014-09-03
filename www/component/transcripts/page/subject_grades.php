@@ -270,6 +270,7 @@ var classes = <?php echo CurriculumJSON::AcademicClassesJSON($all_classes);?>;
 var students = <?php echo PeopleJSON::Peoples($students);?>;
 var only_final = <?php echo $subject["only_final_grade"] == 1 ? "true" : "false";?>;
 var original_only_final = only_final;
+var subject_max_grade = <?php echo json_encode($subject["max_grade"]);?>;
 var evaluation_types = <?php echo json_encode($evaluation_types); ?>;
 var grading_system = <?php echo json_encode($grading_systems[$grading_system]);?>;
 var final_grades = [<?php
@@ -325,7 +326,7 @@ function getEvaluationTypeGrade(people_id, eval_type_id) {
 		for (var j = 0; j < type.evaluations.length; ++j) {
 			var grade = getEvaluationGrade(people_id, type.evaluations[j].id);
 			if (grade === null) continue;
-			total += (grade*100/parseFloat(type.evaluations[j].max_grade))*parseFloat(type.evaluations[j].weight);
+			total += grade*parseFloat(type.evaluations[j].weight);
 			total_coef += parseFloat(type.evaluations[j].weight);
 		}
 	}
@@ -366,7 +367,7 @@ function computeStudentGrades(people_id) {
 			for (var k = 0; k < grades.length; ++k) if (grades[k].eval_id == evaluation_types[i].evaluations[j].id) { grade = grades[k].grade; break; }
 			if (grade != null) {
 				type_coef += coef;
-				type_grade += (grade*100/max)*coef;
+				type_grade += grade*coef;
 			}
 		}
 		if (type_coef == 0)
@@ -423,6 +424,7 @@ field_max_grade.ondataunchanged.add_listener(function() {window.pnapplication.da
 field_max_grade.onchange.add_listener(function() {
 	field_passing_grade.config.max = parseFloat(field_max_grade.getCurrentData());
 	field_passing_grade.validate();
+	subject_max_grade = field_max_grade.getCurrentData();
 	// refresh final grades
 	var col_index = grades_grid.grid.getColumnIndexById('final_grade');
 	for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
