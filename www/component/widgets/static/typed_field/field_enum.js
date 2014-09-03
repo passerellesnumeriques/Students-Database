@@ -90,6 +90,7 @@ field_enum.prototype._create = function(data) {
 			for (var i = 0; i < select.options.length; ++i)
 				if (select.options[i].value == data) {
 					select.selectedIndex = i;
+					found = true;
 					break;
 				}
 			if (!found) return this._data;

@@ -248,7 +248,8 @@ function profile_picture(container, width, height, halign, valign) {
 				}, function(loaded, tot) {
 					if (t.progress) {
 						if (!t.progress.element.parentNode) {
-							t.picture_container.removeChild(img);
+							if (img.parentNode)
+								t.picture_container.removeChild(img);
 							t.picture_container.appendChild(t.progress.element);
 						}
 						if (t.progress.total == 0) t.progress.setTotal(tot);

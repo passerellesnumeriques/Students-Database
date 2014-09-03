@@ -5,6 +5,7 @@ class page_popup_new_person extends Page {
 	
 	public function execute() {
 		$this->requireJavascript("form.js");
+		$input = isset($_POST["input"]) ? json_decode($_POST["input"],true) : array();
 ?>
 <div style='background-color:white;padding:10px;'>
 <form name='form' onsubmit='return false'>
@@ -50,6 +51,14 @@ foreach ($types as $type) {
 </div>
 <script type='text/javascript'>
 var popup = window.parent.get_popup_window_from_frame(window);
+var data = {
+	fixed_columns: <?php echo isset($input["fixed_columns"]) ? json_encode($input["fixed_columns"]) : "[]";?>,
+	fixed_data: <?php echo isset($input["fixed_data"]) ? json_encode($input["fixed_data"]) : "[]";?>,
+	prefilled_columns: <?php echo isset($input["prefilled_columns"]) ? json_encode($input["prefilled_columns"]) : "[]";?>,
+	prefilled_data: <?php echo isset($input["prefilled_data"]) ? json_encode($input["prefilled_data"]) : "[]";?>,
+	precreated: <?php echo isset($input["precreated"]) ? json_encode($input["precreated"]) : "[]";?>,
+	sub_models: <?php echo isset($input["sub_models"]) ? json_encode($input["sub_models"]) : "null";?>,
+};
 popup.addOkCancelButtons(function() {
 	popup.removeButtons();
 	var form = document.forms['form'];
@@ -61,7 +70,7 @@ popup.addOkCancelButtons(function() {
 				if (peoples[0][i].path == "People") { people_id = peoples[0][i].key; break; }
 			this.<?php echo $_GET["ondone"];?>(people_id);
 		};
-		location.href = "/dynamic/people/page/popup_create_people?types=<?php echo $_GET["type"];?>&multiple=false&ondone=_ondone";
+		postData("/dynamic/people/page/popup_create_people?types=<?php echo $_GET["type"];?>&multiple=false&ondone=_ondone",data);
 		return;
 	}
 	var people_id = form.elements["id_"+type].value;

@@ -23,11 +23,13 @@ class service_create_data extends Service {
 					$paths[$i]->found = true;
 					$paths[$i]->{"columns"} = isset($tc["columns"]) ? $tc["columns"] : array();
 					$paths[$i]->{"value"} = $tc["value"];
-					//echo "VALUE FOR PATH:<br/>\n PATH = ".$tc["path"]."<br/>\n VALUE = ".var_export($tc["value"],true)."<br/>\n\n";
+					//PNApplication::error("VALUE FOR PATH:<br/>\n PATH = ".$tc["path"]."<br/>\n VALUE = ".var_export($tc["value"],true)."<br/>\n\n");
 					break;
 				}
 		for ($i = 0; $i < count($paths); $i++)
 			if (!$paths[$i]->found) {
+				$paths[$i]->{"columns"} = array();
+				$paths[$i]->{"value"} = array();
 				array_splice($paths, $i, 1);
 				$i--;			
 			}
