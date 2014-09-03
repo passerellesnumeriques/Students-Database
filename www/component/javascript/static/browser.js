@@ -663,6 +663,7 @@ function addJavascript(url, onload, additional_attributes) {
 	s.onreadystatechange = function() { if (this.readyState == 'loaded') { if (_scripts_loaded) _scripts_loaded.push(p); this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; this.onreadystatechange = null; s.onload = null; } };
 	head.appendChild(s);
 	s.src = p;
+	return s;
 }
 /**
  * Indicate a javascript is already loaded. This is automatically called by addJavascript, but may be useful in case some scripts are loaded in a different way
