@@ -11,6 +11,7 @@ $model->addTableDataDisplay($display);
 class StaffPositionDataDisplay extends datamodel\DataDisplay {
 	
 	public function getDisplayName() { return "Last Position"; }
+	public function canAccess($sub_model) { return true; }
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_text","{}"); }
 	public function isEditable() { return false; }
@@ -52,6 +53,7 @@ class StaffPositionDataDisplay extends datamodel\DataDisplay {
 class StaffDepartmentDataDisplay extends datamodel\DataDisplay {
 
 	public function getDisplayName() { return "Last Department"; }
+	public function canAccess($sub_model) { return true; }
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_text","{}"); }
 	public function isEditable() { return false; }

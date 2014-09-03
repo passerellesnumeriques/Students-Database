@@ -15,6 +15,7 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 		$this->setTableAndCategory(DataModel::get()->internalGetTable("FamilyMember"), $category);
 	}
 	public function getDisplayName() { return "Siblings"; }
+	public function canAccess($sub_model) { return true; } // TODO ?
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_integer","{min:0,can_be_null:true}"); }
 	// TODO public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
@@ -87,6 +88,7 @@ class ChildRank extends datamodel\DataDisplay {
 		$this->setTableAndCategory(DataModel::get()->internalGetTable("FamilyMember"), $category);
 	}
 	public function getDisplayName() { return "Child Rank"; }
+	public function canAccess($sub_model) { return true; } // TODO ?
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_integer","{min:1,can_be_null:true}"); }
 	// TODO public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
@@ -138,6 +140,7 @@ class ParentsSituation extends datamodel\DataDisplay {
 		$this->setTableAndCategory(DataModel::get()->internalGetTable("FamilyMember"), $category);
 	}
 	public function getDisplayName() { return "Parents Situation"; }
+	public function canAccess($sub_model) { return true; } // TODO ?
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) {
 		return PNApplication::$instance->widgets->get_typed_field(DataModel::get()->internalGetTable("Family")->internalGetColumn("parents_situation"));
@@ -195,6 +198,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 	}
 	private $type;
 	public function getDisplayName() { return $this->type; }
+	public function canAccess($sub_model) { return true; } // TODO ?
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) {
 		return array("field_parent","{}");

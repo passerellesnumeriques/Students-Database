@@ -30,6 +30,7 @@ abstract class DataDisplay {
 	 * @return string the display name
 	 */
 	public abstract function getDisplayName();
+	public abstract function canAccess($sub_model);
 	/** Returns the list of columns' name this data represents (either a single column, or a group of columns displayed together
 	 * @return array of string
 	 */
@@ -265,7 +266,9 @@ class SimpleDataDisplay extends DataDisplay {
 	public function getDisplayName() {
 		return $this->display_name;
 	}
-	
+	public function canAccess($sub_model) {
+		return $this->getTable()->canAccess() && $this->getTable()->canAccessColumn($this->column_name);
+	}
 	public function getHandledColumns() {
 		return array($this->column_name);
 	}
@@ -386,6 +389,15 @@ class ChoiceDataDisplay extends DataDisplay {
 		$this->filter = $filter; 
 	}
 	public function getDisplayName() { return $this->display_name; }
+	public function canAccess($sub_model) {
+		if (!$this->getTable()->canAccess()) return false;
+		if (!$this->getTable()->canAccessColumn($this->foreign_key_name)) return false;
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+		$ft = \DataModel::get()->internalGetTable($foreign_key->foreign_table);
+		if (!$ft->canAccess()) return false;
+		if (!$ft->canAccessColumn($this->foreign_column_name)) return false;
+		return true;
+	}
 	public function getHandledColumns() { return array($this->foreign_key_name); }
 	
 	protected $possible_values = array();
@@ -569,6 +581,15 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	
 	public function getDisplayName() { return $this->display_name; }
+	public function canAccess($sub_model) {
+		if (!$this->getTable()->canAccess()) return false;
+		if (!$this->getTable()->canAccessColumn($this->foreign_key_name)) return false;
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+		$ft = \DataModel::get()->internalGetTable($foreign_key->foreign_table);
+		if (!$ft->canAccess()) return false;
+		if (!$ft->canAccessColumn($this->foreign_table_column_name)) return false;
+		return true;
+	}
 	public function getHandledColumns() { return array($this->foreign_key_name); }
 	
 	private $possible_values = array();
@@ -820,6 +841,21 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	}
 
 	public function getDisplayName() { return $this->display_name; }
+	public function canAccess($sub_model) {
+		$steps = explode(".", $this->data_path);
+		$current_table = $this->getTable();
+		// take the final column name
+		$final_column_name = $steps[count($steps)-1];
+		array_splice($steps, count($steps)-1, 1);
+		// go through each step
+		foreach ($steps as $step) {
+			if (!$current_table->canAccess()) return false;
+			$current_table = $this->nextTable($current_table, $step, $sub_model);
+		}
+		if (!$current_table->canAccess()) return false;
+		if (!$current_table->canAccessColumn($final_column_name)) return false;
+		return true;
+	}
 	public function getHandledColumns() { return array(); }
 	
 	/**
@@ -1090,6 +1126,20 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	}
 	
 	public function getDisplayName() { return $this->display_name; }
+	public function canAccess($sub_model) {
+		$columns = explode(".", $this->data_path);
+		$t = $this->getTable();
+		if (!$t->canAccess()) return false;
+		for ($i = 0; $i < count($columns); $i++) {
+			if (!$t->canAccessColumn($columns[$i])) return false;
+			$col = $t->getColumnFor($columns[$i], $sub_model);
+			if ($i < count($columns)-1) {
+				$t = \DataModel::get()->internalGetTable($col->foreign_table);
+				if (!$t->canAccess()) return false;
+			}
+		}
+		return true;
+	}
 	public function getHandledColumns() { return array(); }
 	
 	/**
@@ -1259,6 +1309,31 @@ class CalculationDataDisplay extends DataDisplay {
 	}
 	
 	public function getDisplayName() { return $this->display_name; }
+	public function canAccess($sub_model) {
+		if (!$this->getTable()->canAccess()) return false;
+		$s = $this->expression;
+		do {
+			$i = strpos($s, "`");
+			if ($i === false) break;
+			$j = strpos($s, "`", $i+1);
+			$p = substr($s, $i+1, $j-$i-1);
+			$s = substr($s, $j+1);
+				
+			$columns = explode(".", $p);
+			$t = $this->getTable();
+			for ($i = 0; $i < count($columns); $i++) {
+				if (!$t->canAccessColumn($columns[$i])) return false;
+				$col = $t->getColumnFor($columns[$i], $sub_model);
+				if ($i < count($columns)-1) {
+					$ft = \DataModel::get()->internalGetTable($col->foreign_table);
+					if (!$ft->canAccess()) return false;
+					$t = $ft;
+					if (!($ft->getModel() instanceof \SubDataModel)) $sub_model = null;
+				}
+			}
+		} while ($s <> "");
+		return true;
+	}
 	public function getHandledColumns() { return array(); }
 	
 	public function getTypedField($sub_model) { return array("field_text","{}"); }
@@ -1358,6 +1433,11 @@ class CountLinksDataDisplay extends DataDisplay {
 	}
 
 	public function getDisplayName() { return $this->display_name; }
+	public function canAccess($sub_model) {
+		if (!$this->getTable()->canAccess()) return false;
+		if (!$this->getTable()->canAccessColumn($this->foreign_key)) return false;
+		return true;
+	}
 	public function getHandledColumns() { return array(); }
 	
 	public function getTypedField($sub_model) {

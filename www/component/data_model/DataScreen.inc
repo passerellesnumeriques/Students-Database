@@ -85,6 +85,7 @@ namespace datamodel {
 				}
 			}
 			foreach ($list as $data) {
+				if (!$data->canAccess($path->sub_model)) return;
 				$can_edit = $is_new ? $data->isEditableForNewData() : ($data->isEditable() && !$readonly);
 				if ($is_new && !$can_edit && !$values->hasDataValue($path->table->getName(), $data)) continue;
 				foreach ($data->getHandledColumns() as $c) {

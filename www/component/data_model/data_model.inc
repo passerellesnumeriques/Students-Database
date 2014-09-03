@@ -35,6 +35,7 @@ class data_model extends Component {
 	 * @param array $list the list to be filled
 	 */
 	private function browse($path, $from, &$list, $known_columns, $for_new_data, &$tables_done) {
+		if (!$path->table->canAccess()) return;
 		if (in_array($path->table->getName(), $tables_done)) return;
 		array_push($tables_done, $path->table->getName());
 		
@@ -48,6 +49,7 @@ class data_model extends Component {
 			foreach ($tables as $t) if ($t <> $path->table->getName()) array_push($tables_done, $t);
 			$data = $screen->getDataDisplay($from, $path->sub_model, $for_new_data);
 			foreach ($data as $d) {
+				if (!$d->canAccess($path->sub_model)) return;
 				array_push($list, array($d, $path));
 				foreach ($d->getHandledColumns() as $col)
 					array_push($handled, $col);
@@ -58,6 +60,7 @@ class data_model extends Component {
 			if ($display == null) return; // nothing accessible
 			$data = $display->getDataDisplay($from, $path->sub_model);
 			foreach ($data as $d) {
+				if (!$d->canAccess($path->sub_model)) return;
 				array_push($list, array($d, $path));
 				foreach ($d->getHandledColumns() as $col)
 					array_push($handled, $col);
