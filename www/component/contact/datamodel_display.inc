@@ -100,7 +100,7 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 			}
 			$values .= "]";
 			require_once("component/Service.inc");
-			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".$row[$sql_aliases["key"]].",contacts:".$values."}"));
+			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".$rows[$i][$sql_aliases["key"]].",contacts:".$values."}"));
 		}
 	}
 
@@ -184,7 +184,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 			}
 			$values = ContactJSON::PostalAddresses($match, $match_texts);
 			require_once("component/Service.inc");
-			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".json_encode($row[$sql_aliases["key"]]).",addresses:".$values."}"));
+			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".json_encode($rows[$i][$sql_aliases["key"]]).",addresses:".$values."}"));
 		}
 	}
 
