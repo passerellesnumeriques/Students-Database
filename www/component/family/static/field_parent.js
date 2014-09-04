@@ -23,7 +23,10 @@ field_parent.prototype._create = function(data) {
 				}
 			}
 			this.element.removeAllChildren();
-			this.element.appendChild(document.createTextNode(text));
+			var span = document.createElement("SPAN");
+			span.style.whiteSpace = "nowrap";
+			span.appendChild(document.createTextNode(text));
+			this.element.appendChild(span);
 		};
 	} else {
 		this._setData = function(data) {

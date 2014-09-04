@@ -60,7 +60,8 @@ class service_save_family extends Service {
 		if (!PNApplication::hasErrors()) {
 			SQLQuery::commitTransaction();
 			echo "{family:".json_encode($family).",members:".json_encode($input["members"])."}";
-		}
+		} else 
+			SQLQuery::rollbackTransaction();
 	}
 	
 }

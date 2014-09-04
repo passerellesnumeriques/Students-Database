@@ -156,10 +156,8 @@ class DataBaseLock {
 		
 		DataBaseLock::clean();
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		self::mutexLock();
-		$lock_user = DataBaseLock::isLocked($table, $row_key, $column, true);
+		$lock_user = DataBaseLock::isLocked($table, $row_key, $column);
 		if ($lock_user <> null && is_string($lock_user)) {
-			self::mutexUnlock();
 			$i = strpos($lock_user, "\\");
 			$locked_by = PNApplication::$instance->user_management->getUserFullName(substr($lock_user,0,$i),substr($lock_user,$i+1));
 			return null;
@@ -178,7 +176,13 @@ class DataBaseLock {
 			")"
 		);
 		$id = $db->getInsertID();
-		self::mutexUnlock();
+		$lock_user = DataBaseLock::isLocked($table, $row_key, $column, $id);
+		if ($lock_user <> null && is_string($lock_user)) {
+			$i = strpos($lock_user, "\\");
+			$locked_by = PNApplication::$instance->user_management->getUserFullName(substr($lock_user,0,$i),substr($lock_user,$i+1));
+			$db->execute("DELETE FROM DataLocks WHERE id=$id");
+			return null;
+		}
 		return $id;
 	} 
 
@@ -287,10 +291,8 @@ class DataBaseLock {
 	
 		DataBaseLock::clean();
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		self::mutexLock();
 		$lock_user = DataBaseLock::areRowsLocked($table, $row_keys);
 		if ($lock_user <> null) {
-			self::mutexUnlock();
 			$i = strpos($lock_user, "\\");
 			$locked_by = PNApplication::$instance->user_management->getUserFullName(substr($lock_user,0,$i),substr($lock_user,$i+1));
 			return null;
@@ -324,7 +326,19 @@ class DataBaseLock {
 					array_push($ids, $id+$i);
 			}
 		}
-		self::mutexUnlock();
+		$lock_user = DataBaseLock::areRowsLocked($table, $row_keys, $ids);
+		if ($lock_user <> null) {
+			$i = strpos($lock_user, "\\");
+			$locked_by = PNApplication::$instance->user_management->getUserFullName(substr($lock_user,0,$i),substr($lock_user,$i+1));
+			$sql = "DELETE FROM DataLocks WHERE id IN(";
+			for ($i = 0; $i < count($ids); $i++) {
+				if ($i > 0) $sql .= ",";
+				$sql .= $ids[$i];
+			}
+			$sql .= ")";
+			$db->execute($sql);
+			return null;
+		}
 		return $ids;
 	}
 	
@@ -336,9 +350,7 @@ class DataBaseLock {
 		if (self::$cleant) return;
 		self::$cleant = true;
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		self::mutexLock();
 		$db->execute("DELETE FROM DataLocks WHERE timestamp <= ".(time()-7*60));
-		self::mutexUnlock();
 	}
 	
 	/** check if the table/row/column/cell is locked by someone else.
@@ -346,14 +358,11 @@ class DataBaseLock {
 	 * @param string $table the table name
 	 * @param integer|array|null $row_key the row key or null
 	 * @param string|null $column the column name or null
-	 * @param boolean $db_locked indicates if the database is already locked using the mutex
 	 * @return null|string|integer if this is locked by someone else, returns the user who locked it, if locked by current user, returns the lock id, else returns null
 	 */
-	public static function isLocked($table, $row_key, $column, $db_locked = false) {
+	public static function isLocked($table, $row_key, $column, $ignore_id = null) {
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		if (!$db_locked)
-			self::mutexLock();
-		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escapeString($table)."'");
+		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escapeString($table)."'".($ignore_id <> null ? " AND `id`!=".$ignore_id : ""));
 		$lock_id = null;
 		while (($row = $db->nextRow($res)) <> null) {
 			if ($row["table"] <> $table) continue; // not the same table
@@ -361,55 +370,35 @@ class DataBaseLock {
 				if ($column == null) {
 					// full table is requested
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-						$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-						if (!$db_locked)
-							self::mutexUnlock();
+						$row["locker_username"] <> PNApplication::$instance->user_management->username)
 						return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-					}
 					// same user
-					if ($row["row_key"] == null && $row["column"] == $column) {
-						if (!$db_locked)
-							self::mutexUnlock();
+					if ($row["row_key"] == null && $row["column"] == $column)
 						return intval($row["id"]); // same user locked the full table
-					}
 					continue; // same user, but not full table
 				}
 				// one column is requested
 				if ($row["column"] == $column) {
 					// same column is locked
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-						$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-						if (!$db_locked)
-							self::mutexUnlock();
+						$row["locker_username"] <> PNApplication::$instance->user_management->username)
 						return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-					}
-					if (!$db_locked)
-						self::mutexUnlock();
 					return intval($row["id"]); // same user: ok
 				}
 				if ($row["row_key"] <> null) {
 					// a row is locked: there will be a conflict if we lock a column
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-						$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-						if (!$db_locked)
-							self::mutexUnlock();
+						$row["locker_username"] <> PNApplication::$instance->user_management->username)
 						return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-					}
 					continue; // same user: ok
 				}
-				if ($row["column"] <> null) {
+				if ($row["column"] <> null)
 					// a column is locked, and this is not the same
 					continue;
-				}
 				// the full table is locked
 				if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-					$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-					if (!$db_locked)
-						self::mutexUnlock();
+					$row["locker_username"] <> PNApplication::$instance->user_management->username)
 					return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-				}
-				if (!$db_locked)
-					self::mutexUnlock();
 				return intval($row["id"]); // same user
 			} else {
 				$row_key = self::normalizeKey($row_key);
@@ -418,35 +407,23 @@ class DataBaseLock {
 					if ($row["column"] <> null) {
 						// there is a column locked
 						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-							$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-							if (!$db_locked)
-								self::mutexUnlock();
+							$row["locker_username"] <> PNApplication::$instance->user_management->username)
 							return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-						}
 						continue; // same user
 					}
 					if ($row["row_key"] <> null) {
-						if ($row["row_key"] <> json_encode($row_key)) {
+						if ($row["row_key"] <> json_encode($row_key))
 							// not the same row
 							continue;
-						}
 						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-							$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-							if (!$db_locked)
-								self::mutexUnlock();
+							$row["locker_username"] <> PNApplication::$instance->user_management->username)
 							return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-						}
 						return intval($row["id"]); // same user
 					}
 					// the table is locked
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-						$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-						if (!$db_locked)
-							self::mutexUnlock();
+						$row["locker_username"] <> PNApplication::$instance->user_management->username)
 						return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-					}
-					if (!$db_locked)
-						self::mutexUnlock();
 					return intval($row["id"]); // same user
 				} else {
 					// a cell is requested
@@ -455,21 +432,12 @@ class DataBaseLock {
 							continue; // not on the same column
 						// same column is locked
 						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-							$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-							if (!$db_locked)
-								self::mutexUnlock();
+							$row["locker_username"] <> PNApplication::$instance->user_management->username)
 							return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-						}
-						if ($row["row_key"] == null) {
-							if (!$db_locked)
-								self::mutexUnlock();
+						if ($row["row_key"] == null)
 							return intval($row["id"]); // full column already locked by same user
-						}
-						if ($row["row_key"] == json_encode($row_key)) {
-							if (!$db_locked)
-								self::mutexUnlock();
+						if ($row["row_key"] == json_encode($row_key))
 							return intval($row["id"]); // same cell locked by same user
-						}
 						continue; // different cell
 					} else {
 						if ($row["row_key"] <> null) {
@@ -477,37 +445,34 @@ class DataBaseLock {
 							if ($row["row_key"] <> json_encode($row_key))
 								continue; // not on the same row
 							if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-								$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-								if (!$db_locked)
-									self::mutexUnlock();
+								$row["locker_username"] <> PNApplication::$instance->user_management->username)
 								return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-							}
-							if (!$db_locked)
-								self::mutexUnlock();
 							return intval($row["id"]); // same user
 						} else {
 							// full table is locked
 							if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-								$row["locker_username"] <> PNApplication::$instance->user_management->username) {
-								if (!$db_locked)
-									self::mutexUnlock();
+								$row["locker_username"] <> PNApplication::$instance->user_management->username)
 								return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-							}
-							if (!$db_locked)
-								self::mutexUnlock();
 							return intval($row["id"]); // same user
 						}
 					}
 				}
 			}
 		}
-		if (!$db_locked)
-			self::mutexUnlock();
 	}
 
-	public static function areRowsLocked($table, $row_keys) {
+	public static function areRowsLocked($table, $row_keys, $ignore_ids = null) {
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escapeString($table)."'");
+		$sql = "SELECT * FROM DataLocks WHERE `table`='".$db->escapeString($table)."'";
+		if ($ignore_ids <> null) {
+			$sql .= " AND `id` NOT IN (";
+			for ($i = 0; $i < count($ignore_ids); $i++) {
+				if ($i > 0) $sql .= ",";
+				$sql .= $ignore_ids[$i];
+			}
+			$sql .= ")";
+		}
+		$res = $db->execute($sql);
 		while (($row = $db->nextRow($res)) <> null) {
 			if ($row["locker_domain"] == PNApplication::$instance->user_management->domain ||
 				$row["locker_username"] == PNApplication::$instance->user_management->username)
@@ -533,167 +498,86 @@ class DataBaseLock {
 	 * @param string $table table name
 	 * @param integer|array|null $row_key key of the row or null
 	 * @param string $column column name or null
-	 * @param boolean $db_locked indicates if the database is already locked using the mutex
 	 * @return boolean true if it is locked by the current user
 	 */
-	public static function isLockedByUser($table, $row_key, $column, $db_locked = false) {
+	public static function isLockedByUser($table, $row_key, $column) {
 		$row_key = self::normalizeKey($row_key);
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		if (!$db_locked)
-			self::mutexLock();
 		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escapeString($table)."'");
 		while (($row = $db->nextRow($res)) <> null) {
 			if ($row["table"] <> $table) continue; // not the same table
 			if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 				$row["locker_username"] <> PNApplication::$instance->user_management->username) continue;
 			if ($row["row_key"] == null) {
-				if ($row["column"] == null) {
-					if (!$db_locked) self::mutexUnlock();
+				if ($row["column"] == null)
 					return true; // full table is locked
-				} else {
-					if ($column == $row["column"]) {
-						if (!$db_locked) self::mutexUnlock();
+				else {
+					if ($column == $row["column"])
 						return true; // full column is locked
-					}
 				}
 			} else {
 				if (json_encode($row_key) == $row["row_key"]) {
 					// same row
-					if ($row["column"] == null) {
-						if (!$db_locked) self::mutexUnlock();
+					if ($row["column"] == null)
 						return true; // full row is locked
-					}
-					if ($row["column"] == $column) {
-						if (!$db_locked) self::mutexUnlock();
+					if ($row["column"] == $column)
 						return true; // same cell is locked				
-					}
 				}
 			}
 		}
-		if (!$db_locked) self::mutexUnlock();
 	}
 	
 	/** remove a lock (it must be owned by the current user)
 	 * @param integer $id lock id
-	 * @return null|string null if it succeed, or error message
+	 * @return null
 	 */
 	public static function unlock($id) {
-		$result = null;
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		self::mutexLock();
-		$r = $db->execute("SELECT locker_domain,locker_username FROM DataLocks WHERE id='".$db->escapeString($id)."'");
-		if ($r) {
-			$row = $db->nextRow($r);
-			if ($row) {
-				if ($row["locker_domain"] == PNApplication::$instance->user_management->domain &&
-					$row["locker_username"] == PNApplication::$instance->user_management->username) {
-					$db->execute("DELETE FROM DataLocks WHERE id='".$db->escapeString($id)."'");
-				} else
-					$result = "You are not the owner of this lock";
-			}
-		}
-		self::mutexUnlock();
-		return $result;
+		$db->execute("DELETE FROM DataLocks WHERE id='".$db->escapeString($id)."' AND locker_domain='".$db->escapeString(PNApplication::$instance->user_management->domain)."' AND locker_username='".$db->escapeString(PNApplication::$instance->user_management->username)."'");
+		return null;
 	}
 	/** remove a list of locks (it must be owned by the current user)
 	 * @param array $ids lock ids to remove
-	 * @return null|string null if it succeed, or error message
+	 * @return null
 	 */
 	public static function unlockMultiple($ids) {
 		if (count($ids) == 0) return null;
-		$result = null;
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		self::mutexLock();
-		$sql = "SELECT id,locker_domain,locker_username FROM DataLocks WHERE id IN (";
-		$first = true;
-		foreach ($ids as $id) {
-			if ($first) $first = false; else $sql .= ",";
-			$sql .= "'".$db->escapeString($id)."'";
+		$sql = "DELETE FROM DataLocks WHERE locker_domain='".$db->escapeString(PNApplication::$instance->user_management->domain)."' AND locker_username='".$db->escapeString(PNApplication::$instance->user_management->username)."'";
+		$sql .= " AND `id` IN (";
+		for ($i = 0; $i < count($ids); $i++) {
+			if ($i > 0) $sql .= ",";
+			$sql .= "'".$db->escapeString($ids[$i])."'";
 		}
 		$sql .= ")";
-		$r = $db->execute($sql);
-		if ($r) {
-			$list = array();
-			while (($row = $db->nextRow($r)) !== FALSE) {
-				if ($row) {
-					if ($row["locker_domain"] == PNApplication::$instance->user_management->domain &&
-						$row["locker_username"] == PNApplication::$instance->user_management->username) {
-						array_push($list, $row["id"]);
-					} else {
-						$result = "You are not the owner of the lock id ".$row["id"];
-						break;
-					}
-				}
-			}
-			if ($result == null && count($list) > 0) {
-				$sql = "DELETE FROM DataLocks WHERE id IN(";
-				$first = true;
-				foreach ($list as $id) {
-					if ($first) $first = false; else $sql .= ",";
-					$sql .= "'".$db->escapeString($id)."'";
-				}
-				$sql .= ")";
-				$db->execute($sql);
-			}
-		}
-		self::mutexUnlock();
-		return $result;
+		$db->execute($sql);
+		return null;
 	}
 	
 	/** extend expiration time of a lock
 	 * @param integer $id lock id
-	 * @return null|string null if it succeed, or error message
+	 * @return null
 	 */
 	public static function update($id) {
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		$result = null;
 		$ts = time();
-		self::mutexLock();
-		$r = $db->execute("SELECT locker_domain,locker_username FROM DataLocks WHERE id='".$db->escapeString($id)."'");
-		if ($r) {
-			$row = $db->nextRow($r);
-			if ($row) {
-				if ($row["locker_domain"] == PNApplication::$instance->user_management->domain &&
-					$row["locker_username"] == PNApplication::$instance->user_management->username) {
-					$db->execute("UPDATE DataLocks SET timestamp=".$ts." WHERE id='".$db->escapeString($id)."'");
-				} else
-					$result = "You are not the owner of this lock";
-			} else
-				$result = "This lock does not exist";
-		} else
-			$result = "This lock does not exist";
-		self::mutexUnlock();
+		$db->execute("UPDATE DataLocks SET timestamp=".$ts." WHERE id='".$db->escapeString($id)."' AND locker_domain='".$db->escapeString(PNApplication::$instance->user_management->domain)."' AND locker_username='".$db->escapeString(PNApplication::$instance->user_management->username)."'");
 		DataBaseLock::clean();
-		return $result;
+		return null;
 	}
 	
 	public static function updateLocks($ids) {
 		if (count($ids) == 0) return;
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$ts = time();
-		self::mutexLock();
-		$sql = "SELECT locker_domain,locker_username FROM DataLocks WHERE id IN (";
-		$first = true;
-		foreach ($ids as $id) {
-			if ($first) $first = false; else $sql .= ",";
-			$sql .= "'".$db->escapeString($id)."'";
+		$sql = "UPDATE DataLocks SET timestamp=".$ts." WHERE locker_domain='".$db->escapeString(PNApplication::$instance->user_management->domain)."' AND locker_username='".$db->escapeString(PNApplication::$instance->user_management->username)."'";
+		$sql .= " AND `id` IN (";
+		for ($i = 0; $i < count($ids); $i++) {
+			if ($i > 0) $sql .= ",";
+			$sql .= "'".$db->escapeString($ids[$i])."'";
 		}
 		$sql .= ")";
-		$r = $db->execute($sql);
-		$sql = "UPDATE DataLocks SET timestamp=".$ts." WHERE id IN (";
-		$first = true;
-		if ($r) {
-			while (($row = $db->nextRow($r))<>null) {
-				if ($row["locker_domain"] == PNApplication::$instance->user_management->domain &&
-					$row["locker_username"] == PNApplication::$instance->user_management->username) {
-					if ($first) $first = false; else $sql .= ",";
-					$sql .= "'".$db->escapeString($id)."'";
-				}
-			}
-		}
-		if (!$first)
-			$db->execute($sql.")");
-		self::mutexUnlock();
+		$db->execute($sql);
 		DataBaseLock::clean();
 	}
 	
@@ -739,27 +623,6 @@ class DataBaseLock {
 		return "This lock locks a different row";
 	}
 	
-	/** @var handle $mutex handle to the file locked to handle mutual exclusion */
-	private static $mutex = null;
-	/** Lock, to make sure no other request can perform the same operation */
-	private static function mutexLock() {
-		if (self::$mutex <> null) return;
-		self::$mutex = fopen(realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/component/data_model/DataBaseLock.mutex","r+");
-		for ($i = 0; $i < 50; $i++) {
-			if (flock(self::$mutex, LOCK_EX)) return;
-			usleep(50000);
-		}
-		fclose(self::$mutex);
-		self::$mutex = null;
-		throw new Exception("Unable to lock access to database");
-	}
-	/** Unlock */
-	private static function mutexUnlock() {
-		if (self::$mutex == null) return;
-		fclose(self::$mutex);
-		self::$mutex = null;
-	}
-
 	/** Generate the necessary JavaScript code so the given lock if will be added to the list of locks
 	 * @param integer $id lock id
 	 */

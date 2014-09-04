@@ -18,6 +18,7 @@ class page_enter extends Page {
 		global $need_app_loading;
 		global $pn_app_version;
 		$need_app_loading = !isset($_COOKIE["pnapp_loaded"]) || $_COOKIE["pnapp_loaded"] <> $pn_app_version;
+		$need_app_loading = false; // disabled for now
 		
 		if (PNApplication::$instance->user_management->username == null)
 			include "login.inc";

@@ -35,6 +35,12 @@ class page_transcripts extends Page {
 		foreach ($classes as $c) array_push($classes_ids, $c["id"]);
 		
 		$students = PNApplication::$instance->students->getStudentsForClasses($classes_ids);
+		usort($students, function($s1,$s2) {
+			$r = strcmp($s1["last_name"],$s2["last_name"]);
+			if ($r == 0)
+				return strcmp($s1["first_name"],$s2["first_name"]);
+			return $r;
+		});
 		
 		$published = SQLQuery::create()->select("PublishedTranscript")->whereValue("PublishedTranscript","period",$period["id"])->whereValue("PublishedTranscript","specialization",$spe <> null ? $spe["id"] : null)->execute();
 ?>
