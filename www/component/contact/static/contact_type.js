@@ -19,7 +19,6 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	/** table containing all contacts */
 	this.table = document.createElement("TABLE");
 	this.table.style.backgroundColor = "white";
-	this.table.style.borderCollapse = "collapse";
 	this.table.style.borderSpacing = "0px";
 	this.table.appendChild(this.colgroup = document.createElement("COLGROUP"));
 	/** colgroup epement of the table, allowing to specify fixed column width */ 

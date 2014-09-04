@@ -39,6 +39,8 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 				var a = this.entities_addresses[i][j];
 				var d = document.createElement("DIV");
 				d.style.fontSize = "8pt";
+				d.style.display = "flex";
+				d.style.flexDirection = "row";
 				div.appendChild(d);
 				var cb = document.createElement("INPUT");
 				cb.type = "checkbox";
@@ -46,6 +48,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 				cb.style.marginLeft = "5px";
 				cb.style.marginRight = "2px";
 				cb.style.verticalAlign = "bottom";
+				cb.style.flex = "none";
 				checkboxes.push(cb);
 				markers.push(null);
 				d.appendChild(cb);
@@ -56,8 +59,11 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 				span_type.style.fontStyle = "italic";
 				span_type.appendChild(document.createTextNode(a.address_type));
 				span_type.style.marginRight = "5px";
+				span_type.style.flex = "none";
 				d.appendChild(span_type);
-				var span_text = document.createElement("SPAN");
+				var span_text = document.createElement("DIV");
+				span_text.style.display = "inline-block";
+				span_text.style.flex = "1 1 auto";
 				span_text.appendChild(document.createTextNode(a.geographic_area ? a.geographic_area.text : ""));
 				d.appendChild(span_text);
 			}
@@ -100,7 +106,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 				}
 			}
 			if (shown) {
-				this.entities_highlight[i].style.background = "linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%)";
+				//this.entities_highlight[i].style.background = "linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%)";
 				this.entities_highlight[i].markers = this.entities_markers[i]; 
 				this.entities_highlight[i].onmouseover = function() {
 					this.style.background = "#C0F0C0";
@@ -111,7 +117,8 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 					}
 				};
 				this.entities_highlight[i].onmouseout = function() {
-					this.style.background = "linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%)";
+					//this.style.background = "linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%)";
+					this.style.background = "";
 					for (var i = 0; i < this.markers.length; ++i) {
 						if (!this.markers[i]) continue;
 						this.markers[i].setColor("#C0C0F0");

@@ -96,7 +96,7 @@ foreach ($current_batches as $b) {
 <?php } ?>
 <a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/transcripts'>
 	<img src='/static/transcripts/transcript_white.png'/>
-	Transcripts
+	Published
 </a>
 <?php } else {
 if (in_array("teacher",PNApplication::$instance->user_management->people_types)) { ?>

@@ -39,7 +39,6 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		this.table.appendChild(this.thead = document.createElement("thead"));
 		this.table.appendChild(this.tbody = document.createElement("tbody"));
 		this.table.appendChild(this.tfoot = document.createElement("tfoot"));
-		this.table.style.borderCollapse = "collapse";
 		this.table.style.borderSpacing = "0px";
 		
 		if (header) {

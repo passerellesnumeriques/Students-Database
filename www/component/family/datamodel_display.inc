@@ -7,7 +7,7 @@ $model->addDataCategory($category);
 $display = new datamodel\TableDataDisplay("FamilyMember", $category);
 $display->addJoinFrom("people",array("types"),function($columns){
 	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
-	return in_array("student", $types) || in_array("applicant", $types);
+	return in_array("student", $types) || in_array("applicant", $types) || in_array("family_member", $types);
 });
 $display->addFollow("family");
 class NumberOfSiblings extends datamodel\DataDisplay {
@@ -43,7 +43,7 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 	}
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$families = array();
-		foreach ($rows as $row) if ($row[$sql_aliases["family"]] <> null && !in_array($row[$sql_aliases["family"]],$families)) array_push($families,$row[$sql_aliases["key"]]);
+		foreach ($rows as $row) if ($row[$sql_aliases["family"]] <> null && !in_array($row[$sql_aliases["family"]],$families)) array_push($families,$row[$sql_aliases["family"]]);
 		if (count($families) > 0)
 			$families = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereIn("FamilyMember","family",$families)->whereValue("FamilyMember","member_type","Child")->groupBy("FamilyMember","family")->countOneField("FamilyMember","family","nb_children")->field("FamilyMember","family","family")->execute();
 		$alias = $original_query->generateFieldAlias();
