@@ -133,6 +133,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 					};
 					div_data.address = address;
 					div_data.onclick = function(ev,is_new) {
+						if (ev) stopEventPropagation(ev);
 						require(["popup_window.js","edit_address.js"], function() {
 							var show_popup = function(lock_id) {
 								var content = document.createElement("DIV");

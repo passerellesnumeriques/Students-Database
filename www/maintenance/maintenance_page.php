@@ -70,7 +70,7 @@ html, body, table {
 </div>
 <script type='text/javascript'>
 if (window != window.top) window.top.location.assign("/");
-else setTimeout(function() { window.top.location.assign("/"); }, 30000);
+else setTimeout(function() { window.top.location.reload(); }, 30000);
 </script>
 </body>
 </html>
