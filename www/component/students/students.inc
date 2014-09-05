@@ -100,9 +100,21 @@ class students extends Component {
 	
 	public function getStudentsQueryForBatchPeriod($period_id, $include_people_info = true, $include_excluded = false, $restrict_specialization = false) {
 		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
+		$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"]);
+		$classes_ids = array();
+		foreach ($classes as $c) array_push($classes_ids, $c["id"]);
 		
-		$q = SQLQuery::create()->select("Student");
-		$q->whereValue("Student", "batch", $period["batch"]);
+		if (count($classes_ids) == 0)
+			$q = SQLQuery::create()
+				->select("Student")
+				->whereValue("Student", "batch", $period["batch"])
+				;
+		else
+			$q = SQLQuery::create()
+				->select("StudentClass")
+				->whereIn("StudentClass","class",$classes_ids)
+				->join("StudentClass","Student",array("people"=>"people"))
+				;
 		$q->field("Student","people","people");
 		$q->field("Student","specialization","specialization");
 		if ($restrict_specialization !== false) {

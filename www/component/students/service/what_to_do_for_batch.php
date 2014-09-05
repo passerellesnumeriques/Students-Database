@@ -98,6 +98,17 @@ class service_what_to_do_for_batch extends Service {
 			$students_ids = array();
 			foreach ($all_students as $s) array_push($students_ids, $s["people"]);
 			$students_classes = SQLQuery::create()->select("StudentClass")->whereIn("StudentClass","people",$students_ids)->execute();
+			$all_students_classes = array();
+			$additional_classes = array();
+			foreach ($students_classes as $sc) {
+				if (isset($all_students_classes[$sc["class"]])) continue;
+				$found = false;
+				foreach ($classes as $c) if ($c["id"] == $sc["class"]) { $all_students_classes[$sc["class"]] = $c; $found = true; break; }
+				if ($found) continue;
+				// different class, probably a student who changed from one batch to another
+				$all_students_classes[$sc["class"]] = $c = PNApplication::$instance->curriculum->getAcademicClass($sc["class"]);
+				$additional_classes[$c["id"]] = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($c["period"]);
+			}
 				
 			// check if students are not assigned to a class, and specialization
 			$spe_checked = false;
@@ -111,6 +122,7 @@ class service_what_to_do_for_batch extends Service {
 					if (count($list) > 0) {
 						$classes_ids = array();
 						foreach ($list as $cl) array_push($classes_ids, $cl["id"]);
+						foreach ($additional_classes as $cl=>$per) if ($per["academic_period_id"] == $p[1]["id"]) array_push($classes_ids, $cl);
 						$students = array();
 						foreach ($all_students as $s)
 							if ($s["exclusion_date"] == null || datamodel\ColumnDate::toTimestamp($s["exclusion_date"]) > datamodel\ColumnDate::toTimestamp($p[1]["start"]))
@@ -144,6 +156,7 @@ class service_what_to_do_for_batch extends Service {
 						if (count($list) > 0) {
 							$classes_ids = array();
 							foreach ($list as $cl) array_push($classes_ids, $cl["id"]);
+							foreach ($additional_classes as $cl=>$per) if ($per["academic_period_id"] == $p[1]["id"]) array_push($classes_ids, $cl);
 							$students = array();
 							foreach ($all_students as $s) 
 								if ($s["specialization"] == $spe_id && ($s["exclusion_date"] == null || datamodel\ColumnDate::toTimestamp($s["exclusion_date"]) > datamodel\ColumnDate::toTimestamp($p[1]["start"])))
@@ -157,7 +170,11 @@ class service_what_to_do_for_batch extends Service {
 									}
 							}
 							if (count($students) > 0) {
-								echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class in specialization ".toHTML($this->getSpecializationName($spe_id))." for period ".toHTML($p[0]["name"])." of batch ".toHTML($this->getBatchName())."<br/>";
+								$peoples = PNApplication::$instance->people->getPeoples($students);
+								$names = "";
+								foreach ($peoples as $people)
+									$names .= $people["last_name"]." ".$people["first_name"]."\r\n";
+								echo "<span title=\"$names\"><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class in specialization ".toHTML($this->getSpecializationName($spe_id))." for period ".toHTML($p[0]["name"])." of batch ".toHTML($this->getBatchName())."</span><br/>";
 							}
 						}
 					}

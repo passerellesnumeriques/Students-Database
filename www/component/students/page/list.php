@@ -31,18 +31,16 @@ var can_manage = <?php echo json_encode($can_manage);?>;
 
 function build_filters() {
 	var filters = [];
-	if (batches && batches.length > 0) {
-		var filter = {category:'Student',name:'Batch',data:{values:batches},force:true};
-		filters.push(filter);
-	}
-	if (url.params['period']) {
-		filters.push({category:'Student',name:'Period',data:{values:[url.params['period']]},force:true});
-	}
-	if (url.params['specialization'] != null) {
-		filters.push({category:'Student',name:'Specialization',data:{values:[url.params['specialization']]},force:true});
-	}
 	if (url.params['class'] != null) {
 		filters.push({category:'Student',name:'Class',data:{values:[url.params['class']]},force:true});
+	} else if (url.params['period']) {
+		filters.push({category:'Student',name:'Period',data:{values:[url.params['period']]},force:true});
+		if (url.params['specialization'] != null) {
+			filters.push({category:'Student',name:'Specialization',data:{values:[url.params['specialization']]},force:true});
+		}
+	} else if (batches && batches.length > 0) {
+		var filter = {category:'Student',name:'Batch',data:{values:batches},force:true};
+		filters.push(filter);
 	}
 	return filters;
 }

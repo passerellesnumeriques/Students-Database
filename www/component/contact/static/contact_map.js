@@ -21,6 +21,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 			var link = document.createElement("A");
 			link.style.fontWeight = "bold";
 			link.style.fontSize = "9pt";
+			link.style.whiteSpace = "nowrap";
 			link.appendChild(document.createTextNode(this.getEntityName(this.entities[i])));
 			link.className = "black_link";
 			link.href = "#";
@@ -143,7 +144,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 		};
 		// retrieve entities' info
 		if (type == 'people') {
-			service.json('people','get_peoples',{ids:entities_ids},function(peoples){ t.entities = peoples; oneReady(); });
+			service.json('people','get_peoples',{ids:entities_ids},function(peoples){ t.entities = peoples; t.entities.sort(function(p1,p2){return (p1.last_name+' '+p1.first_name).localeCompare(p2.last_name+' '+p2.first_name);}); oneReady(); });
 			this.getEntityName = function(people) { return people.last_name+" "+people.first_name; };
 			require("profile_picture.js");
 			this.getEntityMarkerContent = function(people) {
