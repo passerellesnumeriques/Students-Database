@@ -106,20 +106,34 @@ function new_teacher() {
 <div style='background-color:white;padding:10px'>
 <table class='teachers_table'><tbody>
 <?php 
+require_once("component/data_model/page/utils.inc");
 foreach ($teachers_ids as $people_id) {
 	$people = null;
 	foreach ($peoples as $p) if ($p["id"] == $people_id) { $people = $p; break; }
-	echo "<tr class='teacher_row'>";
+	echo "<tr class='teacher_row' style='cursor:pointer' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\">";
 	$id = $this->generateID();
-	echo "<td id='$id' style='cursor:pointer' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\"></td>";
+	echo "<td id='$id'></td>";
 	$this->onload("new profile_picture('$id',50,50,'center','middle').loadPeopleStorage($people_id,".json_encode($people["picture"]).",".json_encode($people["picture_revision"]).");");
-	echo "<td style='cursor:pointer' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\">";
+	echo "<td>";
 	$id = $this->generateID();
 	echo "<div id='$id'>".toHTML($people["first_name"])."</div>";
 	$this->onload("window.top.datamodel.registerCellSpan(window,'People','first_name',$people_id,document.getElementById('$id'));");
 	$id = $this->generateID();
 	echo "<div id='$id'>".toHTML($people["last_name"])."</div>";
 	$this->onload("window.top.datamodel.registerCellSpan(window,'People','last_name',$people_id,document.getElementById('$id'));");
+	echo "</td>";
+	// dates
+	$dates = null;
+	foreach ($teachers_dates as $pid=>$d) if ($pid == $people_id) { $dates = $d; break; }
+	$last_date = null;
+	if ($dates <> null) foreach ($dates as $d) if ($d["end"] == null) { $last_date = $d; break; } else if ($last_date == null || strtotime($d["start"]) > strtotime($last_date["start"])) $last_date = $d;
+	echo "<td style='padding-left:10px'>";
+	if ($last_date <> null) {
+		echo "Started on ";
+		datamodel_cell_here($this, PNApplication::$instance->user_management->has_right("edit_curriculum"), "TeacherDates", "start", $last_date["id"], $last_date["start"], null);
+		echo "<br/>Until ";
+		datamodel_cell_here($this, PNApplication::$instance->user_management->has_right("edit_curriculum"), "TeacherDates", "end", $last_date["id"], $last_date["end"], null);
+	}
 	echo "</td>";
 	echo "</tr>";
 }

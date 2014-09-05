@@ -276,19 +276,27 @@ function import_with_match(provider, ev, show_after_grid) {
 					}
 					for (var i = 0; i < t._matching.length; ++i)
 						if (t._matching[i].tr == tr) { t._matching.splice(i,1); break;}
-					var last_tr = first_tr.parentNode.childNodes[first_tr.parentNode.childNodes.length-1];
+					var empty_index = -1;
+					for (var i = 1; i < first_tr.parentNode.childNodes.length; ++i) {
+						var otr = first_tr.parentNode.childNodes[i];
+						if (otr == tr) continue;
+						var sel_xl = otr.childNodes[1].childNodes[0];
+						if (sel_xl.selectedIndex <= 0) { empty_index = i; break; }
+						var sel_data = otr.childNodes[3].childNodes[0];
+						if (sel_data.selectedIndex <= 0) { empty_index = i; break; }
+					}
 					if (select_excel_column.selectedIndex > 0 && select_data.selectedIndex > 0) {
 						var data_columns = [select_data.value];
 						for (var i = 0; i < select_data.other_selects.length; ++i)
 							if (select_data.other_selects[i].selectedIndex > 0 && !data_columns.contains(select_data.other_selects[i].value))
 								data_columns.push(select_data.other_selects[i].value);
 						t._matching.push({tr:tr,excel_column:select_excel_column.value,data_columns:data_columns});
-						if (last_tr == tr)
+						if (empty_index == -1)
 							addRow();
 					} else {
-						if (last_tr != tr)
-							last_tr.parentNode.removeChild(last_tr);
-					}
+						if (empty_index != -1)
+							tr.parentNode.removeChild(tr);
+					}					
 					t._performMatching();
 				};
 				select_excel_column.onchange = check_complete;
@@ -341,15 +349,23 @@ function import_with_match(provider, ev, show_after_grid) {
 				var check_complete = function() {
 					for (var i = 0; i < t._import.length; ++i)
 						if (t._import[i].tr == tr) { t._import.splice(i,1); break;}
-					var last_tr = first_tr2.parentNode.childNodes[first_tr2.parentNode.childNodes.length-1];
+					var empty_index = -1;
+					for (var i = 1; i < first_tr2.parentNode.childNodes.length; ++i) {
+						var otr = first_tr2.parentNode.childNodes[i];
+						if (otr == tr) continue;
+						var sel_xl = otr.childNodes[1].childNodes[0];
+						if (sel_xl.selectedIndex <= 0) { empty_index = i; break; }
+						var sel_data = otr.childNodes[3].childNodes[0];
+						if (sel_data.selectedIndex <= 0) { empty_index = i; break; }
+					}
 					if (select_excel_column.selectedIndex > 0 && select_data.selectedIndex > 0) {
 						t._import.push({tr:tr,excel_column:select_excel_column.value,data_column:select_data.value});
-						if (last_tr == tr)
+						if (empty_index == -1)
 							addRow2();
 					} else {
-						if (last_tr != tr)
-							last_tr.parentNode.removeChild(last_tr);
-					}
+						if (empty_index != -1)
+							tr.parentNode.removeChild(tr);
+					}					
 					t._checkImport(button);
 				};
 				select_excel_column.onchange = check_complete;

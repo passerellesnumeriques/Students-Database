@@ -483,7 +483,7 @@ function changeGradingSystem(name, system) {
 	for (var i = 0; i < grades_grid.grid.columns.length; ++i) {
 		var col = grades_grid.grid.columns[i];
 		if (col.field_type != "field_grade") continue;
-		if (col.id.startsWith("total_eval_type_")) continue;
+		//if (col.id.startsWith("total_eval_type_")) continue;
 		for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
 			var field = grades_grid.grid.getCellField(row, i);
 			field.setGradingSystem(system);
@@ -531,7 +531,7 @@ function createEvaluation(type, eval) {
 	eval.div_coef.style.fontWeight = "normal";
 	eval.div_coef.appendChild(document.createTextNode("Coef. "+eval.weight));
 	div.appendChild(eval.div_coef);
-	eval.col = new CustomDataGridColumn(new GridColumn('eval_'+eval.id, div, null, null, "field_grade", <?php if ($edit) echo "true,evalGradeChanged,evalGradeUnchanged"; else echo "false,null,null";?>, {max:eval.max_grade,passing:1,system:"min=0,max="+eval.max_grade+"/digits=2"}, eval), function(people_id) {
+	eval.col = new CustomDataGridColumn(new GridColumn('eval_'+eval.id, div, null, null, "field_grade", <?php if ($edit) echo "true,evalGradeChanged,evalGradeUnchanged"; else echo "false,null,null";?>, {max:eval.max_grade,passing:1,system:grading_system}, eval), function(people_id) {
 		return getEvaluationGrade(people_id, eval.id);
 	}, true, null, eval.name);
 	var update_passing = function() {
@@ -562,7 +562,7 @@ function createEvaluation(type, eval) {
 function createEvaluationType(eval) {
 	var next_col = grades_grid.getColumnById('final_grade');
 	var cols = [];
-	eval.col_total = new CustomDataGridColumn(new GridColumn('total_eval_type_'+eval.id, "Total (%)", null, null, "field_grade", false, null, null, {max:100,passing:50,system:"min=0,max=100/digits=2"}), function(people_id) {
+	eval.col_total = new CustomDataGridColumn(new GridColumn('total_eval_type_'+eval.id, "Total", null, null, "field_grade", false, null, null, {max:100,passing:50,system:grading_system}), function(people_id) {
 		return getEvaluationTypeGrade(people_id, eval.id);
 	}, true);
 	var update_passing = function() {
@@ -944,7 +944,7 @@ function save() {
 			for (var i = 0; i < eval_grades.length; ++i)
 				if (eval_grades[i].evaluation < 0)
 					for (var k = 0; k < res.evaluations.length; ++k)
-						if (eval_grades[i].evalution == res.evaluations[k].input_id) { eval_grades[i].evaluation = res.evaluations[k].output_id; break; }
+						if (eval_grades[i].evaluation == res.evaluations[k].input_id) { eval_grades[i].evaluation = res.evaluations[k].output_id; break; }
 			// update evaluations' ids in the columns ids
 			for (var i = 0; i < grades_grid.grid.columns.length; ++i) {
 				var col = grades_grid.grid.columns[i];

@@ -160,7 +160,7 @@ class page_transcripts extends Page {
 				<div id='published_list'>
 				<?php 
 				if (count($published) == 0)
-					echo "<span style='font-style:italic'>There is no transcript published yet</span>";
+					echo "<span style='font-style:italic;color:#C00000'><img src='".theme::$icons_10["error"]."' style='vertical-align:middle'/> There is no transcript published yet</span>";
 				else foreach ($published as $p)
 					echo "<span class='menu_item' onclick='selectTranscript(".$p["id"].",this,".json_encode($p["name"],JSON_HEX_APOS).");'>".toHTML($p['name'])."</span>";
 				?>

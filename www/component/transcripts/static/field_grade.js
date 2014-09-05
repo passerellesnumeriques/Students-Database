@@ -28,6 +28,7 @@ field_grade.prototype.compare = function(v1,v2) {
 };
 field_grade.prototype.init_system = function() {
 	this.steps = [];
+	if (this.config.system == null || this.config.system.length == 0) return;
 	var i = this.config.system.indexOf('/');
 	var s;
 	this.digits = 2;
@@ -70,6 +71,8 @@ field_grade.prototype.get_step_grade = function(step_index) {
 };
 /** Converts a grade into a displayable value according to the grading system */
 field_grade.prototype.get_value_from_system = function(grade) {
+	if (this.steps.length == 0)
+		return (grade*this.config.max/100).toFixed(2); // custom display
 	var step = 0;
 	do {
 		var step_grade = this.get_step_grade(step);
@@ -95,6 +98,8 @@ field_grade.prototype.get_value_from_system = function(grade) {
 };
 /** Converts a displayable value into a grade, according to the grading system */
 field_grade.prototype.get_grade_from_system = function(value) {
+	if (this.steps.length == 0)
+		return value*100/this.config.max;// custom display
 	var step = 0;
 	do {
 		var step_grade = this.get_step_grade(step);
