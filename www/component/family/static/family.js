@@ -271,6 +271,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 						remove.onclick = function(ev) {
 							stopEventPropagation(ev);
 							member.people_create = null;
+							member.people = null;
 							td_people.style.fontStyle = "italic";
 							td_people.style.color = "#808080";
 							td_people.innerHTML = "unknown";

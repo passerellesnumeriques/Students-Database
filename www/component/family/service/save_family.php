@@ -30,13 +30,13 @@ class service_save_family extends Service {
 			if (isset($input["members"][$i]["people_create"])) {
 				$create = array("root"=>"People","sub_model"=>null,"paths"=>$input["members"][$i]["people_create"]);
 				$output = Service::internalExecution("data_model", "create_data", $create);
-				unset($input["members"][$i]["people_create"]);
 				$q = PNApplication::$instance->people->getPeoplesSQLQuery(array($output["key"]));
 				$q->bypassSecurity();
 				require_once("component/people/PeopleJSON.inc");
 				PeopleJSON::PeopleSQL($q, false);
 				$input["members"][$i]["people"] = $q->executeSingleRow();
 			}
+			unset($input["members"][$i]["people_create"]);
 			$people = @$input["members"][$i]["people"];
 			if ($people <> null)
 				$input["members"][$i]["people"] = $people["people_id"];
