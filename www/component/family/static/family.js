@@ -13,6 +13,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			if (res) {
 				t.family = res.family;
 				t.members = res.members;
+				t._init();
 				if (ondone) ondone();
 			}
 		});
