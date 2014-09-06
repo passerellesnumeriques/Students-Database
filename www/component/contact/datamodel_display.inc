@@ -229,6 +229,8 @@ class AddressSubDataDisplay extends datamodel\SubDataDisplay {
 		return $names;
 	}
 	
+	public function isEditable($index) { return true; }
+	
 }
 
 class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {

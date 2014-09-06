@@ -6,6 +6,8 @@ class ApplicantPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "applicant"; }
 	public function getName() { return "Applicant"; }
+	public function getIcon16() { return "/static/selection/applicant/applicant_16.png"; }
+	public function getIcon32() { return "/static/selection/applicant/applicant_32.png"; }
 	public function isStandalone() { return true; }
 	
 	public function getTables() { return array("Applicant"); }

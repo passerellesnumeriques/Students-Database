@@ -72,7 +72,7 @@ $model->addTableDataDisplay($display);
 
 class ApplicantDataScreen extends datamodel\GenericDataScreen {
 	
-	protected function endDataRow($data, $value, $is_new, $can_edit) {
+	protected function endDataRow($data, $value, $sub_index, $is_new, $can_edit) {
 		$html = "";
 		switch ($data->getDisplayName()) {
 			case "Information Session":

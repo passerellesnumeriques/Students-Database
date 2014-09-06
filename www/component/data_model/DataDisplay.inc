@@ -233,6 +233,8 @@ abstract class SubDataDisplay {
 	}
 	
 	public abstract function getDisplayNames();
+	public abstract function isEditable($index);
+	public function isEditableForNew($index) { return $this->isEditable($index); }
 	
 }
 

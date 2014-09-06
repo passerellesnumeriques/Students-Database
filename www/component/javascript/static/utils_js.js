@@ -55,6 +55,7 @@ function valueCopy(value, obj_depth) {
 
 function objectMerge(o, add) {
 	for (var name in add) o[name] = add[name];
+	return o;
 }
 
 function objectEquals(o1, o2, done) {

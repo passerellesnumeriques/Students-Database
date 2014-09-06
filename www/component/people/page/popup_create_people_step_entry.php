@@ -39,7 +39,12 @@ class page_popup_create_people_step_entry extends Page {
 							var field = cell.field;
 							var data = grid.getColumnById(cell.col_id).attached_data;
 							if (field.error) {
-								alert("Please correct the problems: "+data.name+": "+field.error);
+								var name;
+								if (typeof data.name != 'undefined')
+									name = data.name;
+								else
+									name = data.datadisplay.name+" "+data.datadisplay.sub_data.names[data.sub_data];
+								alert("Please correct the problems: "+name+": "+field.error);
 								popup.unfreeze();
 								return;
 							}

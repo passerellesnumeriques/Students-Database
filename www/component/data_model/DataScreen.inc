@@ -93,10 +93,6 @@ namespace datamodel {
 						unset($fixed_columns[$c]);
 				}
 				$has_something = true;
-				$html .= "<tr>";
-				$html .= "<td>".toHTML($data->getDisplayName())."</td>";
-				$id = $page->generateID();
-				$html .= "<td id='$id'>";
 				$tf = $data->getTypedField($path->sub_model);
 				if (!$is_new)
 					$kv = $key_value;
@@ -131,28 +127,76 @@ namespace datamodel {
 					foreach ($data->getHandledColumns() as $c)
 						if (!$path->table->canModifyColumn($c)) { $can_edit = false; break; }
 				}
-				if ($is_new) {
-					$script .= "field = new ".$tf[0]."(".json_encode($value).",".json_encode($can_edit).",".$tf[1].");\n";
-					$script .= "field.fillWidth();\n";
-					$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
-					if ($structure_name <> null)
-						$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",field:field,getValue:function(){return this.field.getCurrentData();},validate:function(){ return this.field.error; }});\n";
-				} else if ($can_edit) {
-					$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
-					$page->addJavascript("/static/data_model/datadisplay.js");
-					$page->addJavascript("/static/data_model/editable_field.js");
-					$page->addJavascript("/static/data_model/editable_datadisplay.js");
-					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($value).");\n";
-					$script .= "field.editable_field.fillContainer();\n";
-				} else {
-					$page->addJavascript("/static/data_model/datadisplay.js");
-					$script .= "field = new ".$tf[0]."(".json_encode($value).",false,".$tf[1].");\n";
-					$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
-					$script .= "field.setDataDisplay(".$data->javascriptDataDisplay($path->sub_model).",".json_encode($kv).");\n";
+				$sub = $data->getSubDataDisplay();
+				$sub_indexes = array();
+				if ($sub <> null && ($is_new || $can_edit)) {
+					$sub_names = $sub->getDisplayNames();
+					for ($sub_index = 0; $sub_index < count($sub_names); $sub_index++)
+						if ($is_new && $sub->isEditableForNew($sub_index))
+							array_push($sub_indexes, $sub_index);
+						else if (!$is_new && $sub->isEditable($sub_index))
+							array_push($sub_indexes, $sub_index);
 				}
-				$html .= "</td>";
-				$html .= $this->endDataRow($data, $value, $is_new, $can_edit);
-				$html .= "</tr>";
+				if (count($sub_indexes) > 0) {
+					$html .= "<tr>";
+					$html .= "<td colspan=2 class='sub_data_title'>".toHTML($data->getDisplayName())."</td>";
+					$html .= "</tr>";
+					$sub_names = $sub->getDisplayNames();
+					if ($is_new)
+						$script .= "new_data = ".json_encode($value).";\n";
+					$first_sub_index = true;
+					foreach ($sub_indexes as $sub_index) {
+						$html .= "<tr class='sub_data'>";
+						$html .= "<td>".toHTML($sub_names[$sub_index])."</td>";
+						$id = $page->generateID();
+						$html .= "<td id='$id'>";
+						if ($is_new) {
+							$script .= "field = new ".$tf[0]."(new_data,".json_encode($can_edit).",objectMerge(".$tf[1].",{sub_data_index:$sub_index}));\n";
+							$script .= "field.fillWidth();\n";
+							$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
+							if ($structure_name <> null && $first_sub_index)
+								$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",sub_index:$sub_index,field:field,data:new_data,getValue:function(){return this.field.getCurrentData();},validate:function(){ var fields = window.top.sub_field_registry.getFields(window,this.data);for (var i = 0; i < fields.length; ++i) if (fields[i].error) return fields[i].error; return null; }});\n";
+						} else if ($can_edit) {
+							$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
+							$page->addJavascript("/static/data_model/datadisplay.js");
+							$page->addJavascript("/static/data_model/editable_field.js");
+							$page->addJavascript("/static/data_model/editable_datadisplay.js");
+							$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($value).");\n";
+							$script .= "field.editable_field.fillContainer();\n";
+						}
+						$html .= "</td>";
+						$html .= $this->endDataRow($data, $value, $sub_index, $is_new, $can_edit);
+						$html .= "</tr>";
+						$first_sub_index = false;
+					}
+				} else {
+					$html .= "<tr>";
+					$html .= "<td>".toHTML($data->getDisplayName())."</td>";
+					$id = $page->generateID();
+					$html .= "<td id='$id'>";
+					if ($is_new) {
+						$script .= "field = new ".$tf[0]."(".json_encode($value).",".json_encode($can_edit).",".$tf[1].");\n";
+						$script .= "field.fillWidth();\n";
+						$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
+						if ($structure_name <> null)
+							$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",sub_index:-1,field:field,getValue:function(){return this.field.getCurrentData();},validate:function(){ return this.field.error; }});\n";
+					} else if ($can_edit) {
+						$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
+						$page->addJavascript("/static/data_model/datadisplay.js");
+						$page->addJavascript("/static/data_model/editable_field.js");
+						$page->addJavascript("/static/data_model/editable_datadisplay.js");
+						$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($value).");\n";
+						$script .= "field.editable_field.fillContainer();\n";
+					} else {
+						$page->addJavascript("/static/data_model/datadisplay.js");
+						$script .= "field = new ".$tf[0]."(".json_encode($value).",false,".$tf[1].");\n";
+						$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
+						$script .= "field.setDataDisplay(".$data->javascriptDataDisplay($path->sub_model).",".json_encode($kv).");\n";
+					}
+					$html .= "</td>";
+					$html .= $this->endDataRow($data, $value, -1, $is_new, $can_edit);
+					$html .= "</tr>";
+				}
 			}
 			if (!$has_something) return "";
 			$html .= "</tbody></table>";
@@ -183,7 +227,7 @@ namespace datamodel {
 		 * @param boolean $can_edit
 		 * @return string
 		 */
-		protected function endDataRow($data, $value, $is_new, $can_edit) {
+		protected function endDataRow($data, $value, $sub_index, $is_new, $can_edit) {
 			return "";
 		}
 	

@@ -6,6 +6,8 @@ class UserPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "user"; }
 	public function getName() { return "User"; }
+	public function getIcon16() { return "/static/user_management/user_16.png"; }
+	public function getIcon32() { return "/static/user_management/user_32.png"; }
 	public function isStandalone() { return true; }
 	
 	public function getTables() { return array("Users"); }

@@ -201,9 +201,13 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 	public function canAccess($sub_model) { return true; } // TODO ?
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) {
-		return array("field_parent","{}");
+		return array("field_parent","{type:".json_encode($this->type)."}");
 	}
 	public function isEditable() { return false; }
+	public function isEditableForNewData() { return true; }
+	public function getNewData() {
+		return array("first_name"=>null,"last_name"=>null,"occupation"=>null,"education_level"=>null);
+	}
 	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() { return false; }
 	public function isMandatory($sub_model) { return false; }
@@ -213,6 +217,8 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);
 			$table_alias = $q->generateTableAlias();
 			$q->join($parent_table_alias, "FamilyMember", array("id"=>"people",null=>array("member_type"=>"Child")), $table_alias);
+		} else {
+			$q->whereValue($table_alias, "member_type", "Child");
 		}
 		$family_alias = $q->generateFieldAlias();
 		$q->field($table_alias, "family", $family_alias);
@@ -247,6 +253,43 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+		$family_id = SQLQuery::create()->bypassSecurity()
+			->select("FamilyMember")
+			->whereValue("FamilyMember","people",$joining_key_value_for_new_data)
+			->whereValue("FamilyMember","member_type","Child")
+			->field("family")
+			->executeSingleValue();
+		if ($family_id == null) {
+			// create family
+			$family_id = SQLQuery::create()->bypassSecurity()->insert("Family", array("entry_date"=>date("Y-m-d")));
+			// insert child
+			SQLQuery::create()->bypassSecurity()->insert("FamilyMember", array("family"=>$family_id,"people"=>$joining_key_value_for_new_data,"member_type"=>"Child","entry_date"=>date("Y-m-d")));
+		}
+		$member = SQLQuery::create()->bypassSecurity()
+			->select("FamilyMember")
+			->whereValue("FamilyMember","family",$family_id)
+			->whereValue("FamilyMember","member_type",$this->type)
+			->executeSingleRow();
+		if ($member == null) {
+			// new parent
+			$people_id = null;
+			if ($value["first_name"] <> null && $value["last_name"] <> null) {
+				$people_id = PNApplication::$instance->people->createPeople(array("first_name"=>$value["first_name"],"last_name"=>$value["last_name"],"sex"=>($this->type == "Father" ? "M" : "F")), array("family_member"), true);
+			}
+			SQLQuery::create()->bypassSecurity()->insert("FamilyMember", array("family"=>$family_id,"member_type"=>$this->type,"people"=>$people_id,"occupation"=>$value["occupation"],"education_level"=>$value["education_level"],"entry_date"=>date("Y-m-d")));
+		} else {
+			// update
+			$id = $member["id"];
+			unset($member["id"]);
+			if ($member["people"] == null && $value["first_name"] <> null && $value["last_name"] <> null)
+				$member["people"] = PNApplication::$instance->people->createPeople(array("first_name"=>$value["first_name"],"last_name"=>$value["last_name"],"sex"=>($this->type == "Father" ? "M" : "F")), array("family_member"), true);
+			else
+				unset($member["people"]);
+			$member["occupation"] = $value["occupation"];
+			$member["education_level"] = $value["education_level"];
+			$member["entry_date"] = date("Y-m-d");
+			SQLQuery::create()->bypassSecurity()->updateByKey("FamilyMember", $id, $member);
+		}
 	}
 }
 class ParentsSubDataDisplay extends datamodel\SubDataDisplay {
@@ -259,13 +302,17 @@ class ParentsSubDataDisplay extends datamodel\SubDataDisplay {
 			"Education Level"
 		);
 	}
+	public function isEditable($index) {
+		if ($index == 2) return false;
+		return true;
+	}
 }
 $display->addDataDisplay(new ParentDataDisplay($category, "Father"));
 $display->addDataDisplay(new ParentDataDisplay($category, "Mother"));
 $model->addTableDataDisplay($display);
 
 class FamilyBackgroundDataScreen extends datamodel\GenericDataScreen {
-	protected function endDataRow($data, $value, $is_new, $can_edit) {
+	protected function endDataRow($data, $value, $sub_index, $is_new, $can_edit) {
 		$html = "";
 		switch ($data->getDisplayName()) {
 			case "Child Rank":

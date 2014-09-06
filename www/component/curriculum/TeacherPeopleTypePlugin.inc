@@ -7,6 +7,8 @@ class TeacherPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "teacher"; }
 	public function getName() { return "Teacher"; }
+	public function getIcon16() { return "/static/curriculum/teacher_16.png"; }
+	public function getIcon32() { return "/static/curriculum/teacher_32.png"; }
 	public function isStandalone() { return true; }
 	
 	public function getTables() { return array("TeacherDates"); }

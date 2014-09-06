@@ -105,7 +105,14 @@ foreach ($fields as $field) {
 			}
 	}
 	$sub_data = $data->getSubDataDisplay();
-	if ($sub_data == null) {
+	$sub_indexes = array();
+	if ($sub_data <> null) {
+		$names = $sub_data->getDisplayNames();
+		for ($i = 0; $i < count($names); $i++)
+			if ($sub_data->isEditableForNew($i))
+				array_push($sub_indexes, $i);
+	}
+	if (count($sub_indexes) == 0) {
 		echo "col = new GridColumn(".
 			json_encode($path->getString()."#".$data->getDisplayName()).
 			",".json_encode($data->getDisplayName()).
@@ -120,7 +127,7 @@ foreach ($fields as $field) {
 	} else {
 		echo "sub_cols = [];";
 		$names = $sub_data->getDisplayNames();
-		for ($i = 0; $i < count($names); $i++) {
+		foreach ($sub_indexes as $i) {
 			echo "col = new GridColumn(".
 				json_encode($path->getString()."#".$data->getDisplayName()."#".$i).
 				",".json_encode($names[$i]).

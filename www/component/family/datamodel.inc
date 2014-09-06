@@ -22,6 +22,7 @@ $model->addTable("FamilyMember")
 	->addInteger("child_rank", 8, 1) // ? should we put it ?
 	->addString("comment",250,0,true,false)
 	->addReadAccessFromForeignTable("People")
+	->addReadAccessFromForeignTable("FamilyMember")
 	->addRemoveAccessFromForeignTable("People")
 	;
 

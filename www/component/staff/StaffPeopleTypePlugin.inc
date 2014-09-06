@@ -6,6 +6,8 @@ class StaffPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "staff"; }
 	public function getName() { return "Staff"; }
+	public function getIcon16() { return "/static/staff/staff_16.png"; }
+	public function getIcon32() { return "/static/staff/staff_32.png"; }
 	public function isStandalone() { return true; }
 	
 	public function getTables() { return array("Staff","StaffPosition"); }
