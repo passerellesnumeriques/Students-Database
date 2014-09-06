@@ -347,6 +347,7 @@ class DataBaseLock {
 	
 	/** remove expired locks */
 	public static function clean() {
+		// TODO make a cron task for this
 		if (self::$cleant) return;
 		self::$cleant = true;
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();

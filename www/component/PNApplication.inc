@@ -13,6 +13,7 @@ require_once("utilities.inc");
  * @property authentication $authentication
  * @property calendar $calendar
  * @property contact $contact
+ * @property cron $cron
  * @property curriculum $curriculum
  * @property data_import $data_import
  * @property data_model $data_model
@@ -20,7 +21,7 @@ require_once("utilities.inc");
  * @property discipline $discipline
  * @property documents $documents
  * @property excel $excel
- * @property facebook $facebook
+ * @property family $family
  * @property geography $geography
  * @property google $google
  * @property health $health
