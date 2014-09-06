@@ -145,6 +145,7 @@ namespace datamodel {
 					$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($value).");\n";
 					$script .= "field.editable_field.fillContainer();\n";
 				} else {
+					$page->addJavascript("/static/data_model/datadisplay.js");
 					$script .= "field = new ".$tf[0]."(".json_encode($value).",false,".$tf[1].");\n";
 					$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
 					$script .= "field.setDataDisplay(".$data->javascriptDataDisplay($path->sub_model).",".json_encode($kv).");\n";

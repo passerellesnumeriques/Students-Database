@@ -106,7 +106,7 @@ if (in_array("teacher",PNApplication::$instance->user_management->people_types))
 </a>
 <?php }
 if (in_array("student",PNApplication::$instance->user_management->people_types)) { ?>
-<a class='application_left_menu_item' href='/dynamic/transcripts/page/student_grades?people=<?php echo PNApplication::$instance->user_management->people_id;?>'>
+<a class='application_left_menu_item' href='/dynamic/transcripts/page/student_grades?people=<?php echo PNApplication::$instance->user_management->people_id;?>&title=true'>
 	<img src='/static/transcripts/grades_white.png'/>
 	My Grades
 </a>

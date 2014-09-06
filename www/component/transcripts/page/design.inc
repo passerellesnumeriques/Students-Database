@@ -12,7 +12,7 @@ function generatePublishedTranscript($id, $student_id) {
 	foreach ($student_grades as $sg) array_push($subjects_ids, $sg["subject"]);
 	
 	if (count($subjects_ids) > 0)
-		$subjects = PNApplication::$instance->curriculum->getSubjectsQuery($subjects_ids)->join("CurriculumSubject","CurriculumSubjectGrading",array("id"=>"subject"))->execute();
+		$subjects = PNApplication::$instance->curriculum->getSubjectsQuery($subjects_ids)->bypassSecurity($student_id == PNApplication::$instance->user_management->people_id)->join("CurriculumSubject","CurriculumSubjectGrading",array("id"=>"subject"))->execute();
 	else
 		$subjects = array();
 	
