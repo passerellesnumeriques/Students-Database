@@ -40,7 +40,7 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 				this.nb_columns++;
 				continue;
 			}
-			if (this.sub_columns[i].levels > this.levels+1) this.levels = this.sub_columns[i].levels+1;
+			if (this.levels < this.sub_columns[i].levels+1) this.levels = this.sub_columns[i].levels+1;
 			this.nb_columns += sub_columns[i].nb_columns;
 		}
 		this.th.colSpan = this.nb_columns;
@@ -103,6 +103,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.th = document.createElement('TH');
 	this.th.rowSpan = 1;
 	this.th.col = this;
+	this.th.className = "final";
 	window.to_cleanup.push(this);
 	this.cleanup = function() {
 		this.th.col = null;
@@ -454,9 +455,9 @@ function grid(element) {
 		// continue insertion
 		for (var i = 0; i < container.sub_columns.length; ++i) {
 			if (container.sub_columns[i] instanceof GridColumnContainer) {
-				index = t._addColumnContainer(container.sub_columns[i], level+1, index);
+				index = t._addColumnContainer(container.sub_columns[i], level+container.th.rowSpan, index);
 			} else {
-				t._addFinalColumn(container.sub_columns[i], level+1, index);
+				t._addFinalColumn(container.sub_columns[i], level+container.th.rowSpan, index);
 				if (typeof index != 'undefined') index++;
 			}
 		}
@@ -472,6 +473,7 @@ function grid(element) {
 		if (typeof index == 'undefined') {
 			t.columns.push(col);
 			t.colgroup.appendChild(col.col);
+			col.th.rowSpan = t.header_rows.length-level+1;
 			t.header_rows[level].appendChild(col.th);
 		} else {
 			t.columns.splice(index,0,col);
