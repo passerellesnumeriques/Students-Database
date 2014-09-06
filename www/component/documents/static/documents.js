@@ -8,6 +8,11 @@ window.top.pndocuments = {
 			return;
 		}
 		var head = window.top.document.getElementsByTagName("HEAD")[0];
+		if (this._opener_script) {
+			if (this._opener_script.parentNode == head)
+				head.removeChild(this._opener_script);
+			this._opener_script = null;
+		}
 		var scripts = [];
 		var onload = function() {
 			window.top.pndocuments._connected_port = this._port;
@@ -186,6 +191,12 @@ window.top.pndocuments = {
 	}
 };
 window.top.require("upload.js");
+window.top.pnapplication.onlogout.add_listener(function(){
+	window.top.pndocuments._connected_port = -1;
+	window.top.pndocuments.opener = null;
+	window.top.pndocuments._connected_port = -1;
+	window.top.pndocuments._connected_port = -1;
+});
 }
 
 function AttachedDocuments(container, table, sub_model, key, type, can_add_remove, can_edit, title_size, orientation) {

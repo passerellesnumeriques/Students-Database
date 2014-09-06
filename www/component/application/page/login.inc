@@ -191,6 +191,16 @@ service.json("development","check_libraries_updates",null,function(res) {
 </style>
 <script type='text/javascript'>
 document.getElementById("timezone_input").value = -(new Date().getTimezoneOffset());
+window.top.php_session_cookie_name = <?php echo json_encode(ini_get("session.name"));?>;
+window.top.php_session_id = getCookie(window.top.php_session_cookie_name);
+window.top.php_server = new URL(location.href);
+window.top.php_server_port = window.top.php_server.port;
+window.top.php_server = window.top.php_server.host;
+window.top.pn_version = getCookie("pnversion");
+window.top.require("documents.js",function(){
+	window.top.pndocuments.connected_port = -1;
+	window.top.pndocuments.connect();
+});
 window.top.pnapplication.onlogout.fire();
 function login() {
 	window.no_loading = true;
