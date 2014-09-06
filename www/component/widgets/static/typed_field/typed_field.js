@@ -173,6 +173,9 @@ typed_field.prototype = {
 	},
 	unregister_datamodel_datadisplay: function() {
 		window.top.datamodel.unregisterDataWidget(this.element);
+	},
+	setDataDisplay: function(data_display, data_key) {
+		this.register_datamodel_datadisplay(data_display, data_key);
 	}
 };
 typed_field.prototype.constructor = typed_field;

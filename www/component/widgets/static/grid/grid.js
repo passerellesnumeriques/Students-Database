@@ -993,9 +993,11 @@ function grid(element) {
 				addClassName(td, "last_in_container");
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
-				t._create_cell(t.columns[j], data.data, td, function(field){
+				t._create_cell(t.columns[j], data.data, td, function(field,data){
 					field.onfocus.add_listener(function() { t.onrowfocus.fire(tr); });
-				});
+					if (typeof data.data_display != 'undefined' && data.data_display)
+						field.setDataDisplay(data.data_display, data.data_id);
+				},data);
 			if (typeof data.css != 'undefined' && data.css)
 				td.className = data.css;
 			td.ondomremoved(function(td) { td.field = null; td.col_id = null; td.data_id = null; });
@@ -1330,12 +1332,12 @@ function grid(element) {
 		t.element.appendChild(t.grid_element);
 		table.className = "grid";
 	};
-	t._create_cell = function(column, data, parent, ondone) {
+	t._create_cell = function(column, data, parent, ondone, ondone_param) {
 		t._cells_loading++;
 		t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
 			parent.field = field;
 			field.grid_column_id = column.id;
-			if (ondone) ondone(field);
+			if (ondone) ondone(field, ondone_param);
 			t._cells_loading--;
 			t._check_loaded();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});

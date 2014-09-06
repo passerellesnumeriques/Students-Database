@@ -147,6 +147,7 @@ namespace datamodel {
 				} else {
 					$script .= "field = new ".$tf[0]."(".json_encode($value).",false,".$tf[1].");\n";
 					$script .= "document.getElementById('$id').appendChild(field.getHTMLElement());\n";
+					$script .= "field.setDataDisplay(".$data->javascriptDataDisplay($path->sub_model).",".json_encode($kv).");\n";
 				}
 				$html .= "</td>";
 				$html .= $this->endDataRow($data, $value, $is_new, $can_edit);

@@ -28,8 +28,8 @@ PrivilegesRequired=admin
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "D:\students_database\v0.1_guillaume\tools\document_opener\document_opener\bin\Release\PNDocumentOpener.exe"; DestDir: "{app}"; Check: MakeAPause; Flags: ignoreversion overwritereadonly
-Source: "D:\students_database\install\inno\dotNetFx40_Full_x86_x64.exe"; DestDir: "{app}"; Check: FrameworkIsNotInstalled; Flags: deleteafterinstall
+Source: "../document_opener\bin\Release\PNDocumentOpener.exe"; DestDir: "{app}"; Check: MakeAPause; Flags: ignoreversion overwritereadonly
+Source: "dotNetFx40_Full_x86_x64.exe"; DestDir: "{app}"; Check: FrameworkIsNotInstalled; Flags: deleteafterinstall
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -41,7 +41,7 @@ Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\dotNetFx40_Full_x86_x64.exe"; Parameters: "/passive /norestart"; Check: FrameworkIsNotInstalled; Flags: waituntilterminated
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait runasoriginaluser
 
 [Code]
 function FrameworkIsNotInstalled(): Boolean;
