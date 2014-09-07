@@ -34,11 +34,13 @@ class selection extends Component {
 		require_once("SelectionNewsPlugin.inc");
 		require_once("ApplicantPeopleTypePlugin.inc");
 		require_once("SelectionApplicationSection.inc");
+		require_once("ApplicantImportTemplate.inc");
 		return array(
 			new SelectionOrganizationPlugin(),
 			new SelectionNewsPlugin(),
 			new ApplicantPeopleTypePlugin(),
-			new SelectionApplicationSection()
+			new SelectionApplicationSection(),
+			new ApplicantImportTemplate()
 		);
 	}
 	
@@ -73,6 +75,8 @@ class selection extends Component {
 		SQLQuery::setSubModel("SelectionCampaign", $this->campaign_id);
 		/* Set the calendar id attribute */
 		$this->calendar_id = SQLQuery::create()->select("SelectionCampaign")->field("calendar")->where("id",$id)->executeSingleValue();
+		// load the config
+		$this->getConfig();
 	}
 	
 	/**
@@ -103,7 +107,6 @@ class selection extends Component {
 				$fields["name"] = $campaign_name;
 				$fields["calendar"] = $calendar_id;
 				$campaign_id = SQLQuery::create()->insert("SelectionCampaign",$fields);
-				$this->setCampaignId($campaign_id);
 				
 				/* Insert the default config in the database */
 				$default_config_rows = array();
@@ -112,7 +115,9 @@ class selection extends Component {
 						"name" => $name,
 						"value" => json_encode($data[1]),
 					));
-				SQLQuery::create()->insertMultiple("SelectionCampaignConfig",$default_config_rows);
+				SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->insertMultiple("SelectionCampaignConfig",$default_config_rows);
+				
+				$this->setCampaignId($campaign_id);
 			}
 		} catch (Exception $e) {
 			PNApplication::error($e);

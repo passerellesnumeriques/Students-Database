@@ -150,10 +150,19 @@ abstract class DataDisplay {
 		else {
 			$s .= ",new SubDataDisplay([";
 			$names = $sub->getDisplayNames();
-			$first = true;
 			for ($i = 0; $i < count($names); $i++) {
-				if ($first) $first = false; else $s .= ",";
+				if ($i > 0) $s .= ",";
 				$s .= json_encode($names[$i]);
+			}
+			$s .= "],[";
+			for ($i = 0; $i < count($names); $i++) {
+				if ($i > 0) $s .= ",";
+				$s .= $sub->isEditable($i) ? "true" : "false";
+			}
+			$s .= "],[";
+			for ($i = 0; $i < count($names); $i++) {
+				if ($i > 0) $s .= ",";
+				$s .= $sub->isEditableForNew($i) ? "true" : "false";
 			}
 			$s .= "]";
 			$s .= ")";

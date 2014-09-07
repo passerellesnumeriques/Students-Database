@@ -36,7 +36,7 @@ function CalendarManager() {
 	 */
 	this.addCalendar = function(cal) {
 		for (var i = 0; i < this.calendars.length; ++i)
-			if (this.calendars[i].provider.id == cal.provider.id && this.calendars[i].id == cal.id) return; // already there
+			if (this.calendars[i].provider.id == cal.provider.id && this.calendars[i].id == cal.id) return this.calendars[i]; // already there
 		this.calendars.push(cal);
 		var t=this;
 		var listeners = {calendar:cal,listeners:[

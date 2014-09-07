@@ -31,9 +31,10 @@ function DataDisplay(category, name, table, field_classname, field_config, horiz
 	this.sub_data = sub_data;
 }
 
-function SubDataDisplay(names, filters) {
+function SubDataDisplay(names, editable, editableForNew) {
 	this.names = names;
-	this.filters = filters;
+	this.editable = editable;
+	this.editableForNew = editableForNew;
 }
 
 /** Parse a DataPath to get information about it on JavaScript side

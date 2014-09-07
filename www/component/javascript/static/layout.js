@@ -1,4 +1,4 @@
-layout = {
+window.layout = {
 	cleanup: function() {
 		if (!this._w) return;
 		if (this._w._layout_interval) clearInterval(this._w._layout_interval);

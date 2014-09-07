@@ -18,6 +18,8 @@ class service_config_save extends Service{
 		echo "Save the selection campaign config into the database";
 	}
 	
+	public function mayUpdateSession() { return true; }
+	
 	public function execute(&$component,$input){
 		$fields = @$input["fields"];
 		$db_lock = $input["db_lock"];

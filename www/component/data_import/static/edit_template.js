@@ -1,7 +1,60 @@
-function create_template(container, root_table, sub_model, known_columns, onready) {
+function edit_template(container, type_id, root_table, sub_model, known_columns, template, onready) {
 	if (typeof container == 'string') container = document.getElementById('container');
 	var t=this;
 	var popup = window.parent.get_popup_window_from_frame(window);
+	
+	this._startEdition = function(type) {
+		var win = getIFrameWindow(t.frame_excel);
+		var excel = win.excel;
+		popup.freeze();
+		require("datadisplay.js",function() {
+			service.json("data_import","get_importable_data",{root:root_table,sub_model:sub_model,known_columns:known_columns},function(res){
+				if (!res) { popup.unfreeze(); return; }
+				if (type == "multiple") {
+					require("template_multiple_entries.js", function() {
+						var temp_name = null;
+						var temp_id = template ? template.id : null;
+						new template_multiple_entries(t.import_content, excel, res, template ? template.to_import : null, function(temp) {
+							var save = function() {
+								popup.freeze("Saving...");
+								temp.save(type_id,temp_name.value,temp_id,root_table,sub_model,function(res) {
+									popup.unfreeze();
+									if (res && res.id) temp_id = res.id;
+								});
+							};
+							var div = document.createElement("DIV");
+							div.appendChild(document.createTextNode("Template name: "));
+							temp_name = document.createElement("INPUT");
+							temp_name.type = "text";
+							temp_name.style.marginRight = "5px";
+							if (template) temp_name.value = template.name;
+							div.appendChild(temp_name);
+							popup.addFooter(div);
+							popup.addSaveButton(function() {
+								if (temp_name.value) save();
+								else
+									input_dialog(null,"New Import Template","Please choose a name for this new template","",100,function(name) {
+										name = name.trim();
+										if (name.length == 0) return "Please enter a name";
+										return null;
+									},function(name) {
+										if (!name) return;
+										temp_name.value = name.trim();
+										save();
+									});
+							});
+							popup.addCancelButton();
+							popup.unfreeze();
+						});
+					});
+				} else {
+					require("template_single_entry.js", function() {
+						new template_single_entry(t.import_content, excel, res, function() { popup.unfreeze(); });
+					});
+				}
+			});
+		});
+	};
 	
 	this._askTypeOfImport = function() {
 		t.import_content.removeAllChildren();
@@ -28,23 +81,10 @@ function create_template(container, root_table, sub_model, known_columns, onread
 		r1.onchange = function() { button.disabled = ""; };
 		r2.onchange = function() { button.disabled = ""; };
 		button.onclick = function() {
-			var win = getIFrameWindow(t.frame_excel);
-			var excel = win.excel;
-			popup.freeze();
-			require("datadisplay.js",function() {
-				service.json("data_import","get_importable_data",{root:root_table,sub_model:sub_model,known_columns:known_columns},function(res){
-					if (!res) { popup.unfreeze(); return; }
-					if (r1.checked) {
-						require("template_multiple_entries.js", function() {
-							new template_multiple_entries(t.import_content, excel, res, function() { popup.unfreeze(); });
-						});
-					} else {
-						require("template_single_entry.js", function() {
-							new template_single_entry(t.import_content, excel, res, function() { popup.unfreeze(); });
-						});
-					}
-				});
-			});
+			if (r1.checked)
+				t._startEdition("multiple");
+			else
+				t._startEdition("single");
 		};
 	};
 	
@@ -57,7 +97,10 @@ function create_template(container, root_table, sub_model, known_columns, onread
 		container.style.height = "100%";
 		layout.invalidate(container);
 		popup.showPercent(95,95);
-		this._askTypeOfImport();
+		if (!template)
+			this._askTypeOfImport();
+		else
+			this._startEdition(template.type);
 	};
 	
 	this._startUpload = function(click_event) {
@@ -113,7 +156,7 @@ function create_template(container, root_table, sub_model, known_columns, onread
 				};
 				check_loaded();
 			};
-			t.frame_excel.src = "/dynamic/data_import/page/excel_upload?id="+output.id;
+			t.frame_excel.src = "/dynamic/data_import/page/excel_upload?id="+output.id+"&remove_empty_sheets=true";
 		};
 		t._upl.openDialog(click_event);
 	};
@@ -165,7 +208,7 @@ function create_template(container, root_table, sub_model, known_columns, onread
 
 			t._upl = createUploadTempFile(false, true);
 			t.excel_header.className = "wizard_header";
-			t.excel_header.innerHTML = "<img src='/static/data_import/import_excel_32.png'/> Upload an Excel file as example to create the template";
+			t.excel_header.innerHTML = "<img src='/static/data_import/import_excel_32.png'/> Upload an Excel file as example to "+(template ? "edit" : "create")+" the template";
 			t.frame_excel.style.border = "0px";
 			t.frame_excel.style.width = "100%";
 			t.frame_excel._upload = function(ev) {

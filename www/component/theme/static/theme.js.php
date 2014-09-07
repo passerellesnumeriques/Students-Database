@@ -29,7 +29,7 @@ browse_css("component/theme/static/default/style", "", "default/style/", $css_li
 if ($theme <> "default")
 	browse_css("component/theme/static/".$theme."/style", "", $theme."/style/", $css_list);
 ?>
-theme = {
+window.theme = {
 	name: <?php echo json_encode($theme);?>,
 	css_list: [<?php
 	$first = true;

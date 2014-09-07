@@ -208,13 +208,14 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		var url = get_script_path("grid.js");
 		var t=this;
 		var a = new GridColumnAction('filter', url+"/filter.gif",function(ev,a,col){
+			stopEventPropagation(ev);
 			if (t.filtered) {
 				t.filtered = false;
 				a.icon = url+"/filter.gif";
 				t._refresh_title();
 				t.grid.apply_filters();
 			} else {
-				if (t.grid.table.childNodes.length == 0) return;
+				if (t.grid.table.childNodes.length == 0) return false;
 				require("context_menu.js", function() {
 					var values = [];
 					var index = 0;
@@ -266,7 +267,6 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 					menu.showBelowElement(a.element);
 				});
 			}
-			stopEventPropagation(ev);
 			return false;
 		});
 		this.addAction(a);

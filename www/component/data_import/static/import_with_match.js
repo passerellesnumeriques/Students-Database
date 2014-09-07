@@ -129,7 +129,7 @@ function import_with_match(provider, ev, show_after_grid) {
 						};
 						check_loaded();
 					};
-					t.excel_frame.src = "/dynamic/data_import/page/excel_upload?id="+output.id;
+					t.excel_frame.src = "/dynamic/data_import/page/excel_upload?id="+output.id+"&remove_empty_sheets=true";
 				});
 			};
 			upl.openDialog(ev);

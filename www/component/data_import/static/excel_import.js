@@ -77,7 +77,7 @@ function excel_import(popup, container, onready) {
 					};
 					check_loaded();
 				};
-				t.frame_excel.src = "/dynamic/data_import/page/excel_upload?id="+output.id;
+				t.frame_excel.src = "/dynamic/data_import/page/excel_upload?id="+output.id+"&remove_empty_sheets=true";
 			});
 		};
 		t._upl.openDialog(click_event);

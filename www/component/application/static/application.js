@@ -349,6 +349,7 @@ function initPNApplication() {
 			closeRaised = true;
 			window.pnapplication.closeWindow();
 		}
+		return null;
 	});
 };
 initPNApplication();
