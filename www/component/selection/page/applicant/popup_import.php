@@ -19,7 +19,7 @@ class page_applicant_popup_import extends SelectionPage {
 			<div>
 				<?php
 				require_once("component/data_import/page/template_list.inc");
-				template_list($this, "selection_applicant", "Applicant", PNApplication::$instance->selection->getCampaignId(), "{'People':{'types':'/applicant/'}}");
+				template_list($this, "selection_applicant", "Applicant", PNApplication::$instance->selection->getCampaignId(), "{'People':{'types':'/applicant/'}}", "/dynamic/people/page/popup_create_people?types=applicant", $_POST["input"], $_GET["ondone"]);
 				?>
 			</div>
 		</div>

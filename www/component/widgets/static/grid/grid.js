@@ -46,6 +46,10 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		this.th.colSpan = this.nb_columns;
 		if (this.parent_column) this.parent_column._updateLevels();
 	};
+	this.increaseRowSpan = function() {
+		for (var i = 0; i < this.sub_columns.length; ++i)
+			this.sub_columns[i].increaseRowSpan();
+	};
 	this._updateLevels();
 	this.getNbFinalColumns = function() {
 		var nb = 0;
@@ -125,6 +129,9 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.onclick = new Custom_Event();
 	this.actions = [];
 	
+	this.increaseRowSpan = function() {
+		this.th.rowSpan++;
+	};
 	this.toggleEditable = function() {
 		this.editable = !this.editable;
 		var index = this.grid.columns.indexOf(this);
@@ -430,9 +437,9 @@ function grid(element) {
 		var tr = document.createElement("TR");
 		t.header_rows.push(tr);
 		t.header_rows[0].parentNode.appendChild(tr);
-		// increase rowSpan of first row
+		// increase rowSpan of last one
 		for (var i = 0; i < t.header_rows[0].childNodes.length; i++)
-			t.header_rows[0].childNodes[i].rowSpan++;
+			t.header_rows[0].childNodes[i].col.increaseRowSpan();
 		layout.invalidate(t.element);
 	};
 	t._addColumnContainer = function(container, level, index) {

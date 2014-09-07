@@ -96,7 +96,8 @@ field_parent.prototype._create = function(data) {
 			this._getEditedData = function() {
 				return data;
 			};
-			this._setData = function(d) {
+			this._setData = function(d,from_input) {
+				if (from_input) { input.value = d != null ? d : ""; updater(d); }
 				return data;
 			};
 			this._fillWidth = this.fillWidth;

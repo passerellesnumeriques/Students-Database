@@ -1,5 +1,6 @@
 <?php 
 function createMultipleDataPage(&$page, $root_table_name, $sub_model, $sub_models, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data, $precreated_data = null) {
+require_once("component/data_model/Model.inc");
 $all_sub_models = array();
 if ($sub_model <> null) {
 	$root_table = DataModel::get()->getTable($root_table_name);
@@ -134,7 +135,7 @@ foreach ($cat[1] as $field) {
 			",".$data->javascriptDataDisplay($path->sub_model).")";
 		echo ");\n";
 	} else {
-		echo "sub_cols = [];";
+		echo "sub_cols = [];\n";
 		$names = $sub_data->getDisplayNames();
 		foreach ($sub_indexes as $i) {
 			echo "col = new GridColumn(".
@@ -148,7 +149,7 @@ foreach ($cat[1] as $field) {
 				",".$tf[1].
 				",{datadisplay:".$data->javascriptDataDisplay($path->sub_model).",sub_data:$i});\n";
 			echo "col.field_args.sub_data_index = $i;\n";
-			echo "sub_cols.push(col);";
+			echo "sub_cols.push(col);\n";
 		}
 		echo "col_container = new GridColumnContainer(".json_encode($data->getDisplayName()).",sub_cols,".$data->javascriptDataDisplay($path->sub_model).");\n";
 		echo "cols.push(col_container);\n";

@@ -1,5 +1,5 @@
 <?php
-function template_list(&$page, $type, $root_table, $sub_model, $known_columns) {
+function template_list(&$page, $type, $root_table, $sub_model, $known_columns, $import_url, $import_data, $onimportdone) {
 	$templates = PNApplication::$instance->data_import->getTemplates($type, $sub_model);
 	if (count($templates) == 0) {
 		echo "<div style='text-align:center;font-style:italic'>There is no template yet</div>";
@@ -15,7 +15,7 @@ function template_list(&$page, $type, $root_table, $sub_model, $known_columns) {
 			}
 			echo ")";
 			echo " ";
-			echo "<button class='flat icon' title='Import data using this template' onclick='useTemplate(".$t["id"].")'><img src='/static/data_import/import_excel_16.png'/></button>";
+			echo "<button class='flat icon' title='Import data using this template' onclick='useTemplate(event,".$t["id"].")'><img src='/static/data_import/import_excel_16.png'/></button>";
 			echo " ";
 			echo "<button class='flat icon' title='Edit this template' onclick='editTemplate(".$t["id"].")'><img src='".theme::$icons_16["edit"]."'/></button>";
 			echo " ";
@@ -100,11 +100,105 @@ function removeTemplate(button,id) {
 		});
 	});
 }
-function useTemplate(id) {
+window.top.require("popup_window.js");
+window.top.require("excel_import.js");
+function useTemplate(ev,id) {
 	var temp = null;
 	for (var i = 0; i < templates.length; ++i)
 		if (templates[i].id == id) { temp = templates[i]; break; }
-	// TODO
+	window.top.require("popup_window.js", function() {
+		var container = document.createElement("DIV");
+		container.style.width = "100%";
+		container.style.height = "100%";
+		var p = new window.top.popup_window("Import Applicants", theme.icons_16._import, container);
+		window.top.require("excel_import.js", function() {
+			new window.top.excel_import(p, container, function(imp) {
+				p.showPercent(95,95);
+				imp.init();
+				imp.loadImportDataURL(<?php echo json_encode($import_url);?>+"&root_table=<?php echo urlencode($root_table);?><?php if ($sub_model <> null) echo "&sub_model=".$sub_model;?>&ondone=import_done&multiple="+(temp.type == "multiple" ? "true" : "false"), <?php echo $import_data;?>);
+				imp.frame_import.import_done = window.frameElement.<?php echo $onimportdone;?>;
+				if (temp.type == "multiple")
+					imp._prepareExcel = function(ondone) {
+						waitFrameContentReady(this.frame_import, function(win) { return typeof win.grid != 'undefined'; }, function() {
+							p.set_freeze_content("Importing data using template...");
+							var w = getIFrameWindow(imp.frame_excel);
+							var xl = w.excel;
+							w = getIFrameWindow(imp.frame_import);
+							var grid = w.grid;
+							var errors = [];
+							var next = function(i) {
+								if (i >= temp.to_import.length) {
+									if (errors.length == 1)
+										error_dialog(errors[0]);
+									else if (errors.length > 1) {
+										var div = document.createElement("DIV");
+										div.appendChild(document.createTextNode("Several errors occured while importing data from Excel file, using template "+temp.name+":"));
+										var ul = document.createElement("UL"); div.appendChild(ul);
+										for (var j = 0; j < errors.length; ++j) {
+											var li = document.createElement("LI"); ul.appendChild(li);
+											li.appendChild(document.createTextNode(errors[j]));
+										}
+										error_dialog_html(div);
+									}
+									ondone();
+									return;
+								}
+								var e = temp.to_import[i];
+								if (typeof e.value != 'undefined') {
+									// TODO
+									setTimeout(function(){next(i+1);},1);
+									return;
+								}
+								var sheet = null;
+								if (xl.sheets.length == 1) sheet = xl.sheets[0];
+								else for (var j = 0; j < xl.sheets.length; ++j) if (xl.sheets[j].name == e.sheet_name) { sheet = xl.sheets[j]; break; }
+								if (!sheet) {
+									var err = "Sheet "+e.sheet_name+" not found in Excel file";
+									if (!errors.contains(err)) errors.push(err);
+									setTimeout(function(){next(i+1);},1);
+									return;
+								}
+								if (e.column >= sheet.columns.length) {
+									errors.push("Data "+e.data+" cannot be imported because column "+xl.getExcelColumnName(e.column)+" does not exist in sheet "+sheet.name);
+									setTimeout(function(){next(i+1);},1);
+									return;
+								}
+								if (e.row_start >= sheet.rows.length) {
+									errors.push("Data "+e.data+" cannot be imported because there are only "+sheet.rows.length+" row(s) in sheet "+sheet.name+", and it is expected to start at row "+(e.row_start+1));
+									setTimeout(function(){next(i+1);},1);
+									return;
+								}
+								var range = {start_col:e.column,end_col:e.column,start_row:e.row_start,end_row:sheet.rows.length-1};
+								var col_id = e.path+"#"+e.data;
+								if (typeof e.sub_index != 'undefined') col_id += "#"+e.sub_index;
+								var field_index = grid.getColumnIndexById(col_id);
+								if (field_index < 1) {
+									errors.push("Data "+e.data+" cannot be imported because we cannot find the corresponding column in the data to import");
+									setTimeout(function(){next(i+1);},1);
+									return;
+								}
+								var where;
+								if (typeof e.index != 'undefined') {
+									// TODO
+									setTimeout(function(){next(i+1);},1);
+									return;
+								} else {
+									where = {type:'reset',row:0};
+								}
+								p.set_freeze_content("Importing data "+e.data+" using template...");
+								setTimeout(function(){
+									imp._importData(sheet, range, field_index-1, where, function() {
+										next(i+1);
+									});
+								},1);
+							};
+							setTimeout(function(){next(0);},1);
+						});
+					};
+				imp.uploadFile(ev);
+			});
+		});
+	});
 }
 </script>
 <?php 

@@ -64,6 +64,10 @@ class page_popup_create_people extends Page {
 		echo ",prefilled_columns:".json_encode($prefilled_columns);
 		echo ",prefilled_data:".json_encode($prefilled_data);
 		echo ",precreated:".json_encode($precreated);
+		if (isset($_GET["root_table"])) {
+			echo ",root_table:".json_encode($_GET["root_table"]);
+			if (isset($_GET["sub_model"])) echo ",sub_model:".json_encode($_GET["sub_model"]);
+		}
 		echo ",sub_models:".json_encode(@$input["sub_models"]);
 		if (isset($_GET["ondone"])) echo ",ondone:".json_encode($_GET["ondone"]);
 		if (isset($_GET["donotcreate"])) echo ",donotcreate:".json_encode($_GET["donotcreate"]);

@@ -122,7 +122,7 @@ typed_field.prototype = {
 	 *  change data
 	 *  @param data new data value
 	 */
-	_setData: function(data) { alert("Function _setData not implemented in typed_field "+getObjectClassName(this)); return data; },
+	_setData: function(data,from_input) { alert("Function _setData not implemented in typed_field "+getObjectClassName(this)); return data; },
 	/**
 	 * highlight the field to signal an error
 	 * @param {Boolean} error if true, the field is highlighted, else it is not
