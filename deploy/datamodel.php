@@ -506,8 +506,10 @@ function process_keys_and_indexes(odm,ndm,parent_table) {
 		var ntable;
 		for (var j = 0; j < ndm.tables.length; ++j) if (ndm.tables[j].name == ntable_name) { ntable = ndm.tables[j]; break; }
 		if (objectEquals(otable.key,ntable.key) == false) {
-			changes.push({type:"index_removed",parent_table:parent_table,table:ntable_name,index_name:(typeof otable.key == 'string' ? "PRIMARY" : "table_key"),key:otable.key});
-			changes.push({type:"index_added",parent_table:parent_table,table:ntable_name,index_name:(typeof ntable.key == 'string' ? "PRIMARY" : "table_key"),key:ntable.key});
+			if (otable.key != null)
+				changes.push({type:"index_removed",parent_table:parent_table,table:ntable_name,index_name:(typeof otable.key == 'string' ? "PRIMARY" : "table_key"),key:otable.key});
+			if (ntable.key != null)
+				changes.push({type:"index_added",parent_table:parent_table,table:ntable_name,index_name:(typeof ntable.key == 'string' ? "PRIMARY" : "table_key"),key:ntable.key});
 		}
 		for (var j = 0; j < otable.indexes.length; ++j) {
 			var found = false;
