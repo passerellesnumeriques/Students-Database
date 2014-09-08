@@ -259,7 +259,10 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 		// get data from database if not new
 		//echo "<br/>Values: ".toHTML(var_export($values,true))."<br/>";
 		foreach ($s[1] as $child) {
-			$key_value = getKeyValue($path->table, $values);
+			if ($path->unique)
+				$key_value = getKeyValue($path->table, $values);
+			else
+				$key_value = null;
 			//echo "<br/>Key for ".$child->table->getName()." (".$path->table->getName()."): ".var_export($key_value,true)."<br/>";
 			if ($key_value <> null) {
 				//if ($child->unique) {
@@ -275,22 +278,24 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 					$q->selectSubModelForTable($child->table, $child->sub_model);
 					$q->select($path->table->getName());
 					$q->whereKey($path->table, $key_value);
-					$fields_matching = array();
-					if ($child->isReverse()) {
-						$fields_matching[$path->table->getPrimaryKey()->name] = $child->foreign_key->name;
-					} else {
-						$fields_matching[$child->foreign_key->name] = $child->table->getPrimaryKey()->name;
+					if ($child->unique) {
+						$fields_matching = array();
+						if ($child->isReverse()) {
+							$fields_matching[$path->table->getPrimaryKey()->name] = $child->foreign_key->name;
+						} else {
+							$fields_matching[$child->foreign_key->name] = $child->table->getPrimaryKey()->name;
+						}
+						$q->join($path->table->getName(), $child->table->getName(), $fields_matching);
+						$q->fieldsOfTable($child->table->getName());
 					}
-					$q->join($path->table->getName(), $child->table->getName(), $fields_matching);
-					$q->fieldsOfTable($child->table->getName());
 						
 					$display = DataModel::get()->getTableDataDisplay($child->table->getName());
+					$data_aliases = array();
 					if ($display <> null) {
 						if ($child->isReverse())
 							$from = $child->foreign_key->name;
 						else
 							$from = null;
-						$data_aliases = array();
 						foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
 							$child->parent = new DataPath_Table($path->table, $path->sub_model);
 							$data_aliases[$data->getDisplayName()] = $data->buildSQL($q, $child);
@@ -298,6 +303,21 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 						}
 					}
 					$row = $q->executeSingleRow();
+					if ($display <> null) {
+						if ($child->isReverse())
+							$from = $child->foreign_key->name;
+						else
+							$from = null;
+						foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
+							if ($data_aliases[$data->getDisplayName()]["data"] == null) {
+								$child->parent = new DataPath_Table($path->table, $path->sub_model);
+								$rows = array($row);
+								$data->performSubRequests($q, $rows, $data_aliases[$data->getDisplayName()], $child);
+								$row = $rows[0];
+								$child->parent = $path;
+							}
+						}
+					}
 					foreach ($child->table->internalGetColumnsFor($child->sub_model) as $col) {
 						if (isset($row[$col->name]))
 							$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);

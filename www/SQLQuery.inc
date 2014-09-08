@@ -401,6 +401,29 @@ class SQLQuery {
 				return $j[3] <> null ? $j[3] : $j[1];
 		return null;
 	}
+	
+	public function isJoinAlias($table_alias) {
+		foreach ($this->tables as $t=>$a) {
+			if ($t == $table_alias) return false;
+			if ($a == $table_alias) return false;
+		}
+		foreach ($this->joins as $j) {
+			if ($j[1] == $table_alias) return true;
+			if ($j[3] == $table_alias) return true;
+		}
+		return false;
+	}
+	
+	public function addConditionToJoin($join_table_or_alias, $condition) {
+		foreach ($this->joins as $j) {
+			if ($j[1] == $join_table_or_alias || $j[3] == $join_table_or_alias) {
+				if (!isset($j[2][null]))
+					$j[2][null] = array();
+				$j[2][null] = array_merge($j[2][null], $condition);
+				break;
+			}
+		}
+	}
 
 	/** Disable/Enable security checks. To be used very carefully !
 	 * @param boolean $bypass true to disable security checks, false to enable them

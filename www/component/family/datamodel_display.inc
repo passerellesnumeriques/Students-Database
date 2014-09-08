@@ -31,6 +31,11 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);
 			$table_alias = $q->generateTableAlias();
 			$q->join($parent_table_alias, "FamilyMember", array("id"=>"people",null=>array("member_type"=>"Child")), $table_alias);
+		} else {
+			if (!$q->isJoinAlias($table_alias))
+				$q->whereValue($table_alias, "member_type", "Child");
+			else
+				$q->addConditionToJoin($table_alias, array("member_type"=>"Child"));
 		}
 		$family_alias = $q->generateFieldAlias();
 		$q->field($table_alias, "family", $family_alias);
@@ -104,6 +109,11 @@ class ChildRank extends datamodel\DataDisplay {
 			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);
 			$table_alias = $q->generateTableAlias();
 			$q->join($parent_table_alias, "FamilyMember", array("id"=>"people",null=>array("member_type"=>"Child")), $table_alias);
+		} else {
+			if (!$q->isJoinAlias($table_alias))
+				$q->whereValue($table_alias, "member_type", "Child");
+			else
+				$q->addConditionToJoin($table_alias, array("member_type"=>"Child"));
 		}
 		$family_alias = $q->generateFieldAlias();
 		$q->field($table_alias, "family", $family_alias);
@@ -160,6 +170,11 @@ class ParentsSituation extends datamodel\DataDisplay {
 			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);
 			$table_alias = $q->generateTableAlias();
 			$q->join($parent_table_alias, "FamilyMember", array("id"=>"people",null=>array("member_type"=>"Child")), $table_alias);
+		} else {
+			if (!$q->isJoinAlias($table_alias))
+				$q->whereValue($table_alias, "member_type", "Child");
+			else 
+				$q->addConditionToJoin($table_alias, array("member_type"=>"Child"));
 		}
 		$family_alias = $q->generateTableAlias();
 		$q->join($table_alias, "Family", array("family"=>"id"), $family_alias);
@@ -218,7 +233,10 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 			$table_alias = $q->generateTableAlias();
 			$q->join($parent_table_alias, "FamilyMember", array("id"=>"people",null=>array("member_type"=>"Child")), $table_alias);
 		} else {
-			$q->whereValue($table_alias, "member_type", "Child");
+			if (!$q->isJoinAlias($table_alias))
+				$q->whereValue($table_alias, "member_type", "Child");
+			else
+				$q->addConditionToJoin($table_alias, array("member_type"=>"Child"));
 		}
 		$family_alias = $q->generateFieldAlias();
 		$q->field($table_alias, "family", $family_alias);
@@ -228,14 +246,17 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 	}
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$families_ids = array();
-		foreach ($rows as $r) if (!in_array($r[$sql_aliases["family"]], $families_ids)) array_push($families_ids, $r[$sql_aliases["family"]]);
-		$q = SQLQuery::create()->bypassSecurity()
-			->select("FamilyMember")
-			->whereIn("FamilyMember","family",$families_ids)
-			->whereValue("FamilyMember","member_type",$this->type)
-			->fieldsOfTable("FamilyMember");
-		PNApplication::$instance->people->joinPeople($q, "FamilyMember", "people", false);
-		$res = $q->execute();
+		foreach ($rows as $r) if ($r[$sql_aliases["family"]] <> null && !in_array($r[$sql_aliases["family"]], $families_ids)) array_push($families_ids, $r[$sql_aliases["family"]]);
+		if (count($families_ids) > 0) {
+			$q = SQLQuery::create()->bypassSecurity()
+				->select("FamilyMember")
+				->whereIn("FamilyMember","family",$families_ids)
+				->whereValue("FamilyMember","member_type",$this->type)
+				->fieldsOfTable("FamilyMember");
+			PNApplication::$instance->people->joinPeople($q, "FamilyMember", "people", false);
+			$res = $q->execute();
+		} else
+			$res = array();
 		$alias = $original_query->generateFieldAlias();
 		$sql_aliases["data"] = $alias;
 		for ($i = 0; $i < count($rows); $i++) {
