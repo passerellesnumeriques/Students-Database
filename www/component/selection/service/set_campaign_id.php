@@ -13,6 +13,7 @@ class service_set_campaign_id extends Service{
 		echo "</ul>";
 	}
 	public function documentation(){echo "Set the campaign id attribute";}
+	public function mayUpdateSession() { return true; }
 	public function execute(&$component,$input){
 		if(isset($input['campaign_id'])){
 			$component->setCampaignId($input["campaign_id"]);

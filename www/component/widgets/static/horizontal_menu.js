@@ -63,7 +63,7 @@ function horizontal_menu(menu, valign) {
 				if (t.valign == "middle") {
 					if (t.items[i].element.offsetHeight > 0)
 						t.items[i].element.style.marginTop = Math.floor((h-t.items[i].element.offsetHeight)/2)+'px';
-				} else if (t.valign = "bottom") {
+				} else if (t.valign == "bottom") {
 					if (t.items[i].element.offsetHeight > 0) {
 						var s = getComputedStyleSizes(t.items[i].element);
 						t.items[i].element.style.marginTop = (h-t.items[i].element.offsetHeight-parseInt(s.marginBottom))+'px';

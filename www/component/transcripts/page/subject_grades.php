@@ -28,6 +28,21 @@ class page_subject_grades extends Page {
 				$spe_id = null;
 			}
 			$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id, $spe_id);
+			if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+				for ($i = 0; $i < count($subjects); $i++) {
+					if (!PNApplication::$instance->curriculum->amIAssignedTo($subjects[$i]["id"])) {
+						array_splice($subjects, $i, 1);
+						$i--;
+					}
+				}
+				if (count($subjects) == 0) {
+					echo "<div class='info_box'>You are not assigned to any subject for ".($period_id <> null ? "this period" : "this batch")."</div>";
+					return;
+				}
+			} else if (count($subjects) == 0) {
+				echo "<div class='info_box'>No subject defined in the curriculum for ".($period_id <> null ? "this period" : "this batch")."</div>";
+				return;
+			}
 			echo "<div class='info_box'>";
 			echo "<img src='".theme::$icons_16["question"]."' style='vertical-align:bottom'/> ";
 			echo "Please select a subject to display the grades: ";

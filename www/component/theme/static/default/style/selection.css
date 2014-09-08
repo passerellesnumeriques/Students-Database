@@ -4,7 +4,7 @@ table.selection_partners_table td.partner_name {
 	vertical-align: middle;
 }
 table.selection_partners_table td.partner_contacts .designation {
-	font-color: #606060;
+	color: #606060;
 }
 
 .selection_status ul {

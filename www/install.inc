@@ -477,7 +477,13 @@ function checkEnd() {
 				return;
 			}
 			img.src = icon_ok;
-			window.location.assign("/");
+			var d = document.createElement("DIV");
+			progress.appendChild(d);
+			d.innerHTML = 
+				"Installation done. Please schedule the following tasks (in /etc/crontab for Unix, or in the Task Scheduler for Windows):<ul>"+
+				"<li>Execute, with PHP command line, the file cron.php at least every 5 minutes (recommended is every 2 minutes)</li>"+
+				"<li>Execute, with PHP command line, the file cron_maintenance.php every night (when no user will use the application). This task will put the software into maintenance mode (the users cannot access it), in order to perform some tasks on the database and files (backup, healthy checks...).</li>"+
+				"</ul><a href='/'>Start Application</a>";
 		});
 	}
 }

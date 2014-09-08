@@ -1,2 +1,3 @@
 user_management:login and logout
 news:general news
+cron:daily backup

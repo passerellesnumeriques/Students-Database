@@ -6,7 +6,7 @@ class TranscriptsStudentsPlugin implements StudentsPlugin {
 
 	public function getNewsCategories() {
 		return array(
-				new TranscriptsNewsCategory()
+			new TranscriptsNewsCategory()
 		);
 	}
 

@@ -81,8 +81,10 @@ $model->addTable("People")
 		foreach ($types as $type) {
 			if (!($type->canWrite()))
 				$q->where("(`".$table_alias."`.`types` NOT LIKE '%/".$type->getId()."/%')");
-			else
-				$w .= " OR (`".$table_alias."`.`types` LIKE '%/".$type->getId()."/%')";
+			else {
+				if ($w <> "") $w .= " OR ";
+				$w .= "(`".$table_alias."`.`types` LIKE '%/".$type->getId()."/%')";
+			}
 		}
 		if ($w <> "")
 			$q->where("(".$w.")");

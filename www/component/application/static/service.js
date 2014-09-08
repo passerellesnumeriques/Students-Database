@@ -1,7 +1,7 @@
 /**
  * Functionalities to call services using AJAX requests.
  */
-service = {
+window.service = {
 	/**
 	 * Call a service using JSON
 	 * @param {String} component the component containing the service

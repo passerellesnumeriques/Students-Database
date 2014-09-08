@@ -15,6 +15,7 @@ class service_create_campaign extends Service{
 		echo "</ul>";
 	}
 	public function documentation(){echo "Create a selection campaign";}
+	public function mayUpdateSession() { return true; }
 	public function execute(&$component,$input){
 		if(!isset($input["name"])) {echo "false"; return;}
 		else{

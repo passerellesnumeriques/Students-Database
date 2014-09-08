@@ -40,11 +40,15 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 				this.nb_columns++;
 				continue;
 			}
-			if (this.sub_columns[i].levels > this.levels+1) this.levels = this.sub_columns[i].levels+1;
+			if (this.levels < this.sub_columns[i].levels+1) this.levels = this.sub_columns[i].levels+1;
 			this.nb_columns += sub_columns[i].nb_columns;
 		}
 		this.th.colSpan = this.nb_columns;
 		if (this.parent_column) this.parent_column._updateLevels();
+	};
+	this.increaseRowSpan = function() {
+		for (var i = 0; i < this.sub_columns.length; ++i)
+			this.sub_columns[i].increaseRowSpan();
 	};
 	this._updateLevels();
 	this.getNbFinalColumns = function() {
@@ -103,6 +107,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.th = document.createElement('TH');
 	this.th.rowSpan = 1;
 	this.th.col = this;
+	this.th.className = "final";
 	window.to_cleanup.push(this);
 	this.cleanup = function() {
 		this.th.col = null;
@@ -124,6 +129,9 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.onclick = new Custom_Event();
 	this.actions = [];
 	
+	this.increaseRowSpan = function() {
+		this.th.rowSpan++;
+	};
 	this.toggleEditable = function() {
 		this.editable = !this.editable;
 		var index = this.grid.columns.indexOf(this);
@@ -207,13 +215,14 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		var url = get_script_path("grid.js");
 		var t=this;
 		var a = new GridColumnAction('filter', url+"/filter.gif",function(ev,a,col){
+			stopEventPropagation(ev);
 			if (t.filtered) {
 				t.filtered = false;
 				a.icon = url+"/filter.gif";
 				t._refresh_title();
 				t.grid.apply_filters();
 			} else {
-				if (t.grid.table.childNodes.length == 0) return;
+				if (t.grid.table.childNodes.length == 0) return false;
 				require("context_menu.js", function() {
 					var values = [];
 					var index = 0;
@@ -265,7 +274,6 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 					menu.showBelowElement(a.element);
 				});
 			}
-			stopEventPropagation(ev);
 			return false;
 		});
 		this.addAction(a);
@@ -429,9 +437,9 @@ function grid(element) {
 		var tr = document.createElement("TR");
 		t.header_rows.push(tr);
 		t.header_rows[0].parentNode.appendChild(tr);
-		// increase rowSpan of first row
+		// increase rowSpan of last one
 		for (var i = 0; i < t.header_rows[0].childNodes.length; i++)
-			t.header_rows[0].childNodes[i].rowSpan++;
+			t.header_rows[0].childNodes[i].col.increaseRowSpan();
 		layout.invalidate(t.element);
 	};
 	t._addColumnContainer = function(container, level, index) {
@@ -454,9 +462,9 @@ function grid(element) {
 		// continue insertion
 		for (var i = 0; i < container.sub_columns.length; ++i) {
 			if (container.sub_columns[i] instanceof GridColumnContainer) {
-				index = t._addColumnContainer(container.sub_columns[i], level+1, index);
+				index = t._addColumnContainer(container.sub_columns[i], level+container.th.rowSpan, index);
 			} else {
-				t._addFinalColumn(container.sub_columns[i], level+1, index);
+				t._addFinalColumn(container.sub_columns[i], level+container.th.rowSpan, index);
 				if (typeof index != 'undefined') index++;
 			}
 		}
@@ -472,6 +480,7 @@ function grid(element) {
 		if (typeof index == 'undefined') {
 			t.columns.push(col);
 			t.colgroup.appendChild(col.col);
+			col.th.rowSpan = t.header_rows.length-level+1;
 			t.header_rows[level].appendChild(col.th);
 		} else {
 			t.columns.splice(index,0,col);
@@ -993,9 +1002,11 @@ function grid(element) {
 				addClassName(td, "last_in_container");
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
-				t._create_cell(t.columns[j], data.data, td, function(field){
+				t._create_cell(t.columns[j], data.data, td, function(field,data){
 					field.onfocus.add_listener(function() { t.onrowfocus.fire(tr); });
-				});
+					if (typeof data.data_display != 'undefined' && data.data_display)
+						field.setDataDisplay(data.data_display, data.data_id);
+				},data);
 			if (typeof data.css != 'undefined' && data.css)
 				td.className = data.css;
 			td.ondomremoved(function(td) { td.field = null; td.col_id = null; td.data_id = null; });
@@ -1330,12 +1341,12 @@ function grid(element) {
 		t.element.appendChild(t.grid_element);
 		table.className = "grid";
 	};
-	t._create_cell = function(column, data, parent, ondone) {
+	t._create_cell = function(column, data, parent, ondone, ondone_param) {
 		t._cells_loading++;
 		t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
 			parent.field = field;
 			field.grid_column_id = column.id;
-			if (ondone) ondone(field);
+			if (ondone) ondone(field, ondone_param);
 			t._cells_loading--;
 			t._check_loaded();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});

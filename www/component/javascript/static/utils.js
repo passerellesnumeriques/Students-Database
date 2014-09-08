@@ -147,6 +147,7 @@ Element.prototype.removeChild = function(e) {
 	try { return this._removeChild(e); }
 	catch (err) {
 		log_exception(err, "Remove child failed");
+		return null;
 	}
 };
 Element.prototype.removeAllChildren = function() {
@@ -477,6 +478,7 @@ function getMonthShortName(month) {
 	case 10: return "Oct";
 	case 11: return "Nov";
 	case 12: return "Dec";
+	default: return "Invalid Month ("+month+")";
 	}
 }
 /** Return the full name of the given week day
@@ -493,6 +495,7 @@ function getDayName(d, from_date) {
 	case 4: return "Friday";
 	case 5: return "Saturday";
 	case 6: return "Sunday";
+	default: return "Invalid Day ("+d+")";
 	}
 }
 /** Return the 3 letters short name of the given week day
@@ -509,6 +512,7 @@ function getDayShortName(d, from_date) {
 	case 4: return "Fri";
 	case 5: return "Sat";
 	case 6: return "Sun";
+	default: return "Invalid Day ("+d+")";
 	}
 }
 /** Return the 1 letter name of the given week day
@@ -525,6 +529,7 @@ function getDayLetter(d, from_date) {
 	case 4: return "F";
 	case 5: return "S";
 	case 6: return "S";
+	default: return "Invalid Day ("+d+")";
 	}
 }
 

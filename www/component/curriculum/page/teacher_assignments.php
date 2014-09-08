@@ -17,11 +17,47 @@ class page_teacher_assignments extends Page {
 			->select("TeacherAssignment")
 			->whereValue("TeacherAssignment","people",$people_id)
 			->join("TeacherAssignment","CurriculumSubject",array("subject"=>"id"))
+			->fieldsOfTable("TeacherAssignment")
+			->field("CurriculumSubject","code","subject_code")
+			->field("CurriculumSubject","name","subject_name")
+			->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
+			->field("BatchPeriod","id","batch_period")
+			->field("BatchPeriod","name","batch_period_name")
+			->join("BatchPeriod","StudentBatch",array("batch"=>"id"))
+			->field("StudentBatch","id","batch_id")
+			->field("StudentBatch","name","batch_name")
 			->execute();
+		$classes_ids = array();
+		$subjects_ids = array();
+		foreach ($assigned as $a) {
+			if (!in_array($a["class"], $classes_ids)) array_push($classes_ids, $a["class"]);
+			if (!in_array($a["subject"], $subjects_ids)) array_push($subjects_ids, $a["subject"]);
+		}
+		if (count($classes_ids) > 0) {
+			$where1 = "`SubjectClassMerge`.`class1` IN (";
+			$where2 = "`SubjectClassMerge`.`class2` IN (";
+			$first = true;
+			foreach ($classes_ids as $cid) {
+				if ($first) $first = false; else { $where1 .= ","; $where2 .= ","; }
+				$where1 .= "'$cid'";
+				$where2 .= "'$cid'";
+			}
+			$where1 .= ")";
+			$where2 .= ")";
+			$classes_merges = SQLQuery::create()
+				->select("SubjectClassMerge")
+				->where($where1." OR ".$where2)
+				->whereIn("SubjectClassMerge","subject",$subjects_ids)
+				->execute();
+			$classes = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass","id",$classes_ids)->execute();
+		} else {
+			$classes_merges = array();
+			$classes = array();
+		}
 		
 		$current_period = PNApplication::$instance->curriculum->getCurrentAcademicPeriod();
 		$periods_ids = array();
-		foreach ($assigned as $a) if (!in_array($a["period"], $periods_ids)) array_push($periods_ids, $a["period"]);
+		foreach ($assigned as $a) if (!in_array($a["batch_period"], $periods_ids)) array_push($periods_ids, $a["batch_period"]);
 		if (count($periods_ids) > 0)
 			$batch_periods = PNApplication::$instance->curriculum->getBatchPeriodsById($periods_ids);
 		else
@@ -82,7 +118,7 @@ class page_teacher_assignments extends Page {
 		if (count($periods) > 0) {
 			echo "<div id='past' title='In the past' collapsable='true'>";
 			echo "<div style='padding:5px'>";
-			$this->generatePeriods($periods, $assigned, $batch_periods, $all_years);
+			$this->generatePeriods($periods, $assigned, $batch_periods, $all_years, $classes_merges, $classes);
 			echo "</div>";
 			echo "</div>";
 			$this->onload("sectionFromHTML('past');");
@@ -90,23 +126,36 @@ class page_teacher_assignments extends Page {
 		echo "</div>";
 	}
 	
-	private function generatePeriods($academic_periods, $assigned, $batch_periods, $all_years) {
+	private function generatePeriods($academic_periods, $assigned, $batch_periods, $all_years, $classes_merges, $classes) {
 		foreach ($academic_periods as $ap) {
 			$year = null;
 			foreach ($all_years as $y) if ($y["id"] == $ap["year"]) { $year = $y; break; }
 			echo "<div class='page_section_title2'>";
 			echo "Academic Year ".toHTML($year["name"]).", ".toHTML($ap["name"]);
 			echo "</div>";
-			$this->generatePeriod($ap, $assigned, $batch_periods);
+			$this->generatePeriod($ap, $assigned, $batch_periods, $classes_merges, $classes);
 		}
 	}
 
-	private function generatePeriod($academic_period, $assigned, $batch_periods) {
+	private function generatePeriod($academic_period, $assigned, $batch_periods, $classes_merges, $classes) {
 		$list = array();
 		foreach ($assigned as $a) {
 			foreach ($batch_periods as $bp) {
 				if ($bp["academic_period"] == $academic_period["id"]) {
-					array_push($list, $a);
+					if ($a["batch_period"] <> $bp["id"]) continue;
+					$found = false;
+					for ($i = 0; $i < count($list); $i++) {
+						if ($list[$i]["subject"] == $a["subject"]) {
+							if (!in_array($a["class"], $list[$i]["classes"]))
+								array_push($list[$i]["classes"], $a["class"]);
+							$found = true;
+							break;
+						}
+					}
+					if (!$found) {
+						$a["classes"] = array($a["class"]);
+						array_push($list, $a);
+					}
 					break;
 				}
 			}
@@ -121,9 +170,27 @@ class page_teacher_assignments extends Page {
 				$can_go_to_grades = true;
 			foreach ($list as $subject) {
 				echo "<div>";
-				if ($can_go_to_grades) echo "<a href='/dynamic/transcripts/page/subject_grades?subject=".$subject["id"]."' class='black_link'>";
-				echo $subject["code"]." - ".$subject["name"];
+				if ($can_go_to_grades) echo "<a href='/dynamic/transcripts/page/subject_grades?subject=".$subject["subject"]."' class='black_link'>";
+				echo toHTML($subject["subject_code"])." - ".toHTML($subject["subject_name"]);
 				if ($can_go_to_grades) echo "</a>";
+				$assigned_classes = $subject["classes"];
+				foreach ($classes_merges as $cm) {
+					$oc = null;
+					if (in_array($cm["class1"], $assigned_classes)) $oc = $cm["class2"];
+					else if (in_array($cm["class2"], $assigned_classes)) $oc = $cm["class1"];
+					if ($oc <> null && !in_array($oc, $assigned_classes)) array_push($assigned_classes, $oc);
+				}
+				echo " (";
+				echo "Batch ".toHTML($subject["batch_name"]);
+				echo ", Class";
+				if (count($assigned_classes) > 1) echo "es";
+				echo " ";
+				$first = true;
+				foreach ($assigned_classes as $ac) {
+					if ($first) $first = false; else echo "+";
+					foreach ($classes as $c) if ($c["id"] == $ac) { echo toHTML($c["name"]); break; }
+				}
+				echo ")";
 				echo "</div>";
 			}
 		}

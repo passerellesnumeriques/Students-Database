@@ -1,20 +1,20 @@
 /** unknown participation */
-calendar_event_participation_unknown = "UNKNOWN";
+window.calendar_event_participation_unknown = "UNKNOWN";
 /** participates */
-calendar_event_participation_yes = "YES";
+window.calendar_event_participation_yes = "YES";
 /** does not participate */
-calendar_event_participation_no = "NO";
+window.calendar_event_participation_no = "NO";
 /** tentatively */
-calendar_event_participation_tentative = "TENTATIVE";
+window.calendar_event_participation_tentative = "TENTATIVE";
 /** delegates its participation */
-calendar_event_participation_delegate = "DELEGATE";
+window.calendar_event_participation_delegate = "DELEGATE";
 
 /** participant is requested */
-calendar_event_role_requested = "REQUESTED";
+window.calendar_event_role_requested = "REQUESTED";
 /** participant is optional */
-calendar_event_role_optional = "OPTIONAL";
+window.calendar_event_role_optional = "OPTIONAL";
 /** for information only, but participant does not need to participate */
-calendar_event_role_for_info = "FOR_INFO";
+window.calendar_event_role_for_info = "FOR_INFO";
 
 /**
  * Object representing a calendar event, used between front-end and back-end
@@ -86,13 +86,13 @@ function copyCalendarEvent(ev) {
 };
 
 /** daily recurrence */
-calendar_event_frequency_daily = "DAILY";
+window.calendar_event_frequency_daily = "DAILY";
 /** weekly recurrence */
-calendar_event_frequency_weekly = "WEEKLY";
+window.calendar_event_frequency_weekly = "WEEKLY";
 /** monthly recurrence */
-calendar_event_frequency_monthly = "MONTHLY";
+window.calendar_event_frequency_monthly = "MONTHLY";
 /** yearly recurrence */
-calendar_event_frequency_yearly = "YEARLY";
+window.calendar_event_frequency_yearly = "YEARLY";
 
 /**
  * Recurrence information of a CalendarEvent

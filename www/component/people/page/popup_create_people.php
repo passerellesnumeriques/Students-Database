@@ -64,6 +64,10 @@ class page_popup_create_people extends Page {
 		echo ",prefilled_columns:".json_encode($prefilled_columns);
 		echo ",prefilled_data:".json_encode($prefilled_data);
 		echo ",precreated:".json_encode($precreated);
+		if (isset($_GET["root_table"])) {
+			echo ",root_table:".json_encode($_GET["root_table"]);
+			if (isset($_GET["sub_model"])) echo ",sub_model:".json_encode($_GET["sub_model"]);
+		}
 		echo ",sub_models:".json_encode(@$input["sub_models"]);
 		if (isset($_GET["ondone"])) echo ",ondone:".json_encode($_GET["ondone"]);
 		if (isset($_GET["donotcreate"])) echo ",donotcreate:".json_encode($_GET["donotcreate"]);
@@ -78,12 +82,20 @@ class page_popup_create_people extends Page {
 		}
 		echo "</script>";
 		?>
+		<div class='page_title'>
+			Create <?php echo toHTML($types_descr)?>
+		</div>
 		<div style='padding:10px;background-color:white'>
-		Create <?php echo toHTML($types_descr)?><br/>
-		&nbsp; <a href='#' onclick='go();return false;'>Create a new one</a><br/>
-		&nbsp; <a href='#' onclick='data.multiple = true; go();return false;'>Create several together</a><br/>
+		<button class='big' onclick='go();return false;'>
+			<img src='<?php echo theme::make_icon("/static/people/one_people_64.png", theme::$icons_16["add"]);?>'/><br/>
+			Create a new one
+		</button>
+		<button class='big' onclick='data.multiple = true; go();return false;'>
+			<img src='<?php echo theme::make_icon("/static/people/several_people_64.png", theme::$icons_16["add"]);?>'/><br/>
+			Create several at once
+		</button>
 		<?php if (count($types) == 1 && !isset($_GET["not_from_existing"])) { ?>
-		&nbsp; Create from an existing person:
+		<div class='page_section_title'>This is an existing person</div>
 		<div style='padding-left:30px'>
 		<?php
 		require_once("component/people/PeopleTypePlugin.inc");
@@ -101,15 +113,18 @@ class page_popup_create_people extends Page {
 		foreach ($possible_types as $type) {
 			$list = SQLQuery::create()->select("People")->where("`types` LIKE '%/".$type->getId()."/%'")->limit(0, 501)->orderBy("People","last_name")->orderBy("People","first_name")->execute();
 			if (count($list) == 0) continue;
-			echo "<div style='white-space:nowrap;'>";
-			echo "This is an existing ".$type->getName().": ";
+			echo "<div style='display:inline-block;text-align:center'>";
+			echo "<div class='big_button_style' style='cursor:default;display:block'>";
+			echo "<span style='font-weight:bold'>".toHTML($type->getName())."</span><br/>";
+			echo "<img src='".$type->getIcon32()."'/><br/>";
 			if (count($list) <= 500) {
 				echo "<select id='id_".$type->getId()."'>";
 				foreach ($list as $p)
 					echo "<option value='".$p["id"]."'>".$p["last_name"]." ".$p["first_name"]."</option>";
 				echo "</select>";
-				echo "<button onclick=\"var people_id=document.getElementById('id_".$type->getId()."').value;postData('/dynamic/people/page/people_new_type?people='+people_id+'&type=".$types[0]."&ondone=".$_GET["ondone"]."',data,window);\"><img src='".theme::$icons_16["right"]."'/> Create as ".toHTML($types_descr)."</button>";
 			}
+			echo "</div>";
+			echo "<button onclick=\"var people_id=document.getElementById('id_".$type->getId()."').value;postData('/dynamic/people/page/people_new_type?people='+people_id+'&type=".$types[0]."&ondone=".$_GET["ondone"]."',data,window);\">Create as ".toHTML($types_descr)."</button>";
 			echo "</div>";
 		}
 		?>

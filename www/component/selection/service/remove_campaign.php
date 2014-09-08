@@ -13,6 +13,7 @@ class service_remove_campaign extends Service{
 		echo "</ul>";
 	}
 	public function documentation(){echo "Remove a selection campaign from the database and all the submodel tables";}
+	public function mayUpdateSession() { return true; }
 	public function execute(&$component,$input){
 		if(isset($input["id"])){
 			try{

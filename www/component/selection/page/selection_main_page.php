@@ -2,6 +2,7 @@
 require_once("SelectionPage.inc");
 class page_selection_main_page extends SelectionPage {
 	public function getRequiredRights() { return array(); }
+	public function mayUpdateSession() { return true; } // to save info in the session, if it was not yet done
 	public function executeSelectionPage(){
 		
 		$calendar_id = PNApplication::$instance->selection->getCalendarId();

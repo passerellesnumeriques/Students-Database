@@ -150,10 +150,19 @@ abstract class DataDisplay {
 		else {
 			$s .= ",new SubDataDisplay([";
 			$names = $sub->getDisplayNames();
-			$first = true;
 			for ($i = 0; $i < count($names); $i++) {
-				if ($first) $first = false; else $s .= ",";
+				if ($i > 0) $s .= ",";
 				$s .= json_encode($names[$i]);
+			}
+			$s .= "],[";
+			for ($i = 0; $i < count($names); $i++) {
+				if ($i > 0) $s .= ",";
+				$s .= $sub->isEditable($i) ? "true" : "false";
+			}
+			$s .= "],[";
+			for ($i = 0; $i < count($names); $i++) {
+				if ($i > 0) $s .= ",";
+				$s .= $sub->isEditableForNew($i) ? "true" : "false";
 			}
 			$s .= "]";
 			$s .= ")";
@@ -233,6 +242,8 @@ abstract class SubDataDisplay {
 	}
 	
 	public abstract function getDisplayNames();
+	public abstract function isEditable($index);
+	public function isEditableForNew($index) { return $this->isEditable($index); }
 	
 }
 
@@ -1487,6 +1498,35 @@ class CountLinksDataDisplay extends DataDisplay {
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+	}
+	
+}
+
+class AgeDataDisplay extends CalculationDataDisplay {
+	
+	public function __construct($display_name, $birthdate_column) {
+		$this->birthdate_column = $birthdate_column;
+		parent::__construct($display_name, "TIMESTAMPDIFF(YEAR,`$birthdate_column`,CURDATE())");
+	}
+	
+	private $birthdate_column;
+	
+	public function getTypedField($sub_model) {
+		return array("field_age","{table:".json_encode($this->getTable()->getName()).",sub_model:".json_encode($sub_model).",column:".json_encode($this->birthdate_column)."}");
+	}
+	
+	public function buildSQL(&$q, $path) {
+		$keys = parent::buildSQL($q, $path);
+		$pk = $this->getTable()->getPrimaryKey();
+		if ($pk == null) return $keys;
+		$key_alias = $q->getFieldAlias($this->getTable()->getName(), $pk->name);
+		if ($key_alias == null) {
+			$table_alias = $q->getTableAlias($this->getTable()->getName());
+			$key_alias = $q->generateFieldAlias();
+			$q->field($table_alias, $pk->name, $key_alias);
+		}
+		$keys["key"] = $key_alias;
+		return $keys;
 	}
 	
 }

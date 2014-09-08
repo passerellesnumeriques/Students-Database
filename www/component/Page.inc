@@ -156,7 +156,7 @@ abstract class Page {
 		pageHeaderStart();
 		foreach ($this->init_scripts as $s) echo "<script type='text/javascript'>".$s."</script>";
 		foreach ($this->javascripts as $js) {
-			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1].";this._loaded=true;'>";
+			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(this);".$js[1].";this._loaded=true;'>";
 			echo "</script>";
 		}
 		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.invalidate(window.document.body); this._loaded = true;' media='all'/>";
@@ -225,37 +225,37 @@ function pageHeaderStart() {
 	<script type="text/javascript">
 	if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search+location.hash);};
 	</script>
-	<script type="text/javascript" src="/static/javascript/utils.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/javascript/lib_jquery/jquery.min.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/javascript/browser.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/javascript/utils_js.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/javascript/utils_html.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/javascript/utils_dom.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/javascript/utils_scroll.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/application/config.js.php" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/javascript/layout.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/application/application.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/theme/theme.js.php" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/javascript/ajax.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/application/service.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/widgets/common_dialogs.js" onload="this._loaded=true;"></script>
-	<script type="text/javascript" src="/static/data_model/databaselock.js" onload="this._loaded=true;"></script>
+	<script id='init_js_1' type="text/javascript" src="/static/javascript/utils.js" onload="this._loaded=true;"></script>
+	<script id='init_js_2' type="text/javascript" src="/static/javascript/lib_jquery/jquery.min.js" onload="this._loaded=true;"></script>
+	<script id='init_js_3' type="text/javascript" src="/static/javascript/browser.js" onload="this._loaded=true;"></script>
+	<script id='init_js_4' type="text/javascript" src="/static/javascript/utils_js.js" onload="this._loaded=true;"></script>
+	<script id='init_js_5' type="text/javascript" src="/static/javascript/utils_html.js" onload="this._loaded=true;"></script>
+	<script id='init_js_6' type="text/javascript" src="/static/javascript/utils_dom.js" onload="this._loaded=true;"></script>
+	<script id='init_js_7' type="text/javascript" src="/static/javascript/utils_scroll.js" onload="this._loaded=true;"></script>
+	<script id='init_js_8' type="text/javascript" src="/static/application/config.js.php" onload="this._loaded=true;"></script>
+	<script id='init_js_9' type="text/javascript" src="/static/javascript/layout.js" onload="this._loaded=true;"></script>
+	<script id='init_js_10' type="text/javascript" src="/static/application/application.js" onload="this._loaded=true;"></script>
+	<script id='init_js_11' type="text/javascript" src="/static/theme/theme.js.php" onload="this._loaded=true;"></script>
+	<script id='init_js_12' type="text/javascript" src="/static/javascript/ajax.js" onload="this._loaded=true;"></script>
+	<script id='init_js_13' type="text/javascript" src="/static/application/service.js" onload="this._loaded=true;"></script>
+	<script id='init_js_14' type="text/javascript" src="/static/widgets/common_dialogs.js" onload="this._loaded=true;"></script>
+	<script id='init_js_15' type="text/javascript" src="/static/data_model/databaselock.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript">
-	javascript_loaded("/static/javascript/utils.js");
-	javascript_loaded("/static/javascript/lib_jquery/jquery.min.js");
-	javascript_loaded("/static/javascript/browser.js");
-	javascript_loaded("/static/javascript/utils_js.js");
-	javascript_loaded("/static/javascript/utils_html.js");
-	javascript_loaded("/static/javascript/utils_dom.js");
-	javascript_loaded("/static/javascript/utils_scroll.js");
-	javascript_loaded("/static/application/config.js.php");
-	javascript_loaded("/static/javascript/layout.js");
-	javascript_loaded("/static/application/application.js");
-	javascript_loaded("/static/theme/theme.js.php");
-	javascript_loaded("/static/javascript/ajax.js");
-	javascript_loaded("/static/application/service.js");
-	javascript_loaded("/static/widgets/common_dialogs.js");
-	javascript_loaded("/static/data_model/databaselock.js");
+	javascript_loaded(document.getElementById('init_js_1'));
+	javascript_loaded(document.getElementById('init_js_2'));
+	javascript_loaded(document.getElementById('init_js_3'));
+	javascript_loaded(document.getElementById('init_js_4'));
+	javascript_loaded(document.getElementById('init_js_5'));
+	javascript_loaded(document.getElementById('init_js_6'));
+	javascript_loaded(document.getElementById('init_js_7'));
+	javascript_loaded(document.getElementById('init_js_8'));
+	javascript_loaded(document.getElementById('init_js_9'));
+	javascript_loaded(document.getElementById('init_js_10'));
+	javascript_loaded(document.getElementById('init_js_11'));
+	javascript_loaded(document.getElementById('init_js_12'));
+	javascript_loaded(document.getElementById('init_js_13'));
+	javascript_loaded(document.getElementById('init_js_14'));
+	javascript_loaded(document.getElementById('init_js_15'));
 	window._page_ready = false;
 	window._page_ready_step = 0;
 	function _pageReadyStep() {

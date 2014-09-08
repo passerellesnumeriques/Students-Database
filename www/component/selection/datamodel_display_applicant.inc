@@ -44,7 +44,7 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 			$editable = false;
 		else
 			$editable = !PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id");
-		parent::__construct("applicant_id", "ID", !$editable);
+		parent::__construct("applicant_id", "ID", !$editable, $editable);
 	}
 	
 	public function getHorizontalAlign() { return "right"; }
@@ -72,7 +72,7 @@ $model->addTableDataDisplay($display);
 
 class ApplicantDataScreen extends datamodel\GenericDataScreen {
 	
-	protected function endDataRow($data, $value, $is_new, $can_edit) {
+	protected function endDataRow($data, $value, $sub_index, $is_new, $can_edit) {
 		$html = "";
 		switch ($data->getDisplayName()) {
 			case "Information Session":

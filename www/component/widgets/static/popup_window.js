@@ -665,7 +665,10 @@ function popup_window(title,icon,content,hide_close_button) {
 		});
 	};
 	t.set_freeze_content = function(content) {
-		if (!t.freezer) return;
+		if (!t.freezer) {
+			//window.console.warn("set freeze content on popup not frozen: "+content);
+			return;
+		}
 		set_lock_screen_content(t.freezer, content);
 	};
 	t.unfreeze = function() {

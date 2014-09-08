@@ -16,11 +16,17 @@ table.grid>thead>tr>th {
     padding-left: 2px;
     padding-right: 2px;
 }
+table.grid>thead>tr>th.container {
+	border-bottom: 1px solid #D0D0E0;
+}
 table.grid>thead>tr>th.container, table.grid>thead>tr>th.last_in_container {
 	border-right: 1px solid #C0C0C0;
 }
 table.grid>thead>tr>th.container, table.grid>thead>tr>th.first_in_container {
 	border-left: 1px solid #C0C0C0;
+}
+table.grid>thead>tr>th.final {
+	border-bottom: 1px solid #C0C0C0;
 }
 table.grid>tbody>tr:first-child>td {
 	border-top: 1px solid #C0C0C0;

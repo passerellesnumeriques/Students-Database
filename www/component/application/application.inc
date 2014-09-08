@@ -4,6 +4,10 @@
  */ 
 class application extends Component {
 
+	public function init() {
+		PNApplication::$instance->cron->registerMaintenanceTask("component/application/cron_task_backup.inc");
+	}
+	
 	public function initRequest() {
 		Component::allowPageWithoutLogin("application", "enter");
 		Component::allowPageWithoutLogin("application", "logout");

@@ -18,7 +18,7 @@ function Animation(element,from,to,duration,start_time,handler) {
 }
 
 /** @namespace */
-animation = {
+window.animation = {
 	animations: [],
 	/**
 	 * Create an animation

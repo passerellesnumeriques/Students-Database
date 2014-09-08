@@ -6,6 +6,8 @@ class FamilyMemberPeopleType implements PeopleTypePlugin {
 	
 	public function getId() { return "family_member"; }
 	public function getName() { return "Family Member"; }
+	public function getIcon16() { return "/static/family/family_16.png"; }
+	public function getIcon32() { return "/static/family/family_32.png"; }
 	public function isStandalone() { return false; }
 	
 	public function canRead() {

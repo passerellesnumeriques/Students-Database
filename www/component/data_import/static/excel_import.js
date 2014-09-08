@@ -55,8 +55,9 @@ function excel_import(popup, container, onready) {
 							setTimeout(check_view, 100);
 							return;
 						}
-						t._prepareExcel();
-						popup.unfreeze();
+						t._prepareExcel(function() {
+							popup.unfreeze();
+						});
 					};
 					var check_loaded = function() {
 						var win = getIFrameWindow(t.frame_excel);
@@ -77,13 +78,13 @@ function excel_import(popup, container, onready) {
 					};
 					check_loaded();
 				};
-				t.frame_excel.src = "/dynamic/data_import/page/excel_upload?id="+output.id;
+				t.frame_excel.src = "/dynamic/data_import/page/excel_upload?id="+output.id+"&remove_empty_sheets=true";
 			});
 		};
 		t._upl.openDialog(click_event);
 	};
 	
-	this._prepareExcel = function() {
+	this._prepareExcel = function(ondone) {
 		var w = getIFrameWindow(t.frame_excel);
 		var xl = w.excel;
 		
@@ -249,6 +250,7 @@ function excel_import(popup, container, onready) {
 				break;
 			}
 		}
+		ondone();
 	};
 	this._askImport = function(element, sheet, range) {
 		var content = document.createElement("TABLE");
@@ -522,7 +524,7 @@ function excel_import(popup, container, onready) {
 		return radio;
 	};
 	
-	t._importData = function(sheet, range, field_index, where) {
+	t._importData = function(sheet, range, field_index, where, ondone) {
 		var win = getIFrameWindow(t.frame_import);
 		var grid = win.grid;
 		var row = where.row;
@@ -578,7 +580,10 @@ function excel_import(popup, container, onready) {
 			}
 		// resolve ambiguous values by field
 		var next_ambiguous = function() {
-			if (ambiguous.length == 0) return;
+			if (ambiguous.length == 0) {
+				if (ondone) ondone();
+				return;
+			}
 			var field_index = ambiguous[0].field_index;
 			var field = ambiguous[0].field;
 			// get the next ambiguous
@@ -654,6 +659,9 @@ function excel_import(popup, container, onready) {
 				}
 				pop.close();
 				next_ambiguous();
+			},function() {
+				next_ambiguous();
+				return true;
 			});
 			pop.show();
 		};
@@ -661,6 +669,7 @@ function excel_import(popup, container, onready) {
 			require("popup_window.js", function() {
 				next_ambiguous();
 			});
+		else if (ondone) ondone();
 	};
 	
 	this.init = function() {

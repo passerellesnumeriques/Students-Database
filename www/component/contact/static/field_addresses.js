@@ -2,38 +2,6 @@
 
 if (typeof require != 'undefined') require("contact_objects.js");
 
-if (!window.top.field_addresses_registry) {
-	// allow to register field_addresses having sub data, so that we can synchronize the sub datas
-	window.top.field_addresses_registry = {
-		_fields: [],
-		register: function(win, field) {
-			this._fields.push({field:field,win:win});
-		},
-		_in_change: false,
-		changed: function(win, field) {
-			if (this._in_change) return;
-			this._in_change = true;
-			for (var i = 0; i < this._fields.length; ++i) {
-				var f = this._fields[i];
-				if (f.win == win && f.field._data == field._data) {
-					// same window, same data
-					if (f.field.config.sub_data_index == field.config.sub_data_index) continue; // same
-					f.field.setData(field._data, true);
-				}
-			}
-			this._in_change = false;
-		},
-		_clean: function(win) {
-			for (var i = 0; i < this._fields.length; ++i)
-				if (this._fields[i].win == win) {
-					this._fields.splice(i,1);
-					i--;
-				}
-		}
-	};
-	window.top.pnapplication.onwindowclosed.add_listener(function(c) {c.top.field_addresses_registry._clean(c.win); });
-}
-
 /**
  * Display a list of addresses
  * @param {PostalAddressesData} data coming from a AddressDataDisplay, it specifies the list of addresses together with the owner (people or organization)
@@ -116,9 +84,9 @@ field_addresses.prototype._create = function(data) {
 				t.country_data = country_data;
 			});
 		});
-		window.top.field_addresses_registry.register(window, this);
+		window.top.sub_field_registry.register(window, this);
 		this.onchange.add_listener(function(f){
-			window.top.field_addresses_registry.changed(window, f);
+			window.top.sub_field_registry.changed(window, f);
 		});
 		this._setData = function(data) {
 			this.element.onclick = function(event) { stopEventPropagation(event); return false; };

@@ -5,6 +5,8 @@ interface PeopleTypePlugin {
 	
 	public function getId();
 	public function getName();
+	public function getIcon16();
+	public function getIcon32();
 	/** Indicates if a people of this type can be created from scratch. For example, a student can, but a contact point cannot because it must be linked to an organization. */
 	public function isStandalone();
 	

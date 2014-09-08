@@ -15,9 +15,13 @@ class service_home_menu extends Service {
 	<img src='/static/news/news_white.png'/>
     Updates
 </a>
+<?php
+/* 
 <a class='application_left_menu_item'>
     To Do List
 </a>
+*/
+?>
 <a class='application_left_menu_item' href="/dynamic/calendar/page/calendars">
     <img src='/static/calendar/calendar_white.png'/>
     Your Calendars

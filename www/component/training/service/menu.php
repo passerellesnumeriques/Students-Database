@@ -100,13 +100,13 @@ foreach ($current_batches as $b) {
 </a>
 <?php } else {
 if (in_array("teacher",PNApplication::$instance->user_management->people_types)) { ?>
-<a class='application_left_menu_item' href='/dynamic/transcripts/page/subject_grades'>
+<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/subject_grades' alternate_hrefs='/dynamic/transcripts/page/subject_grades'>
 	<img src='/static/transcripts/grades_white.png'/>
 	Grades
 </a>
 <?php }
 if (in_array("student",PNApplication::$instance->user_management->people_types)) { ?>
-<a class='application_left_menu_item' href='/dynamic/transcripts/page/student_grades?people=<?php echo PNApplication::$instance->user_management->people_id;?>'>
+<a class='application_left_menu_item' href='/dynamic/transcripts/page/student_grades?people=<?php echo PNApplication::$instance->user_management->people_id;?>&title=true'>
 	<img src='/static/transcripts/grades_white.png'/>
 	My Grades
 </a>

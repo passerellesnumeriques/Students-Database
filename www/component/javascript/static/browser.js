@@ -1,7 +1,7 @@
 /**
  * Object to detect which browser and version is used 
  */
-browser = {
+window.browser = {
 	/** information from the UserAgent */
 	agent_infos: [],
 	/** version of Internet Explorer, or 0 */
@@ -160,7 +160,7 @@ if (typeof Element.prototype.getElementsByClassName!='function') {
  * @param {Element} frame iframe
  * @returns {document} the document of the iframe 
  */
-getIFrameDocument = function(frame) {
+window.getIFrameDocument = function(frame) {
 	if (frame.contentDocument) return frame.contentDocument;
 	if (frame.document) return frame.document;
 	return frame.contentWindow.document;
@@ -169,7 +169,7 @@ getIFrameDocument = function(frame) {
  * @param {Element} frame iframe
  * @returns {window} the window of the iframe
  */
-getIFrameWindow = function(frame) {
+window.getIFrameWindow = function(frame) {
 	if (frame.contentWindow) return frame.contentWindow;
 	if (!frame.contentDocument) return null;
 	return frame.contentDocument.window;
@@ -179,13 +179,13 @@ getIFrameWindow = function(frame) {
  * @param {document} doc the document
  * @returns {window} the window containing the given document
  */
-getWindowFromDocument = function(doc) {
+window.getWindowFromDocument = function(doc) {
 	if (browser.IE > 0 && browser.IE <= 8)
 		return doc.parentWindow;
 	return doc.defaultView;
 };
 
-getWindowFromElement = function(e) {
+window.getWindowFromElement = function(e) {
 	//while (e.offsetParent) e = e.offsetParent;
 	//while (e.parentNode && e.parentNode.nodeName != 'BODY' && e.parentNode.nodeName != 'HTML') e = e.parentNode;
 	return getWindowFromDocument(e.ownerDocument);
@@ -211,8 +211,8 @@ if (typeof XMLHttpRequest == "undefined")
 	    //Microsoft.XMLHTTP points to Msxml2.XMLHTTP and is redundant
 	    throw new Error("This browser does not support XMLHttpRequest.");
 	};
-HTTP_Status_Timeout = browser.IE > 0 ? 12031 : 0;
-HTTP_Status_ConnectionLost = browser.IE > 0 ? 12029 : 0;
+window.HTTP_Status_Timeout = browser.IE > 0 ? 12031 : 0;
+window.HTTP_Status_ConnectionLost = browser.IE > 0 ? 12029 : 0;
 	
 /**
  * Set the opacity of an element (if the browser has a way to support it)
@@ -403,20 +403,20 @@ function setRotation(element, degres) {
  * @param {Event} e the event
  * @returns {Object} {x,y,button}
  */
-getCompatibleMouseEvent = function(e) {
-	ev = {};
+function getCompatibleMouseEvent(e) {
+	var ev = {};
 	if (browser.IE == 0 || browser.IE >= 9) { ev.x = e.clientX; ev.y = e.clientY; }
 	else { ev.x = window.event.clientX+document.documentElement.scrollLeft; ev.y = window.event.clientY+document.documentElement.scrollTop; }
 	if (browser.IE == 0 || browser.IE >= 11) ev.button = e.button;
 	else switch (window.event.button) { case 1: ev.button = 0; break; case 4: ev.button = 1; break; case 2: ev.button = 2; break; } 
 	return ev;
-};
+}
 /**
  * Return a key event, whatever browser is used.
  * @param {Event} e the event
  * @returns {Object}
  */
-getCompatibleKeyEvent = function(e) {
+function getCompatibleKeyEvent(e) {
 	// source: http://www.javascripter.net/faq/keycodes.htm
 	var ev = browser.IE == 0 || browser.IE >= 9 ? e : window.event;
 	if (!ev.keyCode) ev.keyCode = ev.charCode;
@@ -500,25 +500,25 @@ getCompatibleKeyEvent = function(e) {
 };
 
 if (!browser.IE >= 9) {
-	getWindowHeight = function() { return window.innerHeight; };
-	getWindowWidth = function() { return window.innerWidth; };
+	window.getWindowHeight = function() { return window.innerHeight; };
+	window.getWindowWidth = function() { return window.innerWidth; };
 } else if (browser.IE >= 7) {
-	getWindowHeight = function() { return document.documentElement.scrollHeight; };
-	getWindowWidth = function() { return document.documentElement.scrollWidth; };
+	window.getWindowHeight = function() { return document.documentElement.scrollHeight; };
+	window.getWindowWidth = function() { return document.documentElement.scrollWidth; };
 } else {
-	getWindowHeight = function() { return document.body.clientHeight; };
-	getWindowWidth = function() { return document.body.clientWidth; };
+	window.getWindowHeight = function() { return document.body.clientHeight; };
+	window.getWindowWidth = function() { return document.body.clientWidth; };
 }
 
 if (browser.IE == 0) {
-	stopEventPropagation = function(evt, do_not_prevent_default) {
+	window.stopEventPropagation = function(evt, do_not_prevent_default) {
 		evt.stopPropagation();
 		if (!do_not_prevent_default)
 			evt.preventDefault();
 		return false;
 	};
 } else {
-	stopEventPropagation = function(evt, do_not_prevent_default) {
+	window.stopEventPropagation = function(evt, do_not_prevent_default) {
 		window.event.cancelBubble = true;
 		window.event.returnValue = do_not_prevent_default ? true : false;
 		return false;
@@ -614,14 +614,15 @@ var _scripts_loaded = [];
  */
 function addJavascript(url, onload, additional_attributes) {
 	var p = new URL(url).toString();
-	if (_scripts_loaded.contains(p)) {
-		if (onload) onload();
-		return;
-	}
+	for (var i = 0; i < _scripts_loaded.length; ++i)
+		if (_scripts_loaded[i].url == p) {
+			if (onload) onload();
+			return _scripts_loaded[i].node;
+		}
 	if (document.readyState != "complete") {
 		// delay the load, as we may not have yet all the scripts in the head
 		setTimeout(function(){addJavascript(url,onload);},1);
-		return;
+		return null;
 	}
 	var head = document.getElementsByTagName("HEAD")[0];
 	for (var i = 0; i < head.childNodes.length; ++i) {
@@ -634,20 +635,20 @@ function addJavascript(url, onload, additional_attributes) {
 			if (e.data) {
 				if (onload)
 					e.data.add_listener(onload);
-				return;
+				return e;
 			}
 			// didn't use this way...
 			if (e._loaded) {
 				// but marked as already loaded
-				_scripts_loaded.push(p);
+				_scripts_loaded.push({url:p,node:e});
 				if (onload) onload();
-				return;
+				return e;
 			}
 			e.data = new Custom_Event();
 			if (onload) e.data.add_listener(onload);
 			if (e.onload) e.data.add_listener(e.onload);
-			e.onload = function() { _scripts_loaded.push(p); this.data.fire(); this.data.cleanup(); this.data = null; };
-			return;
+			e.onload = function() { _scripts_loaded.push({url:p,node:e}); this.data.fire(); this.data.cleanup(); this.data = null; };
+			return e;
 		}
 	}
 	// this is a new script
@@ -658,9 +659,9 @@ function addJavascript(url, onload, additional_attributes) {
 	s.data = new Custom_Event();
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
-	s.onload = function() { if (_scripts_loaded) _scripts_loaded.push(p); this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; s.onload = null; s.onreadystatechange = null; };
+	s.onload = function() { if (_scripts_loaded) _scripts_loaded.push({url:p,node:s}); this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; s.onload = null; s.onreadystatechange = null; };
 	//s.onerror = function(ev) { alert("Error loading javascript file: "+this.src); for (var name in ev) alert("Event: "+name+"="+ev[name]); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded') { if (_scripts_loaded) _scripts_loaded.push(p); this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; this.onreadystatechange = null; s.onload = null; } };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { if (_scripts_loaded) _scripts_loaded.push({url:p,node:s}); this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; this.onreadystatechange = null; s.onload = null; } };
 	head.appendChild(s);
 	s.src = p;
 	return s;
@@ -669,10 +670,11 @@ function addJavascript(url, onload, additional_attributes) {
  * Indicate a javascript is already loaded. This is automatically called by addJavascript, but may be useful in case some scripts are loaded in a different way
  * @param {String} url the URL of the loaded JavaScript
  */
-function javascript_loaded(url) {
-	url = new URL(url).toString();
-	if (!_scripts_loaded.contains(url))
-		_scripts_loaded.push(url);
+function javascript_loaded(node) {
+	var url = new URL(node.src).toString();
+	for (var i = 0; i < _scripts_loaded.length; ++i)
+		if (_scripts_loaded[i].url == url) return;
+	_scripts_loaded.push({url:url,node:node});
 }
 /**
  * Remove a JavaScript from the HEAD
@@ -680,16 +682,23 @@ function javascript_loaded(url) {
  */
 function remove_javascript(url) {
 	var p = new URL(url).toString();
-	_scripts_loaded.remove(p);
+	for (var i = 0; i < _scripts_loaded.length; ++i)
+		if (_scripts_loaded[i].url == p) {
+			if (_scripts_loaded[i].node.parentNode)
+				_scripts_loaded[i].node.parentNode.removeChild(_scripts_loaded[i].node);
+			_scripts_loaded.splice(i,1);
+			break;
+		}
 	var head = document.getElementsByTagName("HEAD")[0];
-	for (var i = 0; i < head.childNodes.length; ++i) {
-		var e = head.childNodes[i];
+	var nodes = [];
+	for (var i = 0; i < head.childNodes.length; ++i) nodes.push(head.childNodes[i]);
+	for (var i = 0; i < nodes.length; ++i) {
+		var e = nodes[i];
 		if (e.nodeName != "SCRIPT") continue;
 		if (!e.src || e.src.length == 0) continue;
 		var u = new URL(e.src).toString();
 		if (u == p) {
 			head.removeChild(e);
-			i--;
 			continue;
 		}
 	}

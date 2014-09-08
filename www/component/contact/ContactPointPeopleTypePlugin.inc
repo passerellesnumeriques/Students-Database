@@ -16,6 +16,8 @@ class ContactPointPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "contact_".$this->org_plugin->getOrganizationCreator(); }
 	public function getName() { return "Contact Point"; }
+	public function getIcon16() { return "/static/contact/contact_point.png"; }
+	public function getIcon32() { return "/static/contact/contact_point_32.png"; }
 	public function isStandalone() { return false; }
 	
 	public function getTables() { return array("PeopleContact", "PeopleAddress"); }

@@ -1,7 +1,7 @@
 /**
  * @namespace
  */
-ajax = {
+window.ajax = {
 	_interceptors: [],
 	/** An interceptor can modify an URL: before every AJAX call, the interceptor will be provided with the URL, and must return an URL (the same or a modified one)
 	 * @param {function} interceptor taking an URL as paramter, and must return an URL

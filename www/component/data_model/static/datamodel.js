@@ -4,7 +4,7 @@
  * Typically, when the same data is displayed several time on the same screen, and is editable, we need to automatically change everywhere as soon as the user makes a modification.
  * Those functionalities help to implement this, by registering listeners/modification events, so that when something changed, actions can be done automatically
  */
-datamodel = {
+window.datamodel = {
 	/** List of components registered as containing a DataDisplay */
 	_data_widgets: [],
 	/** Registers a widget/component as containing a DataDisplay
@@ -247,7 +247,7 @@ datamodel = {
 				handler(res.value);
 			});
 		else
-			return null;
+			handler(null);
 	},
 	
 	/** Called when a window is closed

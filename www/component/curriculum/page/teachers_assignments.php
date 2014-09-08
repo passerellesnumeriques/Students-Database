@@ -191,6 +191,10 @@ class page_teachers_assignments extends Page {
 		var subjects = <?php echo CurriculumJSON::SubjectsJSON($ap->subjects);?>;
 		var teachers = <?php echo $ap->teachersJSON();?>;
 		var teachers_assignments = <?php echo CurriculumJSON::TeachersAssignedJSON($ap->teachers_assignments);?>;
+
+		teachers.sort(function(p1,p2) {
+			return (p1.last_name+' '+p1.first_name).localeCompare(p2.last_name+' '+p2.first_name);
+		});
 		
 		function getSubject(id) {
 			for (var i = 0; i < subjects.length; ++i)
@@ -351,7 +355,7 @@ class page_teachers_assignments extends Page {
 							var menu = new context_menu();
 							menu.addTitleItem(null, "Assign Teacher");
 							for (var i = 0; i < teachers.length; ++i)
-								menu.addIconItem(null, teachers[i].first_name+" "+teachers[i].last_name, function(ev,teacher_id) {
+								menu.addIconItem(null, teachers[i].last_name+" "+teachers[i].first_name, function(ev,teacher_id) {
 									var lock = lock_screen();
 									service.json("curriculum","assign_teacher",{people_id:teacher_id,subject_id:subject.id,classes_ids:[classes[0]]},function(res) {
 										unlock_screen(lock);
@@ -373,7 +377,7 @@ class page_teachers_assignments extends Page {
 							td.appendChild(document.createElement("BR"));
 							td.appendChild(document.createTextNode(" + "));
 						}
-						td.appendChild(document.createTextNode(class_teachers[i].first_name+" "+class_teachers[i].last_name));
+						td.appendChild(document.createTextNode(class_teachers[i].last_name+" "+class_teachers[i].first_name));
 						if (class_teachers_assigned[i].hours != null) {
 							td.appendChild(document.createTextNode("("+class_teachers_assigned[i].hours+"h"+(class_teachers_assigned[i].hours_type == "Per week" ? "/week" : "")+")"));
 							if (class_teachers_assigned[i].hours_type == "Per week")
@@ -413,7 +417,7 @@ class page_teachers_assignments extends Page {
 								var content = document.createElement("DIV");
 								content.style.padding = "10px";
 								content.innerHTML = "Number of hours teaching hours for ";
-								content.appendChild(document.createTextNode(tt.teacher.first_name+" "+tt.teacher.last_name+":"));
+								content.appendChild(document.createTextNode(tt.teacher.last_name+" "+tt.teacher.first_name+":"));
 								content.appendChild(document.createElement("BR"));
 								var current_hours = tt.assignment.hours;
 								var current_hours_type = tt.assignment.hours_type;
@@ -505,7 +509,7 @@ class page_teachers_assignments extends Page {
 									var found = false;
 									for (var j = 0; j < class_teachers.length; ++j) if (class_teachers[j].id == teachers[i].id) { found = true; break; }
 									if (found) continue;
-									menu.addIconItem(null, teachers[i].first_name+" "+teachers[i].last_name, function(ev,teacher_id) {
+									menu.addIconItem(null, teachers[i].last_name+" "+teachers[i].first_name, function(ev,teacher_id) {
 										var lock = lock_screen();
 										var hours = remaining_period;
 										if (subject.hours_type == "Per week") hours /= nb_weeks;
@@ -633,7 +637,7 @@ class page_teachers_assignments extends Page {
 			var tr = document.createElement("TR"); table.appendChild(tr);
 			var td_name = document.createElement("TD"); tr.appendChild(td_name);
 			var span = document.createElement("SPAN"); td_name.appendChild(span);
-			span.appendChild(document.createTextNode(teacher.first_name+" "+teacher.last_name));
+			span.appendChild(document.createTextNode(teacher.last_name+" "+teacher.first_name));
 			span.style.cursor = "default";
 			span.style.whiteSpace = "nowrap";
 			span.title = "Click to see teacher's profile\nDrag and drop to assign this teacher to a subject";

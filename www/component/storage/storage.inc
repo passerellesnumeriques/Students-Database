@@ -1,6 +1,11 @@
 <?php 
 class storage extends Component {
 	
+	public function init() {
+		PNApplication::$instance->cron->registerTask("expired_storage",2,"component/storage/cron_task_expired_storage.inc");
+		PNApplication::$instance->cron->registerMaintenanceTask("component/storage/cron_task_cleanup_storage.inc");
+	}
+	
 	public function get_upload_error($file) {
 		$error = @$file['error'];
 		$msg = $error.": ";
@@ -48,18 +53,84 @@ class storage extends Component {
 			if (is_dir($path."/".$filename))
 				self::remove_directory($path."/".$filename);
 			else
-				unlink($path."/".$filename);
+				@unlink($path."/".$filename);
 		}
 		closedir($dir);
-		rmdir($path);
+		@rmdir($path);
 	}
 	
 	private static function storage_path() {
 		return realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".PNApplication::$instance->current_domain."/storage");
 	}
 	
-	private function remove_old() {
-		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `expire` IS NOT NULL AND `expire` < ".time());
+	public function remove_expired() {
+		$rows = SQLQuery::create()->bypassSecurity()->select("Storage")->where("`expire` IS NOT NULL AND `expire` < ".time())->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("Storage", $rows);
+		foreach ($rows as $row)
+			@unlink($this->get_data_path($row["id"]));
+	}
+	
+	public function cleanup_storage() {
+		$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/".PNApplication::$instance->local_domain."/storage";
+		if (!file_exists($path)) return;
+		$this->cleanup_directory($path, 0, 1, false);
+	}
+	private function cleanup_directory($path, $current_id, $id_mul, $remove_if_empty) {
+		$files = array();
+		$dir = opendir($path);
+		$ids_founds = array();
+		$ids_files = array();
+		$has_files = false;
+		while (($filename = readdir($dir)) <> null) {
+			if ($filename == ".") continue;
+			if ($filename == "..") continue;
+			if (!ctype_digit($filename)) {
+				// everything must be numbers
+				if (is_dir($path."/".$filename))
+					self::remove_directory($path."/".$filename);
+				else
+					@unlink($path."/".$filename);
+				continue;
+			}
+			$id = intval($filename);
+			$id = $current_id+$id*$id_mul;
+			if (is_dir($path."/".$filename)) {
+				if ($id_mul >= 1000000) {
+					// we should not have a directory here !!
+					self::remove_directory($path."/".$filename);
+					continue;
+				}
+				$this->cleanup_directory($path."/".$filename, $id, $id_mul*100, true);
+				if (file_exists($path."/".$filename)) $has_files = true;
+			} else {
+				if ($id_mul <> 1000000)
+					@unlink($path."/".$filename); // we should not have files here!
+				array_push($ids_founds, $id);
+				array_push($ids_files, $filename);
+			}
+		}
+		closedir($dir);
+		if (count($ids_founds) > 0) {
+			$rows = SQLQuery::create()->bypassSecurity()->select("Storage")->whereIn("Storage","id",$ids_founds)->field("id")->executeSingleField();
+			foreach ($rows as $row) {
+				for ($i = 0; $i < count($ids_founds); $i++) {
+					if ($ids_founds[$i] == $row) {
+						// it exists in database
+						$has_files = true;
+						array_splice($ids_founds, $i, 1);
+						array_splice($ids_files, $i, 1);
+						break;
+					}
+				}
+			}
+			if (count($ids_founds) > 0) {
+				// files are not anymore in database !
+				foreach ($ids_files as $filename)
+					@unlink($path."/".$filename);
+			}
+		}
+		if (!$has_files && $remove_if_empty)
+			@rmdir($path);
 	}
 	
 	public function canReadFile($file) {
@@ -86,7 +157,9 @@ class storage extends Component {
 	}
 	
 	private function allocate_id($type, $mime = null, $expire = null) {
-		$this->remove_old();
+#DEV
+		$this->remove_expired();
+#END
 		$q = "INSERT INTO `Storage` (`type`,`mime`,`expire`,`revision`) VALUE (";
 		$q .= "'".SQLQuery::escape($type)."',";
 		$q .= ($mime <> null ? "'".SQLQuery::escape($mime)."'" : "NULL").",";

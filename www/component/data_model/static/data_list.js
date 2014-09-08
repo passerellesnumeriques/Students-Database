@@ -1101,6 +1101,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 								} else {
 									row.row_data[k].data_id = value.k;
 									row.row_data[k].data = value.v;
+									if (cols[k].attached_data) row.row_data[k].data_display = cols[k].attached_data.field;
 									row.row_data[k].css = null;
 								}
 							}
@@ -1122,34 +1123,11 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						t._picture_provider(field.getHTMLElement(), t.getTableKeyForRow(t._picture_table, i), t._pic_width, t._pic_height);
 					}
 				}
-				// register data events
+				// register events
 				for (var i = 0; i < t.grid.table.childNodes.length; ++i) {
 					var row = t.grid.table.childNodes[i];
 					if (t._rowOnclick)
 						t._makeClickable(row);
-					for (var j = 0; j < row.childNodes.length; ++j) {
-						var td = row.childNodes[j];
-						if (!td.field) continue;
-						var col = null;
-						for (var k = 0; k < t.grid.columns.length; ++k) if (t.grid.columns[k].id == td.col_id) { col = t.grid.columns[k]; break; }
-						if (!col || !col.attached_data) continue;
-						var closure = {
-							field:td.field,
-							register: function(data_display, data_key) {
-								var t=this;
-								window.top.datamodel.registerDataWidget(window, data_display.field, data_key, this.field.element, function() {
-									return t.field.getCurrentData();
-								}, function(data) {
-									t.field.setData(data);
-								}, function(listener) {
-									t.field.onchange.add_listener(listener);
-								}, function(listener) {
-									t.field.onchange.remove_listener(listener);
-								});
-							}
-						};
-						closure.register(col.attached_data, td.data_id);
-					}
 				}
 			}
 			t.ondataloaded.fire(t);

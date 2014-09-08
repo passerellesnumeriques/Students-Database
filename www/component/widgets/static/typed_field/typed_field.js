@@ -122,7 +122,7 @@ typed_field.prototype = {
 	 *  change data
 	 *  @param data new data value
 	 */
-	_setData: function(data) { alert("Function _setData not implemented in typed_field "+getObjectClassName(this)); return data; },
+	_setData: function(data,from_input) { alert("Function _setData not implemented in typed_field "+getObjectClassName(this)); return data; },
 	/**
 	 * highlight the field to signal an error
 	 * @param {Boolean} error if true, the field is highlighted, else it is not
@@ -173,6 +173,9 @@ typed_field.prototype = {
 	},
 	unregister_datamodel_datadisplay: function() {
 		window.top.datamodel.unregisterDataWidget(this.element);
+	},
+	setDataDisplay: function(data_display, data_key) {
+		this.register_datamodel_datadisplay(data_display, data_key);
 	}
 };
 typed_field.prototype.constructor = typed_field;
@@ -188,3 +191,46 @@ typed_field_multiple.prototype.getNbData = function() { alert("Function getNbDat
 typed_field_multiple.prototype.resetData = function() { alert("Function resetData not implemented in typed_field_multiple: "+getObjectClassName(this)); };
 typed_field_multiple.prototype.getDataIndex = function(index) { alert("Function getDataIndex not implemented in typed_field_multiple: "+getObjectClassName(this)); };
 typed_field_multiple.prototype.setDataIndex = function(index, value, from_input) { alert("Function setDataIndex not implemented in typed_field_multiple: "+getObjectClassName(this)); };
+
+if (!window.top.sub_field_registry) {
+	// allow to register field_addresses having sub data, so that we can synchronize the sub datas
+	window.top.sub_field_registry = {
+		_fields: [],
+		register: function(win, field) {
+			this._fields.push({field:field,win:win});
+		},
+		_in_change: false,
+		changed: function(win, field) {
+			if (this._in_change) return;
+			this._in_change = true;
+			for (var i = 0; i < this._fields.length; ++i) {
+				var f = this._fields[i];
+				if (f.win == win && f.field._data == field._data) {
+					// same window, same data
+					if (f.field.config.sub_data_index == field.config.sub_data_index) continue; // same
+					f.field.setData(field._data, true);
+				}
+			}
+			this._in_change = false;
+		},
+		_clean: function(win) {
+			for (var i = 0; i < this._fields.length; ++i)
+				if (this._fields[i].win == win) {
+					this._fields.splice(i,1);
+					i--;
+				}
+		},
+		getFields: function(win, data) {
+			var list = [];
+			for (var i = 0; i < this._fields.length; ++i) {
+				var f = this._fields[i];
+				if (f.win == win && f.field._data == data) {
+					// same window, same data
+					list.push(f.field);
+				}
+			}
+			return list;
+		}
+	};
+	window.top.pnapplication.onwindowclosed.add_listener(function(c) {c.top.sub_field_registry._clean(c.win); });
+}

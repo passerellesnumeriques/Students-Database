@@ -164,12 +164,12 @@ field_date.prototype._create = function(data) {
 		this._setData = function(data) {
 			this.element.style.whiteSpace = "nowrap";
 			if (data == null) {
-				if (this.element.innerHTML == "no date") return;
+				if (this.element.innerHTML == "no date") return null;
 				this.element.style.fontStyle = 'italic';
 				this.element.innerHTML = "no date";
 			} else {
 				data = dateToSQL(parseSQLDate(data));
-				if (this.element.innerHTML == data) return;
+				if (this.element.innerHTML == data) return data;
 				this.element.style.fontStyle = 'normal';
 				this.element.innerHTML = data;
 			}

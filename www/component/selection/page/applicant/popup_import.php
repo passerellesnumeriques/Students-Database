@@ -5,12 +5,24 @@ class page_applicant_popup_import extends SelectionPage {
 	public function getRequiredRights() { return array("edit_applicants"); }
 	
 	public function executeSelectionPage() {
+		$this->requireJavascript("section.js");
+		theme::css($this, "section.css");
 ?>
 <div id='container' style='background-color:white;'>
 	<div style='padding:10px'>
-		<a href='#' onclick='manualImport(event);return false;'>Import manually from a file</a><br/>
-		From a template:<br/>
-		<button class='action' onclick='newTemplate();'>Create new template</button>
+		<button class='big' style='font-size:14pt' onclick='manualImport(event);return false;'>
+			<img src='/static/data_import/import_excel_32.png'/> Import manually from a file
+		</button>
+		<br/>
+		<div style='margin-top:10px'></div>
+		<div id='template_section' title='Using a template'>
+			<div>
+				<?php
+				require_once("component/data_import/page/template_list.inc");
+				template_list($this, "selection_applicant", "Applicant", PNApplication::$instance->selection->getCampaignId(), "{'People':{'types':'/applicant/'}}", "/dynamic/people/page/popup_create_people?types=applicant", $_POST["input"], $_GET["ondone"]);
+				?>
+			</div>
+		</div>
 	</div>
 </div>
 <script type='text/javascript'>
@@ -37,12 +49,14 @@ function manualImport(ev) {
 }
 function newTemplate() {
 	popup.freeze();
-	require("create_template.js",function() {
-		new create_template('container', 'Applicant', '<?php echo PNApplication::$instance->selection->getCampaignId();?>', {'People':{'types':'/applicant/'}}, function() {
+	require("edit_template.js",function() {
+		new edit_template('container', 'selection_applicant', 'Applicant', '<?php echo PNApplication::$instance->selection->getCampaignId();?>', {'People':{'types':'/applicant/'}}, null, function() {
 			popup.unfreeze();
 		});
 	});
 }
+var sec = sectionFromHTML(document.getElementById('template_section'));
+sec.addButton(null, "Create new template", "action green", newTemplate);
 </script>
 <?php 
 	}

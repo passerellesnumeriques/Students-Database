@@ -1,5 +1,6 @@
 <?php 
 function createMultipleDataPage(&$page, $root_table_name, $sub_model, $sub_models, $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data, $precreated_data = null) {
+require_once("component/data_model/Model.inc");
 $all_sub_models = array();
 if ($sub_model <> null) {
 	$root_table = DataModel::get()->getTable($root_table_name);
@@ -84,8 +85,17 @@ function datachanged(field) {
 var col, col_container, sub_cols;
 col = new GridColumn("remove", "", null, null, "field_html", false, null, null, {}, null);
 grid.addColumn(col);
+var cat_col, cols, title;
 <?php 
+$by_cat = array();
 foreach ($fields as $field) {
+	$cat = $field[0]->getCategory();
+	if (!isset($by_cat[$cat->getName()])) $by_cat[$cat->getName()] = array($cat,array());
+	array_push($by_cat[$cat->getName()][1], $field); 
+}
+foreach ($by_cat as $cat_name=>$cat) {
+echo "cols = [];\n";
+foreach ($cat[1] as $field) {
 	/* @var $data \datamodel\DataDisplay */
 	$data = $field[0];
 	$path = $field[1];
@@ -105,8 +115,15 @@ foreach ($fields as $field) {
 			}
 	}
 	$sub_data = $data->getSubDataDisplay();
-	if ($sub_data == null) {
-		echo "col = new GridColumn(".
+	$sub_indexes = array();
+	if ($sub_data <> null) {
+		$names = $sub_data->getDisplayNames();
+		for ($i = 0; $i < count($names); $i++)
+			if ($sub_data->isEditableForNew($i))
+				array_push($sub_indexes, $i);
+	}
+	if (count($sub_indexes) == 0) {
+		echo "cols.push(new GridColumn(".
 			json_encode($path->getString()."#".$data->getDisplayName()).
 			",".json_encode($data->getDisplayName()).
 			",null".
@@ -115,12 +132,12 @@ foreach ($fields as $field) {
 			",".($fixed || !$data->isEditableForNewData() ? "false" : "true").
 			",datachanged,null".
 			",".$tf[1].
-			",".$data->javascriptDataDisplay($path->sub_model).");\n";
-		echo "grid.addColumn(col);\n";
+			",".$data->javascriptDataDisplay($path->sub_model).")";
+		echo ");\n";
 	} else {
-		echo "sub_cols = [];";
+		echo "sub_cols = [];\n";
 		$names = $sub_data->getDisplayNames();
-		for ($i = 0; $i < count($names); $i++) {
+		foreach ($sub_indexes as $i) {
 			echo "col = new GridColumn(".
 				json_encode($path->getString()."#".$data->getDisplayName()."#".$i).
 				",".json_encode($names[$i]).
@@ -132,11 +149,18 @@ foreach ($fields as $field) {
 				",".$tf[1].
 				",{datadisplay:".$data->javascriptDataDisplay($path->sub_model).",sub_data:$i});\n";
 			echo "col.field_args.sub_data_index = $i;\n";
-			echo "sub_cols.push(col);";
+			echo "sub_cols.push(col);\n";
 		}
 		echo "col_container = new GridColumnContainer(".json_encode($data->getDisplayName()).",sub_cols,".$data->javascriptDataDisplay($path->sub_model).");\n";
-		echo "grid.addColumnContainer(col_container);\n";
+		echo "cols.push(col_container);\n";
 	}
+}
+echo "title = document.createElement('DIV');\n";
+echo "title.style.display = 'inline-block';\n";
+echo "title.innerHTML = \"<img src='".$cat[0]->getIcon()."' style='vertical-align:bottom'/> ".toHTML($cat[0]->getName())."\";\n";
+echo "col_container = new GridColumnContainer(title,cols,null);\n";
+echo "col_container.text_title = ".json_encode($cat[0]->getName()).";\n";
+echo "grid.addColumnContainer(col_container);\n";
 }
 ?>
 var fields = [<?php

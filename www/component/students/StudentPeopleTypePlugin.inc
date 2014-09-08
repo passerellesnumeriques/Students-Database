@@ -6,6 +6,8 @@ class StudentPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getId() { return "student"; }
 	public function getName() { return "Student"; }
+	public function getIcon16() { return "/static/students/student_16.png"; }
+	public function getIcon32() { return "/static/students/student_32.png"; }
 	public function isStandalone() { return true; }
 	
 	public function getTables() { return array("Student"); }

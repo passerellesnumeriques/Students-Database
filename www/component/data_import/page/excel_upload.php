@@ -78,6 +78,7 @@ class page_excel_upload extends Page {
 					$nb_rows_without_cells = 0;
 			}
 			$rows -= $nb_rows_without_cells;
+			if (isset($_GET["remove_empty_sheets"]) && $rows <= 0) continue;
 			$code .= "xl.addSheet(".json_encode($sheet->getTitle()).",null,".$cols.",".$rows.",function(sheet){\n";
 			for ($i = 0; $i < $cols; $i++) {
 				$col = $sheet->getColumnDimensionByColumn($i);
