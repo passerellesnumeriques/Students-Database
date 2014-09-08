@@ -12,7 +12,7 @@ class cron extends Component {
 		global $in_cron_maintenance;
 		if (!$in_cron_maintenance) return;
 		global $cron_maintenance_tasks;
-		array_push($cron_maintenance_tasks, array($task_id, $file));
+		array_push($cron_maintenance_tasks, $file);
 	}
 	
 	public function executeTasks() {
