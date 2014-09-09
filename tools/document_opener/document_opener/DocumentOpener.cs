@@ -6,7 +6,7 @@ namespace document_opener
 {
     public class DocumentOpener
     {
-        public static string version = "0.0.4";
+        public static string version = "0.0.5";
         private static WebServer server;
         public static System.Windows.Forms.ApplicationContext app_ctx;
         public static OperationWindow op_win;

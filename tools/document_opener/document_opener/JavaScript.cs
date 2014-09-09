@@ -8,8 +8,16 @@ namespace document_opener
     class JavaScript
     {
         public static string js = 
-            "function PNDocumentOpener(opener_port,server,server_port,php_session_cookie,php_session_id,pn_version) {\n"+
+            "function PNDocumentOpener(opener_port,server,server_port,php_session_cookie,php_session_id,pn_version,onready) {\n"+
             "  this.version = '"+DocumentOpener.version+"';\n"+
+            "  var t=this;\n"+
+            "  var listener = function(event) {\n" +
+            "    if (event.origin != 'http://localhost:'+opener_port) return;\n" +
+            "    if (!event.data.is_ready) return;\n" +
+            "    window.top.removeEventListener('message', listener);\n" +
+            "    onready(t);\n" +
+            "  }\n" +
+            "  window.top.addEventListener('message', listener, false);\n" +
             "  this.frame = document.createElement('IFRAME');\n"+
             "  this.frame.style.width = '1px';\n"+
             "  this.frame.style.height = '1px';\n" +
@@ -22,7 +30,7 @@ namespace document_opener
             "    getIFrameWindow(this.frame).postMessage({data:data,url:url,id:id},'http://localhost:'+opener_port);\n" +
             "  };\n"+
             "  this.openDocument = function(document_id, version_id, storage_id, storage_revision, filename, readonly) {\n" +
-            "    var locker = lock_screen(null,'Downloading document...');\n"+
+            "    var locker = lock_screen(null,'Opening document...');\n"+
             "    var id = generateID();\n"+
             "    var listener = function(event) {\n"+
             "      if (event.origin != 'http://localhost:'+opener_port) return;\n"+
@@ -63,6 +71,7 @@ namespace document_opener
             "  xhr.send(event.data.data);\n" +
             "}\n"+
             "window.addEventListener('message', receiveMessage, false);\n"+
+            "window.top.postMessage({is_ready:true},'*');\n" +
             "</script></body></html>"
             ;
     }

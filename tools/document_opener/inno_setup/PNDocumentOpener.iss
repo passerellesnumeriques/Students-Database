@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "PN Document Opener"
-#define MyAppVersion "0.0.4"
+#define MyAppVersion "0.0.5"
 #define MyAppPublisher "Passerelles numériques"
 #define MyAppExeName "PNDocumentOpener.exe"
 
@@ -35,9 +35,7 @@ Source: "dotNetFx40_Full_x86_x64.exe"; DestDir: "{app}"; Check: FrameworkIsNotIn
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-
-[Registry]
-Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "PNDocumentOpener"; ValueData: """{app}\PNDocumentOpener.exe"""; Flags: uninsdeletevalue
+Name: "{commonstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 
 [Run]
 Filename: "{app}\dotNetFx40_Full_x86_x64.exe"; Parameters: "/passive /norestart"; Check: FrameworkIsNotInstalled; Flags: waituntilterminated
