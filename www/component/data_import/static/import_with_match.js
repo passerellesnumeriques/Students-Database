@@ -73,7 +73,7 @@ function import_with_match(provider, ev, show_after_grid) {
 			upl.onstart = function(files, onready) {
 				locker = lock_screen(null,"Uploading file...");
 				t.import_wizard.removeAllChildren();
-				layout.invalidate(t.import_wizard);
+				layout.changed(t.import_wizard);
 				set_lock_screen_content_progress(locker, files[0].size, "Uploading file...", false, function(span,prog) {
 					pb = prog;
 					onready();
@@ -372,7 +372,7 @@ function import_with_match(provider, ev, show_after_grid) {
 				select_data.onchange = check_complete;
 			};
 			addRow2();
-			layout.invalidate(t.import_wizard);
+			layout.changed(t.import_wizard);
 		});
 	};
 	this._performMatching = function() {
@@ -529,7 +529,7 @@ function import_with_match(provider, ev, show_after_grid) {
 		this.container.parentNode.insertBefore(grid.element, this.container);
 		this.container.parentNode.removeChild(this.container);
 		grid._import_with_match = null;
-		layout.invalidate(grid.element);
+		layout.changed(grid.element);
 	};
 	this._init = function() {
 		var grid = provider.getGrid();
@@ -555,7 +555,7 @@ function import_with_match(provider, ev, show_after_grid) {
 				t.uploadFile(ev);
 			});
 			t.excel_bar.addMenuButton(theme.icons_16.close, "Close", function() { t.close(); });
-			layout.invalidate(t.container);
+			layout.changed(t.container);
 		});
 		this.import_container.appendChild(this.excel_header);
 		this.import_wizard = document.createElement("DIV");
@@ -568,7 +568,7 @@ function import_with_match(provider, ev, show_after_grid) {
 		this.excel_frame.style.border = "none";
 		this.excel_frame._upload = function(ev) { t.uploadFile(ev); };
 		this.excel_frame._no_loading = true;
-		listenEvent(this.excel_frame, 'load', function() { layout.invalidate(t.container); });
+		listenEvent(this.excel_frame, 'load', function() { layout.changed(t.container); });
 		this.excel_frame.src = "/dynamic/data_import/page/excel_upload?button=_upload";
 		this.import_container.appendChild(this.excel_frame);
 		this.container.appendChild(this.import_container);
@@ -579,7 +579,7 @@ function import_with_match(provider, ev, show_after_grid) {
 			this.container.insertBefore(grid.element, this.container.firstChild);
 		else
 			this.container.appendChild(grid.element);
-		layout.invalidate(this.container);
+		layout.changed(this.container);
 		this.uploadFile(ev);
 	};
 	this._init();

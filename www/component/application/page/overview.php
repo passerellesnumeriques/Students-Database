@@ -229,7 +229,7 @@ function init_calendars() {
 			});
 		};
 		providers.push(provider);
-		layout.invalidate(calendars_section.element);
+		layout.changed(calendars_section.element);
 	};
 	for (var i = 0; i < window.top.calendar_manager.calendars.length; ++i)
 		new_calendar(window.top.calendar_manager.calendars[i]);

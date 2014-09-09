@@ -35,4 +35,5 @@ field_boolean.prototype._create = function(data) {
 		t.input.checked = data ? "checked" : "";
 		return data;
 	};
+	this.focus = function() { t.input.focus(); };
 };

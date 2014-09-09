@@ -26,7 +26,7 @@ function custom_search(container, min_chars, default_message, provider) {
 		this.input.onfocus = function(){ 
 			if (t.input.default_message) { 
 				t.input.value = ""; t.input.className = ""; t.input.default_message = false; 
-				layout.invalidate(container);
+				layout.changed(container);
 			} else 
 				t.input.select();
 		};
@@ -34,7 +34,7 @@ function custom_search(container, min_chars, default_message, provider) {
 			setTimeout(function(){
 				if (t.input.value == "") { 
 					t.input.value = default_message; t.input.className = "informative_text"; t.input.default_message = true; 
-					layout.invalidate(container);
+					layout.changed(container);
 				}; 
 			},100); 
 		};

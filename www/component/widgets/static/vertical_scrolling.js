@@ -134,5 +134,5 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	};
 	this.layout();
 	
-	layout.addHandler(container, function() { t.layout(); });
+	layout.listenElementSizeChanged(container, function() { t.layout(); });
 }

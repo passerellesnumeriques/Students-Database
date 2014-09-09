@@ -32,7 +32,7 @@ function assign_elements(container, sections_css, non_assigned_icon, element_dis
 		button.appendChild(img);
 		this.div_buttons.appendChild(button);
 		this._possible_assignments.push({id:id,section:s,button:button});
-		layout.invalidate(container);
+		layout.changed(container);
 		button.onclick = function() {
 			var list = t._non_assigned.removeSelectedElements();
 			for (var i = 0; i < list.length; ++i) {
@@ -140,7 +140,7 @@ function assign_elements(container, sections_css, non_assigned_icon, element_dis
 		setBoxShadow(this.div_buttons, 2,2,2,0, "#C0C0C0");
 		this.div_buttons.style.padding = "2px";
 		this._sections_container.appendChild(div);
-		layout.invalidate(container);
+		layout.changed(container);
 		if (onready) onready(this);
 	};
 	require(["section.js"], function() {

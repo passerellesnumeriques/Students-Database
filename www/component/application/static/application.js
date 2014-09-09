@@ -388,7 +388,7 @@ function LoadingFrame(frame_element) {
 		var win = getIFrameWindow(frame_element);
 		if (!win) return false;
 		if (win._static_page) return true;
-		return this.step == 1 && win.document && win._page_ready && win.layout && win.layout._invalidated.length == 0 /*&& win.layout.everythingOnPageLoaded()*/;
+		return this.step == 1 && win.document && win._page_ready && win.layout && win.layout._changes.length == 0 /*&& win.layout.everythingOnPageLoaded()*/;
 	};
 	/** Check if the page inside the frame has been closed */
 	this._isClosed = function() {
@@ -453,7 +453,7 @@ function LoadingFrame(frame_element) {
 	/** Remove the loading */
 	this.remove = function() {
 		if (frame_element._loading_frame != this) return;
-		layout.removeHandler(frame_element, updater);
+		layout.unlistenElementSizeChanged(frame_element, updater);
 		if (this.anim) {
 			animation.stop(this.anim);
 			this.anim = null;
@@ -503,7 +503,7 @@ function LoadingFrame(frame_element) {
 				if (!win.document) console.error("Frame loading timeout: window.document is null");
 				else if (!win._page_ready) console.error("Frame loading timeout: _page_ready is false");
 				else if (!win.layout)  console.error("Frame loading timeout: no layout");
-				else if (win.layout._invalidated.length > 0) console.error("Frame loading timeout: still something to layout");
+				else if (win.layout._changes.length > 0) console.error("Frame loading timeout: still something to layout");
 				//else if (!win.layout.everythingOnPageLoaded()) console.error("Frame loading timeout: script, css or image not yet loaded: "+win.layout.whatIsNotYetLoaded());
 			} else console.error("Frame loading timeout: step = "+this.step);
 			this.remove();
@@ -517,7 +517,7 @@ function LoadingFrame(frame_element) {
 	this._position();
 	this._update(true);
 	setTimeout(updater, 10);
-	layout.addHandler(frame_element, updater);
+	layout.listenElementSizeChanged(frame_element, updater);
 }
 
 // override addJavascript and addStylesheet

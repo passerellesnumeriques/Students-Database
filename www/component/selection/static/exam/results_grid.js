@@ -112,7 +112,7 @@ function results_grid(subject,applicants,grid_height,set_correct_answer) {
       /* Clear previously set grid width css property (from grid.css) */
       $(t.elt.grid).find("table.grid").css("width","");
       
-      layout.invalidate(t.elt.container);
+      layout.changed(t.elt.container);
    }
    
    /* creating applicant ID column */

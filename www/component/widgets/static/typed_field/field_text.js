@@ -84,6 +84,7 @@ field_text.prototype._create = function(data) {
 			else if (!t.config) t.config = {min_size:-1};
 			else t.config.min_size = -1;
 		};
+		this.focus = function() { input.focus(); };
 		this.signal_error = function(error) {
 			this.error = error;
 			input.style.border = error ? "1px solid red" : "";

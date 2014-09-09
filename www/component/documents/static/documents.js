@@ -247,25 +247,26 @@ function AttachedDocuments(container, table, sub_model, key, type, can_add_remov
 			if (this._anim2) animation.stop(this._anim2);
 			this._anim1 = null;
 			this._anim2 = null;
+			var knowledge = [];
 			if (!this._opened) {
 				t.docs_div.style.width = "";
 				t.docs_div.style.height = "";
 				t.docs_div.style.position = "absolute";
 				t.docs_div.style.display = "block";
 				t.docs_div.style.overflow = "";
-				if (getWidth(t.docs_div) < getWidth(this)) setWidth(t.docs_div, getWidth(this));
+				if (getWidth(t.docs_div, knowledge) < getWidth(this, knowledge)) setWidth(t.docs_div, getWidth(this, knowledge), knowledge);
 				var h = t.docs_div.offsetHeight;
 				t.docs_div.style.height = "0px";
 				t.docs_div.style.overflow = "hidden";
 				t.docs_div.style.top = (absoluteTop(this)+this.offsetHeight-1)+"px";
-				t.docs_div.style.left = (absoluteLeft(this)+this.offsetWidth-getWidth(t.docs_div))+"px";
+				t.docs_div.style.left = (absoluteLeft(this)+this.offsetWidth-getWidth(t.docs_div, knowledge))+"px";
 				this._anim1 = animation.create(t.docs_div,0,h,500,function(value,element){
 					element.style.height = Math.floor(value)+"px";
 				});
 				this._anim2 = animation.fadeIn(t.docs_div,500);
 				this._opened = true;
 			} else {
-				this._anim1 = animation.create(t.docs_div,getHeight(t.docs_div),0,500,function(value,element){
+				this._anim1 = animation.create(t.docs_div,getHeight(t.docs_div, knowledge),0,500,function(value,element){
 					element.style.height = Math.floor(value)+"px";
 				});
 				this._anim2 = animation.fadeOut(t.docs_div,500);
@@ -276,9 +277,10 @@ function AttachedDocuments(container, table, sub_model, key, type, can_add_remov
 			if (!this.title_div._opened) return;
 			this.docs_div.style.width = "";
 			this.docs_div.style.height = "";
-			if (getWidth(this.docs_div) < getWidth(this.title_div)) setWidth(this.docs_div, getWidth(this.title_div));
+			var knowledge = [];
+			if (getWidth(this.docs_div, knowledge) < getWidth(this.title_div, knowledge)) setWidth(this.docs_div, getWidth(this.title_div, knowledge), knowledge);
 			this.docs_div.style.top = (absoluteTop(this.title_div)+this.title_div.offsetHeight-1)+"px";
-			this.docs_div.style.left = (absoluteLeft(this.title_div)+this.title_div.offsetWidth-getWidth(this.docs_div))+"px";
+			this.docs_div.style.left = (absoluteLeft(this.title_div)+this.title_div.offsetWidth-getWidth(this.docs_div, knowledge))+"px";
 		};
 	} else {
 		container.appendChild(this.docs_div);

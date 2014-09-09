@@ -204,7 +204,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 					break;
 				}
 		}
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 		onvalidation(ok);
 		return new CurriculumSubject(subject.id, code, name, subject.category_id, subject.period_id, spe_id, hours, hours_type, coef);
 	};

@@ -1,59 +1,74 @@
 window.layout = {
-	cleanup: function() {
-		if (!this._w) return;
-		if (this._w._layout_interval) clearInterval(this._w._layout_interval);
-		this._w._layout_interval = null;
-		if (layout._process_timeout) clearTimeout(layout._process_timeout);
-		layout._process_timeout = null;
-		this._layout_handlers = null;
-		this._w = null;
-		this._invalidated = null;
-	},
-	// Layout handlers attached to elements
-	_layout_handlers: [],
-	_w: window,
-	addHandler: function(element, handler) {
-		if (!layout._w) return;
+	listenElementSizeChanged: function(element, listener) {
 		var w = getWindowFromElement(element);
 		if (!w) return;
 		if (w != layout._w) {
 			if (w.layout)
-				w.layout.addHandler(element, handler);
+				w.layout.listenElementSizeChanged(element, listener);
 			return;
 		}
-		layout._layout_handlers.push({element:element,handler:handler});
-		layout._last_layout_activity = new Date().getTime();
+		if (typeof element._layout_info == 'undefined')
+			element._layout_info = {};
+		if (typeof element._layout_info.size == 'undefined')
+			element._layout_info.size = {width:element.scrollWidth, height:element.scrollHeight};
+		layout._element_size_listeners.push({element:element,listener:listener});
 	},
-	removeHandler: function(element, handler) {
+	listenInnerElementsChanged: function(element, listener) {
 		var w = getWindowFromElement(element);
-		if (!w || !w.layout) return;
-		if (w != window) {
-			w.layout.removeHandler(element, handler);
+		if (!w) return;
+		if (w != layout._w) {
+			if (w.layout)
+				w.layout.listenInnerElementsChanged(element, listener);
 			return;
 		}
-		if (layout._layout_handlers == null) return;
-		for (var i = 0; i < layout._layout_handlers.length; ++i) {
-			if (layout._layout_handlers[i].element == element && layout._layout_handlers[i].handler == handler) {
-				layout._layout_handlers.splice(i,1);
+		if (typeof element._layout_info == 'undefined')
+			element._layout_info = {};
+		if (typeof element._layout_info.from_inside == 'undefined')
+			element._layout_info.from_inside = [];
+		if (element._layout_info.from_inside.contains(listener)) return;
+		element._layout_info.from_inside.push(listener);
+		layout._element_inside_listeners.push({element:element,listener:listener});
+	},
+	unlistenElementSizeChanged: function(element, listener) {
+		var w = getWindowFromElement(element);
+		if (!w) return;
+		if (w != layout._w) {
+			if (w.layout)
+				w.layout.unlistenElementSizeChanged(element, listener);
+			return;
+		}
+		for (var i = 0; i < layout._element_size_listeners.length; ++i)
+			if (layout._element_size_listeners[i].element == element && layout._element_size_listeners[i].listener == listener) {
+				layout._element_size_listeners.splice(i,1);
 				i--;
 			}
+	},
+	unlistenInnerElementsChanged: function(element, listener) {
+		var w = getWindowFromElement(element);
+		if (!w) return;
+		if (w != layout._w) {
+			if (w.layout)
+				w.layout.unlistenInnerElementsChanged(element, listener);
+			return;
 		}
+		for (var i = 0; i < layout._element_inside_listeners.length; ++i)
+			if (layout._element_inside_listeners[i].element == element && layout._element_inside_listeners[i].listener == listener) {
+				layout._element_inside_listeners.splice(i,1);
+				i--;
+			}
+		if (element._layout_info && element._layout_info.from_inside)
+			element._layout_info.from_inside.remove(listener);
 	},
-	_getHandlers: function(element) {
-		var handlers = [];
-		for (var i = 0; i < layout._layout_handlers.length; ++i)
-			if (layout._layout_handlers[i].element == element)
-				handlers.push(layout._layout_handlers[i].handler);
-		return handlers;
-	},
-	
-	// layout process
-	_invalidated: [],
-	invalidate: function(element) {
-		if (this._invalidated == null) return;
+	changed: function(element) {
+		if (this._changes === null) return;
 		if (element == null) {
-			try { throw new Error("null element given to layout.invalidate"); }
+			try { throw new Error("null element given to layout.changed"); }
 			catch (e) { log_exception(e); return; }
+		}
+		var w = getWindowFromElement(element);
+		if (w != layout._w) {
+			w.layout.changed(element);
+			return;
 		}
 		if (window.frameElement && window.frameElement.style && window.frameElement.style.visibility == 'hidden') return;
 		var p = element;
@@ -61,37 +76,31 @@ window.layout = {
 			if (p.style && p.style.visibility == "hidden") return;
 			p = p.parentNode;
 		}
-		var w = getWindowFromElement(element);
-		if (w != window) {
-			w.layout.invalidate(element);
-			return;
-		}
-		if (!layout._invalidated.contains(element)) {
-			layout._invalidated.push(element);
+		if (!layout._changes.contains(element)) {
+			layout._changes.push(element);
 			layout._layout_needed();
 		}
-	},
-	
-	_noresize_event: false,
-	cancelResizeEvent: function() {
-		this._noresize_event = true;
 	},
 	
 	forceLayout: function() {
 		if (layout._process_timeout) clearTimeout(layout._process_timeout);
 		layout._process_timeout = null;
 		layout._process();
-		if (layout._invalidated.length > 0) {
+		if (layout._changes.length > 0) {
 			if (layout._process_timeout) clearTimeout(layout._process_timeout);
 			layout._process_timeout = null;
 			layout._process();
 		}
-		if (layout._invalidated.length > 0) {
+		if (layout._changes.length > 0) {
 			if (layout._process_timeout) clearTimeout(layout._process_timeout);
 			layout._process_timeout = null;
 			layout._process();
 		}
 	},
+	
+	_element_size_listeners: [],
+	_element_inside_listeners: [],
+	_changes: [],
 	
 	_process_timeout: null,
 	_layouts_short_time: 0,
@@ -119,218 +128,81 @@ window.layout = {
 		layout._process_timeout = setTimeout(f,timing);
 	},
 	_process: function() {
-		if (layout._invalidated.length == 0) return; // nothing to do
-		/*
-		 * Process:
-		 *  1- layout the higher level elements (the parents/top elements)
-		 *  2- layout each top element
-		 *  3- for each top element, go through children to process layout in case they hanve a layout handler
-		 *  4- in case a child changed, go back to step 2
-		 */
-		// check we don't have the full document
-		var found = false;
-		for (var i = 0; i < layout._invalidated.length; ++i)
-			if (layout._invalidated[i].nodeName == 'BODY' || layout._invalidated[i].nodeName == "HTML") { found = true; break; }
-		// find the higher level elements
-		var top_elements = [];
-		if (found) {
-			top_elements.push(document.body);
-		} else {
-			// first, only keep the first handled container of invalidated elements
-			var new_list = [];
-			for (var i = 0; i < layout._invalidated.length; ++i) {
-				var e = layout._invalidated[i];
-				var handled = null;
-				do {
-					var h = layout._getHandlers(e);
-					if (h.length > 0) { handled = e; break; }
-					e = e.parentNode;
-				} while (e && e.nodeName != 'BODY' && e.nodeName != 'HTML');
-				if (handled == null) {
-					// no container
-					top_elements = [document.body];
-					break;
-					//handled = e;
-				} else
-					if (!new_list.contains(handled)) new_list.push(handled);
-			}
-			if (top_elements[0] != document.body) {
-				top_elements.push(new_list[0]);
-				for (var i = 1; i < new_list; ++i) {
-					var e = new_list[i];
-					// check if e is already contained in a top_elements
-					var p = e.parentNode;
-					var found = false;
-					while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
-						if (top_elements.contains(p)) { found = true; break; }
-						p = p.parentNode;
-					}
-					if (found) continue; // it is contained, skip it
-					// if e is a parent of some top_elements, remove those top_elements
-					for (var j = 0; j < top_elements.length; ++j) {
-						var te = top_elements[j];
-						p = te.parentNode;
-						found = false;
-						while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
-							if (p == e) { found = true; break; }
-							p = p.parentNode;
-						}
-						if (found) {
-							// it is contained, remove it
-							top_elements.splice(j,1);
-							j--;
-						}
-					}
-					// add this new top element
-					top_elements.push(e);
-				}
-			}
+		if (window.closing || layout._changes === null) return;
+		if (layout._changes.length == 0) return; // nothing to do
+		
+		// first, process the elements inside changed, starting from the leaves of the tree
+		if (layout._element_inside_listeners.length > 0)
+			layout._processInsideChanged(layout._getLeavesElements(layout._changes));
+		// reset changes
+		//var changes = layout._changes;
+		layout._changes = [];
+		if (layout._process_timeout) {
+			clearTimeout(layout._process_timeout);
+			layout._process_timeout = null;
 		}
-		layout._invalidated = [];
-		// process each top element
-		for (var i = 0; i < top_elements.length; ++i) {
-			var handlers = layout._getHandlers(top_elements[i]);
-			for (var j = 0; j < handlers.length; ++j)
-				handlers[j]();
-			if (top_elements[i].scrollHeight != top_elements[i]._layout_scroll_height || top_elements[i].scrollWidth != top_elements[i]._layout_scroll_width) {
-				top_elements[i]._layout_scroll_height = top_elements[i].scrollHeight;
-				top_elements[i]._layout_scroll_width = top_elements[i].scrollWidth;
-				// it changed, we may need to re-layout parents
-				var p = top_elements[i].parentNode;
-				while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
-					var h = layout._getHandlers(p);
-					if (h.length > 0) { layout.invalidate(p); break; }
-					p = p.parentNode;
-				}
-				// or siblings
-				p = top_elements[i].previousSibling;
-				while (p != null) {
-					var h = layout._getHandlers(p);
-					if (h.length > 0) { layout.invalidate(p); break; }
-					p = p.previousSibling;
-				}
-				p = top_elements[i].nextSibling;
-				while (p != null) {
-					var h = layout._getHandlers(p);
-					if (h.length > 0) { layout.invalidate(p); break; }
-					p = p.nextSibling;
-				}
-				// if we are in a frame, let's layout the frame
-				var win = getWindowFromDocument(top_elements[i].ownerDocument); 
-				if (win.frameElement) {
-					var win2 = getWindowFromDocument(win.frameElement.ownerDocument);
-					if (win2 && win2.layout) win2.layout.invalidate(win.frameElement);
-				}
+		// then, process the element size changed
+		if (layout._element_size_listeners.length > 0) {
+			var to_call = [];
+			for (var i = 0; i < layout._element_size_listeners.length; ++i) {
+				var e = layout._element_size_listeners[i].element;
+				var size = {width:e.scrollWidth,height:e.scrollHeight};
+				if (size.width == e._layout_info.size.width && size.height == e._layout_info.size.height) continue;
+				e._layout_info.size = size;
+				to_call.push(layout._element_size_listeners[i].listener);
 			}
+			for (var i = 0; i < to_call.length; ++i)
+				to_call[i]();
 		}
-		// process the children of the top elements
-		for (var i = 0; i < top_elements.length; ++i) {
-			layout._processElement(top_elements[i]);
-		}
-		// check if a top element changed after the children have been processed
-		for (var i = 0; i < top_elements.length; ++i) {
-			if (top_elements[i].scrollHeight != top_elements[i]._layout_scroll_height || top_elements[i].scrollWidth != top_elements[i]._layout_scroll_width) {
-				top_elements[i]._layout_scroll_height = top_elements[i].scrollHeight;
-				top_elements[i]._layout_scroll_width = top_elements[i].scrollWidth;
-				// it changed, let's process again
-				layout.invalidate(top_elements[i]);
-				// we may need to re-layout parents
-				var p = top_elements[i].parentNode;
-				while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
-					var h = layout._getHandlers(p);
-					if (h.length > 0) { layout.invalidate(p); break; }
-					p = p.parentNode;
-				}
-				// if we are in a frame, let's layout the frame
-				var win = getWindowFromDocument(top_elements[i].ownerDocument); 
-				if (win.frameElement) getWindowFromDocument(win.frameElement.ownerDocument).layout.invalidate(win.frameElement);
-			}
-		}
-		// mark activity, to adjust automatic layout timing
+		
 		layout._last_layout_activity = new Date().getTime();
 	},
-	_processElement: function(element, call_handlers) {
-		var handlers = layout._getHandlers(element);
-		if (handlers.length > 0 && call_handlers) {
-			for (var i = 0; i < handlers.length; ++i)
-				handlers[i]();
-			if (element.scrollHeight != element._layout_scroll_height || element.scrollWidth != element._layout_scroll_width) {
-				// size changed, let's do it again later, from its parent
-				element._layout_scroll_height = element.scrollHeight;
-				element._layout_scroll_width = element.scrollWidth;
-				if (element.nodeName != "BODY")
-					layout.invalidate(element.parentNode);
-				else
-					layout.invalidate(element);
-				//return;
+	_getLeavesElements: function(elements) {
+		var leaves = [];
+		var parents = [];
+		var has_parents = false;
+		for (var i = 0; i < elements.length; ++i) {
+			leaves.push(elements[i]);
+			var p = elements[i].parentNode;
+			if (!p) parents.push(null);
+			else {
+				parents.push(p);
+				has_parents = true;
 			}
 		}
-		var children_changed = false;
-		for (var i = 0; i < element.childNodes.length; ++i) {
-			var c = element.childNodes[i];
-			if (c.nodeType != 1) continue; // skip non-element nodes
-			var prev_w = c.scrollWidth;
-			var prev_h = c.scrollHeight;
-			layout._processElement(c, true);
-			if (handlers.length > 0 && (c.scrollHeight != prev_h || c.scrollWidth != prev_w)) {
-				c._layout_scroll_height = c.scrollHeight;
-				c._layout_scroll_width = c.scrollWidth;
-				children_changed = true;
-			}
-		}
-		if (children_changed) {
-			// at least one child changed its size: we need to re-process this parent
-			layout.invalidate(element);
-		} else if (handlers.length > 0 && call_handlers) {
-			if (element.scrollHeight != element._layout_scroll_height || element.scrollWidth != element._layout_scroll_width) {
-				// size changed, let's do it again later, from its parent
-				element._layout_scroll_height = element.scrollHeight;
-				element._layout_scroll_width = element.scrollWidth;
-				layout.invalidate(element.parentNode);
-				return;
-			}
-		}
-
-	},
-	
-	// Layout activity and regular layout done to handle scroll bars changes
-	_last_layout_activity: 0,
-	_layout_auto: function() {
-		/*
-		// go through all handled elements, and check if size of the element or one of its children changed
-		for (var i = 0; i < layout._layout_handlers.length; ++i) {
-			var e = layout._layout_handlers[i].element;
-			if (e.scrollHeight != e._layout_scroll_height || e.scrollWidth != e._layout_scroll_width) {
-				// it changed
-				layout.invalidate(e);
-				continue;
-			}
-			for (var j = 0; j < e.childNodes.length; ++j) {
-				var c = e.childNodes[j];
-				if (c.nodeType != 1) continue;
-				if (c.scrollHeight != c._layout_scroll_height || c.scrollWidth != c._layout_scroll_width) {
-					// it changed
-					layout.invalidate(e);
-					break;
+		while (has_parents) {
+			has_parents = false;
+			for (var i = 0; i < parents.length; ++i) {
+				if (!parents[i]) continue;
+				var j = leaves.indexOf(parents[i]);
+				parents[i] = parents[i].parentNode;
+				if (parents[i]) has_parents = true;
+				if (j != -1) {
+					leaves.splice(j,1);
+					parents.splice(j,1);
+					if (i >= j) i--;
 				}
 			}
 		}
-		*/
-		// try to find new images that may invalidate the layouts
-		var images = document.getElementsByTagName("IMG");
-		for (var i = 0; i < images.length; ++i) {
-			var img = images[i];
-			if (img._layout_done) continue; // already processed
-			img._layout_done = true;
-			if (img.complete || img.height != 0) continue; // already loaded
-			// not yet loaded, add an event
-			listenEvent(img,'load',function() {
-				if (this.parentNode)
-					layout.invalidate(this.parentNode);
-				else
-					this._layout_done = false;
-			});
+		return leaves;
+	},
+	_processInsideChanged: function(elements) {
+		var parents = [];
+		for (var i = 0; i < elements.length; ++i) {
+			if (elements[i]._layout_info && elements[i]._layout_info.from_inside)
+				for (var j = 0; j < elements[i]._layout_info.from_inside.length; ++j)
+					elements[i]._layout_info.from_inside[j]();
+			if (elements[i].nodeName == "BODY") continue;
+			var p = elements[i].parentNode;
+			if (!parents.contains(p)) parents.push(p);
 		}
+		if (parents.length == 0) return;
+		layout._processInsideChanged(parents);
+	},
+	
+	_noresize_event: false,
+	cancelResizeEvent: function() {
+		this._noresize_event = true;
 	},
 	
 	computeContentSize: function(body,keep_styles) {
@@ -359,9 +231,10 @@ window.layout = {
 				if (e._height.indexOf('%') == -1)
 					e.style.height = "";
 			}
-			if (w == null) w = win.absoluteLeft(e)+(win.getWidth ? win.getWidth(e) : getWidth(e));
+			var knowledge = [];
+			if (w == null) w = win.absoluteLeft(e)+(win.getWidth ? win.getWidth(e,knowledge) : getWidth(e,knowledge));
 			if (w > max_width) max_width = w;
-			if (h == null) h = win.absoluteTop(e)+(win.getHeight ? win.getHeight(e) : getHeight(e));
+			if (h == null) h = win.absoluteTop(e)+(win.getHeight ? win.getHeight(e,knowledge) : getHeight(e,knowledge));
 			if (h > max_height) max_height = h;
 			if (e.nodeName != "FORM" && !keep_styles) {
 				e.style.display = e._display;
@@ -409,9 +282,9 @@ window.layout = {
 			if (!frame._check_ready) return; // stopped
 			var b = win.document.body;
 			win.layout.cancelResizeEvent();
-			win.layout.addHandler(b, frame._autoresize);
+			win.layout.listenElementSizeChanged(b, frame._autoresize);
 			for (var i = 0; i < b.childNodes.length; ++i) 
-				win.layout.addHandler(b.childNodes[i], frame._autoresize);
+				win.layout.listenElementSizeChanged(b.childNodes[i], frame._autoresize);
 			frame._autoresize();
 		};
 		frame._check_ready();
@@ -423,7 +296,7 @@ window.layout = {
 		frame._check_ready = null;
 		var win = getIFrameWindow(frame);
 		if (win && win.layout && win.document && win.document.body) {
-			win.layout.removeHandler(win.document.body, frame._autoresize);
+			win.layout.unlistenElementSizeChanged(win.document.body, frame._autoresize);
 			win.layout._no_resize_event = false;
 		}
 	},
@@ -463,23 +336,40 @@ window.layout = {
 			return img.src;
 		}
 		return null;
+	},
+	
+	cleanup: function() {
+		if (!this._w) return;
+		if (this._w._layout_interval) clearInterval(this._w._layout_interval);
+		this._w._layout_interval = null;
+		if (layout._process_timeout) clearTimeout(layout._process_timeout);
+		layout._process_timeout = null;
+		this._noresize_event = true;
+		this._element_size_listeners = null;
+		this._element_inside_listeners = null;
+		this._changes = null;
+		this._w = null;
 	}
 };
+window.layout._w = window;
 if (!window.to_cleanup) window.to_cleanup = [];
 window.to_cleanup.push(layout);
 
-// call onresize of window when all images are loaded, to trigger re-layout if needed
-var resize_triggered = false;
+// fire layout when an image is loaded and when window size change
+
+var _resize_triggered_on_images_loaded = false;
+var _all_images_loaded_timeout = null;
 function _all_images_loaded() {
+	_all_images_loaded_timeout = null;
 	var img = document.getElementsByTagName("IMG");
 	for (var i = 0; i < img.length; ++i) {
 		if (img[i].complete || img[i].height != 0) continue;
 		return;
 	}
-	if (!resize_triggered) {
-		resize_triggered = true;
+	if (!_resize_triggered_on_images_loaded) {
+		_resize_triggered_on_images_loaded = true;
 		setTimeout(function() {
-			resize_triggered = false;
+			_resize_triggered_on_images_loaded = false;
 			triggerEvent(window, 'resize');
 		},10);
 	}
@@ -488,12 +378,35 @@ function _init_images() {
 	var img = document.getElementsByTagName("IMG");
 	for (var i = 0; i < img.length; ++i) {
 		img[i]._layout_done = true;
-		listenEvent(img[i],'load',_all_images_loaded);
+		listenEvent(img[i],'load',function() {
+			if (_all_images_loaded_timeout) return;
+			_all_images_loaded_timeout = setTimeout(_all_images_loaded,10);
+		});
 	}
 }
 
 function _layout_auto() {
-	layout._layout_auto();
+	// try to find new images that may invalidate the layouts
+	var images = document.getElementsByTagName("IMG");
+	for (var i = 0; i < images.length; ++i) {
+		var img = images[i];
+		if (img._layout_done) continue; // already processed
+		img._layout_done = true;
+		if (img.complete || img.height != 0) {
+			// already loaded
+			layout.changed(img);
+			continue;
+		}
+		// not yet loaded, add an event
+		listenEvent(img,'load',function() {
+			if (this.parentNode) {
+				this._layout_done = true;
+				layout.changed(this);
+			} else
+				this._layout_done = false;
+		});
+	}
+	// reschedule
 	var now = new Date().getTime();
 	var timing;
 	if (now - layout._last_layout_activity < 1000) timing = 1000;
@@ -510,7 +423,10 @@ var _layout_interval_time = 5000;
 var _layout_interval = setInterval(_layout_auto,5000);
 
 if (typeof listenEvent != 'undefined') {
-	listenEvent(window, 'load', _all_images_loaded);
+	listenEvent(window, 'load', function() {
+		if (_all_images_loaded_timeout) return;
+		_all_images_loaded_timeout = setTimeout(_all_images_loaded,10);
+	});
 	_init_images();
 	var listener = function(ev) {
 		if (!layout) return;
@@ -519,28 +435,7 @@ if (typeof listenEvent != 'undefined') {
 			return;
 		}
 		if (document.body)
-			layout.invalidate(document.body); 
+			layout.changed(document.body); 
 	};
 	listenEvent(window, 'resize', listener);
-}
-
-var _layout_add_css = window.addStylesheet;
-window.addStylesheet = function(url, onload) {
-	_layout_add_css(url, function() {
-		if (!document.body || window.closing) return;
-		layout.invalidate(document.body);
-		if (onload) onload();
-	});
-};
-if (!window.top.browser_scroll_bar_size) {
-	window.top.browser_scroll_bar_size = 20;
-	var container = window.top.document.createElement("DIV");
-	container.style.position = "fixed";
-	container.style.top = "-300px";
-	container.style.width = "100px";
-	container.style.height = "100px";
-	container.style.overflow = "scroll";
-	window.top.document.body.appendChild(container);
-	window.top.browser_scroll_bar_size = 100 - container.clientWidth;
-	window.top.document.body.removeChild(container);
 }

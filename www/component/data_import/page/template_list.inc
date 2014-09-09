@@ -96,7 +96,7 @@ function removeTemplate(button,id) {
 			var li = button.parentNode;
 			var ul = li.parentNode;
 			ul.removeChild(li);
-			layout.invalidate(ul);
+			layout.changed(ul);
 		});
 	});
 }

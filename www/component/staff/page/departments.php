@@ -79,7 +79,7 @@ class page_departments extends Page {
 								departments.remove(department);
 								p.close();
 								tr.parentNode.removeChild(tr);
-								layout.invalidate(document.body);
+								layout.changed(document.body);
 							});
 						});
 						p.show(); 
@@ -107,7 +107,7 @@ class page_departments extends Page {
 
 			var t = document.getElementById('row_footer');
 			t.parentNode.insertBefore(tr, t);
-			layout.invalidate(t.parentNode);
+			layout.changed(t.parentNode);
 		}
 
 		for (var i = 0; i < departments.length; ++i)

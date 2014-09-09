@@ -756,10 +756,10 @@ function evaluationTypeDialog(eval,is_new) {
 				} else {
 					eval.div_name.removeAllChildren();
 					eval.div_name.appendChild(document.createTextNode(name));
-					layout.invalidate(eval.div_name);
+					layout.changed(eval.div_name);
 					eval.div_coef.removeAllChildren();
 					eval.div_coef.appendChild(document.createTextNode("Coef. "+coef));
-					layout.invalidate(eval.div_coef);
+					layout.changed(eval.div_coef);
 					eval.col_container.select_menu_name = eval.name;
 					computeGrades();
 				}
@@ -830,13 +830,13 @@ function evaluationDialog(type,eval,is_new) {
 				} else {
 					eval.div_name.removeAllChildren();
 					eval.div_name.appendChild(document.createTextNode(name));
-					layout.invalidate(eval.div_name);
+					layout.changed(eval.div_name);
 					eval.div_max.removeAllChildren();
 					eval.div_max.appendChild(document.createTextNode("Max. "+max));
-					layout.invalidate(eval.div_max);
+					layout.changed(eval.div_max);
 					eval.div_coef.removeAllChildren();
 					eval.div_coef.appendChild(document.createTextNode("Coef. "+coef));
-					layout.invalidate(eval.div_coef);
+					layout.changed(eval.div_coef);
 					eval.col.select_menu_name = eval.name;
 					computeGrades();
 				}

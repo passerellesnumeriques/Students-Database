@@ -36,7 +36,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			if (t.header_title) {
 				t.header.removeChild(t.header_title);
 				t.header_title = null;
-				layout.invalidate(t.header);
+				layout.changed(t.header);
 			}
 		} else {
 			if (!t.header_title) {
@@ -49,7 +49,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			if (icon) {
 				var img = document.createElement("IMG");
 				img.src = icon;
-				img.onload = function() { layout.invalidate(t.header_title); };
+				img.onload = function() { layout.changed(t.header_title); };
 				t.header_title.appendChild(img);
 			}
 			if (typeof title == 'string') {
@@ -59,7 +59,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 				title = div;
 			}
 			t.header_title.appendChild(title);
-			layout.invalidate(t.header);
+			layout.changed(t.header);
 		}
 	};
 	t.addFooter = function() {
@@ -67,7 +67,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		t.footer = document.createElement("DIV");
 		t.footer.className = "frame_footer "+css;
 		container.appendChild(t.footer);
-		layout.invalidate(container);
+		layout.changed(container);
 		return t.footer;
 	};
 
@@ -125,7 +125,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			}
 		}
 		t.header_left.appendChild(control);
-		layout.invalidate(t.header);
+		layout.changed(t.header);
 	};
 	t.addRightControl = function(control, tooltip_content) {
 		if (typeof control == 'string') {
@@ -144,7 +144,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			t.header_right.appendChild(control);
 		} else
 			t.header_right.insertBefore(control, t.header_right.childNodes[0]);
-		layout.invalidate(t.header);
+		layout.changed(t.header);
 	};
 	
 	t.resetMenu = function() {
@@ -160,13 +160,13 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		if (t.header_left._valign) t.header_left._valign.remove();
 		t.header.removeChild(t.header_left);
 		t.header_left = null;
-		layout.invalidate(t.header);
+		layout.changed(t.header);
 	};
 	t.resetRightControls = function() {
 		if (!t.header_right) return;
 		t.header.removeChild(t.header_right);
 		t.header_right = null;
-		layout.invalidate(t.header);
+		layout.changed(t.header);
 	};
 	t.resetHeader = function() {
 		t.resetLeftControls();

@@ -109,7 +109,7 @@ function upload(target, multiple, async) {
 					var td = document.createElement("TD");
 					td.innerHTML = "Initializing upload...";
 					tr.appendChild(td);
-					layout.invalidate(progress_table);
+					layout.changed(progress_table);
 					progress_bars = [];
 					prev_onstart(files, function(cancel) {
 						progress_table.removeChild(tr);
@@ -142,7 +142,7 @@ function upload(target, multiple, async) {
 			progress.appendChild(progress_bar);
 			td.appendChild(progress);
 			progress_bars.push({file:file,bar:progress_bar,td:td});
-			layout.invalidate(progress_table);
+			layout.changed(progress_table);
 			if (prev_onstartfile) prev_onstartfile(file);
 		};
 		var prev_onprogressfile = t.onprogressfile;
@@ -165,7 +165,7 @@ function upload(target, multiple, async) {
 				else
 					td.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> Error";
 			}
-			layout.invalidate(progress_table);
+			layout.changed(progress_table);
 			if (prev_ondonefile) prev_ondonefile(file, output, errors);
 		};
 		var prev_ondone = t.ondone;

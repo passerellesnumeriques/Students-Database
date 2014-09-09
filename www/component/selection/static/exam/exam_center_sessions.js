@@ -45,7 +45,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		th.appendChild(document.createTextNode("Capacity"));
 		for (var i = 0; i < this.rooms.length; ++i)
 			this._createRoomRow(this.rooms[i]);
-		layout.invalidate(this._table_rooms);
+		layout.changed(this._table_rooms);
 	};
 	this._createRoomRow = function(room) {
 		var tr, td;
@@ -177,7 +177,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	this._createSession = function(event) {
 		this._sessions_sections.push(new ExamSessionSection(this._sessions_container, event, this, can_edit));
 		this._span_nb_sessions.innerHTML = this.sessions.length;
-		layout.invalidate(this._sessions_container);
+		layout.changed(this._sessions_container);
 	};
 	this._removeSession = function(event) {
 		this.sessions.remove(event);
@@ -195,7 +195,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			}
 		}
 		this._span_nb_sessions.innerHTML = this.sessions.length;
-		layout.invalidate(this._sessions_container);
+		layout.changed(this._sessions_container);
 		window.pnapplication.dataUnsaved("ExamCenterSessions");
 	};
 	this._getSessionSection = function(session_id) {
@@ -742,7 +742,7 @@ function ExamSessionSection(container, event, sessions, can_edit) {
 		}
 
 		this.refreshNbApplicants();
-		layout.invalidate(this.session_section.element);
+		layout.changed(this.session_section.element);
 	};
 	this.refreshNbApplicants = function() {
 		var total_applicants = 0;
@@ -836,7 +836,7 @@ function RoomSection(container, room, session_section, can_edit) {
 			if (applicant.exam_session_id == session_section.event.id && applicant.exam_center_room_id == room.id)
 				this.applicants_list.addApplicant(applicant);
 		}
-		layout.invalidate(container);
+		layout.changed(container);
 	};
 	this._init();
 }
@@ -858,7 +858,7 @@ function ApplicantsListHeader(data_grid) {
 		this.nb_selected_span.innerHTML = sel.length + "/" + data_grid.getList().length;
 		for (var i = 0; i < this._selection_buttons.length; ++i)
 			this._selection_buttons[i].disabled = sel.length > 0 ? "" : "disabled";
-		layout.invalidate(this.header);
+		layout.changed(this.header);
 	};
 	this.addSelectionAction = function(html, css, tooltip, onclick) {
 		var button = document.createElement("BUTTON");
@@ -870,7 +870,7 @@ function ApplicantsListHeader(data_grid) {
 		button.t = this;
 		button.onclick = onclick;
 		this._selection_buttons.push(button);
-		layout.invalidate(this.header);
+		layout.changed(this.header);
 	};
 	
 	var t=this;

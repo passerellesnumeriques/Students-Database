@@ -56,7 +56,7 @@ function filter_comparable(data, config, editable) {
 		t.field1.getHTMLElement().style.verticalAlign = "bottom";
 		t.field2.getHTMLElement().style.verticalAlign = "bottom";
 		t.span_to.style.verticalAlign = "bottom";
-		layout.invalidate(t.element);
+		layout.changed(t.element);
 		t.field1.onchange.add_listener(function() {
 			data.value = t.field1.getCurrentData();
 			if (typeof t.field2.setMinimum != 'undefined')

@@ -162,7 +162,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 			cont.innerHTML = "<center><i>No result</i></center>";
 			cont.style.fontSize = "small";
 		}
-		layout.invalidate(cont);
+		layout.changed(cont);
 	};
 	
 	/**

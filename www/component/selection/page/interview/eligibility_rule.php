@@ -78,7 +78,7 @@ function ValueRow(criterion, coef) {
 					t.tr.nextSibling.obj.plus.style.visibility = 'hidden';
 				t.tr.parentNode.removeChild(t.tr);
 			}
-			layout.invalidate(document.body);
+			layout.changed(document.body);
 			return;
 		}
 		if (t.tr.nextSibling.id == 'row_total' && ev)
@@ -86,7 +86,7 @@ function ValueRow(criterion, coef) {
 		
 		for (var i = 0; i < criteria.length; ++i)
 			if (criteria[i].id == sel) { t.max_score.innerHTML = parseFloat(criteria[i].max_score).toFixed(2); break; }
-		layout.invalidate(t.tr);
+		layout.changed(t.tr);
 	};
 
 	var next = document.getElementById('row_total');

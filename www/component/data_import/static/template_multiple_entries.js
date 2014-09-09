@@ -64,7 +64,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 			else
 				this._field.getHTMLElement().style.display = "";
 			this._onchange();
-			layout.invalidate(div);
+			layout.changed(div);
 		};
 		container.appendChild(div);
 		select.validate();

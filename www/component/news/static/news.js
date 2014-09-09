@@ -348,7 +348,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		}
 
 		if (typeof animation != 'undefined') animation.fadeIn(div, 1500);
-		layout.invalidate(container);
+		layout.changed(container);
 		return div;
 	};
 	
@@ -537,7 +537,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 				toolbar_items_size: 'small',
 			    auto_focus: editor.id,
 			    fontsize_formats: "8pt 9pt 10pt 12pt 14pt 18pt 24pt",
-			    init_instance_callback: function() { div.childNodes[0].style.border = "none"; layout.invalidate(div); }
+			    init_instance_callback: function() { div.childNodes[0].style.border = "none"; layout.changed(div); }
 			});
 		});
 

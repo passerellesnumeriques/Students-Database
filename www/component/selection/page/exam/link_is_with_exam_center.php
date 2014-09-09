@@ -155,7 +155,7 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 			selected_is = [];
 			selected_exam = null;
 			refreshLinkButton();
-			layout.invalidate(document.body);
+			layout.changed(document.body);
 		}
 		function removeLink(is_id, center_id) {
 			// check if it was an added link
@@ -193,7 +193,7 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 			td.style.textAlign = 'center';
 			tr.is = is;
 			is_rows.push(tr);
-			layout.invalidate(table);
+			layout.changed(table);
 		}
 
 		function getLinkedIS(center_id) {
@@ -233,7 +233,7 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 					var doit = function() {
 						div.removeChild(is_div);
 						removeLink(button.is, button.exam);
-						layout.invalidate(div);
+						layout.changed(div);
 					};
 					if (is.nb_applicants_assigned_past > 0 || is.nb_applicants_assigned_future) {
 						if (is.nb_applicants_assigned_past == 0)
@@ -248,7 +248,7 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 				};
 				is_div.appendChild(button);
 				this.appendChild(is_div);
-				layout.invalidate(div);
+				layout.changed(div);
 			};
 			var is = getLinkedIS(center.id);
 			for (var i = 0; i < is.length; ++i)

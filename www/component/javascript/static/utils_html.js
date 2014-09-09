@@ -139,7 +139,7 @@ function LoadingHidder(to_hide) {
 	/** Remove */
 	this.remove = function() {
 		this._removed = true;
-		layout.removeHandler(to_hide, updater);
+		layout.unlistenElementSizeChanged(to_hide, updater);
 		if (this.div.parentNode)
 			this.div.parentNode.removeChild(this.div);
 		this.div = null;
@@ -154,7 +154,7 @@ function LoadingHidder(to_hide) {
 		if (t._removed) return;
 		t._position();
 	}, 50);
-	layout.addHandler(to_hide, updater);
+	layout.listenElementSizeChanged(to_hide, updater);
 }
 
 /** Wait for things to be initialized in a frame

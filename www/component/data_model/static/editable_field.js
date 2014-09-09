@@ -65,7 +65,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.field.setData(t.field.getOriginalData());
 			t.field.setEditable(false);
 			config_field();
-			layout.invalidate(container);
+			layout.changed(container);
 			if (onready) onready(t);
 			if (t._fill_container)
 				t.field.getHTMLElement().style.width = "100%";
@@ -81,7 +81,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 					if (t._fill_container)
 						t.field.getHTMLElement().style.width = "100%";
 					config_field();
-					layout.invalidate(container);
+					layout.changed(container);
 					if (onready) onready(t);
 				}); 
 			});
@@ -101,7 +101,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);
-		layout.invalidate(container);
+		layout.changed(container);
 		lock_data(data, function(locks, data){
 			container.removeChild(loading);
 			//container.appendChild(t.field.getHTMLElement());
@@ -135,7 +135,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.unedit_button.ondomremoved(function() {
 				if (t.save_button) t.unedit();
 			});
-			layout.invalidate(container);
+			layout.changed(container);
 		});
 	};
 	/** Save current data */
@@ -152,7 +152,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		var loading = document.createElement("IMG");
 		loading.src = theme.icons_16.loading;
 		container.appendChild(loading);
-		layout.invalidate(container);
+		layout.changed(container);
 		save_data(data, function(data) {
 			container.removeChild(loading);
 			//container.appendChild(t.field.getHTMLElement());

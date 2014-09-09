@@ -21,17 +21,18 @@ function pictures_list(container) {
 		}
 		var max_width = 0;
 		var max_height = 0;
+		var knowledge = [];
 		for (var i = 0; i < this.pictures.length; ++i) {
-			var w = getWidth(this.pictures[i].element);
+			var w = getWidth(this.pictures[i].element, knowledge);
 			if (w > max_width)
 				max_width = w;
-			var h = getHeight(this.pictures[i].element);
+			var h = getHeight(this.pictures[i].element, knowledge);
 			if (h > max_height)
 				max_height = h;
 		}
 		for (var i = 0; i < this.pictures.length; ++i) {
-			setWidth(this.pictures[i].element, max_width);
-			setHeight(this.pictures[i].element, max_height);
+			setWidth(this.pictures[i].element, max_width, knowledge);
+			setHeight(this.pictures[i].element, max_height, knowledge);
 			this.pictures[i].adjustPicture();
 		}
 	};

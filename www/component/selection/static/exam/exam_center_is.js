@@ -43,7 +43,7 @@ function exam_center_is(container, all_is, linked_is, can_edit) {
 		this._addISRow(is_id);
 		this._loadApplicants(is_id);
 		getWindowFromElement(this._table).pnapplication.dataUnsaved("ExamCenterInformationSession");
-		layout.invalidate(this._table);
+		layout.changed(this._table);
 	};
 	
 	this.setHostFromIS = function(is_id) {
@@ -60,7 +60,7 @@ function exam_center_is(container, all_is, linked_is, can_edit) {
 		this._table.removeAllChildren();
 		for (var i = 0; i < this.linked_ids.length; ++i)
 			this._addISRow(this.linked_ids[i]);
-		layout.invalidate(this._table);
+		layout.changed(this._table);
 	};
 	
 	this._addISRow = function(is_id) {
@@ -143,7 +143,7 @@ function exam_center_is(container, all_is, linked_is, can_edit) {
 			if (tr) {
 				tr.applicants_list = res;
 				tr.is_applicants.innerHTML = " ("+res.length+" applicant"+(res.length > 1 ? "s" : "")+")";
-				layout.invalidate(t._table);
+				layout.changed(t._table);
 			}
 		});
 	};

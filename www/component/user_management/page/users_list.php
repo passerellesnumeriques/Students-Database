@@ -162,7 +162,7 @@ function init_users_list() {
 					unassign_roles.disabled = "";
 					remove.disabled = "";
 				}
-				layout.invalidate(list.header);
+				layout.changed(list.header);
 			};
 			<?php }?>
 

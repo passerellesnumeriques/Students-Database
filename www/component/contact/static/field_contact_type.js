@@ -70,7 +70,7 @@ field_contact_type.prototype._create = function(data) {
 			e.appendChild(document.createTextNode(" ("+data.contacts[i].sub_type+")"));
 			span.appendChild(e);
 			this.element.appendChild(span);
-			layout.invalidate(this.element);
+			layout.changed(this.element);
 		}
 	}
 };

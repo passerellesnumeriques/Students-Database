@@ -46,7 +46,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		var ready = function() {
 			if (++ready_count == 2) {
 				if (onready) onready();
-				layout.invalidate(container);
+				layout.changed(container);
 			}
 		};
 		this.changeView(t.view_name, ready);
@@ -151,8 +151,8 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 				t.header.appendChild(t.zoom_div);
 
 			t.updateHeader();
-			layout.addHandler(t.header, function() { t.updateHeader(); });
-			layout.invalidate(container);
+			layout.listenElementSizeChanged(t.header, function() { t.updateHeader(); });
+			layout.changed(container);
 		});
 	};
 	/** Called when the zoom is changed, to update the text displaying zoom information */

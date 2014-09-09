@@ -224,7 +224,7 @@ new data_list(
 			if (typeof row.row_id == 'undefined') return;
 			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
 		});
-		layout.invalidate(list.container);
+		layout.changed(list.container);
 
 		if (batches && batches.length == 1 && can_manage) {
 			refreshToDo(function() {

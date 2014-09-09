@@ -265,7 +265,7 @@ function organization(container, org, existing_types, can_edit) {
 						t.onchange.fire();
 						t.oncontactpointchange.fire();
 						p.close();
-						layout.invalidate(tbody);
+						layout.changed(tbody);
 					};
 					p.show();
 				});
@@ -360,7 +360,7 @@ function organization(container, org, existing_types, can_edit) {
 		t._google_results_container.style.maxHeight = "250px";
 		t._google_results_container.style.overflowY = "auto";
 		
-		layout.invalidate(container);
+		layout.changed(container);
 	};
 	/**
 	 * Add a contact point to the table
@@ -461,12 +461,12 @@ function organization(container, org, existing_types, can_edit) {
 	t.searchGoogle = function(ondone) {
 		if (org.name.length < 3) return;
 		t._google_results_container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
-		layout.invalidate(container);
+		layout.changed(container);
 		require("google_places.js", function() {
 			getGooglePlaces(t.google_search_input.value, function(results,error) {
 				if (error != null) {
 					t._google_results_container.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+error;
-					layout.invalidate(container);
+					layout.changed(container);
 				} else {
 					var ul = document.createElement("UL");
 					for (var i = 0; i < results.length; ++i) {
@@ -529,7 +529,7 @@ function organization(container, org, existing_types, can_edit) {
 										window.top.geography.getCountryData(window.top.default_country_id, function(country_data){
 											var the_end = function() {
 												unlock_screen(locker);
-												layout.invalidate(container);
+												layout.changed(container);
 											};
 											
 											var a = new PostalAddress(-1,window.top.default_country_id, null, null, null, null, null, null, "Office");
@@ -772,7 +772,7 @@ function organization(container, org, existing_types, can_edit) {
 					t._google_results_container.removeAllChildren();
 					t._google_results_container.appendChild(ul);
 				}
-				layout.invalidate(t._google_results_container);
+				layout.changed(t._google_results_container);
 				ondone();
 			});
 		});

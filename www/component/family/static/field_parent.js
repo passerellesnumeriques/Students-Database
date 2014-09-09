@@ -63,7 +63,7 @@ field_parent.prototype._create = function(data) {
 				}
 				this.element.style.whiteSpace = "nowrap";
 				this.element.appendChild(document.createTextNode(value ? value : ""));
-				layout.invalidate(this.element);
+				layout.changed(this.element);
 			};
 		} else {
 			var t=this;

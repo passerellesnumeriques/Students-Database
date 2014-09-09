@@ -88,7 +88,7 @@ function ValueRow(subject, extract, coef) {
 					t.tr.nextSibling.obj.plus.style.visibility = 'hidden';
 				t.tr.parentNode.removeChild(t.tr);
 			}
-			layout.invalidate(document.body);
+			layout.changed(document.body);
 			return;
 		}
 		if (t.tr.nextSibling.id == 'row_total' && ev)
@@ -107,7 +107,7 @@ function ValueRow(subject, extract, coef) {
 				}
 			t.max_score.innerHTML = max.toFixed(2);
 		}
-		layout.invalidate(t.tr);
+		layout.changed(t.tr);
 	};
 
 	var next = document.getElementById('row_total');

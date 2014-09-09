@@ -131,5 +131,5 @@ function horizontal_scrolling(container, bgcolor, color, arrow_width) {
 	};
 	this.layout();
 	
-	layout.addHandler(container, function() { t.layout(); });
+	layout.listenElementSizeChanged(container, function() { t.layout(); });
 }

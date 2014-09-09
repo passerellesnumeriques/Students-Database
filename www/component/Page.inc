@@ -159,7 +159,7 @@ abstract class Page {
 			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(this);".$js[1].";this._loaded=true;'>";
 			echo "</script>";
 		}
-		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.invalidate(window.document.body); this._loaded = true;' media='all'/>";
+		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.changed(window.document.body); this._loaded = true;' media='all'/>";
 		pageHeaderEnd($this->onload);
 	}
 
@@ -260,7 +260,7 @@ function pageHeaderStart() {
 	window._page_ready_step = 0;
 	function _pageReadyStep() {
 		if (++window._page_ready_step == 2) {
-			layout.invalidate(document.body);
+			layout.changed(document.body);
 			layout.forceLayout();
 			window._page_ready = true;
 		}

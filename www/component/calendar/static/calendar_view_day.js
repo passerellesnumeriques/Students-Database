@@ -250,7 +250,7 @@ function calendar_view_day(view, container) {
 		t._now.style.borderTop = "1px solid #FF0000";
 		t._now.style.borderBottom = "1px solid #808000";
 		t._now.style.height = "0px";
-		t._now.style.width = getWidth(t.day_content)+"px";
+		t._now.style.width = getWidth(t.day_content,[])+"px";
 		t._now.style.zIndex = 3;
 		t.day_content.appendChild(t._now);
 	};
@@ -304,5 +304,5 @@ function calendar_view_day(view, container) {
 	};
 	
 	this._init();
-	layout.addHandler(container, function() { t._layout(); });
+	layout.listenElementSizeChanged(container, function() { t._layout(); });
 }

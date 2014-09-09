@@ -55,7 +55,7 @@ function tabs(container, fill_tab_content) {
 		t.tabs[index].header.className = "tab_header selected";
 		t.tabs[index].content.style.display = "";
 		t.selected = index;
-		layout.invalidate(t.tabs[index].content);
+		layout.changed(t.tabs[index].content);
 		if (t.onselect) t.onselect(t);
 	};
 
@@ -98,18 +98,20 @@ function tabs(container, fill_tab_content) {
 	};
 	t._layout = function() {
 		if (fill_tab_content) {
-			setWidth(t.content, container.clientWidth);
-			setHeight(t.content, container.clientHeight - t.header.offsetHeight);
+			var knowledge = [];
+			setWidth(t.content, container.clientWidth, knowledge);
+			setHeight(t.content, container.clientHeight - t.header.offsetHeight, knowledge);
 		}
 		if (t.selected != -1) {
 			if (fill_tab_content) {
-				setWidth(t.tabs[t.selected].content, t.content.clientWidth);
-				setHeight(t.tabs[t.selected].content, t.content.clientHeight);
+				var knowledge = [];
+				setWidth(t.tabs[t.selected].content, t.content.clientWidth, knowledge);
+				setHeight(t.tabs[t.selected].content, t.content.clientHeight, knowledge);
 			}
 		}
 
 	};
 	t._init();
 	t._layout();
-	layout.addHandler(container, function() { t._layout(); });
+	layout.listenElementSizeChanged(container, function() { t._layout(); });
 }

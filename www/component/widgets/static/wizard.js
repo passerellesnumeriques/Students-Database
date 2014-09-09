@@ -35,7 +35,7 @@ function wizard(container) {
 		t.validate();
 		t._refresh_buttons();
 		if (t.pages[index].onshown) t.pages[index].onshow(t,t.pages[index]);
-		layout.invalidate(t.page_container);
+		layout.changed(t.page_container);
 	};
 	t.validate = function() {
 		var p = t.pages[t.current_page];

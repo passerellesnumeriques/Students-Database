@@ -215,6 +215,7 @@ field_grade.prototype._create = function(data) {
 			this.element.style.width = "100%";
 			input.style.width = "100%";
 		};
+		this.focus = function() { input.focus(); };
 		this.validate = function() {
 			var grade = this._getEditedData();
 			if (grade < 0) this.signal_error("Must be minimum "+this.get_value_from_system(0));

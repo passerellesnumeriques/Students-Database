@@ -61,7 +61,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.header_center.widget.addItem(item);
 		else
 			t.header_center.appendChild(item);
-		layout.invalidate(t.header);
+		layout.changed(t.header);
 	};
 	/** Remove everything in the header, previously added through addHeader */
 	t.resetHeader = function() {
@@ -69,7 +69,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.header_center.widget.removeAll();
 		else
 			while (t.header_center.childNodes.length > 0) t.header_center.removeChild(t.header_center.childNodes[0]);
-		layout.invalidate(t.header);
+		layout.changed(t.header);
 	};
 	t.addFooterTool = function(html) {
 		var item = document.createElement("DIV");
@@ -82,10 +82,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.footer_tools.className = "footer_tools";
 			t.addFooter(t.footer_tools);
 			t.footer.appendChild(t.footer_tools);
-			layout.invalidate(container);
+			layout.changed(container);
 		}
 		t.footer_tools.appendChild(item);
-		layout.invalidate(t.footer_tools);
+		layout.changed(t.footer_tools);
 	};
 	t.addFooter = function(html) {
 		var item = document.createElement("DIV");
@@ -97,16 +97,16 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.footer = document.createElement("DIV");
 			t.footer.className = "footer";
 			container.appendChild(t.footer);
-			layout.invalidate(container);
+			layout.changed(container);
 		}
 		t.footer.appendChild(item);
-		layout.invalidate(t.footer);
+		layout.changed(t.footer);
 	};
 	t.resetFooter = function() {
 		if (!t.footer) return;
 		container.removeChild(t.footer);
 		t.footer = null;
-		layout.invalidate(container);
+		layout.changed(container);
 	};
 	/** Set a title, with optionally an icon
 	 * @param {String} icon URL of the icon 16x16, or null if no icon
@@ -127,7 +127,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			div.appendChild(span);
 		}
 		t.header.insertBefore(div, t.header_left);
-		layout.invalidate(t.header);
+		layout.changed(t.header);
 	};
 	/** Set the title, with some html
 	 * @param {DOMNode} html the html element, or a string
@@ -141,7 +141,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		html.className = "data_list_title";
 		t.header.insertBefore(html, t.header_left);
-		layout.invalidate(t.header);
+		layout.changed(t.header);
 	};
 	/** Force to refresh the data from the server */
 	t.reloadData = function(ondone) {
@@ -415,7 +415,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			tabs.select("text");
 			header.appendChild(tabs.element);
 			t.header_left.appendChild(header);
-			layout.invalidate(t.header);
+			layout.changed(t.header);
 			
 			var col_picture = new GridColumn('data_list_picture', "Picture", null, "left", "field_html", false, null, null, {}, null);
 			var thumb_container = document.createElement("DIV");
@@ -512,7 +512,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					}
 					break;
 				};
-				layout.invalidate(container);
+				layout.changed(container);
 			};
 		});
 	};
@@ -589,7 +589,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			// + previous page
 			t.prev_page_button = div = document.createElement("BUTTON");
 			div.disabled = "disabled";
-			img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+			img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 			div.title = "Previous page";
 			img.src = "/static/data_model/left.png";
 			div.doit = function() {
@@ -607,7 +607,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			// + next page
 			t.next_page_button = div = document.createElement("BUTTON");
 			div.disabled = "disabled";
-			img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+			img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 			div.title = "Next page";
 			div.disabled = "disabled";
 			img.src = "/static/data_model/right.png";
@@ -636,7 +636,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		// + refresh
 		div = document.createElement("BUTTON");
-		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 		div.title = "Refresh";
 		img.src = theme.icons_16.refresh;
 		div.onclick = function() { t._loadData(); };
@@ -645,7 +645,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.refresh_button = div;
 		// + select column
 		div = document.createElement("BUTTON");
-		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 		div.title = "Select columns to display";
 		img.src = get_script_path("data_list.js")+"/table_column.png";
 		div.onclick = function() { t._selectColumnsDialog(this); };
@@ -653,7 +653,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.header_right.appendChild(div);
 		// + filter
 		div = document.createElement("BUTTON");
-		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 		div.title = "Filters";
 		img.src = get_script_path("data_list.js")+"/filter.gif";
 		div.onclick = function() { t._filtersDialog(this); };
@@ -685,7 +685,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		});
 		// + import
 		div = document.createElement("BUTTON");
-		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 		div.title = "Import additional data from file";
 		img.src = theme.icons_16["_import"];
 		div.onclick = function(ev) { 
@@ -698,7 +698,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.header_right.appendChild(div);
 		// + export
 		div = document.createElement("BUTTON");
-		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 		div.title = "Export list";
 		img.src = theme.icons_16["_export"];
 		div.onclick = function() { t._exportMenu(this); };
@@ -706,7 +706,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.header_right.appendChild(div);
 		// + print
 		div = document.createElement("BUTTON");
-		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 		div.title = "Print";
 		img.src = theme.icons_16["print"];
 		div.onclick = function() { t.print(); };
@@ -714,7 +714,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.header_right.appendChild(div);
 		// + more button for horizontal menu
 		div = document.createElement("BUTTON");
-		img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header_center); };
+		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header_center); };
 		img.src = theme.icons_16.more_menu;
 		div.appendChild(img);
 		t.header_center.appendChild(div);
@@ -730,7 +730,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		// layout
 		require("horizontal_menu.js",function(){
 			new horizontal_menu(t.header_center, "middle");
-			layout.invalidate(container);
+			layout.changed(container);
 		});
 	};
 	/** Load the available fields for the root table */
@@ -899,7 +899,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					action.icon = col.editable ? theme.icons_10.edit : theme.icons_10.no_edit;
 					action.tooltip = col.editable ? "Edit data on this column" : "Cancel modifications and stop editing this column";
 					col.toggleEditable();
-					layout.invalidate(container);
+					layout.changed(container);
 				};
 				t.startLoading();
 				if (col.editable) {
@@ -955,7 +955,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				action.icon = has ? "/static/widgets/grid/filter_active.png" : "/static/widgets/grid/filter.gif";
 				action.tooltip = has ? "Edit filters (this column is currently filtered)" : "Filter";
 				col._refresh_title();
-				layout.invalidate(container);
+				layout.changed(container);
 			};
 			var a = new GridColumnAction('filter',has ? "/static/widgets/grid/filter_active.png" : "/static/widgets/grid/filter.gif",function(ev,action,col){
 				var has = t.hasFilterOn(f.field.category, f.field.name);
@@ -1071,7 +1071,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				}
 			} else
 				t._page_num_div.innerHTML = result.data.length;
-			layout.invalidate(t.header);
+			layout.changed(t.header);
 			t.data = result.data;
 			if (t.data.length == 0) {
 				t.grid.setData([]);
@@ -1392,7 +1392,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				t._loadData();
 				if (t._filters.length == 0)
 					container.innerHTML = "<center><i>No filter</i></center>";
-				layout.invalidate(container);
+				layout.changed(container);
 			};
 		}
 		
@@ -1458,7 +1458,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						t._createFilter(new_filter, or_div, true);
 						or_div.removeChild(add_or);
 						or_div.appendChild(add_or);
-						layout.invalidate(container);
+						layout.changed(container);
 						t._loadData();
 					});
 				};
@@ -1505,7 +1505,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						if (t._filters.length == 0) filters_content.removeAllChildren();
 						t.addFilter(filter);
 						var tf = t._createFilter(filter, filters_content);
-						layout.invalidate(filters_content);
+						layout.changed(filters_content);
 						if (tf.isActive())
 							t._loadData();
 					});
@@ -1647,13 +1647,13 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				if (t.save_button) {
 					t.header_left.removeChild(t.save_button);
 					t.save_button = null;
-					layout.invalidate(t.header_left);
+					layout.changed(t.header_left);
 				}
 			} else {
 				// display save button
 				if (t.save_button == null) {
 					t.save_button = document.createElement("BUTTON");
-					var img = document.createElement("IMG"); img.onload = function() { layout.invalidate(t.header); };
+					var img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 					t.save_button.title = "Save Changes";
 					img.src = theme.icons_16.save;
 					t.save_button.onclick = function() { t._save(); };
@@ -1663,7 +1663,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					else
 						t.header_left.appendChild(t.save_button);
 					window.pnapplication.dataUnsaved(container.id);
-					layout.invalidate(t.header_left);
+					layout.changed(t.header_left);
 					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = "red"; t.save_button.style.backgroundColor = "red"; },100);
 					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = ""; t.save_button.style.backgroundColor = ""; },400);
 					setTimeout(function() { if (!t.save_button) return; t.save_button.style.borderColor = "red"; t.save_button.style.backgroundColor = "red"; },600);
@@ -1688,7 +1688,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.header_left.removeChild(t.save_button);
 			t.save_button = null;
 			window.pnapplication.dataSaved(container.id);
-			layout.invalidate(t.header_left);
+			layout.changed(t.header_left);
 		}
 	};
 	/** Save all edited data */
@@ -1734,7 +1734,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				if (t.save_button) {
 					t.header_left.removeChild(t.save_button);
 					t.save_button = null;
-					layout.invalidate(t.header_left);
+					layout.changed(t.header_left);
 					window.pnapplication.dataSaved(container.id);
 				}
 			}

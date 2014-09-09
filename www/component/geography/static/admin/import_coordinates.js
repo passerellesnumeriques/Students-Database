@@ -826,7 +826,7 @@ function match_division_level_names(container, country, country_data, division_i
 				map.fitToShapes();
 			};
 		}
-		layout.invalidate(remaining_db_content);
+		layout.changed(remaining_db_content);
 	};
 	var add_to_match = function(name) {
 		var div = document.createElement("DIV");
@@ -839,7 +839,7 @@ function match_division_level_names(container, country, country_data, division_i
 		radios_names.push(radio);
 		div.appendChild(createGadmLink(name, radio));
 		createAddButton(div, name);
-		layout.invalidate(names_content);
+		layout.changed(names_content);
 	};
 	var add_matching = function(i) {
 		var div = document.createElement("DIV");
@@ -885,7 +885,7 @@ function match_division_level_names(container, country, country_data, division_i
 		};
 		
 		matching_content.appendChild(div);
-		layout.invalidate(matching_content);
+		layout.changed(matching_content);
 	};
 	for (var i = 0; i < areas.length; ++i) {
 		if (matches[i] == null) continue;
@@ -983,7 +983,7 @@ function match_division_level_names(container, country, country_data, division_i
 		map = gm;
 		map.addRect(parent_area.south, parent_area.west, parent_area.north, parent_area.east, "#6060F0", "#D0D0F0", 0.2);
 		map.fitToShapes();
-		layout.invalidate(container);
+		layout.changed(container);
 	});
 	
 	// link button
@@ -1014,7 +1014,7 @@ function match_division_level_names(container, country, country_data, division_i
 		cb_show.checked = "";
 		cb_show.onchange();
 	};
-	layout.invalidate(container);
+	layout.changed(container);
 	return false;
 }
 
@@ -1687,7 +1687,7 @@ function ResultsList(container, from, results, color, coord, map) {
 		};
 		line.appendChild(link);
 	}
-	layout.invalidate(container);
+	layout.changed(container);
 }
 
 function ImportKML(container, ondone) {
@@ -1777,7 +1777,7 @@ function SearchGeonames(container, country_id, name, featureCode, ondone, auto_l
 	var launch = function() {
 		if (div) {
 			div.innerHTML = "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Searching...";
-			layout.invalidate(div);
+			layout.changed(div);
 		}
 		
 		var i = name.indexOf('(');
@@ -1829,7 +1829,7 @@ function SearchGoogle(container, country_id, name, types, area, ondone, auto_lau
 	var launch = function() {
 		if (div) {
 			div.innerHTML = "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Searching...";
-			layout.invalidate(div);
+			layout.changed(div);
 		}
 		
 		var requests = [];

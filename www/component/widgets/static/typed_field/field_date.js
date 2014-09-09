@@ -117,6 +117,7 @@ field_date.prototype._create = function(data) {
 			t.select.onchange = function() {
 				t._datachange();
 			};
+			t.focus = function() { t.select.select_day.focus(); };
 		});
 
 		this._timeoutSetData = null;

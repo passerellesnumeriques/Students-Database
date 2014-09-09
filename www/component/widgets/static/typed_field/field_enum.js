@@ -121,6 +121,7 @@ field_enum.prototype._create = function(data) {
 			this.element.style.width = "100%";
 			select.style.width = "100%";
 		};
+		this.focus = function() { select.focus(); };
 	} else {
 		this.get_text_from_data = function(data) {
 			var text = "invalid value: "+data;

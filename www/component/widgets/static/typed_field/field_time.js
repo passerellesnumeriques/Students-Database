@@ -53,6 +53,7 @@ field_time.prototype._create = function(data) {
 			t._datachange();
 		};
 		listenEvent(input, 'focus', function() { t.onfocus.fire(); });
+		this.focus = function() { input.focus(); };
 		this.element.appendChild(input);
 		this._getEditedData = function() {
 			return getMinutesTimeString(getTimeFromInput());

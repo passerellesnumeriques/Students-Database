@@ -48,7 +48,7 @@ function initResultsEdit(session_id,room_id,subjects,set_correct_answer){
         // avoid width computing from tab widget
         //layout.removeHandler('subj_results',layout._getHandlers('subj_results')[0]);
           //subj_tabs.content.style.width="";
-       layout.invalidate(subj_tabs.content);
+       layout.changed(subj_tabs.content);
        
       $('#subj_results').show();
       

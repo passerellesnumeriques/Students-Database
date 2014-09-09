@@ -670,7 +670,7 @@ class page_teachers_assignments extends Page {
 					}
 				}
 				td_hours.innerHTML = (total/nb_weeks).toFixed(2)+"h/week x "+nb_weeks+" = "+total+"h";
-				layout.invalidate(td_hours);
+				layout.changed(td_hours);
 			};
 			this.update();
 		}

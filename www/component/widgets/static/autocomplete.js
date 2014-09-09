@@ -27,7 +27,7 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 		this.input.onfocus = function(){ 
 			if (t.input.default_message) { 
 				t.input.value = ""; t.input.className = ""; t.input.default_message = false; 
-				layout.invalidate(container);
+				layout.changed(container);
 			} else 
 				t.input.select();
 		};
@@ -35,7 +35,7 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 			setTimeout(function(){
 				if (t.input.value == "") { 
 					t.input.value = default_message; t.input.className = "informative_text"; t.input.default_message = true; 
-					layout.invalidate(container);
+					layout.changed(container);
 				}; 
 				t.menu.hide();
 			},100); 
@@ -184,9 +184,10 @@ function autocomplete_menu(ac, onselectitem) {
 			animation.stop(this.anim);
 			this.anim = null;
 		}
-		var w = getWidth(this.div);
-		var h = getHeight(this.div);
-		var iw = getWidth(ac.input);
+		var knowledge = [];
+		var w = getWidth(this.div, knowledge);
+		var h = getHeight(this.div, knowledge);
+		var iw = getWidth(ac.input, knowledge);
 		if (w < iw) w = iw;
 		var x = absoluteLeft(ac.input);
 		var y = absoluteTop(ac.input);

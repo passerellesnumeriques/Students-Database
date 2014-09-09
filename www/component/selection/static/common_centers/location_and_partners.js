@@ -166,7 +166,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			require("address_text.js",function() {
 				var a = new address_text(address);
 				t._address_container.appendChild(a.element);
-				layout.invalidate(section_location.element);
+				layout.changed(section_location.element);
 			});
 		} else if (this.geographic_area_text != null) {
 			// we only have a geographic area
@@ -175,7 +175,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			// nothing
 			this._address_container.innerHTML = "<center style='color:red'><img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> <i>Please select a location</i></center>";
 		}
-		layout.invalidate(section_location.element);
+		layout.changed(section_location.element);
 	};
 	this._map = null;
 	this._marker = null;
@@ -476,7 +476,7 @@ function partnerRow(table, partner, editable, onchange) {
 				});
 			};
 		}
-		layout.invalidate(table);
+		layout.changed(table);
 	};
 	this._refresh();
 }

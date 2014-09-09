@@ -74,10 +74,11 @@ wizard_freeze_div.style.backgroundColor = "rgba(192, 192, 192, 0.5)";
 wizard_freeze_div.innerHTML = "<table style='width:100%;height:100%'><tr><td align=center valign=middle id='wizard_freezer'></td></tr></table>";
 function wizard_freeze() {
 	var frame = document.getElementById('wizard_page_content');
+	var knowledge = [];
 	wizard_freeze_div.style.top = absoluteTop(frame)+"px";
 	wizard_freeze_div.style.left = absoluteLeft(frame)+"px";
-	wizard_freeze_div.style.width = getWidth(frame)+"px";
-	wizard_freeze_div.style.height = getHeight(frame)+"px";
+	wizard_freeze_div.style.width = getWidth(frame,knowledge)+"px";
+	wizard_freeze_div.style.height = getHeight(frame,knowledge)+"px";
 	wizard_freeze_div.frozen = true;
 	frame.parentNode.appendChild(wizard_freeze_div);
 	document.getElementById('wizard_freezer').removeAllChildren();

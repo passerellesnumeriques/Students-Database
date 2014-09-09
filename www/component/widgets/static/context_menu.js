@@ -164,7 +164,7 @@ function context_menu(menu) {
 		w = menu.offsetWidth;
 		h = menu.offsetHeight;
 		if (min_width_is_from && w < from.offsetWidth) {
-			setWidth(menu, w = from.offsetWidth);
+			setWidth(menu, w = from.offsetWidth, []);
 		}
 		if (y+from.offsetHeight+h > window.top.getWindowHeight()) {
 			// not enough space below
@@ -215,7 +215,7 @@ function context_menu(menu) {
 		w = menu.offsetWidth;
 		h = menu.offsetHeight;
 		if (min_width_is_from && w < from.offsetWidth) {
-			setWidth(menu, w = from.offsetWidth);
+			setWidth(menu, w = from.offsetWidth, []);
 		}
 		if (y-h < 0) {
 			// not enough space above

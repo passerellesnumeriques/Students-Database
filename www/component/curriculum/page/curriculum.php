@@ -155,8 +155,8 @@ class page_curriculum extends Page {
 					else {
 						if (isset($_GET["locker"])) {
 						?>
-						<div style='font-size:10pt'>
-							<img src='<?php echo theme::$icons_16["error"];?>'/> <?php echo $_GET["locker"];?> is already editing a batch, you cannot edit it.
+						<div class='error_box' style='font-size:10pt'>
+							<img src='<?php echo theme::$icons_16["error"];?>' style='vertical-align:bottom'/> <?php echo $_GET["locker"];?> is already editing a batch, you cannot edit it at the same time.
 						</div>
 						<?php 
 						} else
@@ -560,7 +560,7 @@ class page_curriculum extends Page {
 								animation.appearsOnOver(tr,button);
 								td.appendChild(button);
 								button.onclick = function() { remove_category(this); };
-								layout.invalidate(content);
+								layout.changed(content);
 							});
 						}
 					);

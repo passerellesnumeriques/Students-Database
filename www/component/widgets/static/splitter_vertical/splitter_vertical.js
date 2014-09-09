@@ -24,27 +24,28 @@ function splitter_vertical(element, position) {
 	t._position = function() {
 		var w = t.element.clientWidth;
 		var h = t.element.clientHeight;
+		var knowledge = [];
 		if (t.part1.style.visibility == "visible") {
 			if (t.part2.style.visibility == "visible") {
 				// all visible
 				var sw = 7;
 				var x = Math.floor(w*t.position - sw/2);
-				setWidth(t.part1, x);
-				setHeight(t.part1, h);
+				setWidth(t.part1, x, knowledge);
+				setHeight(t.part1, h, knowledge);
 				t.separator.style.left = x+"px";
 				t.separator.style.height = h+"px";
 				t.part2.style.left = (x+sw)+"px";
-				setWidth(t.part2, w-x-sw-1);
-				setHeight(t.part2, h);
+				setWidth(t.part2, w-x-sw-1, knowledge);
+				setHeight(t.part2, h, knowledge);
 			} else {
 				// only left part
-				setWidth(t.part1, w);
-				setHeight(t.part1, h);
+				setWidth(t.part1, w, knowledge);
+				setHeight(t.part1, h, knowledge);
 			}
 		} else {
 			// only right part
-			setWidth(t.part2, w);
-			setHeight(t.part2, h);
+			setWidth(t.part2, w, knowledge);
+			setHeight(t.part2, h, knowledge);
 		}
 	};
 	
@@ -63,11 +64,11 @@ function splitter_vertical(element, position) {
 	t.part2.style.top = "0px";
 	t.part2.style.visibility = "visible";
 	element.insertBefore(t.separator, t.part2);
-	layout.invalidate(t.element);
+	layout.changed(t.element);
 	
 	t.positionChanged = new Custom_Event();
 	
-	layout.addHandler(t.element, t._position);
+	layout.listenElementSizeChanged(t.element, t._position);
 	
 	t._stop_move = function(ev, origin_w, this_w) {
 		unlistenEvent(this_w, 'blur', t._stop_move);
@@ -82,7 +83,7 @@ function splitter_vertical(element, position) {
 		x += diff;
 		t.position = x/w;
 		t.mouse_pos = mouse_x;
-		layout.invalidate(t.element);
+		layout.changed(t.element);
 		t.positionChanged.fire(t);
 	};
 	t.mouse_pos = 0;
@@ -106,13 +107,13 @@ function splitter_vertical(element, position) {
 		t.part2.style.top = '0px';
 		t.part2.style.width = w+'px';
 		t.part2.style.height = h+'px';
-		layout.invalidate(t.element);
+		layout.changed(t.element);
 	};
 	t.show_left = function() {
 		t.part1.style.visibility = 'visible';
 		t.part1.style.top = "0px";
 		t.separator.style.visibility = 'visible';
-		layout.invalidate(t.element);
+		layout.changed(t.element);
 	};
 	t.hide_right = function() {
 		var w = t.element.clientWidth;
@@ -124,21 +125,21 @@ function splitter_vertical(element, position) {
 		t.part1.style.top = '0px';
 		t.part1.style.width = w+'px';
 		t.part1.style.height = h+'px';
-		layout.invalidate(t.element);
+		layout.changed(t.element);
 	};
 	t.show_right = function() {
 		t.part2.style.visibility = 'visible';
 		t.part2.style.top = "0px";
 		t.separator.style.visibility = 'visible';
-		layout.invalidate(t.element);
+		layout.changed(t.element);
 	};
 	
 	t.remove = function() {
-		layout.removeHandler(t.element, t._position);
+		layout.unlistenElementSizeChanged(t.element, t._position);
 		t.element.removeChild(t.separator);
 		t.part1.style.position = 'static';
 		t.part2.style.position = 'static';
-		layout.invalidate(t.element);
+		layout.changed(t.element);
 	};
 
 	t._position();

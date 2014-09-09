@@ -261,7 +261,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 					button.style.marginRight = "10px";
 					content.appendChild(button);
 				}
-				layout.invalidate(content);
+				layout.changed(content);
 			});
 			pop.show();
 		} else {
@@ -307,7 +307,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 						element.style.width = Math.floor(value)+'px';
 						element.style.overflow = "";
 						if(value == element.endWidth)
-							layout.invalidate(element.parentNode);
+							layout.changed(element.parentNode);
 					});
 					t._td_partners.anim2 = animation.fadeIn(t._td_partners, 500, function(){
 						t._td_partners.style.position = 'static';
@@ -332,7 +332,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 					t._td_partners.anim1 = animation.create(t._td_partners, start, 0, 600, function(value, element){
 						element.style.width = Math.floor(value)+'px';
 						element.style.overflow = "hidden";
-						if (value == 0) layout.invalidate(t._td_partners.parentNode);
+						if (value == 0) layout.changed(t._td_partners.parentNode);
 					});
 					//Fade out
 					t._td_partners.anim2 = animation.fadeOut(t._td_partners,500,function(){

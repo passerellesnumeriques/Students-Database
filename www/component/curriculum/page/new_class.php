@@ -80,7 +80,7 @@ class page_new_class extends Page {
 				}
 				if (!err) validation_ok(name);
 			}
-			layout.invalidate(document.body);
+			layout.changed(document.body);
 			return !err;
 		}
 		function submit(ondone) {

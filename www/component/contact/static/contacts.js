@@ -28,17 +28,17 @@ function contacts(container, owner_type, owner_id, contacts, can_edit, can_add, 
 			var w = 0;
 			if (t.email)
 			for (var i = 0; i < t.email.tbody.childNodes.length; ++i) {
-				var we = getWidth(t.email.tbody.childNodes[i].childNodes[0]);
+				var we = getWidth(t.email.tbody.childNodes[i].childNodes[0],[]);
 				if (we > w) w = we;
 			}
 			if (t.phone)
 			for (var i = 0; i < t.phone.tbody.childNodes.length; ++i) {
-				var we = getWidth(t.phone.tbody.childNodes[i].childNodes[0]);
+				var we = getWidth(t.phone.tbody.childNodes[i].childNodes[0],[]);
 				if (we > w) w = we;
 			}
 			if (t.im)
 			for (var i = 0; i < t.im.tbody.childNodes.length; ++i) {
-				var we = getWidth(t.im.tbody.childNodes[i].childNodes[0]);
+				var we = getWidth(t.im.tbody.childNodes[i].childNodes[0],[]);
 				if (we > w) w = we;
 			}
 			if (t.email.col2) t.email.col2.style.width = "";

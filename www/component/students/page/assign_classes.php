@@ -208,7 +208,7 @@ class page_assign_classes extends Page {
 			}
 			echo "\tif (previous_classes) assign.addUnassignedButton(null,'From '+".json_encode($previous_batch_period["name"]).",function(){fromPreviousPeriod(this,assign);});\n";
 			echo "\tassign.onchange.add_listener(changed);\n";
-			echo "\tlayout.invalidate(assign.container);\n";
+			echo "\tlayout.changed(assign.container);\n";
 			echo "});\n";
 			echo "assigns.push(assign);\n";
 		}

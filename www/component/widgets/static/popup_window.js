@@ -39,7 +39,7 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content_container.innerHTML = content;
 			else
 				t.content_container.appendChild(content);
-			layout.invalidate(t.content);
+			layout.changed(t.content);
 		}
 	};
 	
@@ -99,7 +99,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			frame._post_url = url;
 			frame._post_data = post_data;
 		}
-		layout.invalidate(t.content_container);
+		layout.changed(t.content_container);
 		return frame;
 	};
 	
@@ -126,7 +126,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.footer.style.display = "";
 			if (!t.footer.parentNode)
 				t.popup.appendChild(t.footer);
-			layout.invalidate(t.footer);
+			layout.changed(t.footer);
 		}
 	};
 	t.removeButtons = function() {
@@ -136,7 +136,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.footer.display = "none";
 			if (t.footer.parentNode)
 				t.popup.removeChild(t.footer);
-			layout.invalidate(t.popup);
+			layout.changed(t.popup);
 		}
 	};
 	t.addFooter = function(html) {
@@ -144,7 +144,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.footer.style.display = "";
 		if (!t.footer.parentNode)
 			t.popup.appendChild(t.footer);
-		layout.invalidate(t.footer);
+		layout.changed(t.footer);
 	};
 	t.addIconTextButton = function(icon, text, id, onclick, onclick_param) {
 		var span = document.createElement("SPAN");
@@ -405,7 +405,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t._size_type = type;
 		if (!t.popup) return;
 		if (t.content.nodeName == "IFRAME") {
-			layout.removeHandler(t.content_container, t._layout_content);
+			layout.unlistenElementSizeChanged(t.content_container, t._layout_content);
 			switch (t._size_type) {
 			case "fit":
 				t.content_container.style.overflow = "auto";
@@ -441,10 +441,10 @@ function popup_window(title,icon,content,hide_close_button) {
 			switch (t._size_type) {
 			case "fit":
 				t.content_container.style.overflow = "auto";
-				layout.addHandler(t.content_container, t._layout_content);
+				layout.listenElementSizeChanged(t.content_container, t._layout_content);
 				break;
 			case "fixed":
-				layout.removeHandler(t.content_container, t._layout_content);
+				layout.unlistenElementSizeChanged(t.content_container, t._layout_content);
 				// handle bug of Chrome when content wants to take 100%
 				t.content_container.style.position = "relative";
 				t.content.style.position = "absolute";

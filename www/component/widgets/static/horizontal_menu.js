@@ -8,7 +8,7 @@ function HorizontalMenuItem(element) {
 		this.always_in_menu = true;
 	else
 		this.always_in_menu = false;
-	this.originalMargin = getComputedStyleSizes(element).marginTop;
+	this.originalMargin = getStyleSizes(element,[]).marginTop;
 }
 
 function horizontal_menu(menu, valign) {
@@ -21,11 +21,11 @@ function horizontal_menu(menu, valign) {
 	
 	t.addItem = function(element) {
 		t.items.push(new HorizontalMenuItem(element));
-		layout.invalidate(menu);
+		layout.changed(menu);
 	};
 	t.removeAll = function() {
 		t.items = [];
-		layout.invalidate(menu);
+		layout.changed(menu);
 	};
 	
 	while (menu.childNodes.length > 0) {
@@ -56,17 +56,17 @@ function horizontal_menu(menu, valign) {
 			t.items[i].element.style.display = 'inline-block';
 			t.items[i].element.style.whiteSpace = 'nowrap';
 			menu.appendChild(t.items[i].element);
-			var iw = getWidth(t.items[i].element);
+			var iw = getWidth(t.items[i].element,[]);
 			total += iw;
-			t.items[i].element.style.marginTop = t.items[i].element.originalMargin;
+			t.items[i].element.style.marginTop = (t.items[i].element.originalMargin)+'px';
 			if (t.valign) {
 				if (t.valign == "middle") {
 					if (t.items[i].element.offsetHeight > 0)
 						t.items[i].element.style.marginTop = Math.floor((h-t.items[i].element.offsetHeight)/2)+'px';
 				} else if (t.valign == "bottom") {
 					if (t.items[i].element.offsetHeight > 0) {
-						var s = getComputedStyleSizes(t.items[i].element);
-						t.items[i].element.style.marginTop = (h-t.items[i].element.offsetHeight-parseInt(s.marginBottom))+'px';
+						var s = getStyleSizes(t.items[i].element,[]);
+						t.items[i].element.style.marginTop = (h-t.items[i].element.offsetHeight-s.marginBottom)+'px';
 					}
 				}
 			}
@@ -116,5 +116,5 @@ function horizontal_menu(menu, valign) {
 	
 	menu.style.visibility = 'visible';
 	t.update();
-	layout.addHandler(menu, function() { t.update(); });
+	layout.listenElementSizeChanged(menu, function() { t.update(); });
 }

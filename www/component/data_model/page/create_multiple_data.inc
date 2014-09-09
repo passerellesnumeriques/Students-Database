@@ -252,7 +252,7 @@ function addRow() {
 	}
 	var row = grid.addRow(row_id, row_data);
 	row._is_new = true;
-	layout.invalidate(document.body);
+	layout.changed(document.body);
 }
 function removeRowButton(button) {
 	var row = grid.getContainingRow(button);

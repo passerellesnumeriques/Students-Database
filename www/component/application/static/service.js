@@ -144,7 +144,7 @@ window.service = {
 				head.appendChild(s);
 				container._attachedScripts.push(s);
 			}
-			layout.invalidate(container);
+			layout.changed(container);
 			if (ondone) ondone();
 		});
 	},

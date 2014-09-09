@@ -87,7 +87,7 @@ class page_is_main_page extends SelectionPage {
 			function refreshPage() {
 				is_list.reloadData();
 				loadISStatus();
-				layout.invalidate(document.body);
+				layout.changed(document.body);
 			}
 		</script>
 	

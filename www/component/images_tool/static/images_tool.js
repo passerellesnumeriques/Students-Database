@@ -419,7 +419,7 @@ function images_tool() {
 		if (!t.table) this._init_table();
 		t.table.appendChild(picture.tr);
 		t._pictures.push(picture);
-		layout.invalidate(t.container);
+		layout.changed(t.container);
 		return picture;
 	};
 	

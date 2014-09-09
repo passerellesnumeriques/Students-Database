@@ -331,9 +331,9 @@ function loadMenu(url) {
 				} else if (!item.hasAttribute("href")) {
 					// check if we have a sub-menu
 					if (i < items.length-1 && items[i+1].hasAttribute("href")) {
-						var this_size = getComputedStyleSizes(item);
-						var next_size = getComputedStyleSizes(items[i+1]);
-						if (parseInt(next_size.paddingLeft) > parseInt(this_size.paddingLeft)) {
+						var this_size = getStyleSizes(item, []);
+						var next_size = getStyleSizes(items[i+1], []);
+						if (next_size.paddingLeft > this_size.paddingLeft) {
 							item._click_item = items[i+1];
 							item.onclick = function() {
 								window.frames[this._click_item.getAttribute("target")].frameElement.src = this._click_item.getAttribute("href");
@@ -342,7 +342,7 @@ function loadMenu(url) {
 					}
 				}
 			}
-			layout.invalidate(menu_container);
+			layout.changed(menu_container);
 			var frame = document.getElementById('application_frame');
 			var win = getIFrameWindow(frame);
 			if (win && win.location && !frame._loading_application_page)
@@ -359,7 +359,7 @@ function loadPage(url) {
 		frame.src = url;
 	else
 		win.location.reload();
-	layout.invalidate(frame);
+	layout.changed(frame);
 }
 
 function pageLoaded(url) {
@@ -448,7 +448,7 @@ function pageLoaded(url) {
 	if (oks.length > 0)
 		oks[0].className = "application_left_menu_item selected";
 	document.getElementById('application_frame')._loading_application_page = false;
-	layout.invalidate(document.body);
+	layout.changed(document.body);
 }
 
 initPage();

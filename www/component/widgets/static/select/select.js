@@ -31,7 +31,7 @@ function select(container) {
 		document.body.appendChild(temp);
 		var t=this;
 		setTimeout(function() {
-			var w = getWidth(temp);
+			var w = getWidth(temp,[]);
 			if (w > t._max_width) {
 				t._max_width = w;
 				t._htmlContainer.style.width = w+"px";

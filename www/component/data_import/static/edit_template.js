@@ -95,7 +95,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 		t.excel_bar.setTitle("/static/excel/excel_16.png", "Example Excel File");
 		container.style.width = "100%";
 		container.style.height = "100%";
-		layout.invalidate(container);
+		layout.changed(container);
 		popup.showPercent(95,95);
 		if (!template)
 			this._askTypeOfImport();
@@ -216,7 +216,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 			};
 			t.frame_excel.src = "/dynamic/data_import/page/excel_upload?button=_upload";
 			waitFrameContentReady(t.frame_excel, function(win) { return win.is_excel_upload_button; }, function(win){
-				layout.invalidate(container);
+				layout.changed(container);
 				if (onready) onready(this);
 			});
 		});

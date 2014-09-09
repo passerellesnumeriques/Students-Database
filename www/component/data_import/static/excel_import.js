@@ -122,7 +122,7 @@ function excel_import(popup, container, onready) {
 		div_manual.style.marginLeft = "20px";
 		div_manual.appendChild(document.createTextNode("Select cells in the file, then click on 'Import' which will appear inside the selection"));
 		
-		layout.invalidate(t.left);
+		layout.changed(t.left);
 		
 		var header_rows_changed = function() {
 			var nb = t.header_rows_field.getCurrentData();
@@ -199,7 +199,7 @@ function excel_import(popup, container, onready) {
 				}
 				t.header_rows_field.onchange.add_listener(header_rows_changed);
 				header_rows_changed();
-				layout.invalidate(t.left);
+				layout.changed(t.left);
 			}
 		};
 		manual.onchange = function() {
@@ -227,7 +227,7 @@ function excel_import(popup, container, onready) {
 					}
 				}
 				t.header_rows_field.onchange.remove_listener(header_rows_changed);
-				layout.invalidate(t.left);
+				layout.changed(t.left);
 			}
 		};
 		// try to find columns titles
@@ -417,7 +417,7 @@ function excel_import(popup, container, onready) {
 				// nothing yet
 				if (td_where.parentNode == tr) {
 					tr.removeChild(td_where);
-					layout.invalidate(tr);
+					layout.changed(tr);
 				}
 				t._where_selected = {type:'add',row:0};
 				return;
@@ -515,7 +515,7 @@ function excel_import(popup, container, onready) {
 				};
 			}
 			if (td_where.parentNode != tr) tr.appendChild(td_where);
-			layout.invalidate(tr);
+			layout.changed(tr);
 		};
 		if (selected) {
 			radio.checked = "checked";

@@ -15,11 +15,11 @@ function header_bar(container, style) {
 		if (icon) {
 			var img = document.createElement("IMG");
 			img.src = icon;
-			img.onload = function() { layout.invalidate(container); };
+			img.onload = function() { layout.changed(container); };
 			this.title.appendChild(img);
 		}
 		this.title.appendChild(document.createTextNode(text));
-		layout.invalidate(container);
+		layout.changed(container);
 	};
 	
 	this.setTitleHTML = function(html) {
@@ -29,7 +29,7 @@ function header_bar(container, style) {
 			this.title.removeAllChildren();
 			this.title.appendChild(html);
 		}
-		layout.invalidate(container);
+		layout.changed(container);
 	};
 	
 	this.addMenuItem = function(html) {

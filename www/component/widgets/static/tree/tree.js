@@ -545,7 +545,7 @@ function tree(container) {
 						line.style.height = "6px";
 					} else {
 						line.style.bottom = "5px";
-						line.style.height = (getHeight(item.tr)-5)+"px";
+						line.style.height = (getHeight(item.tr,[])-5)+"px";
 					}
 					line.style.borderLeft = "1px solid #A0A0A0";
 					item.head.appendChild(line);
@@ -614,7 +614,7 @@ function tree(container) {
 	
 	this._create();
 	this._build_from_html();
-	layout.addHandler(container, function() {
+	layout.listenInnerElementsChanged(container, function() {
 		t._refresh_heads();
 	});
 }

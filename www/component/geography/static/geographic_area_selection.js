@@ -173,7 +173,7 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 		var area_id = select.value;
 		var area = area_id <= 0 ? null : window.top.geography.getAreaFromDivision(this.country_data, area_id, division_index);
 		this._setDivision(division_index, area);
-		layout.invalidate(container);
+		layout.changed(container);
 		for (var i = this.selects.length-1; i >= 0; --i) {
 			var value = this.selects[i].value;
 			if (value > 0) {
@@ -273,7 +273,7 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 			t.setAreaId(area_id);
 			t.createAutoFillInput();
 			if (onready) onready(t);
-			layout.invalidate(container);
+			layout.changed(container);
 			window.top.geography.startComputingSearchDictionary(country_data);
 		});
 	});

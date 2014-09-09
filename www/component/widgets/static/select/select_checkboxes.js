@@ -36,7 +36,7 @@ function select_checkboxes(container) {
 		document.body.appendChild(temp);
 		var t=this;
 		setTimeout(function() {
-			var w = getWidth(temp);
+			var w = temp.offsetWidth;
 			if (w > t._max_width) {
 				t._max_width = w;
 				t._htmlContainer.style.width = w+"px";
@@ -122,7 +122,7 @@ function select_checkboxes(container) {
 		temp.style.top = "-10000px";
 		document.body.appendChild(temp);
 		setTimeout(function() {
-			var w = getWidth(temp);
+			var w = temp.offsetWidth;
 			if (w > t._max_width) {
 				t._max_width = w;
 				t._htmlContainer.style.width = w+"px";

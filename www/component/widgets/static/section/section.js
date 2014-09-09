@@ -59,7 +59,7 @@ function sectionFromHTML(container) {
 	var parent = container.parentNode;
 	parent.insertBefore(s.element, container);
 	parent.removeChild(container);
-	layout.invalidate(parent);
+	layout.changed(parent);
 	return s;
 }
 
@@ -86,7 +86,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar.appendChild(element);
 		element.style.flex = "none";
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 	};
 	/** Add an element on the left of the title bar
 	 * @param {Element|String} element the HTML element to add
@@ -95,12 +95,12 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar_left.appendChild(element);
 		element.style.flex = "none";
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 	};
 	/** Remove all elements on the left of the title bar (previously added using addToolLeft */
 	this.resetToolLeft = function() {
 		this.toolbar_left.removeAllChildren();
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 	};
 	/** Add an element on the right of the title bar
 	 * @param {Element|String} element the HTML element to add
@@ -109,12 +109,12 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		if (typeof element == 'string') { var d = document.createElement("DIV"); d.innerHTML = element; element = d; }
 		this.toolbar_right.appendChild(element);
 		element.style.flex = "none";
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 	};
 	/** Remove all elements on the right of the title bar (previously added using addToolRight */
 	this.resetToolRight = function() {
 		this.toolbar_right.removeAllChildren();
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 	};
 	/** Add an element in the footer. The footer will become visible when the first element will be added.
 	 * @param {Element|String} element the HTML element to add
@@ -128,7 +128,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		}
 		this.footer.appendChild(element);
 		this.footer.className = "footer";
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 	};
 	this.addButton = function(icon, text, css, onclick) {
 		var button = document.createElement("BUTTON");
@@ -147,7 +147,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	this.resetToolBottom = function() {
 		this.footer.className = "footer_empty";
 		this.footer.removeAllChildren();
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 	};
 	
 	/** Creates the section */
@@ -167,7 +167,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		if (icon) {
 			this.icon = document.createElement("IMG");
 			this.icon.src = icon;
-			this.icon.onload = function() { layout.invalidate(t.element); };
+			this.icon.onload = function() { layout.changed(t.element); };
 			this.title_container.appendChild(this.icon);
 		}
 		this.title = document.createElement("DIV");
@@ -213,7 +213,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 			this.collapse_container.style.padding = "4px";
 			this.collapse_button = document.createElement("IMG");
 			this.collapse_button.src = get_script_path("section.js")+(collapsed?"expand.png":"collapse.png");
-			this.collapse_button.onload = function() { layout.invalidate(t.element); };
+			this.collapse_button.onload = function() { layout.changed(t.element); };
 			this.collapse_button.style.cursor = 'pointer';
 			this.collapse_button.onclick = function() { t.toggleCollapseExpand(); }; 
 			this.collapse_container.appendChild(this.collapse_button);
@@ -256,7 +256,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 				t.content_container.anim1 = animation.create(t.content_container, 0, t.content_container.originalHeight, 500, function(value, element) {
 					element.style.height = Math.floor(value)+'px';
 					element.style.overflow = "hidden";
-					if (value == t.content_container.originalHeight) layout.invalidate(t.element.parentNode);
+					if (value == t.content_container.originalHeight) layout.changed(t.element.parentNode);
 				});
 				t.content_container.anim2 = animation.fadeIn(t.content_container, 600, function() {
 					t.content_container.style.position = 'static';
@@ -281,7 +281,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 				t.content_container.anim1 = animation.create(t.content_container, start, 0, 600, function(value, element) {
 					element.style.height = Math.floor(value)+'px';
 					element.style.overflow = "hidden";
-					if (value == 0) layout.invalidate(t.element.parentNode);
+					if (value == 0) layout.changed(t.element.parentNode);
 				});
 				t.content_container.anim2 = animation.fadeOut(t.content_container, 500, function() {
 					t.content_container.style.position = 'absolute';

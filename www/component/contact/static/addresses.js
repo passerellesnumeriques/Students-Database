@@ -29,7 +29,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	/** Called each time a modification is done (edit, add, or remove) */
 	this.onchange = new Custom_Event();
 	this.onchange.add_listener(function() {
-		layout.invalidate(container);
+		layout.changed(container);
 	});
 	
 	/** Create the table that contains the addresses */
@@ -196,7 +196,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 					};
 					if (is_new) { is_new = false; div_data.onclick(null,true); }
 				}
-				layout.invalidate(div_data);
+				layout.changed(div_data);
 			};
 			create(address);
 		});

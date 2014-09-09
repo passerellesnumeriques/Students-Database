@@ -9,14 +9,14 @@ class page_edit_batch extends Page {
 		$locked_by = null;
 		$lock_spe = DataBaseLock::lockTable("Specialization", $locked_by);
 		if ($lock_spe == null) {
-			echo "<div class='error'>Data are already edited by ".$locked_by.".</div>";
+			echo "<div class='error_box'>This batch is currently edited by ".$locked_by.". You cannot edit it at the same time.</div>";
 			return;
 		}
 		DataBaseLock::generateScript($lock_spe);
 		if (isset($_GET["id"])) {
 			$lock_batch = DataBaseLock::lockRow("StudentBatch", $_GET["id"], $locked_by);
 			if ($lock_batch == null) {
-				echo "<div class='error'>Data are already edited by ".$locked_by.".</div>";
+				echo "<div class='error_box'>This batch is currently edited by ".$locked_by.". You cannot edit it at the same time.</div>";
 				return;
 			}
 			DataBaseLock::generateScript($lock_batch);
@@ -367,7 +367,7 @@ function updatePeriodRow(period) {
 		}
 	} else
 		period.academic_period = 0;
-	layout.invalidate(period.td_period);
+	layout.changed(period.td_period);
 	if (index < periods.length-1)
 		updatePeriodRow(periods[index+1]);
 	else {
@@ -427,7 +427,7 @@ function createPeriodRow(period, before) {
 			selected_specializations = [];
 			refreshSpecializations();
 		}
-		layout.invalidate(before.parentNode);
+		layout.changed(before.parentNode);
 	};
 /*	// disable remove of previous periods
 	for (var i = 0; i < periods.length; ++i) {
@@ -581,7 +581,7 @@ function editSpecializations() {
 			if (!arrayEquals(selected_specializations, list)) pnapplication.dataUnsaved('Batch');
 			selected_specializations = list;
 			refreshSpecializations();
-			layout.invalidate(document.body);
+			layout.changed(document.body);
 			popup.close();
 		});
 		popup.show();

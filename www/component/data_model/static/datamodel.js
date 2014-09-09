@@ -79,7 +79,7 @@ window.datamodel = {
 		var n=text_node;
 		var listener = function(value) {
 			n.nodeValue = value;
-			if (n.parentNode) layout.invalidate(n.parentNode);
+			if (n.parentNode) layout.changed(n.parentNode);
 		};
 		window.top.datamodel.addCellChangeListener(win, table, column, row_key, listener);
 		n.parentNode.ondomremoved(function(element) {
@@ -91,7 +91,7 @@ window.datamodel = {
 		var listener = function(value) {
 			s.removeAllChildren();
 			s.appendChild(document.createTextNode(value));
-			if (s.parentNode) layout.invalidate(s.parentNode);
+			if (s.parentNode) layout.changed(s.parentNode);
 		};
 		window.top.datamodel.addCellChangeListener(win, table, column, row_key, listener);
 		s.ondomremoved(function(element) {

@@ -53,7 +53,7 @@ CurriculumTreeNode.prototype = {
 		footer.removeAllChildren();
 		var info = this.createInfo();
 		if (info) footer.appendChild(info);
-		layout.invalidate(document.getElementById('tree_footer').parentNode);
+		layout.changed(document.getElementById('tree_footer').parentNode);
 		
 		// make sure it is visible (scroll if necessary)
 		if (this.item.tr)

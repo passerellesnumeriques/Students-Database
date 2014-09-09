@@ -65,7 +65,7 @@ function domainChanged() {
 		msg.style.display = '';
 		msg.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> This domain does not support this feature";
 	}
-	layout.invalidate(msg);
+	layout.changed(msg);
 }
 
 <?php if (isset($input["domain"])) echo "domainChanged();";?>

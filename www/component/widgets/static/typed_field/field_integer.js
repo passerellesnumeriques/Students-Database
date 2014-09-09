@@ -115,6 +115,7 @@ field_integer.prototype._create = function(data) {
 				if (ev.isEnter) listener(t);
 			});
 		};
+		this.focus = function() { t.input.focus(); };
 		this.fillWidth = function() {
 			_fw = true;
 			this.element.style.width = "100%";

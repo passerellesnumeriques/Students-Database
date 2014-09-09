@@ -349,7 +349,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			this.span_actions.appendChild(img);
 			img.ondomremoved(function(img) { img.data.element = null; img.data = null; });
 		}
-		layout.invalidate(this.th);
+		layout.changed(this.th);
 	};
 	this._onsort = function(sort_order) {
 		// cancel sorting of other columns
@@ -439,8 +439,8 @@ function grid(element) {
 		t.header_rows[0].parentNode.appendChild(tr);
 		// increase rowSpan of last one
 		for (var i = 0; i < t.header_rows[0].childNodes.length; i++)
-			t.header_rows[0].childNodes[i].col.increaseRowSpan();
-		layout.invalidate(t.element);
+			if (t.header_rows[0].childNodes[i].col) t.header_rows[0].childNodes[i].col.increaseRowSpan();
+		layout.changed(t.element);
 	};
 	t._addColumnContainer = function(container, level, index) {
 		container.grid = this;
@@ -468,7 +468,7 @@ function grid(element) {
 				if (typeof index != 'undefined') index++;
 			}
 		}
-		layout.invalidate(t.element);
+		layout.changed(t.element);
 		return index;
 	};
 	t._addFinalColumn = function(col, level, index) {
@@ -551,7 +551,7 @@ function grid(element) {
 				}
 			}
 		}
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 	};
 	t._subColumnAdded = function(container, final_col) {
 		// get the top level
@@ -692,7 +692,7 @@ function grid(element) {
 			}
 		}
 		t.apply_filters();
-		layout.invalidate(this.element);
+		layout.changed(this.element);
 	};
 	t.rebuildColumn = function(column) {
 		column._refresh_title();
@@ -748,7 +748,7 @@ function grid(element) {
 			for (var i = 0; i < t.table.childNodes.length; ++i)
 				t.table.childNodes[i].insertBefore(t._createSelectionTD(), t.table.childNodes[i].childNodes[0]);
 		}
-		layout.invalidate(this.table);
+		layout.changed(this.table);
 	};
 	t.selectAll = function() {
 		if (!t.selectable) return;
@@ -882,11 +882,14 @@ function grid(element) {
 				if (t.table.parentNode.childNodes[i].nodeName == "TFOOT") { footer = t.table.parentNode.childNodes[i]; break; }
 			if (footer && footer.childNodes.length > 0 && footer.childNodes[0]._for_fixed) footer.removeChild(footer.childNodes[0]);
 			// remove fixed width
-			for (var i = 0; i < t.thead.childNodes.length; ++i)
-				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j) {
-					t.thead.childNodes[i].childNodes[j].style.width = "";
-					t.thead.childNodes[i].childNodes[j].style.minWidth = "";
-				}
+			if (t.selectable) {
+				t.thead.childNodes[0].childNodes[0].style.width = "";
+				t.thead.childNodes[0].childNodes[0].style.minWidth = "";
+			}
+			for (var i = 0; i < t.columns.length; ++i) {
+				t.columns[i].th.style.width = "";
+				t.columns[i].th.style.minWidth = "";
+			}
 			// put back original fixed col width
 			for (var i = 0; i < t.colgroup.childNodes.length; ++i) {
 				if (t.colgroup.childNodes[i]._width) {
@@ -897,14 +900,16 @@ function grid(element) {
 					t.colgroup.childNodes[i].style.minWidth = "";
 				}
 			}
+			var knowledge = [];
 			// fix the size of the container
-			var total_width = getWidth(t.element);
-			setWidth(t.element, total_width-1);
+			var total_width = getWidth(t.element, knowledge);
+			setWidth(t.element, total_width-1, knowledge);
 			// take the width of each th
-			for (var i = 0; i < t.thead.childNodes.length; ++i)
-				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j)
-					t.thead.childNodes[i].childNodes[j]._width = getWidth(t.thead.childNodes[i].childNodes[j]);
-			setWidth(t.element, total_width);
+			if (t.selectable)
+				t.thead.childNodes[0].childNodes[0]._width = getWidth(t.thead.childNodes[0].childNodes[0], knowledge);
+			for (var i = 0; i < t.columns.length; ++i)
+				t.columns[i].th._width = getWidth(t.columns[i].th, knowledge);
+			setWidth(t.element, total_width, knowledge);
 			// take the width of each column
 			var widths = [];
 			if (t.selectable)
@@ -912,11 +917,14 @@ function grid(element) {
 			for (var i = 0; i < t.columns.length; ++i)
 				widths.push(t.columns[i].th._width);
 			// fix the width of each th
-			for (var i = 0; i < t.thead.childNodes.length; ++i)
-				for (var j = 0; j < t.thead.childNodes[i].childNodes.length; ++j) {
-					setWidth(t.thead.childNodes[i].childNodes[j], t.thead.childNodes[i].childNodes[j]._width);
-					t.thead.childNodes[i].childNodes[j].style.minWidth = t.thead.childNodes[i].childNodes[j].style.width;
-				}
+			if (t.selectable) {
+				setWidth(t.thead.childNodes[0].childNodes[0], t.thead.childNodes[0].childNodes[0]._width, knowledge);
+				t.thead.childNodes[0].childNodes[0].style.minWidth = t.thead.childNodes[0].childNodes[0].style.width;
+			}
+			for (var i = 0; i < t.columns.length; ++i) {
+				setWidth(t.columns[i].th, t.columns[i].th._width, knowledge);
+				t.columns[i].th.style.minWidth = t.columns[i].th.style.width;
+			}
 			// fix the width of each column
 			var tr = document.createElement("TR");
 			tr._for_fixed = true;
@@ -939,8 +947,10 @@ function grid(element) {
 				var div = document.createElement("DIV");
 				td.appendChild(div);
 				tr.appendChild(td);
-				setWidth(td, widths[i]);
-				setWidth(div, widths[i]);
+				//setWidth(td, widths[i], knowledge);
+				//setWidth(div, widths[i], knowledge);
+				div.style.width = widths[i]+"px";
+				div.style.minWidth = widths[i]+"px";
 			}
 			tr.style.height = "0px";
 			// put the thead as relative
@@ -950,7 +960,7 @@ function grid(element) {
 			t.thead.style.position = "absolute";
 			t.thead.style.top = "0px";
 			t.thead.style.left = (-t.grid_element.scrollLeft)+"px";
-			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft); 
+			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft, knowledge); 
 			t.thead.style.overflow = "hidden";
 			//t.table.parentNode.style.marginRight = "1px";
 		};
@@ -961,7 +971,17 @@ function grid(element) {
 			t.thead.style.left = (-t.grid_element.scrollLeft)+"px";
 			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft); 
 		};
-		layout.addHandler(t.element, update);
+		var update_timeout = null;
+		var updater = function() {
+			if (update_timeout) return;
+			update_timeout = setTimeout(function() {
+				update_timeout = null;
+				update();
+			},10);
+		};
+		layout.listenElementSizeChanged(t.element, updater);
+		layout.listenInnerElementsChanged(t.thead, updater);
+		layout.listenInnerElementsChanged(t.table, updater);
 	};
 
 	/**
@@ -1034,7 +1054,7 @@ function grid(element) {
 			}
 		if (!sorted)
 			t.table.appendChild(tr);
-		layout.invalidate(t.element);
+		layout.changed(t.element);
 		tr.ondomremoved(function(tr) { tr.row_data = null; });
 		return tr;
 	};
@@ -1087,7 +1107,7 @@ function grid(element) {
 			for (var name in style)
 				td.style[name] = style[name];
 		t.table.appendChild(tr);
-		layout.invalidate(t.table);
+		layout.changed(t.table);
 		return tr;
 	};
 	
@@ -1123,16 +1143,16 @@ function grid(element) {
 	
 	t.removeRowIndex = function(index) {
 		t.table.removeChild(t.table.childNodes[index]);
-		layout.invalidate(this.table);
+		layout.changed(this.table);
 	};
 	t.removeRow = function(row) {
 		t.table.removeChild(row);
-		layout.invalidate(this.table);
+		layout.changed(this.table);
 	};
 	t.removeAllRows = function() {
 		while (t.table.childNodes.length > 0)
 			t.table.removeChild(t.table.childNodes[0]);
-		layout.invalidate(this.table);
+		layout.changed(this.table);
 	};
 	
 	t.getCellContent = function(row,col) {
@@ -1222,7 +1242,7 @@ function grid(element) {
 		t.columns = [];
 		t.setSelectable(!t.selectable);
 		t.setSelectable(!t.selectable);
-		layout.invalidate(this.table);
+		layout.changed(this.table);
 	};
 	
 	t.startLoading = function() {
@@ -1340,6 +1360,46 @@ function grid(element) {
 		table.appendChild(t.table);
 		t.element.appendChild(t.grid_element);
 		table.className = "grid";
+		// listen to keys
+		var getCell = function(element) {
+			while (element && element != document.body) {
+				if (element.nodeName == 'TD' && element.field)
+					return element;
+				element = element.parentNode;
+			}
+			return null;
+		};
+		listenEvent(window,'keyup',function(ev) {
+			var e = getCompatibleKeyEvent(ev);
+			if (e.isArrowUp) {
+				var cell = getCell(ev.target);
+				if (!cell) return;
+				var row = cell.parentNode;
+				var target_row = row.previousSibling;
+				if (!target_row) return;
+				var index;
+				for (index = row.childNodes.length-1; index >= 0; --index) if (row.childNodes[index] == cell) break;
+				if (index < 0) return;
+				var target_cell = target_row.childNodes[index];
+				if (!target_cell || !target_cell.field) return;
+				target_cell.field.focus();
+				return;
+			}
+			if (e.isArrowDown) {
+				var cell = getCell(ev.target);
+				if (!cell) return;
+				var row = cell.parentNode;
+				var target_row = row.nextSibling;
+				if (!target_row) return;
+				var index;
+				for (index = row.childNodes.length-1; index >= 0; --index) if (row.childNodes[index] == cell) break;
+				if (index < 0) return;
+				var target_cell = target_row.childNodes[index];
+				if (!target_cell || !target_cell.field) return;
+				target_cell.field.focus();
+				return;
+			}
+		});
 	};
 	t._create_cell = function(column, data, parent, ondone, ondone_param) {
 		t._cells_loading++;
@@ -1350,7 +1410,7 @@ function grid(element) {
 			t._cells_loading--;
 			t._check_loaded();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
-			layout.invalidate(parent);
+			layout.changed(parent);
 		});
 	},
 	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {
@@ -1361,7 +1421,7 @@ function grid(element) {
 			if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
 			parent.appendChild(f.getHTMLElement());
 			ondone(f);
-			layout.invalidate(parent);
+			layout.changed(parent);
 		});
 	};
 	

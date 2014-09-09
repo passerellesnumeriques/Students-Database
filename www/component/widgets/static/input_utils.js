@@ -1,8 +1,8 @@
 function inputAutoresize(input, min_size) {
 	input._min_size = min_size;
 	input.mirror = document.createElement("SPAN");
-	var style = getComputedStyle(input);
 	if (input.style) {
+		var style = getComputedStyle(input);
 		if (input.style.fontSize)
 			input.mirror.style.fontSize = input.style.fontSize;
 		else if (style.fontSize) input.mirror.style.fontSize = style.fontSize;
@@ -21,18 +21,19 @@ function inputAutoresize(input, min_size) {
 	document.body.appendChild(input.mirror);
 	var last = 0;
 	input.onresize = null;
+	var knowledge = [];
 	var update = function() {
 		input.mirror.removeAllChildren();
 		var s = input.value;
 		input.mirror.appendChild(document.createTextNode(s));
-		var w = getWidth(input.mirror);
+		var w = getWidth(input.mirror, knowledge);
 		if (input._min_size < 0) {
 			// must fill the width of its container
 			input.style.width = "100%";
 			if (w < 15) w = 15;
 			input.style.minWidth = w+"px";
 			if (input.offsetWidth != last) {
-				layout.invalidate(input);
+				layout.changed(input);
 				if (input.onresize) input.onresize();
 				last = input.offsetWidth;
 			}
@@ -41,7 +42,7 @@ function inputAutoresize(input, min_size) {
 			if (w < min) w = min;
 			input.style.width = w+"px";
 			if (last != w) {
-				layout.invalidate(input);
+				layout.changed(input);
 				if (input.onresize) input.onresize();
 			}
 			last = w;

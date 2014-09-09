@@ -76,7 +76,7 @@ function top_status_widget() {
 	
 	t.waiting_components = 0;
 	
-	layout.invalidate(container);
+	layout.changed(container);
 
 	t.getTotalScenarios = function() {
 		var nb = 0;
@@ -526,8 +526,8 @@ function component_widget(component) {
 		else
 			t.span_scenarios_failed.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:middle;padding-left:3px'/> "+nb+" failed";
 		top_status.update_status();
-		layout.invalidate(t.content);
-		layout.invalidate(t.collapsable.element);
+		layout.changed(t.content);
+		layout.changed(t.collapsable.element);
 	};
 	t.update_status();
 	

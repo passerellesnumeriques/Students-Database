@@ -188,7 +188,7 @@ function addPeriod(period) {
 			periods[periods.length-1].remove_button.disabled = "";
 			periods[periods.length-1].remove_button.style.visibility = "visible";
 		}
-		layout.invalidate(table);
+		layout.changed(table);
 	};
 	for (var i = 0; i < periods.length; ++i) {
 		periods[i].remove_button.disabled = "disabled";
@@ -218,7 +218,7 @@ function addPeriod(period) {
 				}
 			} 
 		}
-		layout.invalidate(span_end);
+		layout.changed(span_end);
 	};
 	span_start.onmouseover = function() { this.style.textDecoration = "underline"; };
 	span_start.onmouseout = function() { this.style.textDecoration = "none"; };

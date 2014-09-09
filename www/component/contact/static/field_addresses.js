@@ -69,7 +69,7 @@ field_addresses.prototype._create = function(data) {
 						t.tr.appendChild(td);
 						td.appendChild(text.element);
 						td.style.verticalAlign = "top";
-						layout.invalidate(t.element);
+						layout.changed(t.element);
 					}
 				});
 				return data;
@@ -97,7 +97,7 @@ field_addresses.prototype._create = function(data) {
 				var area = addr.geographic_area;
 				var div = document.createElement("DIV"); this.element.appendChild(div);
 				div.style.whiteSpace = "nowrap";
-				layout.invalidate(this.element);
+				layout.changed(this.element);
 				if (area == null) {
 					div.style.fontStyle = "italic";
 					div.style.color = "#808080";

@@ -156,57 +156,97 @@ function getTableRows(table) {
 }
 
 //useful functions to set height and width, taking into account borders, margins, and paddings
-function setWidth(element, width) {
+function getStyleSizes(element, style_knowledge) {
+	if (element.nodeType != 1) {
+		return {
+			borderLeftWidth: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomWidth: 0,
+			marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: 0,
+			paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0
+		};
+	}
+	for (var i = 0; i < style_knowledge.length; ++i)
+		if (style_knowledge[i].element == element)
+			return style_knowledge[i].sizes;
+	var ss = getComputedStyle(element);
+	var s;
+	if (ss == null)
+		s = {
+			borderLeftWidth: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomWidth: 0,
+			marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: 0,
+			paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0
+		};
+	else {
+		s = {};
+		if (ss.width.indexOf('%') > 0 || ss.width == "auto") s.width = element.scrollWidth; else s.width = parseInt(ss.width);
+		if (ss.height.indexOf('%') > 0 || ss.height == "auto") s.height = element.scrollHeight; else s.height = parseInt(ss.height);
+		s.borderLeftWidth = _styleBorderValue(ss.borderLeftStyle, ss.borderLeftWidth);
+		s.borderRightWidth = _styleBorderValue(ss.borderRightStyle, ss.borderRightWidth);
+		s.borderTopWidth = _styleBorderValue(ss.borderTopStyle, ss.borderTopWidth);
+		s.borderBottomWidth = _styleBorderValue(ss.borderBottomStyle, ss.borderBottomWidth);
+		s.marginLeft = _styleMargin(ss.marginLeft);
+		s.marginRight = _styleMargin(ss.marginRight);
+		s.marginTop = _styleMargin(ss.marginTop);
+		s.marginBottom = _styleMargin(ss.marginBottom);
+		s.paddingTop = _stylePadding(ss.paddingTop);
+		s.paddingBottom = _stylePadding(ss.paddingBottom);
+		s.paddingLeft = _stylePadding(ss.paddingLeft);
+		s.paddingRight = _stylePadding(ss.paddingRight);
+		// we compute the border, as follow, because using the style may be wrong in case we have a border-collapse
+		var w = element.offsetWidth; // excluding margin
+		w -= element.clientWidth; // remove content width + the padding => remaining is border
+		if (s.borderLeftWidth+s.borderRightWidth != w) {
+			s.borderLeftWidth = w-s.borderRightWidth;
+			if (s.borderLeftWidth < 0) {
+				s.borderRightWidth += s.borderLeftWidth;
+				s.borderLeftWidth = 0;
+			}
+		}
+		w = element.offsetHeight; // excluding margin
+		w -= element.clientHeight; // remove content width + the padding => remaining is border
+		if (s.borderTopWidth+s.borderBottomWidth != w) {
+			s.borderTopWidth = w-s.borderBottomWidth;
+			if (s.borderTopWidth < 0) {
+				s.borderBottomWidth += s.borderTopWidth;
+				s.borderYopWidth = 0;
+			}
+		}
+	}
+	style_knowledge.push({element:element,sizes:s});
+	return s;
+}
+
+function setWidth(element, width, style_knowledge) {
 	var win = getWindowFromElement(element);
-	if (win != window) { win.setWidth(element, width); return; }
-	var s = getComputedStyleSizes(element);
+	if (win != window) { win.setWidth(element, width, style_knowledge); return; }
+	var s = getStyleSizes(element, style_knowledge);
 	// we compute the border, as follow, because using the style may be wrong in case we have a border-collapse
-	var w = element.offsetWidth; // excluding margin
-	w -= element.clientWidth; // remove content width + the padding => remaining is border
-	width -= w;
-	width -= parseInt(s.marginLeft);
-	width -= parseInt(s.marginRight);
-	width -= parseInt(s.paddingLeft);
-	width -= parseInt(s.paddingRight);
-	element.style.width = width+"px";
+	var w = width;
+	w -= s.borderLeftWidth + s.borderRightWidth;
+	w -= s.marginLeft + s.marginRight;
+	w -= s.paddingLeft + s.paddingRight;
+	element.style.width = w+"px";
 }
-function setHeight(element, height) {
+function setHeight(element, height, style_knowledge) {
 	var win = getWindowFromElement(element);
-	if (win != window) { win.setHeight(element, height); return; }
-	var s = getComputedStyleSizes(element);
-	// we compute the border, as follow, because using the style may be wrong in case we have a border-collapse
-	var h = element.offsetHeight; // excluding margin
-	h -= element.clientHeight; // remove content width + the padding => remaining is border
-	height -= h;
-	height -= parseInt(s.marginTop);
-	height -= parseInt(s.marginBottom);
-	height -= parseInt(s.paddingTop);
-	height -= parseInt(s.paddingBottom);
-	element.style.height = height+"px";
+	if (win != window) { win.setHeight(element, height, style_knowledge); return; }
+	var s = getStyleSizes(element, style_knowledge);
+	var h = height;
+	h -= s.borderTopWidth + s.borderBottomWidth;
+	h -= s.marginTop + s.marginBottom;
+	h -= s.paddingTop + s.paddingBottom;
+	element.style.height = h+"px";
 }
-function getWidth(element) {
+function getWidth(element, style_knowledge) {
 	var win = getWindowFromElement(element);
-	if (win != window) return win.getWidth(element);
-	var s = getComputedStyleSizes(element);
-	var w = element.offsetWidth;
-	w += parseInt(s.marginLeft) + parseInt(s.marginRight);
-	return w;
+	if (win != window) return win.getWidth(element, style_knowledge);
+	var s = getStyleSizes(element, style_knowledge);
+	return element.offsetWidth + s.marginLeft + s.marginRight;
 }
-function getHeight(element) {
+function getHeight(element, style_knowledge) {
 	var win = getWindowFromElement(element);
-	if (win != window) return win.getHeight(element);
-	var s = getComputedStyleSizes(element);
-	var h = element.offsetHeight;
-	h += parseInt(s.marginTop) + parseInt(s.marginBottom);
-	return h;
-}
-function getInnerHeight(element) {
-	var win = getWindowFromElement(element);
-	if (win != window) return win.getInnerHeight(element);
-	var s = getComputedStyleSizes(element);
-	var h = element.clientHeight;
-	h -= parseInt(s.paddingTop) + parseInt(s.paddingBottom);
-	return h;
+	if (win != window) return win.getHeight(element, style_knowledge);
+	var s = getStyleSizes(element, style_knowledge);
+	return element.offsetHeight + s.marginTop + s.marginBottom;
 }
 function getFixedPosition(elem,only_in_window) {
 	return _getFixedPosition(window,elem,only_in_window);
@@ -242,53 +282,21 @@ function _getFixedPosition(win,elem,only_in_window) {
 	}
 	return {x:x,y:y};
 }
-function getComputedStyleSizes(e) {
-	if (e.nodeType != 1) {
-		return {
-			borderLeftWidth: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomWidth: 0,
-			marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: 0,
-			paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0
-		};
-	}
-	var ss = getComputedStyle(e);
-	if (ss == null)
-		return {
-			borderLeftWidth: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomWidth: 0,
-			marginLeft: 0, marginRight: 0, marginTop: 0, marginBottom: 0,
-			paddingTop: 0, paddingBottom: 0, paddingLeft: 0, paddingRight: 0
-		};
-	var s = {};
-	if (ss.width.indexOf('%') > 0 || ss.width == "auto") s.width = e.scrollWidth+'px'; else s.width = ss.width;
-	if (ss.height.indexOf('%') > 0 || ss.height == "auto") s.height = e.scrollHeight+'px'; else s.height = ss.height;
-	s.borderLeftWidth = _styleBorderValue(ss.borderLeftStyle, ss.borderLeftWidth);
-	s.borderRightWidth = _styleBorderValue(ss.borderRightStyle, ss.borderRightWidth);
-	s.borderTopWidth = _styleBorderValue(ss.borderTopStyle, ss.borderTopWidth);
-	s.borderBottomWidth = _styleBorderValue(ss.borderBottomStyle, ss.borderBottomWidth);
-	s.marginLeft = _styleMargin(ss.marginLeft);
-	s.marginRight = _styleMargin(ss.marginRight);
-	s.marginTop = _styleMargin(ss.marginTop);
-	s.marginBottom = _styleMargin(ss.marginBottom);
-	s.paddingTop = _stylePadding(ss.paddingTop);
-	s.paddingBottom = _stylePadding(ss.paddingBottom);
-	s.paddingLeft = _stylePadding(ss.paddingLeft);
-	s.paddingRight = _stylePadding(ss.paddingRight);
-	return s;
-};
 function _styleBorderValue(t, s) {
-	if (t == "none") return "0px";
-	if (s == "medium") return "4px";
-	if (s == "thick") return "6px";
-	if (s.length == 0) return "0px";
-	return s;
+	if (t == "none") return 0;
+	if (s == "medium") return 4;
+	if (s == "thick") return 6;
+	if (s.length == 0) return 0;
+	return parseInt(s);
 };
 function _styleMargin(s) {
-	if (s == "auto") return "0px";
-	if (s.length == 0) return "0px";
-	return s;
+	if (s == "auto") return 0;
+	if (s.length == 0) return 0;
+	return parseInt(s);
 };
 function _stylePadding(s) {
-	if (s.length == 0) return "0px";
-	return s;
+	if (s.length == 0) return 0;
+	return parseInt(s);
 };
 
 function findFrame(name) {

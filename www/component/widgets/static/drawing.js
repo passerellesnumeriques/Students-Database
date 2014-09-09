@@ -217,13 +217,15 @@ drawing = {
 		};
 		update();
 		var refresh_timeout = null;
-		layout.addHandler(parent,function() {
+		var refresher = function() {
 			if (refresh_timeout) return;
 			refresh_timeout = setTimeout(function() {
 				update();
 				refresh_timeout = null;
 			},1);
-		});
+		};
+		layout.listenElementSizeChanged(parent,refresher);
+		layout.listenInnerElementsChanged(parent,refresher);
 		return canvas;
 	},
 		
@@ -270,13 +272,15 @@ drawing = {
 		};
 		refresh();
 		var refresh_timeout = null;
-		layout.addHandler(parent,function() {
+		var refresher = function() {
 			if (refresh_timeout) return;
 			refresh_timeout = setTimeout(function() {
-				refresh();
+				update();
 				refresh_timeout = null;
 			},1);
-		});
+		};
+		layout.listenElementSizeChanged(parent,refresher);
+		layout.listenInnerElementsChanged(parent,refresher);
 	}
 //	horizontal_connector: function(e1,e2) {
 //		if (typeof e1 == 'string') e1 = document.getElementById(e1);

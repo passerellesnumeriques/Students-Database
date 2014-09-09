@@ -19,7 +19,7 @@ if (u.params && u.params.padding)
     document.getElementById('text_container').style.padding = u.params.padding+"px";
 
 window._page_ready = true;
-window.layout = { _invalidated: [], everythingOnPageLoaded: function() { return true; } };
+window.layout = { _changes: [], everythingOnPageLoaded: function() { return true; } };
 </script>
 </body>
 </html>

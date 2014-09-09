@@ -51,7 +51,7 @@ function Excel(container, onready) {
 		if (onready) onready(t);
 	});
 	
-	layout.addHandler(container, function() { t._layout(); });
+	layout.listenElementSizeChanged(container, function() { t._layout(); });
 }
 
 function ExcelSheet(name, icon, columns, rows, onready) {
@@ -137,11 +137,6 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	this.layout = function() {
 		this.content.style.width = this.container.clientWidth+"px";
 		this.content.style.height = this.container.clientHeight+"px";
-		for (var col = 0; col < this.columns.length; col++)
-			for (var row = 0; row < this.rows.length; row++) {
-				var cell = this.cells[col][row];
-				cell._refreshSize();
-			}
 	};
 	
 	this.addColumn = function(index) {
@@ -154,7 +149,6 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 		} else {
 			// TODO move data and insert column and change name of next columns
 		}
-		this.layout();
 	};
 	
 	this.addRow = function(index) {
@@ -165,7 +159,6 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 		} else {
 			// TODO move data and insert row and change name of next rows
 		}
-		this.layout();
 	};
 	this.removeRow = function(index) {
 		var row = this.rows[index];
@@ -173,7 +166,6 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 		this.row_headers_container.removeChild(row.header);
 		this.row_headers_container.removeChild(row.resizer);
 		row.tr.parentNode.removeChild(row.tr);
-		this.layout();
 	};
 	
 	this.addLayer = function(start_col, start_row, end_col, end_row, r,g,b, content) {
@@ -253,7 +245,7 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	};
 	
 	this._init();
-	layout.addHandler(this.container, function() { t.layout(); });
+	layout.listenElementSizeChanged(this.container, function() { t.layout(); });
 	
 	listenEvent(window,'keydown',function(ev){
 		var event = window.event ? window.event : ev;
@@ -460,7 +452,7 @@ function ExcelSheetColumn(sheet, index) {
 			if (t.resize_pos == null) return;
 			var e = getCompatibleMouseEvent(ev);
 			var diff = e.x-t.resize_pos;
-			t.setWidth(t.width+diff);
+			t.setWidth(t.width+diff,[]);
 			t.resize_pos = e.x;
 		});
 		listenEvent(window,'mouseup',function(ev){
@@ -538,7 +530,7 @@ function ExcelSheetRow(sheet, index) {
 			if (t.resize_pos == null) return;
 			var e = getCompatibleMouseEvent(ev);
 			var diff = e.y-t.resize_pos;
-			t.setHeight(t.height+diff);
+			t.setHeight(t.height+diff,[]);
 			t.resize_pos = e.y;
 		});
 		listenEvent(window,'mouseup',function(ev){
@@ -671,8 +663,9 @@ function ExcelSheetCell(sheet, column, row) {
 			var event = t.td.ondblclick;
 			t.td.ondblclick = null;
 			var input = document.createElement("INPUT");
-			setWidth(input, getWidth(t.value));
-			setHeight(input, getHeight(t.value));
+			var knowledge = [];
+			setWidth(input, getWidth(t.value, knowledge), knowledge);
+			setHeight(input, getHeight(t.value, knowledge), knowledge);
 			input.type = 'text';
 			input.value = t.value.innerHTML;
 			input.style.border = "none";
