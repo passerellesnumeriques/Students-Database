@@ -8,7 +8,7 @@ if (typeof window.top.require != 'undefined')
  * @parameter {function} onready, function that handle the parameter to_return = {area_id: ,field: the string to display}
  */
 
-function geographic_area_selection(container, country_id, area_id, onready) {
+function geographic_area_selection(container, country_id, area_id, orientation, add_custom_search, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	this.selected_area_id = undefined;
@@ -197,6 +197,7 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 			var div = document.createElement("DIV");
 			container.appendChild(div);
 			div.style.paddingRight = "3px";
+			if (orientation == "horizontal") div.style.display = "inline-block";
 			var ac = new autocomplete(div, 3, 'Manually search', function(val, handler){
 				t.autoFill(val, handler);
 			}, function(item){
@@ -241,10 +242,15 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 			t.country_data = country_data;
 			t.selects = [];
 			var table = document.createElement('table');
+			if (orientation == 'horizontal') {
+				table.style.display = "inline-block";
+				table.style.verticalAlign = "middle";
+			}
 			var tbody = document.createElement('tbody'); table.appendChild(tbody); 
 			var tr, td, select, o;
 			for (var j=0; j<country_data.length; j++) {
-				tbody.appendChild(tr = document.createElement('TR'));
+				if (j == 0 || orientation == "vertical")
+					tbody.appendChild(tr = document.createElement('TR'));
 				// division name
 				tr.appendChild(td = document.createElement("TD"));
 				td.appendChild(document.createTextNode(country_data[j].division_name));
@@ -271,7 +277,8 @@ function geographic_area_selection(container, country_id, area_id, onready) {
 			}
 			container.appendChild(table);
 			t.setAreaId(area_id);
-			t.createAutoFillInput();
+			if (add_custom_search)
+				t.createAutoFillInput();
 			if (onready) onready(t);
 			layout.changed(container);
 			window.top.geography.startComputingSearchDictionary(country_data);

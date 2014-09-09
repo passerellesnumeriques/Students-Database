@@ -438,9 +438,11 @@ function grid(element) {
 		t.header_rows.push(tr);
 		t.header_rows[0].parentNode.appendChild(tr);
 		// increase rowSpan of last one
-		for (var i = 0; i < t.header_rows[0].childNodes.length; i++)
-			if (t.header_rows[0].childNodes[i].col) t.header_rows[0].childNodes[i].col.increaseRowSpan();
-		layout.changed(t.element);
+		for (var i = this.selectable ? 1 : 0; i < t.header_rows[0].childNodes.length; i++)
+			t.header_rows[0].childNodes[i].col.increaseRowSpan();
+		if (this.selectable)
+			t.header_rows[0].childNodes[0].rowSpan++;
+		layout.changed(t.thead);
 	};
 	t._addColumnContainer = function(container, level, index) {
 		container.grid = this;
@@ -468,7 +470,8 @@ function grid(element) {
 				if (typeof index != 'undefined') index++;
 			}
 		}
-		layout.changed(t.element);
+		layout.changed(this.thead);
+		layout.changed(this.table);
 		return index;
 	};
 	t._addFinalColumn = function(col, level, index) {
@@ -551,7 +554,8 @@ function grid(element) {
 				}
 			}
 		}
-		layout.changed(this.element);
+		layout.changed(this.thead);
+		layout.changed(this.table);
 	};
 	t._subColumnAdded = function(container, final_col) {
 		// get the top level
@@ -692,7 +696,8 @@ function grid(element) {
 			}
 		}
 		t.apply_filters();
-		layout.changed(this.element);
+		layout.changed(this.thead);
+		layout.changed(this.table);
 	};
 	t.rebuildColumn = function(column) {
 		column._refresh_title();
@@ -870,6 +875,7 @@ function grid(element) {
 	};
 	
 	t.makeScrollable = function() {
+		var thead_knowledge = [];
 		var update = function() {
 			// put back the thead, so we can get the width of every th
 			t.element.style.paddingTop = "0px";
@@ -909,7 +915,7 @@ function grid(element) {
 				t.thead.childNodes[0].childNodes[0]._width = getWidth(t.thead.childNodes[0].childNodes[0], knowledge);
 			for (var i = 0; i < t.columns.length; ++i)
 				t.columns[i].th._width = getWidth(t.columns[i].th, knowledge);
-			setWidth(t.element, total_width, knowledge);
+			//setWidth(t.element, total_width, knowledge);
 			// take the width of each column
 			var widths = [];
 			if (t.selectable)
@@ -959,8 +965,8 @@ function grid(element) {
 			t.grid_element.style.overflow = "auto";
 			t.thead.style.position = "absolute";
 			t.thead.style.top = "0px";
-			t.thead.style.left = (-t.grid_element.scrollLeft)+"px";
-			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft, knowledge); 
+			t.thead.style.left = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1))+"px";
+			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1), thead_knowledge); 
 			t.thead.style.overflow = "hidden";
 			//t.table.parentNode.style.marginRight = "1px";
 		};
@@ -968,8 +974,8 @@ function grid(element) {
 		t.element.style.flexDirection = "column";
 		t.grid_element.style.flex = "1 1 auto";
 		t.grid_element.onscroll = function(ev) {
-			t.thead.style.left = (-t.grid_element.scrollLeft)+"px";
-			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft); 
+			t.thead.style.left = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1))+"px";
+			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1), thead_knowledge); 
 		};
 		var update_timeout = null;
 		var updater = function() {

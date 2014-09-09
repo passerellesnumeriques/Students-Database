@@ -194,7 +194,7 @@ window.layout = {
 					elements[i]._layout_info.from_inside[j]();
 			if (elements[i].nodeName == "BODY") continue;
 			var p = elements[i].parentNode;
-			if (!parents.contains(p)) parents.push(p);
+			if (p && !parents.contains(p)) parents.push(p);
 		}
 		if (parents.length == 0) return;
 		layout._processInsideChanged(parents);

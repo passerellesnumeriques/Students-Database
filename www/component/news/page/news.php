@@ -12,12 +12,12 @@ class page_news extends Page {
 				<?php echo isset($_GET["title"]) ? toHTML($_GET["title"]) : "Updates";?>
 				<button class='flat icon' title='Post a message' onclick="postMessage();"><img src='/static/news/write_24.png'/></button>
 			</div>
-			<div style='flex:1 1 auto;display:flex;flex-direction:row;overflow:auto;'>
-				<div style='flex:1 1 auto;'>
+			<div style='overflow:auto;'>
+				<div style='width:49%;vertical-align:top;display:inline-block;'>
 					<div class='page_section_title2' style='background-color:white'>Updates</div>
 					<div id='updates_container' style='padding:5px'></div>
 				</div>
-				<div style='flex:1 1 auto;'>
+				<div style='width:49%;vertical-align:top;display:inline-block;'>
 					<div class='page_section_title2' style='background-color:white'>Activities</div>
 					<div id='activities_container' style='padding:5px'></div>
 				</div>

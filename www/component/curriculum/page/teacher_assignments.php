@@ -49,6 +49,10 @@ class page_teacher_assignments extends Page {
 				->where($where1." OR ".$where2)
 				->whereIn("SubjectClassMerge","subject",$subjects_ids)
 				->execute();
+			foreach ($classes_merges as $cm) {
+				if (!in_array($cm["class1"], $classes_ids)) array_push($classes_ids, $cm["class1"]);
+				if (!in_array($cm["class2"], $classes_ids)) array_push($classes_ids, $cm["class2"]);
+			}
 			$classes = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass","id",$classes_ids)->execute();
 		} else {
 			$classes_merges = array();

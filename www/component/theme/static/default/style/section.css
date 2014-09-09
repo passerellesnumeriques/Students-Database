@@ -41,6 +41,7 @@
 .section>.header>div:first-child img {
 	vertical-align: bottom;
 	margin-right: 3px;
+	flex: none;
 }
 .section>.footer {
 	border-radius: 0px 0px 5px 5px;

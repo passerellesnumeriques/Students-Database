@@ -203,6 +203,43 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 			t.map = map;
 			oneReady();
 		});
+		var div_area_selection = document.createElement("DIV");
+		div_area_selection.style.borderBottom = "1px solid #808080";
+		div_area_selection.style.backgroundColor = "white";
+		div_area_selection.appendChild(document.createTextNode("Zoom on: "));
+		this._header.appendChild(div_area_selection);
+		require("geographic_area_selection.js",function() {
+			new geographic_area_selection(div_area_selection, window.top.default_country_id, null, 'horizontal', true, function(area_selection) {
+				var add_it = function() {
+					if (!t.map) {
+						setTimeout(function() { add_it(); }, 25);
+						return;
+					}
+					var rect = null;
+					area_selection.onchange = function() {
+						var area_id = area_selection.getSelectedArea();
+						if (!area_id) {
+							if (rect) {
+								t.map.removeShape(rect);
+								rect = null;
+								t.map.fitToShapes();
+							}
+							return;
+						}
+						if (rect) {
+							t.map.removeShape(rect);
+							rect = null;
+						}
+						var area = window.top.geography.searchArea(area_selection.country_data, area_id);
+						if (area.north) {
+							rect = t.map.addRect(area.south, area.west, area.north, area.east, "#00FF00", "#A0FFA0", 0.4);
+							t.map.zoomOnShape(rect);
+						}
+					};
+				};
+				add_it();
+			});
+		});
 	};
 	this._init();
 }

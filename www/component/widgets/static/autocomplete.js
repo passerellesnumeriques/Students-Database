@@ -93,6 +93,7 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 
 function autocomplete_menu(ac, onselectitem) {
 	require("animation.js");
+	theme.css("context_menu.css");
 	var t=this;
 	
 	this.div = ac.input.ownerDocument.createElement("DIV");
