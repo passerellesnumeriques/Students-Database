@@ -119,7 +119,6 @@ function tabs(container, fill_tab_content) {
 				setHeight(t.tabs[t.selected].content, t.content.clientHeight, knowledge);
 			}
 		}
-
 	};
 	t._init();
 	t._layout();

@@ -145,13 +145,16 @@ window.layout = {
 		// then, process the element size changed
 		if (layout._element_size_listeners.length > 0) {
 			var to_call = [];
+			var sizes = [];
 			for (var i = 0; i < layout._element_size_listeners.length; ++i) {
 				var e = layout._element_size_listeners[i].element;
 				var size = {width:e.scrollWidth,height:e.scrollHeight};
-				if (size.width == e._layout_info.size.width && size.height == e._layout_info.size.height) continue;
-				e._layout_info.size = size;
-				to_call.push(layout._element_size_listeners[i].listener);
+				sizes.push(size);
+				if (size.width != e._layout_info.size.width || size.height != e._layout_info.size.height)
+					to_call.push(layout._element_size_listeners[i].listener);
 			}
+			for (var i = 0; i < layout._element_size_listeners.length; ++i)
+				layout._element_size_listeners[i].element._layout_info.size = sizes[i];
 			for (var i = 0; i < to_call.length; ++i)
 				to_call[i]();
 		}
