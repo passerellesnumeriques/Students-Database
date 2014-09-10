@@ -28,6 +28,10 @@ function upload(target, multiple, async) {
 			t.input.click();
 		else
 			triggerEvent(t.input, 'click', {});
+		t.input.ondomremoved(function() {
+			t.form = null;
+			t.input = null;
+		});
 	};
 	
 	t.appendDropArea = function(container) {

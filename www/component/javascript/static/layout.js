@@ -32,6 +32,7 @@ window.layout = {
 	unlistenElementSizeChanged: function(element, listener) {
 		var w = getWindowFromElement(element);
 		if (!w) return;
+		if (!layout._w) return;
 		if (w != layout._w) {
 			if (w.layout)
 				w.layout.unlistenElementSizeChanged(element, listener);

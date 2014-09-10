@@ -300,20 +300,23 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 			if(!t._shown){
 			//Show the td
 				require("animation.js",function(){
-					if(t._td_partners.anim1) animation.stop(t._td_partners.anim1);
-					if(t._td_partners.anim2) animation.stop(t._td_partners.anim2);
+					if(t._td_partners.anim1) { animation.stop(t._td_partners.anim1); t._td_partners.anim1 = null; } 
+					if(t._td_partners.anim2) { animation.stop(t._td_partners.anim2); t._td_partners.anim2 = null; }
 					t._td_partners.endWidth = t._td_partners.originalWidth != null ? t._td_partners.originalWidth : 150;
 					t._td_partners.anim1 = animation.create(t._td_partners, 0, t._td_partners.endWidth, 600, function(value, element){
 						element.style.width = Math.floor(value)+'px';
 						element.style.overflow = "";
-						if(value == element.endWidth)
+						if(value == element.endWidth) {
 							layout.changed(element.parentNode);
+							element.anim1 = null;
+						}
 					});
 					t._td_partners.anim2 = animation.fadeIn(t._td_partners, 500, function(){
 						t._td_partners.style.position = 'static';
 						t._td_partners.style.visibility = 'visible';
 						t._td_partners.style.top = '';
 						t._td_partners.style.left = '';
+						t._td_partners.anim2 = null;
 					});
 				});
 				t._shown = true;
@@ -332,7 +335,10 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 					t._td_partners.anim1 = animation.create(t._td_partners, start, 0, 600, function(value, element){
 						element.style.width = Math.floor(value)+'px';
 						element.style.overflow = "hidden";
-						if (value == 0) layout.changed(t._td_partners.parentNode);
+						if (value == 0) {
+							layout.changed(t._td_partners.parentNode);
+							t._td_partners.anim1 = null;
+						}
 					});
 					//Fade out
 					t._td_partners.anim2 = animation.fadeOut(t._td_partners,500,function(){
@@ -340,6 +346,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 						t._td_partners.style.visibility = 'hidden';
 						t._td_partners.style.top = '-10000px';
 						t._td_partners.style.left = '-10000px';
+						t._td_partners.anim2 = null;
 					});
 				});
 				t._shown = false;

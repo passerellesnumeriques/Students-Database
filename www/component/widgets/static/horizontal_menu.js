@@ -19,6 +19,12 @@ function horizontal_menu(menu, valign) {
 	t.items = [];
 	t.valign = valign;
 	
+	menu.ondomremoved(function() {
+		menu.widget = null;
+		t.items = null;
+		t.more_item = null;
+	});
+	
 	t.addItem = function(element) {
 		t.items.push(new HorizontalMenuItem(element));
 		layout.changed(menu);
@@ -46,6 +52,7 @@ function horizontal_menu(menu, valign) {
 		if (t.items[i].always_in_menu) { t.always_more = true; break; }
 	
 	t.update = function() {
+		if (!t.items) return;
 		while (menu.childNodes.length > 0) menu.removeChild(menu.childNodes[0]);
 		var w = menu.clientWidth;
 		var h = menu.clientHeight;

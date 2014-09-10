@@ -17,6 +17,9 @@ function Excel(container, onready) {
 		tab.sheet = sheet;
 	};
 	this.removeSheet = function(index) {
+		var tab = this.sheets[index].tab;
+		tab.sheet.tab = null;
+		tab.sheet = null;
 		this.sheets.splice(index,1);
 		container.widget.removeTab(index);
 	};
@@ -48,6 +51,15 @@ function Excel(container, onready) {
 		t.tabs.onselect = function() {
 			t.onactivesheetchanged.fire(t);
 		};
+		container.ondomremoved(function() {
+			for (var i = 0; i < t.sheets.length; ++i) {
+				t.sheets[i].tab.sheet = null;
+				t.sheets[i].tab = null;
+			}
+			t.tabs = null;
+			t.sheets = null;
+			t.onactivesheetchanged = null;
+		});
 		if (onready) onready(t);
 	});
 	
@@ -131,6 +143,19 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 			}
 		};
 		this.layout();
+		layout.listenElementSizeChanged(this.container, function() { t.layout(); });
+		this.container.ondomremoved(function() {
+			t.container = null;
+			t.content = null;
+			t.corner = null;
+			t.column_headers_container = null;
+			t.row_headers_container = null;
+			t.table = null;
+			t.columns = null;
+			t.rows = null;
+			t.cells = null;
+			t.layers = null;
+		});
 		if (onready) onready(this);
 	};
 	
@@ -464,6 +489,11 @@ function ExcelSheetColumn(sheet, index) {
 			if (sheet.cursor)
 				sheet.cursor.setRange(t.index, 0, t.index, sheet.rows.length-1);
 		};
+		this.header.ondomremoved(function() {
+			t.header = null;
+			t.resizer = null;
+			t.sheet = null;
+		});
 	};
 	this._init();
 }
@@ -544,6 +574,12 @@ function ExcelSheetRow(sheet, index) {
 		};
 		this.tr = document.createElement("TR");
 		sheet.table.appendChild(this.tr);
+		this.tr.ondomremoved(function() {
+			t.tr = null;
+			t.header = null;
+			t.resizer = null;
+			t.sheet = null;
+		});
 	};
 	this._init();
 }
@@ -557,16 +593,23 @@ function ExcelCellSizeRefresher() {
 			setTimeout(function() { window.excelCellSizeRefresher.doit(); },1);
 	};
 	this.doit = function() {
+		if (this.todo == null) return;
 		var list = this.todo;
 		this.todo = [];
 		var sizes = [];
 		for (var i = 0; i < list.length; ++i)
 			sizes.push(list[i]._calculateRefreshSize());
 		for (var i = 0; i < list.length; ++i) {
+			if (!list[i].value) continue;
 			list[i].value.style.width = (sizes[i][0])+"px";
 			list[i].value.style.height = (sizes[i][1]+1)+"px";
 		}
 	};
+	this.cleanup = function() {
+		this.todo = null;
+		window.excelCellSizeRefresher = null;
+	};
+	window.to_cleanup.push(this);
 }
 window.excelCellSizeRefresher = new ExcelCellSizeRefresher();
 
@@ -591,6 +634,7 @@ function ExcelSheetCell(sheet, column, row) {
 		window.excelCellSizeRefresher.toRefresh(this);
 	};
 	this._calculateRefreshSize = function() {
+		if (!this.sheet) return [0,0];
 		var w = this.sheet.columns[this.column].width;
 		if (this.td.colSpan)
 			for (var i = 2; i <= this.td.colSpan; ++i)
@@ -693,6 +737,11 @@ function ExcelSheetCell(sheet, column, row) {
 				if (e.isEscape) input.onblur();
 			};
 		};
+		this.td.ondomremoved(function() {
+			t.td = null;
+			t.value = null;
+			t.sheet = null;
+		});
 	};
 	this._init();
 }
@@ -946,6 +995,10 @@ function ExcelSheetCursor(sheet) {
 				if (cell && cell.td && cell.td.ondblclick) cell.td.ondblclick(ev);
 			}
 		};
+		this.div.ondomremoved(function() {
+			t.div = null;
+			t.sheet = null;
+		});
 	};
 	
 	this.refresh = function() {

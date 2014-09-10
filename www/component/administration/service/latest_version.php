@@ -25,6 +25,10 @@ class service_latest_version extends Service {
 			return;
 		}
 		curl_close($c);
+		if (strlen($result) > 15) {
+			PNApplication::error("Unable to retrieve latest version");
+			return;
+		}
 		echo "{version:".json_encode($result)."}";
 	}
 	

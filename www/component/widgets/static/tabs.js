@@ -32,9 +32,12 @@ function tabs(container, fill_tab_content) {
 			while (t.content.childNodes.length > 0) t.content.removeChild(t.content.childNodes[0]);
 		} else if (t.selected > index) t.selected--;
 		t.header.removeChild(t.header.childNodes[index]);
+		t.tabs[index].content = null;
+		t.tabs[index].header = null;
 		t.tabs.splice(index,1);
 	};
 	t.removeAll = function() {
+		for (var i = 0; i < t.tabs.length; ++i) { t.tabs[i].content = null; t.tabs[i].header = null; }
 		t.tabs = [];
 		t.selected = -1;
 		while (t.header.childNodes.length > 0) t.header.removeChild(t.header.childNodes[0]);
@@ -95,6 +98,13 @@ function tabs(container, fill_tab_content) {
 			t.addTab(tabs[i].title, tabs[i].icon, tabs[i].content);
 		if (t.tabs.length > 0)
 			t.select(0);
+		container.ondomremoved(function() {
+			for (var i = 0; i < t.tabs.length; ++i) { t.tabs[i].content = null; t.tabs[i].header = null; }
+			t.header = null;
+			t.content = null;
+			t.tabs = null;
+			container.widget = null;
+		});
 	};
 	t._layout = function() {
 		if (fill_tab_content) {

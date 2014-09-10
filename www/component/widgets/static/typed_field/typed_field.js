@@ -14,6 +14,8 @@ function typed_field(data,editable,config){
 		this.element = null;
 		this.originalData = null;
 		this._data = null;
+		this.cleanup = null;
+		this.config = null;
 	};
 	this.originalData = data;
 	this.editable = editable;

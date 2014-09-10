@@ -34,6 +34,9 @@ field_text.prototype._create = function(data) {
 		var input = document.createElement("INPUT");
 		t.input = input;
 		input.type = "text";
+		t.input.ondomremoved(function() {
+			t.input = null;
+		});
 		input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
 		if (this.config && this.config.max_length) input.maxLength = this.config.max_length;
 		if (data) input.value = data;

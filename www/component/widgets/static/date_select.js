@@ -30,6 +30,14 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 	t.maximum = maximum;
 	
 	t.onchange = null;
+	
+	container.ondomremoved(function() {
+		t.select_day = null;
+		t.select_month = null;
+		t.select_year = null;
+		t.icon = null;
+	});
+	
 	t.select_year.onchange = function() {
 		var year = t.select_year.value;
 		var month = t.select_month.value;

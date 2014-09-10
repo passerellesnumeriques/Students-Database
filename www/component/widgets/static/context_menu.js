@@ -277,13 +277,14 @@ function context_menu(menu) {
 			window.top.pnapplication.registerOnclick(window, t._listener);
 		},1);
 		if (typeof window.top.animation != 'undefined')
-			menu.anim = window.top.animation.fadeIn(menu,300);
+			menu.anim = window.top.animation.fadeIn(menu,300,function(){menu.anim = null;});
 	};
 	t._this_win = window;
 	t._window_close_listener = function(c) {
 		if (c.win != t._this_win) return;
 		c.top.document.body.removeChild(menu);
 		c.top.pnapplication.onwindowclosed.remove_listener(t._window_close_listener);
+		t._this_win = null;
 	};
 	/** Hide the menu: call <code>onclose</code> if specified, then hide or remove the html element of the menu depending on <code>removeOnClose</code> 
 	 * @member context_menu#hide

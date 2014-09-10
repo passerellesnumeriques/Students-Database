@@ -99,6 +99,7 @@ function unlock_screen(div) {
 	if (typeof animation != 'undefined') {
 		div.id = '';
 		if (div.anim) animation.stop(div.anim);
+		div.anim = null;
 		animation.fadeOut(div,200,function(){
 			if (div.parentNode == document.body)
 				document.body.removeChild(div);				

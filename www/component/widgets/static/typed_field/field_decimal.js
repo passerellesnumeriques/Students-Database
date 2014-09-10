@@ -38,6 +38,9 @@ field_decimal.prototype._create = function(data) {
 		var t=this;
 		t.input = document.createElement("INPUT");
 		t.input.type = "text";
+		t.input.ondomremoved(function() {
+			t.input = null;
+		});
 		t.input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
 		t.input.maxLength = this.config.integer_digits + 1 + this.config.decimal_digits;
 		if (data !== null) t.input.value = parseFloat(data).toFixed(t.config.decimal_digits);

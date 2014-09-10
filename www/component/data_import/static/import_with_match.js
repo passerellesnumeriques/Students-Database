@@ -86,10 +86,14 @@ function import_with_match(provider, ev, show_after_grid) {
 			upl.ondonefile = function(file, output, errors) {
 				if (errors.length > 0) {
 					pb.error();
+					pb = null;
+					upl = null;
 					unlock_screen(locker);
 					return;
 				}
 				pb.done();
+				pb = null;
+				upl = null;
 				set_lock_screen_content(locker, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading Excel page...");
 				// TODO extend expiration time of temporary storage
 				waitFrameContentReady(t.excel_frame, function(win) {
@@ -101,6 +105,7 @@ function import_with_match(provider, ev, show_after_grid) {
 							var win = getIFrameWindow(t.excel_frame);
 							if (!win.excel || !win.excel.tabs) {
 								if (win.page_errors && !win.excel_uploaded) {
+									t.excel_frame.onload = null;
 									unlock_screen(locker);
 									return;
 								}
@@ -109,6 +114,7 @@ function import_with_match(provider, ev, show_after_grid) {
 							}
 							t._prepareExcel();
 							unlock_screen(locker);
+							t.excel_frame.onload = null;
 						};
 						var check_loaded = function() {
 							var win = getIFrameWindow(t.excel_frame);
@@ -118,6 +124,7 @@ function import_with_match(provider, ev, show_after_grid) {
 							}
 							if (win.page_errors && !win.excel_uploaded) {
 								unlock_screen(locker);
+								t.excel_frame.onload = null;
 								return;
 							}
 							if (!win.excel_uploaded) {
@@ -181,6 +188,9 @@ function import_with_match(provider, ev, show_after_grid) {
 			t._header_rows.onchange.add_listener(function() {
 				if (t._matching.length > 0)
 					t._performMatching();
+			});
+			span.ondomremoved(function() {
+				t._header_rows = null;
 			});
 			var button = document.createElement("BUTTON");
 			button.innerHTML = "<img src='"+theme.icons_16._import+"'/> Import data";
@@ -271,6 +281,9 @@ function import_with_match(provider, ev, show_after_grid) {
 								button.parentNode.appendChild(select);
 								select_data.other_selects.push(select);
 								select.onchange = check_complete;
+								select.ondomeremoved(function() {
+									select.onchange = null;
+								});
 							};
 						}
 					}
@@ -301,6 +314,8 @@ function import_with_match(provider, ev, show_after_grid) {
 				};
 				select_excel_column.onchange = check_complete;
 				select_data.onchange = check_complete;
+				select_data.ondomremoved(function(e) {select_data.other_selects = null;select_data.onchange=null;check_complete = null;});
+				select_excel_column.ondomremoved(function(e) {select_excel_column.onchange=null;});
 			};
 			addRow();
 			var addRow2 = function() {
@@ -370,9 +385,15 @@ function import_with_match(provider, ev, show_after_grid) {
 				};
 				select_excel_column.onchange = check_complete;
 				select_data.onchange = check_complete;
+				select_data.ondomremoved(function(e) {select_data.onchange=null;check_complete=null;});
+				select_excel_column.ondomremoved(function(e) {select_excel_column.onchange=null;});
 			};
 			addRow2();
 			layout.changed(t.import_wizard);
+			table.ondomremoved(function() {
+				addRow = null;
+				addRow2 = null;
+			});
 		});
 	};
 	this._performMatching = function() {
@@ -513,6 +534,8 @@ function import_with_match(provider, ev, show_after_grid) {
 		for (var i = 0; i < sheet.rows.length; ++i) {
 			if (sheet.rows[i]._data_matching) {
 				sheet.removeLayer(sheet.rows[i]._data_matching.layer);
+				sheet.rows[i]._data_matching.layer = null;
+				sheet.rows[i]._data_matching.row = null;
 				sheet.rows[i]._data_matching = null;
 			}
 		}
@@ -579,6 +602,18 @@ function import_with_match(provider, ev, show_after_grid) {
 			this.container.insertBefore(grid.element, this.container.firstChild);
 		else
 			this.container.appendChild(grid.element);
+		this.container.ondomremoved(function() {
+			t._resetExcel();
+			t.container = null;
+			t.import_container = null;
+			t.import_wizard = null;
+			t.excel_frame = null;
+			t.excel_bar = null;
+			t._import = null;
+			t._matching = null;
+			grid._import_with_match = null;
+			provider = null;
+		});
 		layout.changed(this.container);
 		this.uploadFile(ev);
 	};

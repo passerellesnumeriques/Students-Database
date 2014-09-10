@@ -136,25 +136,23 @@ if (@$_COOKIE["test_deploy"] == "true") {
 		What's happening ?
 	</div>
 	<div style='background-color:#e8e8e8;padding-top:10px;display:flex;flex-direction:row;'>
-		<div style='flex:1 1 auto;align-self:flex-start;margin-left:10px'>
-			<div id="updates" style="display:inline-block;width:49%;vertical-align:top"
-				icon="/static/news/news.png"
-				title="Latest Updates"
-			>
-				<div id='updates_container' style='padding:2px;'>
-					<img src='/static/news/loading.gif' id='updates_loading'/>
-				</div>
-			</div>
-			<div id="activities" style="display:inline-block;width:49%;vertical-align:top"
-				icon="/static/news/news.png"
-				title="Latest Activities"
-			>
-				<div id='activities_container' style='padding:2px;'>
-					<img src='/static/news/loading.gif' id='activities_loading'/>
-				</div>
+		<div id="updates" style="flex:1 1 auto;min-width:300px;"
+			icon="/static/news/news.png"
+			title="Latest Updates"
+		>
+			<div id='updates_container' style='padding:2px;'>
+				<img src='/static/news/loading.gif' id='updates_loading'/>
 			</div>
 		</div>
-		<div id="calendar_events" style="flex:1 0 auto;align-self:flex-start;margin-left:5px;vertical-align:top"
+		<div id="activities" style="flex:1 1 auto;min-width:300px;"
+			icon="/static/news/news.png"
+			title="Latest Activities"
+		>
+			<div id='activities_container' style='padding:2px;'>
+				<img src='/static/news/loading.gif' id='activities_loading'/>
+			</div>
+		</div>
+		<div id="calendar_events" style="flex:1 1 auto;align-self:flex-start;margin-left:5px;vertical-align:top;min-width:300px;"
 			icon="/static/calendar/calendar_16.png"
 			title="Upcoming Events"
 		>

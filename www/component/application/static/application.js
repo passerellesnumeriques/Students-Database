@@ -92,7 +92,7 @@ function initPNApplication() {
 					for (var i = 0; i < w.to_cleanup.length; ++i) list.push(w.to_cleanup[i]);
 					w.to_cleanup = [];
 					for (var i = 0; i < list.length; ++i)
-						list[i].cleanup();
+						if (list[i] && list[i].cleanup) list[i].cleanup();
 					w.to_cleanup = null;
 				}
 				w.closing = true;
@@ -101,7 +101,6 @@ function initPNApplication() {
 						name != "self" && name != "parent" && name != "top" &&
 						name != "history" && name != "navigator" &&
 						!name.startsWith("webkit") &&
-						typeof window.top[name] == 'undefined' &&
 						typeof Window.prototype[name] == 'undefined' &&
 						name != "id" && name != "_domRemoved")
 						w[name] = null;

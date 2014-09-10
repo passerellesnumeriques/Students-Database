@@ -50,6 +50,7 @@ function StatusUI_Top(manager, margin) {
 					this.container.childNodes[i].id = generateID();
 					this.container.childNodes[i].anim1 = 
 						animation.fadeOut(this.container.childNodes[i], 400, function(e){
+							e.anim1 = null;
 							var p = e.parentNode;
 							if (p == null) return;
 							try {
@@ -214,5 +215,6 @@ function _status_ui_top_fade(id) {
 	e.anim2 = 
 		animation.create(e, e.offsetHeight-2, 0, 250, function(value,elem){
 			elem.style.height = Math.floor(value)+'px';
+			if (value == 0) elem.anim2 = null;
 		});
 }
