@@ -355,7 +355,7 @@ class page_curriculum extends Page {
 			tr.childNodes[2].innerHTML = total_hours_period+"h";
 			tr.childNodes[3].innerHTML = total_coef;
 		}
-		
+
 		function addSubjectRow(cat_row, subject) {
 			var tr = createSubjectRow(cat_row, subject);
 			var next_tr = cat_row.nextSibling;
@@ -652,6 +652,13 @@ class page_curriculum extends Page {
 							subject.hours_type = ns.hours_type;
 							subject.coefficient = ns.coefficient; 
 							if (subject.specialization_id == ns.specialization_id) {
+								if (subject.specialization_id == null) {
+									var spes = getPeriodSpecializations(subject.period_id);
+									if (spes.length > 0) {
+										location.reload();
+										return;
+									}
+								}
 								var new_row = createSubjectRow(cat_row, subject);
 								row.parentNode.insertBefore(new_row, row);
 								row.parentNode.removeChild(row);

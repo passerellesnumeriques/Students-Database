@@ -35,6 +35,15 @@ class page_import_subjects extends Page {
 					->orderBy("CurriculumSubject", "code")
 					->fieldsOfTable("CurriculumSubject")
 					->execute();
+			$available_subjects[null] = SQLQuery::create()
+				->select("CurriculumSubject")
+				->whereNull("CurriculumSubject","specialization")
+				->whereNotValue("CurriculumSubject","period",$batch_period_id) // remove current period
+				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
+				->whereNotValue("BatchPeriod","batch",$batch_period["batch"]) // remove current batch
+				->orderBy("CurriculumSubject", "code")
+				->fieldsOfTable("CurriculumSubject")
+				->execute();
 		}
 ?>
 <style type='text/css'>
@@ -64,6 +73,8 @@ class page_import_subjects extends Page {
 			if ($spe <> null) {
 				foreach ($specializations as $spec) if ($spec["id"] == $spe) { $sp = $spec; break; }
 				echo "<tr><td colspan=6 style='background-color:#C0FFC0;font-weight:bold;text-align:center'>Specialization ".toHTML($sp["name"])."</td></tr>";
+			} else if (count($available_subjects) > 1) {
+				echo "<tr><td colspan=6 style='background-color:#C0FFC0;font-weight:bold;text-align:center'>Common (no specific specialization)</td></tr>";
 			}
 			foreach ($subjects as $subject) {
 				$found = false;
@@ -107,6 +118,7 @@ popup.addIconTextButton(theme.icons_16._import, "Import Selected Subjects", "imp
 	var to_import = [];
 	for (var tr = document.getElementById('header_row').nextSibling; tr != null; tr = tr.nextSibling) {
 		if (tr.nodeType != 1) continue;
+		if (!tr.id) continue;
 		if (!getCheckbox(tr).checked) continue;
 		var id = tr.id.substring(8);
 		for (var i = 0; i < subjects.length; ++i)
@@ -159,6 +171,7 @@ function checkboxChanged(cb) {
 	for (var tr = document.getElementById('header_row').nextSibling; tr != null; tr = tr.nextSibling) {
 		if (tr.nodeType != 1) continue;
 		if (tr == this_tr) continue;
+		if (!tr.id) continue;
 		if (getCode(tr) != code) continue;
 		tr.style.color = cb.checked ? "#808080" : "";
 		getCheckbox(tr).disabled = cb.checked ? "disabled" : "";
