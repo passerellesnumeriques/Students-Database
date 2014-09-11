@@ -247,7 +247,7 @@ class page_curriculum extends Page {
 								$script_init .= "addSubjectRow(document.getElementById('$cat_id'),".CurriculumJSON::SubjectJSON($s).");\n";
 							}
 						}
-						echo "<tr id='total_".$period['id']."' class='total_period'>";
+						echo "<tr id='total_".$period['id'].($spe <> null ? "_".$spe["id"] : "")."' class='total_period'>";
 						echo "<td>TOTAL</td>";
 						echo "<td></td><td></td><td></td>";
 						echo "</tr>";
@@ -335,25 +335,29 @@ class page_curriculum extends Page {
 		}
 
 		function refreshTotal(period) {
-			var tr = document.getElementById("total_"+period.id);
-			var total_hours_period = 0;
-			var total_hours_week = 0;
-			var total_coef = 0;
-			for (var i = 0; i < subjects.length; ++i) {
-				if (subjects[i].period_id != period.id) continue;
-				if (subjects[i].coefficient) total_coef += parseInt(subjects[i].coefficient);
-				if (!subjects[i].hours) continue;
-				var hw=0,ht=0;
-				switch (subjects[i].hours_type) {
-				case "Per week": hw = parseInt(subjects[i].hours); ht = parseInt(subjects[i].hours)*(period.weeks-period.weeks_break); break;
-				case "Per period": ht = parseInt(subjects[i].hours); hw = parseInt(subjects[i].hours)/(period.weeks-period.weeks_break); break;
+			for (var spe = -1; spe < specializations.length; ++spe) {
+				var tr = document.getElementById("total_"+period.id+(spe == -1 ? "" : "_"+specializations[spe].id));
+				if (!tr) continue;
+				var total_hours_period = 0;
+				var total_hours_week = 0;
+				var total_coef = 0;
+				for (var i = 0; i < subjects.length; ++i) {
+					if (subjects[i].period_id != period.id) continue;
+					if (subjects[i].specialization != null && spe >= 0 && subjects[i].specialization != specializations[spe].id) continue;
+					if (subjects[i].coefficient) total_coef += parseInt(subjects[i].coefficient);
+					if (!subjects[i].hours) continue;
+					var hw=0,ht=0;
+					switch (subjects[i].hours_type) {
+					case "Per week": hw = parseInt(subjects[i].hours); ht = parseInt(subjects[i].hours)*(period.weeks-period.weeks_break); break;
+					case "Per period": ht = parseInt(subjects[i].hours); hw = parseInt(subjects[i].hours)/(period.weeks-period.weeks_break); break;
+					}
+					total_hours_period += ht;
+					total_hours_week += hw;
 				}
-				total_hours_period += ht;
-				total_hours_week += hw;
+				tr.childNodes[1].innerHTML = total_hours_week+"h";
+				tr.childNodes[2].innerHTML = total_hours_period+"h";
+				tr.childNodes[3].innerHTML = total_coef;
 			}
-			tr.childNodes[1].innerHTML = total_hours_week+"h";
-			tr.childNodes[2].innerHTML = total_hours_period+"h";
-			tr.childNodes[3].innerHTML = total_coef;
 		}
 
 		function addSubjectRow(cat_row, subject) {
