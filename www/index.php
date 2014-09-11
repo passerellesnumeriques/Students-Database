@@ -148,7 +148,7 @@ case "static":
 	$i = strrpos($path, ".");
 	if ($i === FALSE) $invalid("Invalid resource type ($path)");
 	$ext = substr($path, $i+1);
-	include("cache.inc"); 
+	include("cache.inc");
 	switch ($ext) {
 	case "gif": header("Content-Type: image/gif"); break;
 	case "png": header("Content-Type: image/png"); break;
