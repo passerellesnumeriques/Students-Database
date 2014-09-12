@@ -19,8 +19,6 @@ class LDAPAuthenticationSystem extends AuthenticationSystem implements Authentic
 	private $server;
 	/** @var array list of DC */
 	private $dcs;
-	/** @var array keep track of tokens, with username and password to reconnect to LDAP server */
-	private $tokens = array();
 	
 	public function authenticate($username, $password, &$error) {
 		$conn = @ldap_connect($this->server);
@@ -37,10 +35,7 @@ class LDAPAuthenticationSystem extends AuthenticationSystem implements Authentic
 			$domain .= $dc;
 		}
 		if (@ldap_bind($conn, $username."@".$domain, $password) === true) {
-			do {
-				$token = "".rand();
-			} while (isset($this->tokens[$token]));
-			$this->tokens[$token] = array($username,$password);
+			$token = base64_encode($username."@".$password);
 			return $token;
 		}
 		$error = ldap_error($conn);
@@ -48,7 +43,9 @@ class LDAPAuthenticationSystem extends AuthenticationSystem implements Authentic
 	}
 
 	public function getUserList($token) {
-		if (!isset($this->tokens[$token])) return null;
+		$i = strpos($token, "@");
+		$token_username = substr($token,0,$i);
+		$token_password = substr($token,$i+1);
 		$conn = @ldap_connect($this->server);
 		if ($conn === false) return null;
 		ldap_set_option($conn, LDAP_OPT_PROTOCOL_VERSION, 3);
@@ -60,7 +57,7 @@ class LDAPAuthenticationSystem extends AuthenticationSystem implements Authentic
 			$domain .= $dc;
 			$ldap_base_dn .= "DC=".$dc;
 		}
-		if (@ldap_bind($conn, $this->tokens[$token][0]."@".$domain, $this->tokens[$token][1]) !== true) return null;
+		if (@ldap_bind($conn, $token_username."@".$domain, $token_password) !== true) return null;
 		$search_filter = '(&(objectCategory=person)(samaccountname=*))';
 		$attributes = array();
 		$attributes[] = 'samaccountname';

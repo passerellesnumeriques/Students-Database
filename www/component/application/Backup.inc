@@ -1,6 +1,42 @@
 <?php 
 class Backup {
 	
+	public static function removeOlds($max_nb = 30) {
+		$list = self::listBackups();
+		if (count($list) <= $max_nb) return;
+		usort($list, function($b1,$b2) {
+			if ($b1["time"] < $b2["time"]) return -1;
+			if ($b1["time"] > $b2["time"]) return 1;
+			return 0;
+		});
+		while (count($list) > $max_nb) {
+			self::removeDirectory("data/backups/".$list[0]["version"]."/".$list[0]["time"]);
+			array_splice($list, 0, 1);
+		}
+	}
+	
+	public static function listBackups() {
+		$list = array();
+		if (!file_exists("data/backups")) return $list;
+		$dir = opendir("data/backups");
+		while (($filename = readdir($dir)) <> null) {
+			if ($filename == "." || $filename == "..") continue;
+			if (!is_dir("data/backups/$filename")) continue;
+			self::_listBackups($filename, $list);
+		}
+		closedir($dir);
+		return $list;
+	}
+	private static function _listBackups($version, &$list) {
+		$dir = opendir("data/backups/$version");
+		while (($filename = readdir($dir)) <> null) {
+			if ($filename == "." || $filename == "..") continue;
+			if (!is_dir("data/backups/$version/$filename")) continue;
+			array_push($list,array("version"=>$version,"time"=>intval($filename)));
+		}
+		closedir($dir);
+	}
+	
 	public static function createBackup() {
 		global $local_domain;
 		require_once("component/PNApplication.inc");

@@ -343,7 +343,7 @@ class page_curriculum extends Page {
 				var total_coef = 0;
 				for (var i = 0; i < subjects.length; ++i) {
 					if (subjects[i].period_id != period.id) continue;
-					if (subjects[i].specialization != null && spe >= 0 && subjects[i].specialization != specializations[spe].id) continue;
+					if (subjects[i].specialization_id != null && spe >= 0 && subjects[i].specialization_id != specializations[spe].id) continue;
 					if (subjects[i].coefficient) total_coef += parseInt(subjects[i].coefficient);
 					if (!subjects[i].hours) continue;
 					var hw=0,ht=0;

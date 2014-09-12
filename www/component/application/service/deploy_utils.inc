@@ -34,7 +34,7 @@ function download($url, $target = null, $from = null, $to = null, $resume_if_exi
 		set_time_limit(240);
 	curl_setopt($c, CURLOPT_TIMEOUT, $timeout);
 	$headers = array(
-		"Connection: close"
+		//"Connection: close"
 	);
 	if ($from !== null)
 		array_push($headers, "Range: bytes=".$from."-".$to);

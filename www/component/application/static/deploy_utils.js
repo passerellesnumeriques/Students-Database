@@ -88,8 +88,7 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 				if (speed > 2.5*1024*1024) speed = 2.5*1024*1024;
 				if (speed < 32768) speed = 32768;
 				else if (speed >= 160*1024) window.download_init_speed = 128*1024;
-			} else
-				speed *= 1.2;
+			}
 			next(end+1);
 		});
 	};

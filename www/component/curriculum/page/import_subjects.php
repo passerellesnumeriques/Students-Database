@@ -21,6 +21,7 @@ class page_import_subjects extends Page {
 				->whereNotValue("CurriculumSubject","period",$batch_period_id) // remove current period
 				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
 				->whereNotValue("BatchPeriod","batch",$batch_period["batch"]) // remove current batch
+				->orderBy("BatchPeriod", "batch",false)
 				->orderBy("CurriculumSubject", "code")
 				->fieldsOfTable("CurriculumSubject")
 				->execute();
@@ -32,6 +33,7 @@ class page_import_subjects extends Page {
 					->whereNotValue("CurriculumSubject","period",$batch_period_id) // remove current period
 					->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
 					->whereNotValue("BatchPeriod","batch",$batch_period["batch"]) // remove current batch
+					->orderBy("BatchPeriod", "batch",false)
 					->orderBy("CurriculumSubject", "code")
 					->fieldsOfTable("CurriculumSubject")
 					->execute();
@@ -41,6 +43,7 @@ class page_import_subjects extends Page {
 				->whereNotValue("CurriculumSubject","period",$batch_period_id) // remove current period
 				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
 				->whereNotValue("BatchPeriod","batch",$batch_period["batch"]) // remove current batch
+				->orderBy("BatchPeriod", "batch",false)
 				->orderBy("CurriculumSubject", "code")
 				->fieldsOfTable("CurriculumSubject")
 				->execute();
@@ -69,6 +72,7 @@ class page_import_subjects extends Page {
 			<th>From</th>
 		</tr>
 		<?php
+		$all_subjects = array();
 		foreach ($available_subjects as $spe=>$subjects) {
 			if ($spe <> null) {
 				foreach ($specializations as $spec) if ($spec["id"] == $spe) { $sp = $spec; break; }
@@ -77,6 +81,7 @@ class page_import_subjects extends Page {
 				echo "<tr><td colspan=6 style='background-color:#C0FFC0;font-weight:bold;text-align:center'>Common (no specific specialization)</td></tr>";
 			}
 			foreach ($subjects as $subject) {
+				array_push($all_subjects, $subject);
 				$found = false;
 				foreach ($current_subjects as $s) if ($s["code"] == $subject["code"]) { $found = true; break; }
 				echo "<tr id='subject_".$subject["id"]."'".($found ? " style='color:#808080'" : "").">";
@@ -110,7 +115,7 @@ class page_import_subjects extends Page {
 	</table>
 </div>
 <script type='text/javascript'>
-var subjects = <?php echo json_encode($subjects);?>;
+var subjects = <?php echo json_encode($all_subjects);?>;
 		
 var popup = window.parent.get_popup_window_from_frame(window);
 popup.addIconTextButton(theme.icons_16._import, "Import Selected Subjects", "import", function() {
