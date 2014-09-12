@@ -95,7 +95,7 @@ function pictures_list_thumbnail(container, picture, width, height, onloaded) {
 		this.picture_container.style.height = "";
 		var h = this.element.clientHeight;
 		h -= this.name_container.offsetHeight;
-		setHeight(this.picture_container, h);
+		setHeight(this.picture_container, h, []);
 		if (t.picture) {
 			var w = this.picture_container.clientWidth;
 			h = this.picture_container.clientHeight;

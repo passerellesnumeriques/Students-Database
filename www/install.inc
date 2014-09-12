@@ -480,9 +480,12 @@ function checkEnd() {
 			var d = document.createElement("DIV");
 			progress.appendChild(d);
 			d.innerHTML = 
+				"<br/>"+
 				"Installation done. Please schedule the following tasks (in /etc/crontab for Unix, or in the Task Scheduler for Windows):<ul>"+
-				"<li>Execute, with PHP command line, the file cron.php at least every 5 minutes (recommended is every 2 minutes)</li>"+
-				"<li>Execute, with PHP command line, the file cron_maintenance.php every night (when no user will use the application). This task will put the software into maintenance mode (the users cannot access it), in order to perform some tasks on the database and files (backup, healthy checks...).</li>"+
+				"<li>Execute, with PHP command line, the file cron.php regularly (at least every 5 minutes is good, recommended is every 2 minutes)</li>"+
+				"<li>Execute, with PHP command line, the file cron_maintenance.php every night (when no user will use the application).<br/>"+
+				"This task will put the software into maintenance mode (the users cannot access it), in order to perform some tasks<br/>"+
+				"on the database and files (backup, healthy checks...).</li>"+
 				"</ul>"+
 				"Please note also that this installation created a directory <b>data</b>. This directory will contains files uploaded by users (documents, pictures...) so it may grow over time. You may want to replace it with a link to another partition/hard drive than the one where you installed this web application.<br/><br/>"+
 				"<a href='/'>Click here to start the application</a>";
