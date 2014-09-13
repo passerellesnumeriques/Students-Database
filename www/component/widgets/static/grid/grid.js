@@ -885,6 +885,7 @@ function grid(element) {
 		var thead_knowledge = [];
 		var update = function() {
 			// put back the thead, so we can get the width of every th
+			if (!t) return;
 			t.element.style.paddingTop = "0px";
 			t.element.style.position = "static";
 			t.grid_element.style.overflow = "auto";

@@ -614,6 +614,7 @@ function tree(container) {
 		this.tbody.appendChild(this.tr_columns = document.createElement("TR"));
 		this.setShowColumn(this.show_columns);
 		this.table.ondomremoved(function() {
+			t._selected_item = null;
 			t.clearItems();
 			if (t.columns) for (var i = 0; i < t.columns.length; ++i) { t.columns[i].title = null; t.columns[i].th = null; }
 			t.table = null;

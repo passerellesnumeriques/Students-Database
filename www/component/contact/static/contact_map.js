@@ -71,6 +71,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 			this.entities_checkboxes.push(checkboxes);
 			this.entities_markers.push(markers);
 		}
+		layout.changed(this._entities_container);
 		this.entities_filled = true;
 	};
 	this.refreshMap = function() {
