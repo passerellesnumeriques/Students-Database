@@ -49,6 +49,7 @@ function Excel(container, onready) {
 	require("tabs.js",function(){
 		t.tabs = new tabs(container, true);
 		t.tabs.onselect = function() {
+			t.sheets[t.tabs.selected].build();
 			t.onactivesheetchanged.fire(t);
 		};
 		container.ondomremoved(function() {
@@ -71,93 +72,14 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	this.name = name;
 	this.icon = icon;
 	this.selection_changed = new Custom_Event();
+	this.columns = [];
+	this.rows = [];
+	this.cells = [];
+	this.layers = [];
 	
 	this.getCell = function(col, row) { return this.cells[col][row]; };
 	this.getColumn = function(col) { return this.columns[col]; };
 	this.getRow = function(row) { return this.rows[row]; };
-	
-	this._init = function() {
-		this.container = document.createElement("DIV");
-		this.container.style.backgroundColor = "white";
-		this.container.style.position = "relative";
-		this.container.style.width = "100%";
-		this.container.style.height = "100%";
-		this.content = document.createElement("DIV");
-		this.content.style.position = "relative";
-		this.content.style.top = "0px";
-		this.content.style.left = "0px";
-		this.container.appendChild(this.content);
-		// create corner
-		this.corner = document.createElement("DIV");
-		this.corner.style.width = "50px";
-		this.corner.style.height = "16px";
-		this.corner.style.left = "0px";
-		this.corner.style.top = "0px";
-		this.corner.style.position = "absolute";
-		this.corner.style.zIndex=5;
-		this.corner.style.backgroundColor = "#D0D0F0";
-		this.corner.style.borderRight = "1px solid #808080";
-		this.corner.style.borderBottom = "1px solid #808080";
-		this.content.appendChild(this.corner);
-		this.column_headers_container = document.createElement("DIV");
-		this.content.appendChild(this.column_headers_container);
-		this.column_headers_container.style.position = "absolute";
-		this.column_headers_container.style.top = "0px";
-		this.column_headers_container.style.left = "50px";
-		this.row_headers_container = document.createElement("DIV");
-		this.content.appendChild(this.row_headers_container);
-		this.row_headers_container.style.position = "absolute";
-		this.row_headers_container.style.top = "16px";
-		this.row_headers_container.style.left = "0px";
-		this.table = document.createElement("TABLE"); this.content.appendChild(this.table);
-		this.table.style.position = "absolute";
-		this.table.style.left = "50px";
-		this.table.style.top = "16px";
-		this.table.style.border = "1px solid black";
-		this.table.style.borderCollapse = "collapse";
-		this.table.style.borderSpacing = "0px";
-		this.table.style.tableLayout = "fixed";
-		// create columns and rows
-		this.columns = [];
-		this.rows = [];
-		this.cells = [];
-		this.layers = [];
-		for (var i = 0; i < columns; ++i)
-			this.addColumn();
-		for (var i = 0; i < rows; ++i)
-			this.addRow();
-		var t=this;
-		this.content.style.overflow = "auto";
-		this.last_scroll_left = this.content.scrollLeft;
-		this.last_scroll_top = this.content.scrollTop;
-		this.content.onscroll = function(ev) {
-			if (t.content.scrollLeft != t.last_scroll_left) {
-				t.row_headers_container.style.left = t.content.scrollLeft+"px";
-				t.corner.style.left = t.content.scrollLeft+"px";
-				t.last_scroll_left = t.content.scrollLeft;
-			}
-			if (t.content.scrollTop != t.last_scroll_top) {
-				t.column_headers_container.style.top = t.content.scrollTop+"px";
-				t.corner.style.top = t.content.scrollTop+"px";
-				t.last_scroll_top = t.content.scrollTop;
-			}
-		};
-		this.layout();
-		layout.listenElementSizeChanged(this.container, function() { t.layout(); });
-		this.container.ondomremoved(function() {
-			t.container = null;
-			t.content = null;
-			t.corner = null;
-			t.column_headers_container = null;
-			t.row_headers_container = null;
-			t.table = null;
-			t.columns = null;
-			t.rows = null;
-			t.cells = null;
-			t.layers = null;
-		});
-		if (onready) onready(this);
-	};
 	
 	this.layout = function() {
 		this.content.style.width = this.container.clientWidth+"px";
@@ -257,20 +179,104 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 	this.mergeCells = function(start_col, start_row, end_col, end_row) {
 		var cell = this.cells[start_col][start_row];
 		if (!cell) return;
-		cell.td.rowSpan = end_row-start_row+1;
-		cell.td.colSpan = end_col-start_col+1;
-		for (var col = start_col; col <= end_col; col++)
-			for (var row = start_row; row <= end_row; row++) {
-				if (col == start_col && row == start_row) continue;
-				this.cells[col][row].td.parentNode.removeChild(this.cells[col][row].td);
-				this.cells[col][row] = cell;
-			}
+		cell.merge(start_col,start_row,end_col,end_row);
 		cell._refreshSize();
 		// TODO
 	};
 	
+	this._init = function() {
+		this.container = document.createElement("DIV");
+		this.container.style.backgroundColor = "white";
+		this.container.style.position = "relative";
+		this.container.style.width = "100%";
+		this.container.style.height = "100%";
+		// create columns and rows
+		for (var i = 0; i < columns; ++i)
+			this.addColumn();
+		for (var i = 0; i < rows; ++i)
+			this.addRow();
+		if (onready) onready(this);
+	};
+	
+	this.build = function(onready) {
+		if (this.content) {
+			if (onready) onready(this);
+			return;
+		}
+		this.content = document.createElement("DIV");
+		this.content.style.position = "relative";
+		this.content.style.top = "0px";
+		this.content.style.left = "0px";
+		this.container.appendChild(this.content);
+		// create corner
+		this.corner = document.createElement("DIV");
+		this.corner.style.width = "50px";
+		this.corner.style.height = "16px";
+		this.corner.style.left = "0px";
+		this.corner.style.top = "0px";
+		this.corner.style.position = "absolute";
+		this.corner.style.zIndex=5;
+		this.corner.style.backgroundColor = "#D0D0F0";
+		this.corner.style.borderRight = "1px solid #808080";
+		this.corner.style.borderBottom = "1px solid #808080";
+		this.content.appendChild(this.corner);
+		this.column_headers_container = document.createElement("DIV");
+		this.content.appendChild(this.column_headers_container);
+		this.column_headers_container.style.position = "absolute";
+		this.column_headers_container.style.top = "0px";
+		this.column_headers_container.style.left = "50px";
+		this.row_headers_container = document.createElement("DIV");
+		this.content.appendChild(this.row_headers_container);
+		this.row_headers_container.style.position = "absolute";
+		this.row_headers_container.style.top = "16px";
+		this.row_headers_container.style.left = "0px";
+		this.table = document.createElement("TABLE"); this.content.appendChild(this.table);
+		this.table.style.position = "absolute";
+		this.table.style.left = "50px";
+		this.table.style.top = "16px";
+		this.table.style.border = "1px solid black";
+		this.table.style.borderCollapse = "collapse";
+		this.table.style.borderSpacing = "0px";
+		this.table.style.tableLayout = "fixed";
+		for (var col = 0; col < this.columns.length; ++col) {
+			this.columns[col].build();
+			for (var row = 0; row < this.rows.length; ++row) {
+				this.rows[row].build();
+				this.cells[col][row].build();
+			}
+		}
+		var t=this;
+		this.content.style.overflow = "auto";
+		this.last_scroll_left = this.content.scrollLeft;
+		this.last_scroll_top = this.content.scrollTop;
+		this.content.onscroll = function(ev) {
+			if (t.content.scrollLeft != t.last_scroll_left) {
+				t.row_headers_container.style.left = t.content.scrollLeft+"px";
+				t.corner.style.left = t.content.scrollLeft+"px";
+				t.last_scroll_left = t.content.scrollLeft;
+			}
+			if (t.content.scrollTop != t.last_scroll_top) {
+				t.column_headers_container.style.top = t.content.scrollTop+"px";
+				t.corner.style.top = t.content.scrollTop+"px";
+				t.last_scroll_top = t.content.scrollTop;
+			}
+		};
+		this.layout();
+		layout.listenElementSizeChanged(this.container, function() { t.layout(); });
+		this.container.ondomremoved(function() {
+			t.container = null;
+			t.content = null;
+			t.corner = null;
+			t.column_headers_container = null;
+			t.row_headers_container = null;
+			t.table = null;
+			t.columns = null;
+			t.rows = null;
+			t.cells = null;
+			t.layers = null;
+		});
+	};
 	this._init();
-	layout.listenElementSizeChanged(this.container, function() { t.layout(); });
 	
 	listenEvent(window,'keydown',function(ev){
 		var event = window.event ? window.event : ev;
@@ -422,6 +428,7 @@ function ExcelSheetColumn(sheet, index) {
 	this.setWidth = function(w) {
 		if (w < 10) w = 10;
 		this.width = w;
+		if (!this.header) return;
 		this.header.style.width = w+"px";
 		for (var j = 0; j < sheet.cells[this.index].length; ++j)
 			sheet.cells[this.index][j]._refreshSize();
@@ -437,7 +444,8 @@ function ExcelSheetColumn(sheet, index) {
 		for (var i = 0; i < sheet.layers.length; ++i) sheet.layers[i].refresh();
 	};
 	
-	this._init = function() {
+	this.build = function() {
+		if (this.header) return;
 		this.header = document.createElement("DIV");
 		this.header.style.borderBottom = "1px solid black";
 		this.header.style.borderLeft = "1px solid black";
@@ -495,7 +503,6 @@ function ExcelSheetColumn(sheet, index) {
 			t.sheet = null;
 		});
 	};
-	this._init();
 }
 
 function ExcelSheetRow(sheet, index) {
@@ -506,6 +513,7 @@ function ExcelSheetRow(sheet, index) {
 	
 	this.setHeight = function(h) {
 		this.height = h;
+		if (!this.header) return;
 		this.header.style.height = h+"px";
 		for (var j = 0; j < sheet.cells.length; ++j)
 			sheet.cells[j][this.index]._refreshSize();
@@ -521,7 +529,8 @@ function ExcelSheetRow(sheet, index) {
 		for (var i = 0; i < sheet.layers.length; ++i) sheet.layers[i].refresh();
 	};
 	
-	this._init = function() {
+	this.build = function() {
+		if (this.header) return;
 		this.header = document.createElement("DIV");
 		this.header.style.borderTop = "1px solid black";
 		this.header.style.borderRight = "1px solid black";
@@ -581,7 +590,6 @@ function ExcelSheetRow(sheet, index) {
 			t.sheet = null;
 		});
 	};
-	this._init();
 }
 
 function ExcelCellSizeRefresher() {
@@ -601,8 +609,11 @@ function ExcelCellSizeRefresher() {
 			sizes.push(list[i]._calculateRefreshSize());
 		for (var i = 0; i < list.length; ++i) {
 			if (!list[i].value) continue;
+			if (list[i].value.style.width && parseInt(list[i].value.style.width) == sizes[i][0] &&
+				list[i].value.style.height && parseInt(list[i].value.style.height) == sizes[i][1]+1) continue;
 			list[i].value.style.width = (sizes[i][0])+"px";
 			list[i].value.style.height = (sizes[i][1]+1)+"px";
+			layout.changed(list[i].value);
 		}
 	};
 	this.cleanup = function() {
@@ -617,20 +628,51 @@ function ExcelSheetCell(sheet, column, row) {
 	this.sheet = sheet;
 	this.column = column;
 	this.row = row;
+	this.value = "";
+	this._styles = {};
+	this._spans = {row:1,col:1};
 	
 	this.setValue = function(value) {
-		this.value.innerHTML = value;
+		if (typeof this.value == 'string')
+			this.value = ""+value;
+		else
+			this.value.innerHTML = value;
 	};
 	this.getValue = function() {
+		if (typeof this.value == 'string')
+			return this.value;
 		return this.value.innerHTML;
 	};
 	this.setStyle = function(styles) {
+		if (typeof this._styles != 'undefined') {
+			for (var name in styles)
+				this._styles[name] = styles[name];
+			return;
+		}
 		for (var name in styles)
 			this.td.style[name] = styles[name];
 		this._refreshSize();
 	};
+	
+	this.merge = function(start_col, start_row, end_col, end_row) {
+		if (this.td) {
+			this.td.rowSpan = end_row-start_row+1;
+			this.td.colSpan = end_col-start_col+1;
+		} else {
+			this._spans.row = end_row-start_row+1;
+			this._spans.col = end_col-start_col+1;
+		}
+		for (var col = start_col; col <= end_col; col++)
+			for (var row = start_row; row <= end_row; row++) {
+				if (col == start_col && row == start_row) continue;
+				if (sheet.cells[col][row].td)
+					sheet.cells[col][row].td.parentNode.removeChild(sheet.cells[col][row].td);
+				sheet.cells[col][row] = this;
+			}
+	};
 
 	this._refreshSize = function() {
+		if (!this.td) return;
 		window.excelCellSizeRefresher.toRefresh(this);
 	};
 	this._calculateRefreshSize = function() {
@@ -652,13 +694,22 @@ function ExcelSheetCell(sheet, column, row) {
 		return [w,h];
 	};
 	
-	this._init = function() {
+	this.build = function() {
+		if (this.td) return;
 		this.td = document.createElement("TD");
 		this.td.style.border = "1px solid #C0C0F0";
 		this.td.style.overflow = "hidden";
 		this.td.title = "Double-click to edit the content";
+		for (var name in this._styles)
+			this.td.style[name] = this._styles[name];
+		this._styles = undefined;
+		this.td.rowSpan = this._spans.row;
+		this.td.colSpan = this._spans.col;
+		this._spans = null;
 		sheet.rows[this.row].tr.appendChild(this.td);
-		this.value = document.createElement("DIV");
+		var val = document.createElement("DIV");
+		val.innerHTML = this.value;
+		this.value = val;
 		this.value.style.overflow = "hidden";
 		this.value.style.paddingLeft = "1px";
 		this.td.style.padding = "0px";
@@ -742,8 +793,8 @@ function ExcelSheetCell(sheet, column, row) {
 			t.value = null;
 			t.sheet = null;
 		});
+		layout.changed(this.td);
 	};
-	this._init();
 }
 
 function ExcelSheetCursor(sheet) {

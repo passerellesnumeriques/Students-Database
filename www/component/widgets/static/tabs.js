@@ -111,12 +111,14 @@ function tabs(container, fill_tab_content) {
 			var knowledge = [];
 			setWidth(t.content, container.clientWidth, knowledge);
 			setHeight(t.content, container.clientHeight - t.header.offsetHeight, knowledge);
+			layout.changed(t.content);
 		}
 		if (t.selected != -1) {
 			if (fill_tab_content) {
 				var knowledge = [];
 				setWidth(t.tabs[t.selected].content, t.content.clientWidth, knowledge);
 				setHeight(t.tabs[t.selected].content, t.content.clientHeight, knowledge);
+				layout.changed(t.tabs[t.selected].content);
 			}
 		}
 	};

@@ -53,6 +53,7 @@ function initPNApplication() {
 						window.top.pnapplication._onmouseup_listeners[i][1](ev, w, window.top.pnapplication._onmouseup_listeners[i][0]);
 				});
 			},
+			_reserved_names: [],
 			/** unregister a window (when it is closed)
 			 * @param {window} w window/frame which has been closed 
 			 */
@@ -99,8 +100,7 @@ function initPNApplication() {
 				for (var name in w)
 					if (name != "closing" && name != "name" && name != "frameElement" &&
 						name != "self" && name != "parent" && name != "top" &&
-						name != "history" && name != "navigator" &&
-						!name.startsWith("webkit") &&
+						!window.top.pnapplication._reserved_names.contains(name) &&
 						typeof Window.prototype[name] == 'undefined' &&
 						name != "id" && name != "_domRemoved")
 						w[name] = null;
@@ -214,6 +214,8 @@ function initPNApplication() {
 				}
 			}
 		};
+		for (var name in Window.prototype)
+			window.top.pnapplication._reserved_names.push(name);
 		window.top.pnapplication.registerWindow(window.top);
 		setInterval(window.top.pnapplication.checkInactivity, 2000);
 		}
