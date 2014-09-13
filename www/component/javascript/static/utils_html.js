@@ -34,7 +34,7 @@ function lock_screen(onclick, content) {
 	if (content)
 		set_lock_screen_content(div, content);
 	if (typeof animation != 'undefined')
-		div.anim = animation.fadeIn(div,200,null,10,100);
+		div.anim = animation.fadeIn(div,200,function() {div.anim=null;},10,100);
 	div.listener = function() {
 		div.style.width = getWindowWidth()+"px";
 		div.style.height = getWindowHeight()+"px";
@@ -96,6 +96,7 @@ function unlock_screen(div) {
 		if (div.usage_counter > 0) return;
 	}
 	unlistenEvent(window, 'resize', div.listener);
+	div.listener = null;
 	if (typeof animation != 'undefined') {
 		div.id = '';
 		if (div.anim) animation.stop(div.anim);

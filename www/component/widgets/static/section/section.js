@@ -299,4 +299,25 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	};
 	
 	this._init();
+	
+	this.element.ondomremoved(function() {
+		t.element = null;
+		t.content = null;
+		t.toolbar = null;
+		t.toolbar_left = null;
+		t.toolbar_right = null;
+		t.footer = null;
+		t.header = null;
+		t.title = null;
+		t.icon = null;
+		t.title_container = null;
+		if (t.content_container) {
+			t.content_container.anim1 = null;
+			t.content_container.anim2 = null;
+		}
+		t.content_container = null;
+		t.collapse_container = null;
+		t.collapse_button = null;
+		t = null;
+	});
 }

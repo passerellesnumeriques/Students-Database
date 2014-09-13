@@ -225,6 +225,8 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			if (t.view && t.view.zoom_supported && t.zoom_div)
 				t.header.appendChild(t.zoom_div);
 			t.updateHeader();
+			layout.changed(t.header);
+			layout.changed(t.view_container);
 			if (onready) onready();
 		});
 	};

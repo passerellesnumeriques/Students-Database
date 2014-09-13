@@ -100,7 +100,10 @@ if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $pn_app_version) {
 	} else if (strpos($path, "/service/") && $path <> "/dynamic/application/service/loading") {
 		header("pn_version_changed: ".$pn_app_version, true, 403);
 		die();
-	} // else we let continue... to avoid blocking everything
+	} else if (strpos($path, "/static/")) {
+	} else {
+		// else we let continue... to avoid blocking everything
+	}
 }
 
 if ($path == "reload") {

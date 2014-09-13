@@ -138,6 +138,9 @@ function autocomplete_menu(ac, onselectitem) {
 				return false;
 			};
 			this.div.appendChild(d);
+			d.ondomremoved(function() {
+				d.item = null;
+			});
 		}
 		this.highlight(0);
 		this.resize();

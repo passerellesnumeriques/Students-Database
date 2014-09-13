@@ -110,6 +110,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.th.className = "final";
 	window.to_cleanup.push(this);
 	this.cleanup = function() {
+		if (!this.th) return;
 		this.th.col = null;
 		this.th = null;
 		this.attached_data = null;
@@ -120,6 +121,10 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				this.actions[i].element = null;
 			}
 		this.actions = null;
+		this.sort_function = null;
+		this.sort_handler = null;
+		this.span_actions = null;
+		window.to_cleanup.remove(this);
 	};
 	this.col = document.createElement('COL');
 	if (this.width) {
@@ -397,6 +402,7 @@ function grid(element) {
 	var t = this;
 	window.to_cleanup.push(t);
 	t.cleanup = function() {
+		element = null;
 		t.element = null;
 		t.columns = null;
 		t.table = null;
@@ -404,6 +410,7 @@ function grid(element) {
 		t.grid_element = null;
 		t.header_rows = null;
 		t.colgroup = null;
+		t = null;
 	};
 	t.element = element;
 	t.columns = [];

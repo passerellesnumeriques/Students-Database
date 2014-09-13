@@ -293,6 +293,7 @@ function reloadMenu() {
 function loadMenu(url) {
 	menu_url = url;
 	var menu_container = document.getElementById('application_left_menu');
+	menu_container.removeAllChildren();
 	menu_container.innerHTML = "<div style='text-align:center'><img src='"+theme.icons_16.loading_white+"'/></div>";
 	var head = document.getElementsByTagName("HEAD")[0];
 	for (var i = 0; i < head.childNodes.length; ++i) {
@@ -304,9 +305,11 @@ function loadMenu(url) {
 	}
 	ajax.call("GET", url, null, null, 
 		function(error){
+			menu_container.removeAllChildren();
 			menu_container.innerHTML = "<img src='"+theme.icons_16.error+"'/> "+error;
 		},
 		function(xhr){
+			menu_container.removeAllChildren();
 			menu_container.innerHTML = xhr.responseText;
 			var scripts = menu_container.getElementsByTagName("SCRIPT");
 			var list = [];

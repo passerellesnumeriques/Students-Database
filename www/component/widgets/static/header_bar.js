@@ -100,4 +100,11 @@ function header_bar(container, style) {
 	};
 	
 	t._init();
+	
+	container.ondomremoved(function() {
+		t.title = null;
+		t.menu = null;
+		t.menu_container = null;
+		t.more_menu = null;
+	});
 }

@@ -226,7 +226,6 @@ function pageHeaderStart() {
 	if (window==window.top){location.href='/?page='+encodeURIComponent(location.pathname+location.search+location.hash);};
 	</script>
 	<script id='init_js_1' type="text/javascript" src="/static/javascript/utils.js" onload="this._loaded=true;"></script>
-	<script id='init_js_2' type="text/javascript" src="/static/javascript/lib_jquery/jquery.min.js" onload="this._loaded=true;"></script>
 	<script id='init_js_3' type="text/javascript" src="/static/javascript/browser.js" onload="this._loaded=true;"></script>
 	<script id='init_js_4' type="text/javascript" src="/static/javascript/utils_js.js" onload="this._loaded=true;"></script>
 	<script id='init_js_5' type="text/javascript" src="/static/javascript/utils_html.js" onload="this._loaded=true;"></script>
@@ -242,7 +241,6 @@ function pageHeaderStart() {
 	<script id='init_js_15' type="text/javascript" src="/static/data_model/databaselock.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript">
 	javascript_loaded(document.getElementById('init_js_1'));
-	javascript_loaded(document.getElementById('init_js_2'));
 	javascript_loaded(document.getElementById('init_js_3'));
 	javascript_loaded(document.getElementById('init_js_4'));
 	javascript_loaded(document.getElementById('init_js_5'));

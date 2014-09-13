@@ -2,7 +2,6 @@
 theme::css($this, "application.css");
 
 // mandatory part
-$this->requireJavascript("calendar.js");
 ?><script type='text/javascript'>
 window.top.username = <?php echo json_encode(PNApplication::$instance->user_management->username); ?>;
 window.top.user_id = <?php echo PNApplication::$instance->user_management->user_id; ?>;
@@ -45,7 +44,7 @@ function init_top_calendar_manager() {
 		setTimeout(init_top_calendar_manager,25);
 		return;
 	}
-	window.top.calendar_manager = new CalendarManager();
+	window.top.calendar_manager = new window.top.CalendarManager();
 	window.top.CalendarsProviders.get(function(provider) {
 		if (!window.top.calendar_manager) return;
 		for (var i = 0; i < provider.calendars.length; ++i)
@@ -75,6 +74,7 @@ function init_top_calendar_manager() {
 		window.top.pnapplication.onlogout.add_listener(window.top._logout_remove_calendars);
 	}
 }
+window.top.require("calendar.js");
 init_top_calendar_manager();
 document.body.style.overflow = "hidden";
 // connect to Google

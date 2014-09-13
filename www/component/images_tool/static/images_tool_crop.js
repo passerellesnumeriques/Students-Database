@@ -400,6 +400,20 @@ function images_tool_crop() {
 		};
 		return div;
 	};
+	this._cleanup = function() {
+		this.general_ratio_input = null;
+	};
+	this.cleanPicture = function(pic) {
+		pic.crop_top_input = null;
+		pic.crop_bottom_input = null;
+		pic.crop_left_input = null;
+		pic.crop_right_input = null;
+		pic.crop_size_container = null;
+		pic.crop_ratio_input = null;
+		if (pic._crop_rectangle)
+			pic._crop_rectangle.cleanup();
+		pic._crop_rectangle = null;
+	};
 };
 images_tool_crop.prototype = new ImageTool;
 images_tool_crop.prototype.constructor = images_tool_crop;
@@ -623,5 +637,19 @@ function crop_rectangle(pic) {
 			pic.update();
 		}
 	});
+	
+	this.cleanup = function() {
+		this.div_top = null;
+		this.div_bottom = null;
+		this.div_left = null;
+		this.div_top = null;
+		this.div_top_left = null;
+		this.div_top_right = null;
+		this.div_bottom_left = null;
+		this.div_bottom_right = null;
+		pic = null;
+		t = null;
+		move = null;
+	};
 
 }

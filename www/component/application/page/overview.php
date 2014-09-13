@@ -162,9 +162,9 @@ if (@$_COOKIE["test_deploy"] == "true") {
 	</div>
 </div>
 <script type='text/javascript'>
-var calendars_section = sectionFromHTML('calendar_events');
-var updates_section = sectionFromHTML('updates');
-var activities_section = sectionFromHTML('activities');
+window.calendars_section = sectionFromHTML('calendar_events');
+window.updates_section = sectionFromHTML('updates');
+window.activities_section = sectionFromHTML('activities');
 
 require("calendar_view.js");
 require("calendar_view_week.js");
@@ -175,7 +175,7 @@ function init_calendars() {
 	icon_loading.style.visibility = 'hidden';
 	icon_loading.style.display = 'none';
 	icon_loading.counter = 0;
-	calendars_section.addToolRight(icon_loading);
+	window.calendars_section.addToolRight(icon_loading);
 	var refresh_listener = function() {
 		icon_loading.counter++;
 		icon_loading.style.visibility = 'visible';
@@ -228,6 +228,9 @@ function init_calendars() {
 				popup.show();
 			});
 		};
+		div.ondomremoved(function() {
+			div.provider = null;
+		});
 		providers.push(provider);
 		layout.changed(calendars_section.element);
 	};
@@ -242,13 +245,14 @@ function init_calendars() {
 }
 init_calendars();
 
-var general_updates = null, other_updates = null;
+window.updates = null;
+window.activities = null;
 require("news.js",function() {
-	updates = new news('updates_container', [], null, 'update', function(n) {
+	window.updates = new news('updates_container', [], null, 'update', function(n) {
 		var loading = document.getElementById('updates_loading');
 		loading.parentNode.removeChild(loading);
 	});
-	activities = new news('activities_container', [], null, 'activity', function(n) {
+	window.activities = new news('activities_container', [], null, 'activity', function(n) {
 		var loading = document.getElementById('activities_loading');
 		loading.parentNode.removeChild(loading);
 	});
@@ -256,9 +260,9 @@ require("news.js",function() {
 	post_button.className = "flat icon";
 	post_button.innerHTML = "<img src='/static/news/write_16.png'/>";
 	post_button.title = "Post a message";
-	updates_section.addToolRight(post_button);
+	window.updates_section.addToolRight(post_button);
 	post_button.onclick = function() {
-		updates.post();
+		window.updates.post();
 	};
 });
 </script>

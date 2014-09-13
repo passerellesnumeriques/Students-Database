@@ -76,6 +76,8 @@ function GoogleCalendar(id, name, color, show, writable) {
 					}
 				} else {
 					// bug
+					google_events = null;
+					t = null;
 					ondone();
 					return;
 				}
@@ -147,6 +149,8 @@ function GoogleCalendar(id, name, color, show, writable) {
 						s += err+"\r\n";
 						s += "Details of the event returned from Google:\r\n";
 						s += debug_object_to_string(gev);
+						ev.cleanup();
+						ev = null;
 						continue;
 					}
 					var found = false;
@@ -156,6 +160,7 @@ function GoogleCalendar(id, name, color, show, writable) {
 							t.events.push(ev);
 							if (ev.last_modified != removed_events[j].last_modified)
 								t.on_event_updated.fire(ev);
+							removed_events[j].cleanup();
 							removed_events.splice(j,1);
 							break;
 						}
@@ -165,8 +170,13 @@ function GoogleCalendar(id, name, color, show, writable) {
 						t.on_event_added.fire(ev);
 					}
 				}
-				for (var i = 0; i < removed_events.length; ++i)
+				for (var i = 0; i < removed_events.length; ++i) {
 					t.on_event_removed.fire(removed_events[i]);
+					removed_events[i].cleanup();
+				}
+				removed_events = null;
+				google_events = null;
+				t = null;
 				ondone();
 			});
 		};

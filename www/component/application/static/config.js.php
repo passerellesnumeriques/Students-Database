@@ -52,6 +52,7 @@ function require_sequential(scripts, handler) {
 		require(scripts[pos], function(){
 			if (++pos >= scripts.length) {
 		 		if (handler) handler();
+		 		next = null;
 		 		return;
 			}
 			next();

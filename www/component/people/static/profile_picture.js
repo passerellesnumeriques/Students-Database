@@ -108,7 +108,7 @@ function profile_picture(container, width, height, halign, valign) {
 
 		t.picture.src = "/static/people/default_"+(sex == 'F' ? "female" : "male")+".jpg";
 		
-		if (!this._datamodel_cell_listener)
+		if (this._datamodel_cell_listener)
 			window.top.datamodel.removeCellChangeListener(this._datamodel_cell_listener);
 		window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, this._datamodel_cell_listener = function(value) {
 			t.loadPeopleID(people_id);
@@ -156,12 +156,12 @@ function profile_picture(container, width, height, halign, valign) {
 		if (!picture_id)
 			this.loadPeopleID(people_id, onloaded);
 		else {
-			if (!this._datamodel_cell_listener)
+			if (this._datamodel_cell_listener)
 				window.top.datamodel.removeCellChangeListener(this._datamodel_cell_listener);
 			window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, this._datamodel_cell_listener = function(value) {
 				t.loadPeopleID(people_id);
 			});
-			if (!this._datamodel_storage_cell_listener)
+			if (this._datamodel_storage_cell_listener)
 				window.top.datamodel.removeCellChangeListener(this._datamodel_storage_cell_listener);
 			window.top.datamodel.addCellChangeListener(window, "Storage", "revision", revision, this._datamodel_storage_cell_listener = function(value) {
 				t.revision = value;
@@ -212,6 +212,7 @@ function profile_picture(container, width, height, halign, valign) {
 			});
 			service.customOutput("storage", "get?id="+storage_id+"&revision="+revision, null, 
 				function(bin) {
+					if (!t) return;
 					if (!bin) return;
 					progress = -1;
 					var len = bin.length;
@@ -234,6 +235,7 @@ function profile_picture(container, width, height, halign, valign) {
 				}, 
 				false, 
 				function(error) {
+					if (!t) return;
 					progress = -1;
 					if (t.progress) {
 						if (t.progress.element.parentNode)
@@ -246,6 +248,7 @@ function profile_picture(container, width, height, halign, valign) {
 					if (t.picture && t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
 					if (onloaded) onloaded();
 				}, function(loaded, tot) {
+					if (!t) return;
 					if (t.progress) {
 						if (!t.progress.element.parentNode) {
 							if (img.parentNode)
@@ -375,6 +378,21 @@ function profile_picture(container, width, height, halign, valign) {
 		animation.create(img,ow,w,500,function(value,element){ element.style.width = Math.floor(value)+"px"; });
 		animation.create(img,oh,h,500,function(value,element){ element.style.height = Math.floor(value)+"px"; });
 	});
+	
+	this.picture_container.ondomremoved(function() {
+		t.picture = null;
+		t.controls = null;
+		t.picture_container = null;
+		t.progress = null;
+		img = null;
+		if (t._datamodel_cell_listener)
+			window.top.datamodel.removeCellChangeListener(t._datamodel_cell_listener);
+		t._datamodel_cell_listener = null;
+		if (t._datamodel_storage_cell_listener)
+			window.top.datamodel.removeCellChangeListener(t._datamodel_storage_cell_listener);
+		t._datamodel_storage_cell_listener = null;
+		t = null;
+	});
 }
 
 function addDataListPeoplePictureSupport(list) {
@@ -382,6 +400,9 @@ function addDataListPeoplePictureSupport(list) {
 		container.removeAllChildren();
 		container.picture = new profile_picture(container,width,height,"center","middle");
 		container.picture.loadPeopleID(people_id);
+		container.ondomremoved(function() {
+			container.picture = null;
+		});
 	},function(handler)  {
 		require("profile_picture.js");
 		var people_ids = [];
@@ -423,8 +444,10 @@ function addDataListImportPicturesButton(list) {
 	import_pictures.className = "flat";
 	import_pictures.disabled = "disabled";
 	import_pictures.innerHTML = "<img src='/static/images_tool/people_picture.png'/> Import Pictures";
+	var tool = null;
 	require("images_tool.js",function() {
-		var tool = new images_tool();
+		if (typeof tool == 'undefined') return;
+		tool = new images_tool();
 		tool.usePopup(true, function() {
 			var pictures = [];
 			for (var i = 0; i < tool.getPictures().length; ++i) pictures.push(tool.getPictures()[i]);
@@ -493,4 +516,9 @@ function addDataListImportPicturesButton(list) {
 		});
 	});
 	list.addHeader(import_pictures);
+	import_pictures.ondomremoved(function() {
+		if (tool)
+			tool.cleanup();
+		tool = undefined;
+	});
 }

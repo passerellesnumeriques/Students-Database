@@ -12,6 +12,7 @@ class page_exam_results_edit extends SelectionPage {
 		
 		theme::css($this, "section.css");
 		
+		$this->requireJavascript("jquery.min.js");
 		$this->requireJavascript("grid.js");
 		$this->requireJavascript("tabs.js");
 		$this->addJavascript("/static/widgets/section/section.js");

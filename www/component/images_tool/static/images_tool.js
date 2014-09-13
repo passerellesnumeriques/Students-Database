@@ -11,13 +11,20 @@ function images_tool() {
 	
 	window.to_cleanup.push(this);
 	this.cleanup = function() {
+		if (!t) return;
+		if (this._tools) for (var i = 0; i < this._tools.length; ++i) this._tools[i].tool.cleanup();
 		this._tools = null;
+		for (var i = 0; i < this._pictures.length; ++i) this._pictures[i].cleanup();
 		this._pictures = null;
 		this.container = null;
 		if (this.popup) {
-			this.popup.removeButtons();
+			this.popup.cleanup();
 			this.popup = null;
 		}
+		this.table = null;
+		this.upl = null;
+		t = null;
+		if (window.to_cleanup) window.to_cleanup.remove(this);
 	};
 	
 	this.usePopup = function(on_top, onfinish) {
@@ -134,6 +141,7 @@ function images_tool() {
 	};
 	
 	this.reset = function() {
+		for (var i = 0; i < this._pictures.length; ++i) this._pictures[i].cleanup();
 		this._pictures = [];
 		this.container.removeAllChildren();
 		this.table = null;
@@ -426,6 +434,7 @@ function images_tool() {
 	this.removePicture = function(picture) {
 		t._pictures.remove(picture);
 		t.table.removeChild(picture.tr);
+		picture.cleanup();
 	};
 	
 	this.getPictures = function() {
@@ -442,7 +451,13 @@ ImageTool.prototype = {
 	update: function(pic, canvas) {},
 	createContent: function(pic) {},
 	createGeneralContent: function() { return null; },
-	images_tool: null // set when the tool is initialized and added
+	images_tool: null, // set when the tool is initialized and added
+	cleanup: function() {
+		if (this._cleanup) this._cleanup();
+		this.images_tool = null;
+	},
+	_cleanup: null,
+	cleanPicture: function(pic) {}
 };
 
 function images_tool_picture() {
@@ -568,4 +583,23 @@ function images_tool_picture() {
 		for (var i = 0; i < data.width*data.height*4; ++i) result.data[i] = data.data[i];
 		return result;
 	};
+	
+	this.cleanup = function() {
+		if (!this.tr) return;
+		for (var i = 0; i < this.tools.length; ++i) this.tools[i].cleanPicture(this);
+		this.tr = null;
+		this.td_name = null;
+		this.td_original = null;
+		this.td_tools = null;
+		this.td_result = null;
+		this.tools = null;
+		this.original = null;
+		this.original_canvas = null;
+		this.div_original = null;
+		this.result_canvas = null;
+		t = null;
+	};
+	this.tr.ondomremoved(function() {
+		if (t) t.cleanup();
+	});
 }

@@ -6,6 +6,7 @@ class page_exam_results extends SelectionPage {
 			
 		theme::css($this, "section.css");
 
+		$this->requireJavascript("jquery.min.js");
 		$this->requireJavascript("address_text.js");
 		$this->addJavascript("/static/widgets/section/section.js");
 		$this->onload("sectionFromHTML('sessions_list');");

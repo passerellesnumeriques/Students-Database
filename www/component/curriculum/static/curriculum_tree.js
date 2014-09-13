@@ -19,11 +19,12 @@ function _initCurriculumTreeNode(node) {
 	node.item.node = node;
 	node.item.setOnSelect(function() { node._onselect(); });
 	node.parent.item.addItem(node.item);
-	window.to_cleanup.push(node);
-	node.cleanup = function() {
-		this.item.node = null;
-		this.item = null;
-		this.parent = null;
+	node.item._item_cleanup = node.item.cleanup;
+	node.item.cleanup = function() {
+		node.item._item_cleanup();
+		node.item.node = null;
+		node.item = null;
+		node.parent = null;
 	};
 }
 CurriculumTreeNode.prototype = {

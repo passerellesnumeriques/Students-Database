@@ -172,8 +172,10 @@ CalendarsProvider.prototype = {
 				}
 				if (!found) t.on_calendar_added.fire(list[i]);
 			}
-			for (var i = 0; i < removed.length; ++i)
+			for (var i = 0; i < removed.length; ++i) {
 				t.on_calendar_removed.fire(removed[i]);
+				removed[i].cleanup();
+			}
 		});
 	},
 	/** Function to be overriden by the implementation, to load the list of calendars on this provider
@@ -238,7 +240,7 @@ CalendarsProvider.prototype = {
 	 */
 	createCalendar: function(name, color, icon, oncreate) {}
 };
-if (!window.top.CalendarsProviders) {
+if (window == window.top && !window.top.CalendarsProviders) {
 	/**
 	 * Handle the list of existing providers of calendars (PN, Google...)
 	 */
@@ -295,8 +297,10 @@ if (!window.top.CalendarsProviders) {
 			for (var i = 0; i < window.top.CalendarsProviders._providers.length; ++i) {
 				var prev_calendars = window.top.CalendarsProviders._providers[i].calendars;
 				window.top.CalendarsProviders._providers[i].calendars = [];
-				for (var j = 0; j < prev_calendars.length; ++j)
+				for (var j = 0; j < prev_calendars.length; ++j) {
 					window.top.CalendarsProviders._providers[i].on_calendar_removed.fire(prev_calendars[j]);
+					prev_calendars[j].cleanup();
+				}
 			}
 		});
 		window.top.pnapplication.onlogin.add_listener(function() {
@@ -376,6 +380,13 @@ function Calendar(provider, name, color, show, icon) {
 	this.saveColor = function(color) {}; // to be overriden if supported
 	/** {Function} function to rename the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.rename = null; // must be overriden if this is supported
+	
+	this.cleanup = function() {
+		for (var i = 0; i < this.events.length; ++i) this.events[i].cleanup();
+		this.events = null;
+		this.provider = null;
+		t = null;
+	};
 }
 
 /**
@@ -525,8 +536,10 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 							t.on_event_added.fire(ev);
 						}
 					}
-					for (var i = 0; i < removed_events.length; ++i)
+					for (var i = 0; i < removed_events.length; ++i) {
 						t.on_event_removed.fire(removed_events[i]);
+						removed_events[i].cleanup();
+					}
 				} catch (e) {
 					log_exception(e, "Error while refreshing PN calendar");
 				}

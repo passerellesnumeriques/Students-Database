@@ -134,6 +134,12 @@ function images_tool_people() {
 			if (new_selected > 0) select.selectedIndex = new_selected;
 		}
 	};
+	this._cleanup = function() {
+		this.peoples = null;
+	};
+	this.cleanPicture = function(pic) {
+		pic.select_people = null;
+	};
 };
 images_tool_people.prototype = new ImageTool;
 images_tool_people.prototype.constructor = images_tool_people;

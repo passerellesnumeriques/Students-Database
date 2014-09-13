@@ -132,7 +132,7 @@ Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e
 Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){this.splice(i,1);i--;};};
 
 function _domRemoved(e) {
-	if (e._ondomremoved) { e._ondomremoved.fire(e); e._ondomremoved = null; }
+	if (e._ondomremoved) { e._ondomremoved.fire(e); e._ondomremoved.cleanup(); e._ondomremoved = null; }
 	if (e.nodeType != 1) return;
 	for (var i = 0; i < e.childNodes.length; ++i)
 		_domRemoved(e.childNodes[i]);

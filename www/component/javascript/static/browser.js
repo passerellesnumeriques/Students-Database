@@ -186,6 +186,7 @@ window.getWindowFromDocument = function(doc) {
 };
 
 window.getWindowFromElement = function(e) {
+	if (!e) return null;
 	//while (e.offsetParent) e = e.offsetParent;
 	//while (e.parentNode && e.parentNode.nodeName != 'BODY' && e.parentNode.nodeName != 'HTML') e = e.parentNode;
 	return getWindowFromDocument(e.ownerDocument);
@@ -731,7 +732,7 @@ function addStylesheet(url,onload) {
 	s.rel = "stylesheet";
 	s.type = "text/css";
 	s.href = url.toString();
-	s.onload = function() { if (onload) onload(); this._loaded = true; };
+	s.onload = function() { if (onload) onload(); this.onload = null; this._loaded = true; };
 	document.getElementsByTagName("HEAD")[0].appendChild(s);
 }
 

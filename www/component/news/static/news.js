@@ -348,6 +348,10 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 			content.appendChild(div.reply_div);
 			// TODO add reply button/section
 		}
+		
+		div.ondomremoved(function() {
+			div.news = null;
+		});
 
 		if (typeof animation != 'undefined') animation.fadeIn(div, 1500);
 		layout.changed(container);
@@ -574,4 +578,13 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 	};
 	
 	this._init();
+	
+	container.ondomremoved(function() {
+		t._main_news = null;
+		t._latests = null;
+		t._olders = null;
+		t._replies_to_load = null;
+		t._more_container = null;
+		t = null;
+	});
 }

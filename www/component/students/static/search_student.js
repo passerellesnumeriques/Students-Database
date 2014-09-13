@@ -62,6 +62,7 @@ function search_student(container,section) {
 										});
 										list.reloadData(ondone);
 									});
+									check = null;
 									return;
 								}
 							}

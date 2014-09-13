@@ -156,6 +156,21 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 	this.addRowStyle = function(style) {
 		for (var name in style) this.tr.style[name] = style[name];
 	};
+	
+	this.cleanup = function() {
+		if (this.children) for (var i = 0; i < this.children.length; ++i) this.children[i].cleanup();
+		this.children = null;
+		this.parent = null;
+		if (this.cells) for (var i = 0; i < this.cells.length; ++i) this.cells[i].cleanup();
+		this.cells = null;
+		this.tree = null;
+		this.tree = null;
+		this.right_td = null;
+		if (this.head) this.head.removeAllChildren();
+		this.head = null;
+		if (this.tr) this.tr.item = null;
+		this.tr = null;
+	};
 }
 /** Cell of a TreeItem
  * @param {Element|String} html the content of the cell
@@ -217,6 +232,11 @@ function TreeCell(html) {
 		img.onclick = onclick;
 		if (tooltip) img.title = tooltip;
 		t.element.appendChild(img);
+	};
+	
+	this.cleanup = function() {
+		this.element = null;
+		t = null;
 	};
 }
 
@@ -325,16 +345,7 @@ function tree(container) {
 			while (p && !p.onselect) p = p.parent;
 			if (p) this.selectItem(p);
 		}
-		item.parent = null;
-		item.tree = null;
-		item.tr.item = null;
-		item.tr = null;
-		item.head.removeAllChildren();
-		item.head = null;
-		item.children = null;
-		for (var i = 0; i < item.cells.length; ++i)
-			item.cells[i].element = null;
-		item.cells = null;
+		item.cleanup();
 	};
 	this._selected_item = null;
 	this.selectItem = function(item) {
@@ -426,6 +437,7 @@ function tree(container) {
 		if (this._refresh_heads_activated) return;
 		this._refresh_heads_activated = true;
 		setTimeout(function() {
+			if (!t) return;
 			t._refresh_heads_activated = false;
 			t._refresh_heads_();
 		},10);
@@ -602,13 +614,15 @@ function tree(container) {
 		this.tbody.appendChild(this.tr_columns = document.createElement("TR"));
 		this.setShowColumn(this.show_columns);
 		this.table.ondomremoved(function() {
-			t.table = null;
 			t.clearItems();
-			t.items = null;
-			t.children = null;
-			t.columns = null;
+			if (t.columns) for (var i = 0; i < t.columns.length; ++i) { t.columns[i].title = null; t.columns[i].th = null; }
+			t.table = null;
 			t.tbody = null;
 			t.tr_columns = null;
+			t.columns = null;
+			t.items = null;
+			t.children = null;
+			t = null;
 		});
 	};
 	

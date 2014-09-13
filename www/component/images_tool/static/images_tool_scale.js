@@ -104,6 +104,12 @@ function images_tool_scale() {
 		
 		return table;
 	};
+	this._cleanup = function() {
+	};
+	this.cleanPicture = function(pic) {
+		pic.scale_width_input = null;
+		pic.scale_height_input = null;
+	};
 };
 images_tool_scale.prototype = new ImageTool;
 images_tool_scale.prototype.constructor = images_tool_scale;

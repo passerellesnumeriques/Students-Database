@@ -361,4 +361,13 @@ function context_menu(menu) {
 	};
 	
 	t.close = function() { t.hide(); };
+	
+	menu.ondomremoved(function() {
+		menu.context_menu = null;
+		t.show_from = null;
+		t.parent_menu = null;
+		menu.anim = null;
+		t = null;
+		menu = null;
+	});
 }

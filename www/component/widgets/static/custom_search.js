@@ -32,6 +32,7 @@ function custom_search(container, min_chars, default_message, provider) {
 		};
 		this.input.onblur = function(){ 
 			setTimeout(function(){
+				if (!t) return;
 				if (t.input.value == "") { 
 					t.input.value = default_message; t.input.className = "informative_text"; t.input.default_message = true; 
 					layout.changed(container);
@@ -49,12 +50,18 @@ function custom_search(container, min_chars, default_message, provider) {
 			else t._call_provider();
 		};
 		
+		this.input.ondomremoved(function() {
+			provider = null;
+			this.input = null;
+			t = null;
+		});
 	};
 	
 	this._call_provider = function() {
 		t._provider_call = true;
 		t._provider_recall = false;
 		setTimeout(function() {
+			if (!t) return;
 			if (t.input.value.length < min_chars) {
 				t._provider_last_string = "";
 				t._provider_call = false;

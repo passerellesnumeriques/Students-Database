@@ -244,7 +244,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 	t.frame_unload = function() {
 	};
 	t.frame_load = function() {
-		listenEvent(getIFrameWindow(t.frame),'unload',function() { t.frame_unload(); });
+		listenEvent(getIFrameWindow(t.frame),'unload',function() { if(t) t.frame_unload(); });
 		var url = new URL(getIFrameWindow(t.frame).location.href);
 		for (var i = 0; i < t._menu_items.length; ++i) {
 			var item = t._menu_items[i];
@@ -262,4 +262,18 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 	};	
 	
 	t._init();
+	
+	container.ondomremoved(function() {
+		container = null;
+		t.container = null;
+		t.header_title = null;
+		t.header = null;
+		t.header_left = null;
+		t.header_right = null;
+		t.header_menu = null;
+		t.footer = null;
+		t.frame = null;
+		t._menu_items = null;
+		t = null;
+	});
 }

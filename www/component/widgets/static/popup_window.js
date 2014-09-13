@@ -395,7 +395,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.anim = win.animation.fadeIn(t.popup, 200);
 		}
 		pnapplication.onclose.add_listener(function(){
-			if (!t.popup) return;
+			if (!t || !t.popup) return;
 			t.close();
 		});
 	};
@@ -453,7 +453,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		}
 	};
 	t._layout_content = function() {
-		if (!t.popup) return;
+		if (!t || !t.popup) return;
 		if (t.content_container.style.overflow == "") return;
 		t.content_container.style.minWidth = "";
 		t.content_container.style.minHeight = "";
@@ -707,7 +707,9 @@ function popup_window(title,icon,content,hide_close_button) {
 		}
 		var popup = t.popup_container;
 		if (t.onclose) t.onclose();
+		layout.unlistenElementSizeChanged(t.content_container, t._layout_content);
 		t.popup_container = null;
+		t.popup.data = null;
 		t.popup = null;
 		var do_close = function() {
 			if (keep_content_hidden || t.keep_content_on_close) {
@@ -724,6 +726,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.content_container = null;
 			t.header = null;
 			t.footer = null;
+			if (!keep_content_hidden && !t.keep_content_on_close)
+				t.cleanup();
 		};
 		if (t.content.nodeName == "IFRAME") t.content._no_loading = true;
 		var win = getWindowFromElement(popup);
@@ -738,6 +742,30 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.hideTitleBar = function() {
 		t.header.style.display = "none";
 	};
+	
+	t.cleanup = function() {
+		if (!t) return;
+		window.to_cleanup.remove(this);
+		if (t.content_container)
+			layout.unlistenElementSizeChanged(t.content_container, t._layout_content);
+		t.content = null;
+		t.content_container = null;
+		t.header = null;
+		t.footer = null;
+		t.buttons = null;
+		t.cleanup = null;
+		t.locker = null;
+		t.popup_container = null;
+		t.freezer = null;
+		t.icon_container = null;
+		t.icon_img = null;
+		t.title_container = null;
+		t.close_button = null;
+		if (t.popup) t.popup.data = null;
+		t.popup = null;
+		t = null;
+	};
+	window.to_cleanup.push(this);
 }
 
 /**

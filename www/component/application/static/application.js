@@ -104,6 +104,12 @@ function initPNApplication() {
 						typeof Window.prototype[name] == 'undefined' &&
 						name != "id" && name != "_domRemoved")
 						w[name] = null;
+				var head = w.document.getElementsByTagName("HEAD");
+				if (head && head.length > 0) {
+					head = head[0];
+					while (head.childNodes.length > 0)
+						head.removeChild(head.childNodes[0]);
+				}
 			},
 			
 			/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
