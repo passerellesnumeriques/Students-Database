@@ -504,6 +504,7 @@ function LoadingFrame(frame_element) {
 		}
 		var now = new Date().getTime();
 		if (now-this._start > 10000) {
+			/*
 			var win = getIFrameWindow(frame_element);
 			if (!win) console.error("Frame loading timeout: window is null");
 			else if (this.step == 1) {
@@ -513,6 +514,7 @@ function LoadingFrame(frame_element) {
 				else if (win.layout._changes.length > 0) console.error("Frame loading timeout: still something to layout");
 				//else if (!win.layout.everythingOnPageLoaded()) console.error("Frame loading timeout: script, css or image not yet loaded: "+win.layout.whatIsNotYetLoaded());
 			} else console.error("Frame loading timeout: step = "+this.step);
+			*/
 			this.remove();
 			return;
 		}

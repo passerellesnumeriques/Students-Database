@@ -134,17 +134,6 @@ function excel_import(popup, container, onready) {
 				var snb = nb >= sheet.rows.length ? sheet.rows.length-1 : nb;
 				if (snb > 0)
 					sheet._header_layer = sheet.addLayer(0, 0, sheet.columns.length-1, snb-1, 255, 128, 60);
-				for (var j = 0; j < sheet.rows.length; ++j) {
-					if (j < snb) {
-						if (!sheet.rows[j].header._originalContent)
-							sheet.rows[j].header._originalContent = sheet.rows[j].header.innerHTML;
-						sheet.rows[j].header.innerHTML = "<i>Title</i>";
-					} else {
-						if (sheet.rows[j].header._originalContent)
-							sheet.rows[j].header.innerHTML = sheet.rows[j].header._originalContent;
-						sheet.rows[j].header._originalContent = null;
-					}
-				}
 			}			
 		};
 		var selection_changed = function(sheet) {
@@ -159,41 +148,43 @@ function excel_import(popup, container, onready) {
 			};
 			sheet.cursor.setContent(link);
 		};
-		
+
+		var default_column_provider = xl.column_header_provider;
+		var by_column_provider = function(col) {
+			var link = document.createElement("A");
+			link.innerHTML = "Import";
+			link.href = "#";
+			link.onclick = function(ev) {
+				var col_index = col.sheet.columns.indexOf(col);
+				var row = t.header_rows_field.getCurrentData();
+				if (row == null) row = 0;
+				var range = {start_col:col_index,start_row:row,end_col:col_index,end_row:col.sheet.rows.length-1};
+				// remove the empty cells at the end
+				while (range.end_row > range.start_row && col.sheet.getCell(col_index,range.end_row).getValue() == "")
+					range.end_row--;
+				// ask the user where to import
+				t._askImport(this, col.sheet, range);
+				stopEventPropagation(ev);
+				return false;
+			};
+			col.header.appendChild(link);
+		};
 		by_column.onchange = function() {
 			if (this.checked) {
 				div_by_column.style.visibility = "visible";
 				div_by_column.style.position = "static";
 				div_manual.style.visibility = "hidden";
 				div_manual.style.position = "absolute";
+				xl.column_header_provider = by_column_provider;
 				for (var i = 0; i < xl.sheets.length; ++i) {
 					var sheet = xl.sheets[i];
 					sheet.enableSelection(false);
 					sheet.selection_changed.remove_listener(selection_changed);
 					for (var j = 0; j < sheet.columns.length; ++j) {
 						var col = sheet.columns[j];
-						if (!col.header._originalContent) {
-							col.header._originalContent = col.header.innerHTML; 
+						if (col.header) {
 							col.header.removeAllChildren();
-							var link = document.createElement("A");
-							link.innerHTML = "Import";
-							link.href = "#";
-							link.col = col;
-							link.onclick = function(ev) {
-								var col = this.col;
-								var col_index = col.sheet.columns.indexOf(col);
-								var row = t.header_rows_field.getCurrentData();
-								if (row == null) row = 0;
-								var range = {start_col:col_index,start_row:row,end_col:col_index,end_row:col.sheet.rows.length-1};
-								// remove the empty cells at the end
-								while (range.end_row > range.start_row && col.sheet.getCell(col_index,range.end_row).getValue() == "")
-									range.end_row--;
-								// ask the user where to import
-								t._askImport(this, col.sheet, range);
-								stopEventPropagation(ev);
-								return false;
-							};
-							col.header.appendChild(link);
+							by_column_provider(col);
 						}
 					}
 				}
@@ -208,6 +199,7 @@ function excel_import(popup, container, onready) {
 				div_by_column.style.position = "absolute";
 				div_manual.style.visibility = "visible";
 				div_manual.style.position = "static";
+				xl.column_header_provider = default_column_provider;
 				for (var i = 0; i < xl.sheets.length; ++i) {
 					var sheet = xl.sheets[i];
 					sheet.enableSelection(true);
@@ -216,14 +208,10 @@ function excel_import(popup, container, onready) {
 					sheet._header_layer = null;
 					for (var j = 0; j < sheet.columns.length; ++j) {
 						var col = sheet.columns[j];
-						if (col.header._originalContent)
-							col.header.innerHTML = col.header._originalContent;
-						col.header._originalContent = null;
-					}
-					for (var j = 0; j < sheet.rows.length; ++j) {
-						if (sheet.rows[j].header._originalContent)
-							sheet.rows[j].header.innerHTML = sheet.rows[j].header._originalContent;
-						sheet.rows[j].header._originalContent = null;
+						if (col.header) {
+							col.header.removeAllChildren();
+							default_column_provider(col);
+						}
 					}
 				}
 				t.header_rows_field.onchange.remove_listener(header_rows_changed);
@@ -529,7 +517,9 @@ function excel_import(popup, container, onready) {
 		var grid = win.grid;
 		var row = where.row;
 		if (row == -1) row = where.row_getter();
+		
 		var ambiguous = [];
+		
 		for (var ci = range.start_col; ci <= range.end_col; ci++)
 			for (var ri = range.start_row; ri <= range.end_row; ri++) {
 				var value = sheet.getCell(ci,ri).getValue();

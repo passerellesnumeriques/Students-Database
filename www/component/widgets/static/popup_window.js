@@ -127,6 +127,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (!t.footer.parentNode)
 				t.popup.appendChild(t.footer);
 			layout.changed(t.footer);
+			layout.changed(t.content);
+			layout.changed(t.popup);
 		}
 	};
 	t.removeButtons = function() {
@@ -145,6 +147,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (!t.footer.parentNode)
 			t.popup.appendChild(t.footer);
 		layout.changed(t.footer);
+		layout.changed(t.content);
+		layout.changed(t.popup);
 	};
 	t.addIconTextButton = function(icon, text, id, onclick, onclick_param) {
 		var span = document.createElement("SPAN");
@@ -279,7 +283,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	
 	t.onEnter = function(onenter) {
 		var listener = function(ev) {
-			if (!t.popup) return;
+			if (!t || !t.popup) return;
 			if (ev.target.nodeName == "TEXTAREA") return;
 			var e = getCompatibleKeyEvent(ev);
 			if (e.isEnter) onenter();
@@ -297,7 +301,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	t.onEscape = function(onescape) {
 		var listener = function(ev) {
-			if (!t.popup) return;
+			if (!t || !t.popup) return;
 			var e = getCompatibleKeyEvent(ev);
 			if (e.isEscape) onescape();
 		};
@@ -314,7 +318,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	
 	t.isShown = function() {
-		return t.popup != null;
+		return t != null && t.popup != null;
 	};
 	
 	t.showPercent = function(width, height) {
@@ -332,7 +336,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			t.anim = win.animation.fadeIn(t.popup, 200);
 		}
 		pnapplication.onclose.add_listener(function(){
-			if (!t.popup) return;
+			if (!t || !t.popup) return;
 			t.close();
 		});
 	};

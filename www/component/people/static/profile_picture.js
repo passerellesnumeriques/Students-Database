@@ -21,7 +21,7 @@ function profile_picture(container, width, height, halign, valign) {
 	if (container) container.appendChild(this.picture_container);
 	
 	this.adjustPicture = function(recall) {
-		if (!t.picture) return;
+		if (!t || !t.picture) return;
 		var resize_ratio = 1;
 		var h = t.picture.naturalHeight;
 		var w = t.picture.naturalWidth;
@@ -31,7 +31,7 @@ function profile_picture(container, width, height, halign, valign) {
 			if (!recall) recall = 0;
 			if (recall < 1000) {
 				setTimeout(function() {
-					t.adjustPicture(recall+1);
+					if (t) t.adjustPicture(recall+1);
 				},10+recall);
 				return;
 			}
@@ -40,7 +40,7 @@ function profile_picture(container, width, height, halign, valign) {
 			if (!recall) recall = 0;
 			if (recall >= 10) return;
 			setTimeout(function() {
-				t.adjustPicture(recall+1);
+				if (t) t.adjustPicture(recall+1);
 			},1+recall*10);
 		}
 		if (h > t.height) {
@@ -92,6 +92,7 @@ function profile_picture(container, width, height, halign, valign) {
 		var prev = t.picture;
 		t.picture = document.createElement("IMG");
 		t.picture.onload = function() {
+			if (!t) return;
 			if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
 			t.adjustPicture();
 			if (img.parentNode)
@@ -99,6 +100,7 @@ function profile_picture(container, width, height, halign, valign) {
 			if (onloaded) onloaded();
 		};
 		t.picture.onerror = function() {
+			if (!t) return;
 			if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
 			if (!img.parentNode) t.picture_container.appendChild(img);
 			img.src = theme.icons_16.error;
@@ -497,7 +499,7 @@ function addDataListImportPicturesButton(list) {
 		tool.init(function() {
 			import_pictures.disabled = "";
 			import_pictures.onclick = function(ev) {
-				tool.reset();
+				if (tool) tool.reset();
 				var people_ids = [];
 				for (var i = 0; i < list.grid.getNbRows(); ++i) {
 					var row = list.grid.getRow(i);

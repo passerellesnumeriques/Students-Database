@@ -40,10 +40,6 @@ setTimeout(function() {
 
 // calendars
 function init_top_calendar_manager() {
-	if (!window.top.CalendarsProviders || !window.top.pnapplication) {
-		setTimeout(init_top_calendar_manager,25);
-		return;
-	}
 	window.top.calendar_manager = new window.top.CalendarManager();
 	window.top.CalendarsProviders.get(function(provider) {
 		if (!window.top.calendar_manager) return;
@@ -74,8 +70,9 @@ function init_top_calendar_manager() {
 		window.top.pnapplication.onlogout.add_listener(window.top._logout_remove_calendars);
 	}
 }
-window.top.require("calendar.js");
-init_top_calendar_manager();
+window.top.require("calendar.js",function() {
+	init_top_calendar_manager();
+});
 document.body.style.overflow = "hidden";
 // connect to Google
 window.top.require("google.js");

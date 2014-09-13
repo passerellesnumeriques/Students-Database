@@ -10,7 +10,7 @@ window.layout = {
 		if (typeof element._layout_info == 'undefined')
 			element._layout_info = {};
 		if (typeof element._layout_info.size == 'undefined')
-			element._layout_info.size = {width:element.scrollWidth, height:element.scrollHeight};
+			element._layout_info.size = {scrollWidth:element.scrollWidth, scrollHeight:element.scrollHeight, clientWidth: element.clientWidth, clientHeight: element.clientHeight};
 		layout._element_size_listeners.push({element:element,listener:listener});
 	},
 	listenInnerElementsChanged: function(element, listener) {
@@ -148,9 +148,10 @@ window.layout = {
 			var sizes = [];
 			for (var i = 0; i < layout._element_size_listeners.length; ++i) {
 				var e = layout._element_size_listeners[i].element;
-				var size = {width:e.scrollWidth,height:e.scrollHeight};
+				var size = {scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight,clientWidth:e.clientWidth,clientHeight:e.clientHeight};
 				sizes.push(size);
-				if (size.width != e._layout_info.size.width || size.height != e._layout_info.size.height)
+				if (size.scrollWidth != e._layout_info.size.scrollWidth || size.scrollHeight != e._layout_info.size.scrollHeight ||
+					size.clientWidth != e._layout_info.size.clientWidth || size.clientHeight != e._layout_info.size.clientHeight)
 					to_call.push(layout._element_size_listeners[i].listener);
 			}
 			for (var i = 0; i < layout._element_size_listeners.length; ++i)

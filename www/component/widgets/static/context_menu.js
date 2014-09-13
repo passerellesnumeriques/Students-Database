@@ -191,7 +191,6 @@ function context_menu(menu) {
 		if (x+w > window.top.getWindowWidth()) {
 			x = window.top.getWindowWidth()-w;
 		}
-		window.top.document.body.removeChild(menu);
 		t.showAt(x,y,from);
 	};
 	/** Display the menu above the given element
@@ -242,7 +241,6 @@ function context_menu(menu) {
 		if (x+w > window.top.getWindowWidth()) {
 			x = window.top.getWindowWidth()-w;
 		}
-		window.top.document.body.removeChild(menu);
 		t.showAt(x,y,from);
 	};
 	/** Display the menu at the given position (using absolute positioning)

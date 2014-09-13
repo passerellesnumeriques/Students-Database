@@ -23,8 +23,10 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 	this._refreshing = 0;
 	this._replies_to_load = [];
 	this.more = function(ondone) {
+		if (!t) return;
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
 		service.json("news", "get_more", {type:news_type,olders:t._olders,olders_timestamp:t._olders_timestamp,sections:t._selected_sections,nb:10}, function(res) {
+			if (!t) return;
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			if (!res) { if (ondone) ondone(false); return; }
 			if (res.length == 0) { if (ondone) ondone(false); return; }
@@ -77,11 +79,13 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		});
 	};
 	this.refresh = function() {
+		if (!t) return;
 		if (t._latests.length == 0) { t.more(); return; }
 		if (t.refresh_timeout) clearTimeout(t.refresh_timeout);
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
 		++t._refreshing;
 		service.json("news", "get_latests", {type:news_type,latests:t._latests,latests_timestamp:t._latests_timestamp,sections:t._selected_sections}, function(res) {
+			if (!t) return;
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			t.refresh_timout = setTimeout(t.refresh, 30000);
 			if (!res) return;
@@ -113,6 +117,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		t._refreshReplies();
 	};
 	this._launchRepliesLoading = function() {
+		if (!t) return;
 		if (t._replies_to_load.length == 0) return;
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
 		var list = t._replies_to_load;
@@ -120,6 +125,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		var ids = [];
 		for (var i = 0; i < list.length; ++i) ids.push(list[i].id);
 		service.json("news", "get_replies", {ids:ids}, function(res) {
+			if (!t) return;
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			if (!res) return;
 			if (res.length == 0) return;
@@ -134,6 +140,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 			to_refresh.push({id:div.news.id,latest:div.latest_reply});
 		}
 		service.json("news", "get_latests_replies", {to_refresh:to_refresh}, function(res) {
+			if (!t) return;
 			if (--t._refreshing == 0 && onrefreshing) onrefreshing(false);
 			if (!res) return;
 			if (res.length == 0) return;

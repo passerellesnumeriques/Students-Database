@@ -9,8 +9,13 @@ function Excel(container, onready) {
 	this.onactivesheetchanged = new Custom_Event();
 	
 	this.sheets = [];
+
+	this.column_header_provider = function(col) {
+		col.header.innerHTML = col.name;
+	};
+	
 	this.addSheet = function(name, icon, columns, rows, onready) {
-		var sheet = new ExcelSheet(name, icon, columns, rows, onready);
+		var sheet = new ExcelSheet(this,name, icon, columns, rows, onready);
 		this.sheets.push(sheet);
 		var tab = container.widget.addTab(name, icon, sheet.container);
 		sheet.tab = tab;
@@ -67,8 +72,9 @@ function Excel(container, onready) {
 	layout.listenElementSizeChanged(container, function() { t._layout(); });
 }
 
-function ExcelSheet(name, icon, columns, rows, onready) {
+function ExcelSheet(xl,name, icon, columns, rows, onready) {
 	var t=this;
+	this.xl = xl;
 	this.name = name;
 	this.icon = icon;
 	this.selection_changed = new Custom_Event();
@@ -261,22 +267,31 @@ function ExcelSheet(name, icon, columns, rows, onready) {
 				t.last_scroll_top = t.content.scrollTop;
 			}
 		};
-		this.layout();
+		for (var i = 0; i < this.layers.length; ++i)
+			this.content.appendChild(this.layers[i].div);
+		if (this.cursor)
+			this.content.appendChild(this.cursor);
+		t.layout();
 		layout.listenElementSizeChanged(this.container, function() { t.layout(); });
-		this.container.ondomremoved(function() {
-			t.container = null;
-			t.content = null;
-			t.corner = null;
-			t.column_headers_container = null;
-			t.row_headers_container = null;
-			t.table = null;
-			t.columns = null;
-			t.rows = null;
-			t.cells = null;
-			t.layers = null;
-		});
+		layout.changed(this.container);
 	};
 	this._init();
+
+	this.container.ondomremoved(function() {
+		t.xl = null;
+		t.container = null;
+		t.content = null;
+		t.corner = null;
+		t.column_headers_container = null;
+		t.row_headers_container = null;
+		t.table = null;
+		t.columns = null;
+		t.rows = null;
+		t.cells = null;
+		t.layers = null;
+		t.cursor = null;
+		t = null;
+	});
 	
 	listenEvent(window,'keydown',function(ev){
 		var event = window.event ? window.event : ev;
@@ -462,7 +477,7 @@ function ExcelSheetColumn(sheet, index) {
 		for (var i = 0 ; i < index; ++i) x += sheet.columns[i].width+1;
 		this.header.style.left = x+"px";
 		this.header.style.position = "absolute";
-		this.header.innerHTML = this.name;
+		sheet.xl.column_header_provider(this);
 		this.sheet.column_headers_container.appendChild(this.header);
 		this.resizer = document.createElement("DIV");
 		this.resizer.style.position = "absolute";
@@ -497,12 +512,14 @@ function ExcelSheetColumn(sheet, index) {
 			if (sheet.cursor)
 				sheet.cursor.setRange(t.index, 0, t.index, sheet.rows.length-1);
 		};
-		this.header.ondomremoved(function() {
-			t.header = null;
-			t.resizer = null;
-			t.sheet = null;
-		});
 	};
+	var t=this;
+	this.sheet.container.ondomremoved(function() {
+		t.header = null;
+		t.resizer = null;
+		t.sheet = null;
+		t = null;
+	});
 }
 
 function ExcelSheetRow(sheet, index) {
@@ -1037,8 +1054,10 @@ function ExcelSheetCursor(sheet) {
 			t.div.style.border = "2px solid rgb("+c[0]+","+c[1]+","+c[2];
 		});
 		//this.div.style.pointerEvents = "none";
-		sheet.content.appendChild(this.div);
-		this.refresh();
+		if (sheet.content) {
+			sheet.content.appendChild(this.div);
+			this.refresh();
+		}
 		window.focus();
 		this.div.ondblclick = function(ev) {
 			if (t.row_start == t.row_end && t.col_start == t.col_end) {

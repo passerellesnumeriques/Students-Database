@@ -243,7 +243,9 @@ function init_calendars() {
 		window.top.calendar_manager.on_calendar_added.remove_listener(new_calendar);
 	});
 }
-init_calendars();
+window.top.require("calendar.js",function() {
+	setTimeout(init_calendars,1);
+});
 
 window.updates = null;
 window.activities = null;

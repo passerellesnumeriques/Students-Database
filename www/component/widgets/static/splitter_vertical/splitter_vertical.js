@@ -37,15 +37,20 @@ function splitter_vertical(element, position) {
 				t.part2.style.left = (x+sw)+"px";
 				setWidth(t.part2, w-x-sw-1, knowledge);
 				setHeight(t.part2, h, knowledge);
+				layout.changed(t.part1);
+				layout.changed(t.part2);
+				layout.changed(t.separator);
 			} else {
 				// only left part
 				setWidth(t.part1, w, knowledge);
 				setHeight(t.part1, h, knowledge);
+				layout.changed(t.part1);
 			}
 		} else {
 			// only right part
 			setWidth(t.part2, w, knowledge);
 			setHeight(t.part2, h, knowledge);
+			layout.changed(t.part2);
 		}
 	};
 	
@@ -83,6 +88,7 @@ function splitter_vertical(element, position) {
 		x += diff;
 		t.position = x/w;
 		t.mouse_pos = mouse_x;
+		t._position();
 		layout.changed(t.element);
 		t.positionChanged.fire(t);
 	};
@@ -90,7 +96,7 @@ function splitter_vertical(element, position) {
 	t.separator.onmousedown = function(event) {
 		if (!event) event = window.event;
 		t.mouse_pos = event.clientX;
-		listenEvent(window, 'blur', t._stop_move);
+		listenEvent(window, 'blur', function(ev) { t._stop_move(ev,window,window); });
 		window.top.pnapplication.registerOnMouseMove(window, t._moving);
 		window.top.pnapplication.registerOnMouseUp(window, t._stop_move);
 		return false;

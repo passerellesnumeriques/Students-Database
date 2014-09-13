@@ -277,6 +277,7 @@ function refreshAcademicCalendar() {
 }
 
 function updatePeriodRow(period) {
+	if (!period) return;
 	period.td_period.removeAllChildren();
 	var index = periods.indexOf(period);
 	var min;
@@ -568,20 +569,22 @@ function editSpecializations() {
 			);
 		});
 		popup.addOkCancelButtons(function() {
-			var list = [];
-			for (var i = 0; i < checkboxes.length; ++i)
-				if (checkboxes[i].checked) list.push(checkboxes[i].spe.id);
-			if (list.length == 0) {
-				if (spe_period_start != null) pnapplication.dataUnsaved('Batch');
-				spe_period_start = null;
-			} else {
-				if (spe_period_start != periods[from.selectedIndex].id) pnapplication.dataUnsaved('Batch');
-				spe_period_start = periods[from.selectedIndex].id;
+			if (from.selectedIndex >= 0) {
+				var list = [];
+				for (var i = 0; i < checkboxes.length; ++i)
+					if (checkboxes[i].checked) list.push(checkboxes[i].spe.id);
+				if (list.length == 0) {
+					if (spe_period_start != null) pnapplication.dataUnsaved('Batch');
+					spe_period_start = null;
+				} else {
+					if (spe_period_start != periods[from.selectedIndex].id) pnapplication.dataUnsaved('Batch');
+					spe_period_start = periods[from.selectedIndex].id;
+				}
+				if (!arrayEquals(selected_specializations, list)) pnapplication.dataUnsaved('Batch');
+				selected_specializations = list;
+				refreshSpecializations();
+				layout.changed(document.body);
 			}
-			if (!arrayEquals(selected_specializations, list)) pnapplication.dataUnsaved('Batch');
-			selected_specializations = list;
-			refreshSpecializations();
-			layout.changed(document.body);
 			popup.close();
 		});
 		popup.show();
