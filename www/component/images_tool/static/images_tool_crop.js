@@ -165,11 +165,18 @@ function images_tool_crop() {
 			pic.crop_ratio_input.disabled = this.general_ratio || !this.general_ratio_editable ? "disabled" : "";
 		}
 		
+		// clean closure
+		rect = null;
+		ctx = null;
+		data = null;
+		canvas = null;
+		
 		// draw the crop
 		if (!pic._crop_rectangle)
 			pic._crop_rectangle = new crop_rectangle(pic);
 		else
 			pic._crop_rectangle.update();
+		pic = null;
 	};
 	var createInput = function() {
 		var input = document.createElement("INPUT");
@@ -620,11 +627,12 @@ function crop_rectangle(pic) {
 		}
 		stopEventPropagation(ev);
 	};
-	window.top.pnapplication.registerOnMouseMove(getWindowFromElement(pic.original_canvas), function(x,y) {
+	var mouse_move_listener = function(x,y) {
 		if (!move) return;
 		move(x,y);
-	});
-	window.top.pnapplication.registerOnMouseUp(getWindowFromElement(pic.original_canvas), function() {
+	};
+	window.top.pnapplication.registerOnMouseMove(getWindowFromElement(pic.original_canvas), mouse_move_listener);
+	var mouse_up_listener = function() {
 		if (move) {
 			move = null;
 			if (move_start) {
@@ -636,9 +644,15 @@ function crop_rectangle(pic) {
 			move_start = null;
 			pic.update();
 		}
-	});
+	};
+	window.top.pnapplication.registerOnMouseUp(getWindowFromElement(pic.original_canvas), mouse_up_listener);
 	
 	this.cleanup = function() {
+		window.top.pnapplication.unregisterOnMouseMove(mouse_move_listener);
+		mouse_move_listener = null;
+		window.top.pnapplication.unregisterOnMouseUp(mouse_up_listener);
+		mouse_up_listener = null;
+		pic.original_canvas.onmousedown = null;
 		this.div_top = null;
 		this.div_bottom = null;
 		this.div_left = null;

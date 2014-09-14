@@ -499,7 +499,7 @@ function addDataListImportPicturesButton(list) {
 		tool.init(function() {
 			import_pictures.disabled = "";
 			import_pictures.onclick = function(ev) {
-				if (tool) tool.reset();
+				tool.reset();
 				var people_ids = [];
 				for (var i = 0; i < list.grid.getNbRows(); ++i) {
 					var row = list.grid.getRow(i);
@@ -518,7 +518,7 @@ function addDataListImportPicturesButton(list) {
 		});
 	});
 	list.addHeader(import_pictures);
-	import_pictures.ondomremoved(function() {
+	list.header.ondomremoved(function() {
 		if (tool)
 			tool.cleanup();
 		tool = undefined;

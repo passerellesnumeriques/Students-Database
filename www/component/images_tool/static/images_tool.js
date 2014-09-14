@@ -12,19 +12,22 @@ function images_tool() {
 	window.to_cleanup.push(this);
 	this.cleanup = function() {
 		if (!t) return;
+		if (window.to_cleanup) window.to_cleanup.remove(this);
+		t = null;
 		if (this._tools) for (var i = 0; i < this._tools.length; ++i) if (this._tools[i].tool) this._tools[i].tool.cleanup();
 		this._tools = null;
-		for (var i = 0; i < this._pictures.length; ++i) this._pictures[i].cleanup();
+		if (this._pictures)
+			for (var i = 0; i < this._pictures.length; ++i) this._pictures[i].cleanup();
 		this._pictures = null;
 		this.container = null;
 		if (this.popup) {
-			this.popup.cleanup();
+			if (this.popup.cleanup)
+				this.popup.cleanup();
 			this.popup = null;
 		}
 		this.table = null;
 		this.upl = null;
-		t = null;
-		if (window.to_cleanup) window.to_cleanup.remove(this);
+		this._onfinish = null;
 	};
 	
 	this.usePopup = function(on_top, onfinish) {
@@ -146,6 +149,10 @@ function images_tool() {
 		this._pictures = [];
 		this.container.removeAllChildren();
 		this.table = null;
+		if (this.popup) {
+			if (this.popup.cleanup) this.popup.cleanup();
+			this.popup = null;
+		}
 		if (this._use_popup) {
 			if (this._use_popup_on_top) {
 				t.popup = new window.top.popup_window("Pictures", "/static/images_tool/people_picture.png", t.container);
@@ -156,6 +163,10 @@ function images_tool() {
 				if (t._onfinish)
 					t.popup.addFinishCancelButtons(t._onfinish);
 			}
+			t.popup.onclose = function() {
+				t.popup = null;
+				t.reset();
+			};
 		}
 	};
 	
@@ -252,6 +263,11 @@ function images_tool() {
 				if (todo[i].face)
 					t.setToolValue("crop", pic, {rect:{x:todo[i].face.x, y:todo[i].face.y, width:todo[i].face.width, height:todo[i].face.height}});
 			}
+			todo = null;
+			table = null;
+			tr = null;
+			td = null;
+			t.upl = null;
 		};
 		var face_detection = function(o) {
 			if (o.error) {

@@ -394,6 +394,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 	};
 	
 	this._refreshTimings = function() {
+		if (!t) return;
 		for (var i = 0; i < t._main_news.length; ++i) {
 			t._refreshTiming(t._main_news[i]);
 			for (var j = 0; j < t._main_news[i].reply_div.childNodes.length; ++j)
@@ -592,6 +593,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		t._olders = null;
 		t._replies_to_load = null;
 		t._more_container = null;
+		if (t.interval) clearInterval(t.interval);
 		t = null;
 	});
 }

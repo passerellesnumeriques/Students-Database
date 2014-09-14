@@ -152,6 +152,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 
 			t.updateHeader();
 			layout.listenElementSizeChanged(t.header, function() { t.updateHeader(); });
+			layout.listenInnerElementsChanged(t.header, function() { t.updateHeader(); });
 			layout.changed(container);
 		});
 	};
@@ -159,7 +160,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	this.updateHeader = function() {
 		if (!this.view_tabs || !this.view) return;
 		var w = this.header.clientWidth;
-		w -= this.view_tabs.element.offsetWidth;
+		w -= getWidth(this.view_tabs.element, []);
 		this.position_div.style.position = "absolute";
 		this.position_div.style.visibility = "hidden";
 		this.position_div.style.top = "-10000px";
@@ -173,11 +174,11 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			this.zoom_div.style.position = "static";
 			this.zoom_div.style.visibility = "visible";
 			this.zoom_text.innerHTML = this.view.getZoomText(this.zoom);
-			zoom_width = this.zoom_div.offsetWidth;
+			zoom_width = getWidth(this.zoom_div, []);
 		}
 		
 		this.position_text.innerHTML = this.view.getPositionText(0); 
-		var position_width = this.position_div.offsetWidth;
+		var position_width = getWidth(this.position_div, []);
 
 		var shorter = 1;
 		while (w < position_width + zoom_width) {
@@ -185,17 +186,17 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			var text = this.view.getPositionText(shorter++);
 			if (text == null) break; // cannot reduce anymore
 			this.position_text.innerHTML = text; 
-			position_width = this.position_div.offsetWidth;
+			position_width = getWidth(this.position_div, []);
 		}
 		if (w < position_width + zoom_width && zoom_width > 0) {
 			// try to reduce zoom, by removing its text
 			this.zoom_text.innerHTML = "";
-			zoom_width = this.zoom_div.offsetWidth;
+			zoom_width = getWidth(this.zoom_div, []);
 		}
 		if (w < position_width + zoom_width) {
 			// reduce again, by removing position text!
 			this.position_text.innerHTML = "";
-			position_width = this.position_div.offsetWidth;
+			position_width = getWidth(this.position_div, []);
 		}		
 		if (w < position_width + zoom_width) {
 			// we cannot show all

@@ -159,6 +159,7 @@ case "static":
 	case "css": header("Content-Type: text/css"); break;
 	case "js": header("Content-Type: text/javascript"); break;
 	case "html": header("Content-Type: text/html;charset=UTF-8"); break;
+	case "woff": header("Content-Type: application/font-woff"); break;
 	case "php": 
 		if (!file_exists("component/".$component_name."/static/".$path)) $invalid("Static resource not found");
 		include "component/".$component_name."/static/".$path;

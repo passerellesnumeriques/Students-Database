@@ -28,15 +28,15 @@ class page_administration extends Page {
 		}
 		echo "<div class='page_section_title2'>Status per table</div>";
 		foreach ($status as $domain=>$rows) {
-			echo "<div class='page_section_title3'>Domain $domain</div>";
+			echo "<div id='section_domain_tables_$domain' css='soft' title='Domain $domain' collapsable='true' collapsed='true'>";
 			echo "<table>";
 			echo "<tr><th>Table</th><th>Rows</th><th>Data size</th><th>Indexes size</th><th>Auto increment</th></tr>";
 			foreach ($rows as $row) {
 				echo "<tr>";
 				echo "<td>".toHTML($row["Name"])."</td>";
-				echo "<td>".$row["Rows"]."</td>";
-				echo "<td>".$this->size($row["Data_length"])."</td>";
-				echo "<td>".$this->size($row["Index_length"])."</td>";
+				echo "<td align='right'>".$row["Rows"]."</td>";
+				echo "<td align='right'>".$this->size($row["Data_length"])."</td>";
+				echo "<td align='right'>".$this->size($row["Index_length"])."</td>";
 				$ai = $row["Auto_increment"];
 				if ($ai == null) echo "<td></td>";
 				else {
@@ -64,11 +64,13 @@ class page_administration extends Page {
 						else if (floor($r/2) == 0) $color = "orange";
 						else $color = "red";
 					}
-					echo "<td style='color:$color'>$ai</td>";
+					echo "<td style='color:$color' align='right'>$ai</td>";
 				}
 				echo "</tr>";
 			}
 			echo "</table>";
+			echo "</div>";
+			$this->onload("sectionFromHTML('section_domain_tables_$domain');");
 		}
 		?>
 	</div>

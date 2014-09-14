@@ -58,6 +58,24 @@ class page_app_admin extends Page {
 			echo "Reset remote access password: <input type='password' id='remote_password'/> <button class='action' onclick='setRemotePassword();'>Reset</button><br/>";
 		} 
 		?>
+		<table class='all_borders'>
+			<tr><th>Version</th><th>Backup date</th></tr>
+			<?php
+			require_once("component/application/Backup.inc");
+			$backups = Backup::listBackups();
+			usort($backups, function($b1,$b2) {
+				if ($b1["time"] < $b2["time"]) return -1;
+				if ($b1["time"] > $b2["time"]) return 1;
+				return 0;
+			});
+			foreach ($backups as $b) {
+				echo "<tr>";
+				echo "<td>".$b["version"]."</td>";
+				echo "<td>".date("d M Y H:i", $b["time"])."</td>";
+				echo "</tr>";
+			}
+			?>
+		</table>
 	</div>
 </div>
 <div id='section_sessions' title='Open Sessions' collapsable='true' style='margin-top:10px'>
