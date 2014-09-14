@@ -741,6 +741,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		div.appendChild(img);
 		t.header_center.appendChild(div);
 		t.more_menu = div;
+		div = null;
+		img = null;
 		// init grid
 		t.grid_container = document.createElement("DIV");
 		t.grid_container.className = "grid_container";

@@ -402,6 +402,7 @@ function grid(element) {
 	var t = this;
 	window.to_cleanup.push(t);
 	t.cleanup = function() {
+		unlistenEvent(window,'keyup',t._key_listener);
 		element = null;
 		t.element = null;
 		t.columns = null;
@@ -540,7 +541,7 @@ function grid(element) {
 				for (var k = 0; k < tr.row_data.length; ++k)
 					if (col.id == tr.row_data[k].col_id) { data = tr.row_data[k].data; break; }
 				t._create_cell(col, data, td, function(field){
-					field.onfocus.add_listener(function() { t.onrowfocus.fire(tr); });
+					field.onfocus.add_listener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
 				});
 				td.ondomremoved(function(td) { td.field = null; });
 			}
@@ -717,7 +718,7 @@ function grid(element) {
 				var data = td.field.getCurrentData();
 				td.removeAllChildren();
 				t._create_cell(column, data, td, function(field){
-					field.onfocus.add_listener(function() { t.onrowfocus.fire(row); });
+					field.onfocus.add_listener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
 				});
 				td.style.textAlign = column.align;
 			}
@@ -1015,7 +1016,8 @@ function grid(element) {
 	};
 	t.addRow = function(row_id, row_data) {
 		var tr = document.createElement("TR");
-		listenEvent(tr, 'click', function() { t.onrowfocus.fire(tr); });
+		var click_listener = function() { t.onrowfocus.fire(tr); };
+		listenEvent(tr, 'click', click_listener);
 		tr.row_id = row_id;
 		tr.row_data = row_data;
 		if (t.selectable)
@@ -1069,7 +1071,12 @@ function grid(element) {
 		if (!sorted)
 			t.table.appendChild(tr);
 		layout.changed(t.element);
-		tr.ondomremoved(function(tr) { tr.row_data = null; });
+		tr.ondomremoved(function(tr) {
+			tr.row_data = null;
+			unlistenEvent(tr, 'click', click_listener);
+			click_listener = null;
+			tr = null;
+		});
 		return tr;
 	};
 	t._createSelectionTD = function() {
@@ -1375,6 +1382,9 @@ function grid(element) {
 		t.element.appendChild(t.grid_element);
 		table.className = "grid";
 		// listen to keys
+		listenEvent(window,'keyup',t._key_listener);
+	};
+	t._key_listener = function(ev) {
 		var getCell = function(element) {
 			while (element && element != document.body) {
 				if (element.nodeName == 'TD' && element.field)
@@ -1383,37 +1393,38 @@ function grid(element) {
 			}
 			return null;
 		};
-		listenEvent(window,'keyup',function(ev) {
-			var e = getCompatibleKeyEvent(ev);
-			if (e.isArrowUp) {
-				var cell = getCell(ev.target);
-				if (!cell) return;
-				var row = cell.parentNode;
-				var target_row = row.previousSibling;
-				if (!target_row) return;
-				var index;
-				for (index = row.childNodes.length-1; index >= 0; --index) if (row.childNodes[index] == cell) break;
-				if (index < 0) return;
-				var target_cell = target_row.childNodes[index];
-				if (!target_cell || !target_cell.field) return;
-				target_cell.field.focus();
-				return;
-			}
-			if (e.isArrowDown) {
-				var cell = getCell(ev.target);
-				if (!cell) return;
-				var row = cell.parentNode;
-				var target_row = row.nextSibling;
-				if (!target_row) return;
-				var index;
-				for (index = row.childNodes.length-1; index >= 0; --index) if (row.childNodes[index] == cell) break;
-				if (index < 0) return;
-				var target_cell = target_row.childNodes[index];
-				if (!target_cell || !target_cell.field) return;
-				target_cell.field.focus();
-				return;
-			}
-		});
+		var e = getCompatibleKeyEvent(ev);
+		if (e.isArrowUp) {
+			var cell = getCell(ev.target);
+			getCell = null;
+			if (!cell) return;
+			var row = cell.parentNode;
+			var target_row = row.previousSibling;
+			if (!target_row) return;
+			var index;
+			for (index = row.childNodes.length-1; index >= 0; --index) if (row.childNodes[index] == cell) break;
+			if (index < 0) return;
+			var target_cell = target_row.childNodes[index];
+			if (!target_cell || !target_cell.field) return;
+			target_cell.field.focus();
+			return;
+		}
+		if (e.isArrowDown) {
+			var cell = getCell(ev.target);
+			getCell = null;
+			if (!cell) return;
+			var row = cell.parentNode;
+			var target_row = row.nextSibling;
+			if (!target_row) return;
+			var index;
+			for (index = row.childNodes.length-1; index >= 0; --index) if (row.childNodes[index] == cell) break;
+			if (index < 0) return;
+			var target_cell = target_row.childNodes[index];
+			if (!target_cell || !target_cell.field) return;
+			target_cell.field.focus();
+			return;
+		}
+		getCell = null;
 	};
 	t._create_cell = function(column, data, parent, ondone, ondone_param) {
 		t._cells_loading++;

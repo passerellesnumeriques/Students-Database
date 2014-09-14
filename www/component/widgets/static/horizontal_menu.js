@@ -23,6 +23,8 @@ function horizontal_menu(menu, valign) {
 		menu.widget = null;
 		t.items = null;
 		t.more_item = null;
+		menu = null;
+		t = null;
 	});
 	
 	t.addItem = function(element) {

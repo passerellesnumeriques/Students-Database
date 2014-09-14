@@ -49,6 +49,8 @@ function typed_field(data,editable,config){
 		this._create(data);
 		this.validate();
 	}
+	data = null;
+	config = null;
 }
 typed_field.prototype = {
 	/** Internal function resetting and creating the field */

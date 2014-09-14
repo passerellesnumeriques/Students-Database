@@ -6,6 +6,10 @@ function initPNApplication() {
 		setTimeout(initPNApplication, 20);
 		return;
 	}
+	var activity_listener = function() {
+		if (!window || !window.top || !window.top.pnapplication || !window.top.pnapplication.userIsActive) return;
+		window.top.pnapplication.userIsActive();
+	};
 	if (window == window.top) {
 		if (typeof window.top.pnapplication == 'undefined') {
 		/**
@@ -22,6 +26,27 @@ function initPNApplication() {
 			_windows: [],
 			/** event when a window/frame is closed. The window is given as parameter to the listeners. */ 
 			onwindowclosed: new Custom_Event(),
+			_window_click_listener: function(ev) {
+				for (var i = 0; i < window.top.pnapplication._onclick_listeners.length; ++i)
+					window.top.pnapplication._onclick_listeners[i][1](ev, ev.view, window.top.pnapplication._onclick_listeners[i][0]);
+			},
+			_window_mousemove_listener: function(ev){
+				if (!window.top.pnapplication) return;
+				var w_pos = getAbsoluteCoordinatesRelativeToWindowTop(ev.view);
+				var cev = getCompatibleMouseEvent(ev);
+				for (var i = 0; i < window.top.pnapplication._onmousemove_listeners.length; ++i) {
+					var target = window.top.pnapplication._onmousemove_listeners[i][0];
+					var listener = window.top.pnapplication._onmousemove_listeners[i][1];
+					var target_pos = getAbsoluteCoordinatesRelativeToWindowTop(target);
+					var x = cev.x + w_pos.x - target_pos.x;
+					var y = cev.y + w_pos.y - target_pos.y;
+					listener(x,y);
+				}
+			},
+			_window_mouseup_listener: function(ev){
+				for (var i = 0; i < window.top.pnapplication._onmouseup_listeners.length; ++i)
+					window.top.pnapplication._onmouseup_listeners[i][1](ev, ev.view, window.top.pnapplication._onmouseup_listeners[i][0]);
+			}, 
 			/** register a new window
 			 * @param {window} w new window/frame 
 			 */
@@ -31,27 +56,9 @@ function initPNApplication() {
 				if (w.frameElement && w.frameElement._loading_frame)
 					w.frameElement._loading_frame.startLoading();
 				window.top.pnapplication._windows.push(w);
-				listenEvent(w,'click',function(ev){
-					for (var i = 0; i < window.top.pnapplication._onclick_listeners.length; ++i)
-						window.top.pnapplication._onclick_listeners[i][1](ev, w, window.top.pnapplication._onclick_listeners[i][0]);
-				});
-				listenEvent(w,'mousemove',function(ev){
-					if (!window.top.pnapplication) return;
-					var w_pos = getAbsoluteCoordinatesRelativeToWindowTop(w);
-					var cev = getCompatibleMouseEvent(ev);
-					for (var i = 0; i < window.top.pnapplication._onmousemove_listeners.length; ++i) {
-						var target = window.top.pnapplication._onmousemove_listeners[i][0];
-						var listener = window.top.pnapplication._onmousemove_listeners[i][1];
-						var target_pos = getAbsoluteCoordinatesRelativeToWindowTop(target);
-						var x = cev.x + w_pos.x - target_pos.x;
-						var y = cev.y + w_pos.y - target_pos.y;
-						listener(x,y);
-					}
-				});
-				listenEvent(w,'mouseup',function(ev){
-					for (var i = 0; i < window.top.pnapplication._onmouseup_listeners.length; ++i)
-						window.top.pnapplication._onmouseup_listeners[i][1](ev, w, window.top.pnapplication._onmouseup_listeners[i][0]);
-				});
+				listenEvent(w,'click',window.top.pnapplication._window_click_listener);
+				listenEvent(w,'mousemove',window.top.pnapplication._window_mousemove_listener);
+				listenEvent(w,'mouseup',window.top.pnapplication._window_mouseup_listener);
 			},
 			_reserved_names: [],
 			/** unregister a window (when it is closed)
@@ -63,6 +70,9 @@ function initPNApplication() {
 				if (w.frameElement && w.frameElement._loading_frame)
 					w.frameElement._loading_frame.startUnloading();
 				window.top.pnapplication._windows.remove(w);
+				unlistenEvent(w,'click',window.top.pnapplication._window_click_listener);
+				unlistenEvent(w,'mousemove',window.top.pnapplication._window_mousemove_listener);
+				unlistenEvent(w,'mouseup',window.top.pnapplication._window_mouseup_listener);
 				for (var i = 0; i < this._onclick_listeners.length; ++i)
 					if (this._onclick_listeners[i][0] == w) {
 						this._onclick_listeners.splice(i,1);
@@ -110,6 +120,10 @@ function initPNApplication() {
 					while (head.childNodes.length > 0)
 						head.removeChild(head.childNodes[0]);
 				}
+				w.self = null;
+				w.frameElement = null;
+				w.document = null;
+				for (var name in w) if (name != "closing" && name != "name") try { w[name] = null; } catch(e){}
 			},
 			
 			/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
@@ -236,6 +250,11 @@ function initPNApplication() {
 			onclose: new Custom_Event(),
 			/** indicates the current window is closing */
 			closeWindow: function() {
+				unlistenEvent(window,'click',activity_listener);
+				unlistenEvent(window,'mousemove',activity_listener);
+				activity_listener = null;
+				if (window.pnapplication._frame_unload_listener)
+					unlistenEvent(window.frameElement, 'unload', window.pnapplication._frame_unload_listener);
 				this.onclose.fire();
 				window.top.pnapplication.unregisterWindow(window);
 			},
@@ -320,30 +339,28 @@ function initPNApplication() {
 				return;
 			}
 			window.top.pnapplication.registerWindow(window);
+			f = null;
 		};
 		f();
 	}
 		
-	var listener = function() {
-		if (!window || !window.top || !window.top.pnapplication || !window.top.pnapplication.userIsActive) return;
-		window.top.pnapplication.userIsActive();
-	};
-	listenEvent(window,'click',listener);
-	listenEvent(window,'mousemove',listener);
-	var closeRaised = false;
+	listenEvent(window,'click',activity_listener);
+	listenEvent(window,'mousemove',activity_listener);
+	window._windowCloseRaised = false;
 	if (window.frameElement) {
-		var prev = window.frameElement.onunload; 
-		listenEvent(window.frameElement, 'unload', function(ev) {
-			if (!closeRaised && window.pnapplication) {
-				closeRaised = true;
+		window.pnapplication._frame_unload_listener = function(ev) {
+			if (window._windowCloseRaised === false && window.pnapplication) {
+				window._windowCloseRaised = true;
 				window.pnapplication.closeWindow();
 			}
-			if (prev) prev(ev);
-		});
+			unlistenEvent(window.frameElement, 'unload', window.pnapplication._frame_unload_listener);
+			window.pnapplication._frame_unload_listener = null;
+		};
+		listenEvent(window.frameElement, 'unload', window.pnapplication._frame_unload_listener);
 	}
 	listenEvent(window, 'unload', function() {
-		if (!closeRaised && window.pnapplication) {
-			closeRaised = true;
+		if (window._windowCloseRaised === false && window.pnapplication) {
+			window._windowCloseRaised = true;
 			window.pnapplication.closeWindow();
 		}
 	});
@@ -352,8 +369,8 @@ function initPNApplication() {
 			ev.returnValue = "The page contains unsaved data";
 			return "The page contains unsaved data";
 		}
-		if (!closeRaised && window.pnapplication) {
-			closeRaised = true;
+		if (window._windowCloseRaised === false && window.pnapplication) {
+			window._windowCloseRaised = true;
 			window.pnapplication.closeWindow();
 		}
 		return null;
@@ -387,6 +404,7 @@ function LoadingFrame(frame_element) {
 		if (zi != "auto") { z = zi; break; }
 		p = p.parentNode;
 	} while (p && p.nodeName != "BODY" && p.nodeName != "HTML");
+	p = null;
 	this.table.style.zIndex = z;
 	this.table.style.backgroundColor = "#d0d0d0";
 
@@ -461,6 +479,7 @@ function LoadingFrame(frame_element) {
 	this.remove = function() {
 		if (frame_element._loading_frame != this) return;
 		layout.unlistenElementSizeChanged(frame_element, updater);
+		updater = null;
 		if (this.anim) {
 			animation.stop(this.anim);
 			this.anim = null;
@@ -470,16 +489,23 @@ function LoadingFrame(frame_element) {
 				animation.fadeOut(this.table, 200, function() {
 					if (t.table && t.table.parentNode)
 						t.table.parentNode.removeChild(t.table);
+					t = null;
 				});
-			} else
+			} else {
 				this.table.parentNode.removeChild(this.table);
+				t = null;
+			}
+		} else {
+			t = null;
 		}
 		frame_element._loading_frame = null;
+		frame_element = null;
 		//console.log("Frame "+frame_element.name+" loaded in "+(new Date().getTime()-this._start)+"ms.");
 	};
 	
 	/** Check what is the current status, and remove the loading if needed */
 	this._update = function(renew) {
+		if (!t || !frame_element) return;
 		if (!frame_element.parentNode ||
 			!frame_element.ownerDocument ||
 			!getWindowFromDocument(frame_element.ownerDocument) ||
@@ -520,7 +546,7 @@ function LoadingFrame(frame_element) {
 		}
 		this._position();
 		if (renew)
-			setTimeout(function() { t._update(true); }, now-this._start < 2000 ? 50 : 100);
+			setTimeout(function() { if (t) t._update(true); }, now-this._start < 2000 ? 50 : 100);
 	};
 	
 	this._position();

@@ -13,7 +13,7 @@ class page_list extends Page {
 <div id='list_container' style='width:100%;height:100%'>
 </div>
 <script type='text/javascript'>
-var list = new data_list(
+new data_list(
 	'list_container',
 	'Staff', null,
 	[
@@ -52,7 +52,7 @@ var list = new data_list(
 				window.top.require("popup_window.js",function() {
 					var p = new window.top.popup_window('New Staff', theme.build_icon("/static/staff/staff_16.png",theme.icons_10.add), "");
 					var frame = p.setContentFrame("/dynamic/people/page/popup_create_people?types=staff&ondone=reload_list");
-					frame.reload_list = reload_list;
+					frame.reload_list = function() { list.reloadData(); };
 					p.show();
 				});
 			};
@@ -66,11 +66,6 @@ var list = new data_list(
 		layout.changed(list.container);
 	}
 );
-
-function reload_list() {
-	list.reloadData();
-}
-
 </script>
 <?php 
 	}

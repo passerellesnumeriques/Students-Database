@@ -39,11 +39,14 @@ function pictures_list(container) {
 	
 	this.setPictures = function(pictures) {
 		while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
+		for (var i = 0; i < this.pictures.length; ++i)
+			this.pictures[i].cleanup();
 		this.pictures = [];
 		var ready_count = pictures.length;
 		var ready = function() {
 			if (--ready_count == 0 || (ready_count%10)==0)
 				t.adjustSizes();
+			if (ready_count == 0) ready = null;
 		};
 		for (var i = 0; i < pictures.length; ++i) {
 			var pic = new pictures_list_thumbnail(container, pictures[i], t.width, t.height, ready);
@@ -66,6 +69,15 @@ function pictures_list(container) {
 		this.pictures = [];
 	};
 	this._init();
+	
+	this.cleanup = function() {
+		for (var i = 0; i < this.pictures.length; ++i)
+			this.pictures[i].cleanup();
+		this.pictures = null;
+		container = null;
+		t = null;
+	};
+	window.to_cleanup.push(this);
 }
 
 function pictures_list_thumbnail(container, picture, width, height, onloaded) {
@@ -110,4 +122,16 @@ function pictures_list_thumbnail(container, picture, width, height, onloaded) {
 	};
 	
 	this.picture = picture.picture_provider(this.picture_container, width, height, onloaded);
+	
+	this.cleanup = function() {
+		this.element._pic = null;
+		this.element = null;
+		this.picture_container = null;
+		this.name_container = null;
+		this.picture = null;
+		container = null;
+		picture = null;
+		onloaded = null;
+		t = null;
+	};
 }

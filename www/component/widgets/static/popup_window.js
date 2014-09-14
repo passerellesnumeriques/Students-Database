@@ -280,39 +280,68 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { if (!onno || onno()) t.close(); });
 		t.onEscape(function() { if (!onno || onno()) t.close(); });
 	};
-	
+
+	t._onenter_listeners = [];
+	t._onEnterListener = function(ev) {
+		if (!t || !t.popup) return;
+		if (ev.target.nodeName == "TEXTAREA") return;
+		var e = getCompatibleKeyEvent(ev);
+		if (e.isEnter)
+			for (var i = 0; i < t._onenter_listeners.length; ++i)
+				t._onenter_listeners[i]();
+	};
+	t._onEnterListenerRegistrations = [];
 	t.onEnter = function(onenter) {
-		var listener = function(ev) {
-			if (!t || !t.popup) return;
-			if (ev.target.nodeName == "TEXTAREA") return;
-			var e = getCompatibleKeyEvent(ev);
-			if (e.isEnter) onenter();
-		};
-		listenEvent(window,'keyup',listener);
+		t._onenter_listeners.push(onenter);
+		if (t._onenter_listeners.length == 1) {
+			listenEvent(window,'keyup',t._onEnterListener);
+			t._onEnterListenerRegistrations.push(window);
+		}
 		var frame = t.content.nodeName == "IFRAME" ? t.content : typeof t.content._frame_loading != 'undefined' ? t.content._frame_loading : null;
 		if (frame) {
 			var win = getIFrameWindow(frame);
-			if (win) listenEvent(win,'keyup',listener);
+			if (win) {
+				listenEvent(win,'keyup',t._onEnterListener);
+				t._onEnterListenerRegistrations.push(win);
+			}
 			listenEvent(frame,'load',function(){
 				var win = getIFrameWindow(frame);
-				if (win) listenEvent(win,'keyup',listener);
+				if (win) {
+					listenEvent(win,'keyup',t._onEnterListener);
+					t._onEnterListenerRegistrations.push(win);
+				}
 			});
 		};
 	};
+	t._onescape_listeners = [];
+	t._onEscapeListener = function(ev) {
+		if (!t || !t.popup) return;
+		if (ev.target.nodeName == "TEXTAREA") return;
+		var e = getCompatibleKeyEvent(ev);
+		if (e.isEscape)
+			for (var i = 0; i < t._onescape_listeners.length; ++i)
+				t._onescape_listeners[i]();
+	};
+	t._onEscapeListenerRegistrations = [];
 	t.onEscape = function(onescape) {
-		var listener = function(ev) {
-			if (!t || !t.popup) return;
-			var e = getCompatibleKeyEvent(ev);
-			if (e.isEscape) onescape();
-		};
-		listenEvent(window,'keyup',listener);
+		t._onescape_listeners.push(onescape);
+		if (t._onescape_listeners.length == 1) {
+			listenEvent(window,'keyup',t._onEscapeListener);
+			t._onEscapeListenerRegistrations.push(window);
+		}
 		var frame = t.content.nodeName == "IFRAME" ? t.content : typeof t.content._frame_loading != 'undefined' ? t.content._frame_loading : null;
 		if (frame) {
 			var win = getIFrameWindow(frame);
-			if (win) listenEvent(win,'keyup',listener);
+			if (win) {
+				listenEvent(win,'keyup',t._onEscapeListener);
+				t._onEscapeListenerRegistrations.push(win);
+			}
 			listenEvent(frame,'load',function(){
 				var win = getIFrameWindow(frame);
-				if (win) listenEvent(win,'keyup',listener);
+				if (win) {
+					listenEvent(win,'keyup',t._onEscapeListener);
+					t._onEscapeListenerRegistrations.push(win);
+				}
 			});
 		};
 	};
@@ -752,6 +781,14 @@ function popup_window(title,icon,content,hide_close_button) {
 		window.to_cleanup.remove(this);
 		if (t.content_container)
 			layout.unlistenElementSizeChanged(t.content_container, t._layout_content);
+		t._onenter_listeners = null;
+		for (var i = 0; i < t._onEnterListenerRegistrations.length; ++i)
+			unlistenEvent(t._onEnterListenerRegistrations[i],'keyup',t._onEnterListener);
+		t._onEnterListener = null;
+		t._onescape_listeners = null;
+		for (var i = 0; i < t._onEscapeListenerRegistrations.length; ++i)
+			unlistenEvent(t._onEscapeListenerRegistrations[i],'keyup',t._onEscapeListener);
+		t._onEscapeListener = null;
 		t.content = null;
 		t.content_container = null;
 		t.header = null;

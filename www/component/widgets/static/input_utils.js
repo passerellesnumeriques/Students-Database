@@ -7,7 +7,6 @@ function inputAutoresizeUpdater() {
 	};
 	this._doUpdates = function() {
 		if (window.closing) return;
-		
 		for (var i = 0; i < this.to_update.length; ++i) {
 			var input = this.to_update[i];
 			input.mirror.removeAllChildren();
@@ -47,23 +46,17 @@ function inputAutoresizeUpdater() {
 			}
 		}
 	};
+	this.cleanup = function() {
+		this.knowledge = null;
+		this.to_update = null;
+	};
+	window.to_cleanup.push(this);
 };
 window._input_autoresize_updater = new inputAutoresizeUpdater();
 
 function inputAutoresize(input, min_size) {
 	input._min_size = min_size;
 	input.mirror = document.createElement("SPAN");
-	input.ondomremoved(function() {
-		if (input.mirror.parentNode)
-			input.mirror.parentNode.removeChild(input.mirror);
-		input.mirror = null;
-		input.autoresize = null;
-		input.inputAutoresize_prev_onkeydown = null;
-		input.inputAutoresize_prev_onkeyup = null;
-		input.inputAutoresize_prev_oninput = null;
-		input.inputAutoresize_prev_onpropertychange = null;
-		input.inputAutoresize_prev_onchange = null;
-	});
 	if (input.style) {
 		var style = getComputedStyle(input);
 		if (input.style.fontSize)
@@ -103,6 +96,20 @@ function inputAutoresize(input, min_size) {
 		this._min_size = min_size;
 		update();
 	};
+	input.ondomremoved(function() {
+		if (input.mirror.parentNode)
+			input.mirror.parentNode.removeChild(input.mirror);
+		input.mirror = null;
+		input.autoresize = null;
+		input.setMinimumSize = null;
+		input.inputAutoresize_prev_onkeydown = null;
+		input.inputAutoresize_prev_onkeyup = null;
+		input.inputAutoresize_prev_oninput = null;
+		input.inputAutoresize_prev_onpropertychange = null;
+		input.inputAutoresize_prev_onchange = null;
+		update = null;
+		input = null;
+	});
 }
 
 function inputDefaultText(input, default_text) {

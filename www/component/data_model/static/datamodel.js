@@ -21,10 +21,11 @@ window.datamodel = {
 		var listener = function(){
 			window.top.datamodel.dataChanged(data_display, data_key, data_getter());
 		};
-		this._data_widgets.push({win:win,data_display:data_display,data_key:data_key,data_getter:data_getter,data_setter:data_setter,element:element,unregister_listener:unregister_listener,listener:listener});
+		window.top.datamodel._data_widgets.push({win:win,data_display:data_display,data_key:data_key,data_getter:data_getter,data_setter:data_setter,element:element,unregister_listener:unregister_listener,listener:listener});
 		register_listener(listener);
 		element.ondomremoved(function(element) {
 			window.top.datamodel.unregisterDataWidget(element);
+			listener = null;
 		});
 		if (data_display.cell)
 			this.registerCellWidget(win, data_display.cell.table, data_display.cell.column, data_key, element, data_getter, data_setter, register_listener, unregister_listener);
