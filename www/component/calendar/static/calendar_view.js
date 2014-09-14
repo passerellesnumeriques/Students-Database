@@ -51,6 +51,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		};
 		this.changeView(t.view_name, ready);
 		ready();
+		if (view_name != "upcoming")
 		require("mac_tabs.js",function() {
 			t.view_tabs = new mac_tabs();
 			t.view_tabs.addItem("Day", "day");
@@ -158,6 +159,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	};
 	/** Called when the zoom is changed, to update the text displaying zoom information */
 	this.updateHeader = function() {
+		if (!this.header.parentNode) return;
 		if (!this.view_tabs || !this.view) return;
 		var w = this.header.clientWidth;
 		w -= getWidth(this.view_tabs.element, []);

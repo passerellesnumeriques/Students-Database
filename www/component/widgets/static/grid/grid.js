@@ -1045,7 +1045,7 @@ function grid(element) {
 						field.setDataDisplay(data.data_display, data.data_id);
 				},data);
 			if (typeof data.css != 'undefined' && data.css)
-				td.className = data.css;
+				addClassName(td, data.css);
 			td.ondomremoved(function(td) { td.field = null; td.col_id = null; td.data_id = null; });
 		}
 		// check if sorted or not

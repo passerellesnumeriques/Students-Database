@@ -23,6 +23,8 @@ function context_menu(menu) {
 		menu = document.createElement("DIV");
 		menu.className = 'context_menu';
 	}
+	menu.style.display = "none";
+	window.top.document.body.appendChild(menu);
 	menu.context_menu=this;
 	this.element = menu;
 	/** Called when the menu is closed
@@ -155,7 +157,6 @@ function context_menu(menu) {
 		menu.style.left = "0px";
 		menu.style.width = "";
 		menu.style.height = "";
-		window.top.document.body.appendChild(menu);
 		var win = getWindowFromElement(from);
 		var x,y,w,h;
 		var pos = win.getFixedPosition(from);
@@ -205,7 +206,6 @@ function context_menu(menu) {
 		menu.style.width = "0px";
 		menu.style.width = "";
 		menu.style.height = "";
-		window.top.document.body.appendChild(menu);
 		var win = getWindowFromElement(from);
 		var x,y,w,h;
 		var pos = win.getFixedPosition(from);
@@ -268,7 +268,7 @@ function context_menu(menu) {
 		}
 		if (typeof window.top.animation != 'undefined')
 			menu.style.visibility = 'hidden';
-		window.top.document.body.appendChild(menu);
+		menu.style.display = "";
 		window.top.pnapplication.onwindowclosed.add_listener(t._window_close_listener);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);
@@ -279,10 +279,11 @@ function context_menu(menu) {
 	};
 	t._this_win = window;
 	t._window_close_listener = function(c) {
+		if (!t) return;
 		if (c.win != t._this_win) return;
-		c.top.document.body.removeChild(menu);
 		c.top.pnapplication.onwindowclosed.remove_listener(t._window_close_listener);
 		t._this_win = null;
+		c.top.document.body.removeChild(menu);
 	};
 	/** Hide the menu: call <code>onclose</code> if specified, then hide or remove the html element of the menu depending on <code>removeOnClose</code> 
 	 * @member context_menu#hide
@@ -316,6 +317,7 @@ function context_menu(menu) {
 			window.top.pnapplication.unregisterOnclick(t._listener);
 	};
 	t._listener = function(ev, win, orig_win) {
+		if (!t) return;
 		t.hide_if_outside_menu(ev, win, orig_win);
 	};
 	t.hide_if_outside_menu = function(ev, win, orig_win) {
@@ -349,7 +351,6 @@ function context_menu(menu) {
 	
 	t.resize = function() {
 		if (menu.parentNode != window.top.document.body) return;
-		window.top.document.body.removeChild(menu);
 		menu.style.top = "";
 		menu.style.left = "";
 		if (t.show_from)

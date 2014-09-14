@@ -66,6 +66,10 @@ window.layout = {
 			try { throw new Error("null element given to layout.changed"); }
 			catch (e) { log_exception(e); return; }
 		}
+		if (typeof getWindowFromElement == 'undefined') {
+			setTimeout(function(){layout.changed(element);},25);
+			return;
+		}
 		var w = getWindowFromElement(element);
 		if (w != layout._w) {
 			w.layout.changed(element);
@@ -419,8 +423,8 @@ function _layout_auto() {
 	// reschedule
 	var now = new Date().getTime();
 	var timing;
-	if (now - layout._last_layout_activity < 1000) timing = 1000;
-	else if (now - layout._last_layout_activity < 5000) timing = 2500;
+	if (now - layout._last_layout_activity < 1000) timing = 2000;
+	else if (now - layout._last_layout_activity < 5000) timing = 3500;
 	else if (now - layout._last_layout_activity < 20000) timing = 5000;
 	else timing = 10000;
 	if (_layout_interval_time != timing) {

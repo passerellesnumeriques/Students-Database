@@ -24,6 +24,7 @@ function calendar_view_upcoming(view, container) {
 	};
 	/** Build the content of the display */
 	this._reload = function() {
+		return;
 		this.div.removeAllChildren();
 		this._rows = [];
 		var date = new Date(this.start_date.getTime());
