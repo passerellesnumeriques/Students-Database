@@ -25,7 +25,7 @@ class service_generate_transcript extends Service {
 		if (!isset($input["id"]))
 			generateTranscript(time(), $input["period"], @$input["specialization"]);
 		else
-			generatePublishedTranscript($input["id"], $input["student"]);
+			generatePublishedTranscript($input["id"], $input["student"], @$input["id_suffix"]);
 	}
 		
 }

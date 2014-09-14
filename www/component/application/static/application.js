@@ -123,7 +123,7 @@ function initPNApplication() {
 				w.self = null;
 				w.frameElement = null;
 				w.document = null;
-				for (var name in w) if (name != "closing" && name != "name") try { w[name] = null; } catch(e){}
+				for (var name in w) if (name != "closing" && name != "name" && name != "_domRemoved") try { w[name] = null; } catch(e){}
 			},
 			
 			/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */

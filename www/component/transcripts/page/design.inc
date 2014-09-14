@@ -1,5 +1,5 @@
 <?php
-function generatePublishedTranscript($id, $student_id) {
+function generatePublishedTranscript($id, $student_id, $id_suffix = null) {
 	$config = SQLQuery::create()->select("PublishedTranscript")->whereValue("PublishedTranscript","id",$id)->executeSingleRow();
 	$categories = PNApplication::$instance->curriculum->getSubjectCategories();
 	$student_grades = SQLQuery::create()->select("PublishedTranscriptStudentSubjectGrade")->whereValue("PublishedTranscriptStudentSubjectGrade","id",$id)->whereValue("PublishedTranscriptStudentSubjectGrade","people",$student_id)->execute();
@@ -31,7 +31,7 @@ function generatePublishedTranscript($id, $student_id) {
 		$class_averages[$subject["id"]] = $nb > 0 ? $total_grade/$nb : null;
 	}
 	
-	generateTranscriptFor($id, $config, $categories, $subjects, $period, $student, $student_grades, $student_general_appreciation, $class_averages);
+	generateTranscriptFor($id, $config, $categories, $subjects, $period, $student, $student_grades, $student_general_appreciation, $class_averages, $id_suffix);
 } 
 function generateTranscript($transcript_id, $period_id, $spe_id = null, $student = null, $student_grades = null, $student_general_appreciation = null) {
 	$config = SQLQuery::create()
@@ -89,7 +89,7 @@ function defaultTranscriptConfig(&$config) {
 		$config["grading_system"] = $d["transcripts"]["default_grading_system"];
 	}
 }
-function generateTranscriptFor($transcript_id, $config, $categories, $subjects, $period, $student = null, $student_grades = null, $student_general_appreciation = null, $class_averages = null) {
+function generateTranscriptFor($transcript_id, $config, $categories, $subjects, $period, $student = null, $student_grades = null, $student_general_appreciation = null, $class_averages = null, $id_suffix = null) {
 	defaultTranscriptConfig($config);
 	
 	$grading_systems = include("component/transcripts/GradingSystems.inc");
@@ -141,7 +141,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 	
 	$design = file_get_contents("component/transcripts/page/design.html");
 
-	$design = str_replace("#ID#", "transcript_container_".$transcript_id, $design);
+	$design = str_replace("#ID#", "transcript_container_".$transcript_id."_student_".$student["id"]."_period_".$period["id"].($id_suffix <> null ? $id_suffix : ""), $design);
 	
 	$design = str_replace("#First Name#", $student["first_name"], $design);
 	$design = str_replace("#Last Name#", $student["last_name"], $design);
@@ -149,9 +149,22 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 	$design = str_replace("#Academic Period#", $period["name"], $design);
 	$design = str_replace("#Academic Period Date#", date("d M Y",strtotime($period["academic_period_start"]))." to ".date("d M Y",strtotime($period["academic_period_end"])), $design);
 	
-	$design = str_replace("#Location#", @$config["location"], $design);
-	$design = str_replace("#Signatory Name#", @$config["signatory_name"], $design);
-	$design = str_replace("#Signatory Title#", @$config["signatory_title"], $design);
+	$sign_info = false;
+	if (@$config["location"] <> null) {
+		$design = str_replace("#Location#", ($sign_info ? ",<br/>" : "").$config["location"], $design);
+		$sign_info = true;
+	} else
+		$design = str_replace("#Location#", "", $design);
+	if (@$config["signatory_name"] <> null) {
+		$design = str_replace("#Signatory Name#", ($sign_info ? ",<br/>" : "").$config["signatory_name"], $design);
+		$sign_info = true;
+	} else
+		$design = str_replace("#Signatory Name#", "", $design);
+	if (@$config["signatory_title"] <> null) {
+		$design = str_replace("#Signatory Title#", ($sign_info ? ",<br/>" : "").$config["signatory_title"], $design);
+		$sign_info = true;
+	} else
+		$design = str_replace("#Signatory Title#", "", $design);
 	
 	$design = str_replace("#General Appreciation#", toHTML($student_general_appreciation), $design);
 	
@@ -235,7 +248,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 			}
 			$total_grade = $total_coef > 0 ? $total_grade/$total_coef : "null";
 			$passing = $total_coef > 0 ? $passing/$total_coef : "null";
-			$id = "total_grade_".$cat["id"]."_".$student["id"]."_$transcript_id";
+			$id = "total_grade_".$cat["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 			$cat_content = str_replace("#TOTAL_GRADE#", "<div id='$id'>$total_grade</div>", $cat_content);
 			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_grade).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 			
@@ -265,12 +278,12 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 					$student_grade = null;
 					foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g; break; }
 					$subj_content = str_replace("#COMMENT#", toHTML($student_grade["comment"]), $subj_content);
-					$id = "grade_subject_".$subject["id"]."_".$student["id"]."_$transcript_id";
+					$id = "grade_subject_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 					$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>".$student_grade["grade"]."</div>", $subj_content);
 					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade["grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 					if (@$config["class_average"] == 1) {
 						$class_av = @$class_averages[$subject["id"]];
-						$id = "class_average_subject_".$subject["id"]."_".$student["id"]."_$transcript_id";
+						$id = "class_average_subject_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 						$subj_content = str_replace("#CLASS_AVERAGE#", "<div id='$id'>$class_av</div>", $subj_content);
 						$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($class_av).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 					}
@@ -280,7 +293,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 				$cat_content = str_replace("#TOTAL_COEFFICIENT#", $total_coef, $cat_content);
 				if (@$config["class_average"] == 1) {
 					$total_class_av = $total_coef > 0 ? $total_class_av/$total_coef : "";
-					$id = "total_class_average_".$cat["id"]."_".$student["id"]."_$transcript_id";
+					$id = "total_class_average_".$cat["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 					$cat_content = str_replace("#TOTAL_CLASS_AVERAGE#", "<div id='$id'>$total_class_av</div>", $cat_content);
 					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_class_av).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 				}				
@@ -318,12 +331,12 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 			$student_grade = null;
 			foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g; break; }
 			$subj_content = str_replace("#COMMENT#", toHTML($student_grade["comment"]), $subj_content);
-			$id = "grade_subject_".$subject["id"]."_".$student["id"]."_$transcript_id";
+			$id = "grade_subject_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 			$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>".$student_grade["grade"]."</div>", $subj_content);
 			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade["grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 			if (@$config["class_average"] == 1) {
 				$class_av = @$class_averages[$subject["id"]];
-				$id = "class_average_subject_".$subject["id"]."_".$student["id"]."_$transcript_id";
+				$id = "class_average_subject_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 				$subj_content = str_replace("#CLASS_AVERAGE#", "<div id='$id'>$class_av</div>", $subj_content);
 				$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($class_av).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 			}
@@ -352,12 +365,12 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 	}
 	$total_grade = $total_coef > 0 ? $total_grade/$total_coef : "null";
 	$passing = $total_coef > 0 ? $passing/$total_coef : "null";
-	$id = "global_grade"."_".$student["id"]."_$transcript_id";
+	$id = "global_grade"."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 	$design = str_replace("#GLOBAL_GRADE#", "<div id='$id'>$total_grade</div>", $design);
 	$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_grade).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 	if (@$config["class_average"] == 1) {
 		$total_class = $total_coef > 0 ? $total_class/$total_coef : "null";
-		$id = "global_class_average_grade"."_".$student["id"]."_$transcript_id";
+		$id = "global_class_average_grade"."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 		$design = str_replace("#GLOBAL_CLASS_AVERAGE_GRADE#", "<div id='$id'>$total_class</div>", $design);
 		$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_class).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 	}

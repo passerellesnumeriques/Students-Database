@@ -32,6 +32,40 @@ class page_teachers extends Page {
 		$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true, true);
 		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
 
+		if (count($current_teachers_ids) > 0) {
+			$current_period = PNApplication::$instance->curriculum->getCurrentAcademicPeriod();
+			$current_assignments = SQLQuery::create()
+				->select("TeacherAssignment")
+				->join("TeacherAssignment","CurriculumSubject",array("subject"=>"id"))
+				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
+				->whereValue("BatchPeriod","academic_period",$current_period["id"])
+				->whereIn("TeacherAssignment","people",$current_teachers_ids)
+				->field("TeacherAssignment","people","teacher")
+				->field("CurriculumSubject","name","subject_name")
+				->groupBy("CurriculumSubject","id")
+				->execute();
+		} else
+			$current_assignments = array();
+		
+		if (count($peoples_ids) > 0) {
+			$previous_assignments = SQLQuery::create()
+				->select("TeacherAssignment")
+				->join("TeacherAssignment","CurriculumSubject",array("subject"=>"id"))
+				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
+				->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"))
+				->join("BatchPeriod","StudentBatch",array("batch"=>"id"))
+				->where("`AcademicPeriod`.`end` < '".date("Y-m-d")."'")
+				->whereIn("TeacherAssignment","people",$peoples_ids)
+				->field("TeacherAssignment","people","teacher")
+				->field("CurriculumSubject","name","subject_name")
+				->field("BatchPeriod","name","period_name")
+				->field("StudentBatch","name","batch_name")
+				->groupBy("CurriculumSubject","id")
+				->orderBy("AcademicPeriod","start",false)
+				->execute();
+		} else
+			$previous_assignments = array();
+
 ?>
 <style type='text/css'>
 .teachers_table {
@@ -54,7 +88,7 @@ class page_teachers extends Page {
 			collapsable='true'
 			style='margin:10px'
 		>
-		<?php $this->buildTeachersList($current_teachers_ids, $teachers, $peoples);?>
+		<?php $this->buildTeachersList($current_teachers_ids, $teachers, $peoples, $current_assignments, $previous_assignments);?>
 		</div>
 		<div id='past_teachers'
 			title='Previous Teachers'
@@ -62,7 +96,7 @@ class page_teachers extends Page {
 			collapsed='false'
 			style='margin:10px'
 		>
-		<?php $this->buildTeachersList($past_teachers_ids, $teachers, $peoples);?>
+		<?php $this->buildTeachersList($past_teachers_ids, $teachers, $peoples, null, $previous_assignments);?>
 		</div>
 	</div>
 	<?php if ($can_edit) {?>
@@ -100,7 +134,7 @@ function new_teacher() {
 	 * @param array $teachers_dates dates of etachers
 	 * @param array $peoples teachers information
 	 */
-	private function buildTeachersList($teachers_ids, $teachers_dates, $peoples) {
+	private function buildTeachersList($teachers_ids, $teachers_dates, $peoples, $current_assignments, $previous_assignments) {
 		$teachers_ids = $this->sortPeopleIds($teachers_ids, $peoples);
 ?>
 <div style='background-color:white;padding:10px'>
@@ -114,7 +148,7 @@ foreach ($teachers_ids as $people_id) {
 	$id = $this->generateID();
 	echo "<td id='$id'></td>";
 	$this->onload("new profile_picture('$id',50,50,'center','middle').loadPeopleStorage($people_id,".json_encode($people["picture"]).",".json_encode($people["picture_revision"]).");");
-	echo "<td>";
+	echo "<td style='white-space:nowrap'>";
 	$id = $this->generateID();
 	echo "<div id='$id'>".toHTML($people["first_name"])."</div>";
 	$this->onload("window.top.datamodel.registerCellSpan(window,'People','first_name',$people_id,document.getElementById('$id'));");
@@ -127,12 +161,45 @@ foreach ($teachers_ids as $people_id) {
 	foreach ($teachers_dates as $pid=>$d) if ($pid == $people_id) { $dates = $d; break; }
 	$last_date = null;
 	if ($dates <> null) foreach ($dates as $d) if ($d["end"] == null) { $last_date = $d; break; } else if ($last_date == null || strtotime($d["start"]) > strtotime($last_date["start"])) $last_date = $d;
-	echo "<td style='padding-left:10px'>";
+	echo "<td style='padding-left:10px;white-space:nowrap'>";
 	if ($last_date <> null) {
 		echo "Started on ";
 		datamodel_cell_here($this, PNApplication::$instance->user_management->has_right("edit_curriculum"), "TeacherDates", "start", $last_date["id"], $last_date["start"], null);
 		echo "<br/>Until ";
 		datamodel_cell_here($this, PNApplication::$instance->user_management->has_right("edit_curriculum"), "TeacherDates", "end", $last_date["id"], $last_date["end"], null);
+	}
+	echo "</td>";
+	if ($current_assignments !== null) {
+		echo "<td style='padding-left:10px;min-width:150px'>";
+		$subjects = array();
+		foreach ($current_assignments as $a) if ($a["teacher"] == $people_id) array_push($subjects, $a["subject_name"]);
+		if (count($subjects) == 0)
+			echo "Currently not assigned to any subject";
+		else {
+			echo "Currently assigned to: ";
+			$first_subject = true;
+			foreach ($subjects as $s) {
+				if ($first_subject) $first_subject = false; else echo ", ";
+				echo toHTML($s);
+			}
+		}
+		echo "</td>";
+	}
+	echo "<td style='padding-left:10px'>";
+	$subjects = array();
+	foreach ($previous_assignments as $a) if ($a["teacher"] == $people_id) array_push($subjects, $a);
+	if (count($subjects) == 0)
+		echo "Never assigned to any subject";
+	else {
+		echo "Has taught: ";
+		for ($i = 0; $i < count($subjects); $i++) {
+			if ($i > 0) echo ", ";
+			if ($i == 5) {
+				echo "<i>... and ".(count($subjects)-5)." more</i>";
+				break;
+			}
+			echo toHTML($subjects[$i]["subject_name"])." (Batch ".toHTML($subjects[$i]["batch_name"])." ".toHTML($subjects[$i]["period_name"]).")";
+		}
 	}
 	echo "</td>";
 	echo "</tr>";

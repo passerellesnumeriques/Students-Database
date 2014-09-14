@@ -240,6 +240,8 @@ function printAll() {
 	container.style.position = "absolute";
 	container.style.top = "-10000px";
 	container.style.visibility = "hidden";
+	container.style.height = "300px";
+	container.style.overflow = "hidden";
 	document.body.appendChild(container);
 	var nb = students_ids.length;
 	var locker = lock_screen(null, "Generating transcripts...");
@@ -257,7 +259,7 @@ function printAll() {
 			div.style.breakAfter = "always";
 			//div.style.height = "810px";
 			container.appendChild(div);
-			service.html("transcripts","generate_transcript",{id:selected_transcript,student:students_ids[i]},div,function() {
+			service.html("transcripts","generate_transcript",{id:selected_transcript,student:students_ids[i],id_suffix:"_to_print"},div,function() {
 				pb.addAmount(1);
 				checkEnd();
 			});
