@@ -290,7 +290,7 @@ function Custom_Event() {
 	window.to_cleanup.push(this);
 	this.cleanup = function() {
 		this.listeners = null;
-		if (window.to_cleanup)
+		if (window && window.to_cleanup)
 			window.to_cleanup.remove(this);
 	};
 	

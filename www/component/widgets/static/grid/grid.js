@@ -538,6 +538,7 @@ function grid(element) {
 				else
 					tr.insertBefore(td, tr.childNodes[col_index]);
 				var data = null;
+				if (tr.row_data)
 				for (var k = 0; k < tr.row_data.length; ++k)
 					if (col.id == tr.row_data[k].col_id) { data = tr.row_data[k].data; break; }
 				t._create_cell(col, data, td, function(field){

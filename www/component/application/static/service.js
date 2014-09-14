@@ -178,13 +178,14 @@ window.service = {
 			s += "{";
 			var first = true;
 			for (var attr in input) {
+				if (typeof input[attr] == 'function') continue;
 				if (first) first = false; else s += ",";
 				s += "\""+attr + "\":" + service.generateInput(input[attr],done);
 			}
 			s += "}";
 		} else if (typeof input == 'string')
 			s += "\""+input.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")+"\"";
-		else
+		else if (typeof input != 'function')
 			s += input;
 		if (typeof input == 'object') {
 			done.remove(input);

@@ -426,6 +426,7 @@ function LoadingFrame(frame_element) {
 		while (e.parentNode != null && e.parentNode != e && e.parentNode != document.body && e.parentNode.className != 'popup_window') e = e.parentNode;
 		if (e.parentNode != null && e.parentNode.className == 'popup_window') {
 			var popup = e.parentNode.data;
+			if (!popup) return false;
 			if (popup.isFrozen()) return true;
 		}
 		return false;

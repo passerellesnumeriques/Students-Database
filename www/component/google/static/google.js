@@ -136,10 +136,15 @@ if (window == window.top && !window.top.google) {
 			container.style.justifyContent = "center";
 			container.style.alignItems = "center";
 			container.style.position = "relative";
-			var loading = document.createElement("IMG");
-			loading.src = "/static/google/map_loading.gif";
-			loading.style.zIndex = 2;
-			container.appendChild(loading);
+			var loading;
+			if (container.childNodes.length > 0 && container.childNodes[0].nodeName == "IMG")
+				loading = container.childNodes[0];
+			else {
+				loading = document.createElement("IMG");
+				loading.src = "/static/google/map_loading.gif";
+				loading.style.zIndex = 2;
+				container.appendChild(loading);
+			}
 			var map_container = document.createElement("DIV");
 			map_container.style.width = container.style.width;
 			map_container.style.height = container.style.height;
@@ -153,7 +158,8 @@ if (window == window.top && !window.top.google) {
 				setTimeout(function() {
 					new GoogleMap(map_container, function(m) {
 						onready(m);
-						container.removeChild(loading);
+						if (loading.parentNode)
+							container.removeChild(loading);
 						/*
 						var check = function() {
 							if (map_container.childNodes.length > 0 && map_container.childNodes[0].className == "gm-style") {

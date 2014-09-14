@@ -240,6 +240,7 @@ class service_get_data_list extends Service {
 		}
 		
 		// handle sort
+		$sort_done = true;
 		if (isset($input["sort_field"]) && isset($input["sort_order"])) {
 			for ($i = 0; $i < count($display_data); $i++) {
 				$data = $display_data[$i];
@@ -247,8 +248,11 @@ class service_get_data_list extends Service {
 					if ($input["sort_order"] == "ASC") $asc = true;
 					else if ($input["sort_order"] == "DESC") $asc = false;
 					else break;
-					$alias = $data_aliases[$i]["data"];
-					$q->orderBy($alias, $asc);
+					$alias = @$data_aliases[$i]["data"];
+					if ($alias <> null)
+						$q->orderBy($alias, $asc);
+					else
+						$sort_done = false;
 					break;
 				}
 			}
@@ -348,6 +352,23 @@ class service_get_data_list extends Service {
 			}
 		}
 		
+		if (!$sort_done) {
+			// manual sort
+			for ($i = 0; $i < count($display_data); $i++) {
+				$data = $display_data[$i];
+				if ($data->getCategoryName().".".$data->getDisplayName() == $input["sort_field"]) {
+					$alias = @$data_aliases[$i]["data"];
+					if ($alias <> null) {
+						if ($input["sort_order"] == "ASC") $asc = true;
+						else if ($input["sort_order"] == "DESC") $asc = false;
+						$sorter = new DataListRowSorter($alias, $asc);
+						usort($res, array($sorter,'compare'));
+					}
+					break;
+				}
+			}
+		}
+		
 		if (!isset($input["export"])) {
 			echo "{";
 			if (isset($input["page_size"]))
@@ -432,5 +453,59 @@ class service_get_data_list extends Service {
 			$writer->save('php://output');
 		}
 	}
+}
+
+class DataListRowSorter {
+	
+	private $alias;
+	private $asc;
+	
+	public function __construct($alias, $asc) {
+		$this->alias = $alias;
+		$this->asc = $asc;
+	}
+	
+	public function compare($row1,$row2) {
+		$r = $this->cmp($row1,$row2);
+		if ($this->asc) return $r;
+		return -$r;
+	}
+	
+	public function cmp($row1,$row2) {
+		$v1 = @$row1[$this->alias];
+		$v2 = @$row2[$this->alias];
+		if ($v1 === null) {
+			if ($v2 === null) return 0;
+			return -1;
+		}
+		if ($v2 === null) return 1;
+		if (is_numeric($v1)) {
+			if (!is_numeric($v2)) return -1;
+			$i1 = intval($v1);
+			$i2 = intval($v2);
+			if ($i1 < $i2) return -1;
+			if ($i1 > $i2) return 1;
+			return 0;
+		}
+		if (is_numeric($v2)) return 1;
+		if (!is_string($v1)) {
+			if (is_string($v2)) return 1;
+			return 0;
+		}
+		if (!is_string($v2)) return -1;
+		if (strlen($v1) == 10 && substr($v1,4,1) == "-" && substr($v1,7,1) == "-") {
+			if (strlen($v2) == 10 && substr($v2,4,1) == "-" && substr($v2,7,1) == "-") {
+				$t1 = strtotime($v1);
+				$t2 = strtotime($v2);
+				if ($t1 < $t2) return -1;
+				if ($t1 > $t2) return 1;
+				return 0;
+			} else
+				return -1;
+		} else if (strlen($v2) == 10 && substr($v2,4,1) == "-" && substr($v2,7,1) == "-")
+			return 1;
+		return strcasecmp($v1, $v2);
+	}
+	
 }
 ?>

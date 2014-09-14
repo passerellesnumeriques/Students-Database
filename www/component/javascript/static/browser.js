@@ -569,7 +569,7 @@ function unlistenEvent(elem, type, handler) {
 	if (elem == window && !document.createEvent) elem = document;
 	if (elem.removeEventListener)
 		elem.removeEventListener(type,handler,false);
-	else
+	else if (elem.detachEvent)
 	     elem.detachEvent('on'+type,handler); 
 }
 function createEvent(type, attributes) {
