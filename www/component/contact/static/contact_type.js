@@ -248,13 +248,11 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 */
 	this._showCategoryContextMenu = function(container,contact){
 		require('context_menu.js',function(){
-			if(!t.context){
-				t.context = new context_menu();
-				t.context.onclose = function() {t.context = null;};
-			}
-			t.context.clearItems();
-			t._addCategoryContextMenuItem(container, "Professional", contact);
+			if (t.context) t.context.hide();
+			t.context = new context_menu();
+			t.context.onclose = function() {t.context = null;};
 			t._addCategoryContextMenuItem(container, "Personal", contact);
+			t._addCategoryContextMenuItem(container, "Professional", contact);
 			t._addCategoryContextMenuItem(container, "Other", contact);
 			
 			t.context.showBelowElement(container);

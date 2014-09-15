@@ -289,6 +289,7 @@ function context_menu(menu) {
 	 * @member context_menu#hide
 	 */
 	t.hide = function() {
+		if (!t) return;
 		window.top.pnapplication.onwindowclosed.remove_listener(t._window_close_listener);
 		if (t.onclose) t.onclose();
 		if (t.parent_menu) {

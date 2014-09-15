@@ -306,11 +306,9 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 */
 	this._showAddressTypeContextMenu = function(container,address){
 		require('context_menu.js',function(){
-			if(!t.context){
-				t.context = new context_menu();
-				t.context.onclose = function() {t.context = null;};
-			}
-			t.context.clearItems();
+			if (t.context) t.context.hide();
+			t.context = new context_menu();
+			t.context.onclose = function() {t.context = null;};
 			t._addAddressTypeToContextMenu(container, "Home", address);
 			t._addAddressTypeToContextMenu(container, "Family", address);
 			t._addAddressTypeToContextMenu(container, "Birthplace", address);
