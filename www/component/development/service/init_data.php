@@ -21,7 +21,8 @@ class service_init_data extends Service {
 			}
 		} else {
 			set_time_limit(240);
- 			$db_system->execute("USE students_".$domain);
+			global $db_config;
+ 			$db_system->execute("USE ".$db_config["prefix"].$domain);
  			$components = PNApplication::sortComponentsByDependencies();
  			if ($domain == PNApplication::$instance->local_domain) {
 	 			foreach ($components as $c) {

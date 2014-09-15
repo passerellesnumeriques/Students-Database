@@ -80,9 +80,10 @@ class user_management extends Component {
 		$this->load_user_rights();
 		
 		// get people information
+		global $db_config;
 		$q = SQLQuery::create()
 			->bypassSecurity() // here we just get name of the user, no need to check if he can see it
-			->database("students_".$this->domain)
+			->database($db_config["prefix"].$this->domain)
 			->select("UserPeople")
 			->where("user",$this->user_id)
 			;

@@ -45,10 +45,11 @@ if (isset($_POST["req"])) {
 			global $local_domain, $db_config;
 			$local_domain = $_POST["domain"];
 			$db_config = array(
-					"type"=>$_POST["db_type"],
-					"server"=>$_POST["db_server"],
-					"user"=>$_POST["db_user"],
-					"password"=>$_POST["db_password"],
+				"type"=>$_POST["db_type"],
+				"server"=>$_POST["db_server"],
+				"user"=>$_POST["db_user"],
+				"password"=>$_POST["db_password"],
+				"prefix"=>$_POST["db_prefix"]
 			);
 			$domain = $_POST["domain"];
 			require_once("component/PNApplication.inc");
@@ -61,9 +62,9 @@ if (isset($_POST["req"])) {
 			require_once("SQLQuery.inc");
 			require_once("component/data_model/Model.inc");
 			$model = DataModel::get();
-			$res = $db->execute("CREATE DATABASE IF NOT EXISTS students_".$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
-			$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = 'students_$domain'");
-			$db->execute("USE students_".$domain);
+			$res = $db->execute("CREATE DATABASE IF NOT EXISTS ".$db_config["prefix"].$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
+			$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = '".$db_config["prefix"].$domain."'");
+			$db->execute("USE ".$db_config["prefix"].$domain);
 			while (($sql = $db->nextRowArray($res)) <> null)
 				$db->execute($sql[0]);
 			require_once("component/data_model/DataBaseUtilities.inc");
@@ -89,6 +90,7 @@ if (isset($_POST["req"])) {
 				"server"=>$_POST["db_server"],
 				"user"=>$_POST["db_user"],
 				"password"=>$_POST["db_password"],
+				"prefix"=>$_POST["db_prefix"]
 			);
 			$domain = $_POST["domain"];
 			set_time_limit(240);
@@ -149,6 +151,7 @@ if (isset($_POST["req"])) {
 				"\t\"server\"=>\"".$_POST["db_server"]."\",\n".
 				"\t\"user\"=>\"".$_POST["db_user"]."\",\n".
 				"\t\"password\"=>\"".$_POST["db_password"]."\",\n".
+				"\t\"prefix\"=>\"".$_POST["db_prefix"]."\",\n".
 				");\n".
 				"?>"
 			);
@@ -261,13 +264,18 @@ ul {
 			<td></td>
 		</tr>
 		<tr>
+			<td>Databse name prefix</td>
+			<td align="left"><input type='text' name='db_prefix' value='students_' onchange='updateDBNames(this.value);'/></td>
+			<td></td>
+		</tr>
+		<tr>
 			<td colspan=3>
 				For the database, you have 2 options:<ul>
 					<li>Specify a user having enough privileges to create and remove databases<br/>
 						<i>Typically for development environment, not production</i>
 					</li>
 					<li>Specify a dedicated user for the software. In this case, you must first:<ul>
-						<li>Create the databases for each domain (students_PNC,students_PNP,students_PNV)</li>
+						<li>Create the databases for each domain (<span id='prefix_PNC'>students_</span>PNC,<span id='prefix_PNP'>students_</span>PNP,<span id='prefix_PNV'>students_</span>PNV)</li>
 						<li>The databases must use UTF8</li>
 					</ul></li>
 				</ul>
@@ -316,7 +324,12 @@ ul {
 	</form>
 </div>
 <script type='text/javascript'>
-var db_type, db_server, db_user, db_password, proxy_server, proxy_port, proxy_user, proxy_pass;
+function updateDBNames(prefix) {
+	document.getElementById('prefix_PNC').innerHTML = prefix;
+	document.getElementById('prefix_PNP').innerHTML = prefix;
+	document.getElementById('prefix_PNV').innerHTML = prefix;
+}
+var db_type, db_server, db_user, db_password, db_prefix, proxy_server, proxy_port, proxy_user, proxy_pass;
 function request(params, handler) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST","?", true);
@@ -334,6 +347,7 @@ function request(params, handler) {
 	params += "&db_server="+encodeURIComponent(db_server);
 	params += "&db_user="+encodeURIComponent(db_user);
 	params += "&db_password="+encodeURIComponent(db_password);
+	params += "&db_prefix="+encodeURIComponent(db_prefix);
 	params += "&proxy_server="+encodeURIComponent(proxy_server);
 	params += "&proxy_port="+encodeURIComponent(proxy_port);
 	if (proxy_user) {
@@ -350,6 +364,7 @@ function checkDB() {
 	db_server = form.elements['db_server'].value;
 	db_user = form.elements['db_user'].value;
 	db_password = form.elements['db_password'].value;
+	db_prefix = form.elements['db_prefix'].value;
 	proxy_server = form.elements['proxy_server'].value;
 	proxy_port = form.elements['proxy_port'].value;
 	if (form.elements['proxy_auth'].checked) {
@@ -383,6 +398,7 @@ db_type = <?php echo json_encode($_POST["db_type"]);?>;
 db_server = <?php echo json_encode($_POST["db_server"]);?>;
 db_user = <?php echo json_encode($_POST["db_user"]);?>;
 db_password = <?php echo json_encode($_POST["db_password"]);?>;
+db_prefix = <?php echo json_encode($_POST["db_prefix"]);?>;
 proxy_server = <?php echo json_encode($_POST["proxy_server"]);?>;
 proxy_port = <?php echo json_encode($_POST["proxy_port"]);?>;
 proxy_user = <?php echo isset($_POST["proxy_user"]) ? json_encode($_POST["proxy_user"]) : "null";?>;

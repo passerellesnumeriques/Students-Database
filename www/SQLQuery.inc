@@ -25,7 +25,7 @@ class SQLQuery {
 			}
 		}
 		// by default, connect to the local domain
-		if (!SQLQuery::$db_system->selectDatabase("students_".PNApplication::$instance->local_domain))
+		if (!SQLQuery::$db_system->selectDatabase($db_config["prefix"].PNApplication::$instance->local_domain))
 			PNApplication::error("Unable to connect to the local domain database");
 		return SQLQuery::$db_system;
 	}

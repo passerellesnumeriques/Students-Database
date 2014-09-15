@@ -21,7 +21,8 @@ class service_test_data extends Service {
 			}
 		} else {
 			set_time_limit(240);
- 			$db_system->execute("USE students_".$domain);
+			global $db_config;
+ 			$db_system->execute("USE ".$db_config["prefix"].$domain);
 			$this->SplitSQL($db_system, "component/development/data/organization.sql");
 			$this->SplitSQL($db_system, "component/development/data/labtable.sql");
 			//$this->SplitSQL($db_system, "component/development/data/students_pnc.sql");

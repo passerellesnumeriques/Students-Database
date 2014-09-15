@@ -13,8 +13,9 @@ class page_administration extends Page {
 	<div style='padding:5px;background-color:white;'>
 		<?php
 		$status = array(); 
+		global $db_config;
 		foreach (PNApplication::$instance->getDomains() as $domain=>$conf) {
-			$res = SQLQuery::getDataBaseAccessWithoutSecurity()->execute("SHOW TABLE STATUS IN `students_$domain`");
+			$res = SQLQuery::getDataBaseAccessWithoutSecurity()->execute("SHOW TABLE STATUS IN `".$db_config["prefix"].$domain."`");
 			$rows = array();
 			while (($row = SQLQuery::getDataBaseAccessWithoutSecurity()->nextRow($res)) <> null)
 				array_push($rows, $row);

@@ -84,13 +84,14 @@ class Backup {
 			if ($first) $first = false; else $cols_names .= ",";
 			$cols_names .= "`".$col->name."`";
 		}
-		$sql = "SELECT $cols_names FROM `students_".PNApplication::$instance->local_domain."`.`$table_name`";
+		global $db_config;
+		$sql = "SELECT $cols_names FROM `".$db_config["prefix"].PNApplication::$instance->local_domain."`.`$table_name`";
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$res = $db->execute($sql);
 		$row = $db->nextRow($res);
 		if ($row <> null) {
 			$f = fopen($path."/$table_name","w");
-			$insert_sql = "INSERT INTO `students_".PNApplication::$instance->local_domain."`.`".$table_name."` ($cols_names) VALUES\n";
+			$insert_sql = "INSERT INTO `".$db_config["prefix"].PNApplication::$instance->local_domain."`.`".$table_name."` ($cols_names) VALUES\n";
 			fwrite($f, $insert_sql);
 			$row_count = 0;
 			do {
@@ -191,10 +192,11 @@ class Backup {
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$domains = include("conf/domains");
 		require_once("component/data_model/DataBaseUtilities.inc");
+		global $db_config;
 		foreach ($domains as $domain=>$conf) {
-			$res = $db->execute("CREATE DATABASE IF NOT EXISTS students_".$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
-			$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = 'students_$domain'");
-			$db->execute("USE students_".$domain);
+			$res = $db->execute("CREATE DATABASE IF NOT EXISTS ".$db_config["prefix"].$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
+			$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = '".$db_config["prefix"].$domain."'");
+			$db->execute("USE ".$db_config["prefix"].$domain);
 			set_time_limit(600);
 			while (($sql = $db->nextRowArray($res)) <> null)
 				$db->execute($sql[0]);

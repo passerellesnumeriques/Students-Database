@@ -25,9 +25,10 @@ class service_create_db extends Service {
 		} else {
 			set_time_limit(240);
 			$model = DataModel::get();
- 			$res = $db_system->execute("CREATE DATABASE IF NOT EXISTS students_".$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
- 			$res = $db_system->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = 'students_$domain'");
- 			$db_system->execute("USE students_".$domain);
+			global $db_config;
+ 			$res = $db_system->execute("CREATE DATABASE IF NOT EXISTS ".$db_config["prefix"].$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
+ 			$res = $db_system->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = '".$db_config["prefix"].$domain."'");
+ 			$db_system->execute("USE ".$db_config["prefix"].$domain);
  			while (($sql = $db_system->nextRowArray($res)) <> null)
  				$db_system->execute($sql[0]);
  			$prev_local = PNApplication::$instance->local_domain;

@@ -29,7 +29,7 @@ fwrite($f,"if (\$res <> DataBaseSystem::ERR_OK)\n");
 fwrite($f,"\tdie(\"Error: unable to migrate because we cannot connect to the database\");\n");
 fwrite($f,"require_once(\"component/data_model/DataBaseUtilities.inc\");\n");
 fwrite($f,"foreach (PNApplication::\$instance->getDomains() as \$domain=>\$conf) {\n");
-fwrite($f,"\$db_system->execute(\"USE students_\".\$domain);\n");
+fwrite($f,"\$db_system->execute(\"USE \".\$db_config['prefix'].\$domain);\n");
 
 $new_tables_root = array();
 $new_tables_sm = array();
