@@ -239,6 +239,7 @@ function createTooltip(element, content) {
 		content.style.right = x+"px";
 	}
 	content.style.top = (absoluteTop(element)+element.offsetHeight+5)+"px";
+	content.style.zIndex = 100;
 	removeTooltip();
 	if (typeof animation != 'undefined') {
 		content.style.visibility = 'hidden';
@@ -283,6 +284,7 @@ function tooltip(element, content) {
 		createTooltip(element, content);
 	};
 	element.onmouseout = function() {
+		if (window.closing) return;
 		if (this._tooltip && this._tooltip == window.top._current_tooltip)
 			removeTooltip();
 		this._tooltip = null;

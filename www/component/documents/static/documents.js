@@ -201,11 +201,13 @@ window.top.pndocuments = {
 	}
 };
 window.top.require("upload.js");
-window.top.pnapplication.onlogout.add_listener(function(){
-	window.top.pndocuments._connected_port = -1;
-	window.top.pndocuments.opener = null;
-	window.top.pndocuments._connected_port = -1;
-	window.top.pndocuments._connected_port = -1;
+window.top.require("application.js",function() {
+	window.top.pnapplication.onlogout.add_listener(function(){
+		window.top.pndocuments._connected_port = -1;
+		window.top.pndocuments.opener = null;
+		window.top.pndocuments._connected_port = -1;
+		window.top.pndocuments._connected_port = -1;
+	});
 });
 }
 

@@ -88,11 +88,11 @@ class page_updates extends Page {
 			</div>
 			<div style='flex:1 1 auto;display:flex;flex-direction:row;overflow:auto;'>
 				<div style='flex:1 1 auto;'>
-					<div class='page_section_title2' style='background-color:white'>Updates</div>
+					<div class='page_section_title2 shadow' style='background-color:white'>Updates</div>
 					<div id='updates_container' style='padding:5px'></div>
 				</div>
 				<div style='flex:1 1 auto;'>
-					<div class='page_section_title2' style='background-color:white'>Activities</div>
+					<div class='page_section_title2 shadow' style='background-color:white'>Activities</div>
 					<div id='activities_container' style='padding:5px'></div>
 				</div>
 			</div>

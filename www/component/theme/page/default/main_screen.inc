@@ -83,9 +83,9 @@ global $pn_app_version;
     position: absolute;
     display: inline-block;
     border-left: 7px solid transparent;
-    border-bottom: 7px solid #e8e8e8;
+    border-bottom: 7px solid #ffffff;
     border-right: 7px solid transparent;
-    border-bottom-color: #e8e8e8;
+    border-bottom-color: #ffffff;
     margin-left: -3px;
     left: 50%;
     bottom: 0px;
@@ -205,7 +205,7 @@ global $pn_app_version;
 					?>
 				</div>
 				<div id="application_right_menu" style="flex:none;">
-					<input type='text' id='application_search'/>
+					<input type='text' id='application_search' onchange='alert("Sorry, the global search functionality is not yet available");'/>
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>' target='application_frame'><div id='user_picture'></div></a>
 					<button class="flat"><img id='notifications' src='/static/application/menu/notifications.png'/></button>
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat"><img id='calendars' src='/static/calendar/calendar_white.png'/></button></a>
@@ -219,7 +219,7 @@ global $pn_app_version;
 			Students Management Software (<?php echo $pn_app_version; ?>) - © 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?> - <a href='http://www.passerellesnumeriques.org' target='_blank' style='color:white;text-decoration:none' onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">Passerelles numériques</a>
 	</div>
 </div>
-<script type='text/javascript'>
+<script type='text/javascript' defer>
 user_picture = document.getElementById('user_picture');
 require("profile_picture.js",function() {
 	new profile_picture(user_picture, 25, 25, "center", "middle").loadPeopleObject(window.top.my_people);

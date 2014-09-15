@@ -37,10 +37,11 @@ class service_get extends Service {
 			header("Location: ?id=".$id."&revision=".$this->file["revision"].(isset($_GET["filename"]) ? "&filename=".urlencode($_GET["filename"]) : ""));
 			return;
 		}
+		$path = $component->get_data_path($id);
 		include("cache.inc");
+		cacheHeadersFromFile($path);
 		if (isset($_GET["filename"]))
 			header("Content-Disposition: attachment; filename=\"".str_replace("\"","\\\"",$_GET["filename"])."\"");
-		$path = $component->get_data_path($id);
 		header("Content-Length: ".filesize($path));
 		readfile($path);
 	}

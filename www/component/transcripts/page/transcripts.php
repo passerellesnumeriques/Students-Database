@@ -25,7 +25,7 @@ class page_transcripts extends Page {
 			$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"], $spe <> null ? $spe["id"] : null);
 		if (count($classes) == 0) {
 			$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"]);
-			if ($count($classes) == 0)
+			if (count($classes) == 0)
 				echo "<div class='info_box'>No class in this period</div>";
 			else
 				echo "<div class='info_box'>Please select a specialization or a class</div>";

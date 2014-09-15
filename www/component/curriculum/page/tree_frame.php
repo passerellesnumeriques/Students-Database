@@ -60,7 +60,7 @@ class page_tree_frame extends Page {
 			<?php if ($can_edit) { ?>
 			<button class='flat' onclick='createNewBatch();'>
 				<img src='<?php echo theme::make_icon("/static/curriculum/batch_16.png", theme::$icons_10["add"]);?>'/>
-				New Batch
+				<b>New Batch</b>
 			</button>
 			<?php } ?>
 		</div>

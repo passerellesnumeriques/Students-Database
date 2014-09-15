@@ -38,17 +38,17 @@ if ($can_edit)
 	DataBaseLock::generateScript($lock_id);
 ?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;position:absolute;top:0px;left:0px;'>
-<div class='page_title' style='flex:none'>
+<div class='page_title shadow' style='flex:none'>
 	<img src='/static/user_management/access_list_32.png'/>
 	User Access Rights: <span style='font-family:Courrier New;font-weight:bold;font-style:italic'><?php echo $user["domain"]."\\".$user["username"];?></span>
 </div>
-<div style='background-color:white;flex:1 1 auto;overflow:auto;'>
+<div style='flex:1 1 auto;overflow:auto;'>
 <?php 
 if ($locked <> null)
 	echo "<img src='".theme::$icons_16["lock"]."'/> This page is already locked by ".$locked."<br/>";
 
 if ($is_admin) {
-	echo "<div style='padding:10px'>This user is an administrator, it has the right to do everything</div>";
+	echo "<div style='padding:5px;margin:10px;background-color:white;border:1px solid black;border-radius:3px;display:inline-block;'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> This user is an administrator, it has the right to do everything</div>";
 } else {
 
 // retrieve all existing rights, and categories
@@ -119,7 +119,7 @@ function generate_right($prefix, $right, $value, $readonly = true, $visible = tr
 
 // print the table of rights
 echo "<form name='um_rights' onsubmit='return false'>";
-echo "<table rules=all cellspacing=0 cellpadding=2>";
+echo "<table rules=all cellspacing=0 cellpadding=2 class='medium_shadow'>";
 $roles_cols = count($roles);
 if ($roles_cols == 0) { $roles_cols = 1; echo "<th></th>"; }
 echo "<tr><th colspan=2 rowspan=2>Right</th><th rowspan=2>Access</th><th rowspan=2>Attached to user</th><th colspan=".$roles_cols.">Inherited from roles</th></tr>";

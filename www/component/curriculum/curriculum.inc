@@ -385,7 +385,9 @@ class curriculum extends Component {
 			foreach ($periods as $period) array_push($ids, $period["id"]);
 			$q->whereIn("CurriculumSubject", "period", $ids);
 		}
-		if ($spe_id <> null) $q->whereValue("CurriculumSubject", "specialization", $spe_id);
+		if ($spe_id <> null) {
+			$q->where("(`CurriculumSubject`.`specialization`='$spe_id' OR `CurriculumSubject`.`specialization` IS NULL)");
+		}
 		if ($category_id <> null) $q->whereValue("CurriculumSubject", "category", $category_id);
 		$q->orderBy("CurriculumSubject","code");
 		return $q->execute();

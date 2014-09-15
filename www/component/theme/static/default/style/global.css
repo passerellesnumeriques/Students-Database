@@ -93,6 +93,18 @@ table.all_borders>tbody>tr>th, table.all_borders>tr>th {
     box-shadow: 0px -3px 5px -2px #DDDDDD inset;
 }
 
+.page_title.shadow, .page_section_title.shadow, .page_section_title2.shadow, .page_section_title3.shadow  {
+	box-shadow: 1px 2px 5px 0px #808080;
+	margin-bottom: 5px;
+}
+
+.light_shadow {
+	box-shadow: 2px 2px 2px #D0D0D0;
+}
+.medium_shadow {
+	box-shadow: 4px 4px 4px 0px #A0A0A0;
+}
+
 /* Button */
 button img {
     vertical-align: bottom;

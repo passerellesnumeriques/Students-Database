@@ -274,7 +274,7 @@ function pageHeaderEnd($onload = "") {
 }
 function pageFooter() {
 ?>
-<script type='text/javascript'>window._pageReadyStep();</script>
+<script type='text/javascript' defer>window._pageReadyStep();</script>
 </body>
 </html>
 <?php

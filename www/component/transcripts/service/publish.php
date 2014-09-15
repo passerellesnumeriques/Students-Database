@@ -21,6 +21,13 @@ class service_publish extends Service {
 		
 		$students_ids = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, false, false, $spe_id)->field("Student","people")->executeSingleField();
 		if (count($students_ids) == 0) {
+			if ($spe_id == null) {
+				$spes = PNApplication::$instance->curriculum->getBatchPeriodsSpecializationsWithName(array($period_id));
+				if (count($spes) > 0) {
+					PNApplication::error("You cannot publish a transcript at this level, you should first select a specialization");
+					return;
+				}
+			}
 			PNApplication::error("There is no student, you cannot publish transcripts without student!");
 			return;
 		}

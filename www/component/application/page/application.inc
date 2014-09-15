@@ -2,7 +2,7 @@
 theme::css($this, "application.css");
 
 // mandatory part
-?><script type='text/javascript'>
+?><script type='text/javascript' defer>
 window.top.username = <?php echo json_encode(PNApplication::$instance->user_management->username); ?>;
 window.top.user_id = <?php echo PNApplication::$instance->user_management->user_id; ?>;
 window.top.my_people = <?php
@@ -53,7 +53,7 @@ function init_top_calendar_manager() {
 			if (!window.top.calendar_manager) return;
 			window.top.calendar_manager.removeCalendar(cal);
 		});
-		provider._refresh_interval = setInterval(function() {
+		provider._refresh_interval = window.top.setInterval(function() {
 			provider.refreshCalendars();
 		},5*60*1000);
 		provider.refreshCalendars();
@@ -63,7 +63,7 @@ function init_top_calendar_manager() {
 			if (!window.top.calendar_manager) return;
 			while (window.top.calendar_manager.calendars.length > 0) window.top.calendar_manager.removeCalendar(window.top.calendar_manager.calendars[0]);
 			window.top.CalendarsProviders.get(function(provider) {
-				clearInterval(provider._refresh_interval);
+				window.top.clearInterval(provider._refresh_interval);
 			});
 			window.top.calendar_manager = null;
 		};
@@ -91,7 +91,7 @@ if (!window.top.pingInterval) {
 		if (window.top._ping_pending > 10) window.top._ping_pending = 0;
 		if (window.top._ping_pending++ > 0 && window.top._ping_pending != 5) return; // avoid queuing pings when connection problems
 		var sent = new Date().getTime();
-		service.json("application","ping",null,function(res) {
+		window.top.service.json("application","ping",null,function(res) {
 			window.top._ping_pending = 0;
 			if (!res) return;
 			window.top.ping_time = new Date().getTime()-sent;
@@ -105,7 +105,7 @@ if (!window.top.pingInterval) {
 				link_ask.style.color = "#0000FF";
 				content.appendChild(link_ask);
 				link_ask.onclick = function() {
-					service.json("administration","ask_cancel_maintenance",null,function(res) {
+					window.top.service.json("administration","ask_cancel_maintenance",null,function(res) {
 						if (!res) return;
 						content.removeChild(link_ask);
 						content.appendChild(document.createTextNode(res.origin+" has been informed you would like to cancel it."));

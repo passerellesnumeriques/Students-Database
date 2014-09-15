@@ -644,11 +644,15 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.freezer = t.popup.ownerDocument.createElement("DIV");
 		t.freezer.usage_counter = 1;
 		t.freezer.style.position = "absolute";
-		t.freezer.style.top = "0px";
-		t.freezer.style.left = "0px";
+		t.freezer.style.top = t.content_container.scrollTop+"px";
+		t.freezer.style.left = t.content_container.scrollLeft+"px";
 		t.freezer.style.width = "100%";
 		t.freezer.style.height = "100%";
 		t.freezer.style.backgroundColor = "rgba(128,128,128,0.5)";
+		t.content_container.onmousewheel = function(ev) {
+			stopEventPropagation(ev);
+			return false;
+		};
 		if (freeze_content)
 			set_lock_screen_content(t.freezer, freeze_content);
 		t.content_container.style.position = "relative";
@@ -708,6 +712,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (!t.freezer) return;
 		if (--t.freezer.usage_counter > 0) return;
 		t.content_container.removeChild(t.freezer);
+		t.content_container.onmousewheel = null;
 		t.freezer = null;
 		for (var i = 0; i < t.buttons.length; ++i)
 			t.buttons[i].disabled = t.buttons[i].unfrozen_status;

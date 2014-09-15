@@ -77,7 +77,7 @@ class page_teachers_assignments extends Page {
 			return;
 		} 
 		?>
-		<div class='page_section_title' style='background-color:white;flex:none'>
+		<div class='page_section_title shadow' style='background-color:white;flex:none'>
 			Academic Period: <select onchange="if (this.value == <?php echo $academic_period_id;?>) return; location.href='?period='+this.value;">
 			<?php
 			foreach ($periods as $period) {

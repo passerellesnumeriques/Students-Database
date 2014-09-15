@@ -116,6 +116,7 @@ date_default_timezone_set("GMT");
 if ($path == "favicon.ico") { 
 	header("Content-Type: image/ico");
 	include("cache.inc"); 
+	cacheHeadersFromFile("favicon.ico");
 	readfile("favicon.ico");
 	die(); 
 }
@@ -152,6 +153,7 @@ case "static":
 	if ($i === FALSE) $invalid("Invalid resource type ($path)");
 	$ext = substr($path, $i+1);
 	include("cache.inc");
+	cacheHeadersFromFile("component/".$component_name."/static/".$path);
 	switch ($ext) {
 	case "gif": header("Content-Type: image/gif"); break;
 	case "png": header("Content-Type: image/png"); break;

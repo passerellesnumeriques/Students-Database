@@ -1,12 +1,14 @@
 function inputAutoresizeUpdater() {
 	this.knowledge = [];
 	this.to_update = [];
+	this.timeout = null;
 	this.update = function(input) {
 		this.to_update.push(input);
-		if (this.to_update.length == 1) setTimeout(function() { if (window._input_autoresize_updater) window._input_autoresize_updater._doUpdates(); },1);
+		if (!this.timeout) this.timeout = setTimeout(function() { if (window._input_autoresize_updater) window._input_autoresize_updater._doUpdates(); },1);
 	};
 	this._doUpdates = function() {
 		if (window.closing) return;
+		this.timeout = null;
 		for (var i = 0; i < this.to_update.length; ++i) {
 			var input = this.to_update[i];
 			input.mirror.removeAllChildren();
@@ -50,6 +52,7 @@ function inputAutoresizeUpdater() {
 		this.knowledge = null;
 		this.to_update = null;
 	};
+	if (!window.to_cleanup) window.to_cleanup = [];
 	window.to_cleanup.push(this);
 };
 window._input_autoresize_updater = new inputAutoresizeUpdater();
