@@ -503,8 +503,9 @@ function checkEnd() {
 				"This task will put the software into maintenance mode (the users cannot access it), in order to perform some tasks<br/>"+
 				"on the database and files (backup, healthy checks...).</li>"+
 				"</ul>"+
-				"Please note also that this installation created a directory <b>data</b>. This directory will contains files uploaded by users (documents, pictures...) so it may grow over time. You may want to replace it with a link to another partition/hard drive than the one where you installed this web application.<br/><br/>"+
-				"<a href='/'>Click here to start the application</a>";
+				"Please note also that this installation created a directory <b>data</b>. This directory will contains files uploaded by users (documents, pictures...)<br/>"+
+				"so it may grow over time. You may want to replace it with a link to another partition/hard drive than the one where you installed this web application.<br/><br/>"+
+				"<a href='/'>Click here to start the application</a> (at the beginning you can login with username <b>admin</b> and no password)";
 		});
 	}
 }

@@ -506,7 +506,10 @@ class user_management extends Component {
 	
 	public function &selectUsers($usernames = null, $domain = null) {
 		$q = SQLQuery::create()->select("Users");
-		if ($domain <> null) $q->database("students_".$domain);
+		if ($domain <> null) {
+			global $db_config;
+			$q->database($db_config["prefix"].$domain);
+		}
 		if ($usernames <> null) $q->whereIn("Users", "username", $usernames);
 		$q->field("Users", "id", "user_id");
 		$q->field("Users", "username", "username");
