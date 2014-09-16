@@ -151,6 +151,7 @@ function context_menu(menu) {
 	 */
 	t.showBelowElement = function(from, min_width_is_from) {
 		menu.style.visibility = "visible";
+		menu.style.display = "";
 		menu.style.position = "fixed";
 		t.show_from = from;
 		menu.style.top = "0px";
@@ -200,6 +201,7 @@ function context_menu(menu) {
 	 */
 	t.showAboveElement = function(from, min_width_is_from) {
 		menu.style.visibility = "visible";
+		menu.style.display = "";
 		menu.style.position = "fixed";
 		t.show_from = from;
 		menu.style.top = "0px";
@@ -256,6 +258,7 @@ function context_menu(menu) {
 			t.parent_menu.hide_if_outside_menu = function(){};
 		}
 		menu.style.visibility = "visible";
+		menu.style.display = "";
 		menu.style.position = "fixed";
 		menu.style.top = y+"px";
 		menu.style.left = x+"px";
@@ -268,7 +271,6 @@ function context_menu(menu) {
 		}
 		if (typeof window.top.animation != 'undefined')
 			menu.style.visibility = 'hidden';
-		menu.style.display = "";
 		window.top.pnapplication.onwindowclosed.add_listener(t._window_close_listener);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);

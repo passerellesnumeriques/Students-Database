@@ -153,6 +153,12 @@ foreach ($students_grades as $sg) {
 } 
 ?>];
 
+function getSubject(subject_id) {
+	for (var i = 0; i < subjects.length; ++i)
+		if (subjects[i].id == subject_id)
+			return subjects[i];
+	return null;
+}
 function getSubjectGrading(subject_id) {
 	for (var i = 0; i < subjects_grading.length; ++i)
 		if (subjects_grading[i].subject == subject_id)
@@ -169,6 +175,52 @@ function getStudentComment(people_id) {
 	for (var i = 0; i < students_comments.length; ++i)
 		if (students_comments[i].people == people_id) return students_comments[i].comment;
 	return null;
+}
+var global_coef = 0;
+var global_passing = 0;
+for (var i = 0; i < subjects.length; ++i) {
+	if (!subjects[i].coefficient) continue;
+	var sg = getSubjectGrading(subjects[i].id);
+	if (!sg || !sg.max_grade) continue;
+	global_coef += subjects[i].coefficient;
+	global_passing += sg.passing_grade;
+}
+if (global_coef > 0) global_passing /= global_coef;
+function computeStudentGlobalGrade(people_id) {
+	var total = 0;
+	var coef = 0;
+	for (var i = 0; i < students_grades.length; ++i) {
+		if (students_grades[i].people != people_id) continue;
+		if (students_grades[i].grade === null) continue;
+		var sg = getSubjectGrading(students_grades[i].subject);
+		if (!sg) continue;
+		if (!sg.max_grade) continue;
+		if (!sg.passing_grade) continue;
+		var s = getSubject(students_grades[i].subject);
+		if (!s || !s.coefficient) continue;
+		coef += s.coefficient;
+		total += (students_grades[i].grade*100/sg.max_grade)*s.coefficient;
+	}
+	if (!coef) return null;
+	return total/coef;
+}
+var students_global_grades = [];
+for (var i = 0; i < students.length; ++i) {
+	var gg = computeStudentGlobalGrade(students[i].id);
+	students_global_grades.push(gg);
+}
+function getStudentGlobalGrade(people_id) {
+	for (var i = 0; i < students.length; ++i)
+		if (students[i].id == people_id)
+			return students_global_grades[i];
+	return null;
+}
+function getStudentRank(people_id) {
+	var gg = getStudentGlobalGrade(people_id);
+	var rank = 1;
+	for (var i = 0; i < students_global_grades.length; ++i)
+		if (students_global_grades[i] > gg) rank++;
+	return rank;
 }
 
 var grades_grid = new people_data_grid('grades_container', function(people) { return people; }, "Student");
@@ -206,9 +258,25 @@ for (var i = 0; i < categories.length; ++i) {
 	}
 	grades_grid.addColumnContainer(new CustomDataGridColumnContainer(categories[i].name, columns));
 }
+if (global_coef > 0) {
+	// global grade column
+	var col = new GridColumn("student_global_grade","Global Grade",null,"center","field_grade",false,null,null,{max:100,padding:global_passing,system:<?php echo json_encode($grading_systems[$grading_system]);?>});
+	col.addSorting();
+	grades_grid.addColumn(new CustomDataGridColumn(col, function(people) {
+		return getStudentGlobalGrade(people.id);
+	}, true, null));
+	// ranking column
+	col = new GridColumn("student_rank","Rank",null,"center","field_integer",false,null,null,{can_be_null:true,min:1});
+	col.addSorting();
+	grades_grid.addColumn(new CustomDataGridColumn(col, function(people) {
+		return getStudentRank(people.id);
+	}, true, null));
+}
+// General appreciation column
 grades_grid.addColumn(new CustomDataGridColumn(new GridColumn("student_comment","General appreciation",null,"left","field_text",false,null,null,{can_be_null:true,max_length:4000,min_size:30}), function(people) {
 	return getStudentComment(people.id);
 }, true, null));
+// add every student
 for (var i = 0; i < students.length; ++i)
 	grades_grid.addPeople(students[i]);
 
