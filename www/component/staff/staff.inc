@@ -7,9 +7,11 @@ class staff extends Component {
 	public function getPluginImplementations() {
 		require_once("StaffAdministrationPlugin.inc");
 		require_once("StaffPeopleTypePlugin.inc");
+		require_once("StaffBirthdaysCalendar.inc");
 		return array(
 			new StaffAdministrationPlugin(),
-			new StaffPeopleTypePlugin()
+			new StaffPeopleTypePlugin(),
+			new StaffBirthdaysCalendar()
 		);
 	}
 	

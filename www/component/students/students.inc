@@ -5,9 +5,11 @@ class students extends Component {
 	public function getPluginImplementations() {
 		require_once("StudentsNewsPlugin.inc");
 		require_once("StudentPeopleTypePlugin.inc");
+		require_once("StudentsBirthdaysCalendar.inc");
 		return array(
 			new StudentPeopleTypePlugin(),
 			new StudentsNewsPlugin(),
+			new StudentsBirthdaysCalendar()
 		);
 	}
 	

@@ -31,13 +31,13 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 			} else 
 				t.input.select();
 		};
-		this.input.onblur = function(){ 
+		this.input.onblur = function(){
 			setTimeout(function(){
 				if (t.input.value == "") { 
 					t.input.value = default_message; t.input.className = "informative_text"; t.input.default_message = true; 
 					layout.changed(container);
 				}; 
-				t.menu.hide();
+				t.menu.hide();// TODO we should not hide it here, as if we click on scrollbar it disappear
 			},100); 
 		};
 		container.appendChild(this.input);
@@ -56,7 +56,6 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 			if (t._provider_call) t._provider_recall = true;
 			else t._call_provider();
 		};
-		
 	};
 	
 	this._call_provider = function() {
@@ -232,4 +231,9 @@ function autocomplete_menu(ac, onselectitem) {
 		if (onselectitem) onselectitem(item);
 		this.hide();
 	};
+	ac.input.ondomremoved(function() {
+		if (t.div.parentNode) t.div.parentNode.removeChild(t.div);
+		t.div = null;
+		t = null;
+	});
 }

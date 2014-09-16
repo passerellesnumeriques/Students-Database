@@ -238,6 +238,7 @@ function init_calendars() {
 		new_calendar(window.top.calendar_manager.calendars[i]);
 	window.top.calendar_manager.on_calendar_added.add_listener(new_calendar);
 	window.pnapplication.onclose.add_listener(function() {
+		if (!window.top.calendar_manager) return;
 		window.top.calendar_manager.on_refresh.remove_listener(refresh_listener);
 		window.top.calendar_manager.on_refresh_done.remove_listener(refresh_done_listener);
 		window.top.calendar_manager.on_calendar_added.remove_listener(new_calendar);
