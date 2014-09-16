@@ -382,7 +382,9 @@ function Calendar(provider, name, color, show, icon) {
 	this.rename = null; // must be overriden if this is supported
 	
 	this.cleanup = function() {
-		for (var i = 0; i < this.events.length; ++i) this.events[i].cleanup();
+		for (var i = 0; i < this.events.length; ++i)
+			for (var n in this.events[i])
+				this.events[i][n] = null;
 		this.events = null;
 		this.provider = null;
 		t = null;
@@ -527,6 +529,8 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 								t.events.push(ev);
 								if (ev.last_modified != removed_events[j].last_modified)
 									t.on_event_updated.fire(ev);
+								for (var n in removed_events[j])
+									removed_events[j][n] = null;
 								removed_events.splice(j,1);
 								break;
 							}
@@ -538,7 +542,8 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 					}
 					for (var i = 0; i < removed_events.length; ++i) {
 						t.on_event_removed.fire(removed_events[i]);
-						removed_events[i].cleanup();
+						for (var n in removed_events[i])
+							removed_events[i][n] = null;
 					}
 				} catch (e) {
 					log_exception(e, "Error while refreshing PN calendar");

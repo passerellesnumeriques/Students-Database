@@ -160,7 +160,8 @@ function GoogleCalendar(id, name, color, show, writable) {
 							t.events.push(ev);
 							if (ev.last_modified != removed_events[j].last_modified)
 								t.on_event_updated.fire(ev);
-							removed_events[j].cleanup();
+							for (var n in removed_events[j])
+								removed_events[j][n] = null;
 							removed_events.splice(j,1);
 							break;
 						}
@@ -172,7 +173,8 @@ function GoogleCalendar(id, name, color, show, writable) {
 				}
 				for (var i = 0; i < removed_events.length; ++i) {
 					t.on_event_removed.fire(removed_events[i]);
-					removed_events[i].cleanup();
+					for (var n in removed_events[i])
+						removed_events[i][n] = null;
 				}
 				removed_events = null;
 				google_events = null;

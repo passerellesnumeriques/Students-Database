@@ -9,19 +9,23 @@ class service_get_my_calendars extends Service {
 	
 	public function execute(&$component, $input) {
 		$readable = $component->getAccessibleCalendars();
-		if (count($readable) == 0) { echo "[]"; return; }
-		$writable = $component->getWritableCalendars();
-		$list = SQLQuery::create()->bypassSecurity()
-			->select("Calendar")
-			->whereIn("Calendar", "id", $readable)
-			->join("Calendar", "UserCalendarConfiguration", array("id"=>"calendar"), null, array("user"=>PNApplication::$instance->user_management->user_id))
-			->field("Calendar", "id", "id")
-			->field("Calendar", "name", "name")
-			->field("Calendar", "color", "default_color")
-			->field("Calendar", "icon", "icon")
-			->field("UserCalendarConfiguration", "color", "user_color")
-			->field("UserCalendarConfiguration", "show", "show")
-			->execute();
+		if (count($readable) > 0) { 
+			$writable = $component->getWritableCalendars();
+			$list = SQLQuery::create()->bypassSecurity()
+				->select("Calendar")
+				->whereIn("Calendar", "id", $readable)
+				->join("Calendar", "UserCalendarConfiguration", array("id"=>"calendar"), null, array("user"=>PNApplication::$instance->user_management->user_id))
+				->field("Calendar", "id", "id")
+				->field("Calendar", "name", "name")
+				->field("Calendar", "color", "default_color")
+				->field("Calendar", "icon", "icon")
+				->field("UserCalendarConfiguration", "color", "user_color")
+				->field("UserCalendarConfiguration", "show", "show")
+				->execute();
+		} else {
+			$writable = array();
+			$list = array();
+		}
 		echo "[";
 		$first = true;
 		foreach ($list as $cal) {

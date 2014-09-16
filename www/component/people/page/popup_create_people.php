@@ -81,6 +81,7 @@ class page_popup_create_people extends Page {
 			else echo "data.multiple = false; go();";
 		}
 		echo "</script>";
+		if (!isset($_GET["multiple"])) {
 		?>
 		<div class='page_title'>
 			Create <?php echo toHTML($types_descr)?>
@@ -124,14 +125,15 @@ class page_popup_create_people extends Page {
 				echo "</select>";
 			}
 			echo "</div>";
-			echo "<button onclick=\"var people_id=document.getElementById('id_".$type->getId()."').value;postData('/dynamic/people/page/people_new_type?people='+people_id+'&type=".$types[0]."&ondone=".$_GET["ondone"]."',data,window);\">Create as ".toHTML($types_descr)."</button>";
+			echo "<button onclick=\"var people_id=document.getElementById('id_".$type->getId()."').value;postData('/dynamic/people/page/people_new_type?people='+people_id+'&type=".$types[0].(isset($_GET["ondone"]) ? "&ondone=".$_GET["ondone"] : "")."',data,window);\">Create as ".toHTML($types_descr)."</button>";
 			echo "</div>";
 		}
 		?>
 		</div>
 		<?php } ?>
 		</div>
-		<?php 
+		<?php
+		}
 	}
 	
 }

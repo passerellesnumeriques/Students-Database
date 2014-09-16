@@ -56,11 +56,6 @@ function CalendarEvent(id, calendar_provider_id, calendar_id, uid, start, end, a
 	this.frequency = frequency;
 	this.app_link = app_link;
 	this.app_link_name = app_link_name;
-	
-	this.cleanup = function() {
-		for (var n in this)
-			if (n != 'cleanup') this[n] = null;
-	};
 }
 /**
  * Create a copy of this event

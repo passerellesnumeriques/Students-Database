@@ -11,6 +11,11 @@ function inputAutoresizeUpdater() {
 		this.timeout = null;
 		for (var i = 0; i < this.to_update.length; ++i) {
 			var input = this.to_update[i];
+			if (!input.mirror) {
+				this.to_update.splice(i,1);
+				i--;
+				continue;
+			}
 			input.mirror.removeAllChildren();
 			input.mirror.appendChild(document.createTextNode(input.value));
 		}

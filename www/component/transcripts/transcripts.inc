@@ -307,10 +307,13 @@ class transcripts extends Component {
 					array_push($type["evaluations"], $eval);
 		}
 		// get all students attached to this subject, with their grades
-		$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($subject["period"], $subject["specialization"]);
+		$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($subject["period"], $subject["specialization"] <> null ? $subject["specialization"] : false);
 		$classes_ids = array();
 		foreach ($classes as $c) array_push($classes_ids, $c["id"]);
-		$students = PNApplication::$instance->students->getStudentsForClasses($classes_ids, false);
+		if (count($classes_ids) > 0)
+			$students = PNApplication::$instance->students->getStudentsForClasses($classes_ids, false);
+		else
+			$students = array();
 		$students_ids = array();
 		foreach ($students as $s) array_push($students_ids, $s["people"]);
 		$evaluations_ids = array();
