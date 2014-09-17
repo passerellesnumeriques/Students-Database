@@ -254,17 +254,23 @@ function getFixedPosition(elem,only_in_window) {
 function _getFixedPosition(win,elem,only_in_window) {
 	var x = elem.offsetLeft;
 	var y = elem.offsetTop;
-	if (elem.nodeName != 'BODY') {
+	if (elem.nodeName != 'BODY' && (!elem.style || !elem.style.position || elem.style.position != 'fixed')) {
 		while (elem.offsetParent) {
 			var p = elem.parentNode;
 			while (p != elem.offsetParent) {
-				x -= p.scrollLeft;
-				y -= p.scrollTop;
+				if (elem.style && elem.style.position && elem.style.position == "absolute") {
+				} else {
+					x -= p.scrollLeft;
+					y -= p.scrollTop;
+				}
 				p = p.parentNode;
 			}
-			x -= elem.offsetParent.scrollLeft;
-			y -= elem.offsetParent.scrollTop;
-			if (elem.nodeName == 'BODY') break;
+			if (elem.style && elem.style.position && elem.style.position == "absolute") {
+			} else {
+				x -= elem.offsetParent.scrollLeft;
+				y -= elem.offsetParent.scrollTop;
+			}
+			if (elem.nodeName == 'BODY' || (elem.style && elem.style.position && elem.style.position == 'fixed')) break;
 			elem = elem.offsetParent;
 			x += elem.offsetLeft;
 			y += elem.offsetTop;

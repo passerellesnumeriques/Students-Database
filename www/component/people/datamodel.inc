@@ -4,9 +4,9 @@ require_once("utilities.inc");
 
 $model->addTable("People")
 	->addPrimaryKey("id")
-	->addString("first_name", 100, 1, false, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter($s); })
-	->addString("middle_name", 100, 1, true, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter($s); })
-	->addString("last_name", 100, 1, false, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter($s); })
+	->addString("first_name", 100, 1, false, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter(trim($s)); })
+	->addString("middle_name", 100, 1, true, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter(trim($s)); })
+	->addString("last_name", 100, 1, false, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter(trim($s)); })
 	->addString("khmer_first_name", 100, 1, true)
 	->addString("khmer_last_name", 100, 1, true)
 	->addEnum("sex", array("M","F"), false)

@@ -149,7 +149,7 @@ function GoogleCalendar(id, name, color, show, writable) {
 						s += err+"\r\n";
 						s += "Details of the event returned from Google:\r\n";
 						s += debug_object_to_string(gev);
-						ev.cleanup();
+						for (var n in ev) ev[n] = null;
 						ev = null;
 						continue;
 					}

@@ -98,9 +98,12 @@ function calendar_view_upcoming(view, container) {
 			}
 		}
 
+		var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
+
 		var li = document.createElement("LI");
 		li.onmouseover = function() { this.style.textDecoration = "underline"; };
 		li.onmouseout = function() { this.style.textDecoration = "none"; };
+		li.title = "Calendar "+cal.name+"\r\n"+ev.description;
 		li.style.cursor = "pointer";
 		li.style.fontSize = "9pt";
 		li.event = ev;
@@ -111,6 +114,13 @@ function calendar_view_upcoming(view, container) {
 			span.style.fontSize = "8pt";
 			li.appendChild(span);
 			li.appendChild(document.createTextNode(" - "));
+		}
+		if (cal.icon) {
+			var icon = document.createElement("IMG");
+			icon.src = cal.icon;
+			icon.style.verticalAlign = "bottom";
+			icon.style.marginRight = "2px";
+			li.appendChild(icon);
 		}
 		li.appendChild(document.createTextNode(ev.title));
 		if (ev.end.getTime()-ev.start.getTime() >= 24*60*60*1000) {
@@ -124,7 +134,7 @@ function calendar_view_upcoming(view, container) {
 		}
 		li.onclick = function(e) {
 			require("event_screen.js",function() {
-				var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);;
+				var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
 				event_screen(ev.original_event, cal);
 			});
 			stopEventPropagation(e);

@@ -274,6 +274,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+		if ($value["first_name"] == null && $value["last_name"] == null && $value["occupation"] == null && $value["education_level"] == null) return;
 		$family_id = SQLQuery::create()->bypassSecurity()
 			->select("FamilyMember")
 			->whereValue("FamilyMember","people",$joining_key_value_for_new_data)
