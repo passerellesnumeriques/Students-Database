@@ -73,6 +73,10 @@ class people extends Component {
 		$info["types"] = $t;
 		return SQLQuery::create()->bypassSecurity($bypass_security)->insert("People", $info);
 	}
+	
+	public function removePeople($people_id, $bypass_security = false) {
+		SQLQuery::create()->bypassSecurity($bypass_security)->removeKey("People", $people_id);
+	}
 
 	public function joinPeople(&$q, $from_table, $from_key, $include_picture_info = true) {
 		require_once("PeopleJSON.inc");

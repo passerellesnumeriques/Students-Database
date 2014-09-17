@@ -70,6 +70,12 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 				cancel_edit.className = "action";
 				cancel_edit.innerHTML = "<img src='"+theme.icons_16.no_edit+"'/> Cancel Editing";
 				sec.addToolBottom(cancel_edit);
+				var remove_family = document.createElement("BUTTON");
+				remove_family.className = "action red";
+				remove_family.innerHTML = "Remove all information";
+				if (!family_family.id || family_family.id < 0)
+					remove_family.disabled = "disabled";
+				sec.addToolBottom(remove_family);
 				cancel_edit.onclick = function() {
 					var locker = lock_screen();
 					databaselock.unlock(lock_id,function() {
@@ -85,6 +91,10 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 						pnapplication.dataSaved(content.id);
 						family_family = f.family;
 						family_members = f.members;
+						if (!family_family.id || family_family.id < 0)
+							remove_family.disabled = "disabled";
+						else
+							remove_family.disabled = "";
 					}); 
 				};
 				cancel_button.onclick = function() {
@@ -92,6 +102,21 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 					save_button.disabled = "disabled";
 					cancel_button.disabled = "disabled";
 					pnapplication.dataSaved(content.id);
+					if (!family_family.id || family_family.id < 0)
+						remove_family.disabled = "disabled";
+					else
+						remove_family.disabled = "";
+				};
+				remove_family.onclick = function() {
+					confirm_dialog("Are you sure you want to remove all information about this family ?",function(yes) {
+						if (!yes) return;
+						var locker = lock_screen(null,"Removing family information...");
+						service.json("family","remove_family",{id:family_family.id},function(res) {
+							unlock_screen(locker);
+							if (!res) return;
+							manageFamily(sec,content,{id:-1},[],people_id,can_edit);
+						});
+					});
 				};
 			};
 			var locker = lock_screen();

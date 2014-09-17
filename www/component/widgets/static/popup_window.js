@@ -750,6 +750,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.popup.data = null;
 		t.popup = null;
 		var do_close = function() {
+			if (!t) return;
 			if (keep_content_hidden || t.keep_content_on_close) {
 				t.content.parentNode.removeChild(t.content);
 				t.content.style.position = 'absolute';
