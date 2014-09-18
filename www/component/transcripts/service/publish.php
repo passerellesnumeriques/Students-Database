@@ -24,7 +24,7 @@ class service_publish extends Service {
 		
 		$subjects_ids = SQLQuery::create()->select("TranscriptSubjects")->whereValue("TranscriptSubjects","period",$period_id)->whereValue("TranscriptSubjects","specialization",$spe_id)->field("subject")->executeSingleField();
 		
-		$students_ids = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, false, false, $spe_id)->field("Student","people")->executeSingleField();
+		$students_ids = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, false, false, $spe_id <> null ? $spe_id : false)->field("Student","people")->executeSingleField();
 		if (count($students_ids) == 0) {
 			if ($spe_id == null) {
 				$spes = PNApplication::$instance->curriculum->getBatchPeriodsSpecializationsWithName(array($period_id));
@@ -33,7 +33,7 @@ class service_publish extends Service {
 					return;
 				}
 			}
-			PNApplication::error("There is no student, you cannot publish transcripts without student!");
+			PNApplication::error("There is no student, you cannot publish a transcript without student!");
 			return;
 		}
 		
