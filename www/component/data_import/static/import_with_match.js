@@ -281,7 +281,7 @@ function import_with_match(provider, ev, show_after_grid) {
 								button.parentNode.appendChild(select);
 								select_data.other_selects.push(select);
 								select.onchange = check_complete;
-								select.ondomeremoved(function() {
+								select.ondomremoved(function() {
 									select.onchange = null;
 								});
 							};

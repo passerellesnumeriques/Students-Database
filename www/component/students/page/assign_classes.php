@@ -15,7 +15,7 @@ class page_assign_classes extends Page {
 		if ($period_id <> null) {
 			// we are on a period
 			// get all students for this period
-			$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false);
+			$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, false, false);
 			$q_students->orderBy("People", "last_name");
 			$q_students->orderBy("People", "first_name");
 			$students = $q_students->execute();
@@ -65,14 +65,14 @@ class page_assign_classes extends Page {
 				// get classes in this specialization
 				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id, $class["specialization"]);
 				// get students from the specialization
-				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $class["specialization"]);
+				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $class["specialization"],false);
 				$q_students->orderBy("People", "last_name");
 				$q_students->orderBy("People", "first_name");
 				$students = $q_students->execute();
 			} else {
 				// not specialized class
 				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id);
-				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false);
+				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, false,false);
 				$q_students->orderBy("People", "last_name");
 				$q_students->orderBy("People", "first_name");
 				$students = $q_students->execute();
