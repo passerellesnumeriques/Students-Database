@@ -20,6 +20,7 @@ class page_configure_transcripts extends Page {
 		
 		$config = SQLQuery::create()
 			->select("TranscriptConfig")
+			->whereNull("TranscriptConfig","specialization")
 			->whereValue("TranscriptConfig","period",$_GET["period"])
 			->executeSingleRow();
 		$spes = PNApplication::$instance->curriculum->getBatchPeriodSpecializations($_GET["period"]);

@@ -104,15 +104,17 @@ class page_assign_classes extends Page {
 		// get previous period if any, and students assignments
 		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
 		$previous_academic_period = PNApplication::$instance->curriculum->getPreviousAcademicPeriod($period["academic_period_start"]);
-		$previous_classes = null;
-		if ($previous_academic_period <> null) {
+		while ($previous_academic_period <> null) {
+			$previous_classes = null;
 			$previous_batch_period = PNApplication::$instance->curriculum->getBatchPeriodFromAcademicPeriod($period["batch"], $previous_academic_period["id"]);
 			if ($previous_batch_period <> null) {
 				$previous_classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($previous_batch_period["id"]);
 				$previous_classes_ids = array();
 				foreach ($previous_classes as $pc) array_push($previous_classes_ids, $pc["id"]);
 				$previous_classes_students = SQLQuery::create()->select("StudentClass")->whereIn("StudentClass","class",$previous_classes_ids)->execute();
+				if (count($previous_classes) > 0) break;
 			}
+			$previous_academic_period = PNApplication::$instance->curriculum->getPreviousAcademicPeriod($previous_academic_period["start"]);
 		}
 		
 		$this->requireJavascript("assign_elements.js");

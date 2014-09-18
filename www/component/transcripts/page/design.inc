@@ -37,11 +37,13 @@ function generateTranscript($transcript_id, $period_id, $spe_id = null, $student
 	$config = SQLQuery::create()
 		->select("TranscriptConfig")
 		->whereValue("TranscriptConfig","period",$period_id)
+		->whereNull("TranscriptConfig","specialization")
 		->executeSingleRow();
 	if ($config == null) $config = array();
 	if ($spe_id <> null) {
 		$config_spe = SQLQuery::create()
 			->select("TranscriptConfig")
+			->whereValue("TranscriptConfig", "period", $period_id)
 			->whereValue("TranscriptConfig","specialization",$spe_id)
 			->executeSingleRow();
 		if ($config_spe <> null)

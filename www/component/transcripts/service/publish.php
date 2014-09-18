@@ -13,7 +13,10 @@ class service_publish extends Service {
 
 		SQLQuery::startTransaction();
 		
-		$config = SQLQuery::create()->select("TranscriptConfig")->whereValue("TranscriptConfig","period",$period_id)->whereValue("TranscriptConfig","specialization",$spe_id)->executeSingleRow();
+		$config = SQLQuery::create()->select("TranscriptConfig")->whereValue("TranscriptConfig","period",$period_id)->whereNull("TranscriptConfig","specialization")->executeSingleRow();
+		$config_spe = SQLQuery::create()->select("TranscriptConfig")->whereValue("TranscriptConfig","period",$period_id)->whereValue("TranscriptConfig","specialization",$spe_id)->executeSingleRow();
+		if ($config_spe <> null)
+			foreach ($config_spe as $col=>$value) if ($value !== null) $config[$col] = $value;
 		$config["period"] = $period_id;
 		$config["specialization"] = $spe_id;
 		require_once("component/transcripts/page/design.inc");

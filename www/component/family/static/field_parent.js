@@ -40,6 +40,7 @@ field_parent.prototype._create = function(data) {
 				var com = document.createElement("SPAN");
 				com.style.fontStyle = "italic";
 				com.style.color = "#606060";
+				com.style.whiteSpace = "nowrap";
 				com.style.marginLeft = "2px";
 				com.appendChild(document.createTextNode("("+data.comment+")"));
 				this.element.appendChild(com);
