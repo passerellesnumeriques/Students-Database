@@ -260,7 +260,7 @@ for (var i = 0; i < categories.length; ++i) {
 }
 if (global_coef > 0) {
 	// global grade column
-	var col = new GridColumn("student_global_grade","Global Grade",null,"center","field_grade",false,null,null,{max:100,padding:global_passing,system:<?php echo json_encode($grading_systems[$grading_system]);?>});
+	var col = new GridColumn("student_global_grade","Global Grade",null,"center","field_grade",false,null,null,{max:100,passing:global_passing,system:<?php echo json_encode($grading_systems[$grading_system]);?>});
 	col.addSorting();
 	grades_grid.addColumn(new CustomDataGridColumn(col, function(people) {
 		return getStudentGlobalGrade(people.id);

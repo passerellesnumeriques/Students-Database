@@ -10,7 +10,7 @@ $remaining = 0;
 while (($filename = readdir($dir)) <> null) {
 	if (is_dir($sessions_path."/".$filename)) continue;
 	$content = @file_get_contents($sessions_path."/".$filename);
-	if (strpos($content,"PNApplication") !== false) {
+	if (strpos($content,"\"PNApplication\"") !== false) {
 		@unlink($sessions_path."/".$filename);
 		if (file_exists($sessions_path."/".$filename)) $remaining++;
 	}
