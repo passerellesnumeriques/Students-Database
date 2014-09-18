@@ -6,6 +6,7 @@ $model->addDataCategory($category);
 $display = new datamodel\TableDataDisplay("Users", $category);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("domain", "Domain", true));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("username", "Username", true));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("last_connection", "Last connection", true, false));
 $display->addJoinToPrimary();
 $model->addTableDataDisplay($display);
 

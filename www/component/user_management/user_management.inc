@@ -100,6 +100,8 @@ class user_management extends Component {
 			$this->people_types = array();
 		}
 		
+		$this->updateLastConnection();
+		
 		$this->logged_in->fire();
 		return null;
 	}
@@ -136,6 +138,11 @@ class user_management extends Component {
 		$this->user_id = null;
 		$this->rights = array();
 		$this->is_admin = array();
+	}
+	
+	function updateLastConnection() {
+		if ($this->user_id == null || $this->user_id < 0) return;
+		SQLQuery::create()->bypassSecurity()->updateByKey("Users", $this->user_id, array("last_connection"=>time()));
 	}
 	
 	/** Creates an internal user, stored in the software database but not in external authentication system.

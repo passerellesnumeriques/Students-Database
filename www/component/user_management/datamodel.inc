@@ -6,6 +6,7 @@ $model->addTable("Users")
 	->addPrimaryKey("id")
 	->addString("domain",100,1,false)
 	->addString("username",100,1,false)
+	->addTimestamp("last_connection", true, false)
 	->addIndex("domain","username")
 	->setRoot()
 	->allowReadAccess() // everybody need to be able to know who says what.. so need to access the list of users

@@ -221,7 +221,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 	public function isEditable() { return false; }
 	public function isEditableForNewData() { return true; }
 	public function getNewData() {
-		return array("first_name"=>null,"last_name"=>null,"occupation"=>null,"education_level"=>null);
+		return array("first_name"=>null,"last_name"=>null,"occupation"=>null,"education_level"=>null,"comment"=>null);
 	}
 	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() { return false; }
@@ -274,7 +274,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
-		if ($value["first_name"] == null && $value["last_name"] == null && $value["occupation"] == null && $value["education_level"] == null) return;
+		if ($value["first_name"] == null && $value["last_name"] == null && $value["occupation"] == null && $value["education_level"] == null && $value["comment"] == null) return;
 		$family_id = SQLQuery::create()->bypassSecurity()
 			->select("FamilyMember")
 			->whereValue("FamilyMember","people",$joining_key_value_for_new_data)
@@ -298,7 +298,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 			if ($value["first_name"] <> null && $value["last_name"] <> null) {
 				$people_id = PNApplication::$instance->people->createPeople(array("first_name"=>$value["first_name"],"last_name"=>$value["last_name"],"sex"=>($this->type == "Father" ? "M" : "F")), array("family_member"), true);
 			}
-			SQLQuery::create()->bypassSecurity()->insert("FamilyMember", array("family"=>$family_id,"member_type"=>$this->type,"people"=>$people_id,"occupation"=>$value["occupation"],"education_level"=>$value["education_level"],"entry_date"=>date("Y-m-d")));
+			SQLQuery::create()->bypassSecurity()->insert("FamilyMember", array("family"=>$family_id,"member_type"=>$this->type,"people"=>$people_id,"occupation"=>$value["occupation"],"education_level"=>$value["education_level"],"comment"=>$value["comment"],"entry_date"=>date("Y-m-d")));
 		} else {
 			// update
 			$id = $member["id"];
@@ -309,6 +309,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 				unset($member["people"]);
 			$member["occupation"] = $value["occupation"];
 			$member["education_level"] = $value["education_level"];
+			$member["comment"] = $value["comment"];
 			$member["entry_date"] = date("Y-m-d");
 			SQLQuery::create()->bypassSecurity()->updateByKey("FamilyMember", $id, $member);
 		}
@@ -321,7 +322,8 @@ class ParentsSubDataDisplay extends datamodel\SubDataDisplay {
 			"First Name",
 			"Age",
 			"Occupation",
-			"Education Level"
+			"Education Level",
+			"Comment"
 		);
 	}
 	public function isEditable($index) {

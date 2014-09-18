@@ -36,6 +36,14 @@ field_parent.prototype._create = function(data) {
 			span.style.whiteSpace = "nowrap";
 			span.appendChild(document.createTextNode(text));
 			this.element.appendChild(span);
+			if (data && data.comment) {
+				var com = document.createElement("SPAN");
+				com.style.fontStyle = "italic";
+				com.style.color = "#606060";
+				com.style.marginLeft = "2px";
+				com.appendChild(document.createTextNode("("+data.comment+")"));
+				this.element.appendChild(com);
+			}
 		};
 	} else {
 		if (!this.editable) {
@@ -60,6 +68,7 @@ field_parent.prototype._create = function(data) {
 					break;
 				case 3: value = data.occupation; break;
 				case 4: value = data.education_level; break;
+				case 5: value = data.comment; break;
 				}
 				this.element.style.whiteSpace = "nowrap";
 				this.element.appendChild(document.createTextNode(value ? value : ""));
@@ -79,6 +88,7 @@ field_parent.prototype._create = function(data) {
 			case 1: input.maxLength = 100; updater = function(value) { data.first_name = value; }; break;
 			case 3: input.maxLength = 100; updater = function(value) { data.occupation = value; }; break;
 			case 4: input.maxLength = 100; updater = function(value) { data.education_level = value; }; break;
+			case 5: input.maxLength = 250; updater = function(value) { data.comment = value; }; break;
 			}
 			this._getInputValue = function() {
 				var data = input.value;

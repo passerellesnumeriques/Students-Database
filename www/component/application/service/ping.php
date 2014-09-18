@@ -11,6 +11,7 @@ class service_ping extends Service {
 			$maintenance = intval(file_get_contents("maintenance_time"));
 			echo ",maintenance_coming:".$maintenance;
 		}
+		PNApplication::$instance->user_management->updateLastConnection();
 		echo "}";
 	}
 	

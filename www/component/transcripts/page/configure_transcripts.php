@@ -59,10 +59,15 @@ class page_configure_transcripts extends Page {
 		if ($spe <> null) {
 			$config_spe = SQLQuery::create()
 				->select("TranscriptConfig")
+				->whereValue("TranscriptConfig","period",$_GET["period"])
 				->whereValue("TranscriptConfig","specialization",$_GET["specialization"])
 				->executeSingleRow();
 			if ($config_spe == null) {
-				SQLQuery::create()->insert("TranscriptConfig", array("period"=>$_GET["period"],"specialization"=>$_GET["specialization"]));
+				$config_spe = array();
+				if ($config <> null) foreach ($config as $n=>$v) $config_spe[$n] = $v;
+				$config_spe["period"] = $_GET["period"];
+				$config_spe["specialization"] = $_GET["specialization"];
+				SQLQuery::create()->insert("TranscriptConfig", $config_spe);
 				$selected_subjects = PNApplication::$instance->curriculum->getSubjects($period["batch"], $period["id"], $spe["id"]);
 				$insert = array();
 				foreach ($selected_subjects as $s)

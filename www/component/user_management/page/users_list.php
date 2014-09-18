@@ -22,7 +22,7 @@ function init_users_list() {
 	window.list = new data_list(
 		'users_list',
 		'Users', null,
-		['User.Domain','User.Username','Personal Information.First Name','Personal Information.Last Name','User.Roles'],
+		['User.Domain','User.Username','Personal Information.First Name','Personal Information.Last Name','User.Roles','User.Last connection'],
 		null,
 		100,
 		function (list) {
