@@ -17,6 +17,7 @@ function createDataList(campaign_id)
                    ],
                    [],
                    -1,
+                   "Personal Information.Last Name", true,
                    function(list) {
                            window.dl = list;
                    }

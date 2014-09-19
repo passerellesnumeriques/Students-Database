@@ -39,6 +39,7 @@ class page_interview_centers extends SelectionPage {
 					],
 					[],
 					-1,
+					null, null,
 					function (list) {
 						list.addTitle("/static/selection/exam/exam_center_16.png", "Interview Centers");
 						<?php if ($can_create) {?>

@@ -223,7 +223,7 @@ function init_calendars() {
 				var content = document.createElement("DIV");
 				content.style.padding = "5px";
 				for (var i = 0; i < t.provider.calendars.length; ++i)
-					new CalendarControl(content, t.provider.calendars[i]);
+					new CalendarControl(content, t.provider.calendars[i], window.top.calendar_manager);
 				var popup = new popup_window(t.provider.provider.getProviderName(), t.provider.provider.getProviderIcon(), content);
 				popup.show();
 			});

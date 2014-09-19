@@ -24,6 +24,7 @@ new data_list(
 	],
 	[],
 	null,
+	'Personal Information.Last Name', true,
 	function (list) {
 		list.grid.makeScrollable();
 		require("profile_picture.js",function() {

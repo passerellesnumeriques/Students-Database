@@ -31,7 +31,7 @@ function profile_picture(container, width, height, halign, valign) {
 			if (!recall) recall = 0;
 			if (recall < 1000) {
 				setTimeout(function() {
-					if (t) t.adjustPicture(recall+1);
+					if (t && t.adjustPicture) t.adjustPicture(recall+1);
 				},10+recall);
 				return;
 			}
@@ -119,6 +119,7 @@ function profile_picture(container, width, height, halign, valign) {
 	
 	this.loadPeopleID = function(people_id, onloaded) {
 		service.json("people", "picture", {people:people_id}, function(res) {
+			if (!t) return;
 			if (!res) {
 				if (t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
 				if (!img.parentNode) t.picture_container.appendChild(img);
@@ -135,6 +136,7 @@ function profile_picture(container, width, height, halign, valign) {
 	};
 	this.loadUser = function(domain, username, onloaded) {
 		service.json("user_management", "people_from_user", {domain:domain,username:username}, function(res) {
+			if (!t) return;
 			if (!res) {
 				if (t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
 				if (!img.parentNode) t.picture_container.appendChild(img);

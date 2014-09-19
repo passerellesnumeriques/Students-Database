@@ -42,6 +42,7 @@ class page_is_main_page extends SelectionPage {
 					],
 					[],
 					-1,
+					null, null,
 					function (list) {
 						list.addTitle("/static/selection/is/is_16.png", "Information Sessions");
 						// by default, order the sessions by date

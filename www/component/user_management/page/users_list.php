@@ -25,6 +25,7 @@ function init_users_list() {
 		['User.Domain','User.Username','Personal Information.First Name','Personal Information.Last Name','User.Roles','User.Last connection'],
 		null,
 		100,
+		'Personal Information.Last Name',true,
 		function (list) {
 			window.list = list;
 			list.grid.makeScrollable();

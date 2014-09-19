@@ -46,8 +46,8 @@ function init_calendars() {
 					}, function(name) {
 						if (!name) return;
 						provider.createCalendar(name, null, null, function(cal) {
-							new CalendarControl(content, cal);
-							layout.changed(left);
+							//new CalendarControl(content, cal, window.top.calendar_manager);
+							//layout.changed(left);
 							window.top.calendar_manager.addCalendar(cal);
 						});
 					},function(){}
@@ -66,7 +66,7 @@ function init_calendars() {
 		for (var i = 0; i < providers.length; ++i) {
 			if (providers[i].provider == cal.provider) {
 				providers[i].calendars.push(cal);
-				new CalendarControl(providers[i].div, cal);
+				new CalendarControl(providers[i].div, cal, window.top.calendar_manager);
 				layout.changed(left);
 				return;
 			}

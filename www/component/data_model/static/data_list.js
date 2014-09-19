@@ -17,7 +17,7 @@ if (typeof require != 'undefined') {
  * @param {Array} filters list of {category:a,name:b,force:c,data:d,or:e}: category = from DataDisplayHandler; name = display name of the DataDisplay; force = true if the user cannot remove it; data = data of the filter, format depends on filter type; or=another filter data to do a 'or' condition
  * @param {Function} onready called when everything is ready, and we can start to use this object
  */
-function data_list(container, root_table, sub_model, initial_data_shown, filters, page_size, onready) {
+function data_list(container, root_table, sub_model, initial_data_shown, filters, page_size, default_sort, default_sort_asc, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (!page_size) page_size = -1;
 	var t=this;
@@ -853,6 +853,23 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					}
 					var container = t.grid.getColumnContainerByAttachedData(f.field);
 					container.addSubColumn(col);
+				}
+			}
+			if (default_sort) {
+				var i = default_sort.indexOf('.');
+				if (i > 0) {
+					var cat = default_sort.substr(0,i);
+					var name = default_sort.substr(i+1);
+					var sub_index = -1;
+					i = name.indexOf('.');
+					if (i > 0) {
+						var s = name.substr(i+1);
+						if (!isNaN(parseInt(s))) {
+							sub_index = parseInt(s);
+							name = name.substr(0,i);
+						}
+					}
+					t.orderBy(cat, name, sub_index, default_sort_asc);
 				}
 			}
 			// signal ready

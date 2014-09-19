@@ -60,6 +60,7 @@ new data_list(
 	data_list_fields,
 	build_filters(),
 	batches == null || batches.length > 1 ? 100 : -1,
+	'Personal Information.Last Name', true,
 	function (list) {
 		window.students_list = list;
 

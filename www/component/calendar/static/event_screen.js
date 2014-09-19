@@ -420,6 +420,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		
 		
 		t.popup = new popup_window("Event", "/static/calendar/event.png",content);
+		if (!ev || t.selected_calendar.saveEvent)
 		t.popup.addButton("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> "+(ev ? "Save" : "Create"), 'ok', function(){
 			var e = new CalendarEvent();
 			e.title = t.title.value.trim();
@@ -456,7 +457,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 			t.selected_calendar.saveEvent(e);
 			t.popup.close();
 		});
-		if (ev)
+		if (ev && t.selected_calendar.saveEvent)
 			t.popup.addButton("<img src='"+theme.icons_16.remove+"' style='vertical-align:bottom'/> Remove", 'ok', function(){
 				// TODO ask confirmation, then remove the event
 			});

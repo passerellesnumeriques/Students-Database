@@ -47,6 +47,8 @@ class page_applicant_list extends SelectionPage {
 				],
 				filters,
 				<?php echo isset($_GET["all"]) ? "-1" : "100"; ?>,
+				'Personal Information.Last Name',
+				true,
 				function (list) {
 					list.grid.makeScrollable();
 					var get_creation_data = function() {

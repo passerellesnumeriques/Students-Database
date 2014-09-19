@@ -128,6 +128,8 @@ function LoadingHidder(to_hide) {
 	
 	/** Refresh the size and position of the loading, according to the size and position of the frame */
 	this._position = function() {
+		if (!this.div) return;
+		if (window.closing) return;
 		this.div.style.top = (absoluteTop(to_hide))+"px";
 		this.div.style.left = (absoluteLeft(to_hide))+"px";
 		this.div.style.width = to_hide.offsetWidth+"px";
@@ -145,6 +147,7 @@ function LoadingHidder(to_hide) {
 		if (this.div.parentNode)
 			this.div.parentNode.removeChild(this.div);
 		this.div = null;
+		t = null;
 	};
 	
 	this.setContent = function(content) {

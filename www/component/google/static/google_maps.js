@@ -12,7 +12,8 @@ function loadGoogleMaps(callback) {
 				};
 				setTimeout(function() {
 					if (window.top.googleMapsLoaded) return;
-					window.top.googleMapJS.parentNode.removeChild(window.top.googleMapJS);
+					if (window.top.googleMapJS.parentNode)
+						window.top.googleMapJS.parentNode.removeChild(window.top.googleMapJS);
 					window.top.googleMapJS = null;
 					window.top.initGoogleMaps = null;
 					window.top.loadGoogleMaps(function(){});

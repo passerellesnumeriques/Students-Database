@@ -95,7 +95,8 @@ function CalendarManager() {
 	this.hideCalendar = function(cal) {
 		if (!cal.show) return;
 		cal.show = false;
-		cal.saveShow(false);
+		if (cal.saveShow)
+			cal.saveShow(false);
 		for (var i = 0; i < cal.events.length; ++i)
 			this.on_event_removed.fire(cal.events[i]);
 	};
@@ -107,7 +108,8 @@ function CalendarManager() {
 	this.showCalendar = function(cal) {
 		if (cal.show) return;
 		cal.show = true;
-		cal.saveShow(true);
+		if (cal.saveShow)
+			cal.saveShow(true);
 		for (var i = 0; i < cal.events.length; ++i)
 			this.on_event_added.fire(cal.events[i]);
 		if (cal.last_update < new Date().getTime() - 60000)
@@ -122,7 +124,8 @@ function CalendarManager() {
 	this.setCalendarColor = function(cal, color) {
 		if (cal.color == color) return;
 		cal.color = color;
-		cal.saveColor(color);
+		if (cal.saveColor)
+			cal.saveColor(color);
 		for (var i = 0; i < cal.events.length; ++i)
 			this.on_event_removed.fire(cal.events[i]);
 		for (var i = 0; i < cal.events.length; ++i)
@@ -373,11 +376,11 @@ function Calendar(provider, name, color, show, icon) {
 	/** Save the visibility of the calendar (if supported by the provider)
 	 * @param {Boolean} show visibility: true to be visible, false to be hidden
 	 */
-	this.saveShow = function(show) {}; // to be overriden if supported
+	this.saveShow = null; // function(show) {}; to be defined if supported
 	/** Save the color of the calendar (if supported by the provider)
 	 * @param {String} color the color to save
 	 */
-	this.saveColor = function(color) {}; // to be overriden if supported
+	this.saveColor = null; // function(color) {}; to be defined if supported
 	/** {Function} function to rename the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.rename = null; // must be overriden if this is supported
 	
@@ -396,7 +399,7 @@ function Calendar(provider, name, color, show, icon) {
  * @param {Element} container where to put it
  * @param {Calendar} cal the calendar to control
  */
-function CalendarControl(container, cal) {
+function CalendarControl(container, cal, manager) {
 	var t=this;
 	/** Creates the control */
 	this._init = function() {
@@ -411,12 +414,11 @@ function CalendarControl(container, cal) {
 		if (cal.show)
 			this.box.style.backgroundColor = "#"+cal.color;
 		this.box.onclick = function() {
-			if (!cal.manager) return;
 			if (cal.show) {
-				cal.manager.hideCalendar(cal);
+				manager.hideCalendar(cal);
 				t.box.style.backgroundColor = '';
 			} else {
-				cal.manager.showCalendar(cal);
+				manager.showCalendar(cal);
 				t.box.style.backgroundColor = "#"+cal.color;
 			}
 		};
@@ -454,7 +456,7 @@ function CalendarControl(container, cal) {
 						var popup = new popup_window("Change Color", theme.icons_16.color, content);
 						popup.addOkCancelButtons(function() {
 							var col = color_string(chooser.color).substring(1);
-							cal.manager.setCalendarColor(cal, col);
+							manager.setCalendarColor(cal, col);
 							t.box.style.backgroundColor = "#"+col;
 							t.box.style.border = "1px solid #"+col;
 							popup.hide();
@@ -552,12 +554,14 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 			});
 		});
 	};
-	this.saveShow = function(show) {
-		service.json("calendar", "set_configuration", {calendar:id,show:show},function(res){});
-	};
-	this.saveColor = function(color) {
-		service.json("calendar", "set_configuration", {calendar:id,color:color},function(res){});
-	};
+	if (id > 0)
+		this.saveShow = function(show) {
+			service.json("calendar", "set_configuration", {calendar:id,show:show},function(res){});
+		};
+	if (id > 0)
+		this.saveColor = function(color) {
+			service.json("calendar", "set_configuration", {calendar:id,color:color},function(res){});
+		};
 	if (writable) {
 		var t = this;
 		this.saveEvent = function(event) {
