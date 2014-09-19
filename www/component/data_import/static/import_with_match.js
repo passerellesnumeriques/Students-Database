@@ -530,6 +530,7 @@ function import_with_match(provider, ev, show_after_grid) {
 
 	this._resetExcel = function() {
 		var win = getIFrameWindow(t.excel_frame);
+		if (!win || !win.excel) return;
 		var sheet = win.excel.getActiveSheet();
 		for (var i = 0; i < sheet.rows.length; ++i) {
 			if (sheet.rows[i]._data_matching) {

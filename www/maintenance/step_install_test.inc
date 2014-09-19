@@ -79,6 +79,10 @@ if (isset($_GET["install"])) {
 	if (file_exists($previous_version_path."/maintenance/update/migrate/datamodel_update.php")) {
 		include($previous_version_path."/maintenance/update/migrate/datamodel_update.php");
 	}
+	if (file_exists($previous_version_path."/maintenance/update/migrate/data.sql")) {
+		require_once("component/data_model/DataBaseUtilities.inc");
+		DataBaseUtilities::importSQL(SQLQuery::getDataBaseAccessWithoutSecurity(), $previous_version_path."/maintenance/update/migrate/data.sql");
+	}
 	if (file_exists($previous_version_path."/maintenance/update/migrate/after_datamodel.php")) {
 		include($previous_version_path."/maintenance/update/migrate/after_datamodel.php");
 	}

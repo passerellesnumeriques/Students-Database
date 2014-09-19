@@ -8,6 +8,14 @@ set_error_handler(function($severity, $message, $filename, $lineno) {
 });
 
 set_time_limit(240);
+$f = null;
+for ($i = 0; isset($_POST["sql".$i]); $i++) {
+	if (!$f) $f = fopen($_POST["path"]."/migration/data.sql","w");
+	fwrite($f,$_POST["sql".$i].";\n");
+}
+if ($f) fclose($f);
+
+set_time_limit(240);
 
 global $zip;
 function zip_directory($path, $zip_path) {
@@ -70,6 +78,8 @@ if (file_exists(realpath($_POST["path"])."/migration/before_datamodel.php"))
 	$zip->addFile(realpath($_POST["path"])."/migration/before_datamodel.php", "before_datamodel.php");
 if (file_exists(realpath($_POST["path"])."/migration/after_datamodel.php"))
 	$zip->addFile(realpath($_POST["path"])."/migration/after_datamodel.php", "after_datamodel.php");
+if (file_exists(realpath($_POST["path"])."/migration/data.sql"))
+	$zip->addFile(realpath($_POST["path"])."/migration/data.sql", "data.sql");
 $zip->close();
 
 // create the checksum

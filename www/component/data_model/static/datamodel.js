@@ -197,6 +197,11 @@ window.datamodel = {
 	dataChanged: function(data_display, data_key, value) {
 		for (var i = 0; i < this._data_change_listeners.length; ++i) {
 			var l = this._data_change_listeners[i];
+			if (l.win.closing) {
+				this._data_change_listeners.splice(i,1);
+				i--;
+				continue;
+			}
 			if (l.data_display.table == data_display.table && l.data_display.name == data_display.name && l.data_key == data_key)
 				l.listener(value);
 		}
@@ -216,6 +221,11 @@ window.datamodel = {
 	cellChanged: function(table, column, row_key, value) {
 		for (var i = 0; i < this._cell_change_listeners.length; ++i) {
 			var l = this._cell_change_listeners[i];
+			if (l.win.closing) {
+				this._cell_change_listeners.splice(i,1);
+				i--;
+				continue;
+			}
 			if (l.table == table && l.column == column && l.row_key == row_key)
 				l.listener(value);
 		}

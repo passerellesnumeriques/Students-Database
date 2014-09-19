@@ -20,6 +20,7 @@ function horizontal_menu(menu, valign) {
 	t.valign = valign;
 	
 	menu.ondomremoved(function() {
+		layout.unlistenElementSizeChanged(menu, t.update);
 		menu.widget = null;
 		t.items = null;
 		t.more_item = null;
@@ -125,5 +126,5 @@ function horizontal_menu(menu, valign) {
 	
 	menu.style.visibility = 'visible';
 	t.update();
-	layout.listenElementSizeChanged(menu, function() { t.update(); });
+	layout.listenElementSizeChanged(menu, t.update);
 }

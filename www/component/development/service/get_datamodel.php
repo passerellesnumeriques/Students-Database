@@ -48,12 +48,12 @@ class service_get_datamodel extends Service {
 			if ($first) $first = false; else echo ",";
 			echo "{";
 			echo "\"name\":".json_encode($table->getName());
-			echo ",key:";
+			echo ",\"key\":";
 			if ($table->getPrimaryKey() <> null)
 				echo json_encode($table->getPrimaryKey()->name);
 			else
 				echo json_encode($table->getKey());
-			echo ",indexes:".json_encode($table->getIndexes());
+			echo ",\"indexes\":".json_encode($table->getIndexes());
 			echo ",\"columns\":[";
 			$first_col = true;
 			foreach ($table->internalGetColumns(null, false) as $col) {

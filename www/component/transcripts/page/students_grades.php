@@ -181,9 +181,9 @@ var global_passing = 0;
 for (var i = 0; i < subjects.length; ++i) {
 	if (!subjects[i].coefficient) continue;
 	var sg = getSubjectGrading(subjects[i].id);
-	if (!sg || !sg.max_grade) continue;
+	if (!sg || !sg.max_grade || !sg.passing_grade) continue;
 	global_coef += subjects[i].coefficient;
-	global_passing += sg.passing_grade;
+	global_passing += parseFloat(sg.passing_grade);
 }
 if (global_coef > 0) global_passing /= global_coef;
 function computeStudentGlobalGrade(people_id) {
@@ -199,7 +199,7 @@ function computeStudentGlobalGrade(people_id) {
 		var s = getSubject(students_grades[i].subject);
 		if (!s || !s.coefficient) continue;
 		coef += s.coefficient;
-		total += (students_grades[i].grade*100/sg.max_grade)*s.coefficient;
+		total += (students_grades[i].grade*100/parseFloat(sg.max_grade))*s.coefficient;
 	}
 	if (!coef) return null;
 	return total/coef;
