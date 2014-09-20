@@ -154,7 +154,6 @@ class DataBaseLock {
 			}
 		}
 		
-		DataBaseLock::clean();
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$lock_user = DataBaseLock::isLocked($table, $row_key, $column);
 		if ($lock_user <> null && is_string($lock_user)) {
@@ -289,7 +288,6 @@ class DataBaseLock {
 			}
 		}
 	
-		DataBaseLock::clean();
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$lock_user = DataBaseLock::areRowsLocked($table, $row_keys);
 		if ($lock_user <> null) {
@@ -342,16 +340,9 @@ class DataBaseLock {
 		return $ids;
 	}
 	
-	/** Used to clean only once per request */
-	private static $cleant = false;
-	
 	/** remove expired locks */
 	public static function clean() {
-		// TODO make a cron task for this
-		if (self::$cleant) return;
-		self::$cleant = true;
-		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		$db->execute("DELETE FROM DataLocks WHERE timestamp <= ".(time()-7*60));
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM DataLocks WHERE timestamp <= ".(time()-7*60));
 	}
 	
 	/** check if the table/row/column/cell is locked by someone else.
@@ -563,7 +554,6 @@ class DataBaseLock {
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		$ts = time();
 		$db->execute("UPDATE DataLocks SET timestamp=".$ts." WHERE id='".$db->escapeString($id)."' AND locker_domain='".$db->escapeString(PNApplication::$instance->user_management->domain)."' AND locker_username='".$db->escapeString(PNApplication::$instance->user_management->username)."'");
-		DataBaseLock::clean();
 		return null;
 	}
 	
@@ -579,7 +569,6 @@ class DataBaseLock {
 		}
 		$sql .= ")";
 		$db->execute($sql);
-		DataBaseLock::clean();
 	}
 	
 	/** check the given lock is locking the given table by the current user

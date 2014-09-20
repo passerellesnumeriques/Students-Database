@@ -1,0 +1,238 @@
+<?php 
+if (!file_exists("data/domains_synch")) mkdir("data/domains_synch");
+
+function getDomainVersion($domain) {
+	$remote_access = include("conf/$domain.remote");
+	$c = curl_init($remote_access["url"]."dynamic/application/service/get_backup");
+	if (file_exists("conf/proxy")) include("conf/proxy");
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+	curl_setopt($c, CURLOPT_HEADER, TRUE);
+	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_list"));
+	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
+	curl_setopt($c, CURLOPT_TIMEOUT, 30);
+	$result = curl_exec($c);
+	if ($result === false) {
+		PNApplication::error("Connection to domain $domain: ".curl_error($c));
+		curl_close($c);
+		return;
+	}
+	curl_close($c);
+	
+	$i = strpos($result, "pn_version_changed:");
+	if ($i === false) {
+		PNApplication::error("We can connect to the URL of domain $domain, but this is not Students Management Software");
+		return;
+	}
+	$result = substr($result,$i+19);
+	$i = strpos($result,"\n");
+	$version = trim(substr($result,0,$i));
+	return $version;
+}
+
+function getLatestBackup($domain, $version, $app_version) {
+	$remote_access = include("conf/$domain.remote");
+	$c = curl_init($remote_access["url"]."dynamic/application/service/get_backup");
+	if (file_exists("conf/proxy")) include("conf/proxy");
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+	curl_setopt($c, CURLOPT_HEADER, FALSE);
+	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_list","password"=>$remote_access["password"]));
+	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
+	curl_setopt($c, CURLOPT_TIMEOUT, 30);
+	curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version"));
+	$result = curl_exec($c);
+	if ($result === false) {
+		PNApplication::error("Connection to domain $domain: ".curl_error($c));
+		curl_close($c);
+		return null;
+	}
+	curl_close($c);
+
+	$backups = json_decode($result, true);
+	if ($backups == null) {
+		PNApplication::error("Invalid response of domain $domain");
+		return null;
+	}
+	if ($backups["result"] == null) {
+		PNApplication::error("Access denied for domain $domain");
+		return null;
+	}
+	if (!is_array($backups["result"])) {
+		PNApplication::error("Invalid response of domain $domain");
+		return null;
+	}
+	$latest = null;
+	global $pn_app_version;
+	foreach ($backups["result"] as $backup) {
+		if ($backup["version"] <> $pn_app_version) continue;
+		$time = intval($backup["time"]);
+		if ($latest == null || $latest < $time) $latest = $time;
+	}
+	return $latest;
+}
+
+function getBackupFileSize($domain, $version, $time, $file, $app_version) {
+	$remote_access = include("conf/$domain.remote");
+	$c = curl_init($remote_access["url"]."dynamic/application/service/get_backup?get_size=true");
+	if (file_exists("conf/proxy")) include("conf/proxy");
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+	curl_setopt($c, CURLOPT_HEADER, TRUE);
+	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_backup","password"=>$remote_access["password"],"version"=>$version,"time"=>$time,"file"=>$file));
+	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
+	curl_setopt($c, CURLOPT_TIMEOUT, 30);
+	curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version"));
+	$result = curl_exec($c);
+	if ($result === false) {
+		PNApplication::error("Connection to domain $domain: ".curl_error($c));
+		curl_close($c);
+		return null;
+	}
+	curl_close($c);
+	if (strpos($result, "HTTP/1.0 404") !== false)
+		return -1;
+	$i = strpos($result, "File-Size:");
+	if ($i === false) {
+		PNApplication::error("Invalid response of domain $domain");
+		return null;
+	}
+	$result = substr($result, $i+10);
+	$i = strpos($result, "\n");
+	if ($i === false) {
+		PNApplication::error("Invalid response of domain $domain");
+		return null;
+	}
+	$result = trim(substr($result,0,$i));
+	if (!is_numeric($result)) {
+		PNApplication::error("Invalid response of domain $domain");
+		return null;
+	}
+	return intval($result);
+}
+
+function getBackupFiles($domain, $version, $time, $app_version) {
+	$files = array();
+	require_once("component/application/Backup.inc");
+	foreach (Backup::$possible_files as $filename) {
+		$size = getBackupFileSize($domain, $version, $time, $filename, $app_version);
+		if ($size == null) return null;
+		$files[$filename] = $size;
+	}
+	return $files;
+}
+
+function downloadBackup($domain, $version, $time, $file, $from, $to, $target, $app_version) {
+	$remote_access = include("conf/$domain.remote");
+	$c = curl_init($remote_access["url"]."dynamic/application/service/get_backup");
+	if (file_exists("conf/proxy")) include("conf/proxy");
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+	curl_setopt($c, CURLOPT_HEADER, FALSE);
+	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_backup","password"=>$remote_access["password"],"version"=>$version,"time"=>$time,"file"=>$file));
+	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
+	curl_setopt($c, CURLOPT_TIMEOUT, 100);
+	curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version","Range: bytes=".$from."-".$to));
+	$result = curl_exec($c);
+	if ($result === false) {
+		PNApplication::error("Download $file from domain $domain: ".curl_error($c));
+		curl_close($c);
+		return 0;
+	}
+	curl_close($c);
+	$f = fopen($target, "a");
+	fwrite($f, $result);
+	fclose($f);
+	return strlen($result);
+}
+
+$start = time();
+foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
+	if (!file_exists("conf/$domain.remote")) continue;
+	if (!file_exists("data/domains_synch/$domain")) mkdir("data/domains_synch/$domain");
+	global $pn_app_version;
+	$version = getDomainVersion($domain);
+	if (file_exists("data/domains_synch/$domain/in_progress")) {
+		if (time()-$start > 90) continue; // we already spend more than 1.5 minute, we cannot spend more => skip this download
+		$download = include("data/domains_synch/$domain/in_progress");
+		touch("data/domains_synch/$domain/in_progress");
+		if ($download["version"] <> $pn_app_version) {
+			// we changed version, we need to cancel this download
+			foreach ($download["files"] as $filename=>$filesize)
+				@unlink("data/domains_synch/$domain/$filename.progress");
+			@unlink("data/domains_synch/$domain/in_progress");
+			continue;
+		}
+		$done = true;
+		$speed = 128*1024;
+		foreach ($download["files"] as $filename=>$filesize) {
+			if ($filesize < 0) continue; // no file
+			if (!file_exists("data/domains_synch/$domain/$filename.progress")) {
+				$current_size = 0;
+				$f = fopen("data/domains_synch/$domain/$filename.progress","w");
+				fclose($f);
+			} else {
+				$current_size = filesize("data/domains_synch/$domain/$filename.progress");
+			}
+			if ($current_size < $filesize) {
+				do {
+					$start_download = time();
+					$to = $current_size + $speed;
+					if ($to >= $filesize) $to = $filesize-1;
+					$prev_size = $current_size;
+					$current_size += downloadBackup($domain, $download["version"], $download["time"], $filename, $current_size, $to, "data/domains_synch/$domain/$filename.progress", $version);
+					if (time()-$start < 60) {
+						if (time() - $start_download < 10) $speed *= 3;
+						else if (time() - $start_download < 20) $speed *= 2;
+						else if (time() - $start_download < 30) $speed *= 1.2;
+					}
+				} while (time() - $start < 75 && $current_size < $filesize && $current_size > $prev_size);
+				if ($current_size < $filesize)
+					$done = false;
+			}
+		}
+		if ($done) {
+			// all files successfully downloaded !
+			require_once("component/application/Backup.inc");
+			foreach (Backup::$possible_files as $filename)
+				@unlink("data/domains_synch/$domain/$filename.zip");
+			foreach ($download["files"] as $filename=>$filesize)
+				if ($filesize >= 0)
+					rename("data/domains_synch/$domain/$filename.progress", "data/domains_synch/$domain/$filename.zip");
+			rename("data/domains_synch/$domain/in_progress", "data/domains_synch/$domain/latest_download");
+		}
+	} else {
+		if (!file_exists("data/domains_synch/$domain/last_check"))
+			$last_check = 0;
+		else {
+			$info = stat("data/domains_synch/$domain/last_check");
+			$last_check = $info["mtime"];
+		}
+		if ($start - $last_check < 60*60) continue; // we already checked less than 1 hour ago
+		$f = fopen("data/domains_synch/$domain/last_check","w");
+		fclose($f);
+		$latest = getLatestBackup($domain, $pn_app_version, $version);
+		if ($latest == null) {
+			PNApplication::error("Cannot synchronize with domain $domain: no available backup for version $version");
+			continue; // no available backup
+		}
+		if (file_exists("data/domains_synch/$domain/latest_download")) {
+			$latest_download = include("data/domains_synch/$domain/latest_download");
+			if ($latest_download["version"] == $pn_app_version && $latest_download["time"] == $latest)
+				continue; // we already downloaded the latest, we are up to date !
+		}
+		$files = getBackupFiles($domain, $pn_app_version, $latest, $version);
+		if ($files == null) continue;
+		$s = "<?php return array('version'=>'".$pn_app_version."','time'=>".$latest.",'files'=>array(";
+		$first = true;
+		foreach ($files as $filename=>$filesize) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= "'$filename'=>$filesize";
+		}
+		$s .= ")); ?>";
+		$f = fopen("data/domains_synch/$domain/in_progress", "w");
+		fwrite($f, $s);
+		fclose($f);
+	}
+}
+?>

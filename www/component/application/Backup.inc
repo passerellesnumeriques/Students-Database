@@ -1,5 +1,11 @@
 <?php 
 class Backup {
+
+	public static $possible_files = array(
+		"db",
+		"storage",
+		"custom_tables"
+	);
 	
 	public static function removeOlds($max_nb = 30) {
 		$list = self::listBackups();
@@ -67,6 +73,7 @@ class Backup {
 		self::zipDirectory(realpath("data/$local_domain/storage"), realpath($path)."/storage.zip", true);
 		if (file_exists("data/$local_domain/custom_tables"))
 			self::zipDirectory(realpath("data/$local_domain/custom_tables"), realpath($path)."/custom_tables.zip", true);
+		touch($path."/ready");
 		return $time;
 	}
 	
@@ -91,7 +98,7 @@ class Backup {
 		$row = $db->nextRow($res);
 		if ($row <> null) {
 			$f = fopen($path."/$table_name","w");
-			$insert_sql = "INSERT INTO `".$db_config["prefix"].PNApplication::$instance->local_domain."`.`".$table_name."` ($cols_names) VALUES\n";
+			$insert_sql = "INSERT INTO `".$table_name."` ($cols_names) VALUES\n";
 			fwrite($f, $insert_sql);
 			$row_count = 0;
 			do {
@@ -180,84 +187,100 @@ class Backup {
 		global $pn_app_version;
 		if ($version == null) $version = $pn_app_version;
 		if (!is_dir("data/backups/$version/$time")) throw new Exception("Backup does not exist");
+		self::synchronizeDatabase("data/backups/$version/$time", $local_domain);
+		$domains = include("conf/domains");
+		foreach ($domains as $domain=>$descr)
+			if ($domain <> $local_domain)
+				self::synchronizeDatabase(null, $domain);
+	}
+	
+	public static function synchronizeDatabase($directory, $domain) {
 		if (file_exists("data/recover")) self::removeDirectory("data/recover");
-		mkdir("data/recover");
+		if (!@mkdir("data/recover")) {
+			sleep(1);
+			if (!@mkdir("data/recover")) {
+				sleep(1);
+				if (!@mkdir("data/recover")) {
+					sleep(1);
+					if (!mkdir("data/recover")) return;
+				}
+			}
+		}
 		// recover database
 		mkdir("data/recover/db");
 		require_once("component/application/service/deploy_utils.inc");
-		unzipFile(realpath("data/backups/$version/$time/db.zip"), realpath("data/recover/db"));
+		if ($directory <> null)
+			unzipFile(realpath("$directory/db.zip"), realpath("data/recover/db"));
 		require_once("component/data_model/Model.inc");
 		require_once("SQLQuery.inc");
 		$model = DataModel::get();
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		$domains = include("conf/domains");
 		require_once("component/data_model/DataBaseUtilities.inc");
 		global $db_config;
-		foreach ($domains as $domain=>$conf) {
-			$res = $db->execute("CREATE DATABASE IF NOT EXISTS ".$db_config["prefix"].$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
-			$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = '".$db_config["prefix"].$domain."'");
-			$db->execute("USE ".$db_config["prefix"].$domain);
+		$res = $db->execute("CREATE DATABASE IF NOT EXISTS ".$db_config["prefix"].$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
+		$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = '".$db_config["prefix"].$domain."'");
+		$db->execute("USE ".$db_config["prefix"].$domain);
+		set_time_limit(600);
+		while (($sql = $db->nextRowArray($res)) <> null)
+			$db->execute($sql[0]);
+		$ref = new ReflectionClass("DataModel");
+		$p = $ref->getProperty("tables");
+		$p->setAccessible(true);
+		$tables = $p->getValue($model);
+		$sub_models_keys = array();
+		foreach ($tables as $table) {
 			set_time_limit(600);
-			while (($sql = $db->nextRowArray($res)) <> null)
-				$db->execute($sql[0]);
-				$ref = new ReflectionClass("DataModel");
-			$p = $ref->getProperty("tables");
-			$p->setAccessible(true);
-			$tables = $p->getValue($model);
-			$sub_models_keys = array();
-			foreach ($tables as $table) {
-				set_time_limit(600);
-				DataBaseUtilities::createTable($db, $table);
-				if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName())) {
-					set_time_limit(30*60);
-					DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName());
-					foreach ($table->_key_submodels as $sm) {
-						$keys = SQLQuery::create()
-							->bypassSecurity()
-#DEV
-							->noWarning()
-#END
-							->select($table->getName())->field($table->getPrimaryKey()->name)->executeSingleField();
-						$sub_models_keys[$table->getName()] = $keys;
-						foreach ($keys as $key) $sm->createTables($key);
-					}
+			DataBaseUtilities::createTable($db, $table);
+			if (file_exists("data/recover/db/".$table->getName())) {
+				set_time_limit(30*60);
+				DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName());
+				foreach ($table->_key_submodels as $sm) {
+					$keys = SQLQuery::create()
+					->bypassSecurity()
+					#DEV
+					->noWarning()
+					#END
+					->select($table->getName())->field($table->getPrimaryKey()->name)->executeSingleField();
+					$sub_models_keys[$table->getName()] = $keys;
+					foreach ($keys as $key) $sm->createTables($key);
 				}
 			}
-			$p = $ref->getProperty("sub_models");
+		}
+		$p = $ref->getProperty("sub_models");
+		$p->setAccessible(true);
+		$sub_models = $p->getValue($model);
+		foreach ($sub_models as $sm) {
+			if (!isset($sub_models_keys[$sm->getParentTable()])) continue;
+			$p = $ref->getProperty("tables");
 			$p->setAccessible(true);
-			$sub_models = $p->getValue($model);
-			foreach ($sub_models as $sm) {
-				if (!isset($sub_models_keys[$sm->getParentTable()])) continue;
-				$p = $ref->getProperty("tables");
-				$p->setAccessible(true);
-				$tables = $p->getValue($sm);
-				foreach ($tables as $table) {
-					foreach ($sub_models_keys[$sm->getParentTable()] as $sub_model) {
-						if ($domain == $local_domain && file_exists("data/recover/db/".$table->getName()."_".$sub_model)) {
-							set_time_limit(600);
-							$db->execute("DROP TABLE IF EXISTS `".($table->getName()."_".$sub_model)."`");
-							DataBaseUtilities::createTable($db, $table, "_".$sub_model);
-							set_time_limit(30*60);
-							DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName()."_".$sub_model);
-						}
+			$tables = $p->getValue($sm);
+			foreach ($tables as $table) {
+				foreach ($sub_models_keys[$sm->getParentTable()] as $sub_model) {
+					if (file_exists("data/recover/db/".$table->getName()."_".$sub_model)) {
+						set_time_limit(600);
+						$db->execute("DROP TABLE IF EXISTS `".($table->getName()."_".$sub_model)."`");
+						DataBaseUtilities::createTable($db, $table, "_".$sub_model);
+						set_time_limit(30*60);
+						DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName()."_".$sub_model);
 					}
 				}
 			}
 		}
 		
-		@mkdir("data/$local_domain");
+		@mkdir("data/$domain");
 		// recover custom tables
-		if (file_exists("data/$local_domain/custom_tables")) self::removeDirectory("data/$local_domain/custom_tables");
-		if (file_exists("data/backups/$version/$time/custom_tables.zip")) {
-			mkdir("data/$local_domain/custom_tables");
-			unzipFile(realpath("data/backups/$version/$time/custom_tables.zip"), realpath("data/$local_domain/custom_tables"));
+		if (file_exists("data/$domain/custom_tables")) self::removeDirectory("data/$domain/custom_tables");
+		if ($directory <> null && file_exists("$directory/custom_tables.zip")) {
+			mkdir("data/$domain/custom_tables");
+			unzipFile(realpath("$directory/custom_tables.zip"), realpath("data/$domain/custom_tables"));
 		}
-		// recover storage		
-		if (file_exists("data/$local_domain/storage")) self::removeDirectory("data/$local_domain/storage");
-		mkdir("data/$local_domain/storage");
+		// recover storage
+		if (file_exists("data/$domain/storage")) self::removeDirectory("data/$domain/storage");
+		mkdir("data/$domain/storage");
 		set_time_limit(60*60);
-		unzipFile(realpath("data/backups/$version/$time/storage.zip"), realpath("data/$local_domain/storage"));
-		if (file_exists("data/$local_domain/storage/empty")) rmdir("data/$local_domain/storage/empty");
+		if ($directory <> null)
+			unzipFile(realpath("$directory/storage.zip"), realpath("data/$domain/storage"));
+		if (file_exists("data/$domain/storage/empty")) rmdir("data/$domain/storage/empty");
 	}
 	
 }

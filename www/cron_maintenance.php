@@ -1,12 +1,16 @@
 <?php
 set_include_path(dirname(__FILE__));
 date_default_timezone_set("GMT");
+if (!file_exists("data/cron")) @mkdir("data/cron");
+@touch("data/cron/maintenance_in_progress");
+for ($i = 0; $i < 60; $i++) {
+	if (!file_exists("data/cron/in_progress")) break;
+	sleep(10);
+}
 global $pn_app_version;
 $pn_app_version = file_get_contents(dirname(__FILE__)."/version");
 global $in_cron_maintenance;
 $in_cron_maintenance = true;
-global $cron_maintenance_tasks;
-$cron_maintenance_tasks = array();
 $f = fopen("maintenance_in_progress","w");
 fclose($f);
 $f = fopen("maintenance/password","w");
@@ -27,4 +31,5 @@ PNApplication::$instance->cron->executeMaintenanceTasks();
 @unlink("maintenance/ask_cancel");
 @unlink("maintenance_in_progress");
 @unlink("maintenance_time");
+@unlink("data/cron/maintenance_in_progress");
 ?>

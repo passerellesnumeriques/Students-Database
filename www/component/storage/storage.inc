@@ -1,9 +1,11 @@
 <?php 
 class storage extends Component {
 	
-	public function init() {
-		PNApplication::$instance->cron->registerTask("expired_storage",2,"component/storage/cron_task_expired_storage.inc");
-		PNApplication::$instance->cron->registerMaintenanceTask("component/storage/cron_task_cleanup_storage.inc");
+	public function getPluginImplementations() {
+		require_once("CronPlugin.inc");
+		return array(
+			new StorageCronPlugin()
+		);
 	}
 	
 	public function get_upload_error($file) {
@@ -40,8 +42,19 @@ class storage extends Component {
 		$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/".$domain;
 		if (file_exists($path))
 			self::remove_directory($path);
-		if (!mkdir($path))
-			PNApplication::error("Unable to create storage directory "+$path);
+		if (!@mkdir($path)) {
+			sleep(1);
+			if (!@mkdir($path)) {
+				sleep(1);
+				if (!@mkdir($path)) {
+					sleep(1);
+					if (!mkdir($path)) {
+						PNApplication::error("Unable to create storage directory "+$path);
+						return;
+					}
+				}
+			}
+		}
 		if (!mkdir($path."/storage"))
 			PNApplication::error("Unable to create storage directory "+$path);
 	}

@@ -6,6 +6,7 @@ class geography extends Component {
 	private $local_country_divisions = null;
 	
 	public function init() {
+		PNApplication::$instance->application->domain_changed->listen($this, "domainChanged");
 	}
 	
 	public function getLocalCountry() { 
@@ -24,11 +25,20 @@ class geography extends Component {
 		return $this->local_country_divisions;
 	}
 	
+	public function domainChanged() {
+		$this->local_country = null;
+		$this->local_country_divisions = null;
+	}
+	
 	public function getPluginImplementations() {
 		require_once("GeographyAdministrationPlugin.inc");
 		return array(
 			new GeographyAdministrationPlugin()
 		);
+	}
+	
+	public function getCountryId($country_code) {
+		return SQLQuery::create()->bypassSecurity()->select("Country")->whereValue("Country", "code", strtoupper($country_code))->field("id")->executeSingleField();
 	}
 	
 	public function joinGeographicArea(&$q, $table_from, $table_from_foreign_key, $force_join = true) {

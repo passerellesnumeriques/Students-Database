@@ -207,9 +207,10 @@ global $pn_app_version;
 				<div id="application_right_menu" style="flex:none;">
 					<input type='text' id='application_search' onchange='alert("Sorry, the global search functionality is not yet available");'/>
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>' target='application_frame'><div id='user_picture'></div></a>
-					<button class="flat"><img id='notifications' src='/static/application/menu/notifications.png'/></button>
-					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat"><img id='calendars' src='/static/calendar/calendar_white.png'/></button></a>
-					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat"><img id='logout' src='/static/application/logout_white.png'/></button></a>
+					<button class="flat" id='notifications'><img src='/static/application/menu/notifications.png'/></button>
+					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat" id='calendars'><img src='/static/calendar/calendar_white.png'/></button></a>
+					<button class="flat" id='domain_connection' onclick='domainConnectionMenu(this);'><img src='/static/data_model/database_white.png'/></button>
+					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat" id='logout'><img src='/static/application/logout_white.png'/></button></a>
 				</div>
 			</div>
 			<iframe id="application_frame" name="application_frame" style="flex:1 1 auto;"></iframe>
@@ -228,6 +229,7 @@ tooltip(user_picture, "Your profile");
 
 tooltip(document.getElementById('notifications'), "See notifications");
 tooltip(document.getElementById('calendars'), "Your calendars");
+tooltip(document.getElementById('domain_connection'), "Connect to other centers' database");
 tooltip(document.getElementById('logout'), "Logout and exit application");
 
 function initPage() {
@@ -247,6 +249,35 @@ function initPage() {
 	});
 	listenEvent(frame,'hashchange',function() {
 		pageLoaded(getIFrameWindow(this).location.href);
+	});
+}
+
+function domainConnectionMenu(button) {
+	require("context_menu.js",function() {
+		var menu = new context_menu();
+		var div;
+		<?php
+		foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
+			echo "div = document.createElement('DIV');";
+			if ($domain == PNApplication::$instance->current_domain)
+				echo "div.style.fontWeight = 'bold';";
+			else {
+				echo "div.className = 'context_menu_item';";
+				echo "div.onclick = function() { connectToDomain('$domain'); };";
+			}
+			echo "div.style.whiteSpace = 'nowrap';";
+			echo "div.innerHTML = \"<img src='/static/geography/flags/".$descr["geography"]["country_code"].".png' style='vertical-align:bottom'/> $domain\";";
+			echo "menu.addItem(div, ".($domain == PNApplication::$instance->current_domain ? "true" : "false").");";
+		}
+		?>
+		menu.showBelowElement(button);
+	});
+}
+function connectToDomain(domain) {
+	var locker = lock_screen(null, "Connection to domain "+domain+"...");
+	service.json("application","set_domain",{domain:domain},function(res) {
+		if (!res) { unlock_screen(locker); return; };
+		window.top.location.reload();
 	});
 }
 

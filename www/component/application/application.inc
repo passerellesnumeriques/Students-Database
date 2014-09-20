@@ -1,11 +1,15 @@
 <?php
+require_once("Event.inc");
 /**
  * This component is the main entry point for the application: login page and home page. It contains also some useful functionalities in javascript like calling a service in JSON. 
  */ 
 class application extends Component {
 
+	/** @var Event $domain_changed */
+	public $domain_changed;
+	
 	public function init() {
-		PNApplication::$instance->cron->registerMaintenanceTask("component/application/cron_task_backup.inc");
+		$this->domain_changed = new Event();
 	}
 	
 	public function initRequest() {
@@ -20,9 +24,11 @@ class application extends Component {
 	public function getPluginImplementations() {
 		require_once("GeneralNewsPlugin.inc");
 		require_once("ApplicationSectionPlugin.inc");
+		require_once("CronPlugin.inc");
 		return array(
 			new GeneralNewsPlugin(),
-			new HomeApplicationSection()
+			new HomeApplicationSection(),
+			new ApplicationCronPlugin()
 		);
 	}
 	

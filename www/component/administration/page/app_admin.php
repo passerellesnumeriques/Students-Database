@@ -10,18 +10,6 @@ class page_app_admin extends Page {
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		require_once("update_urls.inc");
-		
-		$sessions_path = ini_get("session.save_path");
-		$i = strrpos($sessions_path, ";");
-		if ($i !== false) $sessions_path = substr($sessions_path, $i+1);
-		$sessions_path = realpath($sessions_path);
-		$sessions = array();
-		$dir = opendir($sessions_path);
-		while (($filename = readdir($dir)) <> null) {
-			if (is_dir($sessions_path."/".$filename)) continue;
-			array_push($sessions, $filename);
-		}
-		closedir($dir);
 ?>
 <div style='padding:10px'>
 <div id='section_updates' icon='<?php echo theme::$icons_16["refresh"];?>' title='Software Update'>
@@ -33,31 +21,195 @@ class page_app_admin extends Page {
 		?>
 	</div>
 </div>
-<div id='section_maintenance' title='Maintenance' collapsable='true' style='margin-top:10px'>
-	<div style='padding:10px'>
-		You can put the software into <i>Maintenance Mode</i>.<br/>
-		When in maintenance mode, all the users will be disconnected and won't be able to use the software until it will come back into <i>Normal Mode</i>.<br/>
-		To put the software into Maintenance Mode, you need first to inform the users, so they can finish their work and save what they are currently doing,
-		then the application won't be accessible. Only you, using a specific password, will be able to perform operations and put back the application in Normal Mode.<br/>
-		<br/>
-		<form name='maintenance' onsubmit='return false;'> 
-		Inform the users, and put the software into Maintenance Mode in <input name='timing' type='text' size=3 value='5'/> minutes.<br/>
-		I will use the <b>username <i>maintenance</i></b> with the password <input name='pass1' type='password' size=15/>.<br/>
-		Please re-type the maintenance password to confirm:  <input name='pass2' type='password' size=15/><br/>
-		</form>
-		<button class='action red' onclick="startMaintenance();">Start</button>
+<div id='section_maintenance' title='Maintenance' icon='<?php echo theme::$icons_16["config"];?>' collapsable='true' style='margin-top:10px'>
+	<div style='padding:2px'>
+		<div class='info_box'>
+			<table style='broder-spacing:0px'><tr><td valign=top><img src='<?php echo theme::$icons_16["help"];?>'/></td><td>
+			You can put the software into <i>Maintenance Mode</i>.<br/>
+			When in maintenance mode, all the users will be disconnected and won't be able to use the software until it will come back into <i>Normal Mode</i>.<br/>
+			To put the software into Maintenance Mode, you need first to inform the users, so they can finish their work and save what they are currently doing,
+			then the application won't be accessible. Only you, using a specific password, will be able to perform operations and put back the application in Normal Mode.<br/>
+			</td></tr></table>
+		</div>
+		<div style='padding:8px'>
+			<form name='maintenance' onsubmit='return false;'> 
+			Inform the users, and put the software into Maintenance Mode in <input name='timing' type='text' size=3 value='5'/> minutes.<br/>
+			I will use the <b>username <i>maintenance</i></b> with the password <input name='pass1' type='password' size=15/>.<br/>
+			Please re-type the maintenance password to confirm:  <input name='pass2' type='password' size=15/><br/>
+			</form>
+			<button class='action red' onclick="startMaintenance();">Start</button>
+		</div>
 	</div>
 </div>
-<div id='section_backup' title='Backups and Remote access' collapsable='true' style='margin-top:10px'>
+<div id='section_remote_access' title='Remote access' icon='/static/administration/remote_access.png' collapsable='true' style='margin-top:10px'>
+	<div style='padding:2px'>
+		<div class='info_box'>
+			<table style='broder-spacing:0px'><tr><td valign=top><img src='<?php echo theme::$icons_16["help"];?>'/></td><td>
+			Remote access allows each PN center (domain) to synchronize its data with the other centers.
+			</td></tr></table>
+		</div>
+		<div style='padding:8px'>
+			<div class='page_section_title3'>Local domain: <?php echo PNApplication::$instance->local_domain;?></div>
+			<?php
+			if (!file_exists("conf/".PNApplication::$instance->local_domain.".password")) {
+				echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> You didn't setup a password for remote access. Other domains won't be able to synchronize with your data.<br/>";
+				echo "Setup remote access password: <input type='password' id='remote_password'/> <button class='action' onclick='setRemotePassword();'>Setup</button><br/>";
+			} else {
+				echo "Reset remote access password: <input type='password' id='remote_password'/> <button class='action' onclick='setRemotePassword();'>Reset</button><br/>";
+			} 
+			?>
+			<?php
+			foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
+				if ($domain == PNApplication::$instance->local_domain) continue;
+				echo "<div class='page_section_title3' style='margin-top:5px;'>Remote domain: $domain</div>";
+				if (!file_exists("conf/$domain.remote")) {
+					echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> No configuration to access remotely to this domain: we cannot synchronize the data.<br/>";
+					$remote_access = array("url"=>"","password"=>"");
+				} else {
+					$remote_access = include("conf/$domain.remote");
+				}
+				echo "<form name='remote_access_$domain' onsubmit='return false;'>";
+				echo "URL <input type='text' name='url' size=50 value=\"".htmlentities($remote_access['url'])."\"/> ";
+				echo "Password <input type='password' name='password' value=\"".htmlentities($remote_access['password'])."\"/> ";
+				echo "<button class='action' onclick=\"saveRemoteAccess('$domain')\">Save</button>";
+				echo "</form>";
+				echo "<br/>";
+				echo "Latest synchronization: ";
+				if (!file_exists("data/domains_synch/$domain/latest_recover")) {
+					echo "Never";
+				} else {
+					$info = stat("data/domains_synch/$domain/latest_recover");
+					$latest_download = include("data/domains_synch/$domain/latest_download");
+					echo date("d M Y H:i", $info["mtime"]);
+					echo " from backup of $domain done on ".date("d M Y H:i", $latest_download["time"]);
+				}
+				echo "<br/>Latest backup downloaded: ";
+				if (!file_exists("data/domains_synch/$domain/latest_download")) {
+					echo "None";
+				} else {
+					$info = stat("data/domains_synch/$domain/latest_download");
+					$latest_download = include("data/domains_synch/$domain/latest_download");
+					echo date("d M Y H:i", $latest_download["time"])." (version ".$latest_download["version"].") downloaded on ".date("d M Y H:i", $info["mtime"]);
+				}
+				echo "<br/>Download in progress: ";
+				if (!file_exists("data/domains_synch/$domain/in_progress")) {
+					echo "None";
+				} else {
+					$info = stat("data/domains_synch/$domain/in_progress");
+					$latest_download = include("data/domains_synch/$domain/in_progress");
+					echo "Backup of ".date("d M Y H:i", $latest_download["time"])." (version ".$latest_download["version"]."), last partial download on ".date("d M Y H:i", $info["mtime"]);
+					$total_size = 0;
+					$downloaded_size = 0;
+					foreach ($latest_download["files"] as $filename=>$filesize) {
+						if ($filesize < 0) continue;
+						$total_size += $filesize;
+						if (file_exists("data/domains_synch/$domain/$filename.progress"))
+							$downloaded_size += filesize("data/domains_synch/$domain/$filename.progress");
+					}
+					echo ", size downloaded: ".number_format($downloaded_size/(1024*1024),2)."M/".number_format($total_size/(1024*1024),2)."M";
+				}
+			} 
+			?>
+		</div>
+	</div>
+</div>
+<div id='section_cron' title='Scheduled Tasks' icon='/static/cron/scheduled_tasks.png' collapsable='true' style='margin-top:10px'>
 	<div style='padding:10px'>
-		<?php
-		if (!file_exists("conf/".PNApplication::$instance->local_domain.".password")) {
-			echo "<img src='".theme::$icons_16["warning"]."'/> You didn't setup a password for remote access. Other domains won't be able to synchronize with your data.<br/>";
-			echo "Setup remote access password: <input type='password' id='remote_password'/> <button class='action' onclick='setRemotePassword();'>Setup</button><br/>";
-		} else {
-			echo "Reset remote access password: <input type='password' id='remote_password'/> <button class='action' onclick='setRemotePassword();'>Reset</button><br/>";
-		} 
+		<div class='page_section_title3'>Normal tasks</div>
+		<table class='all_borders'>
+		<tr><th>Task</th><th>Executed every</th><th>Last execution</th><th>Last duration</th><th>Last errors</th></tr>
+		<?php 
+		foreach (PNApplication::$instance->cron->getTasks() as $task) {
+			echo "<tr>";
+			echo "<td>".toHTML($task->task_name)."</td>";
+			echo "<td align=center>".$task->every_minutes." min.</td>";
+			if (!file_exists("data/cron/".$task->task_id)) {
+				echo "<td colspan=3>";
+				echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> <span style='font-style:italic'>Never</span>";
+				echo "</td>";
+			} else {
+				echo "<td>";
+				$info = stat("data/cron/".$task->task_id);
+				echo date("d M Y H:i", $info["mtime"]);
+				echo "</td>";
+				echo "<td>";
+				$time = file_get_contents("data/cron/".$task->task_id);
+				echo $time." s.";
+				echo "</td>";
+				echo "<td>";
+				if (!file_exists("data/cron/".$task->task_id.".errors")) {
+					echo "<img src='".theme::$icons_16["ok"]."' style='vertical-align:bottom'/> Success";
+				} else {
+					echo "<img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> Errors:".file_get_contents("data/cron/".$task->task_id.".errors");
+				}
+				echo "</td>";
+			}
+			echo "</td>";
+			echo "</tr>";
+		}
 		?>
+		</table>
+		<br/>
+		Last execution of cron.php: <?php
+		if (!file_exists("data/cron/tasks_time")) echo "Never";
+		else {
+			$info = stat("data/cron/tasks_time");
+			$seconds = file_get_contents("data/cron/tasks_time");
+			echo date("d M Y H:i", $info["mtime"])." (in ".$seconds." second".(floatval($seconds) > 1 ? "s" : "").")";
+		} 
+		?><br/>
+		<br/>
+		<div class='page_section_title3'>Maintenance mode tasks</div>
+		<table class='all_borders'>
+		<tr><th>Task</th><th>Last execution</th><th>Last duration</th><th>Last errors</th></tr>
+		<?php 
+		foreach (PNApplication::$instance->cron->getMaintenanceTasks() as $task) {
+			echo "<tr>";
+			echo "<td>".toHTML($task->task_name)."</td>";
+			if (!file_exists("data/cron/".$task->task_id)) {
+				echo "<td colspan=3>";
+				echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> <span style='font-style:italic'>Never</span>";
+				echo "</td>";
+			} else {
+				echo "<td>";
+				$info = stat("data/cron/".$task->task_id);
+				echo date("d M Y H:i", $info["mtime"]);
+				echo "</td>";
+				echo "<td>";
+				$time = file_get_contents("data/cron/".$task->task_id);
+				echo $time." s.";
+				echo "</td>";
+				echo "<td>";
+				if (!file_exists("data/cron/".$task->task_id.".errors")) {
+					echo "<img src='".theme::$icons_16["ok"]."' style='vertical-align:bottom'/> Success";
+				} else {
+					echo "<img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> Errors:".file_get_contents("data/cron/".$task->task_id.".errors");
+				}
+				echo "</td>";
+			}
+			echo "</tr>";
+		}
+		?>
+		</table>
+		<br/>
+		Last execution of cron_maintenance.php: <?php
+		if (!file_exists("data/cron/maintenance_tasks_time")) echo "Never";
+		else {
+			$info = stat("data/cron/maintenance_tasks_time");
+			$seconds = file_get_contents("data/cron/maintenance_tasks_time");
+			echo date("d M Y H:i", $info["mtime"])." (in ".$seconds." second".(floatval($seconds) > 1 ? "s" : "").")";
+		} 
+		?><br/>
+		<div class='info_box'>
+			<img src='<?php echo theme::$icons_16["help"];?>' style='vertical-align:bottom'/>
+			How to configure scheduled tasks ?<br/>
+			<a href='/static/cron/setup_linux.html' target='_blank'>for Linux server</a><br/>
+			<a href='/static/cron/setup_windows.html' target='_blank'>for Windows server</a><br/>
+		</div>
+	</div>
+</div>
+<div id='section_backup' title='Backups' icon='/static/data_model/database.png' collapsable='true' style='margin-top:10px'>
+	<div style='padding:10px'>
 		<table class='all_borders'>
 			<tr><th>Version</th><th>Backup date</th></tr>
 			<?php
@@ -78,33 +230,43 @@ class page_app_admin extends Page {
 		</table>
 	</div>
 </div>
-<div id='section_sessions' title='Open Sessions' collapsable='true' style='margin-top:10px'>
+<div id='section_sessions' title='Open Sessions' icon='/static/user_management/user_16.png' collapsable='true' style='margin-top:10px'>
 	<table>
-		<tr><th>Session ID</th><th>Creation</th><th>Last modification</th><th>User</th></tr>
+		<tr><th>Session ID</th><th>Creation</th><th>Size</th><th>User</th></tr>
 		<?php 
+		$sessions_path = ini_get("session.save_path");
 		$method = ini_get("session.serialize_handler");
-		foreach ($sessions as $session) {
-			$id = substr($session,5);
-			echo "<tr>";
-			echo "<td><code>".$id."</code></td>";
-			$info = stat($sessions_path."/".$session);
-			echo "<td>".date("Y-m-d h:i A", $info["ctime"])."</td>";
-			echo "<td>".date("Y-m-d h:i A", $info["mtime"])."</td>";
-			echo "<td>";
-			if ($id == session_id()) {
-				echo "<b>You</b>";
-			} else {
-				$content = file_get_contents($sessions_path."/".$session);
-				if (strpos($content, "\"PNApplication\"") === false)
-					echo "<i>Another application</i>";
-				else {
-					$data = self::decodeSession($content);
-					if ($data <> null) {
-						echo @$data["app"]->user_management->username;
-					}
+		$i = strrpos($sessions_path, ";");
+		if ($i !== false) $sessions_path = substr($sessions_path, $i+1);
+		$sessions_path = realpath($sessions_path);
+		$sessions = array();
+		$dir = opendir($sessions_path);
+		while (($filename = readdir($dir)) <> null) {
+			if (is_dir($sessions_path."/".$filename)) continue;
+			if (substr($filename,0,5) <> "sess_") continue;
+			$id = substr($filename,5);
+			$info = stat($sessions_path."/".$filename);
+			if ($id == session_id())
+				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>"<b>You</b>"));
+			else {
+				$content = file_get_contents($sessions_path."/".$filename);
+				if (strpos($content, "\"PNApplication\"") === false) continue; // Another application
+				$data = self::decodeSession($content);
+				$user = "";
+				if ($data <> null) {
+					$user = @$data["app"]->user_management->username;
 				}
+				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>$user));
 			}
-			echo "</td>";
+		}
+		closedir($dir);
+		foreach ($sessions as $session) {
+			echo "<tr>";
+			echo "<td><code>".$session["id"]."</code></td>";
+			echo "<td>".date("Y-m-d h:i A", $session["creation"])."</td>";
+			$size = intval($session["size"]);
+			echo "<td align=right>".($size >= 1024 ? (number_format($size/1024,1)."K") : $size." bytes")."</td>";
+			echo "<td>".$session["user"]."</td>";
 			echo "</tr>";
 		}
 		?>
@@ -115,6 +277,8 @@ class page_app_admin extends Page {
 section_updates = sectionFromHTML('section_updates');
 section_sessions = sectionFromHTML('section_sessions');
 section_maintenance = sectionFromHTML('section_maintenance');
+section_remote_access = sectionFromHTML('section_remote_access');
+section_cron = sectionFromHTML('section_cron');
 section_backup = sectionFromHTML('section_backup');
 
 var latest_url = <?php echo json_encode(getLatestVersionURL());?>;
@@ -333,6 +497,21 @@ function setRemotePassword() {
 	if (pass.length < 10) { alert("Remote Access Password must have at least 10 characters"); return; }
 	service.json("administration","set_remote_password",{password:pass},function(res) {
 		if (res) location.reload();
+	});
+}
+function saveRemoteAccess(domain) {
+	var form = document.forms['remote_access_'+domain];
+	var url = form.elements['url'].value;
+	var password = form.elements['password'].value;
+	url = url.trim();
+	if (url.length == 0) { alert("You didn't specify an URL"); return; }
+	if (password.length == 0) { alert("You didn't specify a password"); return; }
+	var locker = lock_screen(null,'Saving remote access for domain '+domain+'...');
+	service.json("administration","save_remote_access",{domain:domain,url:url,password:password},function(res) {
+		unlock_screen(locker);
+		if (res && res.version) {
+			window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Successfully connected to "+domain+". It's version is "+res.version, [{action:"close"}], 5000));
+		}
 	});
 }
 </script>

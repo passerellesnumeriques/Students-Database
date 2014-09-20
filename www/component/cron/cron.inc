@@ -1,41 +1,92 @@
 <?php 
 class cron extends Component {
-	
-	public function registerTask($task_id, $minutes, $file) {
-		global $in_cron;
-		if (!$in_cron) return;
-		global $cron_tasks;
-		array_push($cron_tasks, array($task_id, $minutes, $file));
+
+	public function getTasks() {
+		require_once("component/cron/CronTask.inc");
+		$tasks = array();
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi)
+				if ($pi instanceof CronPlugin)
+					$tasks = array_merge($tasks, $pi->getTasks());
+		return $tasks;
 	}
-	
-	public function registerMaintenanceTask($file) {
-		global $in_cron_maintenance;
-		if (!$in_cron_maintenance) return;
-		global $cron_maintenance_tasks;
-		array_push($cron_maintenance_tasks, $file);
+	public function getMaintenanceTasks() {
+		require_once("component/cron/CronTask.inc");
+		$tasks = array();
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi)
+			if ($pi instanceof CronPlugin)
+			$tasks = array_merge($tasks, $pi->getMaintenanceTasks());
+		return $tasks;
 	}
 	
 	public function executeTasks() {
-		if (!file_exists("data/cron")) mkdir("data/cron");
+		$start_cron = microtime(true);
 		$now = time();
-		global $cron_tasks;
-		foreach ($cron_tasks as $task) {
-			if (file_exists("data/cron/".$task[0])) {
-				$last = filemtime("data/cron/".$task[0]);
-				if (($now-$last)/60 < $task[1]) continue;
+		if (!file_exists("data/cron")) mkdir("data/cron");
+		set_error_handler(function($severity, $message, $filename, $lineno) {
+			if (error_reporting() == 0) return true;
+			PNApplication::error("PHP Error: ".$message." in ".$filename.":".$lineno);
+			return true;
+		});
+		foreach ($this->getTasks() as $task) {
+			if (file_exists("data/cron/".$task->task_id)) {
+				$last = filemtime("data/cron/".$task->task_id);
+				if (($now-$last+10)/60 < $task->every_minutes) continue;
 			}
-			include($task[2]);
-			$f = fopen("data/cron/".$task[0],"w");
-			fwrite($f, "done at ".time());
+			@unlink("data/cron/".$task->task_id.".errors");
+			$task_start = microtime(true);
+			include($task->file);
+			$task_end = microtime(true);
+			$f = fopen("data/cron/".$task->task_id,"w");
+			fwrite($f, number_format($task_end-$task_start));
 			fclose($f);
+			if (PNApplication::hasErrors()) {
+				$f = fopen("data/cron/".$task->task_id.".errors","w");
+				fwrite($f, "<ul>");
+				foreach (PNApplication::$errors as $err)
+					fwrite($f, "<li>".$err."</li>");
+				fwrite($f, "</ul>");
+				fclose($f);
+				PNApplication::clearErrors();
+			}
 		}
+		$end = microtime(true);
+		$f = fopen("data/cron/tasks_time","w");
+		fwrite($f, number_format($end-$start_cron,2));
+		fclose($f);
 	}
 	
 	public function executeMaintenanceTasks() {
-		global $cron_maintenance_tasks;
-		foreach ($cron_maintenance_tasks as $task) {
-			include($task);
+		$start_cron = microtime(true);
+		if (!file_exists("data/cron")) mkdir("data/cron");
+		set_error_handler(function($severity, $message, $filename, $lineno) {
+			if (error_reporting() == 0) return true;
+			PNApplication::error("PHP Error: ".$message." in ".$filename.":".$lineno);
+			return true;
+		});
+		foreach ($this->getMaintenanceTasks() as $task) {
+			@unlink("data/cron/".$task->task_id.".errors");
+			$task_start = microtime(true);
+			include($task->file);
+			$task_end = microtime(true);
+			$f = fopen("data/cron/".$task->task_id,"w");
+			fwrite($f, number_format($task_end-$task_start));
+			fclose($f);
+			if (PNApplication::hasErrors()) {
+				$f = fopen("data/cron/".$task->task_id.".errors","w");
+				fwrite($f, "<ul>");
+				foreach (PNApplication::$errors as $err)
+					fwrite($f, "<li>".$err."</li>");
+				fwrite($f, "</ul>");
+				fclose($f);
+				PNApplication::clearErrors();
+			}
 		}
+		$end = microtime(true);
+		$f = fopen("data/cron/maintenance_tasks_time","w");
+		fwrite($f, number_format($end-$start_cron,2));
+		fclose($f);
 	}
 	
 }

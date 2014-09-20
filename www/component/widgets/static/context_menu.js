@@ -191,7 +191,10 @@ function context_menu(menu) {
 			y = y+from.offsetHeight;
 		}
 		if (x+w > window.top.getWindowWidth()) {
-			x = window.top.getWindowWidth()-w;
+			if (x+from.offsetWidth < window.top.getWindowWidth()-5)
+				x = window.top.getWindowWidth()-w-5;
+			else
+				x = window.top.getWindowWidth()-w;
 		}
 		t.showAt(x,y,from);
 	};
@@ -241,7 +244,10 @@ function context_menu(menu) {
 			y = y-h;
 		}
 		if (x+w > window.top.getWindowWidth()) {
-			x = window.top.getWindowWidth()-w;
+			if (x+from.offsetWidth < window.top.getWindowWidth()-5)
+				x = window.top.getWindowWidth()-w-5;
+			else
+				x = window.top.getWindowWidth()-w;
 		}
 		t.showAt(x,y,from);
 	};

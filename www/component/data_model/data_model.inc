@@ -6,8 +6,10 @@ class data_model extends Component {
 	
 	public function getPluginImplementations() {
 		require_once("DataModelAdministrationPlugin.inc");
+		require_once("CronPlugin.inc");
 		return array(
-			new DataModelAdministrationPlugin()
+			new DataModelAdministrationPlugin(),
+			new DataModelCronPlugin()
 		);
 	}
 	

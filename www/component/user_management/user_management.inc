@@ -142,7 +142,7 @@ class user_management extends Component {
 	
 	function updateLastConnection() {
 		if ($this->user_id == null || $this->user_id < 0) return;
-		SQLQuery::create()->bypassSecurity()->updateByKey("Users", $this->user_id, array("last_connection"=>time()));
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute(("UPDATE `Users` SET `last_connection`='".time()."' WHERE `id`='".$this->user_id."'"));
 	}
 	
 	/** Creates an internal user, stored in the software database but not in external authentication system.
@@ -428,8 +428,9 @@ class user_management extends Component {
 				// if we are not on the local domain, remove all writable rights, to make everything read-only
 				if ($domain != PNApplication::$instance->local_domain) {
 					foreach (PNApplication::$instance->components as $cname=>$c)
-						foreach ($c->getWritableRights() as $rname=>$rtype)
-						unset($rights[$rname]);
+						foreach ($c->getWritableRights() as $cat)
+							foreach ($cat->rights as $r)
+								unset($rights[$r->name]);
 				}
 				$this->rights[$domain] = $rights;
 			} else {
@@ -437,16 +438,18 @@ class user_management extends Component {
 				$is_local = $domain == PNApplication::$instance->local_domain;
 				$rights = array();
 				foreach (PNApplication::$instance->components as $cname=>$c) {
-					foreach ($c->getReadableRights() as $rname=>$rtype)
-						array_push($rights, $rname);
+					foreach ($c->getReadableRights() as $cat)
+						foreach ($cat->rights as $r)
+							array_push($rights, $r->name);
 					if ($is_local)
-						foreach ($c->getWritableRights() as $rname=>$rtype)
-						array_push($rights, $rname);
+						foreach ($c->getWritableRights() as $cat)
+							foreach ($cat->rights as $r)
+								array_push($rights, $r->name);
 				}
 				$this->rights[$domain] = $rights;
 			}
 		}
-		SQLQuery::getDataBaseAccessWithoutSecurity()->selectDatabase("students_".PNApplication::$instance->local_domain);
+		SQLQuery::getDataBaseAccessWithoutSecurity()->selectDatabase("students_".PNApplication::$instance->current_domain);
 	}
 	
 	/**

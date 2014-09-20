@@ -16,15 +16,16 @@ class service_get_backup extends Service {
 	
 	public function execute(&$component, $input) {
 		if (!file_exists("conf/".PNApplication::$instance->local_domain.".password")) {
-			header("HTTP/1.0 403 Access Denied");
+			header("HTTP/1.0 403 Access Denied (no password set)");
 			return;
 		}
 		if (!isset($input["password"])) {
-			header("HTTP/1.0 403 Access Denied");
+			header("HTTP/1.0 403 Access Denied (no password given)");
 			return;
 		}
 		if (sha1($input["password"]) <> file_get_contents("conf/".PNApplication::$instance->local_domain.".password")) {
-			header("HTTP/1.0 403 Access Denied");
+			// TODO add additional security here to avoid attacks
+			header("HTTP/1.0 403 Access Denied (invalid password)");
 			return;
 		}
 		switch ($input["request"]) {
@@ -97,15 +98,16 @@ class service_get_backup extends Service {
 				return;
 			}
 			header("HTTP/1.1 206 Partial Content");
+			header("Content-Range: bytes $from-$to/$size", true);
 			$f = fopen("data/backups/$version/$time/$file.zip","r");
-			fseek($f, $from);
-			$content = "";
+			fseek($f, $from, SEEK_SET);
 			while ($from <= $to) {
 				$part = fread($f, $to-$from+1);
 				if ($part === false) break;
-				$content .= $part;
+				echo $part;
 				$from += strlen($part);
 			}
+			fclose($f);
 		} else
 			readfile("data/backups/$version/$time/$file.zip");
 	}

@@ -1,0 +1,20 @@
+<html>
+<body>
+To configure scheduled tasks in Linux, you need to add entries in your /etc/crontab file.<br/>
+To execute tasks, you need to execute 2 PHP files<ul>
+	<li><code>cron.php</code> every few minutes (at least every 5 minutes would be the best, every 2 minutes recommended)</li>
+	<li><code>cron_maintenance.php</code> every night (when no user will use the application)</li>
+</ul>
+Here is an exemple of the 2 entries to add in /etc/crontab:<br/>
+<div style='margin:5px;background-color:#D0D0D0;padding:2px;display:inline-block;'>
+<code>
+*/2 * * * * wwwrun cd /srv/www/vhosts/students-management/ &amp;&amp; /usr/bin/php cron.php<br/>
+0 1 * * * wwwrun cd /srv/www/vhosts/students-management/ &amp;&amp; /usr/bin/php cron_maintenance.php
+</code>
+</div>
+<br/>
+Where <code>/srv/www/vhosts/students-management/</code> is the directory where Students Management Software is installed.<br/>
+The first line, executes every 2 minutes the file cron.php, using the PHP command line executable (here <code>/usr/bin/php</code>), and using user <code>wwwrun</code> which is the Apache user<br/>
+The second line is similar, to execute every day at 1AM the file cron_maintenance.php 
+</body>
+</html>

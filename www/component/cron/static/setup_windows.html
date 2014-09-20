@@ -1,0 +1,19 @@
+<html>
+<body>
+To configure scheduled tasks in Windows, you need to go to Control Panel &gt; Administrative Tools &gt; Task Scheduler.<br/>
+To execute the scheduled tasks of Students Management Software, you need to execute 2 PHP files<ul>
+	<li><code>cron.php</code> every few minutes (at least every 5 minutes would be the best, every 2 minutes recommended)</li>
+	<li><code>cron_maintenance.php</code> every night (when no user will use the application)</li>
+</ul>
+To execute a PHP file, in the Task Scheduler, click on Create Task, then<ul>
+	<li>Configure the task to be run by the same user as Apache (usually, if the Apache server is running as a service, it will use the SYSTEM user)</li>
+	<li>Configure also that the task will be executed whether the user is logged on or not</li>
+	<li>In the triggers, configure when the task will be executed (every n minutes for the first one, daily for the second one)</li>
+	<li>In the actions, create an action <i>Start a program</i>:<ul>
+		<li>launch the executable <code>php.exe</code> located where PHP is installed (example: <code>C:\PHP5\php.exe</code>)</li>
+		<li>configure it to start in the directory where Students Management Software is installed (example: <code>C:\StudentsManagement</code>)</li>
+		<li>as argument, specify the option -f followed by the full path of the php file to execute (cron.php for the first task, cron_maintenance.php for the second task). example: <code>-f "C:\StudentsManagement\cron.php"</code></li>
+	</ul></li>
+</ul>
+</body>
+</html>

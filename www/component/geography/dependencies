@@ -1,1 +1,2 @@
 administration:to allow users to manage geography data
+application:to catch domain change event
