@@ -20,6 +20,7 @@ theme::$icons_16 = array(
 	"forbidden" => 		"/static/theme/default/icons_16/forbidden.png",
 	"forward" =>		"/static/theme/default/icons_16/right.png",
 	"help" =>			"/static/theme/default/icons_16/help.png",
+	"help_white" =>		"/static/theme/default/icons_16/help_white.png",
 	"hide" => 			"/static/theme/default/icons_16/invisible.png",
 	"home" => 			"/static/theme/default/icons_16/home.png",
 	"_import" =>		"/static/theme/default/icons_16/import.png",

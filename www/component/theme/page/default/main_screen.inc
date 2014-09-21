@@ -210,6 +210,7 @@ global $pn_app_version;
 					<button class="flat" id='notifications'><img src='/static/application/menu/notifications.png'/></button>
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat" id='calendars'><img src='/static/calendar/calendar_white.png'/></button></a>
 					<button class="flat" id='domain_connection' onclick='domainConnectionMenu(this);'><img src='/static/data_model/database_white.png'/></button>
+					<button class="flat" id='activate_help' onclick='activateHelp(this);'><img src='<?php echo theme::$icons_16["help_white"];?>'/></button>
 					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat" id='logout'><img src='/static/application/logout_white.png'/></button></a>
 				</div>
 			</div>
@@ -230,6 +231,7 @@ tooltip(user_picture, "Your profile");
 tooltip(document.getElementById('notifications'), "See notifications");
 tooltip(document.getElementById('calendars'), "Your calendars");
 tooltip(document.getElementById('domain_connection'), "Connect to other centers' database");
+tooltip(document.getElementById('activate_help'), "Display again help messages on all screens");
 tooltip(document.getElementById('logout'), "Logout and exit application");
 
 function initPage() {
@@ -279,6 +281,11 @@ function connectToDomain(domain) {
 		if (!res) { unlock_screen(locker); return; };
 		window.top.location.reload();
 	});
+}
+
+function activateHelp(button) {
+	service.json("help","show",{},function(res) {});
+	info_dialog("Help messages will now appear again on all screens");
 }
 
 function getSection(section_name) {

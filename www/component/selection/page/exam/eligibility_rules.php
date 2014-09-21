@@ -78,7 +78,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 									if ($can_edit)
 										echo " <button class='flat small_icon' title='Remove' onclick='removeExtract(".$e["id"].");'><img src='".theme::$icons_10["remove"]."'/></button>";
 									echo "</div>";
-									$script .= "drawing.connectElements(document.getElementById('subject_".$subject["id"]."'), document.getElementById('extract_".$e["id"]."'), drawing.CONNECTOR_CIRCLE, drawing.CONNECTOR_ARROW, '#000000');";
+									$script .= "drawing.connectElements(document.getElementById('subject_".$subject["id"]."'), document.getElementById('extract_".$e["id"]."'), drawing.CONNECTOR_CIRCLE, drawing.CONNECTOR_ARROW, '#000000', 1);";
 								}
 							echo "</div>";
 							echo "</div>";
@@ -299,7 +299,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				n_container.style.zIndex = 2;
 				step_container.appendChild(n_container);
 				var n = createRuleNode(n_container, nodes[i]);
-				var conn = drawing.connectElements(previous_node, n, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 'horiz');
+				var conn = drawing.connectElements(previous_node, n, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz');
 				conn.style.zIndex = 1;
 				buildRulesGraphStep(n_container, n, nodes[i].children, final_nodes);
 			}
@@ -329,7 +329,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 			container.appendChild(end_container);
 			var end = createPointNode(end_container, "Eligible");
 			for (var i = 0; i < final_nodes.length; ++i)
-				drawing.connectElements(final_nodes[i], end, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 'horiz').style.zIndex = 1;
+				drawing.connectElements(final_nodes[i], end, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz').style.zIndex = 1;
 		}
 		buildRulesGraph();
 		</script>

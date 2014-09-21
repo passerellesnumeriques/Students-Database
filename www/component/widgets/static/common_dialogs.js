@@ -46,6 +46,13 @@ function confirm_dialog(message, handler) {
 	});
 }
 
+function info_dialog(message) {
+	require("popup_window.js",function() {
+		var p = new popup_window("Information", theme.icons_16.info, "<div style='padding:5px'>"+message+"</div>");
+		p.show();
+	});
+}
+
 function choice_buttons_dialog(message, choices, handler) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");

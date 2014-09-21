@@ -141,7 +141,7 @@ class page_curriculum extends Page {
 		}
 		</style>
 		<div style="width:100%;height:100%;background-color:white;display:flex;flex-direction:column;">
-			<div class="page_title" style="flex:none">
+			<div class="page_title" style="flex:none" id='curriculum_page_title'>
 				<div style='float:right'>
 					<?php 
 					PNApplication::$instance->documents->insertDivForAttachedDocuments($this, "StudentBatch",null,$batch_id,"curriculum","medium","top");
@@ -160,7 +160,7 @@ class page_curriculum extends Page {
 						</div>
 						<?php 
 						} else
-							echo "<button class='action' onclick=\"var u=new window.URL(location.href);u.params.edit = 1;location.href=u.toString();\"><img src='".theme::$icons_16["edit"]."'/> Edit</button>";
+							echo "<button id='edit_curriculum_button' class='action' onclick=\"var u=new window.URL(location.href);u.params.edit = 1;location.href=u.toString();\"><img src='".theme::$icons_16["edit"]."'/> Edit</button>";
 					}
 				}
 				?>
@@ -181,7 +181,7 @@ class page_curriculum extends Page {
 						echo "</span>";
 						$this->onload("window.top.datamodel.registerCellSpan(window,'BatchPeriod','name',".$period["id"].",document.getElementById('$id'));");
 						if ($editing) {
-							echo "<button class='action' onclick='import_subjects(".$period['id'].")'><img src='".theme::$icons_16["_import"]."'/> Import subjects from other batches</button>";
+							echo "<button id='import_subjects_button' class='action' onclick='import_subjects(".$period['id'].")'><img src='".theme::$icons_16["_import"]."'/> Copy subjects from other batches</button>";
 						}
 						echo "</td>";
 						echo "</tr>";
@@ -268,12 +268,45 @@ class page_curriculum extends Page {
 					Edit subject categories
 				</button>
 				<?php if ($period_id <> null) {
-					echo "<button class='action' onclick='import_subjects(".$period_id.")'><img src='".theme::$icons_16["_import"]."'/> Import subjects from other batches</button>";
+					echo "<button class='action' onclick='import_subjects(".$period_id.")'><img src='".theme::$icons_16["_import"]."'/> Copy subjects from other batches</button>";
 				}?>
 				<?php } ?>
 			<?php } ?>
 			</div>
 		</div>
+		<?php
+		if (PNApplication::$instance->help->isShown("curriculum")) {
+			$help_div_id = PNApplication::$instance->help->startHelp("curriculum", $this, "right", "relative:curriculum_page_title:bottom");
+			if (!$editing) {
+				echo "This screen displays the list of subjects, by category, for the<br/>";
+				echo "selected batch or period (selection through the ";
+				PNApplication::$instance->help->spanArrow($this, "tree on the right", "@parent#curriculum_tree_container", "horiz_straight");
+				echo ").<br/>";
+				echo "Those information will be used to assign teachers to subjects,<br/>";
+				echo "but also for to enter the grades of the students<br/>";
+				if ($can_edit && !isset($_GET["locker"])) {
+					echo "<br/>";
+					echo "To edit the curriculum (add/remove/edit subjects), click on the<br/>";
+					echo "Edit button at the top<br/>";
+					PNApplication::$instance->help->spanArrow($this, "try now", "#edit_curriculum_button", "horiz");
+					echo " to display help on how to edit the curriculum.";
+				}
+			} else {
+				echo "Great ! Now you can edit the curriculum.<br/>";
+				echo "<br/>";
+				echo "Here you can add subjects to a category by using the <img src='".theme::$icons_10["add"]."'/> button.<br/>";
+				echo "To modify a subject, click on the subject.<br/>";
+				echo "<br/>";
+				echo "To create subjects faster for this batch, you can also import<br/>";
+				echo "subjects already defined for previous batches, by using<br/>";
+				PNApplication::$instance->help->spanArrow($this, "this button", "#import_subjects_button", "horiz");
+				echo ". Then you can edit the imported subjects if they<br/>";
+				echo "changed for this batch (modifications will apply only<br/>";
+				echo "to this batch, the original subjects will remain unchanged).<br/>";
+			}
+			PNApplication::$instance->help->endHelp($help_div_id, "curriculum");
+		} 
+		?>
 		<script type='text/javascript'>
 		window.top.datamodel.registerCellSpan(window, "StudentBatch", "name", <?php echo $batch_id;?>, document.getElementById("batch_name"));
 		<?php

@@ -51,7 +51,7 @@ function absoluteTop(e,relative) {
 		var top = e.offsetTop;
 		while (e.offsetParent) {
 			var p = e.parentNode;
-			while (p != e.offsetParent) {
+			while (p != e.offsetParent && p) {
 				top -= p.scrollTop;
 				p = p.parentNode;
 			}

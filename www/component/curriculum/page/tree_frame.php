@@ -58,7 +58,7 @@ class page_tree_frame extends Page {
 	<div id="curriculum_tree_container" style="flex:none;display:flex;flex-direction:column;min-width:240px">
 		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Classes' style="flex:none">
 			<?php if ($can_edit) { ?>
-			<button class='flat' onclick='createNewBatch();'>
+			<button id='button_new_batch' class='flat' onclick='createNewBatch();'>
 				<img src='<?php echo theme::make_icon("/static/curriculum/batch_16.png", theme::$icons_10["add"]);?>'/>
 				<b>New Batch</b>
 			</button>
@@ -71,6 +71,28 @@ class page_tree_frame extends Page {
 		</div>
 	</div>
 </div>
+<?php 
+if (PNApplication::$instance->help->isShown('curriculum_tree')) {
+	$help_div_id = PNApplication::$instance->help->startHelp('curriculum_tree', $this, "relative:curriculum_tree_container:left","bottom");
+	PNApplication::$instance->help->spanArrow($this, "On the right side, a tree", "#curriculum_tree_container");
+	echo " allows you to navigate among batches, periods and classes.<br/>";
+	echo "The left side displays information only from what is selected in the tree.<br/>";
+	echo "For example, if you select a period within a batch, only information related to this<br/>";
+	echo "specific period will be displayed.<br/>";
+	if ($can_edit) {
+		echo "<br/><div style='text-align:right'>";
+		echo "To create a new batch, with its periods, click on ";
+		PNApplication::$instance->help->spanArrow($this, "this button", "#button_new_batch");
+		echo ".";
+		echo "</div>";
+		echo "<br/>";
+	}
+	echo "Information ".($can_edit ? "and actions " : "")."about the selected element are displayed ";
+	PNApplication::$instance->help->spanArrow($this, "below the tree", "#tree_footer");
+	echo ".<br/>";
+	PNApplication::$instance->help->endHelp($help_div_id, "curriculum_tree");
+}
+?>
 <script type='text/javascript'>
 window.can_edit_batches = <?php echo $can_edit ? "true" : "false"?>;
 new header_bar('tree_header','toolbar');

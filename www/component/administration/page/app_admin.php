@@ -267,7 +267,9 @@ class page_app_admin extends Page {
 				$remote = "?";
 				$user_agent = "?";
 				if ($data <> null) {
-					$user = @$data["app"]->user_management->username;
+					$user = @$data["app"]->user_management->domain;
+					$user .= "\\";
+					$user .= @$data["app"]->user_management->username;
 					$remote = @$data["remote"];
 					$user_agent = @$data["user_agent"];
 				}

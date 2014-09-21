@@ -312,7 +312,7 @@ class page_interview_criteria extends SelectionPage {
 				n_container.style.zIndex = 2;
 				step_container.appendChild(n_container);
 				var n = createRuleNode(n_container, nodes[i]);
-				var conn = drawing.connectElements(previous_node, n, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 'horiz');
+				var conn = drawing.connectElements(previous_node, n, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz');
 				conn.style.zIndex = 1;
 				buildRulesGraphStep(n_container, n, nodes[i].children, final_nodes);
 			}
@@ -342,7 +342,7 @@ class page_interview_criteria extends SelectionPage {
 			container.appendChild(end_container);
 			var end = createPointNode(end_container, "Eligible");
 			for (var i = 0; i < final_nodes.length; ++i)
-				drawing.connectElements(final_nodes[i], end, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 'horiz').style.zIndex = 1;
+				drawing.connectElements(final_nodes[i], end, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz').style.zIndex = 1;
 		}
 		buildRulesGraph();
 		

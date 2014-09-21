@@ -66,7 +66,7 @@ class page_teachers_assignments extends Page {
 				if ($can_edit) {
 					echo "<button onclick=\"var u = new window.URL(location.href);delete u.params.edit;location.href=u.toString();\" class='action'><img src='".theme::$icons_16["no_edit"]."'/>Stop Editing</button>";
 				} else {
-					echo "<button onclick=\"var u = new window.URL(location.href);u.params.edit = 'true';location.href=u.toString();\" class='action'><img src='".theme::$icons_16["edit"]."'/>Edit</button>";
+					echo "<button id='edit_teachers_assignments_button' onclick=\"var u = new window.URL(location.href);u.params.edit = 'true';location.href=u.toString();\" class='action'><img src='".theme::$icons_16["edit"]."'/>Edit</button>";
 				}
 			}
 			?>
@@ -78,7 +78,7 @@ class page_teachers_assignments extends Page {
 		} 
 		?>
 		<div class='page_section_title shadow' style='background-color:white;flex:none'>
-			Academic Period: <select onchange="if (this.value == <?php echo $academic_period_id;?>) return; location.href='?period='+this.value;">
+			Academic Period: <select id='select_academic_period' onchange="if (this.value == <?php echo $academic_period_id;?>) return; location.href='?period='+this.value;">
 			<?php
 			foreach ($periods as $period) {
 				echo "<option value='".$period["id"]."'";
@@ -153,7 +153,7 @@ class page_teachers_assignments extends Page {
 		?>
 		</div>
 		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white;overflow:auto;' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
-		<div style='background-color:white'>
+		<div id='teachers_list' style='background-color:white'>
 		<?php $id = $this->generateID();?>
 		<table class='teachers_table'><tbody id='<?php echo $id;?>'>
 		<tr><th>Teacher</th><th>Hours</th></tr>
@@ -164,6 +164,56 @@ class page_teachers_assignments extends Page {
 		</div>
 		</div>
 		</div>
+		<?php
+		if (PNApplication::$instance->help->isShown("teachers_assignments")) {
+			$help_div_id = PNApplication::$instance->help->startHelp("teachers_assignments", $this, "left", "bottom", false);
+			if (!$can_edit) {
+				echo "This screen displays the list of subjects for the ";
+				PNApplication::$instance->help->spanArrow($this, "selected academic period", "#select_academic_period");
+				echo ",<br/>";
+				echo "with for each subject which teacher is assigned.<br/>";
+				echo "<br/>";
+				echo "If you don't see any subject, you need first to specify the list of subjects in the curriculum page.<br/>";
+				echo "If you don't see any available teacher, you need first to add teachers on the teachers page.<br/>";
+				echo "<br/>";
+				echo "On the right side is the list of available teachers during this academic period.";
+				echo "<br/>";
+				if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
+					echo "<br/>To modify teachers' assignments, you need first to click on the ";
+					PNApplication::$instance->help->spanArrow($this, "edit button", "#edit_teachers_assignments_button");
+					echo " (try now to see<br/>";
+					echo "the help on how to assign and unassign teachers)";
+				}
+			} else {
+				echo "<div style='max-height:200px;max-width:450px;overflow:auto'>";
+				echo "Great ! Now you can modify the teachers' assignments.<br/>";
+				echo "<br/>";
+				echo "First, for each subject, you need to specify if some classes are following the subject together ";
+				echo "(for example, a lecture subject may be given to 2 classes at the same time, while laboratory is ";
+				echo "given for each class separately).<br/>";
+				echo "On each subject, use the <img src='".theme::$icons_10["merge"]."'/> button to merge classes,";
+				echo "or the <img src='".theme::$icons_10["split"]."'/> button to split classes.<br/>";
+				echo "This will be used to calculate teachers' load (do not count 2 times a subject if 2 classes are together).<br/>";
+				echo "<br/>";
+				echo "To assign a teacher to a subject/class, you can<ul>";
+				echo "<li>Use the <img src='".theme::$icons_10["add"]."'/> button</li>";
+				echo "<li>Or drag and drop a teacher</li>";
+				echo "</ul>";
+				echo "<br/>";
+				echo "Once a teacher is assigned<ul>";
+				echo "<li>Use the <img src='".theme::$icons_10["remove"]."'/> button to unassign him/her</li>";
+				echo "<li>Use the <img src='".theme::$icons_10["time"]."'/> button to specify the number or hours.<br/>";
+				echo "Indeed, it is possible to assign several teachers for the same subject and class. In this case, ";
+				echo "you can specify for each teacher the number of hours. This will be used to calculate correctly ";
+				echo "the teachers' load. However, you cannot exceed the total number of hours of the subject (This is ";
+				echo "not supported to have 2 teachers at the same time in the same class).";
+				echo "</li>";
+				echo "</ul>";
+				echo "</div>";
+			}
+			PNApplication::$instance->help->endHelp($help_div_id, "teachers_assignments");
+		} 
+		?>
 		<style type='text/css'>
 		.subjects_table {
 			border-collapse: collapse;
@@ -226,7 +276,10 @@ class page_teachers_assignments extends Page {
 					total = subjects[i].subject.hours*nb_weeks;
 				else
 					total = subjects[i].subject.hours;
-				td.appendChild(document.createTextNode((total/nb_weeks).toFixed(2)+"h/week x "+nb_weeks+" = "+total+"h"));
+				if (!total)
+					td.innerHTML = "<i>Not specified</i>";
+				else
+					td.appendChild(document.createTextNode((total/nb_weeks).toFixed(2)+"h/week x "+nb_weeks+" = "+total+"h"));
 				new SubjectClasses(tr, subjects[i].classes, subjects[i].subject);
 			}
 		}
@@ -268,10 +321,25 @@ class page_teachers_assignments extends Page {
 				}
 				return s;
 			};
+			this.getClassesHTML = function(classes) {
+				var span = document.createElement("SPAN");
+				var s = "Class";
+				if (classes.length > 1) s += "es";
+				s += " ";
+				span.appendChild(document.createTextNode(s));
+				for (var i = 0; i < classes.length; ++i) {
+					if (i > 0) span.appendChild(document.createTextNode(" + "));
+					s = document.createElement("SPAN");
+					s.style.whiteSpace = "nowrap";
+					s.appendChild(document.createTextNode(getClassName(classes[i])));
+					span.appendChild(s);
+				}
+				return span;
+			};
 			this.createClassRow = function(tr, classes, first, last) {
 				var td;
 				tr.appendChild(td = document.createElement("TD"));
-				td.appendChild(document.createTextNode(this.getClassesText(classes)));
+				td.appendChild(this.getClassesHTML(classes));
 				if (!last) td.style.borderBottom = "none";
 				if (!first) td.style.borderTop = "none";
 				<?php if ($can_edit) { ?>
@@ -654,7 +722,7 @@ class page_teachers_assignments extends Page {
 				window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+this.teacher.id,null,95,95);
 			};
 			var td_hours = document.createElement("TD"); tr.appendChild(td_hours);
-			td_hours.style.whiteSpace = "nowrap";
+			//td_hours.style.whiteSpace = "nowrap";
 			this.update = function() {
 				var total = 0;
 				for (var i = 0; i < teachers_assignments.length; ++i) {
@@ -681,6 +749,7 @@ class page_teachers_assignments extends Page {
 					return;
 				}
 		}
+		window.help_display_ready = true;
 		</script>
 		<?php 
 	}

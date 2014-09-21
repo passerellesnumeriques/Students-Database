@@ -24,6 +24,35 @@ class page_list extends Page {
 ?>
 <div id='list_container' style='width:100%;height:100%'>
 </div>
+<?php
+$help_div_id = null;
+if (PNApplication::$instance->help->isShown('students_list')) {
+	$help_div_id = PNApplication::$instance->help->startHelp('students_list', $this, "relative:list_container:center","relative:list_container:inside_top:80", false);
+	echo "This screen displays the list of students with their ";
+	PNApplication::$instance->help->spanArrow($this, "information by column", "table.grid>thead");
+	echo ".<br/>";
+	echo "<br/>";
+	echo "Note that the students shown depend on the selected element on ";
+	PNApplication::$instance->help->spanArrow($this, "the tree", "@parent#curriculum_tree_container");
+	echo ".<br/>";
+	echo "<br/>";
+	PNApplication::$instance->help->spanArrow($this, "Switch view", ".data_list .header .mac_tabs>.mac_tab:nth-child(2)", "horiz");
+	echo " to display or not the pictures of the students.<br/>";
+	echo "<br/>";
+	echo "You can control which information to display on the ";
+	PNApplication::$instance->help->spanArrow($this, "top-right side", ".data_list>.header>.header_right>button:nth-child(4)", "horiz");
+	echo ":<ul>";
+	echo "<li><img src='/static/data_model/table_column.png' style='vertical-align:bottom'/> Select which columns to show/hide</li>";
+	echo "<li><img src='/static/data_model/filter.gif' style='vertical-align:bottom'/> Filters which students to display</li>";
+	echo "<li><img src='".theme::$icons_16["_import"]."' style='vertical-align:bottom'/> Import information about the students from an Excel file</li>";
+	echo "<li><img src='".theme::$icons_16["_export"]."' style='vertical-align:bottom'/> Export the list to an Excel file</li>";
+	echo "<li><img src='".theme::$icons_16["print"]."' style='vertical-align:bottom'/> Print the list of students</li>";
+	echo "</ul>";
+	echo "<br/>";
+	echo "You can also click on a student to display its complete profile<br/>";
+	PNApplication::$instance->help->endHelp($help_div_id, "students_list");
+}
+?>
 <script type='text/javascript'>
 var url = new URL(location.href);
 var batches = <?php echo json_encode($batches); ?>;
@@ -232,6 +261,18 @@ new data_list(
 				list.ondataloaded.add_listener(function() { refreshToDo(); });
 			});
 		}
+
+		<?php 
+		if ($help_div_id <> null) {?>
+			var test_ready = function() {
+				if ($(".mac_tabs").length == 0) {
+					setTimeout(test_ready,10);
+					return;
+				}
+				window.help_display_ready = true;
+			}
+			test_ready();
+		<?php } ?>
 	}
 );
 

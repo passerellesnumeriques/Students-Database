@@ -96,14 +96,15 @@ drawing = {
 	 * @param {Number} to_type type of connector for the ending point (one of the CONNECTOR_* constants)
 	 * @param {String} style CSS style of the connector (accepted values are the ones of <a href='http://www.w3schools.com/tags/canvas_strokestyle.asp'>strokeStyle</a>) 
 	 */
-	connect: function(ctx, from, to, from_type, to_type, style) {
-		ctx.strokeStyle = style;
+	connect: function(ctx, from, to, from_type, to_type, color, width) {
+		ctx.strokeStyle = color;
+		ctx.lineWidth = width;
 		ctx.beginPath();
 		ctx.moveTo(from.x, from.y);
 		ctx.lineTo(to.x, to.y);
 		ctx.stroke();
-		drawing.drawConnector(ctx, from, to, from_type, style);
-		drawing.drawConnector(ctx, to, from, to_type, style);
+		drawing.drawConnector(ctx, from, to, from_type, color, width);
+		drawing.drawConnector(ctx, to, from, to_type, color, width);
 	},
 	/** Draw a connector point on the given canvas
 	 * @param {Object} ctx the 2d context of the canvas to draw on
@@ -111,10 +112,11 @@ drawing = {
 	 * @param {Point2D} origin where the connection comes from to be able to orientate the drawing correctly
 	 * @param {String} style CSS style of the connector (accepted values are the ones of <a href='http://www.w3schools.com/tags/canvas_strokestyle.asp'>strokeStyle</a>) 
 	 */
-	drawConnector: function(ctx, pt, origin, type, style) {
+	drawConnector: function(ctx, pt, origin, type, color, width) {
 		switch (type) {
 		case drawing.CONNECTOR_ARROW:
-			ctx.strokeStyle = style;
+			ctx.strokeStyle = color;
+			ctx.lineWidth = width;
 			var headlen = 10;   // length of head in pixels
 		    var angle = Math.atan2(pt.y-origin.y,pt.x-origin.x);
 		    ctx.beginPath();
@@ -127,8 +129,9 @@ drawing = {
 		    ctx.stroke();
 			break;
 		case drawing.CONNECTOR_CIRCLE:
-			ctx.strokeStyle = style;
-			ctx.fillStyle = style;
+			ctx.strokeStyle = color;
+			ctx.lineWidth = width;
+			ctx.fillStyle = color;
 			ctx.beginPath();
 			ctx.arc(pt.x,pt.y,1,0,2*Math.PI);
 			ctx.stroke();
@@ -144,9 +147,10 @@ drawing = {
 	 * @param {String} style CSS style of the connector (accepted values are the ones of <a href='http://www.w3schools.com/tags/canvas_strokestyle.asp'>strokeStyle</a>) 
 	 * @param {String} force 'horiz' to force connecting elements horizontally, or 'vert' to force vertical connection, or null to let decide 
 	 */
-	connectElements: function(from, to, from_type, to_type, style, force) {
+	connectElements: function(from, to, from_type, to_type, color, width, force) {
 		var canvas = document.createElement("CANVAS");
 		canvas.style.position = "absolute";
+		canvas.style.pointerEvents = "none";
 		var parent = getAbsoluteParent(from);
 		parent.appendChild(canvas);
 		var update = function() {
@@ -171,6 +175,14 @@ drawing = {
 				} else {
 					start = new Point2D(Math.floor(from_x+from.offsetWidth/2), from_y-1);
 					end = new Point2D(Math.floor(to_x+to.offsetWidth/2), to_y+to.offsetHeight);
+				}
+			} else if (force == "horiz_straight") {
+				if (from_x < to_x) {
+					start = new Point2D(from_x+from.offsetWidth, Math.floor(from_y+from.offsetHeight/2));
+					end = new Point2D(to_x-1, start.y);
+				} else {
+					start = new Point2D(from_x-1, Math.floor(from_y+from.offsetHeight/2));
+					end = new Point2D(to_x+to.offsetWidth, start.y);
 				}
 			} else {
 				// if there is a space vertically, we will connect using bottom/top edges
@@ -213,7 +225,7 @@ drawing = {
 			end.y = end.y-y1;
 			
 			var ctx = canvas.getContext("2d");
-			drawing.connect(ctx, start, end, from_type, to_type, style);
+			drawing.connect(ctx, start, end, from_type, to_type, color, width);
 		};
 		update();
 		var refresh_timeout = null;
