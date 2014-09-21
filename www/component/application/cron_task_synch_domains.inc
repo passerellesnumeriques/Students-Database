@@ -218,7 +218,8 @@ foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
 		if ($start - $last_check < 60*60) {
 			// put back previous errors
 			$errors = json_decode(file_get_contents("data/domains_synch/$domain/last_check"),true);
-			foreach ($errors as $err) PNApplication::errorHTML($err);
+			if ($errors <> null)
+				foreach ($errors as $err) PNApplication::errorHTML($err);
 			continue; // we already checked less than 1 hour ago
 		}
 		$f = fopen("data/domains_synch/$domain/last_check","w");

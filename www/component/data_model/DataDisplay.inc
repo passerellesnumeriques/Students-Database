@@ -92,6 +92,7 @@ abstract class DataDisplay {
 	 * @param array $rows list of rows that have been retrieved with the original query
 	 * @param array $sql_aliases the value returned by buildSQL
 	 * @param DataPath $path how we reached this data
+	 * @return array of array(sub request,result)
 	 */
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {}
 	
@@ -601,7 +602,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		if (!$ft->canAccessColumn($this->foreign_table_column_name)) return false;
 		return true;
 	}
-	public function getHandledColumns() { return array($this->foreign_key_name); }
+	public function getHandledColumns() { return array(); } // not editing a specify column
 	
 	private $possible_values = array();
 	private function get_possible_values($sub_model) {
@@ -668,6 +669,8 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	
 	public function isEditable() {
+		if (!$this->getTable()->mayInsert()) return false;
+		if (!$this->getTable()->mayRemove()) return false;
 		return true;
 	}
 	public function getEditLocks($sub_model) {
@@ -754,16 +757,19 @@ class JoiningTableDataDisplay extends DataDisplay {
 				array_push($keys, $row[$sql_aliases["key"]]);
 		}
 		
-		if (count($keys) == 0)
+		if (count($keys) == 0) {
 			$res = array();
-		else
-			$res = \SQLQuery::create()
+			$q = null;
+		} else {
+			$q = \SQLQuery::create()
 				->select($table_name)
 				->join($table_name, $foreign_table->getSQLName($sub_models), array($this->foreign_key_name => $foreign_table->getPrimaryKey()->name), "JOIN_ALIAS")
 				->field("JOIN_ALIAS", $foreign_table->getPrimaryKey()->name, "VALUE")
 				->field($table_name, $this->joining_key_name, "KEY")
 				->whereIn($table_name, $this->joining_key_name, $keys)
-				->execute();
+				;
+			$res = $q->execute();
+		}
 
 		$sql_aliases["data"] = $original_query->generateFieldAlias();
 		for ($i = 0; $i < count($rows); $i++) {
@@ -775,6 +781,8 @@ class JoiningTableDataDisplay extends DataDisplay {
 			}
 			$rows[$i][$sql_aliases["data"]] = $values;
 		}
+		if ($q == null) return array();
+		return array(array($q,$res));
 	}
 	
 	public function getData($row, $resultFromBuildSQL) {

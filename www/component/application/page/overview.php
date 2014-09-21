@@ -63,6 +63,22 @@ class page_overview extends Page {
 		Welcome in PN Students Management Software !
 	</div>
 <?php
+if (PNApplication::$instance->user_management->username == "admin") {
+	$no_pass = SQLQuery::create()
+		->bypassSecurity()
+#DEV
+		->noWarning()
+#END
+		->select("InternalUser")->where("`username`='admin' AND `password`=SHA1('')")->executeSingleRow();
+	if ($no_pass <> null) {
+		echo "<div class='warning_box'>";
+		echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ";
+		echo "You are logged with <i>admin</i> account, without password !";
+		echo " You must set a password quickly for this user, as it has the right to access everything.<br/>";
+		echo "To change your password, go to <a href='/dynamic/people/page/profile?people=".PNApplication::$instance->user_management->people_id."'>your profile page</a> and click on <i>Reset password</i>.";
+		echo "</div>";
+	}
+}
 if (PNApplication::$instance->current_domain <> PNApplication::$instance->local_domain) {
 	echo "<div class='info_box'>";
 	echo "<img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> ";
@@ -83,7 +99,7 @@ if (PNApplication::$instance->current_domain <> PNApplication::$instance->local_
 	<div class="page_section_title">
 		Navigate into the different sections of the application
 	</div>
-	<div id="section_menu">
+	<div id="section_menu" class='light_shadow'>
 		<?php
 		$sections = array();
 		foreach (PNApplication::$instance->components as $cname=>$comp)

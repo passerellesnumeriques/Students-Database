@@ -46,7 +46,37 @@ $model->addTable("UserRole")
 	->addIndex("user")
 	->addReadAccess("consult_user_roles",true)
 	->addInsertAccess("assign_role",true)
-	->addRemoveAccess("assign_role",true)
+	->addRemoveFilter(function(&$q,$table_alias,&$locks){
+		if (!PNApplication::$instance->user_management->has_right("assign_role")) {
+			$q->where("FALSE");
+			return;
+		}
+		$q->field($table_alias,"user","THE_USER_UNASSIGNED");
+		$q->field($table_alias,"role","THE_ROLE_UNASSIGNED");
+	}, function($rows){
+		$res = array();
+		$users_ids = array();
+		foreach ($rows as $row)
+			if ($row["THE_ROLE_UNASSIGNED"] == -1)
+				array_push($users_ids, $row["THE_USER_UNASSIGNED"]);
+		if (count($users_ids) == 0) return $rows;
+		$users = SQLQuery::create()->bypassSecurity()->select("Users")->whereIn("Users","id",$users_ids)->execute();
+		foreach ($rows as $row) {
+			if ($row["THE_ROLE_UNASSIGNED"] == -1) {
+				$found = false;
+				foreach ($users as $u)
+					if ($u["id"] == $row["THE_USER_UNASSIGNED"]) {
+						$found = $u["username"] == "admin";
+						if ($found)
+							PNApplication::error("Administrator role cannot be removed for user admin.");
+						break;
+					}
+				if ($found) continue; // do not remove Administrator to admin
+			}
+			array_push($res, $row);
+		}
+		return $res;
+	})
 	;
 $model->addTable("RoleRights")
 	->addForeignKey("role", "Role", true, false, true)

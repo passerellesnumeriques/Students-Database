@@ -41,12 +41,12 @@ class page_dashboard extends Page {
 	color: #808080;
 }
 </style>
-<div style="background-color: white">
+<div style="background-color: white;box-shadow:2px 0px 2px 0px #A0A0A0;">
 	<div class="page_title">
 		<img src='/static/administration/admin_32.png'/>
 		Administration of the software
 	</div>
-	<div id="section_menu">
+	<div id="section_menu" style='padding:10px 5px;'>
 <?php 
 require_once("component/administration/AdministrationPlugin.inc");
 foreach (PNApplication::$instance->components as $name=>$c) {

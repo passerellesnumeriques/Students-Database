@@ -21,6 +21,12 @@ class service_remove_users extends Service {
 		PNApplication::$instance->people->joinPeople($q, "UserPeople", "people", false);
 		$users = $q->execute();
 		
+		foreach ($users as $u)
+			if ($u["username"] == "admin") {
+				PNApplication::errorHTML("You cannot remove the user <i>admin</i>, in order to make sur there will be always an administrator user in the system.");
+				return;
+			} 
+		
 		SQLQuery::create()->bypassSecurity()->removeKeys("Users", $users_ids);
 		$internal = array();
 		foreach ($users as $u) if ($u["password"] <> null) array_push($internal, $u["username"]);

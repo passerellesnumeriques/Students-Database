@@ -72,9 +72,10 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 			if (!in_array($row[$sql_aliases["key"]], $keys))
 			array_push($keys, $row[$sql_aliases["key"]]);
 
-		if (count($keys) == 0)
+		if (count($keys) == 0) {
 			$res = array();
-		else {
+			$q = null;
+		} else {
 			$q = \SQLQuery::create()
 				->select($table_name)
 				->join($table_name, "Contact", array("contact" => "id"), "JOIN_ALIAS")
@@ -102,6 +103,8 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 			require_once("component/Service.inc");
 			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".$rows[$i][$sql_aliases["key"]].",contacts:".$values."}"));
 		}
+		if ($q == null) return array();
+		return array(array($q,$res));
 	}
 
 	public function getNewData() {
@@ -159,6 +162,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		if (count($keys) == 0) {
 			$res = array();
 			$texts = array();
+			$q = null;
 		} else {
 			$q = \SQLQuery::create()
 				->select($table_name)
@@ -186,6 +190,8 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 			require_once("component/Service.inc");
 			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".json_encode($rows[$i][$sql_aliases["key"]]).",addresses:".$values."}"));
 		}
+		if ($q == null) return array();
+		return array(array($q,$res));
 	}
 
 	public function getNewData() {

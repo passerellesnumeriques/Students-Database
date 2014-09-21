@@ -29,8 +29,9 @@ class StaffPositionDataDisplay extends datamodel\DataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$ids = array();
 		foreach ($rows as $row) array_push($ids, $row[$sql_aliases["key"]]);
-		if (count($ids) == 0) return;
-		$positions = SQLQuery::create()->select("StaffPosition")->whereIn("StaffPosition","people",$ids)->orderBy("StaffPosition", "start", false)->execute();
+		if (count($ids) == 0) return array();
+		$q = SQLQuery::create()->select("StaffPosition")->whereIn("StaffPosition","people",$ids)->orderBy("StaffPosition", "start", false);
+		$positions = $q->execute();
 		$alias = $original_query->generateFieldAlias();
 		$sql_aliases["data"] = $alias;
 		for ($i = 0; $i < count($rows); $i++) {
@@ -44,6 +45,7 @@ class StaffPositionDataDisplay extends datamodel\DataDisplay {
 				}
 			}
 		}
+		return array(array($q,$positions));
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {}
@@ -71,8 +73,9 @@ class StaffDepartmentDataDisplay extends datamodel\DataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$ids = array();
 		foreach ($rows as $row) array_push($ids, $row[$sql_aliases["key"]]);
-		if (count($ids) == 0) return;
-		$positions = SQLQuery::create()->select("StaffPosition")->whereIn("StaffPosition","people",$ids)->orderBy("StaffPosition", "start", false)->join("StaffPosition","PNDepartment",array("department"=>"id"))->execute();
+		if (count($ids) == 0) return array();
+		$q = SQLQuery::create()->select("StaffPosition")->whereIn("StaffPosition","people",$ids)->orderBy("StaffPosition", "start", false)->join("StaffPosition","PNDepartment",array("department"=>"id"));
+		$positions = $q->execute();
 		$alias = $original_query->generateFieldAlias();
 		$sql_aliases["data"] = $alias;
 		for ($i = 0; $i < count($rows); $i++) {
@@ -83,6 +86,7 @@ class StaffDepartmentDataDisplay extends datamodel\DataDisplay {
 				}
 			}
 		}
+		return array(array($q,$positions));
 	}
 
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {}

@@ -207,7 +207,7 @@ global $pn_app_version;
 				<div id="application_right_menu" style="flex:none;">
 					<input type='text' id='application_search' onchange='alert("Sorry, the global search functionality is not yet available");'/>
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>' target='application_frame'><div id='user_picture'></div></a>
-					<button class="flat" id='notifications'><img src='/static/application/menu/notifications.png'/></button>
+					<!-- <button class="flat" id='notifications'><img src='/static/application/menu/notifications.png'/></button>  -->
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat" id='calendars'><img src='/static/calendar/calendar_white.png'/></button></a>
 					<button class="flat" id='domain_connection' onclick='domainConnectionMenu(this);'><img src='/static/data_model/database_white.png'/></button>
 					<button class="flat" id='activate_help' onclick='activateHelp(this);'><img src='<?php echo theme::$icons_16["help_white"];?>'/></button>
@@ -228,7 +228,7 @@ require("profile_picture.js",function() {
 });
 tooltip(user_picture, "Your profile");
 
-tooltip(document.getElementById('notifications'), "See notifications");
+//tooltip(document.getElementById('notifications'), "See notifications");
 tooltip(document.getElementById('calendars'), "Your calendars");
 tooltip(document.getElementById('domain_connection'), "Connect to other centers' database");
 tooltip(document.getElementById('activate_help'), "Display again help messages on all screens");

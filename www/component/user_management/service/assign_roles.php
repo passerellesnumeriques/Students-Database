@@ -4,7 +4,7 @@ class service_assign_roles extends Service {
 ?>Assign the given roles to the given users.<?php		
 	}
 	public function getRequiredRights() {
-		return array("assign_roles");
+		return array("assign_role");
 	}
 	public function inputDocumentation() {
 ?>

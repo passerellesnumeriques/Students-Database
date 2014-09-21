@@ -49,8 +49,12 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$families = array();
 		foreach ($rows as $row) if ($row[$sql_aliases["family"]] <> null && !in_array($row[$sql_aliases["family"]],$families)) array_push($families,$row[$sql_aliases["family"]]);
-		if (count($families) > 0)
-			$families = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereIn("FamilyMember","family",$families)->whereValue("FamilyMember","member_type","Child")->groupBy("FamilyMember","family")->countOneField("FamilyMember","family","nb_children")->field("FamilyMember","family","family")->execute();
+		$requests = array();
+		if (count($families) > 0) {
+			$q = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereIn("FamilyMember","family",$families)->whereValue("FamilyMember","member_type","Child")->groupBy("FamilyMember","family")->countOneField("FamilyMember","family","nb_children")->field("FamilyMember","family","family");
+			$families = $q->execute();
+			array_push($requests, array($q,$families));
+		}
 		$alias = $original_query->generateFieldAlias();
 		for ($i = 0; $i < count($rows); $i++) {
 			if ($rows[$i][$sql_aliases["family"]] == null) $rows[$i][$alias] = null;
@@ -62,6 +66,7 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 			}
 		}
 		$sql_aliases["data"] = $alias;
+		return $requests;
 	}
 	
 	public function getNewData() { return null; }
@@ -247,6 +252,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$families_ids = array();
 		foreach ($rows as $r) if ($r[$sql_aliases["family"]] <> null && !in_array($r[$sql_aliases["family"]], $families_ids)) array_push($families_ids, $r[$sql_aliases["family"]]);
+		$requests = array();
 		if (count($families_ids) > 0) {
 			$q = SQLQuery::create()->bypassSecurity()
 				->select("FamilyMember")
@@ -255,6 +261,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 				->fieldsOfTable("FamilyMember");
 			PNApplication::$instance->people->joinPeople($q, "FamilyMember", "people", false);
 			$res = $q->execute();
+			array_push($requests, array($q,$res));
 		} else
 			$res = array();
 		$alias = $original_query->generateFieldAlias();
@@ -267,6 +274,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 					break;
 				}
 		}
+		return $requests;
 	}
 	
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {

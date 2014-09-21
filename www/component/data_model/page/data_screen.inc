@@ -303,6 +303,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 						}
 					}
 					$row = $q->executeSingleRow();
+					$requests = array(array($q,array($row)));
 					if ($display <> null) {
 						if ($child->isReverse())
 							$from = $child->foreign_key->name;
@@ -312,7 +313,8 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 							if ($data_aliases[$data->getDisplayName()]["data"] == null) {
 								$child->parent = new DataPath_Table($path->table, $path->sub_model);
 								$rows = array($row);
-								$data->performSubRequests($q, $rows, $data_aliases[$data->getDisplayName()], $child);
+								$sub = $data->performSubRequests($q, $rows, $data_aliases[$data->getDisplayName()], $child);
+								$requests = array_merge($requests, $sub);
 								$row = $rows[0];
 								$child->parent = $path;
 							}
@@ -321,6 +323,34 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 					foreach ($child->table->internalGetColumnsFor($child->sub_model) as $col) {
 						if (isset($row[$col->name]))
 							$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);
+						else {
+							$found = false;
+							foreach ($requests as $req) {
+								$sql_request = $req[0];
+								$request_results = $req[1];
+								$col_alias = $sql_request->getFieldAlias($child->table->getName(), $col->name);
+								if ($col_alias <> null && count($request_results)==1 && isset($request_results[0][$col_alias])) {
+									$values->addTableColumnValue($child->table->getName(), $col->name, $request_results[0][$col_alias]);
+									$found = true;
+									break;
+								}
+							}
+							if (!$found && $col instanceof datamodel\ForeignKey) {
+								// search the primary key
+								$ft = DataModel::get()->internalGetTable($col->foreign_table);
+								$pk = $ft->getPrimaryKey();
+								foreach ($requests as $req) {
+									$sql_request = $req[0];
+									$request_results = $req[1];
+									$col_alias = $sql_request->getFieldAlias($ft->getName(), $pk->name);
+									if ($col_alias <> null && count($request_results)==1 && isset($request_results[0][$col_alias])) {
+										$values->addTableColumnValue($child->table->getName(), $col->name, $request_results[0][$col_alias]);
+										$found = true;
+										break;
+									}
+								}
+							}
+						}
 					}
 					if ($display <> null)
 						foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
@@ -382,13 +412,14 @@ function getKeyValue($table, $values) {
 	$key = $table->getKey();
 	$ok = true;
 	$key_value = array();
-	foreach ($key as $cname) 
+	foreach ($key as $cname) {
 		if (!$values->hasColumnValue($table->getName(), $cname)) {
 			$ok = false;
 			break; 
 		} else {
 			$key_value[$cname] = $values->getColumnValue($table->getName(), $cname);
 		}
+	}
 	if (!$ok) return null;
 	return $key_value;
 }
