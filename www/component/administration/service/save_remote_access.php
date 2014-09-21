@@ -12,6 +12,17 @@ class service_save_remote_access extends Service {
 		$url = $input["url"];
 		$password = $input["password"];
 		
+		if ($url == "" && $password == "") {
+			// remove
+			if (file_exists("data/domains_synch/$domain")) {
+				require_once("component/application/Backup.inc");
+				Backup::removeDirectory("data/domains_synch/$domain");
+			}
+			if (unlink("conf/$domain.remote"))
+				echo "true";
+			return;
+		}
+		
 		if (substr($url,strlen($url)-1) <> "/") $url .= "/";
 		
 		// Step 1: get the version
@@ -68,6 +79,9 @@ class service_save_remote_access extends Service {
 			PNApplication::error("We successfully connect, but the request was rejected ".$error);
 			return;
 		}
+		
+		if (file_exists("data/domains_synch/$domain/last_check"))
+			@unlink("data/domains_synch/$domain/last_check");
 		
 		$f = fopen("conf/$domain.remote","w");
 		fwrite($f, "<?php return array('url'=>'$url','password'=>\"".str_replace("\\","\\\\", str_replace('"','\\"', $password))."\"); ?>");

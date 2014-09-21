@@ -22,7 +22,6 @@ class cron extends Component {
 	
 	public function executeTasks() {
 		$start_cron = microtime(true);
-		$now = time();
 		if (!file_exists("data/cron")) mkdir("data/cron");
 		set_error_handler(function($severity, $message, $filename, $lineno) {
 			if (error_reporting() == 0) return true;
@@ -32,14 +31,14 @@ class cron extends Component {
 		foreach ($this->getTasks() as $task) {
 			if (file_exists("data/cron/".$task->task_id)) {
 				$last = filemtime("data/cron/".$task->task_id);
-				if (($now-$last+10)/60 < $task->every_minutes) continue;
+				if ((time()-$last+10)/60 < $task->every_minutes) continue;
 			}
 			@unlink("data/cron/".$task->task_id.".errors");
 			$task_start = microtime(true);
 			include($task->file);
 			$task_end = microtime(true);
 			$f = fopen("data/cron/".$task->task_id,"w");
-			fwrite($f, number_format($task_end-$task_start));
+			fwrite($f, number_format($task_end-$task_start,2));
 			fclose($f);
 			if (PNApplication::hasErrors()) {
 				$f = fopen("data/cron/".$task->task_id.".errors","w");
@@ -71,7 +70,7 @@ class cron extends Component {
 			include($task->file);
 			$task_end = microtime(true);
 			$f = fopen("data/cron/".$task->task_id,"w");
-			fwrite($f, number_format($task_end-$task_start));
+			fwrite($f, number_format($task_end-$task_start,2));
 			fclose($f);
 			if (PNApplication::hasErrors()) {
 				$f = fopen("data/cron/".$task->task_id.".errors","w");

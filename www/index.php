@@ -193,11 +193,19 @@ case "dynamic":
 #DEV
 	spl_autoload_unregister('component_auto_loader');
 #END
+	$_SESSION["alive_timestamp"] = time(); // make it alive, to avoid being automatically closed
+	if (isset($_SESSION["remote"])) {
+		if ($_SESSION["remote"] <> $_SERVER["REMOTE_ADDR"]) $invalid("Access denied: you changed address");
+	} else {
+		$_SESSION["remote"] = $_SERVER["REMOTE_ADDR"];
+	}
 	if (!isset($_SESSION["app"])) {
 		PNApplication::$instance = new PNApplication();
 		PNApplication::$instance->init();
 		$_SESSION["app"] = &PNApplication::$instance;
 		$_SESSION["version"] = $pn_app_version;
+		if (isset($_SERVER["HTTP_USER_AGENT"]))
+			$_SESSION["user_agent"] = $_SERVER["HTTP_USER_AGENT"]; 
 	} else {
 		if (!isset($_SESSION["version"]) || $_SESSION["version"] <> $pn_app_version) {
 			session_destroy();

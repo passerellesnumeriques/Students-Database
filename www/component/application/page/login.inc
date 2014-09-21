@@ -113,7 +113,7 @@ if ($message <> null) {
 	</tr>
 	<tr><td>
 		<div class='info_box'>
-			<img src='<?php echo theme::$icons_16["help"];?>' style='vertical-align:bottom' style='vertical-align:bottom'/>
+			<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom' style='vertical-align:bottom'/>
 			Your version is a development version
 		</div>
 		<a href="#" onclick="resetDB();return false;">Reset Database</a><br/>

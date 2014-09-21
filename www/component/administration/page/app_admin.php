@@ -72,6 +72,7 @@ class page_app_admin extends Page {
 				echo "URL <input type='text' name='url' size=50 value=\"".htmlentities($remote_access['url'])."\"/> ";
 				echo "Password <input type='password' name='password' value=\"".htmlentities($remote_access['password'])."\"/> ";
 				echo "<button class='action' onclick=\"saveRemoteAccess('$domain')\">Save</button>";
+				echo " &nbsp; <button class='action red' onclick=\"removeRemoteAccess('$domain');\">Remove</button>";
 				echo "</form>";
 				echo "<br/>";
 				echo "Latest synchronization: ";
@@ -196,8 +197,14 @@ class page_app_admin extends Page {
 		if (!file_exists("data/cron/maintenance_tasks_time")) echo "Never";
 		else {
 			$info = stat("data/cron/maintenance_tasks_time");
-			$seconds = file_get_contents("data/cron/maintenance_tasks_time");
-			echo date("d M Y H:i", $info["mtime"])." (in ".$seconds." second".(floatval($seconds) > 1 ? "s" : "").")";
+			$seconds = floatval(file_get_contents("data/cron/maintenance_tasks_time"));
+			$timing = "";
+			if ($seconds >= 60) {
+				$timing .= floor($seconds/60)."m";
+				$seconds -= floor($seconds/60)*60;
+			}
+			$timing .= number_format($seconds,2)."s.";
+			echo date("d M Y H:i", $info["mtime"])." (in $timing)";
 		} 
 		?><br/>
 		<div class='info_box'>
@@ -230,10 +237,14 @@ class page_app_admin extends Page {
 		</table>
 	</div>
 </div>
-<div id='section_sessions' title='Open Sessions' icon='/static/user_management/user_16.png' collapsable='true' style='margin-top:10px'>
-	<table>
-		<tr><th>Session ID</th><th>Creation</th><th>Size</th><th>User</th></tr>
-		<?php 
+<div id='section_sessions' title='Sessions' icon='/static/user_management/user_16.png' collapsable='true' style='margin-top:10px'>
+	<div style='padding:5px'>
+		<?php
+		$max_time = ini_get("session.gc_maxlifetime");
+		echo "Session expiration: ";
+		if ($max_time >= 60) { echo floor($max_time/3600)."h"; $max_time -= floor($max_time/3600)*3600; }
+		echo floor($max_time/60)."m";
+		echo "<br/>";
 		$sessions_path = ini_get("session.save_path");
 		$method = ini_get("session.serialize_handler");
 		$i = strrpos($sessions_path, ";");
@@ -247,30 +258,51 @@ class page_app_admin extends Page {
 			$id = substr($filename,5);
 			$info = stat($sessions_path."/".$filename);
 			if ($id == session_id())
-				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>"<b>You</b>"));
+				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>"<b>You</b>","remote"=>@$_SERVER["REMOTE_ADDR"],"user_agent"=>@$_SERVER["HTTP_USER_AGENT"]));
 			else {
 				$content = file_get_contents($sessions_path."/".$filename);
 				if (strpos($content, "\"PNApplication\"") === false) continue; // Another application
 				$data = self::decodeSession($content);
-				$user = "";
+				$user = "?";
+				$remote = "?";
+				$user_agent = "?";
 				if ($data <> null) {
 					$user = @$data["app"]->user_management->username;
+					$remote = @$data["remote"];
+					$user_agent = @$data["user_agent"];
 				}
-				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>$user));
+				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>$user,"remote"=>$remote,"user_agent"=>$user_agent));
 			}
 		}
 		closedir($dir);
+		usort($sessions,function($s1,$s2) {
+			return $s2["modification"]-$s1["modification"];
+		});
+		echo "".count($sessions)." sessions open:<br/>";
+		echo "<table>";
+		echo "<tr><th>Session ID</th><th>Creation</th><th>Modification</th><th>Size</th><th>User</th><th>Client</th><th>Browser</th></tr>";
+		require_once("Browser.inc");
 		foreach ($sessions as $session) {
 			echo "<tr>";
-			echo "<td><code>".$session["id"]."</code></td>";
-			echo "<td>".date("Y-m-d h:i A", $session["creation"])."</td>";
+			echo "<td style='padding:0px 3px'><code>".$session["id"]."</code></td>";
+			echo "<td style='padding:0px 3px'>".date("Y-m-d h:i A", $session["creation"])."</td>";
+			echo "<td style='padding:0px 3px'>".date("Y-m-d h:i A", $session["modification"])."</td>";
 			$size = intval($session["size"]);
-			echo "<td align=right>".($size >= 1024 ? (number_format($size/1024,1)."K") : $size." bytes")."</td>";
-			echo "<td>".$session["user"]."</td>";
+			echo "<td style='padding:0px 3px' align=right>".($size >= 1024 ? (number_format($size/1024,1)."K") : $size." bytes")."</td>";
+			echo "<td style='padding:0px 3px'>".$session["user"]."</td>";
+			echo "<td style='padding:0px 3px'>".$session["remote"]."</td>";
+			$br = $session["user_agent"];
+			if ($session["user_agent"] <> "") {
+				$browser = new Browser($session["user_agent"]);
+				$br = $browser->getName();
+				if ($br == "Unknown") $br = $session["user_agent"];
+			}
+			echo "<td style='padding:0px 3px'>".$br."</td>";
 			echo "</tr>";
 		}
+		echo "</table>";
 		?>
-	</table>		
+	</div>		
 </div>
 </div>
 <script type='text/javascript'>
@@ -514,6 +546,20 @@ function saveRemoteAccess(domain) {
 		}
 	});
 }
+function removeRemoteAccess(domain) {
+	confirm_dialog("Remove remote access configuration for "+domain+" ?<br/>No synchronization of data will be done anymore.",function(yes) {
+		if (!yes) return;
+		var locker = lock_screen(null,'Saving remote access for domain '+domain+'...');
+		service.json("administration","save_remote_access",{domain:domain,url:"",password:""},function(res) {
+			unlock_screen(locker);
+			if (res) {
+				var form = document.forms['remote_access_'+domain];
+				form.elements['url'].value = "";
+				form.elements['password'].value = "";
+			}
+		});
+	});
+}
 </script>
 	<?php 
 	}
@@ -523,6 +569,8 @@ function saveRemoteAccess(domain) {
 	 * @return array decoded content of session
 	 */
 	private static function decodeSession($session_string){
+		$session_open = session_status() == PHP_SESSION_ACTIVE;
+		if (!$session_open) @session_start();
 	    $current_session = session_encode();
 	    foreach ($_SESSION as $key => $value){
 	        unset($_SESSION[$key]);
@@ -533,6 +581,7 @@ function saveRemoteAccess(domain) {
 	        unset($_SESSION[$key]);
 	    }
 	    session_decode($current_session);
+	    if (!$session_open) session_write_close();
 	    return $restored_session;
 	}
 }

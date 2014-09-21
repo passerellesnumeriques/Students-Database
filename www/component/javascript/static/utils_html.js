@@ -262,8 +262,13 @@ function createTooltip(element, content) {
 		}
 	},10000);
 	element._listener = function() {
-		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip)
-			removeTooltip();
+		if (window.top._current_tooltip && window.top._current_tooltip == element._tooltip) {
+			if (!removeTooltip) {
+				if (window.top._current_tooltip.parentNode)
+					window.top._current_tooltip.parentNode.removeChild(window.top._current_tooltip);
+			} else
+				removeTooltip();
+		}
 	};
 	listenEvent(window,'mouseout',element._listener);
 }

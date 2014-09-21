@@ -1,8 +1,9 @@
 <?php 
 class Browser {
 	
-	public function __construct() {
-		$this->detect($_SERVER["HTTP_USER_AGENT"]);
+	public function __construct($user_agent = null) {
+		if ($user_agent == null) $user_agent = $_SERVER["HTTP_USER_AGENT"];
+		$this->detect($user_agent);
 	}
 	
 	public function isOldChrome($max_ver) {
@@ -106,6 +107,14 @@ class Browser {
 		}
 	}
 	
+	public function getName() {
+		if ($this->IE > 0) return "Internet Explorer ".$this->IE;
+		if ($this->Chrome > 0) return "Google Chrome ".$this->Chrome;
+		if ($this->FireFox > 0) return "Mozilla FireFox ".$this->FireFox;
+		if ($this->SafariBrowser > 0) return "Apple Safari ".$this->SafariBrowser;
+		if ($this->OperaBrowser > 0) return "Opera ".$this->OperaBrowser;
+		return "Unknown";
+	}
 	
 }
 global $browser;

@@ -62,6 +62,24 @@ class page_overview extends Page {
 		<img src='/static/application/logo.png' height="50px" style="vertical-align:bottom"/>
 		Welcome in PN Students Management Software !
 	</div>
+<?php
+if (PNApplication::$instance->current_domain <> PNApplication::$instance->local_domain) {
+	echo "<div class='info_box'>";
+	echo "<img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> ";
+	echo "You are connected on the database of ".PNApplication::$instance->current_domain.".";
+	if (!file_exists("data/domains_synch/".PNApplication::$instance->current_domain."/latest_recover")) {
+		echo " This database has never been synchronized, meaning it is empty.";
+	} else {
+		echo " This is only a copy of ".PNApplication::$instance->current_domain." data, meaning you can consult information, but you won't be able to modify anything. If you want to modify something, you must connect directly to ".PNApplication::$instance->current_domain.".";
+		echo "<br/>";
+		$info = include("data/domains_synch/".PNApplication::$instance->current_domain."/latest_recover");
+		echo "Note that this is not the latest data: the data that we have from ".PNApplication::$instance->current_domain." are from ".date("d M Y g:i A", $info["time"]).".";
+		echo " To consult the latest data you must connect directly to ".PNApplication::$instance->current_domain.".<br/>";
+		echo "Please note also that you will have access only to the data ".PNApplication::$instance->current_domain." allows you to access. If you need more access, please contact ".PNApplication::$instance->current_domain." administrators to give you more privileges on their data.";
+	}
+	echo "</div>";
+} 
+?>
 	<div class="page_section_title">
 		Navigate into the different sections of the application
 	</div>
