@@ -2,7 +2,7 @@ window.help_display_ready = true;
 
 function helpPositionHorizontal(help_div_id, rel_pos, rel_id) {
 	if (!window.help_display_ready) {
-		setTimeout(function() { helpPositionHorizontal(help_div_id, rel_pos, rel_id); }, 25);
+		setTimeout(function() { if (window.closing) return; helpPositionHorizontal(help_div_id, rel_pos, rel_id); }, 25);
 		return;
 	}
 	var help_div = document.getElementById(help_div_id);
@@ -25,7 +25,7 @@ function helpPositionHorizontal(help_div_id, rel_pos, rel_id) {
 }
 function helpPositionVertical(help_div_id, rel_pos, rel_id) {
 	if (!window.help_display_ready) {
-		setTimeout(function() { helpPositionVertical(help_div_id, rel_pos, rel_id); }, 25);
+		setTimeout(function() { if (window.closing) return; helpPositionVertical(help_div_id, rel_pos, rel_id); }, 25);
 		return;
 	}
 	var help_div = document.getElementById(help_div_id);
@@ -50,7 +50,7 @@ function helpPositionVertical(help_div_id, rel_pos, rel_id) {
 }
 function helpSystemArrow(from, to_selector, onover, force_connect) {
 	if (!window.help_display_ready) {
-		setTimeout(function() { helpSystemArrow(from, to_selector, onover, force_connect); }, 25);
+		setTimeout(function() { if (window.closing) return; helpSystemArrow(from, to_selector, onover, force_connect); }, 25);
 		return;
 	}
 	var to;

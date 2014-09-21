@@ -7,8 +7,10 @@ class page_students_grades extends Page {
 		$period_id = @$_GET["period"];
 		$class_id = @$_GET["class"];
 		if ($period_id == null && $class_id == null) {
-			echo "<img src='".theme::$icons_16["info"]."'/> ";
-			echo "Please select a period or a class to display the grades of the students";
+			echo "<div style='padding:5px'><div class='info_box'>";
+			echo "<img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> ";
+			echo "To display the grades, you need first to select for which period, or which class, by using the tree on the right side.";
+			echo "</div></div>";
 			return;
 		}
 		if ($class_id <> null) {
@@ -118,13 +120,32 @@ class page_students_grades extends Page {
 		</div>
 		<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) { ?>
 		<div style='flex:none;display:inline-block;'>
-			<button class='action' onclick="editGeneralAppreciation(this);">Edit General Appreciations</button>
+			<button id='button_edit_general_appreciation' class='action' onclick="editGeneralAppreciation(this);">Edit General Appreciations</button>
 		</div>
 		<?php } ?>
 	</div>
 	<div style='flex:1 1 auto;overflow:auto' id='grades_container'>
 	</div>
 </div>
+<?php
+if (PNApplication::$instance->help->isShown("students_grades")) {
+	$help_div_id = PNApplication::$instance->help->startHelp("students_grades", $this, "left", "bottom", false);
+	echo "This screen gives you an overview of the grades, for all subjects,<br/>";
+	echo "together with the total grade and rank of the students.<br/>";
+	echo "<br/>";
+	if (PNApplication::$instance->user_management->has_right("edit_students_grades")) {
+		echo "In this screen, you can also ";
+		PNApplication::$instance->help->spanArrow($this, "edit the general appreciation", "#button_edit_general_appreciation");
+		echo "<br/>of each student which can be included later in the transcripts.<br/>";
+		echo "<br/>";
+	}
+	echo "To display or edit the details of the grades for a given subject,<br/>";
+	echo "click on ";
+	PNApplication::$instance->help->spanArrow($this, "the subject name", ".grid thead");
+	echo ".<br/>";
+	PNApplication::$instance->help->endHelp($help_div_id, "students_grades");
+} 
+?>
 <script type='text/javascript'>
 var students = <?php echo PeopleJSON::Peoples($students);?>;
 var students_comments = <?php echo json_encode($students_comments);?>;
@@ -341,6 +362,7 @@ function saveGeneralAppreciation(button) {
 		});
 	});
 }
+window.help_display_ready = true;
 </script>
 		<?php 
 	}

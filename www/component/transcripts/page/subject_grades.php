@@ -257,7 +257,7 @@ class page_subject_grades extends Page {
 	<div class='page_footer' style='flex:none;'>
 		<?php
 		if (!$edit && $can_edit) {
-			echo "<button class='action' onclick=\"var u = new window.URL(location.href);u.params.edit='true';location.href=u.toString();\">";
+			echo "<button id='edit_button' class='action' onclick=\"var u = new window.URL(location.href);u.params.edit='true';location.href=u.toString();\">";
 			echo "<img src='".theme::$icons_16["edit"]."'/> Edit";
 			echo "</button>";
 		} else if ($edit) {
@@ -276,6 +276,34 @@ class page_subject_grades extends Page {
 		?>
 	</div>
 </div>
+<?php
+if (PNApplication::$instance->help->isShown("subject_grades") && $can_edit) {
+	$help_div_id = PNApplication::$instance->help->startHelp("subject_grades", $this, "right", "bottom", false);
+	if (!$edit) {
+		echo "This screen allows you to enter the grades for the selected subject.<br/>";
+		echo "<br/>";
+		echo "To start entering grades, first click on the<br/>";
+		PNApplication::$instance->help->spanArrow($this, "edit button", "#edit_button", "horiz");
+	} else {
+		echo "Great ! Now you can enter grades for this subject.<br/>";
+		echo "<br/>";
+		echo "The first step is to specify the ";
+		PNApplication::$instance->help->spanArrow($this, "maximum grade", "#max_grade_container");
+		echo " and the ";
+		PNApplication::$instance->help->spanArrow($this, "passing grade", "#passing_grade_container");
+		echo ".<br/>";
+		echo "Then, you have 2 different ways to enter grades:<ul>";
+		echo "<li>Enter only the final grade of each student</li>";
+		echo "<li>Enter all the grades of the different evaluations performed,<br/>then the final grade will be automatically calculated.</li>";
+		echo "</ul>";
+		echo "<br/>";
+		echo "If you already have grades in an Excel file, you can import them using the<br/>";
+		PNApplication::$instance->help->spanArrow($this, "import", "#import_button", "horiz");
+		echo " button.";
+	}
+	PNApplication::$instance->help->endHelp($help_div_id, "subject_grades");
+} 
+?>
 <?php if ($lock_id <> null) DataBaseLock::generateScript($lock_id); ?>
 <script type='text/javascript'>
 window.onuserinactive = function() { window.pnapplication.cancelDataUnsaved();var u = new window.URL(location.href);delete u.params.edit;location.href=u.toString(); };
@@ -1060,6 +1088,7 @@ grades_grid.addColumn(new CustomDataGridColumn(new GridColumn("student_comment",
 for (var i = 0; i < students.length; ++i)
 	grades_grid.addObject(students[i].id);
 
+window.help_display_ready = true;
 </script>
 		<?php 
 	}
