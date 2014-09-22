@@ -168,9 +168,12 @@ function LoadingHidder(to_hide) {
  * @param {Function} onready called when the frame is ready
  * @param {Number} timeout time in milliseconds after which we will not try anymore (if not specified, default is 30 seconds)
  */
-function waitFrameReady(win, test, onready, timeout) {
-	if (typeof timeout == 'undefined') timeout = 30000;
-	if (timeout < 50) return;
+function waitFrameReady(win, test, onready, timeout, onfail) {
+	if (typeof timeout == 'undefined' || timeout === null) timeout = 30000;
+	if (timeout < 50) {
+		if (onfail) onfail();
+		return;
+	}
 	if (!test(win)) { setTimeout(function() { waitFrameReady(win, test, onready, timeout-50); }, 50); return; }
 	onready(win);
 }
@@ -180,17 +183,23 @@ function waitFrameReady(win, test, onready, timeout) {
  * @param {Function} onready called when the frame is ready
  * @param {Number} timeout time in milliseconds after which we will not try anymore (if not specified, default is 30 seconds)
  */
-function waitFrameContentReady(frame, test, onready, timeout) {
-	if (typeof timeout == 'undefined') timeout = 30000;
-	if (timeout < 50) return;
+function waitFrameContentReady(frame, test, onready, timeout, onfail) {
+	if (typeof timeout == 'undefined' || timeout === null) timeout = 30000;
+	if (timeout < 50) {
+		if (onfail) onfail();
+		return;
+	}
 	var win = getIFrameWindow(frame);
 	if (!win || !test(win)) { setTimeout(function() { waitFrameContentReady(frame, test, onready, timeout-50); }, 50); return; }
 	onready(win);
 }
 
-function waitForFrame(frame_name, onready, timeout) {
-	if (typeof timeout == 'undefined') timeout = 30000;
-	if (timeout < 50) return;
+function waitForFrame(frame_name, onready, timeout, onfailed) {
+	if (typeof timeout == 'undefined' || timeout === null) timeout = 30000;
+	if (timeout < 50) {
+		if (onfailed) onfailed();
+		return;
+	}
 	var frame = findFrame(frame_name);
 	if (frame) {
 		var win = getIFrameWindow(frame);

@@ -61,6 +61,9 @@ function search_student(container,section) {
 											}
 										});
 										list.reloadData(ondone);
+									},10000,function() {
+										// failed
+										ondone();
 									});
 									check = null;
 									return;
@@ -68,8 +71,16 @@ function search_student(container,section) {
 							}
 						}
 						setTimeout(function(){check();},50);
+					},10000,function() {
+						// failed
+						ondone();
+						check = null;
 					});
 					return;
+				},10000,function() {
+					// failed
+					ondone();
+					check = null;
 				});
 			};
 			check();
