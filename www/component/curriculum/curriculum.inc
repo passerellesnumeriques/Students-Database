@@ -35,8 +35,8 @@ class curriculum extends Component {
 		$now = date("Y-m-d",time());
 		return SQLQuery::create()
 			->select("AcademicPeriod")
-			->where("start",">=",$now)
-			->where("end","<=",$now)
+			->where("start","<=",$now)
+			->where("end",">=",$now)
 			->executeSingleRow();
 	}
 	

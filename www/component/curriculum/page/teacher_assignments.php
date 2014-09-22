@@ -80,14 +80,14 @@ class page_teacher_assignments extends Page {
 		$present = false;
 		foreach ($dates as $d) 
 			if (strtotime($d["start"]) < strtotime($current_period["end"]) && 
-				strtotime($d["end"]) > strtotime($current_period["start"])) {
+				($d["end"] == null || strtotime($d["end"]) > strtotime($current_period["start"]))) {
 			$present = true;
 			break;
 		}
 		if ($present) {
 			echo "<div id='current' title='Current Period: ".str_replace("'","\\'","Academic Year ".$current_year["name"]." - ".$current_period["name"])."' collapsable='true'>";
 			echo "<div style='padding:5px'>";
-			$this->generatePeriod($current_period, $assigned, $batch_periods);
+			$this->generatePeriod($current_period, $assigned, $batch_periods, $classes_merges, $classes);
 			echo "</div>";
 			echo "</div>";
 			$this->onload("sectionFromHTML('current');");
@@ -100,7 +100,7 @@ class page_teacher_assignments extends Page {
 			if (count($periods) > 0) {
 				echo "<div id='future' title='Future assignments' collapsable='true'>";
 				echo "<div style='padding:5px'>";
-				$this->generatePeriods($periods, $assigned, $batch_periods, $all_years);
+				$this->generatePeriods($periods, $assigned, $batch_periods, $all_years, $classes_merges, $classes);
 				echo "</div>";
 				echo "</div>";
 				$this->onload("sectionFromHTML('future');");
@@ -112,7 +112,7 @@ class page_teacher_assignments extends Page {
 				$present = false;
 				foreach ($dates as $d) 
 					if (strtotime($d["start"]) < strtotime($p["end"]) && 
-						strtotime($d["end"]) > strtotime($p["start"])) {
+						($d["end"] == null || strtotime($d["end"]) > strtotime($p["start"]))) {
 					$present = true;
 					break;
 				}
@@ -179,6 +179,7 @@ class page_teacher_assignments extends Page {
 				if ($can_go_to_grades) echo "</a>";
 				$assigned_classes = $subject["classes"];
 				foreach ($classes_merges as $cm) {
+					if ($cm["subject"] <> $subject["subject"]) continue;
 					$oc = null;
 					if (in_array($cm["class1"], $assigned_classes)) $oc = $cm["class2"];
 					else if (in_array($cm["class2"], $assigned_classes)) $oc = $cm["class1"];
@@ -189,6 +190,9 @@ class page_teacher_assignments extends Page {
 				echo ", Class";
 				if (count($assigned_classes) > 1) echo "es";
 				echo " ";
+				usort($assigned_classes, function($c1,$c2) {
+					return intval($c1)-intval($c2);
+				});
 				$first = true;
 				foreach ($assigned_classes as $ac) {
 					if ($first) $first = false; else echo "+";
