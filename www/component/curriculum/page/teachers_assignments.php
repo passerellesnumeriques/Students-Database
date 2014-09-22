@@ -212,7 +212,8 @@ class page_teachers_assignments extends Page {
 				echo "</div>";
 			}
 			PNApplication::$instance->help->endHelp($help_div_id, "teachers_assignments");
-		} 
+		} else
+			PNApplication::$instance->help->availableHelp("teachers_assignments");
 		?>
 		<style type='text/css'>
 		.subjects_table {

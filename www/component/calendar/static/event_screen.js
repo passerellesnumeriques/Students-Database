@@ -240,7 +240,18 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 			td = createRowTitle(tr, "");
 			td.colSpan = 2;
 			var link = document.createElement("A");
-			link.href = ev.app_link;
+			if (ev.app_link.startsWith("popup:")) {
+				link.href = '#';
+				link.onclick = function() {
+					window.top.require("popup_window.js", function() {
+						var popup = new window.top.popup_window(ev.title,null,"");
+						popup.setContentFrame(ev.app_link.substring(6));
+						popup.showPercent(95,95);
+					});
+					return false;
+				};
+			} else
+				link.href = ev.app_link;
 			link.innerHTML = ev.app_link_name;
 			td.appendChild(link);
 		}

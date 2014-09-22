@@ -144,7 +144,8 @@ if (PNApplication::$instance->help->isShown("students_grades")) {
 	PNApplication::$instance->help->spanArrow($this, "the subject name", ".grid thead");
 	echo ".<br/>";
 	PNApplication::$instance->help->endHelp($help_div_id, "students_grades");
-} 
+} else
+	PNApplication::$instance->help->availableHelp("students_grades");
 ?>
 <script type='text/javascript'>
 var students = <?php echo PeopleJSON::Peoples($students);?>;

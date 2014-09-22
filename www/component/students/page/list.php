@@ -51,7 +51,8 @@ if (PNApplication::$instance->help->isShown('students_list')) {
 	echo "<br/>";
 	echo "You can also click on a student to display its complete profile<br/>";
 	PNApplication::$instance->help->endHelp($help_div_id, "students_list");
-}
+} else
+	PNApplication::$instance->help->availableHelp("students_list");
 ?>
 <script type='text/javascript'>
 var url = new URL(location.href);

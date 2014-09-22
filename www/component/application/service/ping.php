@@ -6,6 +6,11 @@ class service_ping extends Service {
 	public function inputDocumentation() { echo "nothing"; }
 	public function outputDocumentation() { echo "nothing"; }
 	public function execute(&$component, $input) {
+		if (rand(0,5) == 0) {
+			// from time to time, extend the authentication system token life (if needed)
+			if (PNApplication::$instance->user_management->domain <> null)
+				PNApplication::$instance->authentication->getAuthenticationSystem(PNApplication::$instance->user_management->domain)->extendTokenExpiration(PNApplication::$instance->user_management->auth_token);
+		}
 		echo "{ok:true";
 		if (file_exists("maintenance_time")) {
 			$maintenance = intval(file_get_contents("maintenance_time"));

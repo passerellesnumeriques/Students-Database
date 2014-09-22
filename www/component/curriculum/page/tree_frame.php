@@ -91,7 +91,8 @@ if (PNApplication::$instance->help->isShown('curriculum_tree')) {
 	PNApplication::$instance->help->spanArrow($this, "below the tree", "#tree_footer");
 	echo ".<br/>";
 	PNApplication::$instance->help->endHelp($help_div_id, "curriculum_tree");
-}
+} else
+	PNApplication::$instance->help->availableHelp("curriculum_tree");
 ?>
 <script type='text/javascript'>
 window.can_edit_batches = <?php echo $can_edit ? "true" : "false"?>;

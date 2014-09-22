@@ -287,19 +287,19 @@ class page_app_admin extends Page {
 		foreach ($sessions as $session) {
 			echo "<tr>";
 			echo "<td style='padding:0px 3px'><code>".$session["id"]."</code></td>";
-			echo "<td style='padding:0px 3px'>".date("Y-m-d h:i A", $session["creation"])."</td>";
-			echo "<td style='padding:0px 3px'>".date("Y-m-d h:i A", $session["modification"])."</td>";
+			echo "<td style='padding:0px 3px;font-size:9pt'>".date("Y-m-d h:i A", $session["creation"])."</td>";
+			echo "<td style='padding:0px 3px;font-size:9pt'>".date("Y-m-d h:i A", $session["modification"])."</td>";
 			$size = intval($session["size"]);
-			echo "<td style='padding:0px 3px' align=right>".($size >= 1024 ? (number_format($size/1024,1)."K") : $size." bytes")."</td>";
-			echo "<td style='padding:0px 3px'>".$session["user"]."</td>";
-			echo "<td style='padding:0px 3px'>".$session["remote"]."</td>";
+			echo "<td style='padding:0px 3px;font-size:9pt' align=right>".($size >= 1024 ? (number_format($size/1024,1)."K") : $size." bytes")."</td>";
+			echo "<td style='padding:0px 3px;font-size:9pt'>".$session["user"]."</td>";
+			echo "<td style='padding:0px 3px;font-size:9pt'>".$session["remote"]."</td>";
 			$br = $session["user_agent"];
 			if ($session["user_agent"] <> "") {
 				$browser = new Browser($session["user_agent"]);
 				$br = $browser->getName();
 				if ($br == "Unknown") $br = $session["user_agent"];
 			}
-			echo "<td style='padding:0px 3px'>".$br."</td>";
+			echo "<td style='padding:0px 3px;font-size:9pt'>".$br."</td>";
 			echo "</tr>";
 		}
 		echo "</table>";
@@ -571,7 +571,10 @@ function removeRemoteAccess(domain) {
 	 * @return array decoded content of session
 	 */
 	private static function decodeSession($session_string){
-		$session_open = session_status() == PHP_SESSION_ACTIVE;
+		// $session_open = session_status() == PHP_SESSION_ACTIVE; this is PHP 5.4, not compatible with 5.3
+		//if (session_id() == "") $session_open = false;
+		//else $session_open = true;
+		$session_open = false; // anyway, the session is always closed at this point
 		if (!$session_open) @session_start();
 	    $current_session = session_encode();
 	    foreach ($_SESSION as $key => $value){

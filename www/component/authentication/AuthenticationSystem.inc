@@ -17,6 +17,8 @@ abstract class AuthenticationSystem {
 	 */
 	public function closeSession($token) {}
 	
+	public function extendTokenExpiration($token) {}
+	
 }
 
 interface AuthenticationSystem_UserList {

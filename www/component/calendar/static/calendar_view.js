@@ -263,10 +263,10 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 				return;
 			}
 			setTimeout(function() { t.addEvent(ev, try_counter+1); }, 100); 
+			return;
 		};
 		var e = copyCalendarEvent(ev);
 		e.original_event = ev;
-		if (!this.view) return;
 		if (ev.start.getTime() > this.view.end_date.getTime()) return; // after end
 		if (ev.frequency == null) {
 			// single instance

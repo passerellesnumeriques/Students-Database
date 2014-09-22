@@ -32,6 +32,8 @@ class service_reset_password extends Service {
 			return;
 		}
 		
+		if ($token == null && $domain == PNApplication::$instance->user_management->domain)
+			$token = PNApplication::$instance->user_management->auth_token;
 		$as = PNApplication::$instance->authentication->getAuthenticationSystem($domain);
 		$res = $as->resetPassword($token, $username, $password);
 		if ($res === true) {

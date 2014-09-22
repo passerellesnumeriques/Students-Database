@@ -146,7 +146,15 @@ global $pn_app_version;
 <script type='text/javascript'>
 service.json("administration","latest_version",null,function(res) {
 	if (res && res.version) {
-		if (res.version != <?php echo json_encode($pn_app_version);?>) {
+		var our_version = <?php echo json_encode($pn_app_version);?>.split(".");
+		var latest = res.version.split(".");
+		var new_version = false;
+		for (var i = 0; i < latest.length; ++i) {
+			if (our_version.length <= i) { new_version = true; break; }
+			if (parseInt(latest[i]) > parseInt(our_version[i])) { new_version = true; break; }
+			if (parseInt(latest[i]) < parseInt(our_version[i])) { break; }
+		}
+		if (new_version) {
 			document.getElementById('new_version').innerHTML = res.version;
 			document.getElementById('new_version_available').style.display = "block";
 		}

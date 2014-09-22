@@ -3,7 +3,7 @@ require_once("AuthenticationSystem.inc");
 /**
  * Connect remotely to the PN Philippines authentication system. 
  */
-class PNPAuthenticationSystem extends AuthenticationSystem implements AuthenticationSystem_UserList {
+class PNPAuthenticationSystem extends AuthenticationSystem implements AuthenticationSystem_UserList, AuthenticationSystem_ResetPassword {
 
 	/**
 	 * Initialize the authentication system
@@ -56,6 +56,10 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 		return $token;
 	}
 	
+	public function extendTokenExpiration($token) {
+		$this->callService("extend_session", $token);
+	}
+	
 	/**
 	 * Call a service on the authentication server
 	 * @param string $service name of the service
@@ -78,6 +82,36 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
 		curl_setopt($c, CURLOPT_TIMEOUT, 240);
 		curl_setopt($c, CURLOPT_POSTFIELDS, array_merge(array("service"=>$service,"token"=>$token), $params));
+		$result = curl_exec($c);
+		set_time_limit(30);
+		if ($result === false) {
+			PNApplication::error("Error calling service ".$service." on authentication system: ".curl_error($c));
+			curl_close($c);
+			return null;
+		}
+		curl_close($c);
+		$xml = @simplexml_load_string($result);
+		if ($xml === false) {
+			PNApplication::error("Invalid response from authentication system");
+			return null;
+		}
+		return $xml;
+	}
+	private function callServiceWithPrivileges($service, $token, $params) {
+		set_time_limit(300);
+		if (PNApplication::$instance->local_domain == "PNP") {
+			$c = curl_init("authentication/privileges/$service.sh");
+		} else {
+			$c = curl_init("authentication.pnp.studentscenter.org:800/privileges/$service.sh");
+			if (file_exists("conf/proxy")) include("conf/proxy");
+		}
+		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
+		curl_setopt($c, CURLOPT_HEADER, FALSE);
+		curl_setopt($c, CURLOPT_POST, TRUE);
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
+		curl_setopt($c, CURLOPT_TIMEOUT, 240);
+		curl_setopt($c, CURLOPT_POSTFIELDS, array_merge(array("token"=>$token), $params));
 		$result = curl_exec($c);
 		set_time_limit(30);
 		if ($result === false) {
@@ -137,5 +171,13 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 		return $users;
 	}
 	
+	public function resetPassword($token, $username, $password) {
+		$res = $this->callServiceWithPrivileges("reset_password", $token, array("username"=>$username,"password"=>$password));
+		if ($res->getName() == "ok") return true;
+		if ($res->getName() == "error")
+			foreach ($res->attributes() as $name=>$value)
+				if ($name == "message") return $value;
+		return "Invalid response from authentication server".$res;
+	}
 }
 ?>

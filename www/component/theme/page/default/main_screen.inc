@@ -231,7 +231,7 @@ tooltip(user_picture, "Your profile");
 //tooltip(document.getElementById('notifications'), "See notifications");
 tooltip(document.getElementById('calendars'), "Your calendars");
 tooltip(document.getElementById('domain_connection'), "Connect to other centers' database");
-tooltip(document.getElementById('activate_help'), "Display again help messages on all screens");
+tooltip(document.getElementById('activate_help'), "Display again help messages on the current page");
 tooltip(document.getElementById('logout'), "Logout and exit application");
 
 function initPage() {
@@ -284,8 +284,9 @@ function connectToDomain(domain) {
 }
 
 function activateHelp(button) {
-	service.json("help","show",{},function(res) {});
-	info_dialog("Help messages will now appear again on all screens");
+	window.top.require("help_system.js", function() {
+		window.top.help_system.activateHelp();
+	});
 }
 
 function getSection(section_name) {
@@ -556,4 +557,6 @@ function initFooter() {
 	<?php } ?>
 }
 initFooter();
+
+setTimeout(function() { window.top.require("help_system.js"); }, 1000);
 </script>

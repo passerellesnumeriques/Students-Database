@@ -305,7 +305,8 @@ class page_curriculum extends Page {
 				echo "to this batch, the original subjects will remain unchanged).<br/>";
 			}
 			PNApplication::$instance->help->endHelp($help_div_id, "curriculum");
-		} 
+		} else
+			PNApplication::$instance->help->availableHelp("curriculum");
 		?>
 		<script type='text/javascript'>
 		window.top.datamodel.registerCellSpan(window, "StudentBatch", "name", <?php echo $batch_id;?>, document.getElementById("batch_name"));

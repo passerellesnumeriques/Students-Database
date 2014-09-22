@@ -15,7 +15,7 @@ class page_reset_pass extends Page {
 			}
 		}
 ?>
-<table>
+<table style='background-color:white'>
 	<tr>
 		<td>Enter new password</td>
 		<td><input type='password' id='new_pass'/></td>

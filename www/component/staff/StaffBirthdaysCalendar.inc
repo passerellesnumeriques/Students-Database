@@ -40,7 +40,9 @@ class StaffBirthdaysCalendar implements CustomCalendarPlugin {
 				"frequency"=>array(
 					"frequency"=>"YEARLY",
 					"until"=>null
-				)
+				),
+				"app_link_name"=>"Open profile of ".$staff["first_name"]." ".$staff["last_name"],
+				"app_link"=>"popup:/dynamic/people/page/profile?people=".$staff["people_id"]
 			);
 			array_push($events, $event);
 		}

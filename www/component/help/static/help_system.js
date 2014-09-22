@@ -88,3 +88,51 @@ function helpSystemArrow(from, to_selector, onover, force_connect) {
 		hide_arrow();
 	});
 }
+
+if (window == window.top) {
+	window.top.help_system = {
+		_avail_help: [],
+		registerAvailableHelp: function(win, help_id) {
+			for (var i = 0; i < this._avail_help.length; ++i)
+				if (this._avail_help[i].win == win && this._avail_help[i].help_id == help_id) return;
+			this._avail_help.push({win:win,help_id:help_id});
+		},
+		_window_closed: function(win) {
+			for (var i = 0; i < this._avail_help.length; ++i)
+				if (this._avail_help[i].win == win) {
+					this._avail_help.splice(i,1);
+					i--;
+				}
+		},
+		activateHelp: function() {
+			if (this._avail_help.length == 0) {
+				info_dialog("Unfortunately, there is no help available on this page.");
+				return;
+			}
+			var ids = [];
+			for (var i = 0; i < this._avail_help.length; ++i)
+				ids.push(this._avail_help[i].help_id);
+			var t=this;
+			service.json("help","show",{ids:ids},function(res) {
+				var windows = [];
+				for (var i = 0; i < t._avail_help.length; ++i)
+					if (!windows.contains(t._avail_help[i].win))
+						windows.push(t._avail_help[i].win);
+				for (var i = 0; i < windows.length; ++i)
+					if (!windows[i].closing && windows[i].location)
+						windows[i].location.reload();
+			});
+		}
+	};
+	window.init_help_system = function() {
+		if (!window.top.pnapplication) {
+			setTimeout(window.init_help_system, 25);
+			return;
+		}
+		window.init_help_system = null;
+		window.top.pnapplication.onwindowclosed.add_listener(function(c) {
+			window.top.help_system._window_closed(c.win);
+		});
+	};
+} else if (!window.top.help_system)
+	window.top.require("help_system.js");

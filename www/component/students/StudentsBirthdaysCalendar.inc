@@ -44,7 +44,9 @@ class StudentsBirthdaysCalendar implements CustomCalendarPlugin {
 					"frequency"=>array(
 						"frequency"=>"YEARLY",
 						"until"=>null
-					)
+					),
+					"app_link_name"=>"Open profile of ".$student["first_name"]." ".$student["last_name"],
+					"app_link"=>"popup:/dynamic/people/page/profile?people=".$student["people_id"]
 				);
 				array_push($events, $event);
 			}

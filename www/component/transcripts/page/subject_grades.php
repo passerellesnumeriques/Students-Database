@@ -302,7 +302,8 @@ if (PNApplication::$instance->help->isShown("subject_grades") && $can_edit) {
 		echo " button.";
 	}
 	PNApplication::$instance->help->endHelp($help_div_id, "subject_grades");
-} 
+} else
+	PNApplication::$instance->help->availableHelp("subject_grades");
 ?>
 <?php if ($lock_id <> null) DataBaseLock::generateScript($lock_id); ?>
 <script type='text/javascript'>
