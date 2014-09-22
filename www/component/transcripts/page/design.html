@@ -271,7 +271,7 @@ function init_transcript_#ID#() {
 		}
 	}
 	if (enlarge) {
-		var cols = document.getElementsByClassName("subject_category_col");
+		var cols = document.getElementById('#ID#').getElementsByClassName("subject_category_col");
 		for (var i = 0; i < cols.length; ++i)
 			cols[i].style.width = max_height+"px";
 		for (var i = 0; i < cats.length; ++i)

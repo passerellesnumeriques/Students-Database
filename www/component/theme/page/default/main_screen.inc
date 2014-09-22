@@ -247,10 +247,11 @@ function initPage() {
 	}
 	var frame = document.getElementById('application_frame');
 	listenEvent(frame,'load',function() {
-		pageLoaded(getIFrameWindow(this).location.href);
-	});
-	listenEvent(frame,'hashchange',function() {
-		pageLoaded(getIFrameWindow(this).location.href);
+		var w=getIFrameWindow(this);
+		pageLoaded(w.location.href);
+		listenEvent(w,'hashchange',function() {
+			pageLoaded(w.location.href);
+		});
 	});
 }
 
