@@ -99,6 +99,7 @@ function calendar_view_upcoming(view, container) {
 		}
 
 		var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
+		if (!cal) return;
 
 		var li = document.createElement("LI");
 		li.onmouseover = function() { this.style.textDecoration = "underline"; };

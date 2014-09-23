@@ -57,6 +57,7 @@ CurriculumTreeNode_BatchPeriod.prototype.createInfo = function() {
 			editBatch(this.node.parent.batch);
 		};
 		buttons.appendChild(button);
+		button.ondomremoved(function(b) {b.node = null;});
 		if (this.period.available_specializations.length == 0) {
 			button = document.createElement("BUTTON");
 			button.className = "action green";
@@ -67,6 +68,7 @@ CurriculumTreeNode_BatchPeriod.prototype.createInfo = function() {
 				newClass(this.node, null);
 			};
 			buttons.appendChild(button);
+			button.ondomremoved(function(b) {b.node = null;});
 		}
 	}
 	return div;

@@ -17,7 +17,6 @@ if (typeof require != 'undefined') {
  */
 function editable_cell(container, table, column, row_key, field_classname, field_arguments, data, onsave, onchange, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
-	container.editable_cell = this;
 	var t=this;
 	require("editable_field.js",function() {
 		t.editable_field = new editable_field(container, field_classname, field_arguments, data, function(data, handler) {
@@ -50,4 +49,9 @@ function editable_cell(container, table, column, row_key, field_classname, field
 	t.cancelEditable = function() {
 		t.editable_field.cancelEditable();
 	};
+	
+	container.ondomremoved(function() {
+		t.editable_field = null;
+		t = null;
+	});
 }

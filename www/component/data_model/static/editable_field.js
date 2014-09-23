@@ -14,12 +14,12 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	var t=this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (typeof field_arguments == 'string') field_arguments = eval('('+field_arguments+')');
-	container.editable_cell = this;
 	container.ondomremoved(function() {
-		container.editable_cell = null;
+		if (t.save_button) t.unedit();
 		t.field = null;
 		t.save_button = null;
 		t.unedit_button = null;
+		t = null;
 	});
 	/** {typed_field} the typed field */
 	t.field = null;
@@ -182,6 +182,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	};
 	
 	window.pnapplication.onclose.add_listener(function() {
+		if (!t) return;
 		if (t.save_button) t.unedit();
 	});
 	
