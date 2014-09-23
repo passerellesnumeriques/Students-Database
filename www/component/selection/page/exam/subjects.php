@@ -14,7 +14,8 @@ class page_exam_subjects extends SelectionPage {
 		$can_edit = PNApplication::$instance->user_management->has_right("manage_exam_subject");
 		?>
 		<div style='width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column'>
-			<div class='page_title' style='flex:none'>
+			<div class='page_title' style='flex:none;padding:3px 10px'>
+				<img src='/static/selection/exam/exam_clip_art.png'/>
 				Written Exam Subjects
 			</div>
 			<div style="padding:10px;overflow:hidden;flex:1 1 auto;display:flex;flex-direction:row">
