@@ -19,7 +19,7 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 	public function canAccess($sub_model) { return true; } // TODO ?
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_integer","{min:0,can_be_null:true}"); }
-	// TODO public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
+	public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
 	public function getHorizontalAlign() { return "center"; }
 	public function isEditable() { return false; }
 	public function isEditableForNewData() { return true; }
@@ -38,36 +38,18 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 			else
 				$q->addConditionToJoin($table_alias, array("member_type"=>"Child"));
 		}
-		$family_alias = $q->generateFieldAlias();
-		$q->field($table_alias, "family", $family_alias);
 		$key_alias = $q->generateFieldAlias();
 		$q->field($table_alias, "id", $key_alias);
-		return array("family"=>$family_alias,"key"=>$key_alias,"data"=>null);
+		
+		$nb_sibling_alias = $q->generateFieldAlias();
+		$q->expression("IF(`$table_alias`.family IS NULL,NULL,(SELECT COUNT(*) FROM FamilyMember WHERE FamilyMember.family=`$table_alias`.family AND FamilyMember.member_type='Child')-1)",$nb_sibling_alias);
+		return array("key"=>$key_alias,"data"=>$nb_sibling_alias);
 	}
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
-		// TODO
-	}
-	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
-		$families = array();
-		foreach ($rows as $row) if ($row[$sql_aliases["family"]] <> null && !in_array($row[$sql_aliases["family"]],$families)) array_push($families,$row[$sql_aliases["family"]]);
-		$requests = array();
-		if (count($families) > 0) {
-			$q = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereIn("FamilyMember","family",$families)->whereValue("FamilyMember","member_type","Child")->groupBy("FamilyMember","family")->countOneField("FamilyMember","family","nb_children")->field("FamilyMember","family","family");
-			$families = $q->execute();
-			array_push($requests, array($q,$families));
-		}
-		$alias = $original_query->generateFieldAlias();
-		for ($i = 0; $i < count($rows); $i++) {
-			if ($rows[$i][$sql_aliases["family"]] == null) $rows[$i][$alias] = null;
-			else {
-				$nb = 0;
-				foreach ($families as $f) if ($f["family"] == $rows[$i][$sql_aliases["family"]]) { $nb = $f["nb_children"]; break; }
-				if ($nb > 0) $nb--;
-				$rows[$i][$alias] = $nb;
-			}
-		}
-		$sql_aliases["data"] = $alias;
-		return $requests;
+		$table_alias = $q->getTableAlias($path->table->getName());
+		$cd = $this->getExpressionFilterCondition("`".$data_aliases["data"]."`", "filter_comparable", $filter, $q);
+		if ($cd == null) return null;
+		return array("type"=>"having","condition"=>$cd);
 	}
 	
 	public function getNewData() { return null; }
@@ -102,7 +84,7 @@ class ChildRank extends datamodel\DataDisplay {
 	public function canAccess($sub_model) { return true; } // TODO ?
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_integer","{min:1,can_be_null:true}"); }
-	// TODO public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
+	public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
 	public function getHorizontalAlign() { return "center"; }
 	public function isEditable() { return false; }
 	public function isEditableForNewData() { return true; }
@@ -130,7 +112,9 @@ class ChildRank extends datamodel\DataDisplay {
 		return array("family"=>$family_alias,"key"=>$key_alias,"data"=>$child_rank_alias);
 	}
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
-		// TODO
+		$table_alias = $q->getTableAlias($path->table->getName());
+		$col = $path->table->internalGetColumn("child_rank");
+		return $this->getColumnFilterCondition($table_alias, $col, $filter, $q);
 	}
 	
 	public function getNewData() { return null; }

@@ -94,7 +94,7 @@ abstract class DataDisplay {
 	 * @param DataPath $path how we reached this data
 	 * @return array of array(sub request,result)
 	 */
-	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {}
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) { return array(); }
 	
 	/** Structure to use when creating a new data. This structure will be used in the typed_field, to edit the new data
 	 * @return array|null the associative array will then be converted into JSON, to give it to the typed_field 

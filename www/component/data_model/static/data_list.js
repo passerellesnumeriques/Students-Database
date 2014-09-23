@@ -1113,6 +1113,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			} else
 				t._page_num_div.innerHTML = result.data.length;
 			layout.changed(t.header);
+			//window.console.log("request time: "+result.time+"s.");
 			t.data = result.data;
 			if (t.data.length == 0) {
 				t.grid.setData([]);

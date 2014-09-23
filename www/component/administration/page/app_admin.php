@@ -322,7 +322,7 @@ function getUpdateURL(filename) {
 	return update_url.replace("##FILE##",filename);
 }
 
-function download_new_version(new_versions, new_version_index, icon, msg, reset) {
+function download_new_version(new_versions, new_version_index, icon, msg, reset, onsuccess) {
 	icon.src = theme.icons_16.loading;
 	msg.innerHTML = "Downloading version "+new_versions[new_version_index];
 	var progress = document.createElement("SPAN");
@@ -337,7 +337,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 			button.innerHTML = "Retry";
 			button.style.marginLeft = "5px";
 			button.onclick = function() {
-				download_new_version(new_versions, new_version_index, icon, msg);
+				download_new_version(new_versions, new_version_index, icon, msg, false, onsuccess);
 			};
 			msg.appendChild(button);
 			return;
@@ -356,7 +356,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 				button.innerHTML = "Retry";
 				button.style.marginLeft = "5px";
 				button.onclick = function() {
-					download_new_version(new_versions, new_version_index, icon, msg);
+					download_new_version(new_versions, new_version_index, icon, msg, false, onsuccess);
 				};
 				msg.appendChild(button);
 				return;
@@ -381,7 +381,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 							button.innerHTML = "Retry";
 							button.style.marginLeft = "5px";
 							button.onclick = function() {
-								download_new_version(new_versions, new_version_index, icon, msg);
+								download_new_version(new_versions, new_version_index, icon, msg, false, onsuccess);
 							};
 							msg.appendChild(button);
 							return;
@@ -400,7 +400,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 								button.innerHTML = "Retry";
 								button.style.marginLeft = "5px";
 								button.onclick = function() {
-									download_new_version(new_versions, new_version_index, icon, msg);
+									download_new_version(new_versions, new_version_index, icon, msg, false, onsuccess);
 								};
 								msg.appendChild(button);
 								return;
@@ -410,7 +410,8 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 							service.customOutput("administration","download_update",{step:'check_if_done',version:prev_version+"_to_"+new_version},function(res) {
 								if (res == "OK") {
 									icon.src = theme.icons_16.ok;
-									msg.innerHTML = "New version downloaded and ready to be installed. You can now put the software into <i>Maintenance Mode</i> (see below), then you will have the option to install it.";
+									msg.innerHTML = "New version ("+new_version+") downloaded and ready to be installed. You can now put the software into <i>Maintenance Mode</i> (see below), then you will have the option to install it.";
+									if (onsuccess) onsuccess();
 									return;
 								}
 								if (res == "not_downloaded") {
@@ -428,7 +429,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 								button.innerHTML = "Retry";
 								button.style.marginLeft = "5px";
 								button.onclick = function() {
-									download_new_version(new_versions, new_version_index, icon, msg, true); // retry, with reset
+									download_new_version(new_versions, new_version_index, icon, msg, true, onsuccess); // retry, with reset
 								};
 								msg.appendChild(button);
 							});
@@ -451,7 +452,7 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset)
 				button.innerHTML = "Retry";
 				button.style.marginLeft = "5px";
 				button.onclick = function() {
-					download_new_version(new_versions, new_version_index, icon, msg, true); // retry, with reset
+					download_new_version(new_versions, new_version_index, icon, msg, true, onsuccess); // retry, with reset
 				};
 				msg.appendChild(button);
 			});
@@ -481,15 +482,21 @@ require("deploy_utils.js",function() {
 			span.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> The version is up to date !";
 			return;
 		}
-		span.innerHTML = "<img src='"+theme.icons_16.warning+"'/> "+(new_versions.length)+" newer version"+(new_versions.length > 1 ? "s" : "")+" found!";
-		var div = document.createElement("DIV");
-		section_updates.content.appendChild(div);
-		var icon = document.createElement("IMG");
-		icon.style.verticalAlign = "bottom";
-		var msg = document.createElement("SPAN");
-		div.appendChild(icon);
-		div.appendChild(msg);
-		download_new_version(new_versions, 0, icon, msg);
+		span.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> "+(new_versions.length)+" newer version"+(new_versions.length > 1 ? "s" : "")+" found!";
+		var next_version = function(index) { 
+			var div = document.createElement("DIV");
+			section_updates.content.appendChild(div);
+			var icon = document.createElement("IMG");
+			icon.style.verticalAlign = "bottom";
+			var msg = document.createElement("SPAN");
+			div.appendChild(icon);
+			div.appendChild(msg);
+			download_new_version(new_versions, index, icon, msg, false, function() {
+				if (index < new_versions.length-1)
+					next_version(index+1);
+			});
+		};
+		next_version(0);
 	});
 });
 

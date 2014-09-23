@@ -21,6 +21,7 @@ $model->addTable("FamilyMember")
 	->addBoolean("living_with_family", true)
 	->addInteger("child_rank", 8, 1) // ? should we put it ?
 	->addString("comment",250,0,true,false)
+	->addIndex("family","member_type") // to find easily all children, or parents
 	->addReadAccessFromForeignTable("People")
 	->addReadAccessFromForeignTable("FamilyMember")
 	->addRemoveAccessFromForeignTable("People")

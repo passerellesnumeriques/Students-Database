@@ -903,7 +903,7 @@ class SQLQuery {
 			else
 				$table = DataModel::get()->getTable($t);
 			if ($alias == null) $alias = $table->getSQLName($this->sub_models);
-			if (count($this->fields) == 0 && $this->count === null && count($this->expressions) == 0) {
+			if (count($this->fields) == 0 && $this->count === null && count($this->expressions) == 0 && $this->count_one_field == null) {
 				if ($this->bypass_security)
 					$columns = $table->internalGetColumns($this->sub_models);
 				else
@@ -1018,7 +1018,7 @@ class SQLQuery {
 					if ($f[2] <> null) $sql .= " AS `".$f[2]."`";
 				}
 			}
-			if ($this->count !== null) {
+			if ($this->count !== null && count($this->having) == 0) {
 				if ($first) $first = false; else $sql .= ",";
 				$sql .= "COUNT(*)";
 				if ($this->count[0] <> null)
@@ -1132,6 +1132,9 @@ class SQLQuery {
 					$sql .= "`".$this->resolveWhereTable($o[0])."`.";
 				$sql .= "`".$o[1]."` ".($o[2] ? "ASC" : "DESC");
 			}
+		}
+		if ($this->count !== null && count($this->having) > 0) {
+			$sql = "SELECT COUNT(*)".($this->count[0] <> null ? " AS `".$this->count[0]."`" : "")." FROM (".$sql.") AS `THE_QUERY_TO_COUNT`";
 		}
 		if ($this->limit_number > 0) {
 			$sql .= " LIMIT ".$this->limit_from.",".$this->limit_number;

@@ -277,6 +277,7 @@ class service_get_data_list extends Service {
 				$q->limit(($page-1)*$nb, $nb);
 			}
 		}
+		$query_start_time = microtime(true);
 		// execute the query
 		$res = $q->execute();
 		
@@ -351,6 +352,7 @@ class service_get_data_list extends Service {
 				}
 			}
 		}
+		$query_end_time = microtime(true);
 		
 		if (!$sort_done) {
 			// manual sort
@@ -373,6 +375,7 @@ class service_get_data_list extends Service {
 			echo "{";
 			if (isset($input["page_size"]))
 				echo "count:".$count.",";
+			echo "time:".($query_end_time-$query_start_time).",";
 			echo "data:[";
 			$first = true;
 			foreach ($res as $row) {
