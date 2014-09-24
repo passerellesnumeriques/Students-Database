@@ -3,68 +3,37 @@ require_once("component/selection/page/SelectionPage.inc");
 class page_exam_results extends SelectionPage {
 	public function getRequiredRights() { return array(); }
 	public function executeSelectionPage(){
-			
 		theme::css($this, "section.css");
-
 		$this->requireJavascript("jquery.min.js");
 		$this->requireJavascript("address_text.js");
 		$this->addJavascript("/static/widgets/section/section.js");
-		$this->onload("sectionFromHTML('sessions_list');");
-		$this->onload("sectionFromHTML('session_info');");
-		$this->onload("sectionFromHTML('session_applicants');"); 
-		$this->addJavascript("/static/selection/exam/results.js");
 		$this->requireJavascript("data_list.js");
-		$this->onload("createDataList(".$this->component->getCampaignId().");");
-		$this->onload("initResults()");
 	?>
-	
-
-		<style>
-			table>tbody>tr>td {
-				text-align: center;
-			}
-			table>tbody>tr.clickable_row:hover{
-			background-color: #FFF0D0;
-			background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
-			}
-			
-			table>tbody>tr.selectedRow{
-			background-color: #FFF0D0;
-			background: linear-gradient(to bottom, #FFF0D0 0%, orange 100%);
-			}
-		</style>
-			
-	<!-- main structure of the exam results page -->
-	<div style="margin:10px;display:flex;flex-direction:row">
-		<div id="sessions_with_button" style="display: inline-block;vertical-align: top;flex:1 1 auto;">
-			<div style ="max-height: 300px;overflow: auto">
-			      <div id = "sessions_list" title='Exam sessions list' icon="/static/calendar/calendar_16.png" collapsable='true' css="soft">
-				<?php $this->createTableSessionsList();?>
-			      </div>
-			</div>
-			<div id="sessions_buttons" style="position:relative;margin-right: 5px;height:28px;background-color:rgb(229,190,212);border-radius:3px;">
-				<button id="edit_notes" class="action" style="position:absolute;top:0;bottom: 0;left:0;right:0;width:9%;height: 58%;margin: auto;" >EDIT NOTES</button>
-			</div>
-		</div>
-		<div id = "session_info" title='Exam session informations' icon="/static/theme/default/icons_16/info.png" collapsable='true' style='display:inline-block;vertical-align: top;flex:none;height:100%;' css="soft">
-			<div id="session_info_location" style='padding-left:5px;'></div>
-		</div>
-	</div>
-		
-
-	<!--List of applicants-->		
-	<div id = "session_applicants" title='Applicants list' icon="/static/selection/applicant/applicants_16.png" collapsable='true' css="soft" style="width:500px;margin: 20px 0 0 10px;" >
-	       <div id="session_applicants_list"></div>
-	</div>
-
-	<?php
+<style>
+	table>tbody>tr>td {
+		text-align: center;
 	}
-	/*
-	 * Generate html Table element displaying Sessions List (grouped by Exam Center)
-	 */
-	private function createTableSessionsList()
-		{
-			$q = SQLQuery::create()->select("ExamCenter")
+	table>tbody>tr.clickable_row:hover{
+	background-color: #FFF0D0;
+	background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
+	}
+	
+	table>tbody>tr.selectedRow{
+	background-color: #FFF0D0;
+	background: linear-gradient(to bottom, #FFF0D0 0%, orange 100%);
+	}
+</style>
+			
+<!-- main structure of the exam results page -->
+<div style="width:100%;height:100%;display:flex;flex-direction:column">
+	<div class="page_title" style="flex:none">
+		Written Exam Results
+	</div>
+	<div style="flex: 1 1 auto;display:flex;flex-direction:row;">
+		<div style="flex:1 1 auto;padding:5px;padding-right:0px;">
+			<div id="sessions_list" title='Exam sessions' icon="/static/calendar/calendar_16.png" collapsable='true' css="soft">
+		      	<?php 
+				$q = SQLQuery::create()->select("ExamCenter")
 					->field("ExamCenter","name")
 					->field("ExamCenter","id","center_id")
 					->field("CalendarEvent","start")
@@ -77,39 +46,134 @@ class page_exam_results extends SelectionPage {
 					->join("ExamSession","Applicant",array("event"=>"exam_session"))
 					->field("ExamSession","event","session_id")
 					->join("Applicant","ExamCenterRoom",array("exam_center_room"=>"id"));
-			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
-			$exam_sessions=$q->groupBy("ExamSession","event")->groupBy("ExamCenterRoom","id")->execute();
+				PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
+				$exam_sessions=$q->groupBy("ExamSession","event")->groupBy("ExamCenterRoom","id")->execute();
+				?>
+				<table class="grid" id="table_exam_results" style="width: 100%">
+					<thead>
+						<tr>
+						      <th>Exam Session</th>
+						      <th>Room</th>
+						      <th>Applicants</th>
+						      <th>Status</th>					      
+						</tr>
+					</thead>
+					<tbody>
+				<?php
+				$exam_center_id=null;
+				foreach($exam_sessions as $exam_session){
+					$session_name=date("d M Y",$exam_session['start'])." (".date("h:ia",$exam_session['start'])." to ".date("h:ia",$exam_session['end']).")";
+					if ($exam_center_id<>$exam_session['center_id']){ // Group for a same exam center
+						$exam_center_id=$exam_session['center_id'] ?>
+						<tr class="exam_center_row" >
+							<th colspan="4" ><?php echo $exam_session['name'];?></th>
+					    </tr><?php } //end of if statement ?> 
+						<tr class="clickable_row" style="cursor: pointer" session_id="<?php echo $exam_session['session_id'];?>" room_id="<?php echo $exam_session['room_id'];?>" exam_center_id="<?php echo $exam_center_id;?>" > 
+							<td><?php echo $session_name ?></td>
+							<td><?php echo $exam_session['room_name'] ?></td>
+							<td><?php echo $exam_session['applicants'] ?></td>
+							<td><?php echo 'TODO..' ?></td>
+						</tr>
+					<?php } // end of foreach statement ?>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<!--List of applicants-->
+		<div style="flex:1 1 auto;padding:5px;padding-right:0px;">		
+			<div id="session_applicants" title='Applicants for selected session' icon="/static/selection/applicant/applicants_16.png" collapsable='true' css="soft">
+				<div id="session_applicants_list" style="display:none"></div>
+			</div>
+		</div>
+	</div>
+	<div class="page_footer" style="flex:none">
+		<button id="edit_results_button" class="action" disabled="disabled" onclick="editResults();">Edit Results</button>
+	</div>
+</div>
+<script type='text/javascript'>
+/* global variable containing data about selected items */
+var selected={};
 
-		?>
-			<table class="grid" id="table_exam_results" style="width: 100%">
-				<thead>
-					<tr>
-					      <th>Exam Session</th>
-					      <th>Room</th>
-					      <th>Applicants</th>
-					      <th>Status</th>					      
-					</tr>
-				</thead>
-				<tbody>
-			<?php
-			$exam_center_id=null;
-			foreach($exam_sessions as $exam_session){
-				$session_name=date("Y.m.d",$exam_session['start'])." (".date("h:i:a",$exam_session['start'])." to ".date("h:i:a",$exam_session['end']).")";
-				if ($exam_center_id<>$exam_session['center_id']){ // Group for a same exam center
-				       $exam_center_id=$exam_session['center_id'] ?>
-				       <tr class="exam_center_row" >
-					       <th colspan="4" ><?php echo $exam_session['name'];?></th>
-				       </tr><?php } //end of if statement ?> 
-					<tr  class="clickable_row" style="cursor: pointer" session_id="<?php echo $exam_session['session_id'];?>" room_id="<?php echo $exam_session['room_id'];?>" exam_center_id="<?php echo $exam_center_id;?>" > 
-						<td><?php echo $session_name ?></td>
-						<td><?php echo $exam_session['room_name'] ?></td>
-						<td><?php echo $exam_session['applicants'] ?></td>
-						<td><?php echo 'TODO..' ?></td>
-					</tr>
-				<?php } // end of foreach statement ?>
-				</tbody>
-			</table>
-		<?php
+/*
+ * Create data list for showing applicants attached to an exam session
+ */
+function createDataList(campaign_id)
+{
+	new data_list(
+		"session_applicants_list",
+		"Applicant", campaign_id,
+		[
+			"Personal Information.First Name",
+			"Personal Information.Last Name",
+			"Personal Information.Gender",
+			"Personal Information.Birth Date"
+		],
+		[],
+		-1,
+		"Personal Information.Last Name", true,
+		function(list) {
+			window.dl = list;
 		}
+	);
+}
+
+function initResults(){
+	// Update the exam session info and applicants list boxes
+	$("tr.clickable_row").click(function(){
+		// display selected row 
+		$(this).addClass("selectedRow");
+		$(this).siblings().removeClass("selectedRow");
+	      
+		// get the exam session's data for the selected row
+		selected["session_name"]= $(this).children().eq(0).text(); // TODO
+		selected["room_name"]= $(this).children().eq(1).text();      
+		selected["exam_center_name"]=$(this).prevAll(".exam_center_row").first().children().eq(0).text();
+		selected["exam_center_id"]=this.getAttribute("exam_center_id");
+		selected["session_id"]=this.getAttribute("session_id");
+		selected["room_id"]=this.getAttribute("room_id");
+	      
+		// update applicants list
+		updateApplicantsList();
+
+		document.getElementById("session_applicants_list").style.display = selected["session_id"] != null ? "" : "none";
+		document.getElementById('edit_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
+	});
+}
+
+function updateApplicantsList() {
+	/* Check if the data list is already initialized */
+	if (!window.dl) {
+		setTimeout(function() { updateApplicantsList(); },10);
+		return;
+	}
+	window.dl.resetFilters();
+	window.dl.addFilter({category:"Selection",name:"Exam Session",force:true,data:{values:[selected["session_id"]]}});
+	window.dl.addFilter({category:"Selection",name:"Exam Center Room",force:true,data:{values:[selected["room_id"]]}});
+	window.dl.reloadData();
+}
+
+function editResults() {
+	/* Check if an exam session row is selected */ 
+	if(selected["session_id"] != null) {
+		/* open a new window pop up for results edition */
+		window.top.popup_frame(
+			"/static/selection/exam/results_edit.jpg",
+			"Exam Session Results",
+			"/dynamic/selection/page/exam/results_edit",
+			selected,
+			95, 95,
+			function(frame, pop) {}
+		);
+	}
+}
+
+sectionFromHTML('sessions_list');
+sectionFromHTML('session_applicants');
+createDataList(<?php echo $this->component->getCampaignId();?>);
+initResults();
+
+</script>
+	<?php
+	}
 }
 ?>

@@ -130,6 +130,16 @@ function LoadingHidder(to_hide) {
 	this._position = function() {
 		if (!this.div) return;
 		if (window.closing) return;
+		var p = to_hide;
+		do {
+			if (p.style && p.style.display == "none") { p = null; break; }
+			p = p.parentNode;
+		} while (p && p.nodeName != "BODY" && p.nodeName != "HTML");
+		if (!p) {
+			this.div.style.display = "none";
+			return;
+		}
+		this.div.style.display = "";
 		this.div.style.top = (absoluteTop(to_hide))+"px";
 		this.div.style.left = (absoluteLeft(to_hide))+"px";
 		this.div.style.width = to_hide.offsetWidth+"px";

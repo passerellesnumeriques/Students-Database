@@ -1,7 +1,6 @@
 table.grid {
 	border-collapse: collapse;
 	border-spacing: 0px;
-	box-shadow: 2px 0px 2px 0px #A0A0A0;
 }
 table.grid, table.grid input, table.grid select, table.grid table {
 	font-size: 11px;
