@@ -247,6 +247,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	this.loadEvents = function() {
 		for (var i = 0; i < this.calendar_manager.calendars.length; ++i) {
 			var cal = this.calendar_manager.calendars[i];
+			if (!cal.show) continue;
 			for (var j = 0; j < cal.events.length; ++j)
 				t.addEvent(cal.events[j]);
 		}

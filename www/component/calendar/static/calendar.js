@@ -481,7 +481,7 @@ function CalendarControl(container, cal, manager) {
 		};
 		this.div.appendChild(this.menu_button);
 		var start_refresh = function() {
-			if (!document || !getWindowFromDocument(document)) return;
+			if (window.closing) return;
 			t.loading = document.createElement("IMG");
 			t.loading.src = theme.icons_10.loading;
 			t.div.appendChild(t.loading);
@@ -522,8 +522,6 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 					t.events = [];
 					for (var i = 0; i < result.length; ++i) {
 						var ev = result[i];
-						ev.start = new Date(parseInt(ev.start)*1000);
-						ev.end = new Date(parseInt(ev.end)*1000);
 						var found = false;
 						for (var j = 0; j < removed_events.length; ++j) {
 							if (ev.uid == removed_events[j].uid) {

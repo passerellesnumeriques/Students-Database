@@ -379,6 +379,7 @@ function calendar_view_week(view, container) {
 		var i = ev.start.getTime()-this.start_date.getTime();
 		i /= 24*60*60*1000;
 		i = Math.floor(i);
+		if (i < 0) i = 0; // starts before, but continue from first displayed day
 		this.events[i].push(ev);
 		this._layout();
 	};

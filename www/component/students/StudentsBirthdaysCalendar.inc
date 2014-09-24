@@ -35,10 +35,10 @@ class StudentsBirthdaysCalendar implements CustomCalendarPlugin {
 				$event = array(
 					"id"=>$student["people_id"],
 					"uid"=>PNApplication::$instance->local_domain."_Student_Birthday_".$student["people_id"],
-					"start"=>strtotime($student["birth"]),
-					"end"=>strtotime($student["birth"])+24*60*60-1,
+					"start"=>\datamodel\ColumnDate::toTimestamp($student["birth"]),
+					"end"=>\datamodel\ColumnDate::toTimestamp($student["birth"])+24*60*60-1,
 					"all_day"=>true,
-					"last_modified"=>strtotime($student["birth"]),
+					"last_modified"=>\datamodel\ColumnDate::toTimestamp($student["birth"]),
 					"title"=>$student["first_name"]." ".$student["last_name"],
 					"description"=>"Birthday of student ".$student["first_name"]." ".$student["last_name"],
 					"frequency"=>array(

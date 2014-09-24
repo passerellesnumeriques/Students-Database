@@ -41,11 +41,30 @@ function CalendarEvent(id, calendar_provider_id, calendar_id, uid, start, end, a
 	this.calendar_provider_id = calendar_provider_id;
 	this.calendar_id = calendar_id;
 	this.uid = uid;
-	/** {Date} start timestamp in seconds of the start of the event */
-	this.start = typeof start == 'number' ? new Date(start*1000) : typeof start == 'string' ? new Date(parseInt(start)*1000) : start;
-	/** {Date} end timestamp in seconds of the end of the event */
-	this.end = typeof end == 'number' ? new Date(end*1000) : typeof end == 'string' ? new Date(parseInt(end)*1000) : end;
-	this.all_day = all_day;
+	if (all_day) {
+		this.all_day = true;
+		var d;
+		if (typeof start == 'number') d = new Date(start*1000);
+		else if (typeof start == 'string') d = new Date(parseInt(start)*1000);
+		else d = start;
+		var year = d.getUTCFullYear();
+		var month = d.getUTCMonth();
+		var day = d.getUTCDate();
+		this.start = new Date(year, month, day, 0, 0, 0, 0);
+		if (typeof end == 'number') d = new Date(end*1000);
+		else if (typeof end == 'string') d = new Date(parseInt(end)*1000);
+		else d = end;
+		var year = d.getUTCFullYear();
+		var month = d.getUTCMonth();
+		var day = d.getUTCDate();
+		this.end = new Date(year, month, day, 23, 59, 59, 999);
+	} else {
+		this.all_day = false;
+		/** {Date} start timestamp in seconds of the start of the event */
+		this.start = typeof start == 'number' ? new Date(start*1000) : typeof start == 'string' ? new Date(parseInt(start)*1000) : start;
+		/** {Date} end timestamp in seconds of the end of the event */
+		this.end = typeof end == 'number' ? new Date(end*1000) : typeof end == 'string' ? new Date(parseInt(end)*1000) : end;
+	}
 	this.last_modified = last_modified;
 	this.title = title;
 	this.description = description;

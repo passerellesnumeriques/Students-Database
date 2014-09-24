@@ -10,6 +10,7 @@ function day_row_layout(calendar_manager) {
 	 * @param {Array} events list of events
 	 * @param {Array} day_boxes list of containers: one per day
 	 * @param {Date} first_day first day displayed
+	 * @returns {Number} height of day boxes
 	 */
 	this.layout = function(events, day_boxes, first_day) {
 		this.removeEvents();
@@ -24,7 +25,9 @@ function day_row_layout(calendar_manager) {
 			if (day1 >= day_boxes.length) continue; // after
 			var day_end = Math.floor((ev.end.getTime()-first_day.getTime())/(24*60*60*1000));
 			if (day_end < 0) continue; // before
+			var real_day1 = day1;
 			if (day1 < 0) day1 = 0;
+			var real_day_end = day_end;
 			if (day_end >= day_boxes.length) day_end = day_boxes.length-1;
 			
 			var y;
@@ -70,6 +73,32 @@ function day_row_layout(calendar_manager) {
 			};
 			day_boxes[0].parentNode.appendChild(div);
 			this.events.push(div);
+			if (real_day1 < 0) {
+				var arrow = document.createElement("DIV");
+				arrow.style.borderTop = "7px solid transparent";
+				arrow.style.borderBottom = "7px solid transparent";
+				arrow.style.borderRight = "4px solid #"+cal.color;
+				arrow.style.position = "absolute";
+				arrow.style.zIndex = 3;
+				arrow.event = ev;
+				arrow.style.left = (div.offsetLeft-3)+"px";
+				arrow.style.top = (div.offsetTop+1)+"px";
+				day_boxes[0].parentNode.appendChild(arrow);
+				this.events.push(arrow);
+			}
+			if (real_day_end >= day_boxes.length) {
+				var arrow = document.createElement("DIV");
+				arrow.style.borderTop = "7px solid transparent";
+				arrow.style.borderBottom = "7px solid transparent";
+				arrow.style.borderLeft = "4px solid #"+cal.color;
+				arrow.style.position = "absolute";
+				arrow.style.zIndex = 3;
+				arrow.event = ev;
+				arrow.style.left = (div.offsetLeft+div.offsetWidth-1)+"px";
+				arrow.style.top = (div.offsetTop+1)+"px";
+				day_boxes[0].parentNode.appendChild(arrow);
+				this.events.push(arrow);
+			}
 		}
 		
 		var h = 0;
