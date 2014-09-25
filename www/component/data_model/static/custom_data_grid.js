@@ -170,13 +170,17 @@ custom_data_grid.prototype = {
 				// child is a container
 				if (container.sub_columns[i].getColumnById(col_id) != null) {
 					// it contains it
+					var sub_container_shown = container.sub_columns[i].grid_column_container;
 					this._showColumnInContainer(container, container.sub_columns[i], col_id, index+index_in_container);
 					if (!container.shown) {
 						container.shown = true;
 						container.grid_column_container = new GridColumnContainer(container.title, [container.sub_columns[i].grid_column_container]);
 						if (!parent_container)
 							this.grid.addColumnContainer(container.grid_column_container, index);
-					}
+						else
+							parent_container.grid_column_container.addSubColumn(container.grid_column_container);
+					} else if (!sub_container_shown)
+						container.grid_column_container.addSubColumn(container.sub_columns[i].grid_column_container);
 					return;
 				}
 				if (container.shown)

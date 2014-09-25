@@ -279,6 +279,19 @@ class calendar extends Component {
 		return $ev_name;
 	}
 	
+	public function getEvent($calendar_id, $event_id) {
+		if(!$this->canReadCalendar($calendar_id)){
+			PNApplication::error("Access denied to this calendar");
+			return false;
+		}
+		$ev = SQLQuery::create()->bypassSecurity()->select("CalendarEvent")->whereValue("CalendarEvent","id",$event_id)->executeSingleRow();
+		if ($ev["calendar"] <> $calendar_id) {
+			PNApplication::error("Invalid event ID");
+			return false;
+		}
+		return $ev;
+	}
+	
 	/** Join the CalendarEvent table.
 	 * @param SQLQuery $q the query to join
 	 * @param string $from_table origin table name

@@ -496,6 +496,7 @@ class page_exam_subject extends SelectionPage {
 					if (isNaN(config)) config = null;
 				}
 				if (config != null && config > 1) nb_answers = config;
+				else question.question.type_config = nb_answers;
 				var id = generateID();
 				for (var i = 0; i < nb_answers; ++i) {
 					var cb = document.createElement("INPUT");

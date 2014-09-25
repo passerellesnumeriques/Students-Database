@@ -128,7 +128,7 @@ field_decimal.prototype._create = function(data) {
 			else {
 				var val = parseFloat(t.input.value);
 				if (isNaN(val)) val = null;
-				if (val == null && !this.config.can_be_null) this.error = "Please specify a value";
+				if (val === null && !this.config.can_be_null) this.error = "Please specify a value";
 				else if (typeof this.config.min != 'undefined' && val < this.config.min) this.error = "Must be minimum "+this.config.min.toFixed(t.config.decimal_digits);
 				else if (typeof this.config.max != 'undefined' && val > this.config.max) this.error = "Must be maximum "+this.config.max.toFixed(t.config.decimal_digits);
 				else this.error = null;

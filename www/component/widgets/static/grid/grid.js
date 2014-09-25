@@ -72,13 +72,13 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		}
 		return list;
 	};
-	this.addSubColumn = function(final_col, index) {
+	this.addSubColumn = function(col, index) {
 		if (typeof index == 'undefined' || index >= this.sub_columns.length)
-			this.sub_columns.push(final_col);
+			this.sub_columns.push(col);
 		else
-			this.sub_columns.splice(index,0,final_col);
+			this.sub_columns.splice(index,0,col);
 		this._updateLevels();
-		this.grid._subColumnAdded(this, final_col);
+		this.grid._subColumnAdded(this, col);
 	};
 }
 
@@ -457,12 +457,24 @@ function grid(element) {
 		// insert the container TH
 		if (typeof index != 'undefined') {
 			// calculate the real index in the TR for the header
-			var i = index;
-			var tr_index = t.selectable ? 1 : 0;
-			while (i > 0) {
-				i -= t.header_rows[level].childNodes[tr_index].colSpan;
-				tr_index++;
+			var matrix = [];
+			for (var i = 0; i <= level; ++i) matrix.push([]);
+			for (var i = 0; i <= level; ++i) {
+				var tr = t.header_rows[i];
+				for (var j = 0; j < tr.childNodes.length; ++j) {
+					var th = tr.childNodes[j];
+					var cols = th.colSpan ? th.colSpan : 1;
+					var rows = th.rowSpan ? th.rowSpan : 1;
+					matrix[i].push(th);
+					for (var k = 0; k < rows && i+k<=level; k++)
+						for (var l = 0; l < cols; l++)
+							if (k!=0||l!=0) matrix[i+k].push(null);
+				}
 			}
+			var tr_index = 0;
+			var i;
+			for (i = index; i > 0; i--)
+				if (matrix[level][i] != null) tr_index++;
 			if (tr_index < t.header_rows[level].childNodes.length)
 				t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[tr_index]);
 			else
@@ -566,7 +578,7 @@ function grid(element) {
 		layout.changed(this.thead);
 		layout.changed(this.table);
 	};
-	t._subColumnAdded = function(container, final_col) {
+	t._subColumnAdded = function(container, col) {
 		// get the top level
 		var top_container = container;
 		while (top_container.parent_column) top_container = top_container.parent_column;
@@ -586,14 +598,20 @@ function grid(element) {
 			}
 			p = p.parent_column;
 		}
-		// finally, add the final column
-		var list = container.getFinalColumns();
-		var first_index = this.getColumnIndex(final_col == list[0] ? list[1] : list[0]);
 		var level;
-		for (level = 0; level < t.header_rows.length-1; level++) {
+		for (level = 0; level < t.header_rows.length-1; level++)
 			if (t.header_rows[level] == container.th.parentNode) break;
+		if (col instanceof GridColumn) {
+			// finally, add the final column
+			var list = container.getFinalColumns();
+			var first_index = this.getColumnIndex(col == list[0] ? list[1] : list[0]);
+			t._addFinalColumn(col, level+1, first_index+list.indexOf(col));
+		} else {
+			var list = container.getFinalColumns();
+			var first_index = this.getColumnIndex(list[0]);
+			var sub_list = col.getFinalColumns();
+			t._addColumnContainer(col, level+1, first_index+list.indexOf(sub_list[0]));
 		}
-		t._addFinalColumn(final_col, level+1, first_index+list.indexOf(final_col));
 	};
 	
 	t.addColumn = function(column, index) {

@@ -20,7 +20,6 @@ class service_get_js extends Service {
 			$cmd .= " \"$file\"";
 		}
 		$cmd .= " 2>&1";
-		session_write_close();
 		$out = array();
 		$ret = 0;
 		exec($cmd, $out, $ret);

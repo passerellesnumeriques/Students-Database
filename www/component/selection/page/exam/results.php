@@ -27,11 +27,12 @@ class page_exam_results extends SelectionPage {
 <!-- main structure of the exam results page -->
 <div style="width:100%;height:100%;display:flex;flex-direction:column">
 	<div class="page_title" style="flex:none">
+		<img src='/static/transcripts/transcript_32.png'/>
 		Written Exam Results
 	</div>
 	<div style="flex: 1 1 auto;display:flex;flex-direction:row;">
 		<div style="flex:1 1 auto;padding:5px;padding-right:0px;">
-			<div id="sessions_list" title='Exam sessions' icon="/static/calendar/calendar_16.png" collapsable='true' css="soft">
+			<div id="sessions_list" title='Exam sessions' icon="/static/calendar/calendar_16.png" css="soft">
 		      	<?php 
 				$q = SQLQuery::create()->select("ExamCenter")
 					->field("ExamCenter","name")
@@ -81,14 +82,16 @@ class page_exam_results extends SelectionPage {
 		</div>
 		<!--List of applicants-->
 		<div style="flex:1 1 auto;padding:5px;padding-right:0px;">		
-			<div id="session_applicants" title='Applicants for selected session' icon="/static/selection/applicant/applicants_16.png" collapsable='true' css="soft">
+			<div id="session_applicants" title='Applicants for selected session' icon="/static/selection/applicant/applicants_16.png" css="soft">
 				<div id="session_applicants_list" style="display:none"></div>
 			</div>
 		</div>
 	</div>
+	<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
 	<div class="page_footer" style="flex:none">
 		<button id="edit_results_button" class="action" disabled="disabled" onclick="editResults();">Edit Results</button>
 	</div>
+	<?php } ?>
 </div>
 <script type='text/javascript'>
 /* global variable containing data about selected items */
@@ -108,7 +111,7 @@ function createDataList(campaign_id)
 			"Personal Information.Gender",
 			"Personal Information.Birth Date"
 		],
-		[],
+		[{category:"Selection",name:"Exam Session",force:true,data:{values:[-1]}}],
 		-1,
 		"Personal Information.Last Name", true,
 		function(list) {
@@ -125,9 +128,6 @@ function initResults(){
 		$(this).siblings().removeClass("selectedRow");
 	      
 		// get the exam session's data for the selected row
-		selected["session_name"]= $(this).children().eq(0).text(); // TODO
-		selected["room_name"]= $(this).children().eq(1).text();      
-		selected["exam_center_name"]=$(this).prevAll(".exam_center_row").first().children().eq(0).text();
 		selected["exam_center_id"]=this.getAttribute("exam_center_id");
 		selected["session_id"]=this.getAttribute("session_id");
 		selected["room_id"]=this.getAttribute("room_id");
@@ -136,7 +136,9 @@ function initResults(){
 		updateApplicantsList();
 
 		document.getElementById("session_applicants_list").style.display = selected["session_id"] != null ? "" : "none";
+		<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
 		document.getElementById('edit_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
+		<?php } ?>
 	});
 }
 
@@ -157,10 +159,10 @@ function editResults() {
 	if(selected["session_id"] != null) {
 		/* open a new window pop up for results edition */
 		window.top.popup_frame(
-			"/static/selection/exam/results_edit.jpg",
+			"/static/transcripts/grades_16.png",
 			"Exam Session Results",
-			"/dynamic/selection/page/exam/results_edit",
-			selected,
+			"/dynamic/selection/page/exam/edit_results?session="+selected["session_id"]+"&room="+selected["room_id"],
+			null,
 			95, 95,
 			function(frame, pop) {}
 		);
