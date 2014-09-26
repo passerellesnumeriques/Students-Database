@@ -31,10 +31,10 @@ class StaffBirthdaysCalendar implements CustomCalendarPlugin {
 			$event = array(
 				"id"=>$staff["people_id"],
 				"uid"=>PNApplication::$instance->local_domain."_Staff_Birthday_".$staff["people_id"],
-				"start"=>strtotime($staff["birth"]),
-				"end"=>strtotime($staff["birth"])+24*60*60-1,
+				"start"=>\datamodel\ColumnDate::toTimestamp($staff["birth"]),
+				"end"=>\datamodel\ColumnDate::toTimestamp($staff["birth"])+24*60*60-1,
 				"all_day"=>true,
-				"last_modified"=>strtotime($staff["birth"]),
+				"last_modified"=>\datamodel\ColumnDate::toTimestamp($staff["birth"]),
 				"title"=>$staff["first_name"]." ".$staff["last_name"],
 				"description"=>"Birthday of ".$staff["first_name"]." ".$staff["last_name"].", PN Staff !",
 				"frequency"=>array(

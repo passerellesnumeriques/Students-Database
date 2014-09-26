@@ -934,7 +934,11 @@ namespace datamodel {
 			$y = intval($s[0]);
 			$m = intval($s[1]);
 			$d = intval($s[2]);
-			return mktime(0,0,0,$m,$d,$y);
+			$tz = date_default_timezone_get();
+			date_default_timezone_set("GMT");
+			$ts = mktime(0,0,0,$m,$d,$y);
+			date_default_timezone_set($tz);
+			return $ts;
 		}
 
 		public function validate($value) {
