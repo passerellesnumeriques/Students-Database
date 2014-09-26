@@ -36,7 +36,7 @@ class service_get_js extends Service {
 		if ($js == null) {
 			PNApplication::error("Error encoding JavaScript doc into JSON structure");
 		}
-		echo "{js:".$js.",out:[";
+		echo "{\"js\":".$js.",\"out\":[";
 		$first = true;
 		foreach ($out as $line) {
 			if ($first) $first = false; else echo ",";

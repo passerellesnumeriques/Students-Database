@@ -499,6 +499,8 @@ function grid(element) {
 			if (index < 0) index = undefined;
 			else if (index >= t.columns.length) index = undefined;
 		}
+		if (level < t.header_rows.length-1)
+			col.th.rowSpan = t.header_rows.length-level;
 		col.grid = this;
 		if (typeof index == 'undefined') {
 			t.columns.push(col);
@@ -532,7 +534,7 @@ function grid(element) {
 			}
 		}
 		col._refresh_title();
-		if (!col.loaded) {
+		if (!col._loaded) {
 			t._columns_loading++;
 			col.onloaded.add_listener(function() { t._columns_loading--; t._check_loaded(); });
 		}
