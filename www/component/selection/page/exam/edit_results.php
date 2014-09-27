@@ -420,11 +420,12 @@ function SubjectGrid(subject, container, edit_mode) {
 
 var edit_mode = document.getElementById('edit_mode');
 
+var subjects_tabs = null;
 function buildGrid() {
 	var tabs_container = document.getElementById('tabs_container');
 	tabs_container.removeAllChildren();
 	subjects_grids = [];
-	var subjects_tabs = new tabs(tabs_container, true);
+	subjects_tabs = new tabs(tabs_container, true);
 	for (var i = 0; i < subjects.length; ++i) {
 		var container = document.createElement("DIV");
 		container.style.display = "flex";
@@ -495,54 +496,188 @@ function importClickers(ev) {
 				span.appendChild(document.createTextNode("No subject match the number of questions, impossible to import this test"));
 				li.appendChild(span);
 			} else if (possible_subjects.length == 1) {
-				// TODO
+				var span = document.createElement("SPAN");
+				span.style.marginLeft = "5px";
+				span.style.fontWeight = "bold";
+				span.appendChild(document.createTextNode("Match with subject "+possible_subjects[0].name));
+				li.appendChild(span);
+				subject_matching.push({test:tests[i],subject:possible_subjects[0]});
 			} else {
 				// TODO
-			}
-		}
-		var missing = [];
-		for (var i = 0; i < applicants.length; ++i) missing.push(applicants[i]);
-		var exam_takers = {};
-		var nb_takers = 0;
-		for (var i = 0; i < tests.length; ++i) {
-			for (var j = 0; j < tests[i].applicants.length; ++j)
-				if (typeof exam_takers[tests[i].applicants[j].id] == 'undefined') {
-					nb_takers++;
-					var app = null;
-					for (var k = 0; k < applicants.length; ++k) if (applicants[k].applicant_id == tests[i].applicants[j].id) { app = applicants[k]; break; }
-					if (app != null)
-						for (var k = 0; k < missing.length; ++k) if (missing[k] == app) { missing.splice(k,1); break; }
-					exam_takers[tests[i].applicants[j].id] = app;
-				}
-		}
-		div = document.createElement("DIV");
-		div.innerHTML = nb_takers+" clicker"+(nb_takers > 1 ? "s" : "")+" found in the file:";
-		content.appendChild(div);
-		var ul = document.createElement("UL");
-		content.appendChild(ul);
-		for (var id in exam_takers) {
-			var li = document.createElement("LI");
-			ul.appendChild(li);
-			li.appendChild(document.createTextNode("ID "+id));
-			var app = exam_takers[id];
-			if (app != null) {
-				li.appendChild(document.createTextNode(" ("+app.people.first_name+" "+app.people.last_name+")"));
-			} else {
-			}
-		}
-		if (missing.length > 0) {
-			div = document.createElement("DIV");
-			div.innerHTML = missing.length+" applicant"+(missing.length > 1 ? "s are" : " is")+" missing, and will have the attendance set to 'No':";
-			content.appendChild(div);
-			var ul = document.createElement("UL");
-			content.appendChild(ul);
-			for (var i = 0; i < missing.length; ++i) {
-				var li = document.createElement("LI");
-				ul.appendChild(li);
-				li.appendChild(document.createTextNode("ID "+missing[i].applicant_id+" ("+missing[i].people.first_name+" "+missing[i].people.last_name+")"));
 			}
 		}
 		layout.changed(content);
+		popup.addNextButton(function() {
+			if (subject_matching.length == 0) {
+				popup.close();
+				return;
+			}
+			popup.removeButtons();
+			content.removeAllChildren();
+			var missing = [];
+			for (var i = 0; i < applicants.length; ++i) missing.push(applicants[i]);
+			var exam_takers = {};
+			var nb_takers = 0;
+			for (var i = 0; i < tests.length; ++i) {
+				for (var j = 0; j < tests[i].applicants.length; ++j)
+					if (typeof exam_takers[tests[i].applicants[j].id] == 'undefined') {
+						nb_takers++;
+						var app = null;
+						for (var k = 0; k < applicants.length; ++k) if (applicants[k].applicant_id == tests[i].applicants[j].id) { app = applicants[k]; break; }
+						if (app != null)
+							for (var k = 0; k < missing.length; ++k) if (missing[k] == app) { missing.splice(k,1); break; }
+						exam_takers[tests[i].applicants[j].id] = app;
+					}
+			}
+			div = document.createElement("DIV");
+			div.innerHTML = nb_takers+" clicker"+(nb_takers > 1 ? "s" : "")+" found in the file:";
+			content.appendChild(div);
+			var table = document.createElement("TABLE");
+			var tr,td;
+			table.appendChild(tr = document.createElement("TR"));
+			tr.appendChild(td = document.createElement("TH"));
+			td.appendChild(document.createTextNode("ID"));
+			tr.appendChild(td = document.createElement("TH"));
+			td.appendChild(document.createTextNode("Applicant"));
+			for (var i = 0; i < subject_matching.length; ++i) {
+				tr.appendChild(td = document.createElement("TH"));
+				td.appendChild(document.createTextNode(subject_matching[i].subject.name));
+			}
+			content.appendChild(table);
+			var applicants_data = {};
+			for (var i = 0; i < applicants.length; ++i) {
+				var id = ""+applicants[i].applicant_id;
+				applicants_data[id] = {attendance:null,row_id:applicants[i].people.id,answers:{}};
+				for (var j = 0; j < subject_matching.length; ++j) {
+					applicants_data[id].answers[subject_matching[j].subject.id] = [];
+				}
+			}
+			for (var id in exam_takers) {
+				id = ""+id;
+				table.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.appendChild(document.createTextNode(id));
+				tr.appendChild(td = document.createElement("TD"));
+				var app = exam_takers[id];
+				if (app != null) {
+					td.appendChild(document.createTextNode(app.people.first_name+" "+app.people.last_name));
+				} else {
+				}
+				for (var i = 0; i < subject_matching.length; ++i) {
+					tr.appendChild(td = document.createElement("TD"));
+					for (var j = 0; j < subject_matching[i].test.applicants.length; ++j) {
+						if (subject_matching[i].test.applicants[j].id != id) continue;
+						var answers = subject_matching[i].test.applicants[j].answers;
+						var last_answer = subject_matching[i].test.nb_questions-1;
+						while (last_answer >= 0 && (answers.length < last_answer || !answers[last_answer])) last_answer--;
+						if (last_answer < 0) {
+							td.appendChild(document.createTextNode("Didn't attend"));
+							if (app != null && applicants_data[id].attendance === null) applicants_data[id].attendance = 0;
+						} else {
+							if (last_answer == subject_matching[i].test.nb_questions-1) {
+								td.appendChild(document.createTextNode("Answered all questions"));
+							} else {
+								td.appendChild(document.createTextNode("Answered until question "+(last_answer+1)));
+							}
+							if (app != null) {
+								if (applicants_data[id].attendance === null) applicants_data[id].attendance = 1;
+								else applicants_data[id].attendance++;
+								for (var k = 0; k <= last_answer; k++)
+									applicants_data[id].answers[subject_matching[i].subject.id].push(answers[k]);
+							}
+						}
+						break;
+					}
+				}
+				if (app != null && applicants_data[id].attendance !== null) {
+					if (applicants_data[id].attendance == subject_matching.length)
+						applicants_data[id].attendance = "Yes";
+					else
+						applicants_data[id].attendance = "Partially";
+				}
+			}
+			if (missing.length > 0) {
+				div = document.createElement("DIV");
+				div.innerHTML = missing.length+" applicant"+(missing.length > 1 ? "s are" : " is")+" missing, and will have the attendance set to 'No':";
+				content.appendChild(div);
+				var ul = document.createElement("UL");
+				content.appendChild(ul);
+				for (var i = 0; i < missing.length; ++i) {
+					var li = document.createElement("LI");
+					ul.appendChild(li);
+					li.appendChild(document.createTextNode("ID "+missing[i].applicant_id+" ("+missing[i].people.first_name+" "+missing[i].people.last_name+")"));
+				}
+			}
+			layout.changed(content);
+			popup.addNextButton(function(){
+				popup.removeButtons();
+				content.removeAllChildren();
+				content.innerHTML = "<img src='"+theme.icons_16.loading+"' style='verticala-lign:bottom'/> Importing results...";
+				layout.changed(content);
+				var set_edit_mode = function(ondone) {
+					if (edit_mode.value == 'answers') { ondone(); return; }
+					edit_mode.value = "answers";
+					edit_mode.onchange();
+					var nb = subjects_grids.length;
+					var grid_ready = function() {
+						if (--nb == 0) ondone();
+					};
+					for (var i = 0; i < subjects_grids.length; ++i)
+						subjects_grids[i].data_grid.grid.onallrowsready(grid_ready);
+				};
+				var import_applicant = function(id, subject, grid, ondone) {
+					id = ""+id;
+					if (typeof applicants_data[id] == 'undefined') { ondone(); return; }
+					if (typeof applicants_data[id].answers[""+subject.id] == 'undefined') { ondone(); return; }
+					setTimeout(function() {
+						var answers = applicants_data[id].answers[""+subject.id];
+						var q_index = 0;
+						for (var i = 0; i < subject.parts.length; ++i) {
+							if (q_index >= answers.length) break;
+							for (var j = 0; j < subject.parts[i].questions.length; ++j) {
+								if (q_index >= answers.length) break;
+								var q = subject.parts[i].questions[j];
+								var field = grid.getCellFieldById(applicants_data[id].row_id, q.id);
+								field.setData(answers[q_index]);
+								q_index++;
+							}
+						}
+						ondone();
+					},10);
+				};
+				var import_subject = function(test, subject, ondone) {
+					var subject_index = 0;
+					while (subjects[subject_index] != subject) subject_index++;
+					subjects_tabs.select(subject_index);
+					setTimeout(function() {
+						var grid = subjects_grids[subject_index].data_grid.grid;
+						var next_applicant = function(index) {
+							if (index == test.applicants.length) { ondone(); return; }
+							import_applicant(test.applicants[index].id, subject, grid, function() {
+								next_applicant(index+1);
+							});
+						};
+						next_applicant(0);
+					}, 25);
+				};
+				setTimeout(function() {
+					set_edit_mode(function() {
+						var next_subject = function(index) {
+							setTimeout(function() {
+								if (index == subject_matching.length) {
+									popup.close();
+									return;
+								}
+								import_subject(subject_matching[index].test, subject_matching[index].subject, function() {
+									next_subject(index+1);
+								});
+							},10);
+						};
+						next_subject(0);
+					});
+				},10);
+			});
+		});
 	};
 	upl.addUploadPopup("/static/selection/exam/sunvote_16.png", "Import from Clickers", function(pop) { popup = pop; });
 	upl.openDialog(ev, ".xls,.xlsx");

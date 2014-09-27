@@ -110,24 +110,29 @@ field_enum.prototype._create = function(data) {
 		this.fillWidth = function() {
 			// calculate the minimum width of the select, to be able to see it...
 			var temp_container = null;
+			var sel = null;
 			layout.three_steps_process(function() {
-				if (t.element.parentNode == null) {
-					temp_container = document.createElement("DIV");
-					temp_container.style.position = "aboslute";
-					temp_container.style.top = "-10000px";
-					document.body.appendChild(temp_container);
-					temp_container.appendChild(t.element);
+				temp_container = document.createElement("DIV");
+				temp_container.style.position = "absolute";
+				temp_container.style.top = "-10000px";
+				document.body.appendChild(temp_container);
+				sel = document.createElement("SELECT");
+				for (var i = 0; i < select.options.length; ++i) {
+					var o = document.createElement("OPTION");
+					o.text = select.options[i].text;
+					sel.add(o);
 				}
-				select.style.width = "";
+				temp_container.appendChild(sel);
 			}, function() {
-				return select.offsetWidth;
+				return sel.offsetWidth;
 			}, function(w) {
 				t.element.style.width = "100%";
 				select.style.width = "100%";
 				select.style.minWidth = w+"px";
 				if (t.element.parentNode == temp_container) temp_container.removeChild(t.element);
-				if (temp_container != null) document.body.removeChild(temp_container);
+				document.body.removeChild(temp_container);
 				temp_container = null;
+				sel = null;
 			});
 		};
 		this.focus = function() { select.focus(); };
