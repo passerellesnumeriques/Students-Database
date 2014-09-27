@@ -427,7 +427,6 @@ function grid(element) {
 			listener();
 			return;
 		}
-		
 		t._loaded_listeners.push(listener);
 	};
 	t.addColumnContainer = function(column_container, index) {
@@ -911,6 +910,7 @@ function grid(element) {
 			t.element.style.paddingTop = "0px";
 			t.element.style.position = "static";
 			t.grid_element.style.overflow = "auto";
+			t.grid_element.style.maxHeight = "";
 			t.thead.style.position = "static";
 			t.element.style.width = "";
 			var footer = null;
@@ -939,7 +939,17 @@ function grid(element) {
 			var knowledge = [];
 			// fix the size of the container
 			var total_width = getWidth(t.element, knowledge);
+			if (total_width > t.element.parentNode.clientWidth)
+				setWidth(t.element, total_width-1, knowledge);
+			/*
+			var total_width = getWidth(t.element, knowledge);
+			//if (total_width > t.element.parentNode.clientWidth) total_width = t.element.parentNode.clientWidth;
 			setWidth(t.element, total_width-1, knowledge);
+			*/
+			// take header info
+			var head_height = t.thead.offsetHeight;
+			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));
+			var head_width = t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1);
 			// take the width of each th
 			if (t.selectable)
 				t.thead.childNodes[0].childNodes[0]._width = getWidth(t.thead.childNodes[0].childNodes[0], knowledge);
@@ -990,31 +1000,39 @@ function grid(element) {
 			}
 			tr.style.height = "0px";
 			// put the thead as relative
-			t.element.style.paddingTop = t.thead.offsetHeight+"px";
+			t.element.style.paddingTop = head_height+"px";
 			t.element.style.position = "relative";
 			t.grid_element.style.overflow = "auto";
+			if (t.element.style.height) t.grid_element.style.maxHeight = t.element.style.height;
 			t.thead.style.position = "absolute";
 			t.thead.style.top = "0px";
-			t.thead.style.left = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1))+"px";
-			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1), thead_knowledge); 
+			t.thead.style.left = head_scroll+"px";
 			t.thead.style.overflow = "hidden";
+			setWidth(t.thead, head_width, thead_knowledge); 
 			//t.table.parentNode.style.marginRight = "1px";
+			layout.changed(t.element);
 		};
 		t.element.style.display = "flex";
 		t.element.style.flexDirection = "column";
 		t.grid_element.style.flex = "1 1 auto";
 		t.grid_element.onscroll = function(ev) {
-			t.thead.style.left = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1))+"px";
-			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1), thead_knowledge); 
+			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));
+			var head_width = t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1);
+			setWidth(t.thead, head_width, thead_knowledge); 
+			t.thead.style.left = head_scroll+"px";
 		};
 		var update_timeout = null;
 		var updater = function() {
 			if (update_timeout) return;
 			update_timeout = setTimeout(function() {
 				update_timeout = null;
-				update();
-			},10);
+				if (t._columns_loading == 0 && t._cells_loading == 0) // do not update if still loading, because we will need to update again
+					update();
+				else
+					updater();
+			},25);
 		};
+		layout.listenElementSizeChanged(t.element.parentNode, updater);
 		layout.listenElementSizeChanged(t.element, updater);
 		layout.listenInnerElementsChanged(t.thead, updater);
 		layout.listenInnerElementsChanged(t.table, updater);
@@ -1456,7 +1474,6 @@ function grid(element) {
 			t._cells_loading--;
 			t._check_loaded();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
-			layout.changed(parent);
 		});
 	},
 	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {

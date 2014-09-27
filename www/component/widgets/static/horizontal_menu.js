@@ -1,4 +1,4 @@
-if (typeof require != 'undefined') {
+if (typeof require == 'function') {
 	require("context_menu.js");
 }
 

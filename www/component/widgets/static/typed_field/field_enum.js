@@ -109,17 +109,26 @@ field_enum.prototype._create = function(data) {
 		};
 		this.fillWidth = function() {
 			// calculate the minimum width of the select, to be able to see it...
-			var included_in_body = false;
-			if (this.element.parentNode == null) {
-				included_in_body = true;
-				document.body.appendChild(this.element);
-			}
-			select.style.width = "";
-			select.style.minWidth = select.offsetWidth+"px";
-			if (included_in_body) document.body.removeChild(this.element);
-			
-			this.element.style.width = "100%";
-			select.style.width = "100%";
+			var temp_container = null;
+			layout.three_steps_process(function() {
+				if (t.element.parentNode == null) {
+					temp_container = document.createElement("DIV");
+					temp_container.style.position = "aboslute";
+					temp_container.style.top = "-10000px";
+					document.body.appendChild(temp_container);
+					temp_container.appendChild(t.element);
+				}
+				select.style.width = "";
+			}, function() {
+				return select.offsetWidth;
+			}, function(w) {
+				t.element.style.width = "100%";
+				select.style.width = "100%";
+				select.style.minWidth = w+"px";
+				if (t.element.parentNode == temp_container) temp_container.removeChild(t.element);
+				if (temp_container != null) document.body.removeChild(temp_container);
+				temp_container = null;
+			});
 		};
 		this.focus = function() { select.focus(); };
 	} else {

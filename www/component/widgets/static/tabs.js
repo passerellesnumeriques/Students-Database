@@ -18,6 +18,7 @@ function tabs(container, fill_tab_content) {
 		};
 		t.tabs.push(tab);
 		t._build_tab_header(tab);
+		tab.content._prev_display = tab.content.style.display;
 		tab.content.style.display = "none";
 		t.content.appendChild(tab.content);
 		if (t.selected == -1)
@@ -35,6 +36,7 @@ function tabs(container, fill_tab_content) {
 		t.tabs[index].content = null;
 		t.tabs[index].header = null;
 		t.tabs.splice(index,1);
+		layout.changed(t.header);
 	};
 	t.removeAll = function() {
 		for (var i = 0; i < t.tabs.length; ++i) { t.tabs[i].content = null; t.tabs[i].header = null; }
@@ -42,6 +44,8 @@ function tabs(container, fill_tab_content) {
 		t.selected = -1;
 		while (t.header.childNodes.length > 0) t.header.removeChild(t.header.childNodes[0]);
 		while (t.content.childNodes.length > 0) t.content.removeChild(t.content.childNodes[0]);
+		layout.changed(t.header);
+		layout.changed(t.content);
 	};
 	
 	t.getTabIndexById = function(id) {
@@ -56,7 +60,7 @@ function tabs(container, fill_tab_content) {
 			t.tabs[t.selected].content.style.display = "none";
 		}
 		t.tabs[index].header.className = "tab_header selected";
-		t.tabs[index].content.style.display = "";
+		t.tabs[index].content.style.display = t.tabs[index].content._prev_display;
 		t.selected = index;
 		layout.changed(t.tabs[index].content);
 		if (t.onselect) t.onselect(t);
@@ -71,6 +75,7 @@ function tabs(container, fill_tab_content) {
 		div.onclick = function() { t.select(t.getTabIndexById(this.id)); };
 		tab.header = div;
 		t.header.appendChild(div);
+		layout.changed(t.header);
 	};
 	
 	t._init = function() {
@@ -108,21 +113,28 @@ function tabs(container, fill_tab_content) {
 	};
 	t._layout = function() {
 		if (fill_tab_content) {
-			var knowledge = [];
-			setWidth(t.content, container.clientWidth, knowledge);
-			setHeight(t.content, container.clientHeight - t.header.offsetHeight, knowledge);
-			layout.changed(t.content);
-		}
-		if (t.selected != -1) {
-			if (fill_tab_content) {
+			layout.two_steps_process(function() {
+				return {w:container.clientWidth, h:container.clientHeight - t.header.offsetHeight};
+			}, function(sizes) {
 				var knowledge = [];
-				setWidth(t.tabs[t.selected].content, t.content.clientWidth, knowledge);
-				setHeight(t.tabs[t.selected].content, t.content.clientHeight, knowledge);
-				layout.changed(t.tabs[t.selected].content);
-			}
+				setWidth(t.content, sizes.w, knowledge);
+				setHeight(t.content, sizes.h, knowledge);
+				layout.changed(t.content);
+				if (t.selected != -1) {
+					layout.two_steps_process(function() {
+						return {w:t.content.clientWidth, h:t.content.clientHeight};
+					}, function(sizes) {
+						var knowledge = [];
+						setWidth(t.tabs[t.selected].content, sizes.w, knowledge);
+						setHeight(t.tabs[t.selected].content, sizes.h, knowledge);
+						layout.changed(t.tabs[t.selected].content);
+					});
+				}
+			});
 		}
 	};
 	t._init();
 	t._layout();
 	layout.listenElementSizeChanged(container, function() { t._layout(); });
+	layout.listenElementSizeChanged(t.header, function() { t._layout(); });
 }

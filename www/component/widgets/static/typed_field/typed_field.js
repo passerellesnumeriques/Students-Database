@@ -61,7 +61,10 @@ typed_field.prototype = {
 	getHTMLElement: function() { return this.element; },
 	/** The field must use the full width of its container */
 	fillWidth: function() {
-		this.element.style.width = "100%";
+		var t=this;
+		layout.modifyDOM(function() {
+			t.element.style.width = "100%";
+		});
 	},
 	/**
 	 * @returns true if this field is editable

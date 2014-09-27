@@ -124,7 +124,7 @@ String.prototype.checkVisible = function(){
  * @param {any} e the element to search 
  * @returns true if this array contains the given element
  */
-Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e)return true;return false;};
+Array.prototype.contains=function(e){return this.indexOf(e) != -1;};
 /** 
  * remove all occurences of the given element from this array, if any.
  * @param {any} e the element to remove

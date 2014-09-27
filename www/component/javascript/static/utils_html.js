@@ -147,7 +147,7 @@ function LoadingHidder(to_hide) {
 	};
 
 	/** Call the _position function */
-	var updater = function() { t._position(); };
+	var updater = function() { if (!t) layout.unlistenElementSizeChanged(to_hide, updater); else t._position(); };
 
 	this._removed = false;
 	/** Remove */

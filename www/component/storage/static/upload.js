@@ -159,7 +159,7 @@ function upload(target, multiple, async) {
 			if (prev_onprogressfile) prev_onprogressfile(file, uploaded, total);
 		};
 		var prev_ondonefile = t.ondonefile;
-		t.ondonefile = function(file, output, errors) {
+		t.ondonefile = function(file, output, errors, warnings) {
 			var td = null;
 			for (var i = 0; i < progress_bars.length; ++i)
 				if (progress_bars[i].file == file) { td = progress_bars[i].td; break; }
@@ -170,16 +170,16 @@ function upload(target, multiple, async) {
 					td.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> Error";
 			}
 			layout.changed(progress_table);
-			if (prev_ondonefile) prev_ondonefile(file, output, errors);
+			if (prev_ondonefile) prev_ondonefile(file, output, errors, warnings);
 		};
 		var prev_ondone = t.ondone;
-		t.ondone = function(outputs) {
+		t.ondone = function(outputs, errors, warnings) {
 			popup.enableClose();
 			if (callback_with_popup)
 				callback_with_popup(popup);
 			else
 				popup.close();
-			if (prev_ondone) prev_ondone(outputs);
+			if (prev_ondone) prev_ondone(outputs, errors, warnings);
 		};
 	};
 	
@@ -228,10 +228,13 @@ function upload(target, multiple, async) {
 	
 	t.sendFiles = function(files) {
 		var received = [];
+		var all_errors = [];
+		var all_warnings = [];
 		var send = function(f,ondone) {
 			if (t.onstartfile) t.onstartfile(f);
 			t.uploadFile(f,function(xhr,file){
 				var errors = [];
+				var warnings = [];
 				var output = null;
 				if (xhr.status != 200)
 					errors.push("Error returned by the server: "+xhr.status+" "+xhr.statusText);
@@ -239,8 +242,15 @@ function upload(target, multiple, async) {
 					try {
 						var json = eval("("+xhr.responseText+")");
 						if (json.errors)
-							for (var j = 0; j < json.errors.length; ++j)
+							for (var j = 0; j < json.errors.length; ++j) {
 								errors.push(json.errors[j]);
+								all_errors.push(json.errors[j]);
+							}
+						if (json.warnings)
+							for (var j = 0; j < json.warnings.length; ++j) {
+								warnings.push(json.warnings[j]);
+								all_warnings.push(json.warnings[j]);
+							}
 						if (json.result) output = json.result;
 					} catch (e) {
 						errors.push("Invalid response: "+e+"<br/>"+xhr.responseText);
@@ -249,8 +259,10 @@ function upload(target, multiple, async) {
 					output = xhr.responseText;
 				for (var j = 0; j < errors.length; ++j)
 					window.top.status_manager.add_status(new window.top.StatusMessageError(null, errors[j], 10000));
+				for (var j = 0; j < warnings.length; ++j)
+					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING, warnings[j], [{action:"popup"},{action:"close"}],10000));
 				received.push(output);
-				if (t.ondonefile) t.ondonefile(file, output, errors);
+				if (t.ondonefile) t.ondonefile(file, output, errors, warnings);
 				ondone();
 			});
 		};
@@ -265,7 +277,7 @@ function upload(target, multiple, async) {
 			send(f,function() {
 				uploading--;
 				if (todo.length == 0 && uploading == 0) {
-					if (t.ondone) t.ondone(received);
+					if (t.ondone) t.ondone(received, all_errors, all_warnings);
 					return;
 				}
 				setTimeout(next, 10);

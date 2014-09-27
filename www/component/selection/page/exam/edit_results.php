@@ -118,6 +118,8 @@ class page_exam_edit_results extends SelectionPage {
 			<option value='parts_scores'>Enter score for each part</option>
 		</select>
 		<button class='flat' id='columns_chooser_button'><img src='/static/data_model/table_column.png'/> Choose columns</button>
+		<button class='flat' onclick='importClickers(event);'><img src='/static/selection/exam/sunvote_16.png'/> Import from Clickers (SunVote)</button>
+		<button class='flat' onclick='importScanner(event);'><img src='/static/selection/exam/amc_16.png'/> Import from Scanner (AMC)</button>
 	</div>
 	<div style='flex:1 1 auto;' id='tabs_container'>
 	</div>
@@ -180,6 +182,7 @@ function SubjectGrid(subject, container, edit_mode) {
 	var t=this;
 	this.data_grid = new applicant_data_grid(container, function(applicant) { return applicant; }, true);
 	this.data_grid.setColumnsChooserButton(document.getElementById('columns_chooser_button'));
+	this.data_grid.grid.makeScrollable();
 
 	this.getQuestion = function(question_id) {
 		for (var i = 0; i < subject.parts.length; ++i) {
@@ -424,11 +427,128 @@ function buildGrid() {
 	var subjects_tabs = new tabs(tabs_container, true);
 	for (var i = 0; i < subjects.length; ++i) {
 		var container = document.createElement("DIV");
+		container.style.display = "flex";
+		container.style.flexDirection = "column";
 		subjects_tabs.addTab(subjects[i].name, null, container);
-		subjects_grids.push(new SubjectGrid(subjects[i], container, edit_mode.value));
+		var grid_container = document.createElement("DIV");
+		grid_container.style.flex = "1 1 auto";
+		container.appendChild(grid_container);
+		subjects_grids.push(new SubjectGrid(subjects[i], grid_container, edit_mode.value));
 	}
 }
 buildGrid();
+
+setTimeout(function() { require(["upload.js","popup_window.js"]); }, 100);
+function importClickers(ev) {
+	var upl = new upload("/dynamic/selection/service/exam/import_sunvote_results", false);
+	var popup = null;
+	upl.ondone = function(outputs, errors, warnings) {
+		var content = document.createElement("DIV");
+		content.style.backgroundColor = "white";
+		content.style.padding = "5px";
+		popup.setContent(content);
+		if (!outputs || outputs.length == 0 || !outputs[0]) errors.push("Upload failed");
+		else {
+			if (typeof outputs[0].subjects != 'undefined' && outputs[0].subjects.length == 0)
+				errors.push("No test found in this file, is it really coming from the SunVote system ?");
+		}
+		if (warnings.length > 0) {
+			for (var i = 0; i < warnings.length; ++i) {
+				var div = document.createElement("DIV");
+				div.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> "+warnings[i];
+				content.appendChild(div);
+			}
+		}
+		if (errors.length > 0) {
+			for (var i = 0; i < errors.length; ++i) {
+				var div = document.createElement("DIV");
+				div.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+errors[i];
+				content.appendChild(div);
+			}
+			layout.changed(content);
+			return;
+		}
+		var tests = outputs[0].subjects;
+		var div = document.createElement("DIV");
+		div.innerHTML = tests.length+" test"+(tests.length > 1 ? "s" : "")+" found in the file:";
+		content.appendChild(div);
+		var ul = document.createElement("UL");
+		content.appendChild(ul);
+		var subject_matching = [];
+		for (var i = 0; i < tests.length; ++i) {
+			var li = document.createElement("LI");
+			ul.appendChild(li);
+			li.appendChild(document.createTextNode(tests[i].name));
+			li.appendChild(document.createTextNode(" ("+tests[i].nb_questions+" question"+(tests[i].nb_questions > 1 ? "s" : "")+")"));
+			var possible_subjects = [];
+			for (var j = 0; j < subjects.length; ++j) {
+				var nb_questions = 0;
+				for (var k = 0; k < subjects[j].parts.length; ++k)
+					nb_questions += subjects[j].parts[k].questions.length;
+				if (nb_questions == 0) continue;
+				if (nb_questions == tests[i].nb_questions) possible_subjects.push(subjects[j]);
+			}
+			if (possible_subjects.length == 0) {
+				var span = document.createElement("SPAN");
+				span.style.marginLeft = "5px";
+				span.style.fontStyle = "italic";
+				span.appendChild(document.createTextNode("No subject match the number of questions, impossible to import this test"));
+				li.appendChild(span);
+			} else if (possible_subjects.length == 1) {
+				// TODO
+			} else {
+				// TODO
+			}
+		}
+		var missing = [];
+		for (var i = 0; i < applicants.length; ++i) missing.push(applicants[i]);
+		var exam_takers = {};
+		var nb_takers = 0;
+		for (var i = 0; i < tests.length; ++i) {
+			for (var j = 0; j < tests[i].applicants.length; ++j)
+				if (typeof exam_takers[tests[i].applicants[j].id] == 'undefined') {
+					nb_takers++;
+					var app = null;
+					for (var k = 0; k < applicants.length; ++k) if (applicants[k].applicant_id == tests[i].applicants[j].id) { app = applicants[k]; break; }
+					if (app != null)
+						for (var k = 0; k < missing.length; ++k) if (missing[k] == app) { missing.splice(k,1); break; }
+					exam_takers[tests[i].applicants[j].id] = app;
+				}
+		}
+		div = document.createElement("DIV");
+		div.innerHTML = nb_takers+" clicker"+(nb_takers > 1 ? "s" : "")+" found in the file:";
+		content.appendChild(div);
+		var ul = document.createElement("UL");
+		content.appendChild(ul);
+		for (var id in exam_takers) {
+			var li = document.createElement("LI");
+			ul.appendChild(li);
+			li.appendChild(document.createTextNode("ID "+id));
+			var app = exam_takers[id];
+			if (app != null) {
+				li.appendChild(document.createTextNode(" ("+app.people.first_name+" "+app.people.last_name+")"));
+			} else {
+			}
+		}
+		if (missing.length > 0) {
+			div = document.createElement("DIV");
+			div.innerHTML = missing.length+" applicant"+(missing.length > 1 ? "s are" : " is")+" missing, and will have the attendance set to 'No':";
+			content.appendChild(div);
+			var ul = document.createElement("UL");
+			content.appendChild(ul);
+			for (var i = 0; i < missing.length; ++i) {
+				var li = document.createElement("LI");
+				ul.appendChild(li);
+				li.appendChild(document.createTextNode("ID "+missing[i].applicant_id+" ("+missing[i].people.first_name+" "+missing[i].people.last_name+")"));
+			}
+		}
+		layout.changed(content);
+	};
+	upl.addUploadPopup("/static/selection/exam/sunvote_16.png", "Import from Clickers", function(pop) { popup = pop; });
+	upl.openDialog(ev, ".xls,.xlsx");
+}
+function importScanner(ev) {
+}
 </script>
 <?php 
 	}

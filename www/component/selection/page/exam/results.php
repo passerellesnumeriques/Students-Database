@@ -30,8 +30,8 @@ class page_exam_results extends SelectionPage {
 		<img src='/static/transcripts/transcript_32.png'/>
 		Written Exam Results
 	</div>
-	<div style="flex: 1 1 auto;display:flex;flex-direction:row;">
-		<div style="flex:1 1 auto;padding:5px;padding-right:0px;">
+	<div style="flex: 1 1 auto;display:flex;flex-direction:row;overflow:auto;">
+		<div style="flex:1 1 auto;padding:5px;padding-right:0px;min-width:300px;">
 			<div id="sessions_list" title='Exam sessions' icon="/static/calendar/calendar_16.png" css="soft">
 		      	<?php 
 				$q = SQLQuery::create()->select("ExamCenter")
@@ -81,8 +81,8 @@ class page_exam_results extends SelectionPage {
 			</div>
 		</div>
 		<!--List of applicants-->
-		<div style="flex:1 1 auto;padding:5px;padding-right:0px;">		
-			<div id="session_applicants" title='Applicants for selected session' icon="/static/selection/applicant/applicants_16.png" css="soft">
+		<div style="flex:1 1 auto;align-self:stretch;padding:5px;padding-right:0px;display:flex;flex-direction:column;">		
+			<div id="session_applicants" title='Applicants for selected session' icon="/static/selection/applicant/applicants_16.png" css="soft" fill_height='true' style='flex:1 1 auto;'>
 				<div id="session_applicants_list" style="display:none"></div>
 			</div>
 		</div>
@@ -106,16 +106,18 @@ function createDataList(campaign_id)
 		"session_applicants_list",
 		"Applicant", campaign_id,
 		[
+			"Selection.ID",
 			"Personal Information.First Name",
 			"Personal Information.Last Name",
 			"Personal Information.Gender",
-			"Personal Information.Birth Date"
+			"Personal Information.Age"
 		],
 		[{category:"Selection",name:"Exam Session",force:true,data:{values:[-1]}}],
 		-1,
 		"Personal Information.Last Name", true,
 		function(list) {
 			window.dl = list;
+			list.grid.makeScrollable();
 		}
 	);
 }

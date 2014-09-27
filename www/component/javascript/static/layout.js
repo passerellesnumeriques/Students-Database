@@ -75,16 +75,8 @@ window.layout = {
 			w.layout.changed(element);
 			return;
 		}
-		if (window.frameElement && window.frameElement.style && window.frameElement.style.visibility == 'hidden') return;
-		var p = element;
-		while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
-			if (p.style && p.style.visibility == "hidden") return;
-			p = p.parentNode;
-		}
-		if (!layout._changes.contains(element)) {
-			layout._changes.push(element);
-			layout._layout_needed();
-		}
+		layout._changes.push(element);
+		layout._layout_needed();
 	},
 	
 	forceLayout: function() {
@@ -135,6 +127,22 @@ window.layout = {
 	_process: function() {
 		if (window.closing || layout._changes === null) return;
 		if (layout._changes.length == 0) return; // nothing to do
+		// filter changes
+		var changes = layout._changes;
+		layout._changes = [];
+		if (window.frameElement && window.frameElement.style && (window.frameElement.style.visibility == 'hidden' || window.frameElement.style.display == "none")) return;
+		for (var i = 0; i < changes.length; ++i) {
+			if (layout._changes.contains(changes[i])) continue; // duplicate
+			var p = changes[i];
+			var hidden = false;
+			while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
+				if (p.style && (p.style.visibility == "hidden" || p.style.display == "none")) { hidden = true; break; }
+				p = p.parentNode;
+			}
+			if (hidden) continue;
+			layout._changes.push(changes[i]);
+		}
+		changes = null;
 		
 		// first, process the elements inside changed, starting from the leaves of the tree
 		if (layout._element_inside_listeners.length > 0)
@@ -150,18 +158,31 @@ window.layout = {
 		if (layout._element_size_listeners.length > 0) {
 			var to_call = [];
 			var sizes = [];
+			var list = [];
 			for (var i = 0; i < layout._element_size_listeners.length; ++i) {
+				list.push(layout._element_size_listeners[i]);
 				var e = layout._element_size_listeners[i].element;
 				var size = {scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight,clientWidth:e.clientWidth,clientHeight:e.clientHeight};
 				sizes.push(size);
 				if (size.scrollWidth != e._layout_info.size.scrollWidth || size.scrollHeight != e._layout_info.size.scrollHeight ||
 					size.clientWidth != e._layout_info.size.clientWidth || size.clientHeight != e._layout_info.size.clientHeight)
-					to_call.push(layout._element_size_listeners[i].listener);
+					if (!to_call.contains(layout._element_size_listeners[i].listener))
+						to_call.push(layout._element_size_listeners[i].listener);
 			}
 			for (var i = 0; i < layout._element_size_listeners.length; ++i)
 				layout._element_size_listeners[i].element._layout_info.size = sizes[i];
 			for (var i = 0; i < to_call.length; ++i)
 				to_call[i]();
+			// check if changed again, due to flex box model
+			setTimeout(function() {
+				for (var i = 0; i < list.length; ++i) {
+					var e = list[i].element;
+					var size = {scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight,clientWidth:e.clientWidth,clientHeight:e.clientHeight};
+					if (size.scrollWidth != e._layout_info.size.scrollWidth || size.scrollHeight != e._layout_info.size.scrollHeight ||
+						size.clientWidth != e._layout_info.size.clientWidth || size.clientHeight != e._layout_info.size.clientHeight)
+						layout.changed(e);
+				}
+			},25);
 		}
 		
 		layout._last_layout_activity = new Date().getTime();
@@ -169,29 +190,21 @@ window.layout = {
 	_getLeavesElements: function(elements) {
 		var leaves = [];
 		var parents = [];
-		var has_parents = false;
 		for (var i = 0; i < elements.length; ++i) {
 			leaves.push(elements[i]);
 			var p = elements[i].parentNode;
-			if (!p) parents.push(null);
-			else {
-				parents.push(p);
-				has_parents = true;
-			}
+			if (!p) continue;
+			parents.push(p);
 		}
-		while (has_parents) {
-			has_parents = false;
+		while (parents.length > 0) {
+			var new_parents = [];
 			for (var i = 0; i < parents.length; ++i) {
-				if (!parents[i]) continue;
 				var j = leaves.indexOf(parents[i]);
-				parents[i] = parents[i].parentNode;
-				if (parents[i]) has_parents = true;
-				if (j != -1) {
-					leaves.splice(j,1);
-					parents.splice(j,1);
-					if (i >= j) i--;
-				}
+				if (j != -1) leaves.splice(j,1);
+				var p = parents[i].parentNode;
+				if (p && !new_parents.contains(p)) new_parents.push(p); 
 			}
+			parents = new_parents;
 		}
 		return leaves;
 	},
@@ -347,6 +360,55 @@ window.layout = {
 		return null;
 	},
 	
+	_dom_modifications: [],
+	_layout_reading: [],
+	_process_steps_timeout: null,
+	_process_steps: function() {
+		if (this._process_steps_timeout) return;
+		this._process_steps_timeout = setTimeout(function() {
+			layout._process_steps_timeout = null;
+			var dom_changed = false;
+			while (layout._dom_modifications.length > 0) {
+				dom_changed = true;
+				layout._dom_modifications[0]();
+				layout._dom_modifications.splice(0,1);
+			}
+			if (dom_changed) { layout._process_steps(); return; }
+			while (layout._layout_reading.length > 0) {
+				layout._layout_reading[0]();
+				layout._layout_reading.splice(0,1);
+			}
+			if (layout._dom_modifications.length > 0 || layout._layout_reading.length > 0)
+				layout._process_steps();
+		},1);
+	},
+	
+	three_steps_process: function(step1_dom_modification, step2_layout_reading, step3_dom_modification) {
+		this._dom_modifications.push(function() {
+			var r1 = step1_dom_modification();
+			layout._layout_reading.push(function() {
+				var r2 = step2_layout_reading(r1);
+				layout._dom_modifications.push(function() { step3_dom_modification(r2); });
+			});
+		});
+		this._process_steps();
+	},
+	two_steps_process: function(step1_layout_reading, step2_dom_modification) {
+		this._layout_reading.push(function() {
+			var r1 = step1_layout_reading();
+			layout._dom_modifications.push(function() { step2_dom_modification(r1); });
+		});
+		this._process_steps();
+	},
+	modifyDOM: function(handler) {
+		this._dom_modifications.push(handler);
+		this._process_steps();
+	},
+	readLayout: function(handler) {
+		this._layout_reading.push(handler);
+		this._process_steps();
+	},
+	
 	cleanup: function() {
 		if (!this._w) return;
 		if (this._w._layout_interval) clearInterval(this._w._layout_interval);
@@ -379,6 +441,7 @@ function _all_images_loaded() {
 	if (!_resize_triggered_on_images_loaded) {
 		_resize_triggered_on_images_loaded = true;
 		setTimeout(function() {
+			if (window.closing) return;
 			_resize_triggered_on_images_loaded = false;
 			triggerEvent(window, 'resize');
 		},10);

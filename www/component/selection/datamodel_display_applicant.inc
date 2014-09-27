@@ -13,20 +13,10 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 			$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "applicant_id", $applicant_id);
 		}
 		$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "excluded", false);
-		echo "<br/>\r\n";
-		var_dump($table_fields);
-		echo "<br/>\r\n";
-		echo "<br/>\r\n";
 		// if an IS is specified, and this IS is linked to an exam center, automatically assign the applicant to this exam center
 		$is = $table_fields->getValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "information_session");
-		var_dump($is);
-		echo "<br/>\r\n";
-		echo "<br/>\r\n";
 		if ($is <> null) {
 			$exam_center = SQLQuery::create()->bypassSecurity()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "information_session", $is)->field("ExamCenterInformationSession", "exam_center")->executeSingleValue();
-		var_dump($exam_center);
-		echo "<br/>\r\n";
-		echo "<br/>\r\n";
 			if ($exam_center <> null)
 				$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "exam_center", $exam_center);
 		}
