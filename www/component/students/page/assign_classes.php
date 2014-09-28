@@ -104,6 +104,8 @@ class page_assign_classes extends Page {
 		// get previous period if any, and students assignments
 		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
 		$previous_academic_period = PNApplication::$instance->curriculum->getPreviousAcademicPeriod($period["academic_period_start"]);
+		$previous_classes = null;
+		$previous_batch_period = null;
 		while ($previous_academic_period <> null) {
 			$previous_classes = null;
 			$previous_batch_period = PNApplication::$instance->curriculum->getBatchPeriodFromAcademicPeriod($period["batch"], $previous_academic_period["id"]);

@@ -7,6 +7,7 @@ return array(
 		new BooleanRight("manage_exam_subject","Edit Exam Subjects",array(true=>array("see_exam_subject"=>true))),
 		new BooleanRight("manage_exam_center","Edit Exam centers",array(true=>array("see_exam_center"=>true))),
 		new BooleanRight("manage_exam_rules","Edit Exam Eligibility Rules",array(true=>array("manage_exam_subject"=>true,"see_exam_rules"=>true))),
+		new BooleanRight("edit_exam_results","Edit Exam Results",array(true=>array("see_exam_center"=>true,"see_exam_subject"=>true,"see_exam_rules"=>true))),
 		// interview
 		new BooleanRight("manage_interview_center","Manage interview centers",array(true=>array("see_interview_center"=>true))),
 		new BooleanRight("manage_interview_criteria","Manage Interview Criteria and Rules",array(true=>array("see_interview_criteria"=>true))),

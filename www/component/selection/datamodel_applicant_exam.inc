@@ -24,7 +24,7 @@ $sm->addTable("ApplicantExamAnswer")
       ->addForeignKey("applicant","Applicant",true,false,true)
       ->addForeignKey("exam_subject_question","ExamSubjectQuestion",true,false,true)
        ->setKey(array("applicant","exam_subject_question"))
-      ->addString("answer") // the answer given by the applicant
+      ->addString("answer",255,0,true,false) // the answer given by the applicant
       ->addDecimal("score",10,2,null,null,false,false)
       ->addReadAccess("see_applicant_info", true)
         ;

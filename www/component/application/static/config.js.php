@@ -1,14 +1,19 @@
 <?php header("Content-Type: text/javascript");?>
-var javascripts_paths = [
+var javascripts_paths = {
 <?php 
+global $first_file;
+$first_file = true;
 function browse($path, $component, $sub_path) {
 	$d = opendir($path);
 	while (($filename = readdir($d)) <> null) {
 		if ($filename == "." || $filename == "..") continue;
 		if (is_dir($path."/".$filename))
 			browse($path."/".$filename, $component, $sub_path.$filename."/");
-		else if (substr($filename,strlen($filename)-3) == ".js")
-			echo "{name:".json_encode($filename).",path:".json_encode("/static/".$component.$sub_path.$filename)."},";
+		else if (substr($filename,strlen($filename)-3) == ".js") {
+			global $first_file;
+			if ($first_file) $first_file = false; else echo ",\n";
+			echo json_encode($filename).":new URL(".json_encode("/static/".$component.$sub_path.$filename).")";
+		}
 	}
 	closedir($d);
 }
@@ -21,8 +26,7 @@ while (($filename = readdir($dir)) <> null) {
 }
 closedir($dir);
 ?>
-	{name:"",path:""}
-];
+};
 
 function require(javascript,handler) {
 	if (javascript instanceof Array || getObjectClassName(javascript) == "Array") {
@@ -39,12 +43,11 @@ function require(javascript,handler) {
 		}
 		return;
 	}
-	for (var i = 0; i < javascripts_paths.length; ++i)
-		if (javascripts_paths[i].name == javascript) {
-			addJavascript(javascripts_paths[i].path, handler);
-			return;
-		}
-	alert("Unknown javascript '"+javascript+"'");
+	if (typeof javascripts_paths[javascript] == 'undefined') {
+		alert("Unknown javascript '"+javascript+"'");
+		return;
+	}
+	addJavascript(javascripts_paths[javascript], handler);
 }
 function require_sequential(scripts, handler) {
 	var pos = 0;

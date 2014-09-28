@@ -177,8 +177,6 @@ function getStyleSizes(element, style_knowledge) {
 		};
 	else {
 		s = {};
-		if (ss.width.indexOf('%') > 0 || ss.width == "auto") s.width = element.scrollWidth; else s.width = parseInt(ss.width);
-		if (ss.height.indexOf('%') > 0 || ss.height == "auto") s.height = element.scrollHeight; else s.height = parseInt(ss.height);
 		s.borderLeftWidth = _styleBorderValue(ss.borderLeftStyle, ss.borderLeftWidth);
 		s.borderRightWidth = _styleBorderValue(ss.borderRightStyle, ss.borderRightWidth);
 		s.borderTopWidth = _styleBorderValue(ss.borderTopStyle, ss.borderTopWidth);
@@ -289,21 +287,21 @@ function _getFixedPosition(win,elem,only_in_window) {
 	return {x:x,y:y};
 }
 function _styleBorderValue(t, s) {
+	if (s.length == 0) return 0;
 	if (t == "none") return 0;
 	if (s == "medium") return 4;
 	if (s == "thick") return 6;
-	if (s.length == 0) return 0;
 	return parseInt(s);
-};
+}
 function _styleMargin(s) {
-	if (s == "auto") return 0;
 	if (s.length == 0) return 0;
+	if (s == "auto") return 0;
 	return parseInt(s);
-};
+}
 function _stylePadding(s) {
 	if (s.length == 0) return 0;
 	return parseInt(s);
-};
+}
 
 function findFrame(name) {
 	return _findFrame(window.top, name);

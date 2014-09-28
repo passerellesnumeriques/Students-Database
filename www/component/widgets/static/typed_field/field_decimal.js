@@ -128,7 +128,7 @@ field_decimal.prototype._create = function(data) {
 			else {
 				var val = parseFloat(t.input.value);
 				if (isNaN(val)) val = null;
-				if (val == null && !this.config.can_be_null) this.error = "Please specify a value";
+				if (val === null && !this.config.can_be_null) this.error = "Please specify a value";
 				else if (typeof this.config.min != 'undefined' && val < this.config.min) this.error = "Must be minimum "+this.config.min.toFixed(t.config.decimal_digits);
 				else if (typeof this.config.max != 'undefined' && val > this.config.max) this.error = "Must be maximum "+this.config.max.toFixed(t.config.decimal_digits);
 				else this.error = null;
@@ -151,19 +151,22 @@ field_decimal.prototype._create = function(data) {
 			t.setData(getValueFromInput());
 		};
 	} else {
-		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));
+		this.element.appendChild(this.text = document.createTextNode(""));
 		this._setData = function(data) {
+			var prev = this.text.nodeValue;
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
 			if (data === null && this.config && !this.config.can_be_null) data = 0;
 			if (data === null) this.text.nodeValue = "";
 			else this.text.nodeValue = data.toFixed(this.config.decimal_digits);
+			if (this.text.nodeValue != prev) layout.changed(this.element);
 			return data;
 		};
 		this.signal_error = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};
+		this._setData(data);
 	}
 };
 field_decimal.prototype.setLimits = function(min,max) {

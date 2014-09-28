@@ -72,13 +72,13 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		}
 		return list;
 	};
-	this.addSubColumn = function(final_col, index) {
+	this.addSubColumn = function(col, index) {
 		if (typeof index == 'undefined' || index >= this.sub_columns.length)
-			this.sub_columns.push(final_col);
+			this.sub_columns.push(col);
 		else
-			this.sub_columns.splice(index,0,final_col);
+			this.sub_columns.splice(index,0,col);
 		this._updateLevels();
-		this.grid._subColumnAdded(this, final_col);
+		this.grid._subColumnAdded(this, col);
 	};
 }
 
@@ -427,7 +427,6 @@ function grid(element) {
 			listener();
 			return;
 		}
-		
 		t._loaded_listeners.push(listener);
 	};
 	t.addColumnContainer = function(column_container, index) {
@@ -457,12 +456,24 @@ function grid(element) {
 		// insert the container TH
 		if (typeof index != 'undefined') {
 			// calculate the real index in the TR for the header
-			var i = index;
-			var tr_index = t.selectable ? 1 : 0;
-			while (i > 0) {
-				i -= t.header_rows[level].childNodes[tr_index].colSpan;
-				tr_index++;
+			var matrix = [];
+			for (var i = 0; i <= level; ++i) matrix.push([]);
+			for (var i = 0; i <= level; ++i) {
+				var tr = t.header_rows[i];
+				for (var j = 0; j < tr.childNodes.length; ++j) {
+					var th = tr.childNodes[j];
+					var cols = th.colSpan ? th.colSpan : 1;
+					var rows = th.rowSpan ? th.rowSpan : 1;
+					matrix[i].push(th);
+					for (var k = 0; k < rows && i+k<=level; k++)
+						for (var l = 0; l < cols; l++)
+							if (k!=0||l!=0) matrix[i+k].push(null);
+				}
 			}
+			var tr_index = 0;
+			var i;
+			for (i = index; i > 0; i--)
+				if (matrix[level][i] != null) tr_index++;
 			if (tr_index < t.header_rows[level].childNodes.length)
 				t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[tr_index]);
 			else
@@ -487,6 +498,8 @@ function grid(element) {
 			if (index < 0) index = undefined;
 			else if (index >= t.columns.length) index = undefined;
 		}
+		if (level < t.header_rows.length-1)
+			col.th.rowSpan = t.header_rows.length-level;
 		col.grid = this;
 		if (typeof index == 'undefined') {
 			t.columns.push(col);
@@ -520,7 +533,7 @@ function grid(element) {
 			}
 		}
 		col._refresh_title();
-		if (!col.loaded) {
+		if (!col._loaded) {
 			t._columns_loading++;
 			col.onloaded.add_listener(function() { t._columns_loading--; t._check_loaded(); });
 		}
@@ -566,7 +579,7 @@ function grid(element) {
 		layout.changed(this.thead);
 		layout.changed(this.table);
 	};
-	t._subColumnAdded = function(container, final_col) {
+	t._subColumnAdded = function(container, col) {
 		// get the top level
 		var top_container = container;
 		while (top_container.parent_column) top_container = top_container.parent_column;
@@ -586,14 +599,20 @@ function grid(element) {
 			}
 			p = p.parent_column;
 		}
-		// finally, add the final column
-		var list = container.getFinalColumns();
-		var first_index = this.getColumnIndex(final_col == list[0] ? list[1] : list[0]);
 		var level;
-		for (level = 0; level < t.header_rows.length-1; level++) {
+		for (level = 0; level < t.header_rows.length-1; level++)
 			if (t.header_rows[level] == container.th.parentNode) break;
+		if (col instanceof GridColumn) {
+			// finally, add the final column
+			var list = container.getFinalColumns();
+			var first_index = this.getColumnIndex(col == list[0] ? list[1] : list[0]);
+			t._addFinalColumn(col, level+1, first_index+list.indexOf(col));
+		} else {
+			var list = container.getFinalColumns();
+			var first_index = this.getColumnIndex(list[0]);
+			var sub_list = col.getFinalColumns();
+			t._addColumnContainer(col, level+1, first_index+list.indexOf(sub_list[0]));
 		}
-		t._addFinalColumn(final_col, level+1, first_index+list.indexOf(final_col));
 	};
 	
 	t.addColumn = function(column, index) {
@@ -891,6 +910,7 @@ function grid(element) {
 			t.element.style.paddingTop = "0px";
 			t.element.style.position = "static";
 			t.grid_element.style.overflow = "auto";
+			t.grid_element.style.maxHeight = "";
 			t.thead.style.position = "static";
 			t.element.style.width = "";
 			var footer = null;
@@ -919,7 +939,17 @@ function grid(element) {
 			var knowledge = [];
 			// fix the size of the container
 			var total_width = getWidth(t.element, knowledge);
+			if (total_width > t.element.parentNode.clientWidth)
+				setWidth(t.element, total_width-1, knowledge);
+			/*
+			var total_width = getWidth(t.element, knowledge);
+			//if (total_width > t.element.parentNode.clientWidth) total_width = t.element.parentNode.clientWidth;
 			setWidth(t.element, total_width-1, knowledge);
+			*/
+			// take header info
+			var head_height = t.thead.offsetHeight;
+			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));
+			var head_width = t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1);
 			// take the width of each th
 			if (t.selectable)
 				t.thead.childNodes[0].childNodes[0]._width = getWidth(t.thead.childNodes[0].childNodes[0], knowledge);
@@ -970,31 +1000,39 @@ function grid(element) {
 			}
 			tr.style.height = "0px";
 			// put the thead as relative
-			t.element.style.paddingTop = t.thead.offsetHeight+"px";
+			t.element.style.paddingTop = head_height+"px";
 			t.element.style.position = "relative";
 			t.grid_element.style.overflow = "auto";
+			if (t.element.style.height) t.grid_element.style.maxHeight = t.element.style.height;
 			t.thead.style.position = "absolute";
 			t.thead.style.top = "0px";
-			t.thead.style.left = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1))+"px";
-			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1), thead_knowledge); 
+			t.thead.style.left = head_scroll+"px";
 			t.thead.style.overflow = "hidden";
+			setWidth(t.thead, head_width, thead_knowledge); 
 			//t.table.parentNode.style.marginRight = "1px";
+			layout.changed(t.element);
 		};
 		t.element.style.display = "flex";
 		t.element.style.flexDirection = "column";
 		t.grid_element.style.flex = "1 1 auto";
 		t.grid_element.onscroll = function(ev) {
-			t.thead.style.left = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1))+"px";
-			setWidth(t.thead, t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1), thead_knowledge); 
+			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));
+			var head_width = t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1);
+			setWidth(t.thead, head_width, thead_knowledge); 
+			t.thead.style.left = head_scroll+"px";
 		};
 		var update_timeout = null;
 		var updater = function() {
 			if (update_timeout) return;
 			update_timeout = setTimeout(function() {
 				update_timeout = null;
-				update();
-			},10);
+				if (t._columns_loading == 0 && t._cells_loading == 0) // do not update if still loading, because we will need to update again
+					update();
+				else
+					updater();
+			},25);
 		};
+		layout.listenElementSizeChanged(t.element.parentNode, updater);
 		layout.listenElementSizeChanged(t.element, updater);
 		layout.listenInnerElementsChanged(t.thead, updater);
 		layout.listenInnerElementsChanged(t.table, updater);
@@ -1436,7 +1474,6 @@ function grid(element) {
 			t._cells_loading--;
 			t._check_loaded();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
-			layout.changed(parent);
 		});
 	},
 	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {

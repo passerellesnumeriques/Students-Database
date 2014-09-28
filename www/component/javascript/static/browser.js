@@ -607,22 +607,32 @@ function fireEvent(elem, type, evt) {
 	}
 }
 
-var _scripts_loaded = [];
+var _scripts_loaded = {};
+var _scripts_loading = {};
 /**
  * Dynamically load a javascript into the page. If it was already loaded, it will not load it again, but will call <code>onload</code> immediately
  * @param {String} url URL of the JavaScript file to load
  * @param {Function} onload called once the javascript is loaded
  */
 function addJavascript(url, onload, additional_attributes) {
-	var p = new URL(url).toString();
-	for (var i = 0; i < _scripts_loaded.length; ++i)
-		if (_scripts_loaded[i].url == p) {
-			if (onload) onload();
-			return _scripts_loaded[i].node;
-		}
+	if (typeof url == 'string') url = new URL(url);
+	var p = url.toString();
+	if (typeof _scripts_loaded[p] != 'undefined') {
+		if (onload) onload();
+		return _scripts_loaded[p];
+	}
+	if (typeof _scripts_loading[p] != 'undefined') {
+		if (onload) _scripts_loading[p].data.add_listener(onload);
+		return _scripts_loading[p];
+	}
 	if (document.readyState != "complete") {
 		// delay the load, as we may not have yet all the scripts in the head
-		setTimeout(function(){addJavascript(url,onload);},1);
+		var listener = function() {
+			addJavascript(url,onload,additional_attributes);
+			unlistenEvent(document, 'readystatechange', listener);
+			listener = null;
+		};
+		listenEvent(document, 'readystatechange',listener);
 		return null;
 	}
 	var head = document.getElementsByTagName("HEAD")[0];
@@ -634,6 +644,8 @@ function addJavascript(url, onload, additional_attributes) {
 		if (eu == p) {
 			// we found a script there
 			if (e.data) {
+				// already using data ?? should be in the _scripts_loading...
+				_scripts_loading[p] = e;
 				if (onload)
 					e.data.add_listener(onload);
 				return e;
@@ -641,14 +653,15 @@ function addJavascript(url, onload, additional_attributes) {
 			// didn't use this way...
 			if (e._loaded) {
 				// but marked as already loaded
-				_scripts_loaded.push({url:p,node:e});
+				_scripts_loaded[p] = e;
 				if (onload) onload();
 				return e;
 			}
 			e.data = new Custom_Event();
+			_scripts_loading[p] = e;
 			if (onload) e.data.add_listener(onload);
 			if (e.onload) e.data.add_listener(e.onload);
-			e.onload = function() { _scripts_loaded.push({url:p,node:e}); this.data.fire(); this.data.cleanup(); this.data = null; };
+			e.onload = function() { if (_scripts_loading) delete _scripts_loading[p]; if (_scripts_loaded) _scripts_loaded[p]=e; this.data.fire(); this.data.cleanup(); this.data = null; };
 			return e;
 		}
 	}
@@ -660,9 +673,9 @@ function addJavascript(url, onload, additional_attributes) {
 	s.data = new Custom_Event();
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
-	s.onload = function() { if (_scripts_loaded) _scripts_loaded.push({url:p,node:s}); this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; s.onload = null; s.onreadystatechange = null; };
+	s.onload = function() { if (_scripts_loading) delete _scripts_loading[p]; if (_scripts_loaded) _scripts_loaded[p]=s; this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; s.onload = null; s.onreadystatechange = null; };
 	//s.onerror = function(ev) { alert("Error loading javascript file: "+this.src); for (var name in ev) alert("Event: "+name+"="+ev[name]); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded') { if (_scripts_loaded) _scripts_loaded.push({url:p,node:s}); this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; this.onreadystatechange = null; s.onload = null; } };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded') { if (_scripts_loading) delete _scripts_loading[p]; if (_scripts_loaded) _scripts_loaded[p]=s; this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; this.onreadystatechange = null; s.onload = null; } };
 	head.appendChild(s);
 	s.src = p;
 	return s;
@@ -673,9 +686,8 @@ function addJavascript(url, onload, additional_attributes) {
  */
 function javascript_loaded(node) {
 	var url = new URL(node.src).toString();
-	for (var i = 0; i < _scripts_loaded.length; ++i)
-		if (_scripts_loaded[i].url == url) return;
-	_scripts_loaded.push({url:url,node:node});
+	_scripts_loaded[url] = node;
+	delete _scripts_loading[url]; 
 }
 /**
  * Remove a JavaScript from the HEAD
@@ -683,13 +695,16 @@ function javascript_loaded(node) {
  */
 function remove_javascript(url) {
 	var p = new URL(url).toString();
-	for (var i = 0; i < _scripts_loaded.length; ++i)
-		if (_scripts_loaded[i].url == p) {
-			if (_scripts_loaded[i].node.parentNode)
-				_scripts_loaded[i].node.parentNode.removeChild(_scripts_loaded[i].node);
-			_scripts_loaded.splice(i,1);
-			break;
-		}
+	if (typeof _scripts_loaded[p] != 'undefined') {
+		var node = _scripts_loaded[p];
+		if (node.parentNode) node.parentNode.removeChild(node);
+		delete _scripts_loaded[p];
+	}
+	if (typeof _scripts_loading[p] != 'undefined') {
+		var node = _scripts_loading[p];
+		if (node.parentNode) node.parentNode.removeChild(node);
+		delete _scripts_loading[p];
+	}
 	var head = document.getElementsByTagName("HEAD")[0];
 	var nodes = [];
 	for (var i = 0; i < head.childNodes.length; ++i) nodes.push(head.childNodes[i]);

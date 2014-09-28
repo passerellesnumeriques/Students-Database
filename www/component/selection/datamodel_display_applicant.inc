@@ -13,7 +13,13 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 			$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "applicant_id", $applicant_id);
 		}
 		$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "excluded", false);
-		// TODO assignment to exam center if assigned to IS...
+		// if an IS is specified, and this IS is linked to an exam center, automatically assign the applicant to this exam center
+		$is = $table_fields->getValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "information_session");
+		if ($is <> null) {
+			$exam_center = SQLQuery::create()->bypassSecurity()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "information_session", $is)->field("ExamCenterInformationSession", "exam_center")->executeSingleValue();
+			if ($exam_center <> null)
+				$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "exam_center", $exam_center);
+		}
 	}
 	
 	public function getDataDisplay($come_from, $sub_model) {
@@ -60,8 +66,10 @@ $display->addDataDisplay(new datamodel\ChoiceDataDisplay("information_session", 
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", "Exam Center", false, false));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center_room", "name", "Exam Center Room", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Exam Session", "exam_session", "exam_session.event.start"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("exam_attendance", "Exam Attendance",true,false));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("interview_center", "name", "Interview Center", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Interview Session", "interview_session", "interview_session.event.start"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("excluded", "Excluded", false, false));
 $display->addFollow("people");
 $display->addJoinFrom("people", array("types"), function($columns) {
 	$types = PNApplication::$instance->people->parseTypes($columns["types"]);

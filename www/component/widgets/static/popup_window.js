@@ -68,6 +68,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		frame._no_loading = true;
 		t.content_container.appendChild(frame);
 		frame.onload = function() {
+			if (!t) return;
 			frame._no_loading = false;
 			if (t.content == frame) {
 				// this is a new onload, probably to follow a link inside the frame
@@ -750,8 +751,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.popup.data = null;
 		t.popup = null;
 		var do_close = function() {
-			if (!t) return;
-			if (keep_content_hidden || t.keep_content_on_close) {
+			if (t && (keep_content_hidden || t.keep_content_on_close)) {
 				t.content.parentNode.removeChild(t.content);
 				t.content.style.position = 'absolute';
 				t.content.style.visibility = 'hidden';
@@ -761,12 +761,15 @@ function popup_window(title,icon,content,hide_close_button) {
 			popup.removeAllChildren();
 			if (popup.parentNode)
 				popup.parentNode.removeChild(popup);
-			t.content = null;
-			t.content_container = null;
-			t.header = null;
-			t.footer = null;
-			if (!keep_content_hidden && !t.keep_content_on_close)
-				t.cleanup();
+			popup.data = null;
+			if (t) {
+				t.content = null;
+				t.content_container = null;
+				t.header = null;
+				t.footer = null;
+				if (!keep_content_hidden && !t.keep_content_on_close)
+					t.cleanup();
+			}
 		};
 		if (t.content.nodeName == "IFRAME") t.content._no_loading = true;
 		var win = getWindowFromElement(popup);
@@ -794,6 +797,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t._onescape_listeners = null;
 		for (var i = 0; i < t._onEscapeListenerRegistrations.length; ++i)
 			unlistenEvent(t._onEscapeListenerRegistrations[i],'keyup',t._onEscapeListener);
+		if (t.popup) t.close();
 		t._onEscapeListener = null;
 		t.content = null;
 		t.content_container = null;

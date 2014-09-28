@@ -124,12 +124,13 @@ String.prototype.checkVisible = function(){
  * @param {any} e the element to search 
  * @returns true if this array contains the given element
  */
-Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e)return true;return false;};
+Array.prototype.contains=function(e){return this.indexOf(e) != -1;};
 /** 
  * remove all occurences of the given element from this array, if any.
  * @param {any} e the element to remove
  */
 Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){this.splice(i,1);i--;};};
+Array.prototype.removeUnique=function(e){var i=this.indexOf(e);if(i>=0)this.splice(i,1);};
 
 function _domRemoved(e) {
 	if (e._ondomremoved) { e._ondomremoved.fire(e); e._ondomremoved.cleanup(); e._ondomremoved = null; }
@@ -291,7 +292,7 @@ function Custom_Event() {
 	this.cleanup = function() {
 		this.listeners = null;
 		if (window && window.to_cleanup)
-			window.to_cleanup.remove(this);
+			window.to_cleanup.removeUnique(this);
 	};
 	
 	this.listeners = [];

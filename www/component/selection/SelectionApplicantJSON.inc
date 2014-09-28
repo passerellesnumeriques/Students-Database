@@ -17,6 +17,7 @@ class SelectionApplicantJSON {
 		$q->field("Applicant", "exam_center", "applicant_exam_center_id");
 		$q->field("Applicant", "exam_center_room", "applicant_exam_center_room_id");
 		$q->field("Applicant", "exam_session", "applicant_exam_session_id");
+		$q->field("Applicant", "exam_attendance", "applicant_exam_attendance");
 	}
 	
 	public static function ApplicantJSON($row) {
@@ -33,6 +34,7 @@ class SelectionApplicantJSON {
 		$s .= ",exam_center_id:".json_encode($row["applicant_exam_center_id"]);
 		$s .= ",exam_center_room_id:".json_encode($row["applicant_exam_center_room_id"]);
 		$s .= ",exam_session_id:".json_encode($row["applicant_exam_session_id"]);
+		$s .= ",exam_attendance:".json_encode($row["applicant_exam_attendance"]);
 		$s .= "}";
 		return $s;
 	}

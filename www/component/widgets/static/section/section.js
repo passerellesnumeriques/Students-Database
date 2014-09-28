@@ -213,7 +213,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 			this.collapse_container.style.padding = "4px";
 			this.collapse_button = document.createElement("IMG");
 			this.collapse_button.src = get_script_path("section.js")+(collapsed?"expand.png":"collapse.png");
-			this.collapse_button.onload = function() { layout.changed(t.element); };
+			this.collapse_button.onload = function() { if (layout) layout.changed(t.element); };
 			this.collapse_button.style.cursor = 'pointer';
 			this.collapse_button.onclick = function() { t.toggleCollapseExpand(); }; 
 			this.collapse_container.appendChild(this.collapse_button);
@@ -239,9 +239,14 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 			this.content_container.style.display = "flex";
 			this.content_container.style.flexDirection = "row";
 			content.style.flex = "1 1 auto";
-			content.style.paddingRight = window.top.browser_scroll_bar_size+"px";
 			content.style.overflowY = "auto";
 			this.footer.style.flex = "none";
+			layout.listenElementSizeChanged(content,function() {
+				if (content.scrollHeight > content.clientHeight)
+					content.style.paddingRight = window.top.browser_scroll_bar_size+"px";
+				else
+					content.style.paddingRight = "0px";
+			});
 		}
 	};
 	

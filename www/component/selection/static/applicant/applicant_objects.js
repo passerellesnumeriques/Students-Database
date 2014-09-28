@@ -1,4 +1,4 @@
-function Applicant(people, applicant_id, exclusion_reason, automatic_exclusion_step, automatic_exclusion_reason,custom_exclusion, excluded, information_session_id, exam_center_id, exam_center_room_id, exam_session_id){
+function Applicant(people, applicant_id, exclusion_reason, automatic_exclusion_step, automatic_exclusion_reason,custom_exclusion, excluded, information_session_id, exam_center_id, exam_center_room_id, exam_session_id, exam_attendance){
 	this.people = people;
 	this.applicant_id = applicant_id ;
 	this.exclusion_reason = exclusion_reason ;
@@ -10,6 +10,7 @@ function Applicant(people, applicant_id, exclusion_reason, automatic_exclusion_s
 	this.exam_center_id = exam_center_id;
 	this.exam_center_room_id = exam_center_room_id;
 	this.exam_session_id = exam_session_id;
+	this.exam_attendance = exam_attendance;
 }
 
 function ApplicantExamAnswer(applicant,exam_subject_question,answer,score){
