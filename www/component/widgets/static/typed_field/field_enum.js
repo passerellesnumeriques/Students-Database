@@ -111,28 +111,34 @@ field_enum.prototype._create = function(data) {
 			// calculate the minimum width of the select, to be able to see it...
 			var temp_container = null;
 			var sel = null;
-			layout.three_steps_process(function() {
-				temp_container = document.createElement("DIV");
-				temp_container.style.position = "absolute";
-				temp_container.style.top = "-10000px";
-				document.body.appendChild(temp_container);
-				sel = document.createElement("SELECT");
-				for (var i = 0; i < select.options.length; ++i) {
-					var o = document.createElement("OPTION");
-					o.text = select.options[i].text;
-					sel.add(o);
-				}
-				temp_container.appendChild(sel);
-			}, function() {
-				return sel.offsetWidth;
-			}, function(w) {
-				t.element.style.width = "100%";
-				select.style.width = "100%";
-				select.style.minWidth = w+"px";
-				if (t.element.parentNode == temp_container) temp_container.removeChild(t.element);
-				document.body.removeChild(temp_container);
-				temp_container = null;
-				sel = null;
+			layout.readLayout(function() {
+				var s = getComputedStyle(select);
+				layout.three_steps_process(function() {
+					temp_container = document.createElement("DIV");
+					temp_container.style.position = "absolute";
+					temp_container.style.top = "-10000px";
+					document.body.appendChild(temp_container);
+					sel = document.createElement("SELECT");
+					if (s.fontSize) sel.style.fontSize = s.fontSize;
+					if (s.fontFamily) sel.style.fontFamily = s.fontFamily;
+					if (s.fontWeight) sel.style.fontWeight = s.fontWeight;
+					for (var i = 0; i < select.options.length; ++i) {
+						var o = document.createElement("OPTION");
+						o.text = select.options[i].text;
+						sel.add(o);
+					}
+					temp_container.appendChild(sel);
+				}, function() {
+					return sel.offsetWidth;
+				}, function(w) {
+					t.element.style.width = "100%";
+					select.style.width = "100%";
+					select.style.minWidth = w+"px";
+					if (t.element.parentNode == temp_container) temp_container.removeChild(t.element);
+					document.body.removeChild(temp_container);
+					temp_container = null;
+					sel = null;
+				});
 			});
 		};
 		this.focus = function() { select.focus(); };

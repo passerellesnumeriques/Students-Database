@@ -1,13 +1,14 @@
 // #depends[/static/widgets/grid/grid.js]
 
-function CustomDataGridColumn(grid_column, data_getter, shown, data_getter_param, select_menu_name) {
+function CustomDataGridColumn(grid_column, data_getter, shown, data_getter_param, select_menu_name, always_shown) {
 	this.grid_column = grid_column;
 	this.data_getter = data_getter;
 	this.data_getter_param = data_getter_param;
 	this.select_menu_name = select_menu_name;
 	if (select_menu_name)
 		this.grid_column.text_title = select_menu_name;
-	this.shown = shown;
+	this.shown = always_shown ? true : shown;
+	this.always_shown = always_shown;
 }
 
 function CustomDataGridColumnContainer(title, sub_columns, select_menu_name) {
@@ -82,8 +83,11 @@ custom_data_grid.prototype = {
 	list: [],
 	/** List of CustomDataGridColumn, or CustomDataGridColumnContainer */
 	columns: [],
-	addColumn: function(column) {
-		this.columns.push(column);
+	addColumn: function(column, index) {
+		if (typeof index == 'undefined' || index >= this.columns.length)
+			this.columns.push(column);
+		else
+			this.columns.splice(index,0,column);
 		if (column.shown) { column.shown = false; this.showColumn(column.grid_column.id); }
 	},
 	getColumnById: function(col_id) {
@@ -456,6 +460,7 @@ custom_data_grid.prototype = {
 			var div = document.createElement("DIV");
 			div.style.paddingLeft = padding+"px";
 			if (columns[i] instanceof CustomDataGridColumn) {
+				if (columns[i].always_shown) continue;
 				var cb = document.createElement("INPUT"); cb.type = 'checkbox';
 				cb.checked = columns[i].shown ? "checked" : "";
 				cb.col = columns[i];
@@ -469,13 +474,17 @@ custom_data_grid.prototype = {
 				div.appendChild(cb);
 				div.appendChild(document.createTextNode(" "+(columns[i].select_menu_name ? columns[i].select_menu_name : columns[i].grid_column.title)));
 			} else {
+				var cols = columns[i].getFinalColumns();
+				if (cols.length == 0) continue;
+				var always = true;
+				for (var j = 0; j < cols.length; ++j) always &= cols[i].always_shown;
+				if (always) continue;
 				var cb = document.createElement("INPUT"); cb.type = 'checkbox';
 				cb.checked = columns[i].shown ? "checked" : "";
 				cb.col = columns[i];
 				cb.g = this;
 				cb.style.cssFloat = "left";
 				cb.onchange = function() {
-					var cols = this.col.getFinalColumns();
 					for (var i = 0; i < cols.length; ++i)
 						if (this.checked)
 							this.g.showColumn(cols[i].grid_column.id);

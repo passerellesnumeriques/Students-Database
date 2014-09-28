@@ -8,7 +8,7 @@ function applicant_data_grid(container, applicant_getter, show_id) {
 	var col;
 	col = new GridColumn("applicant.id", "ID", null, null, "field_integer");
 	col.addSorting();
-	this.addColumn(new CustomDataGridColumn(col, function(obj) { return applicant_getter(obj).applicant_id; }, show_id));
+	this.addColumn(new CustomDataGridColumn(col, function(obj) { return applicant_getter(obj).applicant_id; }, show_id), 0);
 	if (show_id) col.sort(true);
 }
 applicant_data_grid.prototype = new people_data_grid;

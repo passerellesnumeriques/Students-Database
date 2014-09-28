@@ -19,7 +19,7 @@ class page_exam_subjects extends SelectionPage {
 				Written Exam Subjects
 			</div>
 			<div style="padding:10px;overflow:hidden;flex:1 1 auto;display:flex;flex-direction:row">
-				<div id='subjects' class='section_block' style="display:inline-block;background-color:white;overflow-y:auto;margin-right:10px;width:350px;flex:none">
+				<div id='subjects' class='section_block' style="display:inline-block;background-color:white;overflow-y:auto;margin-right:10px;width:370px;flex:none">
 					<span id='no_subject' style='display:none;position:absolute;'>
 						<i>No subject defined yet</i>
 					</span>

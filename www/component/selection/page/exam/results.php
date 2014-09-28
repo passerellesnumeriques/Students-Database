@@ -110,7 +110,8 @@ function createDataList(campaign_id)
 			"Personal Information.First Name",
 			"Personal Information.Last Name",
 			"Personal Information.Gender",
-			"Personal Information.Age"
+			"Personal Information.Age",
+			"Selection.Exam Attaendance"
 		],
 		[{category:"Selection",name:"Exam Session",force:true,data:{values:[-1]}}],
 		-1,

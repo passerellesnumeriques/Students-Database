@@ -151,7 +151,7 @@ field_decimal.prototype._create = function(data) {
 			t.setData(getValueFromInput());
 		};
 	} else {
-		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));
+		this.element.appendChild(this.text = document.createTextNode(""));
 		this._setData = function(data) {
 			var prev = this.text.nodeValue;
 			if (typeof data == 'string') data = parseFloat(data);
@@ -166,6 +166,7 @@ field_decimal.prototype._create = function(data) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};
+		this._setData(data);
 	}
 };
 field_decimal.prototype.setLimits = function(min,max) {
