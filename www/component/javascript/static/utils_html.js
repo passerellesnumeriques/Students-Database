@@ -166,7 +166,7 @@ function LoadingHidder(to_hide) {
 	
 	this._position();
 	setTimeout(function() {
-		if (t._removed) return;
+		if (!t || t._removed) return;
 		t._position();
 	}, 50);
 	layout.listenElementSizeChanged(to_hide, updater);

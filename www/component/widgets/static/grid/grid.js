@@ -913,6 +913,11 @@ function grid(element) {
 			t.grid_element.style.maxHeight = "";
 			t.thead.style.position = "static";
 			t.element.style.width = "";
+			if (t.element.parentNode._fixed_by_grid) {
+				t.element.parentNode.style.width = t.element.parentNode._fixed_by_grid_prev_width;
+				t.element.parentNode.style.minWidth = t.element.parentNode._fixed_by_grid_prev_min_width;
+				t.element.parentNode.style.maxWidth = t.element.parentNode._fixed_by_grid_prev_max_width;
+			}
 			var footer = null;
 			for (var i = 0; i < t.table.parentNode.childNodes.length; ++i)
 				if (t.table.parentNode.childNodes[i].nodeName == "TFOOT") { footer = t.table.parentNode.childNodes[i]; break; }
@@ -938,14 +943,20 @@ function grid(element) {
 			}
 			var knowledge = [];
 			// fix the size of the container
+			var container_width = getWidth(t.element.parentNode, knowledge);
 			var total_width = getWidth(t.element, knowledge);
-			if (total_width > t.element.parentNode.clientWidth)
-				setWidth(t.element, total_width-1, knowledge);
-			/*
-			var total_width = getWidth(t.element, knowledge);
-			//if (total_width > t.element.parentNode.clientWidth) total_width = t.element.parentNode.clientWidth;
 			setWidth(t.element, total_width-1, knowledge);
-			*/
+			if (t.element.parentNode.clientWidth != container_width) {
+				// the container is expanding with us ! typically this may be done by the flex box model
+				// let's fix temporarly the container !
+				t.element.parentNode._fixed_by_grid = true;
+				t.element.parentNode._fixed_by_grid_prev_width = t.element.parentNode.style.width;
+				t.element.parentNode._fixed_by_grid_prev_min_width = t.element.parentNode.style.minWidth;
+				t.element.parentNode._fixed_by_grid_prev_max_width = t.element.parentNode.style.maxWidth;
+				setWidth(t.element.parentNode, container_width, knowledge);
+				t.element.parentNode.style.minWidth = t.element.parentNode.style.width;
+				t.element.parentNode.style.maxWidth = t.element.parentNode.style.width;
+			}
 			// take header info
 			var head_height = t.thead.offsetHeight;
 			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));

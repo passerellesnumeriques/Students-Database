@@ -19,7 +19,7 @@ class page_exam_subjects extends SelectionPage {
 				Written Exam Subjects
 			</div>
 			<div style="padding:10px;overflow:hidden;flex:1 1 auto;display:flex;flex-direction:row">
-				<div id='subjects' class='section_block' style="display:inline-block;background-color:white;overflow-y:auto;margin-right:10px;width:370px;flex:none">
+				<div id='subjects' class='section_block' style="display:inline-block;background-color:white;overflow-y:auto;margin-right:10px;width:200px;flex:none">
 					<span id='no_subject' style='display:none;position:absolute;'>
 						<i>No subject defined yet</i>
 					</span>
@@ -30,6 +30,10 @@ class page_exam_subjects extends SelectionPage {
 					<div class='page_footer' id='subject_footer' style='visibility:hidden;flex:none;background-color:white;<?php if (!$can_edit) echo "display:none;"?>'>
 						<button class="action" id='save_button'><img src='<?php echo theme::$icons_16['save'];?>'/> Save</button>
 						<button class="action" id='cancel_button'><img src='<?php echo theme::$icons_16['cancel'];?>'/> Cancel modifications</button>
+						<?php if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) { ?>
+						<button class="action" id='import_answers_from_clickers'><img src='<?php echo theme::make_icon("/static/selection/exam/sunvote_16.png", theme::$icons_10["_import"]);?>'/> Import answers from Clickers</button>
+						<button class="action" id='export_answers_to_clickers'><img src='<?php echo theme::make_icon("/static/selection/exam/sunvote_16.png", theme::$icons_10["_export"]);?>'/> Export answers to Clickers</button>
+						<?php } ?>
 					</div>
 				</div>
 			</div>
@@ -49,7 +53,6 @@ class page_exam_subjects extends SelectionPage {
 			text-align: center;
 			border: 1px solid rgba(0,0,0,0);
 			border-radius: 5px;
-			display: inline-block;
 			cursor: pointer;
 			width: 150px;
 		}
@@ -71,7 +74,6 @@ class page_exam_subjects extends SelectionPage {
 			color: #606060;
 		}
 		.subject_actions_container {
-			display: inline-block;
 		}
 		.subject_actions_container>button {
 			display: block;
@@ -120,14 +122,6 @@ class page_exam_subjects extends SelectionPage {
 				this.actions_container = document.createElement("DIV");
 				this.actions_container.className = "subject_actions_container";
 				this.div.appendChild(this.actions_container);
-
-				var export_button = document.createElement("BUTTON");
-				this.actions_container.appendChild(export_button);
-				export_button.className = "action";
-				export_button.innerHTML = "<img src='"+theme.icons_16._export+"'/> Export to...";
-				export_button.onclick = function() {
-					alert("Not yet implemented."); // TODO
-				};
 
 				<?php if ($can_edit) { ?>
 				var remove_button = document.createElement("BUTTON");
@@ -193,8 +187,8 @@ class page_exam_subjects extends SelectionPage {
 		}
 
 		function showSubjectActions(subject) {
-			<?php if ($can_edit) {?>
 			document.getElementById('subject_footer').style.visibility = "visible";
+			<?php if ($can_edit) {?>
 			var save_button = document.getElementById('save_button');
 			save_button.disabled = "disabled";
 			var cancel_button = document.getElementById('cancel_button');
@@ -218,6 +212,7 @@ class page_exam_subjects extends SelectionPage {
 						selected_index = subjects.length;
 						subjects.push(subj);
 						subjects_controls.push(new SubjectControl(subj));
+						subject = subj;
 					} else {
 						// updated subject
 						for (var i = 0; i < subjects.length; ++i) {
@@ -240,6 +235,33 @@ class page_exam_subjects extends SelectionPage {
 				} else {
 					win.pnapplication.cancelDataUnsaved();
 					win.location.reload();
+				}
+			};
+			<?php if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) { ?>
+			<?php } ?>
+			require("upload.js");
+			var import_button = document.getElementById('import_answers_from_clickers');
+			import_button.onclick = function(ev) {
+				var upl = new upload("/dynamic/selection/service/exam/import_exam_answers_from_sunvote", false, false);
+				var popup = null;
+				upl.ondone = function(outputs, errors, warnings) {
+					popup.close();
+					if (outputs.length == 0 || !outputs[0] || !outputs[0].questions) return;
+					win.importQuestionsInfo(outputs[0].questions);
+				};
+				upl.addUploadPopup("/static/selection/exam/sunvote_16.png", "Import Exam Answers From Clickers System", function(pop) { popup = pop; });
+				upl.openDialog(ev, ".xls,.xlsx");
+			};
+			var export_button = document.getElementById('export_answers_to_clickers');
+			export_button.onclick = function(ev) {
+				if (win.answers.length == 1)
+					postToDownload("/dynamic/selection/service/exam/export_exam_answers_to_sunvote", {subject:win.subject.id,version_index:0});
+				else {
+					var options = [];
+					for (var i = 0; i < win.answers.length; ++i) options.push([i,String.fromCharCode("A".charCodeAt(0)+i)]);
+					select_dialog(null,"Subject Version","For which version of the subject do you want to export ?",null,options,function(version_index) {
+						postToDownload("/dynamic/selection/service/exam/export_exam_answers_to_sunvote", {subject:win.subject.id,version_index:version_index});
+					});
 				}
 			};
 			<?php } ?>

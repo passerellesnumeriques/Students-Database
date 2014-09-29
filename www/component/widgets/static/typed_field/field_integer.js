@@ -6,7 +6,6 @@
 function field_integer(data,editable,config) {
 	if (typeof data == 'string') data = parseInt(data);
 	if (isNaN(data)) data = null;
-	if (config && !config.can_be_null && data == null) data = 0;
 	typed_field.call(this, data, editable, config);
 }
 field_integer.prototype = new typed_field();
@@ -74,20 +73,21 @@ field_integer.prototype._create = function(data) {
 		};
 		var getValueFromInput = function() {
 			var value;
-			if (t.input.value.length == 0 && t.config.can_be_null) value = null;
+			if (t.input.value.length == 0) value = null;
 			else {
-				if (t.input.value.length == 0 && !t.config.can_be_null) value = t.config.min ? t.config.min : 0;
 				var i = parseInt(t.input.value);
-				if (isNaN(i)) i = t.config.min ? t.config.min : 0;
-				if (typeof t.config.min != 'undefined' && i < t.config.min) i = t.config.min;
-				if (typeof t.config.max != 'undefined' && i > t.config.max) i = t.config.max;
+				if (isNaN(i)) i = null;
+				else {
+					if (typeof t.config.min != 'undefined' && i < t.config.min) i = t.config.min;
+					if (typeof t.config.max != 'undefined' && i > t.config.max) i = t.config.max;
+				}
 				value = i;
 			}
 			return value;
 		};
 		t.input.onblur = function(ev) {
 			var val = t._getEditedData();
-			t.input.value = val;
+			t.input.value = val === null ? "" : val;
 			t.setData(val);
 		};
 		listenEvent(t.input, 'focus', function() { t.onfocus.fire(); });
@@ -96,13 +96,12 @@ field_integer.prototype._create = function(data) {
 		this.element.appendChild(t.input);
 		this._getEditedData = function() {
 			var value = getValueFromInput();
-			if (value == null) return null;
+			if (value === null) return null;
 			return parseInt(value);
 		};
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseInt(data);
 			if (isNaN(data)) data = null;
-			if (t.config && !t.config.can_be_null && data === null) data = 0;
 			if (data === null) t.input.value = "";
 			else t.input.value = data;
 			if (typeof t.input.autoresize != 'undefined') t.input.autoresize();
@@ -111,6 +110,11 @@ field_integer.prototype._create = function(data) {
 		this.signal_error = function(error) {
 			this.error = error;
 			t.input.style.border = error ? "1px solid red" : "";
+		};
+		this.validate = function() {
+			var value = getValueFromInput();
+			if (value === null && t.config && !t.config.can_be_null) this.signal_error("Please enter a value");
+			else this.signal_error(null);
 		};
 		this.onenter = function(listener) {
 			onkeyup.add_listener(function(e) {
@@ -130,11 +134,8 @@ field_integer.prototype._create = function(data) {
 				data = parseInt(data);
 				if (isNaN(data)) data = null;
 			}
-			if (!t.config.can_be_null) {
-				if (data == null) data = t.config.min;
-			}
-			if (data != null && data < t.config.min) data = t.config.min;
-			if (data != null && data > t.config.max) data = t.config.max;
+			if (data !== null && data < t.config.min) data = t.config.min;
+			if (data !== null && data > t.config.max) data = t.config.max;
 			if (data != prev) { t.setData(data); }
 		}
 		this.setMinimum = function(min) {
@@ -152,7 +153,6 @@ field_integer.prototype._create = function(data) {
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseInt(data);
 			if (isNaN(data)) data = null;
-			if (this.config && !this.config.can_be_null && data === null) data = 0;
 			if (data === null) this.text.nodeValue = "";
 			else this.text.nodeValue = data;
 			return data;
@@ -160,6 +160,10 @@ field_integer.prototype._create = function(data) {
 		this.signal_error = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
+		};
+		this.validate = function() {
+			if (this._data === null && this.config && !this.config.can_be_null) this.signal_error("Please enter a value");
+			else this.signal_error(null);
 		};
 	}
 };

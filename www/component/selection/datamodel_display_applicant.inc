@@ -57,6 +57,61 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 	
 }
 
+class ApplicantExclusionReason extends datamodel\DataDisplay {
+
+	public function getDisplayName() { return "Exclusion Reason"; }
+	public function canAccess($sub_model) { return PNApplication::$instance->user_management->has_right("see_applicant_info"); }
+	public function getHandledColumns() { return array("automatic_exclusion_step","automatic_exclusion_reason","custom_exclusion"); }
+	public function getTypedField($sub_model) { return array("field_text","{}"); }
+	public function getHorizontalAlign() { return "left"; }
+	public function isEditable() { return false; }
+	public function getEditLocks($sub_model) { return array(); }
+	public function isSortable() { return false; }
+	public function isMandatory($sub_model) { return false; }
+	public function getTypedFilter($sub_model) { return null; } // TODO
+	
+	public function buildSQL(&$q, $path) {
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
+		$key_alias = $q->getFieldAlias($table_alias, "people");
+		if ($key_alias == null)
+			$q->field($table_alias, "people", $key_alias = $q->generateFieldAlias());
+		$excluded_alias = $q->getFieldAlias($table_alias, "excluded");
+		if ($excluded_alias == null)
+			$q->field($table_alias, "excluded", $excluded_alias = $q->generateFieldAlias());
+		$custom_exclusion_alias = $q->getFieldAlias($table_alias, "custom_exclusion");
+		if ($custom_exclusion_alias == null)
+			$q->field($table_alias, "custom_exclusion", $custom_exclusion_alias = $q->generateFieldAlias());
+		$automatic_exclusion_step_alias = $q->getFieldAlias($table_alias, "automatic_exclusion_step");
+		if ($automatic_exclusion_step_alias == null)
+			$q->field($table_alias, "automatic_exclusion_step", $automatic_exclusion_step_alias = $q->generateFieldAlias());
+		$automatic_exclusion_reason_alias = $q->getFieldAlias($table_alias, "automatic_exclusion_reason");
+		if ($automatic_exclusion_reason_alias == null)
+			$q->field($table_alias, "automatic_exclusion_reason", $automatic_exclusion_reason_alias = $q->generateFieldAlias());
+		return array("key"=>$key_alias,"data"=>$excluded_alias,"custom"=>$custom_exclusion_alias,"automatic_step"=>$automatic_exclusion_step_alias,"automatic_reason"=>$automatic_exclusion_reason_alias);
+	}
+
+	public function getData($row, $resultFromBuildSQL) {
+		if (!isset($resultFromBuildSQL["data"])) return null;
+		if ($row[$resultFromBuildSQL["data"]] == false) return null;
+		if ($row[$resultFromBuildSQL["automatic_step"]] <> null) {
+			return "Automatic from ".$row[$resultFromBuildSQL["automatic_step"]].": ".$row[$resultFromBuildSQL["automatic_reason"]];
+		}
+		if ($row[$resultFromBuildSQL["custom"]] <> null) {
+			return "Manual: ".$row[$resultFromBuildSQL["custom"]];
+		}
+		return "Unknown";
+	}
+	
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		return null; // TODO
+	}
+	
+	public function getNewData() { return null; }
+	
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {}
+	
+}
+
 $display = new ApplicantTableDataDisplay($category);
 $display->addDataDisplay(new ApplicantID_DataDisplay());
 require_once("component/contact/datamodel_display.inc");
@@ -70,6 +125,7 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("exam_attendance", "Exa
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("interview_center", "name", "Interview Center", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Interview Session", "interview_session", "interview_session.event.start"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("excluded", "Excluded", false, false));
+$display->addDataDisplay(new ApplicantExclusionReason());
 $display->addFollow("people");
 $display->addJoinFrom("people", array("types"), function($columns) {
 	$types = PNApplication::$instance->people->parseTypes($columns["types"]);

@@ -489,7 +489,8 @@ class page_exam_subject extends SelectionPage {
 			var answer = getAnswer(this.version_id, question.question.id);
 			switch (question.question.type) {
 			case "mcq_single":
-				var nb_answers = document.getElementById('default_nb_choices').value;
+				var nb_answers = document.getElementById('default_nb_choices');
+				if (nb_answers) nb_answers = nb_answers.value;
 				var config = question.question.type_config;
 				if (config != null) {
 					config = parseInt(config);
@@ -497,6 +498,7 @@ class page_exam_subject extends SelectionPage {
 				}
 				if (config != null && config > 1) nb_answers = config;
 				else question.question.type_config = nb_answers;
+				if (!question.question.type_config) question.question.type_config = 2; // ?
 				var id = generateID();
 				for (var i = 0; i < nb_answers; ++i) {
 					var cb = document.createElement("INPUT");
@@ -740,9 +742,65 @@ class page_exam_subject extends SelectionPage {
 			});
 		}
 
+		function importQuestionsInfo(questions) {
+			if (questions.length == 0) {
+				info_dialog("The information to import is empty.");
+				return;
+			}
+			var nb_questions = 0;
+			for (var i = 0; i < subject.parts.length; ++i) nb_questions += subject.parts[i].questions.length;
+			if (nb_questions != questions.length) {
+				error_dialog("The number of questions does not match: the subject has "+nb_questions+" question(s), the imported information contain "+questions.length+" question(s). Unable to import information.");
+				return;
+			}
+			var importForVersion = function(version_index) {
+				var q_index = 0;
+				var subject_max_score = 0;
+				for (var i = 0; i < subject.parts.length; ++i) {
+					var part_max_score = 0;
+					for (var j = 0; j < subject.parts[i].questions.length; ++j, ++q_index) {
+						if (questions[q_index].max_score) subject.parts[i].questions[j].max_score = parseFloat(questions[q_index].max_score); 
+						part_max_score += subject.parts[i].questions[j].max_score;
+						subject_max_score += subject.parts[i].questions[j].max_score;
+						if (questions[q_index].nb_choices) {
+							var nb = parseInt(questions[q_index].nb_choices);
+							if (nb > 1) subject.parts[i].questions[j].type_config = nb;
+						}
+						if (typeof questions[q_index].answer != 'undefined') {
+							var found = false;
+							for (var k = 0; k < answers[version_index].length; ++k)
+								if (answers[version_index][k].q == subject.parts[i].questions[j].id) {
+									found = true;
+									answers[version_index][k].a = questions[q_index].answer;
+								}
+							if (!found)
+								answers[version_index].push({q:subject.parts[i].questions[j].id,a:questions[q_index].answer});
+						}
+					}
+					subject.parts[i].max_score = part_max_score;
+				}
+				subject.max_score = subject_max_score;
+				pnapplication.dataUnsaved('subject');
+				parts = [];
+				var table = document.getElementById("table");
+				table.removeAllChildren();
+				buildTable();
+				update();
+				info_message("Information successfully imported");
+			};
+			if (answers.length > 1 && typeof questions[0].answer != 'undefined') {
+				var options = [];
+				for (var i = 0; i < answers.length; ++i) options.push([i,String.fromCharCode("A".charCodeAt(0)+i)]);
+				select_dialog(null,"Subject Version","For which version of the subject do you want to import the information ?",null,options,function(version_index) {
+					importForVersion(version_index);
+				});
+			} else
+				importForVersion(0);
+		}
+
 		<?php
 		if (isset($_GET["onready"]))
-			echo "window.frameElement.".$_GET["onready"]."();"; 
+			echo "if (window.frameElement.".$_GET["onready"].") window.frameElement.".$_GET["onready"]."();"; 
 		?>
 
 		window.onuserinactive = function() {

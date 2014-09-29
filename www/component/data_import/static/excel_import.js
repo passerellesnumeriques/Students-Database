@@ -342,7 +342,7 @@ function excel_import(popup, container, onready) {
 		};
 		p.addIconTextButton(theme.icons_16.ok, "Import", "import", function() {
 			var index = -1;
-			for (var i = 0; i < radios.length; ++i) if (radios[i].checked) { index = i; break; }
+			for (var i = 0; i < radios.length; ++i) if (radios[i].checked) { index = radios[i].col_index; break; }
 			if (index == -1) {
 				alert('Please select which kind of data it is');
 				return;
@@ -365,6 +365,19 @@ function excel_import(popup, container, onready) {
 		radio.name = "select_field_col_"+range.start_col;
 		radio.field = field;
 		radio.sub_data_index = sub_data_index;
+		var win = getIFrameWindow(t.frame_import);
+		var grid = win.grid;
+		radio.col_index = -1;
+		for (var i = 0; i < grid.columns.length; ++i)
+			if (grid.columns[i].attached_data != null) {
+				if (sub_data_index == -1 && typeof grid.columns[i].attached_data.datadisplay == 'undefined' && grid.columns[i].attached_data.category == field.category && grid.columns[i].attached_data.name == field.name) {
+					radio.col_index = i;
+					break;
+				} else if (sub_data_index != -1 && typeof grid.columns[i].attached_data.datadisplay != 'undefined' && grid.columns[i].attached_data.sub_data == sub_data_index && grid.columns[i].attached_data.datadisplay.category == field.category && grid.columns[i].attached_data.datadisplay.name == field.name) {
+					radio.col_index = i;
+					break;
+				}
+			}
 		if (sub_data_index != -1) radio.style.marginLeft = "20px";
 		var name = document.createElement("SPAN"); d.appendChild(name);
 		name.appendChild(document.createTextNode(sub_data_index == -1 ? field.name : field.sub_data.names[sub_data_index]));
@@ -376,31 +389,19 @@ function excel_import(popup, container, onready) {
 		};
 		radio.onchange = function() {
 			if (!this.checked) return;
-			var win = getIFrameWindow(t.frame_import);
-			var grid = win.grid;
-			var col_index = -1;
-			for (var i = 0; i < grid.columns.length; ++i)
-				if (grid.columns[i].attached_data != null) {
-					if (this.sub_data_index == -1 && typeof grid.columns[i].attached_data.datadisplay == 'undefined' && grid.columns[i].attached_data.category == this.field.category && grid.columns[i].attached_data.name == this.field.name) {
-						col_index = i;
-						break;
-					} else if (this.sub_data_index != -1 && typeof grid.columns[i].attached_data.datadisplay != 'undefined' && grid.columns[i].attached_data.sub_data == this.sub_data_index && grid.columns[i].attached_data.datadisplay.category == this.field.category && grid.columns[i].attached_data.datadisplay.name == this.field.name) {
-						col_index = i;
-						break;
-					}
-				}
-			var cell = grid.getCellField(0,col_index);
+			var cell = grid.getCellField(0,this.col_index);
 
 			var is_new = true;
 			var first_empty = -1;
 			for (var i = 0; i < grid.getNbRows(); ++i) {
-				var f = grid.getCellField(i, col_index);
+				var f = grid.getCellField(i, this.col_index);
 				if (f.isMultiple()) {
 					if (f.getNbData() > 0) { is_new = false; } else if (first_empty == -1) first_empty = i;
 				} else {
 					if (f.hasChanged()) { is_new = false; } else if (first_empty == -1) first_empty = i;
 				}
 			}
+			if (first_empty == -1) first_empty = grid.getNbRows()-1;
 			if (is_new) {
 				// nothing yet
 				if (td_where.parentNode == tr) {
@@ -512,7 +513,7 @@ function excel_import(popup, container, onready) {
 		return radio;
 	};
 	
-	t._importData = function(sheet, range, field_index, where, ondone) {
+	t._importData = function(sheet, range, col_index, where, ondone) {
 		var win = getIFrameWindow(t.frame_import);
 		var grid = win.grid;
 		var row = where.row;
@@ -526,7 +527,7 @@ function excel_import(popup, container, onready) {
 				value = value.trim();
 				while (grid.getNbRows() <= row)
 					win.addRow();
-				var f = grid.getCellField(row++, field_index+1);
+				var f = grid.getCellField(row++, col_index);
 				if (f.isMultiple()) {
 					if (where.type == 'reset') f.resetData();
 					if (value != "") {
@@ -558,7 +559,7 @@ function excel_import(popup, container, onready) {
 						if (i < 0)
 							ambiguous.push({
 								field: f,
-								field_index: field_index,
+								col_index: col_index,
 								value: value,
 								values: values
 							});
@@ -574,13 +575,13 @@ function excel_import(popup, container, onready) {
 				if (ondone) ondone();
 				return;
 			}
-			var field_index = ambiguous[0].field_index;
+			var col_index = ambiguous[0].col_index;
 			var field = ambiguous[0].field;
 			// get the next ambiguous
 			var list = [ambiguous[0]];
 			ambiguous.splice(0,1);
 			for (var i = 0; i < ambiguous.length; ++i)
-				if (ambiguous[i].field_index == field_index) {
+				if (ambiguous[i].col_index == col_index) {
 					list.push(ambiguous[i]);
 					ambiguous.splice(i,1);
 					i--;
@@ -591,7 +592,7 @@ function excel_import(popup, container, onready) {
 				if (!found_values.contains(list[i].value))
 					found_values.push(list[i].value);
 			var div = document.createElement("DIV");
-			div.innerHTML = ""+found_values.length+" value(s) are ambiguous for field '"+grid.columns[field_index+1].title+"':";
+			div.innerHTML = ""+found_values.length+" value(s) are ambiguous for field '"+grid.columns[col_index].title+"':";
 			var ul = document.createElement("UL");
 			div.appendChild(ul);
 			var selects = [];
@@ -614,13 +615,13 @@ function excel_import(popup, container, onready) {
 				if (typeof field.createValue != 'undefined') {
 					var add = document.createElement("A");
 					add.href = "#";
-					add.appendChild(document.createTextNode("Create New "+grid.columns[field_index+1].title));
+					add.appendChild(document.createTextNode("Create New "+grid.columns[col_index].title));
 					add.style.marginLeft = "5px";
 					add._value = found_values[i];
 					add._select = select;
 					add.onclick = function() {
 						var select = this._select;
-						field.createValue(this._value, grid.columns[field_index+1].title, function(new_value) {
+						field.createValue(this._value, grid.columns[col_index].title, function(new_value) {
 							for (var i = 0; i < selects.length; ++i) {
 								o = document.createElement("OPTION");
 								o.value = new_value;

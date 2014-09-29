@@ -236,6 +236,33 @@ function postFrame(url, data, frame) {
 	form.submit();
 	document.body.removeChild(form);
 }
+
+function postToDownload(url, data) {
+	var frame = document.createElement("IFRAME");
+	frame.style.position = "absolute";
+	frame.style.top = "-10000px";
+	frame.style.visibility = "hidden";
+	frame.name = generateID();
+	document.body.appendChild(frame);
+	var form = document.createElement("FORM");
+	var input = document.createElement("INPUT");
+	form.appendChild(input);
+	form.action = url;
+	form.method = 'POST';
+	input.type = 'hidden';
+	input.name = 'input';
+	input.value = service.generateInput(data);
+	form.target = frame.name;
+	document.body.appendChild(form);
+	form.submit();
+	window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
+	setTimeout(function() {
+		if (window.closing || !document || !document.body) return;
+		document.body.removeChild(form);
+		document.body.removeChild(frame);
+	},60000);
+}
+
 if (typeof ajax != 'undefined')
 	ajax.http_response_handlers.push(function(xhr){
 		if (xhr.status == 403) {

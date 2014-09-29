@@ -239,21 +239,26 @@ function upload(target, multiple, async) {
 				if (xhr.status != 200)
 					errors.push("Error returned by the server: "+xhr.status+" "+xhr.statusText);
 				else if (xhr.getResponseHeader("Content-Type").startsWith("application/json")) {
-					try {
-						var json = eval("("+xhr.responseText+")");
-						if (json.errors)
-							for (var j = 0; j < json.errors.length; ++j) {
-								errors.push(json.errors[j]);
-								all_errors.push(json.errors[j]);
-							}
-						if (json.warnings)
-							for (var j = 0; j < json.warnings.length; ++j) {
-								warnings.push(json.warnings[j]);
-								all_warnings.push(json.warnings[j]);
-							}
-						if (json.result) output = json.result;
-					} catch (e) {
-						errors.push("Invalid response: "+e+"<br/>"+xhr.responseText);
+					if (xhr.responseText.length == 0) {
+						errors.push("No response from the server");
+						output = null; // nothing received
+					} else {
+						try {
+							var json = eval("("+xhr.responseText+")");
+							if (json.errors)
+								for (var j = 0; j < json.errors.length; ++j) {
+									errors.push(json.errors[j]);
+									all_errors.push(json.errors[j]);
+								}
+							if (json.warnings)
+								for (var j = 0; j < json.warnings.length; ++j) {
+									warnings.push(json.warnings[j]);
+									all_warnings.push(json.warnings[j]);
+								}
+							if (json.result) output = json.result;
+						} catch (e) {
+							errors.push("Invalid response: "+e+"<br/>"+xhr.responseText);
+						}
 					}
 				} else
 					output = xhr.responseText;

@@ -187,7 +187,7 @@ function useTemplate(ev,id) {
 								}
 								p.set_freeze_content("Importing data "+e.data+" using template...");
 								setTimeout(function(){
-									imp._importData(sheet, range, field_index-1, where, function() {
+									imp._importData(sheet, range, field_index, where, function() {
 										next(i+1);
 									});
 								},1);
