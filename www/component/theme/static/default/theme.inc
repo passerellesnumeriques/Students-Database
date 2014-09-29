@@ -75,6 +75,7 @@ theme::$icons_10 = array(
 	"down" => 			"/static/theme/default/icons_10/down.png",
 	"edit" => 			"/static/theme/default/icons_10/edit.gif",
 	"error" => 			"/static/theme/default/icons_10/error.png",
+	"_export" =>		"/static/theme/default/icons_10/down.png",
 	"forbidden" =>		"/static/theme/default/icons_10/forbidden_10.png",
 	"_import" =>		"/static/theme/default/icons_10/import.png",
 	"info" => 			"/static/theme/default/icons_10/info.png",

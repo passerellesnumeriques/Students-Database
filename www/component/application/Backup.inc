@@ -110,7 +110,11 @@ class Backup {
 					if ($first_col) $first_col = false; else $line .= ",";
 					$val = $row[$col->name];
 					if ($val === null) $line .= "NULL";
-					else $line .= "'".$db->escapeString($val)."'";
+					else {
+						if ($col instanceof datamodel\ColumnBoolean)
+							$line .= "b";
+						$line .= "'".$db->escapeString($val)."'";
+					}
 				}
 				$line .= ")\n";
 				fwrite($f, $line);

@@ -31,59 +31,63 @@ class page_exam_results extends SelectionPage {
 		Written Exam Results
 	</div>
 	<div style="flex: 1 1 auto;display:flex;flex-direction:row;overflow:auto;">
-		<div style="flex:1 1 auto;padding:5px;padding-right:0px;min-width:300px;">
-			<div id="sessions_list" title='Exam sessions' icon="/static/calendar/calendar_16.png" css="soft">
-		      	<?php 
-				$q = SQLQuery::create()->select("ExamCenter")
-					->field("ExamCenter","name")
-					->field("ExamCenter","id","center_id")
-					->field("CalendarEvent","start")
-					->field("CalendarEvent","end")
-					->field("ExamCenterRoom","name","room_name")
-					->field("ExamCenterRoom","id","room_id")
-					->countOneField("Applicant","applicant_id","applicants")
-					->join("ExamCenter","ExamSession",array("id"=>"exam_center"))
-					->whereNotNull("ExamSession","event")
-					->join("ExamSession","Applicant",array("event"=>"exam_session"))
-					->field("ExamSession","event","session_id")
-					->join("Applicant","ExamCenterRoom",array("exam_center_room"=>"id"));
-				PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
-				$exam_sessions=$q->groupBy("ExamSession","event")->groupBy("ExamCenterRoom","id")->execute();
-				?>
-				<table class="grid" id="table_exam_results" style="width: 100%">
-					<thead>
-						<tr>
-						      <th>Exam Session</th>
-						      <th>Room</th>
-						      <th>Applicants</th>
-						      <th>Status</th>					      
-						</tr>
-					</thead>
-					<tbody>
-				<?php
-				$exam_center_id=null;
-				foreach($exam_sessions as $exam_session){
-					$session_name=date("d M Y",$exam_session['start'])." (".date("h:ia",$exam_session['start'])." to ".date("h:ia",$exam_session['end']).")";
-					if ($exam_center_id<>$exam_session['center_id']){ // Group for a same exam center
-						$exam_center_id=$exam_session['center_id'] ?>
-						<tr class="exam_center_row" >
-							<th colspan="4" ><?php echo $exam_session['name'];?></th>
-					    </tr><?php } //end of if statement ?> 
-						<tr class="clickable_row" style="cursor: pointer" session_id="<?php echo $exam_session['session_id'];?>" room_id="<?php echo $exam_session['room_id'];?>" exam_center_id="<?php echo $exam_center_id;?>" > 
-							<td><?php echo $session_name ?></td>
-							<td><?php echo $exam_session['room_name'] ?></td>
-							<td><?php echo $exam_session['applicants'] ?></td>
-							<td><?php echo 'TODO..' ?></td>
-						</tr>
-					<?php } // end of foreach statement ?>
-					</tbody>
-				</table>
+		<div style="flex:none;width:50%;">
+			<div style="padding:5px;padding-right:0px;">
+				<div id="sessions_list" title='Exam sessions' icon="/static/calendar/calendar_16.png" css="soft">
+			      	<?php 
+					$q = SQLQuery::create()->select("ExamCenter")
+						->field("ExamCenter","name")
+						->field("ExamCenter","id","center_id")
+						->field("CalendarEvent","start")
+						->field("CalendarEvent","end")
+						->field("ExamCenterRoom","name","room_name")
+						->field("ExamCenterRoom","id","room_id")
+						->countOneField("Applicant","applicant_id","applicants")
+						->join("ExamCenter","ExamSession",array("id"=>"exam_center"))
+						->whereNotNull("ExamSession","event")
+						->join("ExamSession","Applicant",array("event"=>"exam_session"))
+						->field("ExamSession","event","session_id")
+						->join("Applicant","ExamCenterRoom",array("exam_center_room"=>"id"));
+					PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
+					$exam_sessions=$q->groupBy("ExamSession","event")->groupBy("ExamCenterRoom","id")->execute();
+					?>
+					<table class="grid" id="table_exam_results" style="width: 100%">
+						<thead>
+							<tr>
+							      <th>Exam Session</th>
+							      <th>Room</th>
+							      <th>Applicants</th>
+							      <th>Status</th>					      
+							</tr>
+						</thead>
+						<tbody>
+					<?php
+					$exam_center_id=null;
+					foreach($exam_sessions as $exam_session){
+						$session_name=date("d M Y",$exam_session['start'])." (".date("h:ia",$exam_session['start'])." to ".date("h:ia",$exam_session['end']).")";
+						if ($exam_center_id<>$exam_session['center_id']){ // Group for a same exam center
+							$exam_center_id=$exam_session['center_id'] ?>
+							<tr class="exam_center_row" >
+								<th colspan="4" ><?php echo $exam_session['name'];?></th>
+						    </tr><?php } //end of if statement ?> 
+							<tr class="clickable_row" style="cursor: pointer" session_id="<?php echo $exam_session['session_id'];?>" room_id="<?php echo $exam_session['room_id'];?>" exam_center_id="<?php echo $exam_center_id;?>" > 
+								<td><?php echo $session_name ?></td>
+								<td><?php echo $exam_session['room_name'] ?></td>
+								<td><?php echo $exam_session['applicants'] ?></td>
+								<td><?php echo 'TODO..' ?></td>
+							</tr>
+						<?php } // end of foreach statement ?>
+						</tbody>
+					</table>
+				</div>
 			</div>
 		</div>
 		<!--List of applicants-->
-		<div style="flex:1 1 auto;align-self:stretch;padding:5px;padding-right:0px;display:flex;flex-direction:column;">		
-			<div id="session_applicants" title='Applicants for selected session' icon="/static/selection/applicant/applicants_16.png" css="soft" fill_height='true' style='flex:1 1 auto;'>
-				<div id="session_applicants_list" style="display:none"></div>
+		<div style="flex:none;width:50%;align-self:stretch;display:flex;flex-direction:column;">
+			<div style="padding:5px;padding-right:0px;display:flex;flex-direction:column;flex:1 1 auto">		
+				<div id="session_applicants" title='Applicants for selected session' icon="/static/selection/applicant/applicants_16.png" css="soft" fill_height='true' style='flex:1 1 auto;'>
+					<div id="session_applicants_list" style="display:none"></div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -111,7 +115,7 @@ function createDataList(campaign_id)
 			"Personal Information.Last Name",
 			"Personal Information.Gender",
 			"Personal Information.Age",
-			"Selection.Exam Attaendance"
+			"Selection.Exam Attendance"
 		],
 		[{category:"Selection",name:"Exam Session",force:true,data:{values:[-1]}}],
 		-1,
@@ -119,6 +123,14 @@ function createDataList(campaign_id)
 		function(list) {
 			window.dl = list;
 			list.grid.makeScrollable();
+
+			var export_sunvote = document.createElement("BUTTON");
+			export_sunvote.className = "flat";
+			export_sunvote.innerHTML = "<img src='/static/selection/exam/sunvote_16.png'/> Export for Clickers";
+			export_sunvote.onclick = function() {
+				postToDownload("/dynamic/selection/service/exam/export_exam_session_applicants_to_sunvote", {session:selected["session_id"],room:selected["room_id"]});
+			};
+			list.addHeader(export_sunvote);
 		}
 	);
 }

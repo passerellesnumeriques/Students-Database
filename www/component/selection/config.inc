@@ -23,7 +23,6 @@ return array(
 	"use_subject_version" => array("Use different versions of each exam subject to avoid cheating",false,array(true,false),"boolean","Exam Subject",array()),
 	// Exam Centers and Sessions
 	"give_name_to_exam_center" => array("Be able to set a custom name to the exam centers.<br/><i>Note: otherwise, the exam center name is the geographic area where it is located</i>",true,array(true,false),"boolean","Entrance Examination",array()),
-	"give_name_to_exam_center_room" => array("Be able to set a custom name to the exam centers rooms.<br/><i>Note: otherwise, the rooms will be named 1, 2, 3...</i>",true,array(true,false),"boolean","Entrance Examination",array()),
 	"default_duration_exam_session" => array("Pre-selected duration of an Exam Session","4 hours",array("1 hour","2 hours","3 hours","4 hours","6 hours","8 hours"),"enum","Entrance Examination",array()),
 	// Applications
  	"generate_applicant_id" => array("Automatically generate the selection applicant ID.<br/><i>Note: Otherwize, you will have to manually set it (only <b>numbers</b> are allowed)</i>",true,array(true,false),"boolean","Applicant",array()),

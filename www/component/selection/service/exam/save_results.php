@@ -96,7 +96,7 @@ class service_exam_save_results extends Service {
 				return;
 			}
 			if ($app["exam_attendance"] <> "Yes") {
-				SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array("exam_attendance"=>$app["exam_attendance"], "excluded"=>true, "automatic_exclusion_step"=>"Written Exam", "automatic_exclusion_reason"=>"Attendance"));
+				SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array("exam_attendance"=>$app["exam_attendance"], "excluded"=>true, "automatic_exclusion_step"=>"Written Exam", "automatic_exclusion_reason"=>"Attendance", "exam_passer"=>null));
 			}
 			$parts_score = array();
 			$all_parts_score = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubjectPart")->whereValue("ApplicantExamSubjectPart","applicant",$app["people_id"])->execute();
@@ -219,11 +219,11 @@ class service_exam_save_results extends Service {
 			if ($app["exam_attendance"] == "Yes") {
 				$pass = $this->applyRules($root_rule, $subjects_scores, $extracts_scores);
 				if (!$pass) {
-					SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array("exam_attendance"=>"Yes", "excluded"=>true, "automatic_exclusion_step"=>"Written Exam", "automatic_exclusion_reason"=>"Failed"));
+					SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array("exam_attendance"=>"Yes", "excluded"=>true, "automatic_exclusion_step"=>"Written Exam", "automatic_exclusion_reason"=>"Failed", "exam_passer"=>false));
 				} else {
 					// if applicant previously excluded because of attendance or results, put it back in the process!
 					$row = SQLQuery::create()->bypassSecurity()->select("Applicant")->whereValue("Applicant","people",$app["people_id"])->executeSingleRow();
-					$update = array("exam_attendance"=>"Yes");
+					$update = array("exam_attendance"=>"Yes", "exam_passer"=>true);
 					if ($row["excluded"] && $row["automatic_exclusion_step"] == "Written Exam" && ($row["automatic_exclusion_reason"] == "Attendance" || $row["automatic_exclusion_reason"] == "Failed")) {
 						$update["excluded"] = false;
 						$update["automatic_exclusion_step"] = null;

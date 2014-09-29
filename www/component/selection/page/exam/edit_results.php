@@ -182,7 +182,7 @@ foreach ($applicants_ids as $id) {
 var subjects_grids = [];
 var changing_attendance = false;
 
-function SubjectGrid(subject, container, edit_mode) {
+function SubjectGrid(subject, container, edit_mode, onready) {
 	var t=this;
 	this.data_grid = new applicant_data_grid(container, function(applicant) { return applicant; }, true);
 	this.data_grid.setColumnsChooserButton(document.getElementById('columns_chooser_button'));
@@ -468,33 +468,46 @@ function SubjectGrid(subject, container, edit_mode) {
 			this.data_grid.addColumn(dcol);
 		}
 	}
-	
-	for (var i = 0; i < applicants.length; ++i)
-		this.data_grid.addApplicant(applicants[i]);
+
+	// add the first applicant, then wait, in order to avoid a lot of pending events which is quite slow
+	if (applicants.length > 0) this.data_grid.addApplicant(applicants[0]);
 	this.data_grid.grid.onallrowsready(function() {
-		for (var i = 0; i < applicants.length; ++i) {
-			for (var j = 0; j < subject.parts.length; ++j) {
-				if (edit_mode == 'answers') {
-					for (var k = 0; k < subject.parts[j].questions.length; ++k) {
-						var f = t.data_grid.grid.getCellFieldById(applicants[i].people.id, subject.parts[j].questions[k].id);
-						if (f.getCurrentData() !== null)
-							t.answerChanged(f);
+		for (var i = 1; i < applicants.length; ++i)
+			t.data_grid.addApplicant(applicants[i]);
+		t.data_grid.grid.onallrowsready(function() {
+			for (var i = 0; i < applicants.length; ++i) {
+				for (var j = 0; j < subject.parts.length; ++j) {
+					if (edit_mode == 'answers') {
+						for (var k = 0; k < subject.parts[j].questions.length; ++k) {
+							var f = t.data_grid.grid.getCellFieldById(applicants[i].people.id, subject.parts[j].questions[k].id);
+							if (f.getCurrentData() !== null)
+								t.answerChanged(f);
+						}
 					}
+					t.computeTotals(applicants[i].people.id, subject.parts[j]);
 				}
-				t.computeTotals(applicants[i].people.id, subject.parts[j]);
 			}
-		}
+			if (onready) onready();
+		});
 	});
 }
 
 var edit_mode = document.getElementById('edit_mode');
 
 var subjects_tabs = null;
-function buildGrid() {
+function buildGrid(onready) {
+	layout.pause();
 	var tabs_container = document.getElementById('tabs_container');
 	tabs_container.removeAllChildren();
 	subjects_grids = [];
 	subjects_tabs = new tabs(tabs_container, true);
+	var nb_ready = 0;
+	var one_ready = function() {
+		if (++nb_ready == subjects.length) {
+			layout.resume();
+			if (onready) onready();
+		}
+	};
 	for (var i = 0; i < subjects.length; ++i) {
 		var container = document.createElement("DIV");
 		container.style.display = "flex";
@@ -503,7 +516,7 @@ function buildGrid() {
 		var grid_container = document.createElement("DIV");
 		grid_container.style.flex = "1 1 auto";
 		container.appendChild(grid_container);
-		subjects_grids.push(new SubjectGrid(subjects[i], grid_container, edit_mode.value));
+		subjects_grids.push(new SubjectGrid(subjects[i], grid_container, edit_mode.value, one_ready));
 	}
 }
 buildGrid();
@@ -824,6 +837,8 @@ function importClickers(ev) {
 				if (app != null && applicants_data[id].attendance !== null) {
 					if (applicants_data[id].attendance == subject_matching.length)
 						applicants_data[id].attendance = "Yes";
+					else if (applicants_data[id].attendance == 0)
+						applicants_data[id].attendance = "No";
 					else
 						applicants_data[id].attendance = "Partially";
 				}
@@ -878,16 +893,9 @@ function importClickers(ev) {
 				var set_edit_mode = function(ondone) {
 					if (edit_mode.value == 'answers') { ondone(); return; }
 					edit_mode.value = "answers";
-					edit_mode.onchange();
-					var nb = subjects_grids.length;
-					var grid_ready = function() {
-						if (--nb == 0) ondone();
-					};
-					for (var i = 0; i < subjects_grids.length; ++i)
-						subjects_grids[i].data_grid.grid.onallrowsready(grid_ready);
+					buildGrid(ondone);
 				};
 				var set_attendance = function(ondone) {
-					if (missing.length == 0) { ondone(); return; }
 					setTimeout(function() {
 						for (var i = 0; i < missing.length; ++i) {
 							missing[i].exam_attendance = "No";
@@ -945,10 +953,12 @@ function importClickers(ev) {
 				setTimeout(function() {
 					apply_keypads_replacements(function() {
 						set_edit_mode(function() {
+							layout.pause();
 							set_attendance(function() {
 								var next_subject = function(index) {
 									setTimeout(function() {
 										if (index == subject_matching.length) {
+											layout.resume();
 											popup.close();
 											return;
 										}
@@ -968,8 +978,6 @@ function importClickers(ev) {
 	upl.addUploadPopup("/static/selection/exam/sunvote_16.png", "Import from Clickers", function(pop) { popup = pop; });
 	upl.openDialog(ev, ".xls,.xlsx");
 }
-// TODO for clickers: when several subjects have the same number of questions => manual selection
-// TODO for clickers: for ID not matching, select who used it, and manage clicker replacement in the middle of an exam
 
 function importScanner(ev) {
 	var upl = new upload("/dynamic/selection/service/exam/import_amc_results", true, true);
@@ -1250,13 +1258,7 @@ function importScanner(ev) {
 				var set_edit_mode = function(ondone) {
 					if (edit_mode.value == 'questions_scores') { ondone(); return; }
 					edit_mode.value = "questions_scores";
-					edit_mode.onchange();
-					var nb = subjects_grids.length;
-					var grid_ready = function() {
-						if (--nb == 0) ondone();
-					};
-					for (var i = 0; i < subjects_grids.length; ++i)
-						subjects_grids[i].data_grid.grid.onallrowsready(grid_ready);
+					buildGrid(ondone);
 				};
 				var set_attendance = function(ondone) {
 					for (var i = 0; i < applicants.length; ++i) {
@@ -1316,10 +1318,12 @@ function importScanner(ev) {
 				};
 				setTimeout(function() {
 					set_edit_mode(function() {
+						layout.pause();
 						set_attendance(function() {
 							var next_subject = function(index) {
 								setTimeout(function() {
 									if (index == subject_matching.length) {
+										layout.resume();
 										popup.close();
 										return;
 									}

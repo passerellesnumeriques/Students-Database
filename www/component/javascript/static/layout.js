@@ -99,6 +99,15 @@ window.layout = {
 	_element_inside_listeners: [],
 	_changes: [],
 	
+	_paused: false,
+	pause: function() {
+		this._paused = true;
+	},
+	resume: function() {
+		this._paused = false;
+		this._layout_needed();
+	},
+	
 	_process_timeout: null,
 	_layouts_short_time: 0,
 	_layout_needed: function() {
@@ -125,7 +134,7 @@ window.layout = {
 		layout._process_timeout = setTimeout(f,timing);
 	},
 	_process: function() {
-		if (window.closing || layout._changes === null) return;
+		if (window.closing || layout._changes === null || this._paused) return;
 		if (layout._changes.length == 0) return; // nothing to do
 		// filter changes
 		var changes = layout._changes;
@@ -173,16 +182,6 @@ window.layout = {
 				layout._element_size_listeners[i].element._layout_info.size = sizes[i];
 			for (var i = 0; i < to_call.length; ++i)
 				to_call[i]();
-			// check if changed again, due to flex box model
-			setTimeout(function() {
-				for (var i = 0; i < list.length; ++i) {
-					var e = list[i].element;
-					var size = {scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight,clientWidth:e.clientWidth,clientHeight:e.clientHeight};
-					if (size.scrollWidth != e._layout_info.size.scrollWidth || size.scrollHeight != e._layout_info.size.scrollHeight ||
-						size.clientWidth != e._layout_info.size.clientWidth || size.clientHeight != e._layout_info.size.clientHeight)
-						layout.changed(e);
-				}
-			},25);
 		}
 		
 		layout._last_layout_activity = new Date().getTime();
@@ -461,6 +460,14 @@ function _init_images() {
 }
 
 function _layout_auto() {
+	// due to scroll bars, and flex box model, which can resize elements without notice, we re-check regularly
+	/*for (var i = 0; i < layout._element_size_listeners.length; ++i) {
+		var e = layout._element_size_listeners[i].element;
+		var size = {scrollWidth:e.scrollWidth,scrollHeight:e.scrollHeight,clientWidth:e.clientWidth,clientHeight:e.clientHeight};
+		if (size.scrollWidth != e._layout_info.size.scrollWidth || size.scrollHeight != e._layout_info.size.scrollHeight ||
+			size.clientWidth != e._layout_info.size.clientWidth || size.clientHeight != e._layout_info.size.clientHeight)
+			layout.changed(e);
+	}*/
 	// try to find new images that may invalidate the layouts
 	var images = document.getElementsByTagName("IMG");
 	for (var i = 0; i < images.length; ++i) {

@@ -101,6 +101,7 @@ class service_exam_save_subject extends Service {
 					return;
 				}
 			}
+			unset($part);
 		}
 		$remaining_parts_ids = array();
 		foreach ($current_parts as $c) array_push($remaining_parts_ids, $c["id"]);
@@ -118,6 +119,7 @@ class service_exam_save_subject extends Service {
 					$new_id = SQLQuery::create()->bypassSecurity()->insert("ExamSubjectQuestion", array("exam_subject_part"=>$part["id"],"index"=>$q["index"],"max_score"=>$q["max_score"],"type"=>$q["type"],"type_config"=>$q["type_config"]));
 					$questions_ids_mapping[$id] = $new_id;
 					$all_questions[$new_id] = $q;
+					$q["id"] = $new_id;
 				} else {
 					$questions_ids_mapping[$id] = $id;
 					$all_questions[$id] = $q;
@@ -136,11 +138,13 @@ class service_exam_save_subject extends Service {
 						return;
 					}
 				}
+				unset($q);
 			}
 			$remaining_ids = array();
 			foreach ($current_questions as $c) array_push($remaining_ids, $c["id"]);
 			if (count($remaining_ids) > 0)
 				SQLQuery::create()->bypassSecurity()->removeKeys("ExamSubjectQuestion", $remaining_ids);
+			unset($part);
 		}
 		
 		// answers
@@ -166,10 +170,44 @@ class service_exam_save_subject extends Service {
 				}
 				if ($valid)
 					array_push($to_insert, array("exam_subject_version"=>$subject["versions"][$version_index],"exam_subject_question"=>$a["q"],"answer"=>$a["a"]));
+				unset($a);
 			}
 		}
 		if (count($to_insert) > 0)
 			SQLQuery::create()->bypassSecurity()->insertMultiple("ExamSubjectAnswer", $to_insert);
+		
+		if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) {
+			// check we have the answer of all questions, and all versions
+			$missing = array();
+			foreach ($all_questions as $qid=>$q) {
+				for ($version_index = 0; $version_index < count($answers); $version_index++) {
+					$found = false;
+					foreach ($answers[$version_index] as &$a)
+						if ($a["q"] == $qid) { $found = true; break; }
+					if (!$found) array_push($missing, array("qid"=>$qid,"version_index"=>$version_index));
+				}
+			}
+			if (count($missing) > 0) {
+				$msg = count($missing)." answer".(count($missing) > 1 ? "s are" : " is")." missing:<ul>";
+				foreach ($missing as $m) {
+					$msg .= "<li>";
+					$msg .= "Question ".$all_questions[$m["qid"]]["index"];
+					$p = null;
+					foreach ($subject["parts"] as &$part) {
+						foreach ($part["questions"] as &$q)
+							if ($q["id"] == $m["qid"]) { $p = $part["index"]; break; }
+						if ($p <> null) break;
+					}
+					$msg .= " in Part ".$p;
+					if (count($answers) > 1) {
+						$msg .= ", version ".chr(ord("A")+$m["version_index"]);
+					}
+					$msg .= "</li>";
+				}
+				$msg .= "</ul>";
+				PNApplication::warning($msg);
+			}
+		}
 		
 		// check there is no empty exam extract (if we removed all its parts)
 		$empty_extracts = SQLQuery::create()

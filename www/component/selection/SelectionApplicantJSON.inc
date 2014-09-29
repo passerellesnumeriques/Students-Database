@@ -8,7 +8,6 @@ class SelectionApplicantJSON {
 			PNApplication::$instance->people->joinPeople($q, "Applicant", "people");
 		PeopleJSON::PeopleSQL($q);
 		$q->field("Applicant", "applicant_id", "applicant_id");
-		$q->field("Applicant", "exclusion_reason", "applicant_exclusion_reason");
 		$q->field("Applicant", "automatic_exclusion_step", "applicant_automatic_exclusion_step");
 		$q->field("Applicant", "automatic_exclusion_reason", "applicant_automatic_exclusion_reason");
 		$q->field("Applicant", "custom_exclusion", "applicant_custom_exclusion");
@@ -18,6 +17,7 @@ class SelectionApplicantJSON {
 		$q->field("Applicant", "exam_center_room", "applicant_exam_center_room_id");
 		$q->field("Applicant", "exam_session", "applicant_exam_session_id");
 		$q->field("Applicant", "exam_attendance", "applicant_exam_attendance");
+		$q->field("Applicant", "exam_passer", "applicant_exam_passer");
 	}
 	
 	public static function ApplicantJSON($row) {
@@ -25,7 +25,6 @@ class SelectionApplicantJSON {
 		$s = "{";
 		$s .= "people:".PeopleJSON::People($row);
 		$s .= ",applicant_id:".$row["applicant_id"];
-		$s .= ",exclusion_reason:".json_encode($row["applicant_exclusion_reason"]);
 		$s .= ",automatic_exclusion_step:".json_encode($row["applicant_automatic_exclusion_step"]);
 		$s .= ",automatic_exclusion_reason:".json_encode($row["applicant_automatic_exclusion_reason"]);
 		$s .= ",custom_exclusion:".json_encode($row["applicant_custom_exclusion"]);
@@ -35,6 +34,7 @@ class SelectionApplicantJSON {
 		$s .= ",exam_center_room_id:".json_encode($row["applicant_exam_center_room_id"]);
 		$s .= ",exam_session_id:".json_encode($row["applicant_exam_session_id"]);
 		$s .= ",exam_attendance:".json_encode($row["applicant_exam_attendance"]);
+		$s .= ",exam_passer:".json_encode($row["applicant_exam_passer"]);
 		$s .= "}";
 		return $s;
 	}

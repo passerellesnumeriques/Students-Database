@@ -145,11 +145,11 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 				d.setHours(0,date.time,0,0);
 				var doit = function() {
 					var event = new CalendarEvent(
-						t._new_event_id_counter--, 
-						'PN', 
-						calendar_id, 
-						null, 
-						d, 
+						t._new_event_id_counter--,
+						'PN',
+						calendar_id,
+						null,
+						d,
 						new Date(d.getTime()+date.duration*60*1000)
 					);
 					t.sessions.push(event);

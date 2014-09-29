@@ -107,6 +107,10 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return array(array($q,$res));
 	}
 
+	public function getData($row, $resultFromBuildSQL) {
+		return @$row[$resultFromBuildSQL["data"]];
+	}
+	
 	public function getNewData() {
 		require_once("component/Service.inc");
 		return json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:-1,contacts:[]}"));
@@ -192,6 +196,10 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		}
 		if ($q == null) return array();
 		return array(array($q,$res));
+	}
+	
+	public function getData($row, $resultFromBuildSQL) {
+		return @$row[$resultFromBuildSQL["data"]];
 	}
 
 	public function getNewData() {

@@ -86,7 +86,7 @@ class SelectionExamJSON {
 	public static function ExamSubjectFullJSON($subject_id) {
 		$subjects = SQLQuery::create()->select("ExamSubject")->whereValue("ExamSubject","id",$subject_id)->execute();
 		$versions = SQLQuery::create()->select("ExamSubjectVersion")->orderBy("ExamSubjectVersion", "exam_subject")->whereValue("ExamSubjectVersion", "exam_subject", $subject_id)->execute();
-		$parts = SQLQuery::create()->select("ExamSubjectPart")->orderBy("ExamSubjectPart", "exam_subject")->orderBy("ExamSubjectPart", "index")->whereValue("ExamSubjectPart","exam_subject",$subject_id)->execute();
+		$parts = SQLQuery::create()->select("ExamSubjectPart")->orderBy("ExamSubjectPart", "index")->whereValue("ExamSubjectPart","exam_subject",$subject_id)->execute();
 		$parts_ids = array();
 		foreach ($parts as $part) array_push($parts_ids, $part["id"]);
 		$questions = count($parts_ids) == 0 ? array() : SQLQuery::create()->select("ExamSubjectQuestion")->orderBy("ExamSubjectQuestion", "exam_subject_part")->orderBy("ExamSubjectQuestion", "index")->whereIn("ExamSubjectQuestion","exam_subject_part",$parts_ids)->execute();

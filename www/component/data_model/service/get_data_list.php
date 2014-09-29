@@ -388,10 +388,7 @@ class service_get_data_list extends Service {
 					$path = $paths[$i];
 					if ($f) $f = false; else echo ",";
 					echo "{v:";
-					if (isset($a["data"]) && isset($row[$a["data"]]))
-						echo json_encode($row[$a["data"]]);
-					else
-						echo "null";
+					echo json_encode($data->getData($row, $a));
 					if (@$a["key"] !== null && isset($row[$a["key"]]))
 						echo ",k:".json_encode($row[$a["key"]]);
 					else {
@@ -428,7 +425,7 @@ class service_get_data_list extends Service {
 					$a = $data_aliases[$i];
 					$data = $display_data[$i];
 					$path = $paths[$i];
-					$value = $row[$a["data"]];
+					$value = $data->getValue($row, $a);
 					$value = $data->exportValue($value, $path->sub_model);
 					$sheet->setCellValueByColumnAndRow($col_index, $row_index, $value);
 					$col_index++;
