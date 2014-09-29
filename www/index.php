@@ -195,7 +195,14 @@ case "dynamic":
 #END
 	$_SESSION["alive_timestamp"] = time(); // make it alive, to avoid being automatically closed
 	if (isset($_SESSION["remote"])) {
-		if ($_SESSION["remote"] <> $_SERVER["REMOTE_ADDR"]) $invalid("Access denied: you changed address");
+		if ($_SESSION["remote"] <> $_SERVER["REMOTE_ADDR"]) {
+			// try to use a session, with a different IP => reject and force open a new session
+			session_write_close();
+			setcookie(session_name(), "", time()-10000, "/dynamic/");
+			setcookie(session_name(), "", time()-10000, "/");
+			header("Location: /");
+			die("Access denied: you changed address");
+		}
 	} else {
 		$_SESSION["remote"] = $_SERVER["REMOTE_ADDR"];
 	}
