@@ -95,6 +95,7 @@ function initPNApplication() {
 							i--;
 						}
 				}
+				w.closing = true;
 				window.top.pnapplication.onwindowclosed.fire({top:window.top,win:w});
 				// clean up
 				w.document.body.removeAllChildren();
@@ -106,7 +107,6 @@ function initPNApplication() {
 						if (list[i] && list[i].cleanup) list[i].cleanup();
 					w.to_cleanup = null;
 				}
-				w.closing = true;
 				for (var name in w)
 					if (name != "closing" && name != "name" && name != "frameElement" &&
 						name != "self" && name != "parent" && name != "top" &&

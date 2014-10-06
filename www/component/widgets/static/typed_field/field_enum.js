@@ -107,39 +107,46 @@ field_enum.prototype._create = function(data) {
 				err = "Please select a value";
 			this.signal_error(err);
 		};
-		this.fillWidth = function() {
+		this.fillWidth = function(cache) {
 			// calculate the minimum width of the select, to be able to see it...
-			var temp_container = null;
-			var sel = null;
-			layout.readLayout(function() {
-				var s = getComputedStyle(select);
+			if (!cache) {
+				cache = {onavail:[]};
 				layout.three_steps_process(function() {
-					temp_container = document.createElement("DIV");
-					temp_container.style.position = "absolute";
-					temp_container.style.top = "-10000px";
-					document.body.appendChild(temp_container);
-					sel = document.createElement("SELECT");
-					if (s.fontSize) sel.style.fontSize = s.fontSize;
-					if (s.fontFamily) sel.style.fontFamily = s.fontFamily;
-					if (s.fontWeight) sel.style.fontWeight = s.fontWeight;
+					var div = document.createElement("DIV");
+					div.style.display = "inline-block";
+					div.style.position = "absolute";
+					div.style.top = "-10000px";
 					for (var i = 0; i < select.options.length; ++i) {
-						var o = document.createElement("OPTION");
-						o.text = select.options[i].text;
-						sel.add(o);
+						div.appendChild(document.createTextNode(select.options[i].text));
+						div.appendChild(document.createElement("BR"));
 					}
-					temp_container.appendChild(sel);
-				}, function() {
-					return sel.offsetWidth;
-				}, function(w) {
+					t.element.appendChild(div);
+					return div;
+				}, function(div) {
+					return {div:div,w:div.offsetWidth};
+				}, function(o) {
+					t.element.removeChild(o.div);
 					t.element.style.width = "100%";
 					select.style.width = "100%";
-					select.style.minWidth = w+"px";
-					if (t.element.parentNode == temp_container) temp_container.removeChild(t.element);
-					document.body.removeChild(temp_container);
-					temp_container = null;
-					sel = null;
+					select.style.minWidth = (o.w+27)+"px";
+					cache.w = o.w+27;
+					for (var i = 0; i < cache.onavail.length; ++i)
+						cache.onavail[i]();
+					cache.onavail = null;
 				});
+				return cache;
+			}
+			if (!cache.w) cache.onavail.push(function() {
+				t.element.style.width = "100%";
+				select.style.width = "100%";
+				select.style.minWidth = cache.w+"px";
 			});
+			else {
+				t.element.style.width = "100%";
+				select.style.width = "100%";
+				select.style.minWidth = cache.w+"px";
+			}
+			return cache;
 		};
 		this.focus = function() { select.focus(); };
 	} else {

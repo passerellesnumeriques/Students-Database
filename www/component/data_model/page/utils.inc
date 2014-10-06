@@ -67,7 +67,7 @@ function datamodel_datadisplay(&$page, $data, $data_key, $value, $sub_model, $co
 	$table = $data->handler->table;
 	if ($data->isEditable() && $can_edit) {
 		$page->addJavascript("/static/data_model/editable_datadisplay.js");
-		$page->onload("new editable_datadisplay('".$container_id."',".$data->javascriptDataDisplay($sub_model).",null,".json_encode($data_key).",".json_encode($value).",".($onchange <> null ? $onchange : "null").");");
+		$page->onload("new editable_datadisplay('".$container_id."',".$data->javascriptDataDisplay($sub_model).",null,".json_encode($data_key).",".json_encode($sub_model).",".json_encode($value).",".($onchange <> null ? $onchange : "null").");");
 	} else {
 		$page->onload("{var f=new ".$typed_field[0]."(".json_encode($value).",false,".$typed_field[1].");f.register_datamodel_datadisplay(".$data->javascriptDataDisplay($sub_model).",".json_encode($data_key).");document.getElementById('$container_id').appendChild(f.getHTMLElement());".($onchange <> null ? "f.onchange.add_listener(".$onchange.");" : "")."};");
 	}

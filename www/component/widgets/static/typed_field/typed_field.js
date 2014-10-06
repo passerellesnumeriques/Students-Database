@@ -6,17 +6,8 @@
  * @param {Object} config additional information depending on the implementation
  */
 function typed_field(data,editable,config){
-	this.element = document.createElement("DIV");
-	this.element.style.display = "inline-block";
 	if (!window.to_cleanup) window.to_cleanup = [];
 	window.to_cleanup.push(this);
-	this.cleanup = function() {
-		this.element = null;
-		this.originalData = null;
-		this._data = null;
-		this.cleanup = null;
-		this.config = null;
-	};
 	this.originalData = data;
 	this.editable = editable;
 	this.onchange = new Custom_Event();
@@ -24,35 +15,24 @@ function typed_field(data,editable,config){
 	this.ondataunchanged = new Custom_Event();
 	this.onfocus = new Custom_Event();
 	this._data = data;
-	this._in_change_event = false;
-	this._datachange = function(force) {
-		var cur = this._getEditedData();
-		if (!force && objectEquals(cur, this._data)) return; // no change
-		this._in_change_event = true;
-		this._data = cur;
-		this.validate();
-		this.onchange.fire(this);
-		if (!force && !this.hasChanged())
-			this.ondataunchanged.fire(this);
-		else
-			this.ondatachanged.fire(this);
-		this._in_change_event = false;
-	};
-	this.hasChanged = function() {
-		var cur = this.getCurrentData();
-		if (cur != this.originalData) return true;
-		return !objectEquals(cur, this.originalData);
-	};
-	this.error = null;
 	this.config = config;
-	if (getObjectClassName(this) != 'typed_field' && getObjectClassName(this) != 'typed_field_multiple') {
+	var cl = getObjectClassName(this);
+	if (cl != 'typed_field' && cl != 'typed_field_multiple') {
+		this.element = document.createElement("DIV");
+		this.element.style.display = "inline-block";
 		this._create(data);
 		this.validate();
 	}
-	data = null;
-	config = null;
 }
 typed_field.prototype = {
+	cleanup: function() {
+		this.element = null;
+		this.originalData = null;
+		this._data = null;
+		this.cleanup = null;
+		this.config = null;
+	},
+
 	/** Internal function resetting and creating the field */
 	_create: function(data) { alert("Function _create not implemented in typed_field: "+getObjectClassName(this)); },
 	/**
@@ -81,10 +61,28 @@ typed_field.prototype = {
 		// create
 		this._create(data);
 	},
+	_in_change_event: false,
+	_datachange: function(force) {
+		var cur = this._getEditedData();
+		if (!force && objectEquals(cur, this._data)) return; // no change
+		this._in_change_event = true;
+		this._data = cur;
+		this.validate();
+		this.onchange.fire(this);
+		if (!force && !this.hasChanged())
+			this.ondataunchanged.fire(this);
+		else
+			this.ondatachanged.fire(this);
+		this._in_change_event = false;
+	},
 	/**
 	 * @returns {Boolean} true if the data has been changed by the user since the creation of the field
 	 */
-	hasChanged: function() { return this.getCurrentData() != this.getOriginalData(); },
+	hasChanged: function() {
+		var cur = this.getCurrentData();
+		if (cur != this.originalData) return true;
+		return !objectEquals(cur, this.originalData);
+	},
 	/**
 	 * @returns the current data (the edited one)
 	 */
@@ -130,6 +128,7 @@ typed_field.prototype = {
 	 *  @param data new data value
 	 */
 	_setData: function(data,from_input) { alert("Function _setData not implemented in typed_field "+getObjectClassName(this)); return data; },
+	error: null,
 	/**
 	 * highlight the field to signal an error
 	 * @param {Boolean} error if true, the field is highlighted, else it is not

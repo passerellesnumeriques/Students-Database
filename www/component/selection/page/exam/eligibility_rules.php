@@ -15,8 +15,10 @@ class page_exam_eligibility_rules extends SelectionPage {
 			$extract_parts = SQLQuery::create()->select("ExamSubjectExtractParts")->join("ExamSubjectExtractParts","ExamSubjectPart",array("part"=>"id"))->execute();
 			foreach ($extracts as &$e) {
 				$e["parts"] = array();
+				$e["max_score"] = 0;
 				for ($i = 0; $i < count($extract_parts); $i++) {
 					if ($extract_parts[$i]["extract"] <> $e["id"]) continue;
+					$e["max_score"] += floatval($extract_parts[$i]["max_score"]);
 					array_push($e["parts"], $extract_parts[$i]);
 					array_splice($extract_parts, $i, 1);
 					$i--;
@@ -59,6 +61,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 							<div id='subject_<?php echo $subject["id"];?>' style="border:1px solid rgba(0,0,0,0);border-radius:5px;padding:5px;cursor:pointer" onmouseover="this.style.border='1px solid #F0D080';" onmouseout="this.style.border='1px solid rgba(0,0,0,0)';" onclick="popup_frame('/static/selection/exam/exam_subject_16.png', 'Exam Subject', '/dynamic/selection/page/exam/subject?id=<?php echo $subject["id"];?>&readonly=true');">
 								<img src='/static/selection/exam/exam_subject_48.png'/><br/>
 								<span style='font-size:12pt;font-weight:bold'><?php echo toHTML($subject["name"]);?></span><br/>
+								<span style='font-size:9pt;'><?php echo number_format($subject["max_score"],2);?> pt(s)</span><br/>
 							</div>
 							<?php if ($can_edit) { ?>
 							<button class='action' onclick="extractSubject(<?php echo $subject["id"];?>);">Extract...</button>
@@ -69,7 +72,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 						foreach ($extracts as &$e) if ($e["subject"] == $subject["id"]) array_push($list, $e);
 						if (count($list) > 0) {
 							echo "<div style='display:inline-block;height:90px;margin-left:50px;'>";
-							echo "<div style='height:90px;display:flex;flex-direction:column;justify-content:center;'>";
+							echo "<div style='height:90px;display:flex;flex-direction:column;justify-content:center;padding:3px;'>";
 								foreach ($list as $e) {
 									echo "<div id='extract_".$e["id"]."' style='flex:none;padding:3px;font-weight:bold;border:1px solid #A0A0A0;border-radius:3px;margin-top:5px;margin-bottom:5px;'>";
 									echo "<a class='black_link' href='#' title='Click to edit' onclick='editExtract(".$e["id"].");return false;'>";
@@ -77,6 +80,10 @@ class page_exam_eligibility_rules extends SelectionPage {
 									echo "</a>";
 									if ($can_edit)
 										echo " <button class='flat small_icon' title='Remove' onclick='removeExtract(".$e["id"].");'><img src='".theme::$icons_10["remove"]."'/></button>";
+									echo "<br/>";
+									echo "<span style='font-size:9pt;font-weight:normal;'>";
+									echo number_format($e["max_score"],2)." pt(s)";
+									echo "</span>";
 									echo "</div>";
 									$script .= "drawing.connectElements(document.getElementById('subject_".$subject["id"]."'), document.getElementById('extract_".$e["id"]."'), drawing.CONNECTOR_CIRCLE, drawing.CONNECTOR_ARROW, '#000000', 1);";
 								}
@@ -91,7 +98,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 					id='rules_section'
 					title='Eligibility Rules'
 				>
-					<div id='rules_container'>
+					<div id='rules_container' style='overflow-x:auto'>
 					</div>
 				</div>
 			</div>
@@ -120,6 +127,17 @@ class page_exam_eligibility_rules extends SelectionPage {
 			});
 		}
 
+		function gradeStr(grade) {
+			var s = grade.toFixed(2);
+			if (s.endsWith(".00")) return ""+Math.floor(grade);
+			return s;
+		}
+		function coefStr(coef) {
+			var s = coef.toFixed(1);
+			if (s.endsWith(".0")) return ""+Math.floor(coef);
+			return s;
+		}
+		
 		function createPointNode(container, title, can_add_next, parent_id) {
 			var node = document.createElement("DIV");
 			node.style.flex = "none";
@@ -183,7 +201,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 			if (topic.subject) {
 				for (var i = 0; i < subjects.length; ++i)
 					if (subjects[i].id == topic.subject)
-						return subjects[i].max_score;
+						return gradeStr(parseFloat(subjects[i].max_score));
 				return 0;
 			}
 			for (var i = 0; i < extracts.length; ++i)
@@ -191,7 +209,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 					var max = 0;
 					for (var j = 0; j < extracts[i].parts.length; ++j)
 						max += parseFloat(extracts[i].parts[j].max_score);
-					return max.toFixed(2);
+					return gardeStr(max);
 				}
 			return 0;
 		}
@@ -209,16 +227,17 @@ class page_exam_eligibility_rules extends SelectionPage {
 			node.style.padding = "3px";
 			if (rule.topics.length == 1) {
 				var min = parseFloat(rule.expected)/parseFloat(rule.topics[0].coefficient);
-				node.innerHTML = "Minimum "+min.toFixed(2)+"/"+getTopicMaxScore(rule.topics[0])+" in "+getTopicName(rule.topics[0]);
+				node.innerHTML = "Minimum "+gradeStr(min)+"/"+getTopicMaxScore(rule.topics[0])+"<br/>in "+getTopicName(rule.topics[0]);
 			} else {
 				var s = "";
 				for (var i = 0; i < rule.topics.length; ++i) {
-					if (i > 0) s += " + ";
+					if (i > 0) s += " + "; else s += "<span style='color:transparent'> + </span>";
 					s += getTopicName(rule.topics[i]);
 					s += " (/"+getTopicMaxScore(rule.topics[i])+")";
-					s += " * "+parseFloat(rule.topics[i].coefficient).toFixed(1);
+					s += " * "+coefStr(parseFloat(rule.topics[i].coefficient));
+					s += "<br/>";
 				}
-				s += "<br/>= "+parseFloat(rule.expected).toFixed(2)+" minimum";
+				s += " = "+gradeStr(parseFloat(rule.expected))+" minimum";
 				node.innerHTML = s;
 			}
 			if (can_edit) {
@@ -310,7 +329,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 			container.style.position = "relative";
 			container.style.display = "flex";
 			container.style.flexDirection = "row";
-			container.style.justifyContent = "center";
+			//container.style.justifyContent = "center";
 			var start_container = document.createElement("DIV");
 			start_container.style.flex = "none";
 			start_container.style.display = "flex";

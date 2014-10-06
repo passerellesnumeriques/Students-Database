@@ -122,9 +122,10 @@ $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", 
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center_room", "name", "Exam Center Room", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Exam Session", "exam_session", "exam_session.event.start"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("exam_attendance", "Exam Attendance",true,false));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("exam_passer", "Eligible for Interview", true, false));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("interview_center", "name", "Interview Center", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Interview Session", "interview_session", "interview_session.event.start"));
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("excluded", "Excluded", false, false));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("excluded", "Excluded", true, false));
 $display->addDataDisplay(new ApplicantExclusionReason());
 $display->addFollow("people");
 $display->addJoinFrom("people", array("types"), function($columns) {

@@ -106,6 +106,7 @@ class page_popup_create_people_step_check extends Page {
 				}
 			}
 		}
+		$this->requireJavascript("datadisplay.js");
 		echo "<script type='text/javascript'>";
 		echo "peoples = [";
 		$first = true;
@@ -158,9 +159,9 @@ class page_popup_create_people_step_check extends Page {
 						$li_id = $this->generateID();
 						echo "<li id='$li_id'>".$first_name." ".$last_name.":<ul>";
 						if ($same <> null)
-							$this->similarPeople("seems to be the same as", $same, $path, $table, $li_id, $sub_models);
+							$this->similarPeople("seems to be the same as", $same, $path, $table, $li_id, $sub_models, $itc);
 						foreach ($similars as $similar)
-							$this->similarPeople("may be the same as", $similar, $path, $table, $li_id, $sub_models);
+							$this->similarPeople("may be the same as", $similar, $path, $table, $li_id, $sub_models, $itc);
 						echo "</ul>";
 						echo "<a href='#' onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);peoples.push(window._new_peoples[$itc]);window.oneDone();return false;\">";
 						echo "This is a new person, I want to create it";
@@ -193,7 +194,7 @@ class page_popup_create_people_step_check extends Page {
 				<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]."();"; ?>
 				return true;
 			});
-			function addTypesToPeople(li_id, types, people_id) {
+			function addTypesToPeople(li_id, types, people_id,inp) {
 				var li = document.getElementById(li_id);
 				li.parentNode.removeChild(li);
 				var next = function(i) {
@@ -201,10 +202,19 @@ class page_popup_create_people_step_check extends Page {
 						window.oneDone();
 						return;
 					}
+					var data = {prefilled_data:[]};
+					for (var j = 0; j < window._new_peoples[inp].length; ++j) {
+						var p = window._new_peoples[inp][j];
+						var path = new DataPath(p.path);
+						var table = path.lastElement().table;
+						if (p.value.length > 0)
+							for (var k = 0; k < p.value.length; ++k)
+								data.prefilled_data.push({table:table,data:p.value[k].name,value:p.value[k].value});
+					}
 					window.parent.popup_frame(
 						null,'New Person',
 						'/dynamic/people/page/people_new_type?people='+people_id+'&ondone=done&oncancel=done&type='+types[i]<?php if ($sub_models <> null) echo "+'&sub_models=".urlencode(json_encode($sub_models))."'";?>,
-						null,null,null,
+						data,null,null,
 						function(frame,pop){
 							frame.done = function() {
 								next(i+1);
@@ -222,7 +232,7 @@ class page_popup_create_people_step_check extends Page {
 		}
 	}
 	
-	private function similarPeople($msg, $similar, $path, $table, $li_id, $sub_models) {
+	private function similarPeople($msg, $similar, $path, $table, $li_id, $sub_models, $itc) {
 		$id = $this->generateID();
 		echo "<li id='$id'>$msg ";
 		echo "<a href='#' class='black_link' title='Click to see the profile' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$similar["id"]."',null,95,95);return false;\">";
@@ -244,7 +254,7 @@ class page_popup_create_people_step_check extends Page {
 				if ($types <> "") $types .= ",";
 				$types .= "'$t'";
 			}
-			echo "<a href='#' onclick=\"addTypesToPeople('$li_id',[$types],".$similar["id"].");return false;\">";
+			echo "<a href='#' onclick=\"addTypesToPeople('$li_id',[$types],".$similar["id"].",$itc);return false;\">";
 			echo "Yes, they are the same, make it as ";
 			$add_types = "";
 			$first = true;

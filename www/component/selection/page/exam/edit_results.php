@@ -180,6 +180,7 @@ foreach ($applicants_ids as $id) {
 };
 
 var subjects_grids = [];
+var subjects_grids_ready = [];
 var changing_attendance = false;
 
 function SubjectGrid(subject, container, edit_mode, onready) {
@@ -198,7 +199,7 @@ function SubjectGrid(subject, container, edit_mode, onready) {
 				break;
 			}
 		for (var i = 0; i < subjects_grids.length; ++i) {
-			if (subjects_grids[i] == t) continue;
+			if (subjects_grids[i] == t || subjects_grids[i] == null) continue;
 			subjects_grids[i].data_grid.grid.getCellFieldById(cell.row_id,cell.col_id).setData(field.getCurrentData());
 		}
 		changing_attendance = false;
@@ -469,10 +470,8 @@ function SubjectGrid(subject, container, edit_mode, onready) {
 		}
 	}
 
-	// add the first applicant, then wait, in order to avoid a lot of pending events which is quite slow
-	if (applicants.length > 0) this.data_grid.addApplicant(applicants[0]);
 	this.data_grid.grid.onallrowsready(function() {
-		for (var i = 1; i < applicants.length; ++i)
+		for (var i = 0; i < applicants.length; ++i)
 			t.data_grid.addApplicant(applicants[i]);
 		t.data_grid.grid.onallrowsready(function() {
 			for (var i = 0; i < applicants.length; ++i) {
@@ -496,28 +495,34 @@ var edit_mode = document.getElementById('edit_mode');
 
 var subjects_tabs = null;
 function buildGrid(onready) {
-	layout.pause();
 	var tabs_container = document.getElementById('tabs_container');
 	tabs_container.removeAllChildren();
 	subjects_grids = [];
+	subjects_grids_ready = [];
 	subjects_tabs = new tabs(tabs_container, true);
-	var nb_ready = 0;
-	var one_ready = function() {
-		if (++nb_ready == subjects.length) {
+	subjects_tabs.onselect = function() {
+		layout.pause();
+		var container = subjects_tabs.tabs[subjects_tabs.selected].content;
+		if (container.childNodes.length == 0) {
+			var grid_container = document.createElement("DIV");
+			grid_container.style.flex = "1 1 auto";
+			container.appendChild(grid_container);
+			subjects_grids[subjects_tabs.selected] = new SubjectGrid(subjects[subjects_tabs.selected], grid_container, edit_mode.value, function() {
+				subjects_grids_ready[subjects_tabs.selected] = true;
+				layout.resume();
+			});
+		} else
 			layout.resume();
-			if (onready) onready();
-		}
 	};
 	for (var i = 0; i < subjects.length; ++i) {
 		var container = document.createElement("DIV");
 		container.style.display = "flex";
 		container.style.flexDirection = "column";
 		subjects_tabs.addTab(subjects[i].name, null, container);
-		var grid_container = document.createElement("DIV");
-		grid_container.style.flex = "1 1 auto";
-		container.appendChild(grid_container);
-		subjects_grids.push(new SubjectGrid(subjects[i], grid_container, edit_mode.value, one_ready));
+		subjects_grids.push(null);
+		subjects_grids_ready.push(false);
 	}
+	if (onready) onready();
 }
 buildGrid();
 
@@ -939,7 +944,11 @@ function importClickers(ev) {
 					var subject_index = 0;
 					while (subjects[subject_index] != subject) subject_index++;
 					subjects_tabs.select(subject_index);
-					setTimeout(function() {
+					var check_grid_ready = function() {
+						if (!subjects_grids_ready[subject_index]) {
+							setTimeout(check_grid_ready, 100);
+							return;
+						}
 						var grid = subjects_grids[subject_index].data_grid.grid;
 						var next_applicant = function(index) {
 							if (index == applicants.length) { ondone(); return; }
@@ -948,7 +957,15 @@ function importClickers(ev) {
 							});
 						};
 						next_applicant(0);
-					}, 25);
+					};
+					var check_tab = function() {
+						if (subjects_grids[subject_index] == null) {
+							setTimeout(check_tab, 100);
+							return;
+						}
+						check_grid_ready();
+					};
+					check_tab();
 				};
 				setTimeout(function() {
 					apply_keypads_replacements(function() {
@@ -1305,7 +1322,11 @@ function importScanner(ev) {
 					var subject_index = 0;
 					while (subjects[subject_index] != subject) subject_index++;
 					subjects_tabs.select(subject_index);
-					setTimeout(function() {
+					var check_grid_ready = function() {
+						if (!subjects_grids_ready[subject_index]) {
+							setTimeout(check_grid_ready, 100);
+							return;
+						}
 						var grid = subjects_grids[subject_index].data_grid.grid;
 						var next_applicant = function(index) {
 							if (index == applicants.length) { ondone(); return; }
@@ -1314,7 +1335,15 @@ function importScanner(ev) {
 							});
 						};
 						next_applicant(0);
-					}, 25);
+					};
+					var check_tab = function() {
+						if (subjects_grids[subject_index] == null) {
+							setTimeout(check_tab, 100);
+							return;
+						}
+						check_grid_ready();
+					};
+					check_tab();
 				};
 				setTimeout(function() {
 					set_edit_mode(function() {

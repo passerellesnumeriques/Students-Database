@@ -289,38 +289,42 @@ URL.prototype = {
 function Custom_Event() {
 	if (!window.to_cleanup) window.to_cleanup = [];
 	window.to_cleanup.push(this);
-	this.cleanup = function() {
-		this.listeners = null;
-		if (window && window.to_cleanup)
-			window.to_cleanup.removeUnique(this);
-	};
 	
 	this.listeners = [];
+}
+Custom_Event.prototype = {
 	/**
 	 * Add a listener to this event
 	 * @param listener
 	 */
-	this.add_listener = function(listener) {
+	add_listener: function(listener) {
 		if (this.listeners === null) return;
-		if (this.listeners.contains(listener)) return;
+		//if (this.listeners.contains(listener)) return;
 		this.listeners.push(listener); 
-	};
-	this.remove_listener = function(listener) { if (this.listeners === null) return; this.listeners.remove(listener); };
+	},
+	remove_listener: function(listener) {
+		if (this.listeners === null) return;
+		this.listeners.removeUnique(listener);
+	},
 	/**
 	 * Trigger the event: call all listeners with the given data as parameter
 	 * @param data
 	 */
-	this.fire = function(data) {
+	fire: function(data) {
 		if (this.listeners == null) return;
 		var list = [];
 		for (var i = 0; i < this.listeners.length; ++i) list.push(this.listeners[i]);
 		for (var i = 0; i < list.length; ++i) 
 			try { list[i](data); } 
-			catch (e) {
-				log_exception(e, "occured in event listener: "+list[i]);
-			}
-	};
-}
+			catch (e) { log_exception(e, "occured in event listener: "+list[i]); }
+	},
+	
+	cleanup: function() {
+		this.listeners = null;
+		if (window && window.to_cleanup && !window.closing)
+			window.to_cleanup.removeUnique(this);
+	}
+};
 
 function log_exception(e, additional_message) {
 	var msg = e.message;

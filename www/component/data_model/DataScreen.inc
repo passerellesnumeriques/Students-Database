@@ -111,11 +111,11 @@ namespace datamodel {
 					if ($keys["key"] <> null)
 						$kv = $row[$keys["key"]];
 					if ($keys["data"] <> null)
-						$value = @$row[$keys["data"]];
+						$value = $data->getData($row, $keys);
 					else {
 						$rows = array($row);
 						$data->performSubRequests($q, $rows, $keys, $path);
-						$value = @$rows[0][$keys["data"]];
+						$value = $data->getData($rows[0], $keys);
 					}
 				}
 				if (!$is_new)
@@ -161,7 +161,7 @@ namespace datamodel {
 							$page->addJavascript("/static/data_model/datadisplay.js");
 							$page->addJavascript("/static/data_model/editable_field.js");
 							$page->addJavascript("/static/data_model/editable_datadisplay.js");
-							$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($value).");\n";
+							$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($path->sub_model).", ".json_encode($value).");\n";
 							$script .= "field.editable_field.fillContainer();\n";
 						}
 						$html .= "</td>";
@@ -185,7 +185,7 @@ namespace datamodel {
 						$page->addJavascript("/static/data_model/datadisplay.js");
 						$page->addJavascript("/static/data_model/editable_field.js");
 						$page->addJavascript("/static/data_model/editable_datadisplay.js");
-						$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($value).");\n";
+						$script .= "field = new editable_datadisplay(document.getElementById('$id'), ".$data->javascriptDataDisplay($path->sub_model).", ".json_encode($from).", ".json_encode($kv).", ".json_encode($path->sub_model).", ".json_encode($value).");\n";
 						$script .= "field.editable_field.fillContainer();\n";
 					} else {
 						$page->addJavascript("/static/data_model/datadisplay.js");

@@ -115,16 +115,18 @@ function tabs(container, fill_tab_content) {
 	t._layout = function() {
 		if (fill_tab_content) {
 			layout.two_steps_process(function() {
+				getWidth(t.content, t._style_knowledge_content);
 				return {w:container.clientWidth, h:container.clientHeight - t.header.offsetHeight};
 			}, function(sizes) {
 				setWidth(t.content, sizes.w, t._style_knowledge_content);
 				setHeight(t.content, sizes.h, t._style_knowledge_content);
 				layout.changed(t.content);
 				if (t.selected != -1) {
+					var knowledge = [];
 					layout.two_steps_process(function() {
+						getWidth(t.tabs[t.selected].content, knowledge);
 						return {w:t.content.clientWidth, h:t.content.clientHeight};
 					}, function(sizes) {
-						var knowledge = [];
 						setWidth(t.tabs[t.selected].content, sizes.w, knowledge);
 						setHeight(t.tabs[t.selected].content, sizes.h, knowledge);
 						layout.changed(t.tabs[t.selected].content);

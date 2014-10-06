@@ -252,7 +252,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 						cb.checked = 'checked';
 						item.appendChild(cb);
 						checkboxes.push(cb);
-						t.grid._create_field(t.field_type, false, null, null, t.field_args, item, values[i], function(input) {
+						t.grid._create_field(t, t.field_type, false, null, null, t.field_args, item, values[i], function(input) {
 							input.disabled = 'disabled';
 						});
 						item.style.paddingRight = "2px";
@@ -1478,7 +1478,7 @@ function grid(element) {
 	};
 	t._create_cell = function(column, data, parent, ondone, ondone_param) {
 		t._cells_loading++;
-		t._create_field(column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
+		t._create_field(column, column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
 			parent.field = field;
 			field.grid_column_id = column.id;
 			if (ondone) ondone(field, ondone_param);
@@ -1487,15 +1487,21 @@ function grid(element) {
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
 		});
 	},
-	t._create_field = function(field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {
+	t._create_field = function(column, field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {
 		require([["typed_field.js",field_type+".js"]], function() {
-			var f = new window[field_type](data, editable, field_args);
-			if (onchanged) f.ondatachanged.add_listener(onchanged);
-			if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
-			parent.appendChild(f.getHTMLElement());
-			f.fillWidth();
-			ondone(f);
-			layout.changed(parent);
+			layout.modifyDOM(function() {
+				var f = new window[field_type](data, editable, field_args);
+				if (onchanged) f.ondatachanged.add_listener(onchanged);
+				if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
+				parent.appendChild(f.getHTMLElement());
+				ondone(f);
+				setTimeout(function() {
+					layout.modifyDOM(function() {
+						column._cache_fw = f.fillWidth(column._cache_fw);
+						layout.changed(parent);
+					});
+				},1);
+			});
 		});
 	};
 	
