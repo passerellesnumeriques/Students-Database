@@ -53,7 +53,7 @@ class page_interview_criteria extends SelectionPage {
 					id='rules_section'
 					title='Eligibility Rules'
 				>
-					<div id='rules_container'>
+					<div id='rules_container' style='overflow-x:auto'>
 					</div>
 				</div>
 			</div>
@@ -65,6 +65,17 @@ class page_interview_criteria extends SelectionPage {
 		var criteria = <?php echo json_encode($criteria);?>;
 		var root_rules = <?php echo json_encode($root_rules);?>;
 		var can_edit = <?php echo json_encode($can_edit);?>;
+
+		function gradeStr(grade) {
+			var s = grade.toFixed(2);
+			if (s.endsWith(".00")) return ""+Math.floor(grade);
+			return s;
+		}
+		function coefStr(coef) {
+			var s = coef.toFixed(1);
+			if (s.endsWith(".0")) return ""+Math.floor(coef);
+			return s;
+		}
 		
 		function addCriterion(criterion) {
 			var table = document.getElementById('criteria_table');
@@ -221,17 +232,18 @@ class page_interview_criteria extends SelectionPage {
 			if (rule.criteria.length == 1) {
 				var c = getCriterion(rule.criteria[0].criterion);
 				var min = parseFloat(rule.expected)/parseFloat(rule.criteria[0].coefficient);
-				node.innerHTML = "Minimum "+min.toFixed(2)+"/"+c.max_score+" in "+c.name;
+				node.innerHTML = "Minimum "+gradeStr(min)+"/"+gradeStr(parseFloat(c.max_score))+"<br/>in "+c.name;
 			} else {
 				var s = "";
 				for (var i = 0; i < rule.criteria.length; ++i) {
-					if (i > 0) s += " + ";
+					if (i > 0) s += " + "; else s += "<span style='color:transparent'> + </span>";
 					var c = getCriterion(rule.criteria[i].criterion);
 					s += c.name;
-					s += " (/"+c.max_score+")";
-					s += " * "+parseFloat(rule.criteria[i].coefficient).toFixed(1);
+					s += " (/"+gradeStr(parseFloat(c.max_score))+")";
+					s += " * "+coefStr(parseFloat(rule.criteria[i].coefficient));
+					s += "<br/>";
 				}
-				s += "<br/>= "+parseFloat(rule.expected).toFixed(2)+" minimum";
+				s += " = "+gradeStr(parseFloat(rule.expected))+" minimum";
 				node.innerHTML = s;
 			}
 			if (can_edit) {
@@ -323,7 +335,7 @@ class page_interview_criteria extends SelectionPage {
 			container.style.position = "relative";
 			container.style.display = "flex";
 			container.style.flexDirection = "row";
-			container.style.justifyContent = "center";
+			//container.style.justifyContent = "center";
 			var start_container = document.createElement("DIV");
 			start_container.style.flex = "none";
 			start_container.style.display = "flex";

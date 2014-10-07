@@ -73,6 +73,7 @@ namespace datamodel {
 			$readonly = false;
 			if (!$is_new) {
 				$key_value = getKeyValue($path->table, $values);
+				//echo "KEY_VALUE=".var_export($key_value,true)."<br/>\nTable=".$path->table->getName()."<br/>\nPath=".toHTML($path->getString())."<br/>\nValues=".var_export($values,true)."<br/>\n<br/>\n";
 				if (!$path->table->mayModify() && !$path->table->mayInsert() && !$path->table->mayRemove()) {
 					$readonly = true;
 				} else {
