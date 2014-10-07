@@ -83,14 +83,25 @@ class page_exam_edit_results extends SelectionPage {
 		foreach ($applicants as $a) array_push($applicants_ids, $a["people_id"]);
 		
 		// get results already in DB for applicants
+		$applicants_answers = array();
+		$applicants_parts = array();
+		$applicants_subjects = array();
 		if (count($applicants_ids) > 0) {
-			$applicants_answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant", $applicants_ids)->execute();
-			$applicants_parts = SQLQuery::create()->select("ApplicantExamSubjectPart")->whereIn("ApplicantExamSubjectPart","applicant", $applicants_ids)->execute();
-			$applicants_subjects = SQLQuery::create()->select("ApplicantExamSubject")->whereIn("ApplicantExamSubject","applicant", $applicants_ids)->execute();
-		} else {
-			$applicants_answers = array();
-			$applicants_parts = array();
-			$applicants_subjects = array();
+			$_applicants_answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant", $applicants_ids)->execute();
+			$_applicants_parts = SQLQuery::create()->select("ApplicantExamSubjectPart")->whereIn("ApplicantExamSubjectPart","applicant", $applicants_ids)->execute();
+			$_applicants_subjects = SQLQuery::create()->select("ApplicantExamSubject")->whereIn("ApplicantExamSubject","applicant", $applicants_ids)->execute();
+			foreach ($_applicants_answers as $a) {
+				if (!isset($applicants_answers[$a["applicant"]])) $applicants_answers[$a["applicant"]] = array();
+				array_push($applicants_answers[$a["applicant"]], $a);
+			}
+			foreach ($_applicants_parts as $a) {
+				if (!isset($applicants_parts[$a["applicant"]])) $applicants_parts[$a["applicant"]] = array();
+				array_push($applicants_parts[$a["applicant"]], $a);
+			}
+			foreach ($_applicants_subjects as $a) {
+				if (!isset($applicants_subjects[$a["applicant"]])) $applicants_subjects[$a["applicant"]] = array();
+				array_push($applicants_subjects[$a["applicant"]], $a);
+			}
 		}
 		
 		$this->requireJavascript("tabs.js");
@@ -138,8 +149,7 @@ foreach ($applicants_ids as $id) {
 	if ($first_app) $first_app = false; else echo ",";
 	echo "'$id':{";
 	$first_subject = true;
-	foreach ($applicants_subjects as $as) {
-		if ($as["applicant"] <> $id) continue;
+	foreach ($applicants_subjects[$id] as $as) {
 		if ($first_subject) $first_subject = false; else echo ",";
 		echo "'".$as["exam_subject"]."':{";
 		echo "version:".json_encode($as["exam_subject_version"]);
@@ -147,8 +157,7 @@ foreach ($applicants_ids as $id) {
 		echo ",parts:{";
 		foreach ($subjects as $s) if ($s["id"] == $as["exam_subject"]) { $subject = $s; break; }
 		$first_part = true;
-		foreach ($applicants_parts as $ap) {
-			if ($ap["applicant"] <> $id) continue;
+		foreach ($applicants_parts[$id] as $ap) {
 			$part = null;
 			foreach ($subject["parts"] as $sp) if ($sp["id"] == $ap["exam_subject_part"]) { $part = $sp; break; }
 			if ($part == null) continue;
@@ -157,8 +166,7 @@ foreach ($applicants_ids as $id) {
 			echo "score:".json_encode($ap["exam_subject_part"]);
 			echo ",questions:{";
 			$first_question = true;
-			foreach ($applicants_answers as $aa) {
-				if ($aa["applicant"] <> $id) continue;
+			foreach ($applicants_answers[$id] as $aa) {
 				$found = false;
 				foreach ($part["questions"] as $q) if ($q["id"] == $aa["exam_subject_question"]) { $found = true; break; }
 				if (!$found) continue;

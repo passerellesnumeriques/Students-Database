@@ -357,43 +357,45 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		layout.changed(this.th);
 	};
 	this._onsort = function(sort_order) {
-		// cancel sorting of other columns
-		for (var i = 0; i < this.grid.columns.length; ++i) {
-			var col = this.grid.columns[i];
-			if (col == this) continue;
-			if (col.sort_order) {
-				col.sort_order = 3;
-				col._refresh_title();
+		var t=this;
+		this.grid.onallrowsready(function() {
+			// cancel sorting of other columns
+			for (var i = 0; i < t.grid.columns.length; ++i) {
+				var col = t.grid.columns[i];
+				if (col == t) continue;
+				if (col.sort_order) {
+					col.sort_order = 3;
+					col._refresh_title();
+				}
 			}
-		}
-		if (this.sort_function) {
-			// get all rows
-			var rows = [];
-			for (var i = 0; i < this.grid.table.childNodes.length; ++i)
-				rows.push(this.grid.table.childNodes[i]);
-			// call sort function
-			var t=this;
-			var col_index = t.grid.columns.indexOf(t);
-			if (t.grid.selectable) col_index++;
-			rows.sort(function(r1,r2){
-				var f1 = r1.childNodes[col_index].field;
-				var f2 = r2.childNodes[col_index].field;
-				var v1 = f1.getCurrentData();
-				var v2 = f2.getCurrentData();
-				var res = t.sort_function(v1,v2);
-				if (sort_order == 2) res = -res;
-				return res;
-			});
-			// order rows
-			for (var i = 0; i < rows.length; ++i) {
-				if (this.grid.table.childNodes[i] == rows[i]) continue;
-				this.grid.table.insertBefore(rows[i], this.grid.table.childNodes[i]);
-			}
-		} else
-			this.sort_handler(sort_order);
-		
-		this.sort_order = sort_order;
-		this._refresh_title();
+			if (t.sort_function) {
+				// get all rows
+				var rows = [];
+				for (var i = 0; i < t.grid.table.childNodes.length; ++i)
+					rows.push(t.grid.table.childNodes[i]);
+				// call sort function
+				var col_index = t.grid.columns.indexOf(t);
+				if (t.grid.selectable) col_index++;
+				rows.sort(function(r1,r2){
+					var f1 = r1.childNodes[col_index].field;
+					var f2 = r2.childNodes[col_index].field;
+					var v1 = f1.getCurrentData();
+					var v2 = f2.getCurrentData();
+					var res = t.sort_function(v1,v2);
+					if (sort_order == 2) res = -res;
+					return res;
+				});
+				// order rows
+				for (var i = 0; i < rows.length; ++i) {
+					if (t.grid.table.childNodes[i] == rows[i]) continue;
+					t.grid.table.insertBefore(rows[i], t.grid.table.childNodes[i]);
+				}
+			} else
+				t.sort_handler(sort_order);
+			
+			t.sort_order = sort_order;
+			t._refresh_title();
+		});
 	};
 }
 
