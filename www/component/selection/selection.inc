@@ -146,18 +146,42 @@ class selection extends Component {
 			PNApplication::error("You are not allowed to manage the selection campaigns");
 			return;
 		}
+		
+		SQLQuery::startTransaction();
+		$campaign = SQLQuery::create()->select("SelectionCampaign")->whereValue("SelectionCampaign", "id", $id)->executeSingleRow();
+		if ($campaign == null) {
+			SQLQuery::rollbackTransaction();
+			PNApplication::error("Invalid selection campaign");
+			return;
+		}
+		// remove the calendar
+		PNApplication::$instance->calendar->removeSharedCalendar($campaign["calendar"]);
+		// remove applicants
+		$applicants_ids = SQLQuery::create()->select("Applicant")->field("people")->executeSingleField();
+		$campaigns_ids = SQLQuery::create()->select("SelectionCampaign")->whereNotValue("SelectionCampaign", "id", $id)->field("id")->executeSingleField();
+		$reassign_applicants = array();
+		foreach ($campaigns_ids as $cid) {
+			$common_applicants_ids = SQLQuery::create()->selectSubModel("SelectionCampaign", $cid)->select("Applicant")->whereIn("Applicant","people",$applicants_ids)->field("people")->executeSingleField();
+			foreach ($common_applicants_ids as $people_id) {
+				$i = array_search($people_id, $applicants_ids);
+				array_splice($applicants_ids, $i, 1);
+				$reassign_applicants[$people_id] = $cid;
+			}
+		}
+		PNApplication::$instance->people->removePeoplesType($applicants_ids, "applicant");
+		// TODO remove organizations and their contact points...
+		// TODO remove all news having the tag campaignX
+		if (PNApplication::hasErrors()) {
+			SQLQuery::rollbackTransaction();
+			return;
+		}
+		SQLQuery::commitTransaction();
 		/* Set the campaign id to null */
 		$this->campaign_id = null;
 		/* Set the calendar_id to null */
 		$this->calendar_id = null;
-		$campaign = SQLQuery::create()->select("SelectionCampaign")->whereValue("SelectionCampaign", "id", $id)->executeSingleRow();
-		if ($campaign == null) {
-			PNApplication::error("Invalid selection campaign");
-			return;
-		}
+		// remove the campaign and its sub-model
 		SQLQuery::create()->removeKey("SelectionCampaign",$id);
-		PNApplication::$instance->calendar->removeSharedCalendar($campaign["calendar"]);
-		// TODO remove all news having the tag campaignX
 	}
 	
 	/**
