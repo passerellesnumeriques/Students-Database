@@ -139,7 +139,7 @@ class page_selection_main_page extends SelectionPage {
 			function loadExamResultsStatus() {
 				var container = document.getElementById('status_exam_results');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
-				service.html("selection","exam/results_status",null,container);
+				service.html("selection","exam/status_results",null,container);
 			}
 			function loadInterviewStatus() {
 				var container = document.getElementById('status_interview');

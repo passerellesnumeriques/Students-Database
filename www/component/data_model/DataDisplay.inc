@@ -1510,6 +1510,109 @@ class CountLinksDataDisplay extends DataDisplay {
 	
 }
 
+class CountDataValueDataDisplay extends DataDisplay {
+
+	/** @var string name of this data */
+	protected $display_name;
+	protected $column;
+	protected $value;
+	protected $table;
+	protected $foreign_key;
+	protected $is_integer;
+	protected $horiz_align;
+
+	/**
+	 * @param string $display_name name of this data
+	 */
+	public function __construct($display_name, $column, $value, $table = null, $foreign_key = null, $is_integer = true, $horiz_align = "center") {
+		$this->display_name = $display_name;
+		$this->column = $column;
+		$this->value = $value;
+		$this->table = $table;
+		$this->foreign_key = $foreign_key;
+		$this->is_integer = $is_integer;
+		$this->horiz_align = $horiz_align;
+	}
+
+	public function getDisplayName() { return $this->display_name; }
+	public function canAccess($sub_model) {
+		if (!$this->getTable()->canAccess()) return false;
+		if (!$this->getTable()->canAccessColumn($this->column)) return false;
+		return true;
+	}
+	public function getHandledColumns() { if ($this->foreign_key == null) return array($this->column); return array(); }
+
+	public function getTypedField($sub_model) {
+		if ($this->is_integer)
+			return array("field_integer","{can_be_null:false}");
+		return array("field_decimal", "{integer_digits:10,decimal_digits:2,can_be_null:false}");
+	}
+	public function getHorizontalAlign() { return $this->horiz_align; }
+	public function getTypedFilter($sub_model) {
+		if ($this->is_integer)
+			return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{can_be_null:false}}");
+		return array("filter_comparable","{value_field_classname:'field_decimal',value_field_config:{can_be_null:false,integer_digits:10,decimal_digits:2}}");
+	}
+
+	public function isEditable() {
+		return false;
+	}
+	public function getEditLocks($sub_model) {
+		return array();
+	}
+	public function isSortable() {
+		return true;
+	}
+	public function isMandatory($sub_model) {
+		return false;
+	}
+
+	public function buildSQL(&$q, $path) {
+		$t = $this->getTable();
+		// go to the table
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
+		$key_alias = $q->getFieldAlias($t->getName(), $t->getPrimaryKey()->name);
+		if ($key_alias == null) {
+			$key_alias = $q->generateFieldAlias();
+			$q->field($table_alias, $t->getPrimaryKey()->name, $key_alias);
+		}
+		if ($this->foreign_key <> null) {
+			// we go to a different table
+			if ($this->table <> null) {
+				// reverse link
+				$ft_alias = $q->getTableAlias($this->table);
+				if ($ft_alias == null) {
+					$ft_alias = $q->generateTableAlias();
+					$q->join($table_alias, $this->table, array($t->getPrimaryKey()->name=>$this->foreign_key), $ft_alias);
+				}
+				$table_alias = $ft_alias;
+			} else {
+				$fk = $t->internalGetColumnFor($this->foreign_key, $path->sub_model);
+				$ft_alias = $q->getTableAlias($fk->foreign_table);
+				if ($ft_alias == null) {
+					$ft_alias = $q->generateTableAlias();
+					$ft = \DataModel::get()->internalGetTable($fk->foreign_table);
+					$q->join($table_alias, $fk->foreign_table, array($this->foreign_key=>$ft->getPrimaryKey()->name), $ft_alias);
+				}
+				$table_alias = $ft_alias;
+			}
+		}
+		$data_alias = $q->generateFieldAlias();
+		$q->expression("SUM(case when `$table_alias`.`".$this->column."`".($this->value === null ? " IS NULL" : "='".\SQLQuery::escape($this->value)."'")." then 1 else 0 end)", $data_alias);
+		return array("key"=>$key_alias,"data"=>$data_alias);
+	}
+
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		$cd = $this->getExpressionFilterCondition("`".$data_aliases["data"]."`", "filter_comparable", $filter, $q);
+		if ($cd == null) return null;
+		return array("type"=>"having", "condition"=>$cd);
+	}
+
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
+	}
+
+}
+
 class AgeDataDisplay extends CalculationDataDisplay {
 	
 	public function __construct($display_name, $birthdate_column) {

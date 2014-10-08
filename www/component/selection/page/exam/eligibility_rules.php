@@ -26,6 +26,15 @@ class page_exam_eligibility_rules extends SelectionPage {
 				$e["subject"] = $e["parts"][0]["exam_subject"];
 			}
 		}
+
+		// get general figures about applicants
+		$all_applicants_info = SQLQuery::create()->select("Applicant")
+			->expression("SUM(case when `exam_attendance` IS NULL then 1 else 0 end)", "nb_not_yet")
+			->expression("SUM(case when `exam_attendance` = 'Yes' then 1 else 0 end)", "nb_attendees")
+			->expression("SUM(case when `exam_attendance` IS NOT NULL AND `exam_attendance` != 'Yes' then 1 else 0 end)", "nb_attendance_no")
+			->expression("SUM(case when `exam_passer` IS NOT NULL AND `exam_attendance` = 'Yes' then 1 else 0 end)", "nb_results_entered")
+			->expression("SUM(`exam_passer`)", "nb_passers")
+			->executeSingleRow();
 		
 		// get eligibility rules
 		$rules = SQLQuery::create()->select("ExamEligibilityRule")->execute();
@@ -38,9 +47,10 @@ class page_exam_eligibility_rules extends SelectionPage {
 					array_push($rule["topics"], $topic);
 		}
 		// make a tree of rules
-		$root_rules = $this->buildRulesTree($rules, null);
+		$rules_applicants_ids = SQLQuery::create()->select("Applicant")->whereNotNull("Applicant","exam_passer")->whereValue("Applicant","exam_attendance","Yes")->field("Applicant","people")->executeSingleField();
+		$root_rules = $this->buildRulesTree($rules, null, $all_applicants_info["nb_results_entered"], $rules_applicants_ids);
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_exam_rules") && PNApplication::$instance->selection->canEditExamSubjects();
+		$can_edit = PNApplication::$instance->user_management->has_right("manage_exam_rules");
 		
 		$this->requireJavascript("drawing.js");
 		$script = "";
@@ -49,7 +59,15 @@ class page_exam_eligibility_rules extends SelectionPage {
 			<div class='page_title' style='flex:none'>
 				Eligibility rules for written exams
 			</div>
-			<div id='rules_page_content' style="padding:10px;overflow:hidden;flex:1 1 auto">
+			<?php 
+			if ($can_edit) {
+				if (!PNApplication::$instance->selection->canEditExamSubjects()) {
+					$can_edit = false;
+					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot modify rules because some results are already entered for some applicants.</div>";
+				}
+			} 
+			?>
+			<div id='rules_page_content' style="padding:10px;overflow:auto;flex:1 1 auto">
 				<div 
 					id='subjects_section'
 					title='Subjects'
@@ -138,7 +156,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 			return s;
 		}
 		
-		function createPointNode(container, title, can_add_next, parent_id) {
+		function createPointNode(container, title, sub_title, can_add_next, parent_id) {
 			var node = document.createElement("DIV");
 			node.style.flex = "none";
 			node.style.display = "flex";
@@ -154,7 +172,8 @@ class page_exam_eligibility_rules extends SelectionPage {
 			circle.style.border = "2px solid black";
 			circle.style.width = "10px";
 			circle.style.height = "10px";
-			circle.style.marginBottom = "16px";
+			if (!sub_title)
+				circle.style.marginBottom = "16px";
 			setBorderRadius(circle,10,10,10,10,10,10,10,10);
 			node.appendChild(circle);
 			var inner_circle = document.createElement("DIV");
@@ -183,6 +202,14 @@ class page_exam_eligibility_rules extends SelectionPage {
 				};
 			}
 			container.appendChild(node);
+			if (sub_title) {
+				var sub_title_div = document.createElement("DIV");
+				sub_title_div.innerHTML = sub_title;
+				sub_title_div.style.marginTop = "2px";
+				sub_title_div.style.fontSize = "8pt";
+				node.appendChild(sub_title_div);
+				title_div.style.marginTop = (sub_title_div.offsetHeight - title_div.offsetHeight)+"px";
+			}
 			return node;
 		}
 		function getTopicName(topic) {
@@ -317,7 +344,23 @@ class page_exam_eligibility_rules extends SelectionPage {
 				n_container.style.justifyContent = "center";
 				n_container.style.zIndex = 2;
 				step_container.appendChild(n_container);
-				var n = createRuleNode(n_container, nodes[i]);
+				var node_div = document.createElement("DIV");
+				n_container.appendChild(node_div);
+				if (nodes[i].total_passed) {
+					var d = document.createElement("DIV");
+					d.style.textAlign = "center";
+					d.style.fontSize = "8pt";
+					node_div.appendChild(d);
+					d.innerHTML = "Only this rule: "+nodes[i].total_passed;
+				}
+				var n = createRuleNode(node_div, nodes[i]);
+				if (nodes[i].passers) {
+					var d = document.createElement("DIV");
+					d.style.textAlign = "center";
+					d.style.fontSize = "8pt";
+					node_div.appendChild(d);
+					d.innerHTML = "Cummulative: "+nodes[i].passers.length + " / "+nodes[i].applicants.length;
+				}
 				var conn = drawing.connectElements(previous_node, n, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz');
 				conn.style.zIndex = 1;
 				buildRulesGraphStep(n_container, n, nodes[i].children, final_nodes);
@@ -336,7 +379,17 @@ class page_exam_eligibility_rules extends SelectionPage {
 			start_container.style.flexDirection = "column";
 			start_container.style.justifyContent = "center";
 			container.appendChild(start_container);
-			var start = createPointNode(start_container, "Applicants", true, null);
+			var sub_title = null;
+			<?php
+			if ($all_applicants_info["nb_results_entered"] > 0) {
+				$s = $all_applicants_info["nb_results_entered"]." have results<br/>";
+				$s .= $all_applicants_info["nb_attendees"]." attended exams<br/>";
+				$s .= $all_applicants_info["nb_attendance_no"]." didn't come/cheat<br/>";
+				$s .= $all_applicants_info["nb_not_yet"]." still have to attend<br/>";
+				echo "sub_title=".json_encode($s).";\n";
+			}
+			?>
+			var start = createPointNode(start_container, "Applicants", sub_title, true, null);
 			var final_nodes = [];
 			buildRulesGraphStep(container, start, root_rules, final_nodes);
 			var end_container = document.createElement("DIV");
@@ -346,7 +399,13 @@ class page_exam_eligibility_rules extends SelectionPage {
 			end_container.style.justifyContent = "center";
 			end_container.style.marginLeft = "30px";
 			container.appendChild(end_container);
-			var end = createPointNode(end_container, "Eligible");
+			var sub_title = null;
+			<?php
+			if ($all_applicants_info["nb_passers"] > 0) {
+				echo "sub_title=".json_encode($all_applicants_info["nb_passers"]." passed").";\n";
+			} 
+			?>
+			var end = createPointNode(end_container, "Eligible", sub_title);
 			for (var i = 0; i < final_nodes.length; ++i)
 				drawing.connectElements(final_nodes[i], end, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz').style.zIndex = 1;
 		}
@@ -355,14 +414,53 @@ class page_exam_eligibility_rules extends SelectionPage {
 		<?php 
 	}
 	
-	private function buildRulesTree(&$rules, $parent_id) {
+	private function buildRulesTree(&$rules, $parent_id, $total_applicants, $applicants_from_parent) {
 		$children = array();
 		foreach ($rules as $rule) {
 			if ($rule["parent"] == $parent_id)
 				array_push($children, $rule);
 		}
 		foreach ($children as &$rule) {
-			$rule["children"] = $this->buildRulesTree($rules, $rule["id"]);
+			if (count($applicants_from_parent) > 0) {
+				$q = SQLQuery::create()->select("Applicant");
+				$q->whereValue("Applicant","exam_attendance","Yes");
+				$expr = "";
+				for ($topic_index = 0; $topic_index < count($rule["topics"]); ++$topic_index) {
+					$topic = $rule["topics"][$topic_index];
+					if ($topic["subject"] <> null)
+						$q->join("Applicant","ApplicantExamSubject",array("people"=>"applicant",null=>array("exam_subject"=>$topic["subject"])),"topic_$topic_index");
+					else
+						$q->join("Applicant","ApplicantExamExtract",array("people"=>"applicant",null=>array("exam_extract"=>$topic["extract"])),"topic_$topic_index");
+					if ($topic_index > 0) $expr .= " + ";
+					$expr .= "`topic_$topic_index`.`score` * ".$topic["coefficient"];
+				}
+				$q->expression("($expr)","total_rule");
+				$q->having("`total_rule` >= ".$rule["expected"]);
+				$res = $q->execute();
+				$rule["total_passed"] = count($res)." / ".$total_applicants;
+	
+				$q = SQLQuery::create()->select("Applicant");
+				$q->whereIn("Applicant","people",$applicants_from_parent);
+				$expr = "";
+				for ($topic_index = 0; $topic_index < count($rule["topics"]); ++$topic_index) {
+					$topic = $rule["topics"][$topic_index];
+					if ($topic["subject"] <> null)
+						$q->join("Applicant","ApplicantExamSubject",array("people"=>"applicant",null=>array("exam_subject"=>$topic["subject"])),"topic_$topic_index");
+					else
+						$q->join("Applicant","ApplicantExamExtract",array("people"=>"applicant",null=>array("exam_extract"=>$topic["extract"])),"topic_$topic_index");
+					if ($topic_index > 0) $expr .= " + ";
+					$expr .= "`topic_$topic_index`.`score` * ".$topic["coefficient"];
+				}
+				$q->expression("($expr)","total_rule");
+				$q->having("`total_rule` >= ".$rule["expected"]);
+				$q->field("Applicant","people");
+				$res = $q->execute();
+				$rule["applicants"] = $applicants_from_parent;
+				$rule["passers"] = array();
+				foreach ($res as $r) array_push($rule["passers"], $r["people"]);
+			}
+							
+			$rule["children"] = $this->buildRulesTree($rules, $rule["id"], $total_applicants, count($applicants_from_parent) > 0 ? $rule["passers"] : array());
 		}
 		return $children;
 	}
