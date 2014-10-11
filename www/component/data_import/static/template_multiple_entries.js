@@ -177,7 +177,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 			td.appendChild(document.createTextNode("#"+(i+1)));
 			for (var j = 0; j < rows[i].layers.length; ++j)
 				if (rows[i].layers[j])
-					rows[i].layers[j].setContent(field.data.name+" #"+(i+1)+field.data.sub_data.names[j]);
+					rows[i].layers[j].setContent(field.data.name+" #"+(i+1)+" "+field.data.sub_data.names[rows[i].selects[j]._sub_index]);
 		}
 	};
 	this._createMultipleFieldRowSubData = function(field, table, rows) {
@@ -196,7 +196,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 			row.selects.push(select);
 			row.layers.push(null);
 			select._sub_index = i;
-			select._select_index = row.selects.length;
+			select._select_index = row.selects.length-1;
 			select._onchange = function() {
 				var sub_index = this._sub_index;
 				var select_index = this._select_index;

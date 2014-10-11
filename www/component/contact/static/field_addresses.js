@@ -90,7 +90,7 @@ field_addresses.prototype._create = function(data) {
 		});
 		this._setData = function(data) {
 			this.element.onclick = function(event) { stopEventPropagation(event); return false; };
-			while (this.element.childNodes.length > 0) this.element.removeChild(this.element.childNodes[0]);
+			this.element.removeAllChildren();
 			if (data == null) return null;
 			for (var i = 0; i < data.addresses.length; ++i) {
 				var addr = data.addresses[i];
@@ -234,8 +234,24 @@ field_addresses.prototype._create = function(data) {
 					}
 				}
 			}
+			if (t.editable) {
+				var add_button = document.createElement("BUTTON");
+				add_button.className = "flat small_icon";
+				add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+				add_button.title = "Add new address";
+				this.element.appendChild(add_button);
+				add_button.onclick = function(event) {
+					require("contact_objects.js", function() {
+						var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "Home");
+						t._data.addresses.push(address);
+						t.setData(t._data, true);
+					});
+					stopEventPropagation(event);
+					return false;
+				};
+			}
 			return data;
-		}
+		};
 		if (t.editable) {
 			this.getNbData = function() {
 				return t._data.addresses.length;
@@ -315,21 +331,6 @@ field_addresses.prototype._create = function(data) {
 				} else {
 					// TODO ?
 				}
-			};
-
-			var add_button = document.createElement("BUTTON");
-			add_button.className = "flat small_icon";
-			add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
-			add_button.title = "Add new address";
-			this.element.appendChild(add_button);
-			add_button.onclick = function(event) {
-				require("contact_objects.js", function() {
-					var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "Home");
-					t._data.addresses.push(address);
-					t.setData(t._data, true);
-				});
-				stopEventPropagation(event);
-				return false;
 			};
 		}
 		this._setData(data);

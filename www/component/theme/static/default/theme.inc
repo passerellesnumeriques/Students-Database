@@ -90,6 +90,7 @@ theme::$icons_10 = array(
 	"offline" => 		"/static/theme/default/icons_10/offline.gif",
 	"minus" => 			"/static/theme/default/icons_10/minus.png",
 	"paste" =>	 		"/static/theme/default/icons_10/paste.png",
+	"pen" =>	 		"/static/theme/default/icons_10/pen.png",
 	"popup" =>	 		"/static/theme/default/icons_10/popup.png",
 	"refresh" => 		"/static/theme/default/icons_10/refresh.png",
 	"remove" => 		"/static/theme/default/icons_10/remove.png",

@@ -82,6 +82,51 @@ function datachanged(field) {
 	}
 }
 
+function addColumnActions(col) {
+	var needFieldInfo = function() {
+		var f = new window[col.field_type](col.attached_data.new_data,true,col.field_args);
+		if (typeof f.getPossibleValues != 'undefined') {
+			col.addAction(new GridColumnAction('set_all',theme.icons_10.pen,function(ev) {
+				var div = document.createElement("DIV");
+				div.appendChild(document.createTextNode("Select the value to set on all rows: "));
+				var sel = document.createElement("SELECT");
+				div.appendChild(sel);
+				var o = document.createElement("OPTION");
+				o.text = "";
+				o.value = null;
+				sel.add(o);
+				var values = f.getPossibleValues();
+				for (var i = 0; i < values.length; ++i) {
+					o = document.createElement("OPTION");
+					o.text = values[i];
+					o.value = values[i];
+					sel.add(o);
+				}
+				require("popup_window.js",function() {
+					var popup = new popup_window("Set values for all rows",null,div);
+					popup.addOkCancelButtons(function() {
+						var value = sel.options[sel.selectedIndex].value;
+						if (grid.getNbRows() == 1)
+							grid.getCellField(0,grid.getColumnIndex(col)).setData(value,false,true);
+						else {
+							var col_index = grid.getColumnIndex(col);
+							for (var i = 0; i < grid.getNbRows()-1; ++i)
+								grid.getCellField(i,col_index).setData(value,false,true);
+						}
+						popup.close();
+					});
+					popup.show();
+				});
+				// TODO
+			},'Enter a value for all rows'));
+		}
+	};
+	if (col._loaded)
+		needFieldInfo();
+	else
+		col.onloaded.add_listener(needFieldInfo);
+}
+
 var col, col_container, sub_cols;
 col = new GridColumn("remove", "", null, null, "field_html", false, null, null, {}, null);
 grid.addColumn(col);
@@ -123,7 +168,7 @@ foreach ($cat[1] as $field) {
 				array_push($sub_indexes, $i);
 	}
 	if (count($sub_indexes) == 0) {
-		echo "cols.push(new GridColumn(".
+		echo "cols.push(col = new GridColumn(".
 			json_encode($path->getString()."#".$data->getDisplayName()).
 			",".json_encode($data->getDisplayName()).
 			",null".
@@ -134,6 +179,7 @@ foreach ($cat[1] as $field) {
 			",".$tf[1].
 			",".$data->javascriptDataDisplay($path->sub_model).")";
 		echo ");\n";
+		echo "addColumnActions(col);\n";
 	} else {
 		echo "sub_cols = [];\n";
 		$names = $sub_data->getDisplayNames();

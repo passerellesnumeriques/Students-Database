@@ -85,7 +85,7 @@ field_enum.prototype._create = function(data) {
 			if (select.selectedIndex <= 0) return null;
 			return select.options[select.selectedIndex].value; 
 		};
-		this._setData = function(data) {
+		this._setData = function(data, from_input) {
 			var found = false;
 			for (var i = 0; i < select.options.length; ++i)
 				if (select.options[i].value == data) {
@@ -93,6 +93,13 @@ field_enum.prototype._create = function(data) {
 					found = true;
 					break;
 				}
+			if (!found && from_input)
+				for (var i = 0; i < select.options.length; ++i)
+					if (select.options[i].text.isSame(data)) {
+						select.selectedIndex = i;
+						found = true;
+						break;
+					}
 			if (!found) return this._data;
 			return data;
 		};
@@ -112,20 +119,25 @@ field_enum.prototype._create = function(data) {
 			if (!cache) {
 				cache = {onavail:[]};
 				layout.three_steps_process(function() {
-					var div = document.createElement("DIV");
-					div.style.display = "inline-block";
-					div.style.position = "absolute";
-					div.style.top = "-10000px";
+					var sel = document.createElement("SELECT");
+					sel.style.display = "inline-block";
+					sel.style.position = "absolute";
+					sel.style.top = "-10000px";
+					var max = null;
 					for (var i = 0; i < select.options.length; ++i) {
-						div.appendChild(document.createTextNode(select.options[i].text));
-						div.appendChild(document.createElement("BR"));
+						var s = select.options[i].text;
+						if (max == null || s.length > max.length) max = s;
 					}
-					t.element.appendChild(div);
-					return div;
-				}, function(div) {
-					return {div:div,w:div.offsetWidth};
+					if (max == null) max = "";
+					var o = document.createElement("OPTION");
+					o.text = max;
+					sel.add(o);
+					t.element.appendChild(sel);
+					return sel;
+				}, function(sel) {
+					return {sel:sel,w:sel.offsetWidth};
 				}, function(o) {
-					t.element.removeChild(o.div);
+					t.element.removeChild(o.sel);
 					t.element.style.width = "100%";
 					select.style.width = "100%";
 					select.style.minWidth = (o.w+27)+"px";
