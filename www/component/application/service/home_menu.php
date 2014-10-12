@@ -30,6 +30,10 @@ class service_home_menu extends Service {
     <img src='/static/people/profile_white.png'/>
     Your Profile
 </a>
+<a class='application_left_menu_item' href="/dynamic/search/page/search">
+    <img src='<?php echo theme::$icons_16["search_white"];?>'/>
+    Search
+</a>
 <a class='application_left_menu_item' onclick="location.href='/dynamic/application/page/logout';">
     <img src='/static/application/logout_white.png'/>
     Logout and Exit

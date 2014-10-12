@@ -49,6 +49,7 @@ theme::$icons_16 = array(
 	"saving" =>			"/static/theme/default/icons_16/saving.gif",
 	"see" =>			"/static/theme/default/icons_16/visible.png",
 	"search" => 		"/static/theme/default/icons_16/search.png",
+	"search_white" =>	"/static/theme/default/icons_16/search_white.png",
 	"settings" =>		"/static/theme/default/icons_16/settings.png",
 	"show" =>	 		"/static/theme/default/icons_16/visible.png",
 	"tree_collapse" =>	"/static/theme/default/icons_16/tree_collapse.png",

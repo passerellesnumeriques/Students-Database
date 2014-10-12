@@ -8,11 +8,13 @@ class people extends Component {
 		require_once("PeoplePluginsImplementations.inc");
 		require_once("PeoplePictureStoragePlugin.inc");
 		require_once("PeopleDocuments.inc");
+		require_once("PeopleSearchPlugin.inc");
 		return array(
 			new PeopleProfilePage(),
 			new PeopleDocumentsPage(),
 			new PeoplePictureStoragePlugin(),
-			new PeopleDocuments()
+			new PeopleDocuments(),
+			new PeopleSearchPlugin()
 		);
 	}
 	
