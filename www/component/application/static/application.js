@@ -474,7 +474,7 @@ function LoadingFrame(frame_element) {
 	};
 
 	/** Call the _update function */
-	var updater = function() { t._update(); };
+	var updater = function() { if(t) t._update(); };
 
 	/** Remove the loading */
 	this.remove = function() {

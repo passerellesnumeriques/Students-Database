@@ -124,15 +124,23 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	
 	/** Initialize the Location section with the address and the host partner */
 	this._initLocation = function() {
+		section_location.content.style.display = "flex";
+		section_location.content.style.flexDirection = "row";
+		
+		var left = document.createElement("DIV");
+		var right = document.createElement("DIV");
+		section_location.content.appendChild(left);
+		section_location.content.appendChild(right);
+		
 		// if this is a new center, mark it as not saved
 		if (center_id == -1)
 			window.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 		// Location section is composed of 2 elements: the address / geographic area, and the host partner
 		this._address_container = document.createElement("DIV");
-		section_location.content.appendChild(this._address_container);
+		left.appendChild(this._address_container);
 		this._address_container.style.padding = "10px";
 		this._host_container = document.createElement("DIV");
-		section_location.content.appendChild(this._host_container);
+		left.appendChild(this._host_container);
 		// buttons
 		if (editable) {
 			this._button_set_location = document.createElement("BUTTON");
@@ -143,12 +151,14 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			section_location.addToolBottom(this._button_set_location);
 		}
 		this._map_container = document.createElement("DIV");
-		section_location.content.appendChild(this._map_container);
+		right.appendChild(this._map_container);
 		this._map_container.style.visibility = "hidden";
 		this._map_container.style.position = "absolute";
 		this._map_container.style.top = "-1000px";
-		this._map_container.style.width = "100%";
-		this._map_container.style.height = "150px";
+		//this._map_container.style.width = "100%";
+		this._map_container.style.height = "100%";
+		this._map_container.style.minHeight = "150px";
+		this._map_container.style.width = "250px";
 		// refresh with actual values
 		this._refreshAddress();
 		this._refreshHost();
