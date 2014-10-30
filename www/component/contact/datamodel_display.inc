@@ -520,4 +520,15 @@ class ContactPointDataScreen implements datamodel\SimpleDataScreen {
 }
 
 $model->addDataScreen(new ContactPointDataScreen());
+
+/*
+$display = new datamodel\TableDataDisplay("ContactPoint", $org_category);
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("designation", "Designation"));
+$display->addJoinFrom("people", array("types"), function($columns) {
+	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
+	foreach ($types as $type) if (substr($type, 0, 8) == "contact_") return true;
+	return false;
+});
+$model->addTableDataDisplay($display);
+*/
 ?>

@@ -729,7 +729,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param keep_content_hidden
 	 */
 	t.close = function(keep_content_hidden) {
-		if (!t.popup) return;
+		if (!t || !t.popup) return;
 		unlistenEvent(t.popup_container.win, 'resize', t.popup_container.listener);
 		if (t.content.nodeName == "IFRAME") {
 			var w = getIFrameWindow(t.content);

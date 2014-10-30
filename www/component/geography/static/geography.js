@@ -87,6 +87,27 @@ if (window == window.top && !window.top.geography) {
 					return this._countries_data[i].id;
 			return -1;
 		},
+		getCountryArea: function(country_id, area_id, onready) {
+			this.getCountryData(country_id, function(country_data) {
+				onready(window.top.geography.searchArea(country_data, area_id));
+			});
+		},
+		getCountryAreaRect: function(country_id, area_id, onready) {
+			this.getCountryData(country_id, function(country_data) {
+				var area = window.top.geography.searchArea(country_data, area_id);
+				while (!area.north) {
+					if (area.area_parent_id > 0) {
+						area = window.top.geography.getParentArea(country_data, area);
+						continue;
+					}
+					window.top.geography.getCountry(country_id, function(country) {
+						if (country.north) onready(country); else onready(null);
+					});
+					return;
+				}
+				onready(area);
+			});
+		},
 		
 		/* Functions to get additional info, and which store this info
 		 * Additional info are:

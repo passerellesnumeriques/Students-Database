@@ -16,6 +16,8 @@ class page_people_new_type extends Page {
 		
 		$type = PNApplication::$instance->people->getPeopleTypePlugin($new_type);
 		$tables = $type->getTables();
+		$remaining_tables = array();
+		foreach ($tables as $t) array_push($remaining_tables, $t);
 		$screens = array();
 		require_once("component/data_model/Model.inc");
 		foreach (DataModel::get()->getDataScreens() as $screen) {
@@ -23,6 +25,19 @@ class page_people_new_type extends Page {
 			$ok = true;
 			foreach ($screen->getTables() as $t) if (!in_array($t, $tables)) { $ok = false; break; }
 			if (!$ok) continue;
+			array_push($screens, $screen);
+			foreach ($screen->getTables() as $t) {
+				for ($i = 0; $i < count($remaining_tables); $i++)
+					if ($remaining_tables[$i] == $t) {
+						array_splice($remaining_tables, $i, 1);
+						$i--;
+					}
+			}
+		}
+		foreach ($remaining_tables as $t) {
+			$display = DataModel::get()->getTableDataDisplay($t);
+			if ($display == null) continue;
+			$screen = new \datamodel\GenericDataScreen($display);
 			array_push($screens, $screen);
 		}
 		

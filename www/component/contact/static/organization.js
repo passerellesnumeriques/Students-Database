@@ -231,10 +231,10 @@ function organization(container, org, existing_types, can_edit) {
 					var p = new window.top.popup_window('New Contact Point', theme.build_icon("/static/contact/contact_point.png",theme.icons_10.add), "");
 					var frame;
 					if (org.id == -1) {
-						frame = p.setContentFrame("/dynamic/people/page/popup_create_people?types=contact_"+org.creator+"&donotcreate=contact_point_created");
+						frame = p.setContentFrame("/dynamic/people/page/popup_create_people?multiple=false&types=contact_"+org.creator+"&donotcreate=contact_point_created");
 					} else {
 						frame = p.setContentFrame(
-							"/dynamic/people/page/popup_create_people?types=contact_"+org.creator+"&ondone=contact_point_created",
+							"/dynamic/people/page/popup_create_people?multiple=false&types=contact_"+org.creator+"&ondone=contact_point_created",
 							null,
 							{
 								fixed_columns: [
@@ -244,28 +244,31 @@ function organization(container, org, existing_types, can_edit) {
 						);
 					}
 					frame.contact_point_created = function(peoples) {
-						var paths = peoples[0];
-						var people_path = null;
-						var contact_path = null;
-						for (var i = 0; i < paths.length; ++i)
-							if (paths[i].path == "People") people_path = paths[i];
-							else if (paths[i].path == "People<<ContactPoint(people)") contact_path = paths[i];
-						
-						var people_id = people_path.key;
-						var first_name = "", last_name = "";
-						for (var i = 0; i < people_path.value.length; ++i)
-							if (people_path.value[i].name == "First Name") first_name = people_path.value[i].value;
-							else if (people_path.value[i].name == "Last Name") last_name = people_path.value[i].value;
-						var designation = contact_path.value;
-						var point = new ContactPoint(people_id, first_name, last_name, designation);
-						if (org.id == -1)
-							point.create_people = paths;
-						org.contact_points.push(point);
-						t._addContactPointRow(point, tbody);
-						t.onchange.fire();
-						t.oncontactpointchange.fire();
-						p.close();
-						layout.changed(tbody);
+						require(["contact_objects.js","people_objects.js"],function() {
+							var paths = peoples[0];
+							var people_path = null;
+							var contact_path = null;
+							for (var i = 0; i < paths.length; ++i)
+								if (paths[i].path == "People") people_path = paths[i];
+								else if (paths[i].path == "People<<ContactPoint(people)") contact_path = paths[i];
+							
+							var people_id = people_path.key;
+							var first_name = "", last_name = "";
+							for (var i = 0; i < people_path.value.length; ++i)
+								if (people_path.value[i].name == "First Name") first_name = people_path.value[i].value;
+								else if (people_path.value[i].name == "Last Name") last_name = people_path.value[i].value;
+							var designation = contact_path.value;
+							var people = new People(people_id,first_name,last_name);
+							var point = new ContactPoint(people_id, people, designation);
+							if (org.id == -1)
+								point.create_people = paths;
+							org.contact_points.push(point);
+							t._addContactPointRow(point, tbody);
+							t.onchange.fire();
+							t.oncontactpointchange.fire();
+							p.close();
+							layout.changed(tbody);
+						});
 					};
 					p.show();
 				});
@@ -292,11 +295,27 @@ function organization(container, org, existing_types, can_edit) {
 			markers = [];
 			var list = t._addresses_widget.getAddresses();
 			if (list.length > 0) {
+				var waiting = 0;
 				for (var i = 0; i < list.length; ++i) {
 					if (list[i].lat && list[i].lng)
 						markers.push(t.map.addMarker(parseFloat(list[i].lat), parseFloat(list[i].lng), 1, list[i].address_type));
+					else if (list[i].country_id > 0 && list[i].geographic_area && list[i].geographic_area.id > 0) {
+						waiting++;
+						var type = list[i].address_type;
+						window.top.geography.getCountryAreaRect(list[i].country_id, list[i].geographic_area.id, function(rect) {
+							if (rect) {
+								markers.push(t.map.addRect(rect.south, rect.west, rect.north, rect.east, "#0000FF", "#C0C0FF", 0.3));
+								var lat = parseFloat(rect.south);
+								lat = lat+(parseFloat(rect.north)-lat)/2;
+								var lng = parseFloat(rect.west);
+								lng = lng+(parseFloat(rect.east)-lng)/2;
+								markers.push(t.map.addMarker(lat, lng, 1, type));
+							}
+							if (--waiting == 0) t.map.fitToShapes();
+						});
+					}
 				}
-				t.map.fitToShapes();
+				if (waiting == 0) t.map.fitToShapes();
 				//map_container.style.position = "static";
 				//map_container.style.visibility = "visible";
 			} else {
@@ -375,7 +394,7 @@ function organization(container, org, existing_types, can_edit) {
 		tr.people_id = point.people_id;
 		if (org.id != -1) {
 			require("editable_cell.js",function() {
-				new editable_cell(td_design, "ContactPoint", "designation", {organization:org.id,people:point.people_id}, "field_text", {min_length:1,max_length:100,can_be_null:false}, point.designation, function(new_data){
+				new editable_cell(td_design, "ContactPoint", "designation", {organization:org.id,people:point.people.id}, "field_text", {min_length:1,max_length:100,can_be_null:false}, point.designation, function(new_data){
 					point.designation = new_data;
 					t.onchange.fire();
 					return new_data;
@@ -397,24 +416,24 @@ function organization(container, org, existing_types, can_edit) {
 		link.innerHTML = "<img src='/static/people/profile_16.png'/>";
 		link.style.verticalAlign = "center";
 		link.title = "See profile";
-		link.people_id = point.people_id;
+		link.people_id = point.people.id;
 		link.onclick = function(){
 			window.top.popup_frame("/static/people/people_16.png", "People Profile", "/dynamic/people/page/profile?plugin=people&people="+this.people_id);
 		};
-		var first_name = document.createTextNode(point.first_name);
-		var last_name = document.createTextNode(point.last_name);
+		var first_name = document.createTextNode(point.people.first_name);
+		var last_name = document.createTextNode(point.people.last_name);
 		td.appendChild(first_name);
 		td.appendChild(document.createTextNode(" "));
 		td.appendChild(last_name);
 		td.appendChild(link);
-		window.top.datamodel.registerCellText(window, "People", "first_name", point.people_id, first_name);
-		window.top.datamodel.registerCellText(window, "People", "last_name", point.people_id, last_name);
+		window.top.datamodel.registerCellText(window, "People", "first_name", point.people.id, first_name);
+		window.top.datamodel.registerCellText(window, "People", "last_name", point.people.id, last_name);
 		if(can_edit){
 			var remove_button = document.createElement("BUTTON");
 			td.appendChild(remove_button);
 			remove_button.className = "flat";
 			remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"' style = 'vertical-align:center;'/>";
-			remove_button.people_id = point.people_id;
+			remove_button.people_id = point.people.id;
 			remove_button.onclick = function(){
 				var people_id = this.people_id;
 				if(org.id != -1){

@@ -230,6 +230,11 @@ function GoogleMap(container, onready) {
 		this.addShape(m);
 		return m;
 	};
+	this.addPNMarker = function(lat, lng, color, content) {
+		var m = new PNMapMarker(lat, lng, color, content);
+		this.addShape(m);
+		return m;
+	};
 	
 	this.onNextIdle = function(listener, timeout) {
 		window.top.google.maps.event.addListenerOnce(this.map, 'idle', function() {

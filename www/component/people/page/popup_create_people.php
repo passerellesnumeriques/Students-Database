@@ -111,6 +111,8 @@ class page_popup_create_people extends Page {
 			}
 		}
 		
+		$this->requireJavascript("people_search.js");
+		$this->requireJavascript("custom_search.js");
 		foreach ($possible_types as $type) {
 			$list = SQLQuery::create()->select("People")->where("`types` LIKE '%/".$type->getId()."/%'")->limit(0, 501)->orderBy("People","last_name")->orderBy("People","first_name")->execute();
 			if (count($list) == 0) continue;
@@ -118,14 +120,40 @@ class page_popup_create_people extends Page {
 			echo "<div class='big_button_style' style='cursor:default;display:block'>";
 			echo "<span style='font-weight:bold'>".toHTML($type->getName())."</span><br/>";
 			echo "<img src='".$type->getIcon32()."'/><br/>";
+			echo "<div style='height:20px'>";
+			$select_id = $this->generateID();
 			if (count($list) <= 500) {
-				echo "<select id='id_".$type->getId()."'>";
+				echo "<select id='$select_id'>";
 				foreach ($list as $p)
 					echo "<option value='".$p["id"]."'>".$p["last_name"]." ".$p["first_name"]."</option>";
 				echo "</select>";
+			} else {
+				echo "<i>More than 500</i>";
 			}
 			echo "</div>";
-			echo "<button onclick=\"var people_id=document.getElementById('id_".$type->getId()."').value;postData('/dynamic/people/page/people_new_type?people='+people_id+'&type=".$types[0].(isset($_GET["ondone"]) ? "&ondone=".$_GET["ondone"] : "")."',data,window);\">Create as ".toHTML($types_descr)."</button>";
+			$search_id = $this->generateID();
+			echo "<div id='$search_id'></div>";
+			?>
+			<script type='text/javascript'>
+			var search<?php echo $type->getId();?> = new people_search('<?php echo $search_id;?>','<?php echo $type->getId();?>',function(people){
+				var select = document.getElementById('<?php echo $select_id;?>');
+				if (select != null) select.value = people.id;
+			});
+			function createPeople<?php echo $type->getId()?>() {
+				var select = document.getElementById('<?php echo $select_id;?>');
+				var people_id = null;
+				if (select != null) people_id = select.value;
+				else {
+					var people = search<?php echo $type->getId();?>.getSelectedPeople();
+					if (people) people_id = people.id;
+				}
+				if (!people_id) { alert('Please select someone'); return; }
+				postData('/dynamic/people/page/people_new_type?people='+people_id+'&type=<?php echo $types[0].(isset($_GET["ondone"]) ? "&ondone=".$_GET["ondone"] : "");?>',data,window);
+			}
+			</script>
+			<?php 
+			echo "</div>";
+			echo "<button onclick=\"createPeople".$type->getId()."();\">Create as ".toHTML($types_descr)."</button>";
 			echo "</div>";
 		}
 		?>

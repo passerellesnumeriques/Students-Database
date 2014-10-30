@@ -6,10 +6,6 @@ $model->addDataCategory($category);
 
 $display = new datamodel\TableDataDisplay("FamilyMember", $category);
 $display->addJoinFrom("people");
-/*$display->addJoinFrom("people",array("types"),function($columns){
-	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
-	return in_array("student", $types) || in_array("applicant", $types) || in_array("family_member", $types);
-});*/
 $display->addFollow("family");
 class NumberOfSiblings extends datamodel\DataDisplay {
 	public function __construct($category) {
