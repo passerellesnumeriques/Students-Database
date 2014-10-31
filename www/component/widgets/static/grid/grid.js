@@ -1039,6 +1039,7 @@ function grid(element) {
 			if (update_timeout) return;
 			update_timeout = setTimeout(function() {
 				update_timeout = null;
+				if (!t) return;
 				if (t._columns_loading == 0 && t._cells_loading == 0) // do not update if still loading, because we will need to update again
 					update();
 				else
