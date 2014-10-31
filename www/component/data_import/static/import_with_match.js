@@ -414,6 +414,7 @@ function import_with_match(provider, ev, show_after_grid) {
 				var matching = true;
 				for (var i = 0; i < t._matching.length && matching; ++i) {
 					var excel_value = sheet.getCell(t._matching[i].excel_column, excel_row).getValue();
+					if (excel_value.trim().length == 0) { matching = false; break; } // cell empty: not matching
 					var data_str = "";
 					for (var j = 0; j < t._matching[i].data_columns.length; ++j) {
 						var data_col = grid.getColumnIndexById(t._matching[i].data_columns[j]);
@@ -425,12 +426,16 @@ function import_with_match(provider, ev, show_after_grid) {
 						data_str += data_value;
 					}
 					if (!excel_value.isSame(data_str)) {
-						if (t._matching[i].data_columns.length > 1) {
-							var res = wordsMatch(excel_value, data_str, true);
-							if (res.nb_words2_in_words1 != res.nb_words_2)
+						if (!wordsMatchingWithLetters(excel_value, data_str)) {
+							if (t._matching[i].data_columns.length > 1) {
+								var res = wordsMatch(excel_value, data_str, true);
+								if (res.nb_words2_in_words1 != res.nb_words_2) {
+									matching = false;
+								}
+							} else {
 								matching = false;
-						} else
-							matching = false;
+							}
+						}							
 					}
 				}
 				if (matching)

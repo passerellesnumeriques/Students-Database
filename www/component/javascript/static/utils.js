@@ -558,6 +558,20 @@ function wordsMatch(s1, s2, ignore_case) {
 	return {nb_words_1:words1.length,nb_words_2:words2.length,nb_words1_in_words2:words1_in_words2,nb_words2_in_words1:words2_in_words1};
 }
 
+function wordsMatchingWithLetters(s1, s2) {
+	s1 = s1.latinize().toLowerCase();
+	s2 = s2.latinize().toLowerCase();
+	var words1 = prepareMatchScore(s1);
+	var words2 = prepareMatchScore(s2);
+	var ss1 = ""; for (var i = 0; i < words1.length; ++i) ss1 += words1[i];
+	var ss2 = ""; for (var i = 0; i < words2.length; ++i) ss2 += words2[i];
+	var ok = true;
+	for (var i = 0; ok && i < words1.length; i++) if (ss2.indexOf(words1[i]) < 0) ok = false;
+	if (!ok) return false;
+	for (var i = 0; ok && i < words2.length; i++) if (ss1.indexOf(words2[i]) < 0) ok = false;
+	return ok;
+}
+
 function matchScore(ref, needle) {
 	return matchScorePrepared(ref, prepareMatchScore(ref), needle, prepareMatchScore(needle));
 }

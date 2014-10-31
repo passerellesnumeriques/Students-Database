@@ -261,6 +261,8 @@ for (var i = 0; i < categories.length; ++i) {
 		var sname = document.createElement("A");
 		sname.href = "subject_grades?subject="+cat_subjects[j].id<?php if ($class <> null) echo "+'&class=".$class["id"]."'";?>;
 		sname.target = "application_frame";
+		sname.appendChild(document.createTextNode(cat_subjects[j].code));
+		sname.appendChild(document.createElement("BR"));
 		sname.appendChild(document.createTextNode(cat_subjects[j].name));
 		sname.className = "black_link";
 		tooltip(sname, "Click to open grades of subject <i>"+cat_subjects[j].name+"</i>");

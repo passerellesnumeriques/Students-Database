@@ -378,6 +378,7 @@ window.layout = {
 	_process_steps: function() {
 		if (this._process_steps_timeout) return;
 		this._process_steps_timeout = setTimeout(function() {
+			if (window.closing || !layout) return;
 			layout._process_steps_timeout = null;
 			//var dom_changed = false;
 			while (layout._dom_modifications.length > 0) {
