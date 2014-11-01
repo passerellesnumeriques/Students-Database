@@ -121,6 +121,7 @@ class page_configure_transcripts extends Page {
 				<div class='page_section_title'>
 					Information to include
 				</div>
+				<input type='checkbox' <?php echo @$config["subject_code"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('subject_code',this.checked?1:0);"/> Subject code<br/>
 				<input type='checkbox' <?php echo @$config["nb_hours"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('nb_hours',this.checked?1:0);"/> Nb of hours
 				<select onchange="saveTranscriptConfig('hours_type',this.value);">
 					<option value="Per week" <?php if (@$config["hours_type"] == "Per week") echo "selected='selected'";?>>Per week</option>

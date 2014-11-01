@@ -169,7 +169,7 @@
 	#SUBJECT#
 	<tr class='subject_row'>
 		#IF:SUBJECT[0]#<td rowspan="#COUNT(SUBJECTS)#" style='white-space:nowrap;background-color:#SUBJECT_CATEGORY_BACKGROUND#;'><div class='subject_category' style='display:inline-block'>#SUBJECT_CATEGORY_NAME#</div></td>#ENDIF#
-		<td class='subject_name'>#SUBJECT_NAME#</td>
+		<td class='subject_name'>#IF:subject_code##SUBJECT_CODE# - #ENDIF##SUBJECT_NAME#</td>
 		#IF:nb_hours#<td class='info'>#SUBJECT_HOURS#</td>#ENDIF#
 		#IF:coefficient#<td class='info'>#SUBJECT_COEFFICIENT#</td>#ENDIF#
 		<td style='position:relative' class='grade'>#GRADE#</td>
@@ -199,7 +199,7 @@
 	</colgroup>
 	<tbody>
 	<tr class='subject_row'>
-		<td class='subject_name'>#CATEGORY_NAME# - #SUBJECT_NAME#</td>
+		<td class='subject_name'>#CATEGORY_NAME# - #IF:subject_code##SUBJECT_CODE# - #ENDIF##SUBJECT_NAME#</td>
 		#IF:nb_hours#<td class='info'>#SUBJECT_HOURS#</td>#ENDIF#
 		#IF:coefficient#<td class='info'>#SUBJECT_COEFFICIENT#</td>#ENDIF#
 		<td style='position:relative' class='grade'>#GRADE#</td>
