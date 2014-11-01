@@ -18,8 +18,10 @@ class page_curriculum extends Page {
 			$end_date = $batch_info["end_date"];
 		} else {
 			if (!isset($_GET["batch"])) {
-				echo "<img src='".theme::$icons_16["info"]."'/> ";
+				echo "<div style='padding:5px'><div class='info_box'>";
+				echo "<img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> ";
 				echo "Please select a batch, an academic period, or a class, to display its curriculum";
+				echo "</div></div>";
 				return;
 			}
 			if (isset($_GET["period"])) {
