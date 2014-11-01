@@ -1072,6 +1072,8 @@ function importFromFile(event) {
 		new import_with_match(prov, event, true);
 	});
 }
+//to import, load upload.js
+setTimeout(function(){if(!window.closing)require(["import_with_match.js","upload.js"]);},2000);
 
 <?php } ?> // if editable mode
 

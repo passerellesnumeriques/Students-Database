@@ -59,7 +59,7 @@ function helpSystemArrow(from, to_selector, onover, force_connect) {
 	else
 		to = $(to_selector);
 	if (to.length == 0) {
-		alert("Help system: cannot find element matching "+to_selector);
+		//alert("Help system: cannot find element matching "+to_selector);
 		return;
 	}
 	to = to.get(0);
