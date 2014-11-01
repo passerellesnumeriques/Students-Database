@@ -20,7 +20,7 @@ class ContactPointPeopleTypePlugin implements PeopleTypePlugin {
 	public function getIcon32() { return "/static/contact/contact_point_32.png"; }
 	public function isStandalone() { return false; }
 	
-	public function getTables() { return array("PeopleContact", "PeopleAddress"); }
+	public function getTables() { return array("ContactPoint"); }
 	
 	public function canRead() {
 		return $this->org_plugin->canReadOrganization();

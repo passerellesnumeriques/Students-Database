@@ -154,15 +154,9 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	this._init = function() {
 		this.header = document.createElement("DIV");
 		this.header.className = "header";
-		this.header.style.display = "flex";
-		this.header.style.flexDirection = "row";
 		this.element.appendChild(this.header);
 
 		this.title_container = document.createElement("DIV");
-		this.title_container.style.flex = "1 0 auto";
-		this.title_container.style.display = "flex";
-		this.title_container.style.flexDirection = "row";
-		this.title_container.style.alignItems = "center";
 		this.header.appendChild(this.title_container);
 		if (icon) {
 			this.icon = document.createElement("IMG");

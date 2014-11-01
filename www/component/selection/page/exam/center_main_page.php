@@ -41,7 +41,8 @@ class page_exam_center_main_page extends SelectionPage {
 						'Exam Center.Name',
 						'Exam Center.Applicants',
 						'Exam Center.Rooms',
-						'Exam Center.Sessions'
+						'Exam Center.Sessions',
+						'Exam Center.Eligible for Interview'
 					],
 					[],
 					-1,

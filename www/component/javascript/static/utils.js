@@ -289,38 +289,42 @@ URL.prototype = {
 function Custom_Event() {
 	if (!window.to_cleanup) window.to_cleanup = [];
 	window.to_cleanup.push(this);
-	this.cleanup = function() {
-		this.listeners = null;
-		if (window && window.to_cleanup)
-			window.to_cleanup.removeUnique(this);
-	};
 	
 	this.listeners = [];
+}
+Custom_Event.prototype = {
 	/**
 	 * Add a listener to this event
 	 * @param listener
 	 */
-	this.add_listener = function(listener) {
+	add_listener: function(listener) {
 		if (this.listeners === null) return;
-		if (this.listeners.contains(listener)) return;
+		//if (this.listeners.contains(listener)) return;
 		this.listeners.push(listener); 
-	};
-	this.remove_listener = function(listener) { if (this.listeners === null) return; this.listeners.remove(listener); };
+	},
+	remove_listener: function(listener) {
+		if (this.listeners === null) return;
+		this.listeners.removeUnique(listener);
+	},
 	/**
 	 * Trigger the event: call all listeners with the given data as parameter
 	 * @param data
 	 */
-	this.fire = function(data) {
+	fire: function(data) {
 		if (this.listeners == null) return;
 		var list = [];
 		for (var i = 0; i < this.listeners.length; ++i) list.push(this.listeners[i]);
 		for (var i = 0; i < list.length; ++i) 
 			try { list[i](data); } 
-			catch (e) {
-				log_exception(e, "occured in event listener: "+list[i]);
-			}
-	};
-}
+			catch (e) { log_exception(e, "occured in event listener: "+list[i]); }
+	},
+	
+	cleanup: function() {
+		this.listeners = null;
+		if (window && window.to_cleanup && !window.closing)
+			window.to_cleanup.removeUnique(this);
+	}
+};
 
 function log_exception(e, additional_message) {
 	var msg = e.message;
@@ -552,6 +556,20 @@ function wordsMatch(s1, s2, ignore_case) {
 			if (words1[j] == words2[i]) { words2_in_words1++; break; }
 	}
 	return {nb_words_1:words1.length,nb_words_2:words2.length,nb_words1_in_words2:words1_in_words2,nb_words2_in_words1:words2_in_words1};
+}
+
+function wordsMatchingWithLetters(s1, s2) {
+	s1 = s1.latinize().toLowerCase();
+	s2 = s2.latinize().toLowerCase();
+	var words1 = prepareMatchScore(s1);
+	var words2 = prepareMatchScore(s2);
+	var ss1 = ""; for (var i = 0; i < words1.length; ++i) ss1 += words1[i];
+	var ss2 = ""; for (var i = 0; i < words2.length; ++i) ss2 += words2[i];
+	var ok = true;
+	for (var i = 0; ok && i < words1.length; i++) if (ss2.indexOf(words1[i]) < 0) ok = false;
+	if (!ok) return false;
+	for (var i = 0; ok && i < words2.length; i++) if (ss1.indexOf(words2[i]) < 0) ok = false;
+	return ok;
 }
 
 function matchScore(ref, needle) {

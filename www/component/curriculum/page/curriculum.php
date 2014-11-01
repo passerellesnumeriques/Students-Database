@@ -18,8 +18,10 @@ class page_curriculum extends Page {
 			$end_date = $batch_info["end_date"];
 		} else {
 			if (!isset($_GET["batch"])) {
-				echo "<img src='".theme::$icons_16["info"]."'/> ";
+				echo "<div style='padding:5px'><div class='info_box'>";
+				echo "<img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> ";
 				echo "Please select a batch, an academic period, or a class, to display its curriculum";
+				echo "</div></div>";
 				return;
 			}
 			if (isset($_GET["period"])) {
@@ -268,7 +270,7 @@ class page_curriculum extends Page {
 					Edit subject categories
 				</button>
 				<?php if ($period_id <> null) {
-					echo "<button class='action' onclick='import_subjects(".$period_id.")'><img src='".theme::$icons_16["_import"]."'/> Copy subjects from other batches</button>";
+					echo "<button class='action' id='import_subjects_button' onclick='import_subjects(".$period_id.")'><img src='".theme::$icons_16["_import"]."'/> Copy subjects from other batches</button>";
 				}?>
 				<?php } ?>
 			<?php } ?>
@@ -288,7 +290,7 @@ class page_curriculum extends Page {
 					echo "<br/>";
 					echo "To edit the curriculum (add/remove/edit subjects), click on the<br/>";
 					echo "Edit button at the top<br/>";
-					PNApplication::$instance->help->spanArrow($this, "try now", "#edit_curriculum_button", "horiz");
+					PNApplication::$instance->help->spanArrow($this, "try now", "#edit_curriculum_button");
 					echo " to display help on how to edit the curriculum.";
 				}
 			} else {
@@ -299,7 +301,7 @@ class page_curriculum extends Page {
 				echo "<br/>";
 				echo "To create subjects faster for this batch, you can also import<br/>";
 				echo "subjects already defined for previous batches, by using<br/>";
-				PNApplication::$instance->help->spanArrow($this, "this button", "#import_subjects_button", "horiz");
+				PNApplication::$instance->help->spanArrow($this, "this button", "#import_subjects_button");
 				echo ". Then you can edit the imported subjects if they<br/>";
 				echo "changed for this batch (modifications will apply only<br/>";
 				echo "to this batch, the original subjects will remain unchanged).<br/>";

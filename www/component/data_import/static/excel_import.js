@@ -521,54 +521,76 @@ function excel_import(popup, container, onready) {
 		
 		var ambiguous = [];
 		
-		for (var ci = range.start_col; ci <= range.end_col; ci++)
-			for (var ri = range.start_row; ri <= range.end_row; ri++) {
-				var value = sheet.getCell(ci,ri).getValue();
-				value = value.trim();
-				while (grid.getNbRows() <= row)
-					win.addRow();
-				var f = grid.getCellField(row++, col_index);
-				if (f.isMultiple()) {
-					if (where.type == 'reset') f.resetData();
-					if (value != "") {
-						if (where.type == "set_sub_data") {
-							var nb = f.getNbData();
-							var set = false;
-							for (var i = 0; i < nb; ++i) {
-								var d = f.getDataIndex(i);
-								if (!d) {
-									f.setDataIndex(i, value, true);
-									set = true;
-									break;
-								}
+		var process_ambiguous;
+		var next_cell = function(ci, ri) {
+			var value = sheet.getCell(ci,ri).getValue();
+			value = value.trim();
+			while (grid.getNbRows() <= row)
+				win.addRow();
+			var f = grid.getCellField(row++, col_index);
+			if (f.isMultiple()) {
+				if (where.type == 'reset') f.resetData();
+				if (value != "") {
+					if (where.type == "set_sub_data") {
+						var nb = f.getNbData();
+						var set = false;
+						for (var i = 0; i < nb; ++i) {
+							var d = f.getDataIndex(i);
+							if (!d) {
+								f.setDataIndex(i, value, true);
+								set = true;
+								break;
 							}
-							if (!set)
-								f.addData(value,true);
-						} else
+						}
+						if (!set)
 							f.addData(value,true);
-					}
-				} else {
-					if (typeof f.getPossibleValues != 'undefined' && value != null && value.trim().length > 0) {
-						// support for a list of possible value, we can check
-						var values = f.getPossibleValues();
-						var values2 = [];
-						for (var i = 0; i < values.length; ++i)
-							values2.push(values[i].trim().latinize().toLowerCase());
-						var v = value.trim().latinize().toLowerCase();
-						var i = values2.indexOf(v);
-						if (i < 0)
-							ambiguous.push({
-								field: f,
-								col_index: col_index,
-								value: value,
-								values: values
-							});
-						else
-							value = values[i];
-					}
-					f.setData(value,false,true);
+					} else if (where.type == "set") {
+						var nb = f.getNbData();
+						if (typeof where.index != 'undefined') {
+							while (nb < where.index) { f.addData(null,true); nb++; }
+							if (nb <= where.index)
+								f.addData(value,true);
+							else
+								f.setDataIndex(where.index, value, true);
+						}
+							
+					} else
+						f.addData(value,true);
+				}
+			} else {
+				if (typeof f.getPossibleValues != 'undefined' && value != null && value.trim().length > 0) {
+					// support for a list of possible value, we can check
+					var values = f.getPossibleValues();
+					var values2 = [];
+					for (var i = 0; i < values.length; ++i)
+						values2.push(values[i].trim().latinize().toLowerCase());
+					var v = value.trim().latinize().toLowerCase();
+					var i = values2.indexOf(v);
+					if (i < 0)
+						ambiguous.push({
+							field: f,
+							col_index: col_index,
+							value: value,
+							values: values
+						});
+					else
+						value = values[i];
+				}
+				f.setData(value,false,true);
+			}
+
+			++ri;
+			if (ri > range.end_row) {
+				ri = range.start_row;
+				ci++;
+				if (ci > range.end_col) {
+					process_ambiguous();
+					return;
 				}
 			}
+			setTimeout(function() {next_cell(ci,ri);},1);
+		};
+		
 		// resolve ambiguous values by field
 		var next_ambiguous = function() {
 			if (ambiguous.length == 0) {
@@ -656,11 +678,15 @@ function excel_import(popup, container, onready) {
 			});
 			pop.show();
 		};
-		if (ambiguous.length > 0)
-			require("popup_window.js", function() {
-				next_ambiguous();
-			});
-		else if (ondone) ondone();
+
+		process_ambiguous = function() {
+			if (ambiguous.length > 0)
+				require("popup_window.js", function() {
+					next_ambiguous();
+				});
+			else if (ondone) ondone();
+		};
+		next_cell(range.start_col, range.start_row);
 	};
 	
 	this.init = function() {

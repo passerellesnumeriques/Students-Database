@@ -142,13 +142,15 @@ window.layout = {
 		if (window.frameElement && window.frameElement.style && (window.frameElement.style.visibility == 'hidden' || window.frameElement.style.display == "none")) return;
 		for (var i = 0; i < changes.length; ++i) {
 			if (layout._changes.contains(changes[i])) continue; // duplicate
-			var p = changes[i];
-			var hidden = false;
-			while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
-				if (p.style && (p.style.visibility == "hidden" || p.style.display == "none")) { hidden = true; break; }
-				p = p.parentNode;
+			if (changes.length < 1000) {
+				var p = changes[i];
+				var hidden = false;
+				while (p != null && p.nodeName != 'BODY' && p.nodeName != 'HTML') {
+					if (p.style && (p.style.visibility == "hidden" || p.style.display == "none")) { hidden = true; break; }
+					p = p.parentNode;
+				}
+				if (hidden) continue;
 			}
-			if (hidden) continue;
 			layout._changes.push(changes[i]);
 		}
 		changes = null;
@@ -192,7 +194,7 @@ window.layout = {
 		for (var i = 0; i < elements.length; ++i) {
 			leaves.push(elements[i]);
 			var p = elements[i].parentNode;
-			if (!p) continue;
+			if (!p || parents.contains(p)) continue;
 			parents.push(p);
 		}
 		while (parents.length > 0) {
@@ -281,6 +283,17 @@ window.layout = {
 			frame.style.width = size.x+"px";
 			frame.style.height = size.y+"px";
 			frame.style.position = "static";
+			// check if supposed to be height 100%
+			var first_child = null;
+			for (var i = 0; i < win.document.body.childNodes.length; ++i) {
+				var c = win.document.body.childNodes[i];
+				if (c.nodeType != 1) continue;
+				if (c.nodeName == "SCRIPT" || c.nodeName == "STYLE") continue;
+				first_child = c;
+				break;
+			}
+			if (first_child && first_child.style.height == "100%" && size.y > frame.parentNode.clientHeight)
+				frame.style.height = frame.parentNode.clientHeight+"px";
 			// check again the size
 			var size2 = layout.computeContentSize(win.document.body,true);
 			if (size2.y > size.y)
@@ -365,14 +378,15 @@ window.layout = {
 	_process_steps: function() {
 		if (this._process_steps_timeout) return;
 		this._process_steps_timeout = setTimeout(function() {
+			if (window.closing || !layout) return;
 			layout._process_steps_timeout = null;
-			var dom_changed = false;
+			//var dom_changed = false;
 			while (layout._dom_modifications.length > 0) {
-				dom_changed = true;
+				//dom_changed = true;
 				layout._dom_modifications[0]();
 				layout._dom_modifications.splice(0,1);
 			}
-			if (dom_changed) { layout._process_steps(); return; }
+			//if (dom_changed) { layout._process_steps(); return; }
 			while (layout._layout_reading.length > 0) {
 				layout._layout_reading[0]();
 				layout._layout_reading.splice(0,1);

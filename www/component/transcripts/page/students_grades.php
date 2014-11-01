@@ -100,7 +100,7 @@ class page_students_grades extends Page {
 			<img src='<?php echo theme::$icons_16["settings"];?>' style='vertical-align:bottom'/>
 			Display settings:
 		</div>
-		<div style='flex:1 1 auto;display:flex;flex-direction:row;align-items:center;'>
+		<div style='flex:1 1 auto;'>
 			<span style='margin-left:10px'></span>
 			Grading system <select onchange="changeGradingSystem(this.options[this.selectedIndex].text,this.value);">
 			<?php
@@ -112,37 +112,37 @@ class page_students_grades extends Page {
 			?>
 			</select>
 			<span style='margin-left:10px'></span>
-			<input type='checkbox' onchange='setDisplayCoef(this.checked);' <?php if ($display_coef == 1) echo " checked='checked'";?>/><span onclick="this.previousSibling.checked = this.previousSibling.checked ? '' : 'checked';"> Display coefficients</span>
+			<input type='checkbox' style='vertical-align:middle;' onchange='setDisplayCoef(this.checked);' <?php if ($display_coef == 1) echo " checked='checked'";?>/><span onclick="this.previousSibling.checked = this.previousSibling.checked ? '' : 'checked';">Display coefficients</span>
 			<span style='margin-left:10px'></span>
 			<button class='flat' id='columns_chooser_button'><img src='/static/data_model/table_column.png'/> Choose columns</button>
 			<button class='flat' id='export_button'><img src='<?php echo theme::$icons_16["_export"];?>'/> Export</button>
 			<button class='flat' id='print_button'><img src='<?php echo theme::$icons_16["print"];?>'/> Print</button>
 		</div>
-		<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) { ?>
-		<div style='flex:none;display:inline-block;'>
-			<button id='button_edit_general_appreciation' class='action' onclick="editGeneralAppreciation(this);">Edit General Appreciations</button>
-		</div>
-		<?php } ?>
 	</div>
 	<div style='flex:1 1 auto;overflow:auto' id='grades_container'>
 	</div>
+	<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) { ?>
+	<div class='page_footer' style='flex:none;'>
+		<button id='button_import_general_appreciation' style='display:none' class='action' onclick="importGeneralAppreciation(event);"><img src='<?php echo theme::$icons_16["_import"];?>'/> Import Appreciations</button>
+		<button id='button_edit_general_appreciation' class='action' onclick="editGeneralAppreciation(this);"><img src='<?php echo theme::$icons_16["edit"];?>'/> Edit General Appreciations</button>
+	</div>
+	<?php } ?>
 </div>
 <?php
 if (PNApplication::$instance->help->isShown("students_grades")) {
-	$help_div_id = PNApplication::$instance->help->startHelp("students_grades", $this, "left", "bottom", false);
+	$help_div_id = PNApplication::$instance->help->startHelp("students_grades", $this, "right", "bottom", false);
 	echo "This screen gives you an overview of the grades, for all subjects,<br/>";
 	echo "together with the total grade and rank of the students.<br/>";
 	echo "<br/>";
-	if (PNApplication::$instance->user_management->has_right("edit_students_grades")) {
-		echo "In this screen, you can also ";
-		PNApplication::$instance->help->spanArrow($this, "edit the general appreciation", "#button_edit_general_appreciation");
-		echo "<br/>of each student which can be included later in the transcripts.<br/>";
-		echo "<br/>";
-	}
 	echo "To display or edit the details of the grades for a given subject,<br/>";
 	echo "click on ";
-	PNApplication::$instance->help->spanArrow($this, "the subject name", ".grid thead");
+	PNApplication::$instance->help->spanArrow($this, "the subject name", ".grid thead .subject_column_title", "horiz");
 	echo ".<br/>";
+	if (PNApplication::$instance->user_management->has_right("edit_students_grades")) {
+		echo "<br/>In this screen, you can also ";
+		PNApplication::$instance->help->spanArrow($this, "edit the general appreciation", "#button_edit_general_appreciation", "horiz");
+		echo "<br/>of each student which can be included later in the transcripts.<br/>";
+	}
 	PNApplication::$instance->help->endHelp($help_div_id, "students_grades");
 } else
 	PNApplication::$instance->help->availableHelp("students_grades");
@@ -261,6 +261,8 @@ for (var i = 0; i < categories.length; ++i) {
 		var sname = document.createElement("A");
 		sname.href = "subject_grades?subject="+cat_subjects[j].id<?php if ($class <> null) echo "+'&class=".$class["id"]."'";?>;
 		sname.target = "application_frame";
+		sname.appendChild(document.createTextNode(cat_subjects[j].code));
+		sname.appendChild(document.createElement("BR"));
 		sname.appendChild(document.createTextNode(cat_subjects[j].name));
 		sname.className = "black_link";
 		tooltip(sname, "Click to open grades of subject <i>"+cat_subjects[j].name+"</i>");
@@ -275,8 +277,9 @@ for (var i = 0; i < categories.length; ++i) {
 		title.span_coef = span_coef;
 		var sg = getSubjectGrading(cat_subjects[j].id);
 		var col = new GridColumn("subject"+cat_subjects[j].id,title,null,"center","field_grade",false,null,null,{max:sg ? sg.max_grade : 1,passing:sg ? sg.passing_grade : 0.5,system:<?php echo json_encode($grading_systems[$grading_system]);?>});
+		addClassName(col.th, "subject_column_title");
 		col.addSorting();
-		columns.push(new CustomDataGridColumn(col,function(people,subject_id){return getStudentGrade(people.id,subject_id);},true,cat_subjects[j].id,cat_subjects[j].name));
+		columns.push(new CustomDataGridColumn(col,function(people,subject_id){return getStudentGrade(people.id,subject_id);},true,cat_subjects[j].id,cat_subjects[j].code + ' - ' + cat_subjects[j].name));
 	}
 	grades_grid.addColumnContainer(new CustomDataGridColumnContainer(categories[i].name, columns));
 }
@@ -340,9 +343,36 @@ function editGeneralAppreciation(button) {
 		var col = grades_grid.grid.getColumnById('student_comment');
 		col.toggleEditable();
 		pnapplication.dataUnsaved('general_appreciation');
+		document.getElementById('button_import_general_appreciation').style.display = '';
 		unlock_screen(locker);
 	});
 }
+function importGeneralAppreciation(event) {
+	if (grades_grid.grid._import_with_match) return;
+	require("import_with_match.js",function() {
+		var prov = new import_with_match_provider_custom_data_grid(grades_grid);
+		prov.getColumnsCanBeMatched = function() {
+			var cols = [];
+			var student_container = grades_grid.columns[0];
+			if (!(student_container instanceof CustomDataGridColumnContainer)) return cols;
+			if (student_container.title != 'Student') return cols;
+			var gcols = student_container.getFinalColumns();
+			for (var i = 0; i < gcols.length; ++i) {
+				if (!gcols[i].shown) continue;
+				var id = gcols[i].grid_column.id;
+				cols.push({ id: id, name: gcols[i].select_menu_name ? gcols[i].select_menu_name : gcols[i].grid_column.title });
+			}
+			return cols;
+		};
+		prov.getColumnsCanBeImported = function() {
+			return [{id:'student_comment',name:"General Appreciation"}];
+		};
+		new import_with_match(prov, event, true);
+	});
+}
+// to import, load upload.js
+setTimeout(function(){if(!window.closing)require(["import_with_match.js","upload.js"]);},2000);
+
 function saveGeneralAppreciation(button) {
 	var locker = lock_screen(null, "Saving general appreciations...");
 	var comments = [];
@@ -354,11 +384,12 @@ function saveGeneralAppreciation(button) {
 		if (!res) { unlock_screen(locker); return; }
 		databaselock.unlock(general_appreciation_lock_id, function(res) {
 			general_appreciation_lock_id = null;
-			button.innerHTML = "Edit General Appreciations";
+			button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit General Appreciations";
 			button.onclick = function() { editGeneralAppreciation(this); };
 			var col = grades_grid.grid.getColumnById('student_comment');
 			col.toggleEditable();
 			pnapplication.dataSaved('general_appreciation');
+			document.getElementById('button_import_general_appreciation').style.display = 'none';
 			unlock_screen(locker);
 		});
 	});

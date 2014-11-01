@@ -3,6 +3,8 @@
 	flex-direction: column;
 }
 .data_list_title {
+	display: inline-block;
+	flex: none !important;
 	background-color: rgba(255,255,255,0.3);
 	border-right: 1px solid rgba(255,255,255,0.7);
 	border-bottom-right-radius: 5px;
@@ -11,7 +13,6 @@
 	margin-right: 5px !important;
 	margin-left: 0px !important;
 	padding-top: 3px;
-	flex: none;
 }
 .data_list_title>img {
 	vertical-align: top;

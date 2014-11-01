@@ -28,17 +28,11 @@
 	margin-top: 2px;
 	padding: 2px 5px;
 	font-size: 8pt;
-}
-.help_system_footer input {
-	vertical-align: middle;
-	transform: scale(0.8);
-	-webkit-transform: scale(0.8);
-	border: 1px solid #808080;
+	height: 14px;
 }
 .help_system_footer a {
-	color: #606060;
 	text-decoration: none;
-	margin-left: 5px;
+	margin: 2px 3px;
 }
 .help_system_footer a:hover {
 	text-decoration: underline;

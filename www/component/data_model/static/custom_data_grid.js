@@ -137,9 +137,12 @@ custom_data_grid.prototype = {
 			}
 		}
 		// put data
-		for (var i = 0; i < this.list.length; ++i)
-			this.grid.setCellData(this.id_getter(this.list[i]), col_id, col.data_getter(this.list[i], col.data_getter_param));
-		this.column_shown.fire(col);
+		var t=this;
+		this.grid.onallrowsready(function() {
+			for (var i = 0; i < t.list.length; ++i)
+				t.grid.setCellData(t.id_getter(t.list[i]), col_id, col.data_getter(t.list[i], col.data_getter_param));
+			t.column_shown.fire(col);
+		});
 	},
 	_showColumnInContainer: function(parent_container, container, col_id, index) {
 		if (container.grid_column_container && container.grid_column_container.th.parentNode == null) {
@@ -477,19 +480,27 @@ custom_data_grid.prototype = {
 				var cols = columns[i].getFinalColumns();
 				if (cols.length == 0) continue;
 				var always = true;
-				for (var j = 0; j < cols.length; ++j) always &= cols[i].always_shown;
+				for (var j = 0; j < cols.length; ++j) always &= cols[j].always_shown;
 				if (always) continue;
 				var cb = document.createElement("INPUT"); cb.type = 'checkbox';
 				cb.checked = columns[i].shown ? "checked" : "";
 				cb.col = columns[i];
+				cb.sub_cols = cols;
 				cb.g = this;
 				cb.style.cssFloat = "left";
 				cb.onchange = function() {
-					for (var i = 0; i < cols.length; ++i)
+					for (var i = 0; i < this.sub_cols.length; ++i) {
 						if (this.checked)
-							this.g.showColumn(cols[i].grid_column.id);
+							this.g.showColumn(this.sub_cols[i].grid_column.id);
 						else
-							this.g.hideColumn(cols[i].grid_column.id);
+							this.g.hideColumn(this.sub_cols[i].grid_column.id);
+						// check or uncheck sub check-boxes
+						var items = menu.getItems();
+						for (var j = 0; j < items.length; ++j) {
+							if (items[j].childNodes[0].col == this.sub_cols[i])
+								items[j].childNodes[0].checked = this.checked ? "checked" : "";
+						}
+					}
 				};
 				div.appendChild(cb);
 				div.appendChild(document.createTextNode(columns[i].select_menu_name ? columns[i].select_menu_name : columns[i].title));

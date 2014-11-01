@@ -4,9 +4,9 @@ function template_list(&$page, $type, $root_table, $sub_model, $known_columns, $
 	if (count($templates) == 0) {
 		echo "<div style='text-align:center;font-style:italic'>There is no template yet</div>";
 	} else {
-		echo "<ul>";
+		echo "<ul style='padding-left:20px'>";
 		foreach ($templates as $t) {
-			echo "<li>";
+			echo "<li style='white-space:nowrap'>";
 			echo toHTML($t["name"]);
 			echo " (";
 			switch ($t["template_type"]) {
@@ -179,9 +179,13 @@ function useTemplate(ev,id) {
 								}
 								var where;
 								if (typeof e.index != 'undefined') {
-									// TODO
-									setTimeout(function(){next(i+1);},1);
-									return;
+									if (typeof e.sub_index != 'undefined') {
+										where = {type:'set',row:0,index:e.index,sub_index:e.sub_index};
+									} else {
+										where = {type:'set',row:0,index:e.index};
+									}
+								} else if (typeof e.sub_index != 'undefined') {
+									where = {type:'set',row:0,sub_index:e.sub_index};
 								} else {
 									where = {type:'reset',row:0};
 								}

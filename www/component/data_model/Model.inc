@@ -251,7 +251,7 @@ class SubDataModel extends DataModel {
 	public function &getParentModel() { return $this->parent_model; }
 	public function getParentTable() { return $this->parent_table; }
 	
-	public function addSubModelLink($sub_model_table, $root_table, $needed_columns_to_join = null, $join_check_function = null) {
+	public function addSubModelLink($sub_model_table, $root_table, $unique, $needed_columns_to_join = null, $join_check_function = null) {
 		$t = $this->internalGetTable($sub_model_table);
 		// check we have a foreign key
 		if ($t == null) { PNApplication::error("Invalid table: ".$sub_model_table); return; }
@@ -261,13 +261,21 @@ class SubDataModel extends DataModel {
 				if ($col->foreign_table == $root_table) { $fk = $col; break; }
 		if ($fk == null) { PNApplication::error("Invalid sub model link: table ".$sub_model_table." does not have a foreign key to table ".$root_table); return; }
 		// add the link table
-		$link_table = $this->parent_model->addTable("smlink_".$sub_model_table."_".$root_table)
-			->addForeignKey("root", $root_table, true, false, true, false, false)
-			->addForeignKey("sm", $this->parent_table, true, false, true, false, false)
-			->setKey(array("root","sm"))
-			->addIndex("root")
-			->allowReadAccess()
-			;
+		if ($unique)
+			$link_table = $this->parent_model->addTable("smlink_".$sub_model_table."_".$root_table)
+				->addForeignKey("root", $root_table, true, false, false, false, true)
+				->addForeignKey("sm", $this->parent_table, true, false, true, false, false)
+				->setPrimary("root")
+				->allowReadAccess()
+				;
+		else
+			$link_table = $this->parent_model->addTable("smlink_".$sub_model_table."_".$root_table)
+				->addForeignKey("root", $root_table, true, false, true, false, false)
+				->addForeignKey("sm", $this->parent_table, true, false, true, false, false)
+				->setKey(array("root","sm"))
+				->addIndex("root")
+				->allowReadAccess()
+				;
 		$fake_category = new datamodel\DataDisplayCategory("");
 		$display = new datamodel\TableDataDisplay("smlink_".$sub_model_table."_".$root_table, $fake_category);
 		$display->addJoinFrom("root",$needed_columns_to_join,$join_check_function);
@@ -276,7 +284,7 @@ class SubDataModel extends DataModel {
 		
 		$this->links_to_parent[$sub_model_table] = $root_table;
 		// listen to events
-		new SubModelLinkListener($t, $fk, $link_table);
+		new SubModelLinkListener($t, $fk, $link_table, $unique);
 	}
 	
 	public function hasLink($sub_model_table_name, $root_table_name) {
@@ -352,9 +360,10 @@ class SubDataModel extends DataModel {
 
 class SubModelLinkListener {
 	
-	public function __construct($sub_model_table, $sub_model_foreign_key, $link_table) {
+	public function __construct($sub_model_table, $sub_model_foreign_key, $link_table, $unique) {
 		$this->link_table = $link_table;
 		$this->sub_model_foreign_key = $sub_model_foreign_key;
+		$this->unique = $unique;
 		$sub_model_table->onInsert(array($this,"onInsert"));
 		$sub_model_table->onRemove(array($this,"onRemove"));
 	}
@@ -363,8 +372,10 @@ class SubModelLinkListener {
 	private $link_table;
 	/** @var datamodel\ForeignKey $sub_model_foreign_key */
 	private $sub_model_foreign_key;
+	private $unique;
 	
 	public function onInsert($fields_values, $id, $sub_model_instance) {
+		// TODO in case unique, we update the previous one, or we make an error ?
 		SQLQuery::create()->bypassSecurity()->insert($this->link_table->getName(), array(
 			"root"=>$fields_values[$this->sub_model_foreign_key->name],
 			"sm"=>$sub_model_instance

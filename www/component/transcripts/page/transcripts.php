@@ -5,7 +5,7 @@ class page_transcripts extends Page {
 	
 	public function execute() {
 		if (!isset($_GET["period"])) {
-			echo "<div class='info_box'>Please select a period, a class, or a specialization within a period</div>";
+			echo "<div style='padding:5px'><div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> Please select a period, a class, or a specialization within a period</div></div>";
 			return;
 		}
 		

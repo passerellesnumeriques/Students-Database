@@ -89,7 +89,7 @@ class widgets extends Component {
 			return array("filter_enum", $cfg);
 		}
 		if ($col instanceof \datamodel\ColumnBoolean) {
-			$cfg = "{possible_values:['Yes','No']";
+			$cfg = "{possible_values:[[1,'Yes'],[0,'No']]";
 			$cfg .= ",can_be_null:".($col->can_be_null ? "true" : "false");
 			$cfg .= "}";
 			return array("filter_enum", $cfg);

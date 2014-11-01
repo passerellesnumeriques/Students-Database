@@ -5,6 +5,8 @@
 	border-radius: 5px 5px 5px 5px;
 }
 .section>.header {
+	display: flex;
+	flex-direction: row;
 	border-radius: 5px 5px 0px 0px;
 	border-bottom: none; /* TODO remove */
 	white-space: nowrap;
@@ -28,6 +30,10 @@
     color: #000000;
 }
 .section>.header>div:first-child {
+	flex: 1 0 auto;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
 	margin-left: 5px;
 	margin-right: 5px;
 	font-weight: bold;

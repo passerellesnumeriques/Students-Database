@@ -205,7 +205,7 @@ global $pn_app_version;
 					?>
 				</div>
 				<div id="application_right_menu" style="flex:none;">
-					<input type='text' id='application_search' onchange='alert("Sorry, the global search functionality is not yet available");'/>
+					<input type='text' id='application_search' onchange="postFrame('/dynamic/search/page/search',{q:this.value},'application_frame');this.value='';"/>
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>' target='application_frame'><div id='user_picture'></div></a>
 					<!-- <button class="flat" id='notifications'><img src='/static/application/menu/notifications.png'/></button>  -->
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat" id='calendars'><img src='/static/calendar/calendar_white.png'/></button></a>

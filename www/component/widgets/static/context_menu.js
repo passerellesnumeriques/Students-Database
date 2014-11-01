@@ -368,7 +368,7 @@ function context_menu(menu) {
 			t.showAt(t.show_at[0], t.show_at[1]);
 	};
 	
-	t.close = function() { t.hide(); };
+	t.close = function() { if(t) t.hide(); };
 	
 	menu.ondomremoved(function() {
 		menu.context_menu = null;

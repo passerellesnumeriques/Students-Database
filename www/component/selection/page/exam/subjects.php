@@ -18,6 +18,14 @@ class page_exam_subjects extends SelectionPage {
 				<img src='/static/selection/exam/exam_clip_art.png'/>
 				Written Exam Subjects
 			</div>
+			<?php
+			if ($can_edit) {
+				if (!PNApplication::$instance->selection->canEditExamSubjects()) {
+					$can_edit = false;
+					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot modify subjects because some results are already entered for some applicants.</div>";
+				}
+			} 
+			?>
 			<div style="padding:10px;overflow:hidden;flex:1 1 auto;display:flex;flex-direction:row">
 				<div id='subjects' class='section_block' style="display:inline-block;background-color:white;overflow-y:auto;margin-right:10px;width:200px;flex:none">
 					<span id='no_subject' style='display:none;position:absolute;'>

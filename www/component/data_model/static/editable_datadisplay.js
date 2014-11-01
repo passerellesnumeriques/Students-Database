@@ -7,7 +7,7 @@
  * @param {Function} onchange (optional) called when the user is editing the value
  * @constructor
  */
-function editable_datadisplay(container, data_display, come_from, key, data, onchange) {
+function editable_datadisplay(container, data_display, come_from, key, sub_model, data, onchange) {
 	
 	var t=this;
 	if (key == -1) {
@@ -17,12 +17,12 @@ function editable_datadisplay(container, data_display, come_from, key, data, onc
 		// existing data
 		require("editable_field.js",function() {
 			t.editable_field = new editable_field(container, data_display.field_classname, data_display.field_config, data, function(data, handler) {
-				service.json("data_model", "lock_datadisplay", {table:data_display.table,name:data_display.name,come_from:come_from,key:key}, function(result) {
+				service.json("data_model", "lock_datadisplay", {table:data_display.table,name:data_display.name,come_from:come_from,key:key,sub_model:sub_model}, function(result) {
 					if (!result) handler(null);
 					else handler(result.locks, result.data);
 				});
 			}, function(data, handler) {
-				service.json("data_model", "save_datadisplay", {table:data_display.table,name:data_display.name,come_from:come_from,key:key,data:data}, function(result) {
+				service.json("data_model", "save_datadisplay", {table:data_display.table,name:data_display.name,come_from:come_from,key:key,sub_model:sub_model,data:data}, function(result) {
 					handler(data);
 				});
 			});

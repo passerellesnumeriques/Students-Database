@@ -8,11 +8,13 @@ class people extends Component {
 		require_once("PeoplePluginsImplementations.inc");
 		require_once("PeoplePictureStoragePlugin.inc");
 		require_once("PeopleDocuments.inc");
+		require_once("PeopleSearchPlugin.inc");
 		return array(
 			new PeopleProfilePage(),
 			new PeopleDocumentsPage(),
 			new PeoplePictureStoragePlugin(),
-			new PeopleDocuments()
+			new PeopleDocuments(),
+			new PeopleSearchPlugin()
 		);
 	}
 	
@@ -65,6 +67,31 @@ class people extends Component {
 		if (!$pi->canWrite())
 			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
 		SQLQuery::create()->updateByKey("People", $people_id, array("types"=>$people["types"]."/".$new_type."/"));
+	}
+	
+	public function removePeoplesType($peoples_ids, $type) {
+		if (count($peoples_ids) == 0) return;
+		$pi = $this->getPeopleTypePlugin($new_type);
+		if ($pi == null)
+			throw new Exception("Invalid people type ".$type);
+		if (!$pi->canWrite())
+			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
+		// 1-remove peoples who only have this type
+		$remove_ids = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->whereValue("People","types","/$type/")->field("id")->execute();
+		if (count($remove_ids) > 0) {
+			SQLQuery::create()->bypassSecurity()->removeKeys("People", $remove_ids);
+			$peoples_ids = array_diff($peoples_ids, $remove_ids);
+			if (count($peoples_ids) == 0) return;
+		}
+		// 2-only remove type for remaining peoples
+		$peoples = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->field("id")->field("types")->execute();
+		foreach ($peoples as $p) {
+			$types = $this->parseTypes($p["types"]);
+			$pi->remove($p["id"]);
+			$t = "";
+			foreach ($types as $ty) if ($ty <> $type) $t .= "/".$ty."/";
+			SQLQuery::create()->bypassSecurity()->updateByKey("People", $p["id"], array("types"=>$t));
+		}
 	}
 	
 	public function createPeople($info, $types, $bypass_security = false) {

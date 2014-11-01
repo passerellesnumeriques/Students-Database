@@ -33,6 +33,8 @@ class service_lock_datadisplay extends Service {
 			PNApplication::error("No TableDataDisplay on table ".$table);
 			return;
 		}
+		$sql_name = $table;
+		if ($sub_model <> null) $sql_name .= "_".$sub_model;
 		foreach ($display->getDataDisplay($come_from, $sub_model) as $data) {
 			if ($data->getDisplayName() == $input["name"]) {
 				$locks = $data->getEditLocks($sub_model);
@@ -44,14 +46,14 @@ class service_lock_datadisplay extends Service {
 					$locked_by = null;
 					if (isset($lock["column"])) {
 						if (isset($lock["row_key"]))
-							$id = DataBaseLock::lockCell($lock["table"], $lock["row_key"], $lock["column"], $locked_by);
+							$id = DataBaseLock::lockCell($sql_name, $lock["row_key"], $lock["column"], $locked_by);
 						else
-							$id = DataBaseLock::lockColumn($lock["table"], $lock["column"], $locked_by);
+							$id = DataBaseLock::lockColumn($sql_name, $lock["column"], $locked_by);
 					} else {
 						if (isset($lock["row_ley"]))
-							$id = DataBaseLock::lockRow($lock["table"], $lock["row_key"], $locked_by);
+							$id = DataBaseLock::lockRow($sql_name, $lock["row_key"], $locked_by);
 						else
-							$id = DataBaseLock::lockTable($lock["table"], $locked_by);
+							$id = DataBaseLock::lockTable($sql_name, $locked_by);
 					}
 					if ($id == null) {
 						// rollback

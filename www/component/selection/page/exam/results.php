@@ -35,6 +35,7 @@ class page_exam_results extends SelectionPage {
 			<div style="padding:5px;padding-right:0px;">
 				<div id="sessions_list" title='Exam sessions' icon="/static/calendar/calendar_16.png" css="soft">
 			      	<?php 
+			      	$campaign_id = PNApplication::$instance->selection->getCampaignId();
 					$q = SQLQuery::create()->select("ExamCenter")
 						->field("ExamCenter","name")
 						->field("ExamCenter","id","center_id")
@@ -47,7 +48,12 @@ class page_exam_results extends SelectionPage {
 						->whereNotNull("ExamSession","event")
 						->join("ExamSession","Applicant",array("event"=>"exam_session"))
 						->field("ExamSession","event","session_id")
-						->join("Applicant","ExamCenterRoom",array("exam_center_room"=>"id"));
+						->join("Applicant","ExamCenterRoom",array("exam_center_room"=>"id"))
+						->expression("SUM(case when `Applicant_$campaign_id`.`exam_attendance` IS NOT NULL then 1 else 0 end)", "nb_attendance_set")
+						->expression("SUM(case when `Applicant_$campaign_id`.`exam_attendance` = 'Yes' then 1 else 0 end)", "nb_attendees")
+						->expression("SUM(case when `Applicant_$campaign_id`.`exam_passer` IS NOT NULL AND `Applicant_$campaign_id`.`exam_attendance` = 'Yes' then 1 else 0 end)", "nb_results_entered")
+						->expression("SUM(`Applicant_$campaign_id`.`exam_passer`)", "nb_passers")
+						;
 					PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
 					$exam_sessions=$q->groupBy("ExamSession","event")->groupBy("ExamCenterRoom","id")->execute();
 					?>
@@ -71,10 +77,33 @@ class page_exam_results extends SelectionPage {
 								<th colspan="4" ><?php echo $exam_session['name'];?></th>
 						    </tr><?php } //end of if statement ?> 
 							<tr class="clickable_row" style="cursor: pointer" session_id="<?php echo $exam_session['session_id'];?>" room_id="<?php echo $exam_session['room_id'];?>" exam_center_id="<?php echo $exam_center_id;?>" > 
-								<td><?php echo $session_name ?></td>
-								<td><?php echo $exam_session['room_name'] ?></td>
-								<td><?php echo $exam_session['applicants'] ?></td>
-								<td><?php echo 'TODO..' ?></td>
+								<td><?php echo $session_name; ?></td>
+								<td><?php echo $exam_session['room_name']; ?></td>
+								<td><?php echo $exam_session['applicants']; ?></td>
+								<td><?php
+								if ($exam_session["nb_attendance_set"] == 0) {
+									echo "<span style='color:red'>No attendance set</span>";
+								} else {
+									if ($exam_session["nb_attendance_set"] < $exam_session['applicants']) {
+										echo "<span style='color:orange'>Attendance missing for ".($exam_session['applicants'] - $exam_session["nb_attendance_set"])."</span>";
+									} else {
+										echo "<span style='color:green'>Attendance set for all</span>";
+									}
+									echo " (".$exam_session["nb_attendees"]." present)";
+									echo ",<br/>";
+									if ($exam_session["nb_results_entered"] == 0) {
+										echo "<span style='color:red'>No result yet</span>";
+									} else {
+										if ($exam_session["nb_results_entered"] < $exam_session["nb_attendees"]) {
+											echo "<span style='color:orange'>Results missing for ".($exam_session["nb_attendees"] - $exam_session["nb_results_entered"])."</span>";
+										} else {
+											echo "<span style='color:green'>All results entered</span>";
+										}
+										echo ", ";
+										echo $exam_session["nb_passers"]." passer".($exam_session["nb_passers"]>1?"s":"");
+									}
+								} 
+								?></td>
 							</tr>
 						<?php } // end of foreach statement ?>
 						</tbody>

@@ -7,12 +7,12 @@ class page_subject_grades extends Page {
 		if (!isset($_GET["subject"])) {
 			// direct from menu, we need to select a subject
 			if (isset($_GET["batches"])) {
-				echo "<div class='info_box'><img src='".theme::$icons_16["question"]."' style='vertical-align:bottom'/> Please select a batch, period or class to display the subjects</div>";
+				echo "<div style='padding:5px'><div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> Please select a batch, period or class to display the subjects</div></div>";
 				return;
 			}
 			if (!isset($_GET["batch"])) {
 				// in order to select a subject, we want to be inside the tree_frame
-				header("Location: /dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/subject_grades");
+				echo "<script type='text/javascript'>if (window.frameElement && window.frameElement.name == 'curriculum_tree_frame') { var u = new URL(location.href); u.params['batches'] = 'all'; location.href = u.toString(); } else location.href = '/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/subject_grades';</script>";
 				return;
 			}
 			$batch_id = $_GET["batch"];
@@ -43,8 +43,8 @@ class page_subject_grades extends Page {
 				echo "<div class='info_box'>No subject defined in the curriculum for ".($period_id <> null ? "this period" : "this batch")."</div>";
 				return;
 			}
-			echo "<div class='info_box'>";
-			echo "<img src='".theme::$icons_16["question"]."' style='vertical-align:bottom'/> ";
+			echo "<div style='padding:5px'><div class='info_box'>";
+			echo "<img src='".theme::$icons_16["question"]."' style='vertical-align:top'/> ";
 			echo "Please select a subject to display the grades: ";
 			echo "<select onchange=\"if (this.value == '') return; window.parent.frameElement.src='/dynamic/transcripts/page/subject_grades?subject='+this.value";
 			if (isset($_GET["class"])) echo "+'&class=".$_GET["class"]."'";
@@ -56,7 +56,7 @@ class page_subject_grades extends Page {
 				echo "</option>";
 			}
 			echo "</select>";
-			echo "</div>";
+			echo "</div></div>";
 			return;
 		}
 		
@@ -1072,6 +1072,8 @@ function importFromFile(event) {
 		new import_with_match(prov, event, true);
 	});
 }
+//to import, load upload.js
+setTimeout(function(){if(!window.closing)require(["import_with_match.js","upload.js"]);},2000);
 
 <?php } ?> // if editable mode
 

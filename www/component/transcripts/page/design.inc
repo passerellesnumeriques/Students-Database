@@ -170,6 +170,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 	
 	$design = str_replace("#General Appreciation#", toHTML($student_general_appreciation), $design);
 	
+	processTranscriptCondition($design, "subject_code", @$config["subject_code"] == 1);
 	processTranscriptCondition($design, "nb_hours", @$config["nb_hours"] == 1);
 	processTranscriptCondition($design, "coefficient", @$config["coefficient"] == 1);
 	processTranscriptCondition($design, "class_average", @$config["class_average"] == 1);

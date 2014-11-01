@@ -29,6 +29,15 @@ class page_applicant_list extends SelectionPage {
 		<script type='text/javascript'>
 		var dl;
 		var filters = <?php if (isset($input["filters"])) echo json_encode($input["filters"]); else echo "[]"; ?>;
+		<?php
+		if (isset($_GET["type"])) {
+			switch ($_GET["type"]) {
+			case "exam_passers":
+				echo "filters.push({category:'Selection',name:'Eligible for Interview',force:true,data:{values:[1]}});\n";
+				break;
+			}
+		}
+		?>
 		function init_list() {
 			dl = new data_list(
 				'list_container',

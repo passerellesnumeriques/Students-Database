@@ -23,7 +23,10 @@ class service_exam_save_subject extends Service {
 		SQLQuery::startTransaction();
 		$subject = &$input["exam"];
 		
-		// TODO check we can modify subjects (no result imported yet...)
+		if (!PNApplication::$instance->selection->canEditExamSubjects()) {
+			PNApplication::error("Modification of exam subject denied: some results are already entered for some applicants");
+			return;
+		}
 		
 		// re-calculate scores and indexes on back-end side to make sure everything is coherent
 		$total_score = 0;

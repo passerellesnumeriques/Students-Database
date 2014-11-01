@@ -23,6 +23,9 @@ input.informative_text {
 ul {
 	margin: 0px;
 }
+b {
+	font-weight: bold;
+}
 
 table.all_borders {
 	border: 1px solid black;

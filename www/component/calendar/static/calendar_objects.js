@@ -50,14 +50,15 @@ function CalendarEvent(id, calendar_provider_id, calendar_id, uid, start, end, a
 		var year = d.getUTCFullYear();
 		var month = d.getUTCMonth();
 		var day = d.getUTCDate();
-		this.start = new Date(year, month, day, 0, 0, 0, 0);
+
+		var s = d.getTime();
 		if (typeof end == 'number') d = new Date(end*1000);
 		else if (typeof end == 'string') d = new Date(parseInt(end)*1000);
 		else d = end;
-		var year = d.getUTCFullYear();
-		var month = d.getUTCMonth();
-		var day = d.getUTCDate();
-		this.end = new Date(year, month, day, 23, 59, 59, 999);
+		var e = d.getTime();
+		
+		this.start = new Date(year, month, day, 0, 0, 0, 0);
+		this.end = new Date(this.start.getTime()-(e-s));
 	} else {
 		this.all_day = false;
 		/** {Date} start timestamp in seconds of the start of the event */

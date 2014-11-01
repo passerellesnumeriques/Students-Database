@@ -522,8 +522,11 @@ function process_keys_and_indexes(odm,ndm,parent_table) {
 				ntable.indexes.splice(k,1);
 				break;
 			}
-			if (!found)
-				changes.push({type:"index_removed",parent_table:parent_table,table:ntable_name,index_name:otable.indexes[j][0]});
+			if (!found) {
+				var name = otable.indexes[j][0];
+				otable.indexes[j].splice(0,1);
+				changes.push({type:"index_removed",parent_table:parent_table,table:ntable_name,index_name:name,columns:otable.indexes[j]});
+			}
 		}
 		for (j = 0; j < ntable.indexes.length; ++j) {
 			var name = ntable.indexes[j][0];
@@ -582,7 +585,13 @@ function createChangeDescription(change,odm,ndm) {
 	case "add_column": li.innerHTML = "Column <i>"+change.column.name+"</i> has been added in table <i>"+change.table+"</i>"; break;
 	case "remove_column": li.innerHTML = "Column <i>"+change.column+"</i> has been removed from table <i>"+change.table+"</i>, <img src='/static/theme/default/icons_16/warning.png'/> all data in it will be lost"; break;
 	case "rename_column": li.innerHTML = "Column <i>"+change.old_column_name+"</i> of table <i>"+change.old_table_name+"</i> became column <i>"+change.new_column_name+"</i> of table <i>"+change.new_table_name+"</i>"; break;
-	case "column_spec": li.innerHTML = "Column <i>"+change.old_spec.name+"</i> of table <i>"+change.old_table_name+"</i> changed its specification"; if(change.new_spec.name != change.old_spec.name) li.innerHTML += " and will be column <i>"+change.new_spec.name+"</i> of table <i>"+change.new_table_name+"</i>"; else if (change.new_table_name != change.old_table_name) li.innerHTML += " and will be in table <i>"+change.new_table_name+"</i>"; break;
+	case "column_spec":
+		li.innerHTML = "Column <i>"+change.old_spec.name+"</i> of table <i>"+change.old_table_name+"</i> changed its specification";
+		if(change.new_spec.name != change.old_spec.name)
+			li.innerHTML += " and will be column <i>"+change.new_spec.name+"</i> of table <i>"+change.new_table_name+"</i>";
+		else if (change.new_table_name != change.old_table_name)
+			li.innerHTML += " and will be in table <i>"+change.new_table_name+"</i>";
+		break;
 	case "index_removed":
 		if (change.index_name == "PRIMARY")
 			li.innerHTML = "Primary key <i>"+change.key+"</i> removed from table <i>"+change.table+"</i>";
@@ -599,7 +608,7 @@ function createChangeDescription(change,odm,ndm) {
 				if (i > 0) s += ", ";
 				s += change.columns[i];
 			} 
-			li.innerHTML = "Index on columns <i>"+s+"</i> remove from table <i>"+change.table+"</i>";
+			li.innerHTML = "Index on columns <i>"+s+"</i> removed from table <i>"+change.table+"</i>";
 		}
 		break;
 	case "index_added":

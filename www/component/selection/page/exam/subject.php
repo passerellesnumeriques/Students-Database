@@ -41,10 +41,10 @@ class page_exam_subject extends SelectionPage {
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_decimal.js");
 		?>
-		<div style="width:100%;height:100%;overflow:auto;text-align:center">
-		<div style="display:inline-block;text-align:left;">
-		<div style="background-color:white;display:flex;flex-direction:column;border: 1px solid #A0A0A0; box-shadow: 2px 2px 2px 0px #808080; border-radius: 3px; margin: 5px;padding:5px;">
-			<div style="flex:none;margin:5px;">
+		<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;">
+		<div style="flex:1 1 auto;overflow:auto;">
+		<div style="background-color:white;display:flex;flex-direction:column;border: 1px solid #A0A0A0; box-shadow: 2px 2px 2px 0px #808080; border-radius: 3px; margin: 5px;padding:5px;margin-right:10px;">
+			<div style="flex:none;margin:5px;min-width:580px">
 				<div style='display:inline-block;width:120px'>
 					<img src='/static/application/logo.png' style='vertical-align:top'/>
 				</div>

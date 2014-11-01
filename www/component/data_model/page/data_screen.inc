@@ -302,6 +302,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 							$child->parent = $path;
 						}
 					}
+					//echo "<br/>\nSQL=".$q->generate()."<br/>\n";
 					$row = $q->executeSingleRow();
 					$requests = array(array($q,array($row)));
 					if ($display <> null) {

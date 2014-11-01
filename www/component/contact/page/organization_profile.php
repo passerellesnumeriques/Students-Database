@@ -44,25 +44,9 @@ class page_organization_profile extends Page {
 			$org_structure .= "]";
 			$org_structure .= ",contacts:".contacts_structure("organization", $id);
 			$org_structure .= ",addresses:".addresses_structure("organization", $id);
-			$q = SQLQuery::create()
-				->select("ContactPoint")
-				->whereValue("ContactPoint", "organization", $id)
-				->field("ContactPoint", "designation")
-				;
-			PNApplication::$instance->people->joinPeople($q, "ContactPoint", "people");
-			$points = $q 
-				->field("People", "id", "people_id")
-				->field("People", "first_name")
-				->field("People", "last_name")
-				->execute();
-			
-			$org_structure .= ",contact_points:[";
-			$first = true;
-			foreach ($points as $p) {
-				if ($first) $first = false; else $org_structure .= ",";
-				$org_structure .= "{designation:".json_encode($p["designation"]).",people_id:".$p["people_id"].",first_name:".json_encode($p["first_name"]).",last_name:".json_encode($p["last_name"])."}";
-			}
-			$org_structure .= "]";
+			require_once("component/contact/ContactJSON.inc");
+			$org_structure .= ",contact_points:";
+			$org_structure .= ContactJSON::OrganizationContactsPointsFromDB($id);
 		} else {
 			$org_structure .= "id:-1";
 			$org_structure .= ",name:".json_encode($name);

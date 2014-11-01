@@ -5,7 +5,7 @@ class page_configure_transcripts extends Page {
 	
 	public function execute() {	
 		if (!isset($_GET["period"])) {
-			echo "<div class='info_box'>Please select a period, a class, or a specialization within a period</div>";
+			echo "<div style='padding:5px'><div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> Please select a period, a class, or a specialization within a period</div></div>";
 			return;
 		}
 		
@@ -121,6 +121,7 @@ class page_configure_transcripts extends Page {
 				<div class='page_section_title'>
 					Information to include
 				</div>
+				<input type='checkbox' <?php echo @$config["subject_code"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('subject_code',this.checked?1:0);"/> Subject code<br/>
 				<input type='checkbox' <?php echo @$config["nb_hours"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('nb_hours',this.checked?1:0);"/> Nb of hours
 				<select onchange="saveTranscriptConfig('hours_type',this.value);">
 					<option value="Per week" <?php if (@$config["hours_type"] == "Per week") echo "selected='selected'";?>>Per week</option>
@@ -238,9 +239,14 @@ class page_configure_transcripts extends Page {
 				</div>
 			</div>
 		</div>
-		<div style='flex:1 1 auto;overflow:auto;text-align:center'>
-			<div id='design' style='text-align:left;background-color:white;border-radius:5px;display:inline-block;box-shadow: 2px 2px 2px 0px #808080;width:630px;height:810px;margin-bottom:5px;'>
-				<?php generateTranscriptFor($this->generateID(), $config,$categories,$selected_subjects,$period);?>
+		<div style='flex:1 1 auto;display:flex;flex-direction:column'>
+			<div style='flex:none;margin:0px' class='info_box'>
+				<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/> Grades are fake in this screen. This is only to give an idea how the transcripts will be.
+			</div>
+			<div style='flex:1 1 auto;overflow:auto;text-align:center'>
+				<div id='design' style='text-align:left;background-color:white;border-radius:5px;display:inline-block;box-shadow: 2px 2px 2px 0px #808080;width:630px;height:810px;margin-bottom:5px;'>
+					<?php generateTranscriptFor($this->generateID(), $config,$categories,$selected_subjects,$period);?>
+				</div>
 			</div>
 		</div>
 	</div>

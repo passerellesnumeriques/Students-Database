@@ -136,7 +136,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	 */
 	t.addTitle = function(icon, text) {
 		var div = document.createElement("DIV");
-		div.style.display = "inline-block";
 		div.className = "data_list_title";
 		if (icon) {
 			var img = document.createElement("IMG");
@@ -157,7 +156,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	t.setTitle = function(html) {
 		if (typeof html == 'string') {
 			var div = document.createElement("DIV");
-			div.style.display = "inline-block";
 			div.innerHTML = html;
 			html = div;
 		}

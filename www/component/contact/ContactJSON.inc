@@ -250,7 +250,7 @@ class ContactJSON {
 			->whereValue("ContactPoint", "organization", $organization_id)
 			;
 		self::OrganizationContactPointSQL($q);
-		return self::OrganizationContactsPoints($q->execute());
+		return self::OrganizationContactPoints($q->execute());
 	}
 	
 	public static function OrganizationContactPointSQL(&$q) {
