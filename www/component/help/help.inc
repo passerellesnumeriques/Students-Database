@@ -56,8 +56,8 @@ class help extends Component {
 	public function endHelp($help_div_id, $help_id) {
 		echo "</div>";
 		echo "<div class='help_system_footer'>";
-		echo "<div style='float:left'><input type='checkbox' onchange=\"service.json('help','hide',{help_id:'$help_id'},function(res){});var div = document.getElementById('$help_div_id');animation.fadeOut(div,200,function(){div.parentNode.removeChild(div);});\"/> Close and do not show this help again</div>";
-		echo "<div style='float:right'><a href='#' onclick=\"var div = document.getElementById('$help_div_id');animation.fadeOut(div,200,function(){div.parentNode.removeChild(div);});return false;\"><img src='".theme::$icons_10["close"]."' style='vertical-align:middle'/> Close and show again next time</a></div>";
+		echo "<div style='float:left'><a href='#' style='color:#A04040' onclick=\"service.json('help','hide',{help_id:'$help_id'},function(res){});var div = document.getElementById('$help_div_id');animation.fadeOut(div,200,function(){div.parentNode.removeChild(div);});return false;\"><img src='".theme::$icons_10["close"]."' style='vertical-align:middle'/> Close and do not show this help again</a></div>";
+		echo "<div style='float:right'><a href='#' style='color:#40A040' onclick=\"var div = document.getElementById('$help_div_id');animation.fadeOut(div,200,function(){div.parentNode.removeChild(div);});return false;\"><img src='".theme::$icons_10["close"]."' style='vertical-align:middle'/> Close and show again next time</a></div>";
 		echo "</div>";
 		echo "</div>";
 	}
