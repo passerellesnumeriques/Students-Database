@@ -14,16 +14,16 @@ class service_store_stats extends Service {
 			$user = "";
 		$c = curl_init("http://stats.lecousin.net/store");
 		if (file_exists("conf/proxy")) include("conf/proxy");
+		curl_setopt($c, CURLOPT_HEADER, FALSE);
 		curl_setopt($c, CURLOPT_POST, TRUE);
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_POSTFIELDS, array(
 			"product"=>"students_management_software",
 			"version"=>$pn_app_version,
 			"domain"=>PNApplication::$instance->local_domain,
-			"user"=>$user
+			"user"=>$user,
+			"host"=>$_SERVER["HTTP_HOST"]
 		));
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
 		curl_setopt($c, CURLOPT_TIMEOUT, 25);
 		set_time_limit(45);
