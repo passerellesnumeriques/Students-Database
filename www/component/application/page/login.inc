@@ -153,6 +153,11 @@ service.json("development","check_libraries_updates",null,function(res) {
 		}
 	}
 });
+<?php if (rand(0,3)==0) { ?>
+setTimeout(function() {
+	service.json("administration","store_stats",null,function(res){});
+},1000);
+<?php } ?>
 </script>
 <?php
 #END 
