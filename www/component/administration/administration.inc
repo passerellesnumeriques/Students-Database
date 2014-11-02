@@ -14,5 +14,9 @@ class administration extends Component {
 		);
 	}
 	
+	public function initRequest() {
+		Component::allowServiceWithoutLogin("administration", "store_stats");
+	}
+	
 }
 ?>
