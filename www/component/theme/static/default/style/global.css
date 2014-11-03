@@ -64,9 +64,10 @@ table.all_borders>tbody>tr>th, table.all_borders>tr>th {
 	vertical-align: middle;
 }
 .page_footer {
-	border-top: 1px solid #DDDDDD;
-	padding: 5px 15px 5px 15px;
+	border-top: 1px solid #C0C0C0;
+	padding: 3px 10px 3px 10px;
 	background-color: white;
+	box-shadow: 0px 1px 0px 0px #E8E8FF inset;
 }
 .page_section_title {
     font-family: Arial;
