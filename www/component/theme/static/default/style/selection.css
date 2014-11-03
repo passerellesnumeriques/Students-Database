@@ -1,3 +1,6 @@
+table.selection_partners_table th {
+	text-align: left;
+}
 table.selection_partners_table td.partner_name {
 	font-weight: bold;
 	font-size: 16px;

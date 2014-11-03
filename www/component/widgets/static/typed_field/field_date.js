@@ -170,9 +170,11 @@ field_date.prototype._create = function(data) {
 				this.element.innerHTML = "no date";
 			} else {
 				data = dateToSQL(parseSQLDate(data));
-				if (this.element.innerHTML == data) return data;
+				var d = parseSQLDate(data);
+				var s = getDayShortName(d.getDay(),true)+" "+_2digits(d.getDate())+" "+getMonthShortName(d.getMonth()+1)+" "+d.getFullYear();
+				if (this.element.innerHTML == s) return data;
 				this.element.style.fontStyle = 'normal';
-				this.element.innerHTML = data;
+				this.element.innerHTML = s;
 			}
 			return data;
 		};
