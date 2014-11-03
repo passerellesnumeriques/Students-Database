@@ -40,6 +40,7 @@ function people_search(container, people_types, onselected) {
 						t._cs.input.value = people.last_name+' '+people.first_name;
 					}, peoples[i]);
 				}
+				t._menu.showBelowElement(t._cs.input);
 			});
 			ondone();
 		});

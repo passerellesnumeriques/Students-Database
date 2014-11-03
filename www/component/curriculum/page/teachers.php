@@ -99,11 +99,19 @@ class page_teachers extends Page {
 		<?php $this->buildTeachersList($past_teachers_ids, $teachers, $peoples, null, $previous_assignments);?>
 		</div>
 	</div>
-	<?php if ($can_edit) {?>
 	<div class="page_footer" style="flex:none;">
+		<?php
+		$this->requireJavascript("people_search.js");
+		$this->requireJavascript("custom_search.js");
+		
+		$search_id = $this->generateID();
+		echo "<div style='display:inline-block' id='$search_id'></div>";
+		$this->onload("new people_search('$search_id','teacher',function(people){ window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+people.id,null,95,95); });");
+		if ($can_edit) {
+		?>
 		<button class='action green' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
+		<?php } ?>
 	</div>
-	<?php } ?>
 </div>
 
 <script type='text/javascript'>

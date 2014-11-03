@@ -61,6 +61,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			t.view_tabs.addItem("Agenda", "agenda");
 			t.view_tabs.select(t.view_name);
 			t.view_tabs.element.style.display = "inline-block";
+			t.view_tabs.element.style.flex = "none";
 			t.header.appendChild(t.view_tabs.element);
 			t.view_tabs.onselect = function(view_name) {
 				t.changeView(view_name);

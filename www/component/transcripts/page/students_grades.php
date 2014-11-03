@@ -221,7 +221,7 @@ function computeStudentGlobalGrade(people_id) {
 		var s = getSubject(students_grades[i].subject);
 		if (!s || !s.coefficient) continue;
 		coef += s.coefficient;
-		total += (students_grades[i].grade*100/parseFloat(sg.max_grade))*s.coefficient;
+		total += parseFloat(students_grades[i].grade)*s.coefficient;
 	}
 	if (!coef) return null;
 	return total/coef;
@@ -316,6 +316,11 @@ function changeGradingSystem(name, system) {
 			field.setGradingSystem(system);
 		}
 	}
+	var col_index = grades_grid.grid.getColumnIndexById('student_global_grade');
+	for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
+		var field = grades_grid.grid.getCellField(row, col_index);
+		field.setGradingSystem(system);
+	}
 }
 function setDisplayCoef(display) {
 	setCookie("display_coef",name,365*24*60,"/dynamic/transcripts/page/students_grade");
@@ -324,6 +329,7 @@ function setDisplayCoef(display) {
 		if (typeof columns[i].grid_column.title.span_coef == 'undefined') continue;
 		columns[i].grid_column.title.span_coef.style.visibility = display ? "visible" : "hidden";
 		columns[i].grid_column.title.span_coef.style.position = display ? "static" : "absolute";
+		layout.changed(columns[i].grid_column.title.span_coef.parentNode);
 	}
 }
 var general_appreciation_lock_id = null;

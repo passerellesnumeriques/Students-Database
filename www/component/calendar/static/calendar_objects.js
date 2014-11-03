@@ -58,7 +58,7 @@ function CalendarEvent(id, calendar_provider_id, calendar_id, uid, start, end, a
 		var e = d.getTime();
 		
 		this.start = new Date(year, month, day, 0, 0, 0, 0);
-		this.end = new Date(this.start.getTime()-(e-s));
+		this.end = new Date(this.start.getTime()+(e-s));
 	} else {
 		this.all_day = false;
 		/** {Date} start timestamp in seconds of the start of the event */

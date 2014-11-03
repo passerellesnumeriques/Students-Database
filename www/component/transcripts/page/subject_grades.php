@@ -43,20 +43,54 @@ class page_subject_grades extends Page {
 				echo "<div class='info_box'>No subject defined in the curriculum for ".($period_id <> null ? "this period" : "this batch")."</div>";
 				return;
 			}
-			echo "<div style='padding:5px'><div class='info_box'>";
-			echo "<img src='".theme::$icons_16["question"]."' style='vertical-align:top'/> ";
-			echo "Please select a subject to display the grades: ";
-			echo "<select onchange=\"if (this.value == '') return; window.parent.frameElement.src='/dynamic/transcripts/page/subject_grades?subject='+this.value";
-			if (isset($_GET["class"])) echo "+'&class=".$_GET["class"]."'";
-			echo ";\">";
-			echo "<option value=''></option>";
-			foreach ($subjects as $s) {
-				echo "<option value='".$s["id"]."'>";
-				echo toHTML($s["code"]." - ".$s["name"]);
-				echo "</option>";
-			}
-			echo "</select>";
-			echo "</div></div>";
+			$batch = PNApplication::$instance->curriculum->getBatch($batch_id);
+			$period = $period_id <> null ? PNApplication::$instance->curriculum->getBatchPeriod($period_id) : null;
+			theme::css($this, "section.css");
+			?>
+			<div style='width:100%;height:100%;overflow:auto'>
+				<div style='min-height:100%;display:flex;flex-direction:row;align-items:center;justify-content:center;'>
+					<div class='section' style='background-color:white;border:1px solid #A0A0A0;padding:5px;margin:5px;'>
+						<div style='font-size: 12pt;font-weight:bold'>
+							<img src='<?php echo theme::$icons_32["question"];?>' style='vertical-align:middle'/>
+							Please select a subject to display the grades of batch <?php
+							echo toHTML($batch["name"]);
+							if ($period_id <> null) echo ", ".toHTML($period["name"]);
+							?>:
+						</div>
+						<ul>
+						<?php 
+						if ($period_id <> null)
+							foreach ($subjects as $s) {
+								echo "<li>";
+								echo "<a class='black_link' href='/dynamic/transcripts/page/subject_grades?subject=".$s["id"]."'>";
+								echo toHTML($s["code"]." - ".$s["name"]);
+								echo "</a>";
+								echo "</li>";
+							}
+						else {
+							$periods = PNApplication::$instance->curriculum->getBatchPeriods($batch_id);
+							foreach ($periods as $period) {
+								echo "<li><span style='font-weight:bold'>";
+								echo toHTML($period["name"]);
+								echo "</span><ul>";
+								foreach ($subjects as $s) {
+									if ($s["period"] <> $period["id"]) continue;
+									echo "<li>";
+									echo "<a class='black_link' href='/dynamic/transcripts/page/subject_grades?subject=".$s["id"]."'>";
+									echo toHTML($s["code"]." - ".$s["name"]);
+									echo "</a>";
+									echo "</li>";
+								}
+								echo "</ul>";
+								echo "</li>";
+							}
+						}
+						?>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<?php 
 			return;
 		}
 		

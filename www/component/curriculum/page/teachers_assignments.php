@@ -272,6 +272,7 @@ class page_teachers_assignments extends Page {
 				tr.appendChild(td = document.createElement("TD"));
 				td.appendChild(document.createTextNode(subjects[i].subject.name));
 				tr.appendChild(td = document.createElement("TD"));
+				td.style.fontSize = "8pt";
 				var total = 0;
 				if (subjects[i].subject.hours_type == "Per week")
 					total = subjects[i].subject.hours*nb_weeks;
@@ -324,10 +325,10 @@ class page_teachers_assignments extends Page {
 			};
 			this.getClassesHTML = function(classes) {
 				var span = document.createElement("SPAN");
-				var s = "Class";
-				if (classes.length > 1) s += "es";
-				s += " ";
-				span.appendChild(document.createTextNode(s));
+				//var s = "Class";
+				//if (classes.length > 1) s += "es";
+				//s += " ";
+				//span.appendChild(document.createTextNode(s));
 				for (var i = 0; i < classes.length; ++i) {
 					if (i > 0) span.appendChild(document.createTextNode(" + "));
 					s = document.createElement("SPAN");
@@ -738,7 +739,7 @@ class page_teachers_assignments extends Page {
 						else total += ta.hours;
 					}
 				}
-				td_hours.innerHTML = (total/nb_weeks).toFixed(2)+"h/week x "+nb_weeks+" = "+total+"h";
+				td_hours.innerHTML = "<span style='font-size:8pt'><span style='font-weight:bold'>"+(total/nb_weeks).toFixed(2)+"h</span>/week x "+nb_weeks+" = <span style='font-weight:bold'>"+total+"h</span></span>";
 				layout.changed(td_hours);
 			};
 			this.update();
