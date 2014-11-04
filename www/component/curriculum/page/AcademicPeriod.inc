@@ -105,6 +105,13 @@ class AcademicPeriod {
 		foreach ($this->specializations as $s) if ($s["id"] == $spe_id) return $s["name"];
 	}
 	
+	public function getClassesForBatch($batch_period_id) {
+		$list = array();
+		foreach ($this->classes as $c)
+			if ($c["period"] == $batch_period_id)
+				array_push($list, $c);
+		return $list;
+	}
 	public function getClassesFor($batch_period_id, $spe_id) {
 		$list = array();
 		foreach ($this->classes as $c)
@@ -119,10 +126,10 @@ class AcademicPeriod {
 				array_push($list, $s);
 		return $list;
 	}
-	public function getSubjectsFor($batch_period_id, $spe_id) {
+	public function getSubjectsFor($batch_period_id, $spe_id, $include_common_subjects = true) {
 		$list = array();
 		foreach ($this->subjects as $s)
-			if ($s["period"] == $batch_period_id && ($s["specialization"] == null || $s["specialization"] == $spe_id))
+			if ($s["period"] == $batch_period_id && (($include_common_subjects && $s["specialization"] == null) || $s["specialization"] == $spe_id))
 				array_push($list, $s);
 		return $list;
 	}
