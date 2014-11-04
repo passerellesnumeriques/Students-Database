@@ -292,7 +292,13 @@ class SimpleDataDisplay extends DataDisplay {
 		$col = $this->getTable()->getColumnFor($this->column_name, $sub_model);
 		return \PNApplication::$instance->widgets->get_typed_field($col);
 	}
-	public function getHorizontalAlign() { return $this->horiz_align; }
+	public function getHorizontalAlign() {
+		if ($this->horiz_align === null) {
+			$col = $this->getTable()->internalGetColumn($this->column_name);
+			if ($col instanceof \datamodel\ColumnDate) return "right";
+		}
+		return $this->horiz_align;
+	}
 	
 	public function getTypedFilter($sub_model) {
 		$col = $this->getTable()->getColumnFor($this->column_name, $sub_model);

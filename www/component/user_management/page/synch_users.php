@@ -9,8 +9,14 @@ class page_synch_users extends Page {
 		$token = $input["token"];
 		echo "<div style='background-color:white;padding:10px'>";
 		$as = PNApplication::$instance->authentication->getAuthenticationSystem($domain);
-		$list = $as instanceof AuthenticationSystem_UserList ? $as->getUserList($token) : null;
-		if ($list === null) {
+		try {
+			$list = $as instanceof AuthenticationSystem_UserList ? $as->getUserList($token) : null;
+		} catch (Exception $e) {
+			$list = $e;
+		}
+		if ($list instanceof Exception) {
+			echo toHTML($list->getMessage());
+		} else if ($list === null) {
 			echo "The authentication system of ".$domain." does not support synchronization";
 		} else {
 			$current = SQLQuery::create()->select("Users")->whereValue("Users","domain",$domain)->execute();

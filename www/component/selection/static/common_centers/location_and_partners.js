@@ -136,9 +136,16 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		if (center_id == -1)
 			window.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 		// Location section is composed of 2 elements: the address / geographic area, and the host partner
+		var address_title = document.createElement("DIV");
+		address_title.style.fontWeight = "bold";
+		address_title.innerHTML = "Address";
+		address_title.style.padding = "1px 2px";
+		address_title.style.marginTop = "2px";
+		left.appendChild(address_title);
 		this._address_container = document.createElement("DIV");
+		this._address_container.style.padding = "1px 2px";
+		this._address_container.style.marginBottom = "4px";
 		left.appendChild(this._address_container);
-		this._address_container.style.padding = "10px";
 		this._host_container = document.createElement("DIV");
 		left.appendChild(this._host_container);
 		// buttons
@@ -255,7 +262,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		tr.appendChild(th = document.createElement("TH"));
 		th.appendChild(document.createTextNode("Hosting Partner"));
 		tr.appendChild(th = document.createElement("TH"));
-		th.appendChild(document.createTextNode("Contacts"));
+		th.appendChild(document.createTextNode("Contact Point(s)"));
 		new partnerRow(table, host, editable, function(org) {
 			// remove any non-valid contact point
 			for (var i = 0; i < host.selected_contact_points_id.length; ++i) {
@@ -362,8 +369,22 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		th.appendChild(document.createTextNode("Contact Point(s)"));
 		for (var i = 0; i < this.partners.length; ++i) {
 			if (this.partners[i].host) continue;
-			new partnerRow(this._partners_table, this.partners[i], editable, function(org) {
-				// TODO org changed
+			new partnerRow(this._partners_table, this.partners[i], editable, function(org, partner) {
+				// remove any non-valid contact point
+				for (var i = 0; i < partner.selected_contact_points_id.length; ++i) {
+					var found = false;
+					for (var j = 0; j < org.contact_points.length; ++j)
+						if (org.contact_points[j].people.id == partner.selected_contact_points_id[i]) {
+							found = true;
+							break;
+						}
+					if (!found) {
+						partner.selected_contact_points_id.splice(i,1);
+						i--;
+					}
+				}
+				partner.organization = org;
+				window.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 			});
 		}
 	};
@@ -392,7 +413,7 @@ function partnerRow(table, partner, editable, onchange) {
 			window.top.popup_frame("/static/contact/organization.png","Organization Profile","/dynamic/contact/page/organization_profile?organization="+partner.organization.id+"&onready=orgready", null, null, null, function(frame) {
 				frame.orgready = function(org) {
 					org.onchange.add_listener(function () {
-						if (onchange) onchange(org.getStructure());
+						if (onchange) onchange(org.getStructure(), partner);
 						t._refresh();
 					});
 				};
@@ -472,7 +493,7 @@ function partnerRow(table, partner, editable, onchange) {
 								partner.selected_contact_points_id.remove(this.contact_point_id);
 							}
 							twin.pnapplication.dataUnsaved("SelectionLocationAndPartners");
-							if (onchange) onchange(partner.organization);
+							if (onchange) onchange(partner.organization, partner);
 							t._refresh();
 						};
 					}
