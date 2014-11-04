@@ -578,9 +578,11 @@ class page_teachers_assignments extends Page {
 						span.style.fontStyle = "italic";
 						span.style.color = "#808080";
 						span.style.whiteSpace = "nowrap";
-						if (subject.hours_type == "Per week")
-							span.innerHTML = (remaining_period/nb_weeks)+"h/week remaining";
-						else
+						if (subject.hours_type == "Per week") {
+							var hs = (remaining_period/nb_weeks).toFixed(2);
+							if (hs.substring(hs.length-3) == ".00") hs = Math.floor(remaining_period/nb_weeks); 
+							span.innerHTML = hs+"h/week remaining";
+						} else
 							span.innerHTML = remaining_period+"h remaining";
 						td.appendChild(span);
 						<?php if ($can_edit) { ?>

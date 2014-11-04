@@ -145,7 +145,7 @@ field_integer.prototype._create = function(data) {
 		};
 		this.setMaximum = function(max) {
 			t.config.max = max === null ? undefined : max;
-			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.min < max) t.config.min = max;
+			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.min > max) t.config.min = max;
 			t.setData(getValueFromInput());
 		};
 	} else {
