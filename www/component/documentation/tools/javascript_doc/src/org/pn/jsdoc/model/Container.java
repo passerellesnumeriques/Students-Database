@@ -190,7 +190,7 @@ public abstract class Container extends FinalElement {
 			if (val != null)
 				content.put(e.getKey(), val);
 			else if (!ctx.need_reevaluation)
-				content.put(e.getKey(), new ObjectClass(te.getLocation().file, "?cannot evaluate:"+te.getNode().toSource().replace("\"", "\\\"")+"?", te.getNode(), te.getDocs()));
+				content.put(e.getKey(), new ObjectClass(te.getLocation().file, "?cannot evaluate:"+te.getNode().toSource().replace("\\","\\\\").replace("\r\n"," ").replace("\n"," ").replace("\"", "\\\"")+"?", te.getNode(), te.getDocs()));
 			has_more |= ctx.need_reevaluation;
 		}
 		for (Map.Entry<String, Element> e : content.entrySet()) {

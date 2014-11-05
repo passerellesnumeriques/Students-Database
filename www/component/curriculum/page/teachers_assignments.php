@@ -114,16 +114,36 @@ class page_teachers_assignments extends Page {
 				if (!in_array($s["specialization"], $spes))
 					array_push($spes, $s["specialization"]);
 			}
+			global $specializations;
+			$specializations = $ap->specializations;
+			usort($spes, function($s1,$s2) {
+				if ($s1 == null) return -1;
+				if ($s2 == null) return 1;
+				global $specializations;
+				$sn1 = "";
+				foreach ($specializations as $s) if ($s["id"] == $s1) { $sn1 = $s["name"]; break; }
+				$sn2 = "";
+				foreach ($specializations as $s) if ($s["id"] == $s2) { $sn2 = $s["name"]; break; }
+				return strcasecmp($sn1, $sn2);
+			});
 			foreach ($spes as $spe_id) {
 				if ($spe_id <> null)
 					echo "<div class='page_section_title2'><img src='/static/curriculum/curriculum_16.png'/> Specialization ".toHTML($ap->getSpecializationName($spe_id))."</div>";
-				$classes = $ap->getClassesFor($bp["id"], $spe_id);
-				$subjects = $ap->getSubjectsFor($bp["id"], $spe_id);
+				$subjects = $ap->getSubjectsFor($bp["id"], $spe_id, false);
+				$is_common_to_all_spes = count($spes) > 1 && $spe_id == null;
+				if ($is_common_to_all_spes)
+					$classes = $ap->getClassesForBatch($bp["id"]);
+				else
+					$classes = $ap->getClassesFor($bp["id"], $spe_id);
 				if (count($classes) == 0) {
-					echo "<i>No class defined for this period</i>";
+					if (!$is_common_to_all_spes)
+						echo "<i>No class defined for this period</i>";
 				} else if (count($subjects) == 0) {
-					echo "<i>No subject defined for this period</i>";
+					if (!$is_common_to_all_spes)
+						echo "<i>No subject defined for this period</i>";
 				} else {
+					if ($is_common_to_all_spes)
+						echo "<div class='page_section_title2'><img src='/static/curriculum/curriculum_16.png'/> Subjects common to all specializations </div>";
 					$id = $this->generateID();
 					echo "<table class='subjects_table'><tbody id='$id'>";
 					echo "<tr><th>Code</th><th>Subject Description</th><th>Hours</th><th>Class(es)</th><th>Teacher(s) assigned</th></tr>";
@@ -558,9 +578,11 @@ class page_teachers_assignments extends Page {
 						span.style.fontStyle = "italic";
 						span.style.color = "#808080";
 						span.style.whiteSpace = "nowrap";
-						if (subject.hours_type == "Per week")
-							span.innerHTML = (remaining_period/nb_weeks)+"h/week remaining";
-						else
+						if (subject.hours_type == "Per week") {
+							var hs = (remaining_period/nb_weeks).toFixed(2);
+							if (hs.substring(hs.length-3) == ".00") hs = Math.floor(remaining_period/nb_weeks); 
+							span.innerHTML = hs+"h/week remaining";
+						} else
 							span.innerHTML = remaining_period+"h remaining";
 						td.appendChild(span);
 						<?php if ($can_edit) { ?>

@@ -30,6 +30,9 @@ class page_index extends Page {
 			require("jsdoc.js");
 			service.json("documentation","get_js",{},function(res){
 				require("jsdoc.js",function() {
+					//var ta = document.createElement("TEXTAREA");
+					//ta.value = res.js;
+					//document.body.appendChild(ta);
 					var fct;
 					try {
 						fct = eval("(function (){"+res.js+";this.jsdoc = jsdoc;})");
