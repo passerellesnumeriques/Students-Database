@@ -33,6 +33,7 @@ require_once("utilities.inc");
  * @property staff $staff
  * @property storage $storage
  * @property students $students
+ * @property teaching $teaching
  * @property test $test
  * @property theme $theme
  * @property transcripts $transcripts
