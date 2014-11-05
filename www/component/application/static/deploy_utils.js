@@ -77,7 +77,9 @@ function downloading(backend_url, download_url, size, file, progress_handler, en
 			}
 			progress_handler(end+1,size);
 			if (end >= size-1) { end_handler(null); return; }
-			if (content != "cache") {
+			if (content.substring(0,6) == "cache:") {
+				end = parseInt(content.substring(6));
+			} else {
 				var end_time = new Date().getTime();
 				if (end_time-start_time < 2000) speed *= 10;
 				else if (end_time-start_time < 4000) speed *= 5.5;
