@@ -5,21 +5,7 @@ class page_list extends Page {
 	
 	public function execute() {
 		$this->requireJavascript("data_list.js");
-		$batches = null;
-		if (isset($_GET["batches"])) {
-			if ($_GET["batches"] == "current") {
-				$list = PNApplication::$instance->curriculum->getCurrentBatches();
-				$batches = array();
-				foreach ($list as $b) array_push($batches, $b["id"]);
-			} else if ($_GET["batches"] == "alumni") {
-				$list = PNApplication::$instance->curriculum->getAlumniBatches();
-				$batches = array();
-				foreach ($list as $b) array_push($batches, $b["id"]);
-			}
-		}
-		if (isset($_GET["batch"])) {
-			$batches = array($_GET["batch"]);
-		}
+		require_once("component/students_groups/page/TreeFrameSelection.inc");
 		$can_manage = PNApplication::$instance->user_management->has_right("manage_batches");
 ?>
 <div id='list_container' style='width:100%;height:100%'>
@@ -56,14 +42,15 @@ if (PNApplication::$instance->help->isShown('students_list')) {
 ?>
 <script type='text/javascript'>
 var url = new URL(location.href);
-var batches = <?php echo json_encode($batches); ?>;
+var batches = <?php echo json_encode(TreeFrameSelection::getBatchesIds()); ?>;
 var can_manage = <?php echo json_encode($can_manage);?>;
 
 function build_filters() {
 	var filters = [];
-	if (url.params['class'] != null) {
-		filters.push({category:'Student',name:'Class',data:{values:[url.params['class']]},force:true});
+	if (url.params['group'] != null) {
+		filters.push({category:'Student',name:'Group',data:{values:[url.params['group']]},force:true});
 	} else if (url.params['period']) {
+		filters.push({category:'Student',name:'Group Type',data:{values:[url.params['group_type']]},force:true});
 		filters.push({category:'Student',name:'Period',data:{values:[url.params['period']]},force:true});
 		if (url.params['specialization'] != null) {
 			filters.push({category:'Student',name:'Specialization',data:{values:[url.params['specialization']]},force:true});
@@ -82,11 +69,11 @@ var data_list_fields = [
 	'Student.Batch',
 	'Student.Specialization',
 ];
-if (url.params['period']) data_list_fields.push("Student.Class");
+if (url.params['period']) data_list_fields.push("Student.Group");
 window.students_list = null;
 new data_list(
 	'list_container',
-	url.params['period'] || url.params['class'] ? 'StudentClass' : 'Student', null,
+	url.params['period'] ? 'StudentGroup' : 'Student', null,
 	data_list_fields,
 	build_filters(),
 	batches == null || batches.length > 1 ? 100 : -1,
@@ -163,8 +150,9 @@ new data_list(
 			}
 		};
 		<?php 
-		if ($batches <> null && count($batches) == 1 && $can_manage) {
-			$specializations = PNApplication::$instance->curriculum->getBatchSpecializations($batches[0]);
+		if (TreeFrameSelection::isSingleBatch() && $can_manage) {
+			$batch_id = TreeFrameSelection::getBatchId();
+			$specializations = PNApplication::$instance->curriculum->getBatchSpecializations($batch_id);
 			if (count($specializations) > 0) {
 				?>
 				var assign_spe = document.createElement("BUTTON");
@@ -173,7 +161,7 @@ new data_list(
 				assign_spe.onclick = function() {
 					window.parent.require("popup_window.js",function() {
 						var p = new window.parent.popup_window("Assign Specializations", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
-						var frame = p.setContentFrame("/dynamic/students/page/assign_specializations?batch=<?php echo $batches[0];?>&onsave=reload_list");
+						var frame = p.setContentFrame("/dynamic/students/page/assign_specializations?batch=<?php echo $batch_id;?>&onsave=reload_list");
 						frame.reload_list = reload_list;
 						p.showPercent(95,95);
 					});

@@ -5,14 +5,10 @@
 class curriculum extends Component {
 	
 	public function getPluginImplementations() {
-		require_once("TeacherPeopleTypePlugin.inc");
 		require_once("CurriculumStudentsPlugin.inc");
-		require_once("TeacherAssignmentsPeopleProfilePagePlugin.inc");
 		require_once("CurriculumDocumentsPlugin.inc");
 		return array(
-			new TeacherPeopleTypePlugin(),
 			new CurriculumStudentsPlugin(),
-			new TeacherAssignmentsPeopleProfilePagePlugin(),
 			new CurriculumAttachedDocumentsPlugin()
 		);
 	}
@@ -193,6 +189,13 @@ class curriculum extends Component {
 	 */
 	public function getSpecialization($id) {
 		return SQLQuery::create()->select("Specialization")->whereValue("Specialization", "id", $id)->executeSingleRow();
+	}
+	/** Retrieve the name of the given specialization
+	 * @param integer $id the requested specialization
+	 * @return string the name
+	 */
+	public function getSpecializationName($id) {
+		return SQLQuery::create()->select("Specialization")->whereValue("Specialization", "id", $id)->field("name")->executeSingleValue();
 	}
 	
 	/**

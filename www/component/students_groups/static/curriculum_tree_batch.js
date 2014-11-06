@@ -61,7 +61,7 @@ CurriculumTreeNode_Batch.prototype.createInfo = function() {
 	return div;
 };
 CurriculumTreeNode_Batch.prototype.getURLParameters = function() {
-	return {batch:this.batch.id};
+	return {batch:this.batch.id,group_type:group_type_id};
 };
 
 /** Open a popup to create a new batch */

@@ -9,19 +9,19 @@ function search_student(container,section) {
 				waitForFrame('application_frame', function(app_win) {
 					var app_frame = findFrame('application_frame');
 					var url = new URL(app_frame.src);
-					if (url.path != '/dynamic/curriculum/page/tree_frame') {
+					if (url.path != '/dynamic/students_groups/page/tree_frame') {
 						redirected = true;
-						app_win.location.href = '/dynamic/curriculum/page/tree_frame?section='+section+'#/dynamic/students/page/list';
-						app_frame.src = '/dynamic/curriculum/page/tree_frame?section='+section+'#/dynamic/students/page/list';
+						app_win.location.href = '/dynamic/students_groups/page/tree_frame?section='+section+'#/dynamic/students/page/list';
+						app_frame.src = '/dynamic/students_groups/page/tree_frame?section='+section+'#/dynamic/students/page/list';
 						setTimeout(function(){check();},50);
 						return;
 					}
 					url = new URL(app_win.location.href);
-					if (url.path != '/dynamic/curriculum/page/tree_frame') {
+					if (url.path != '/dynamic/students_groups/page/tree_frame') {
 						if (!redirected) {
 							redirected = true;
-							app_win.location.href = '/dynamic/curriculum/page/tree_frame?section='+section+'#/dynamic/students/page/list';
-							app_frame.src = '/dynamic/curriculum/page/tree_frame?section='+section+'#/dynamic/students/page/list';
+							app_win.location.href = '/dynamic/students_groups/page/tree_frame?section='+section+'#/dynamic/students/page/list';
+							app_frame.src = '/dynamic/students_groups/page/tree_frame?section='+section+'#/dynamic/students/page/list';
 							setTimeout(function(){check();},50);
 							return;
 						}
@@ -41,7 +41,7 @@ function search_student(container,section) {
 							setTimeout(function(){check();},50);
 							return;
 						}
-						var list_frame = findFrame('curriculum_tree_frame');
+						var list_frame = findFrame('students_groups_tree_frame');
 						if (list_frame) {
 							var list_win = getIFrameWindow(list_frame);
 							if (list_win && list_win.location) {

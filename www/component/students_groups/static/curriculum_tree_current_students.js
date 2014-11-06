@@ -32,5 +32,5 @@ CurriculumTreeNode_CurrentStudents.prototype.createInfo = function() {
 	return div;
 };
 CurriculumTreeNode_CurrentStudents.prototype.getURLParameters = function() {
-	return {batches:'current'};
+	return {batches:'current',group_type:group_type_id};
 };

@@ -19,5 +19,5 @@ CurriculumTreeNode_AllStudents.prototype.createInfo = function() {
 	return div;
 };
 CurriculumTreeNode_AllStudents.prototype.getURLParameters = function() {
-	return {}; // all students: nothing specified
+	return {group_type:group_type_id}; // all students: nothing specified
 };

@@ -1,122 +1,6 @@
 <?php 
 /* @var $model DataModel */
 
-$model->addTable("StudentsGroupType")
-	->addPrimaryKey("id")
-	->addString("name", 100, 1, false, false)
-	->addBoolean("specialization_dependent",false)
-	->addBoolean("builtin",false)
-	->addReadAccess("consult_curriculum", true)
-	->addReadAccessFromForeignTable("StudentsGroup")
-	->addWriteAccess("edit_curriculum", true)
-	->addInsertAccess("edit_curriculum", true)
-	->addRemoveAccess("edit_curriculum", true)
-	;
-
-$model->addTable("StudentsGroup")
-	->addPrimaryKey("id")
-	->addForeignKey("type", "StudentsGroupType", true, false, true)
-	->addForeignKey("parent", "StudentsGroup", true, false, true, true)
-	->addForeignKey("period", "BatchPeriod", true, false, true)
-	->addForeignKey("specialization", "Specialization", true, false, true, true)
-	->addString("name", 100, 1, false, false)
-	->addReadAccess("consult_curriculum", true)
-	->addReadAccessFromForeignTable("period")
-	->addWriteAccess("edit_curriculum", true)
-	->addInsertAccess("edit_curriculum", true)
-	->addRemoveAccess("edit_curriculum", true)
-	->onInsert(function($fields,$id,$sub_model_instance) {
-		try {
-			$period = SQLQuery::create()->bypassSecurity()
-				->select("BatchPeriod")
-				->whereValue("BatchPeriod","id",$fields["period"])
-				->field("BatchPeriod","name","period_name")
-				->join("BatchPeriod", "StudentBatch", array("batch"=>"id"))
-				->field("StudentBatch", "name", "batch_name")
-				->field("StudentBatch", "id", "batch_id")
-				->executeSingleRow()
-				;
-			$group_type = SQLQuery::create()->bypassSecurity()->select("StudentsGroupType")->whereValue("StudentsGroupType","id",$fields["type"])->field("name")->executeSingleValue();
-			$message = $group_type." <i>".toHTML($fields["name"])."</i> created for period ".toHTML($period["period_name"])." of batch ".toHTML($period["batch_name"]);
-			if (isset($fields["specialization"]) && $fields["specialization"] <> null) {
-				$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $fields["specialization"])->field("Specialization","name")->executeSingleValue();
-				$message .= " with specialization ".toHTML($spe);
-			}
-			PNApplication::$instance->news->post("students", "students", array("batch".$period["batch_id"],"period".$fields["period"]), "activity", $message);
-		} catch (Exception $e) { PNApplication::error($e); }
-	})
-	->onRemove(function($row,$sm){
-		$period = SQLQuery::create()->bypassSecurity()
-			->select("BatchPeriod")
-			->whereValue("BatchPeriod","id",$row["period"])
-			->field("BatchPeriod","name","period_name")
-			->join("BatchPeriod", "StudentBatch", array("batch"=>"id"))
-			->field("StudentBatch", "name", "batch_name")
-			->field("StudentBatch", "id", "batch_id")
-			->executeSingleRow()
-			;
-		$group_type = SQLQuery::create()->bypassSecurity()->select("StudentsGroupType")->whereValue("StudentsGroupType","id",$row["type"])->field("name")->executeSingleValue();
-		$message = $group_type." <i>".toHTML($row["name"])."</i> removed for period ".toHTML($period["period_name"])." of batch ".toHTML($period["batch_name"]);
-		if (isset($row["specialization"]) && $row["specialization"] <> null) {
-			$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $row["specialization"])->field("Specialization","name")->executeSingleValue();
-			$message .= " with specialization ".toHTML($spe);
-		}
-		PNApplication::$instance->news->post("students", "students", array("batch".$period["batch_id"],"period".$row["period"]), "activity", $message);
-	})
-	->setRowDescriptionProvider(function($row) {
-		$period = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","id",$row["period"])->executeSingleRow();
-		$batch_name = SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch","id",$period["batch"])->field("name")->executeSingleValue();
-		$group_type = SQLQuery::create()->bypassSecurity()->select("StudentsGroupType")->whereValue("StudentsGroupType","id",$row["type"])->field("name")->executeSingleValue();
-		return $group_type." <i>".toHTML($row["name"])."</i> during period <i>".toHTML($period["name"])."</i> of batch <i>".toHTML($batch_name)."</i>";
-	})
-	;
-
-$model->addTable("StudentGroup")
-	->addForeignKey("people", "People", true, false, true)
-	->addForeignKey("group", "StudentsGroup", true, false, true)
-	->setKey(array("people","group"))
-	->addIndex("people")
-	->addIndex("group")
-	->addReadFilter(function(&$q, $table_alias) { // allow a student to read its own groups
-		$q->whereValue($table_alias,"people",PNApplication::$instance->user_management->people_id);
-	})
-	->addReadAccess("consult_students_list", true)
-	->addWriteAccess("manage_batches", true) // TODO
-	->addInsertAccess("manage_batches", true)// TODO
-	->addRemoveAccess("manage_batches", true)// TODO
-	->onInsert(function($fields_values, $id, $sub_model_instance){
-		$group = PNApplication::$instance->teaching->getGroup($fields_values["group"]);
-		$group_type = PNApplication::$instance->teaching->getGroupType($group["type"]);
-		$period = PNApplication::$instance->curriculum->getBatchPeriod($group["period"]);
-		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
-		$news = PNApplication::$instance->news->getRecentPost("students", "students", "% student% of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		if ($news == null)
-			PNApplication::$instance->news->post("students", "students", array("batch".$batch["id"],"period".$period["id"],"group".$group["id"]), "activity", "1 student of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		else {
-			$i = strpos($news["html"]," ");
-			$nb = intval(substr($news["html"],0,$i));
-			$nb++;
-			PNApplication::$instance->news->updatePost($news["id"], "$nb students of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		}
-	})
-	->onRemove(function($row, $sub_model_instance){
-		$group = PNApplication::$instance->teaching->getGroup($row["group"]);
-		$group_type = PNApplication::$instance->teaching->getGroupType($group["type"]);
-		$period = PNApplication::$instance->curriculum->getBatchPeriod($group["period"]);
-		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
-		$news = PNApplication::$instance->news->getRecentPost("students", "students", "% student% of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		if ($news == null)
-			PNApplication::$instance->news->post("students", "students", array("batch".$batch["id"],"period".$period["id"],"group".$group["id"]), "activity", "1 student of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		else {
-			$i = strpos($news["html"]," ");
-			$nb = intval(substr($news["html"],0,$i));
-			$nb++;
-			PNApplication::$instance->news->updatePost($news["id"], "$nb students of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		}
-	})
-	;
-
-
 $model->addTable("SubjectTeaching")
 	->addPrimaryKey("id")
 	->addForeignKey("subject", "CurriculumSubject", true, false, true)
@@ -136,6 +20,49 @@ $model->addTable("SubjectTeachingGroups")
 	->addRemoveAccess("edit_curriculum", true)
 	;
 
+/* Teachers */
+
+$model->addTable("TeacherDates")
+	->addPrimaryKey("id")
+	->addForeignKey("people", "People", true, false, true)
+	->addDate("start", false, false, "2004-01-01","end")
+	->addDate("end", true, false, "start", null)
+	->addReadAccess("consult_curriculum", true)
+	->addReadFilter(function(&$q, $table_alias) {
+		$q->whereValue($table_alias,"people",PNApplication::$instance->user_management->people_id);
+	})
+	->addWriteAccess("edit_curriculum", true)
+	->addInsertAccess("edit_curriculum", true)
+	->addRemoveAccess("edit_curriculum", true)
+	->onInsert(function($fields_values,$id,$sm){
+		$people_id = $fields_values["people"];
+		$people = PNApplication::$instance->people->getPeople($people_id, true);
+		$dates = SQLQuery::create()->bypassSecurity()->select("TeacherDates")->whereValue("TeacherDates","people",$people_id)->execute();
+		if (count($dates) == 1) {
+			PNApplication::$instance->news->post("students","curriculum",null,"activity","New teacher: <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>");
+		} else {
+			PNApplication::$instance->news->post("students","curriculum",null,"activity","New dates for teacher <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>: from ".$fields_values["start"].($fields_values["end"] <> null ? " to ".$fields_values["end"] : ""));
+		}
+	})
+	->onBeforeUpdate(function($fields_values,$id,$sm){
+		$prev = SQLQuery::create()->bypassSecurity()->select("TeacherDates")->whereValue("TeacherDates","id",$id)->executeSingleRow();
+		$people = PNApplication::$instance->people->getPeople($prev["people"], true);
+		$message = "Update teaching dates of <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>: ";
+		$first = true;
+		if (isset($fields_values["start"]) && $fields_values["start"] <> $prev["start"]) {
+			$first = false;
+			$message .= "started on ".$fields_values["start"]." instead of ".$prev["start"];
+		}
+		if (isset($fields_values["end"]) && $fields_values["end"] <> $prev["end"]) {
+			if ($first) $first = false; else $message .= ", ";
+			if ($prev["end"] == null) $message .= "ended on ".$fields_values["end"];
+			else if ($fields_values["end"] == null) $message .= "still teaching today (previously ended on ".$prev["end"].")";
+			else $message .= "ended on ".$fields_values["end"]." instead of ".$prev["end"];
+		}
+		PNApplication::$instance->news->post("students","curriculum",null,"activity",$message);
+	})
+	;
+
 $model->addTable("TeacherAssignment")
 	->addForeignKey("subject_teaching", "SubjectTeaching", true, false, true, false)
 	->addForeignKey("people", "People", true, false, true, false)
@@ -151,5 +78,4 @@ $model->addTable("TeacherAssignment")
 	->addRemoveAccess("edit_curriculum", true)
 	// TODO news
 	;
-
 ?>

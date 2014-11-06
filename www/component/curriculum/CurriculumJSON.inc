@@ -103,12 +103,10 @@ class CurriculumJSON {
 			$periods_ids = array();
 			foreach ($periods as $p) array_push($periods_ids, $p["id"]);
 			$periods_spe = SQLQuery::create()->select("BatchPeriodSpecialization")->whereIn("BatchPeriodSpecialization","period",$periods_ids)->execute();
-			$classes = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass", "period", $periods_ids)->execute();
 		} else {
 			$periods_spe = array();
-			$classes = array();
 		}
-		return self::BatchStructure($batch, $periods, $periods_spe, $classes);
+		return self::BatchStructure($batch, $periods, $periods_spe);
 	}
 	
 	/** Build a JavaScript array of Batch
@@ -119,12 +117,11 @@ class CurriculumJSON {
 		$batches = SQLQuery::create()->select("StudentBatch")->execute();
 		$periods = SQLQuery::create()->select("BatchPeriod")->execute();
 		$periods_spe = SQLQuery::create()->select("BatchPeriodSpecialization")->execute();
-		$classes = SQLQuery::create()->select("AcademicClass")->execute();
 		$s = "[";
 		$first_batch = true;
 		foreach ($batches as $batch) {
 			if ($first_batch) $first_batch = false; else $s .= ",";
-			$s .= self::BatchStructure($batch, $periods, $periods_spe, $classes);
+			$s .= self::BatchStructure($batch, $periods, $periods_spe);
 		}
 		$s .= "]";
 		return $s;
@@ -138,7 +135,7 @@ class CurriculumJSON {
 	 * @return string the JSON structure
 	 * @no_name_check
 	 */
-	private static function BatchStructure($batch, $periods, $periods_spe, $classes) {
+	private static function BatchStructure($batch, $periods, $periods_spe) {
 		$s = "{";
 		$s .= "id:".$batch["id"];
 		$s .= ",name:".json_encode($batch["name"]);
@@ -159,18 +156,6 @@ class CurriculumJSON {
 				if ($ps["period"] <> $period["id"]) continue;
 				if ($first_spe) $first_spe = false; else $s .= ",";
 				$s .= $ps["specialization"];
-			}
-			$s .= "]";
-			$s .= ",classes:[";
-			$first_class = true;
-			foreach ($classes as $c) {
-				if ($c["period"] <> $period["id"]) continue;
-				if ($first_class) $first_class = false; else $s .= ",";
-				$s .= "{";
-				$s .= "id:".$c["id"];
-				$s .= ",name:".json_encode($c["name"]);
-				$s .= ",spe_id:".json_encode($c["specialization"]);
-				$s .= "}";
 			}
 			$s .= "]";
 			$s .= "}";

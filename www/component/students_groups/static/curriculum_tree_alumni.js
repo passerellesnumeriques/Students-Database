@@ -32,5 +32,5 @@ CurriculumTreeNode_Alumni.prototype.createInfo = function() {
 	return div;
 };
 CurriculumTreeNode_Alumni.prototype.getURLParameters = function() {
-	return {batches:'alumni'};
+	return {batches:'alumni',group_type:group_type_id};
 };

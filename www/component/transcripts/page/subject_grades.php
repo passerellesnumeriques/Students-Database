@@ -12,7 +12,7 @@ class page_subject_grades extends Page {
 			}
 			if (!isset($_GET["batch"])) {
 				// in order to select a subject, we want to be inside the tree_frame
-				echo "<script type='text/javascript'>if (window.frameElement && window.frameElement.name == 'curriculum_tree_frame') { var u = new URL(location.href); u.params['batches'] = 'all'; location.href = u.toString(); } else location.href = '/dynamic/curriculum/page/tree_frame#/dynamic/transcripts/page/subject_grades';</script>";
+				echo "<script type='text/javascript'>if (window.frameElement && window.frameElement.name == 'students_groups_tree_frame') { var u = new URL(location.href); u.params['batches'] = 'all'; location.href = u.toString(); } else location.href = '/dynamic/students_groups/page/tree_frame#/dynamic/transcripts/page/subject_grades';</script>";
 				return;
 			}
 			$batch_id = $_GET["batch"];

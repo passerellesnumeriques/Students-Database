@@ -8,12 +8,13 @@
 function CurriculumTreeNode_Specialization(parent, spe) {
 	this.spe = spe;
 	CurriculumTreeNode.call(this, parent, "period"+parent.period.id+"_specialization"+spe.id, true);
-	for (var i = 0; i < parent.period.classes.length; ++i)
-		if (parent.period.classes[i].spe_id == spe.id)
-			new CurriculumTreeNode_Class(this, parent.period.classes[i]);
+	buildGroupsTree(this, parent.period, spe);
 }
 CurriculumTreeNode_Specialization.prototype = new CurriculumTreeNode;
 CurriculumTreeNode_Specialization.prototype.constructor = CurriculumTreeNode_Specialization;
+CurriculumTreeNode_Specialization.prototype.createGroupsNodes = function() {
+	buildGroupsTree(this, this.parent.period, this.spe);
+};
 CurriculumTreeNode_Specialization.prototype.getIcon = function() { return "/static/curriculum/curriculum_16.png"; };
 CurriculumTreeNode_Specialization.prototype.createTitle = function(editable) {
 	var span = document.createElement("SPAN");
@@ -34,18 +35,20 @@ CurriculumTreeNode_Specialization.prototype.createInfo = function() {
 			editBatch(this.node.parent.parent.batch);
 		};
 		div.appendChild(button);
-		button = document.createElement("BUTTON");
-		button.className = "action green";
-		button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New Class";
-		button.title = "Create a new class";
-		button.node = this;
-		button.onclick = function() {
-			newClass(this.node.parent, this.node.spe);
-		};
-		div.appendChild(button);
+		var gt = getSelectedGroupType();
+		if (gt.specialization_dependent) {
+			button = document.createElement("BUTTON");
+			button.className = "action green";
+			button.innerHTML = "<img src='"+theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add)+"'/> New ";
+			button.appendChild(document.createTextNode(gt.name));
+			button.title = "Create a new "+gt.name+" in specialization "+this.spe.name;
+			button.node = this;
+			button.onclick = function() { newGroup(this.node); };
+			div.appendChild(button);
+		}
 	}
 	return div;
 };
 CurriculumTreeNode_Specialization.prototype.getURLParameters = function() {
-	return {batch:this.parent.parent.batch.id,period:this.parent.period.id,specialization:this.spe.id};
+	return {batch:this.parent.parent.batch.id,period:this.parent.period.id,specialization:this.spe.id,group_type:group_type_id};
 };

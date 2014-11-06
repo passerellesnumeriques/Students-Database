@@ -97,6 +97,21 @@ CurriculumTreeNode.prototype = {
 	 * @returns {Object} the parameters
 	 */
 	getURLParameters: function () {
-		return {};
-	}
+		return {group_type:group_type_id};
+	},
+	refreshGroups: function() {
+		this.removeGroupsNodes();
+		for (var i = 0; i < this.item.children.length; ++i)
+			this.item.children[i].node.refreshGroups();
+		this.createGroupsNodes();
+	},
+	removeGroupsNodes: function() {
+		for (var i = 0; i < this.item.children.length; ++i) {
+			if (this.item.children[i].node instanceof CurriculumTreeNode_Group) {
+				this.item.children[i].node.remove();
+				i--;
+			}
+		}
+	},
+	createGroupsNodes: function() {}
 };
