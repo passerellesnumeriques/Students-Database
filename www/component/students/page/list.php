@@ -170,21 +170,23 @@ new data_list(
 				<?php 
 			}
 		}
+		if ($can_manage && (TreeFrameSelection::getPeriodId() <> null || TreeFrameSelection::getGroupId() <> null)) {
+			require("component/students_groups/StudentsGroupsJSON.inc");
+			echo "var group_type = ".StudentsGroupsJSON::getGroupTypeById(TreeFrameSelection::getGroupTypeId()).";\n";
 		?>
-		if (can_manage && (url.params['period'] || url.params['class'])) {
-			var assign = document.createElement("BUTTON");
-			assign.className = "action";
-			assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+(url.params['class'] ? "class" : "classes");
-			assign.onclick = function() {
-				window.parent.require("popup_window.js",function() {
-					var p = new window.parent.popup_window("Assign Students to Classes", "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
-					var frame = p.setContentFrame("/dynamic/students/page/assign_classes?"+(url.params['class'] ? "class="+url.params['class'] : "period="+url.params['period'])+"&onsave=reload_list");
-					frame.reload_list = reload_list;
-					p.showPercent(95,95);
-				});
-			};
-			list.addFooterTool(assign);
-		}
+		var assign = document.createElement("BUTTON");
+		assign.className = "action";
+		assign.innerHTML = "<img src='/static/application/icon.php?main=/static/students/student_16.png&small="+theme.icons_10.edit+"&where=right_bottom' style='vertical-align:bottom'/> Assign students to "+group_type.name;
+		assign.onclick = function() {
+			window.parent.require("popup_window.js",function() {
+				var p = new window.parent.popup_window("Assign Students to "+group_type.name, "/static/application/icon.php?main=/static/curriculum/curriculum_16.png&small="+theme.icons_10.edit+"&where=right_bottom", "");
+				var frame = p.setContentFrame("/dynamic/students_groups/page/assign_groups?"+(url.params['group'] ? "group="+url.params['group'] : "period="+url.params['period']+"&group_type="+group_type.id)+"&onsave=reload_list");
+				frame.reload_list = reload_list;
+				p.showPercent(95,95);
+			});
+		};
+		list.addFooterTool(assign);
+		<?php } ?>
 
 		if (batches && batches.length == 1 && can_manage) {
 			var import_students = document.createElement("BUTTON");

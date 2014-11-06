@@ -30,6 +30,12 @@ class StudentsGroupsJSON {
 		return $s;
 	}
 	
+	public static function getGroupTypeById($id) {
+		$q = SQLQuery::create()->select("StudentsGroupType")->whereValue("StudentsGroupType","id",$id);
+		self::GroupTypeSQL($q);
+		return self::GroupTypeJSON($q->executeSingleRow());
+	}
+	
 	public static function getGroupsTypes() {
 		$q = SQLQuery::create()->select("StudentsGroupType");
 		self::GroupTypeSQL($q);

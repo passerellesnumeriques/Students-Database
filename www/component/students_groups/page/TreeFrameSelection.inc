@@ -33,6 +33,14 @@ class TreeFrameSelection {
 		return null;
 	}
 	
+	public static function getPeriodId() {
+		return isset($_GET["period"]) ? intval($_GET["period"]) : null;
+	}
+	
+	public static function getGroupTypeId() {
+		return isset($_GET["group_type"]) ? intval($_GET["group_type"]) : 1;
+	}
+	
 	public static function getGroupId() {
 		return isset($_GET["group"]) ? intval($_GET["group"]) : null;
 	}

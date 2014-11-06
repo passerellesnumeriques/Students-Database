@@ -1,5 +1,5 @@
 <?php 
-class page_assign_classes extends Page {
+class page_assign_groups extends Page {
 	
 	public function getRequiredRights() { return array("manage_batches"); }
 	
@@ -14,6 +14,8 @@ class page_assign_classes extends Page {
 		$sections = array();
 		if ($period_id <> null) {
 			// we are on a period
+			$group_type_id = $_GET["group_type"];
+			$group_type = PNApplication::$instance->students_groups->getGroupType($group_type_id);
 			// get all students for this period
 			$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, false, false);
 			$q_students->orderBy("People", "last_name");
@@ -21,57 +23,60 @@ class page_assign_classes extends Page {
 			$students = $q_students->execute();
 			$students_ids = array();
 			foreach ($students as $s) array_push($students_ids, $s["people"]);
-			// get class assignment
+			// get group assignment
 			if (count($students) > 0) {
-				$q = SQLQuery::create()->select("StudentClass");
-				PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period_id);
-				$q->whereIn("StudentClass", "people", $students_ids);
-				$q->field("StudentClass", "people", "people");
-				$q->field("AcademicClass", "id", "class");
-				$students_classes = $q->execute();
+				$students_groups = SQLQuery::create()->select("StudentGroup")
+					->join("StudentGroup","StudentsGroup",array("group"=>"id"))
+					->whereValue("StudentsGroup","type",$group_type_id)
+					->whereValue("StudentsGroup","period",$period_id)
+					->whereIn("StudentGroup", "people", $students_ids)
+					->field("StudentGroup", "people", "people")
+					->field("StudentsGroup", "id", "group")
+					->execute();
 			} else
-				$students_classes = array();
+				$students_groups = array();
 			foreach ($students as &$s) {
-				foreach ($students_classes as $sc) {
-					if ($sc["people"] == $s["people"]) {
-						$s["class"] = $sc["class"];
+				foreach ($students_groups as $g) {
+					if ($g["people"] == $s["people"]) {
+						$s["group"] = $g["group"];
 						break;
 					}
 				}
-				if (!isset($s["class"])) $s["class"] = null;
+				if (!isset($s["group"])) $s["group"] = null;
 			}
-			// check if this period is specialized
-			$specializations = PNApplication::$instance->curriculum->getBatchPeriodSpecializationsWithName($period_id);
-			$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id);
+			// check if this period is specialized and the groups are specialization dependent
+			$specializations = $group_type["specialization_dependent"] == 1 ? PNApplication::$instance->curriculum->getBatchPeriodSpecializationsWithName($period_id) : array();
+			$groups = PNApplication::$instance->students_groups->getGroups($group_type_id, $period_id);
+			$groups_tree = PNApplication::$instance->students_groups->buildGroupTree($groups);
+			$groups = PNApplication::$instance->students_groups->getFinalGroupsFromTree($groups_tree);
 			if (count($specializations) > 0) {
 				// specialized period
 				foreach ($specializations as $spe) {
 					$list_students = array();
 					foreach ($students as &$s) if ($s["specialization"] == $spe["id"]) array_push($list_students, $s);
-					$list_classes = array();
-					foreach ($classes as $cl) if ($cl["specialization"] == $spe["id"]) array_push($list_classes, $cl);
-					array_push($sections, array($spe["name"],$list_classes,$list_students));
+					$list_groups = array();
+					foreach ($groups as $g) if ($g["specialization"] == $spe["id"]) array_push($list_groups, $cl);
+					array_push($sections, array($spe["name"],$list_groups,$list_students));
 				}
 			} else {
 				// not specialized period
-				array_push($sections, array(null,$classes,$students));
+				array_push($sections, array(null,$groups,$students));
 			}
 		} else {
-			// we are on a class
-			$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
-			$period_id = $class["period"];
-			if ($class["specialization"] <> null) {
-				// specialized class
-				// get classes in this specialization
-				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id, $class["specialization"]);
+			// we are on a group
+			$group = PNApplication::$instance->students_groups->getGroup($_GET["group"]);
+			$period_id = $group["period"];
+			// get groups with the same specialization
+			$groups = PNApplication::$instance->students_groups->getGroups($group_type_id, $period_id, $group["specialization"]);
+			if ($group["specialization"] <> null) {
+				// specialized group
 				// get students from the specialization
-				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $class["specialization"],false);
+				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $group["specialization"],false);
 				$q_students->orderBy("People", "last_name");
 				$q_students->orderBy("People", "first_name");
 				$students = $q_students->execute();
 			} else {
-				// not specialized class
-				$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period_id);
+				// not specialized group
 				$q_students = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, false,false);
 				$q_students->orderBy("People", "last_name");
 				$q_students->orderBy("People", "first_name");
@@ -79,42 +84,48 @@ class page_assign_classes extends Page {
 			}
 			$students_ids = array();
 			foreach ($students as &$s) array_push($students_ids, $s["people"]);
-			// get class assignment
+			// get group assignment
 			if (count($students) > 0) {
-				$q = SQLQuery::create()->select("StudentClass");
-				PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period_id);
-				$q->whereIn("StudentClass", "people", $students_ids);
-				$q->field("StudentClass", "people", "people");
-				$q->field("AcademicClass", "id", "class");
-				$students_classes = $q->execute();
+				$students_groups = SQLQuery::create()->select("StudentGroup")
+					->join("StudentGroup","StudentsGroup",array("group"=>"id"))
+					->whereValue("StudentsGroup","type",$group_type_id)
+					->whereValue("StudentsGroup","period",$period_id)
+					->whereIn("StudentGroup", "people", $students_ids)
+					->field("StudentGroup", "people", "people")
+					->field("StudentsGroup", "id", "group")
+					->execute();
 			} else
-				$students_classes = array();
+				$students_groups = array();
 			foreach ($students as &$s) {
-				foreach ($students_classes as $sc) {
-					if ($sc["people"] == $s["people"]) {
-						$s["class"] = $sc["class"];
+				foreach ($students_groups as $g) {
+					if ($g["people"] == $s["people"]) {
+						$s["group"] = $g["group"];
 						break;
 					}
 				}
-				if (!isset($s["class"])) $s["class"] = null;
+				if (!isset($s["group"])) $s["group"] = null;
 			}
-			array_push($sections, array(null, $classes, $students));
+			array_push($sections, array(null, $groups, $students));
 		}
 		
 		// get previous period if any, and students assignments
 		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
 		$previous_academic_period = PNApplication::$instance->curriculum->getPreviousAcademicPeriod($period["academic_period_start"]);
-		$previous_classes = null;
+		$previous_groups = null;
 		$previous_batch_period = null;
 		while ($previous_academic_period <> null) {
-			$previous_classes = null;
+			$previous_groups = null;
 			$previous_batch_period = PNApplication::$instance->curriculum->getBatchPeriodFromAcademicPeriod($period["batch"], $previous_academic_period["id"]);
 			if ($previous_batch_period <> null) {
-				$previous_classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($previous_batch_period["id"]);
-				$previous_classes_ids = array();
-				foreach ($previous_classes as $pc) array_push($previous_classes_ids, $pc["id"]);
-				$previous_classes_students = SQLQuery::create()->select("StudentClass")->whereIn("StudentClass","class",$previous_classes_ids)->execute();
-				if (count($previous_classes) > 0) break;
+				$previous_groups = PNApplication::$instance->students_groups->getGroups($group_type_id, $previous_batch_period["id"]);
+				$previous_groups = PNApplication::$instance->students_groups->buildGroupTree($previous_groups);
+				$previous_groups = PNApplication::$instance->students_groups->getFinalGroupsFromTree($previous_groups);
+				$previous_groups_ids = array();
+				foreach ($previous_groups as $pg) array_push($previous_groups_ids, $pg["id"]);
+				$previous_groups_students = SQLQuery::create()->select("StudentGroup")
+					->whereIn("StudentGroup","group",$previous_groups_ids)
+					->execute();
+				if (count($previous_groups) > 0) break;
 			}
 			$previous_academic_period = PNApplication::$instance->curriculum->getPreviousAcademicPeriod($previous_academic_period["start"]);
 		}
@@ -138,10 +149,11 @@ class page_assign_classes extends Page {
 		var assign, container, sec;
 		var assigns = [];
 
-		var classes = [];
-		function getClassName(id) {
-			for (var i = 0; i < classes.length; ++i)
-				if (classes[i].id == id) return classes[i].name;
+		var group_type = <?php echo json_encode($group_type);?>;
+		var groups = [];
+		function getGroupName(id) {
+			for (var i = 0; i < groups.length; ++i)
+				if (groups[i].id == id) return groups[i].name;
 			return "";
 		}
 		var students = <?php echo PeopleJSON::Peoples($students);?>;
@@ -150,26 +162,26 @@ class page_assign_classes extends Page {
 			return null;
 		}
 
-		var previous_classes = <?php echo json_encode($previous_classes);?>;
+		var previous_groups = <?php echo json_encode($previous_groups);?>;
 		<?php
-		if ($previous_classes <> null && count($previous_classes) > 0)
-			echo "var previous_assignments = ".json_encode($previous_classes_students).";"; 
+		if ($previous_groups <> null && count($previous_groups) > 0)
+			echo "var previous_assignments = ".json_encode($previous_groups_students).";"; 
 		?>
 
 		function fromPreviousPeriod(button, assign) {
 			require("context_menu.js",function() {
 				var menu = new context_menu();
-				for (var i = 0; i < previous_classes.length; ++i) {
-					menu.addIconItem(null, "Class "+previous_classes[i].name, function(ev,class_id) {
+				for (var i = 0; i < previous_groups.length; ++i) {
+					menu.addIconItem(null, group_type.name+" "+previous_groups[i].name+(previous_groups[i].path.length > 0 ? "("+previous_groups[i].path+")" : ""), function(ev,group_id) {
 						var elements = [];
 						for (var i = 0; i < previous_assignments.length; ++i)
-							if (previous_assignments[i]["class"] == class_id) {
+							if (previous_assignments[i]["group"] == group_id) {
 								var student = getStudent(previous_assignments[i]["people"]);
 								if (student != null)
 									elements.push(student);
 							}
 						assign.selectUnassigned(elements);
-					}, previous_classes[i].id);
+					}, previous_groups[i].id);
 				}
 				menu.showBelowElement(button);
 			});
@@ -190,7 +202,7 @@ class page_assign_classes extends Page {
 		<?php
 		foreach ($sections as $section) {
 			$section_name = $section[0];
-			$classes = $section[1];
+			$groups = $section[1];
 			$students = $section[2];
 			if ($section_name <> null) {
 				echo "container = document.createElement('DIV');\n";
@@ -203,14 +215,14 @@ class page_assign_classes extends Page {
 			} else
 				echo "container = document.getElementById('top_container');\n";
 			echo "assign = new assign_elements(container,".($section_name<>null?"'sub'":"null").",null,display_people,function(assign){\n";
-			foreach ($classes as $cl) {
-				echo "\tassign.addPossibleAssignment(".$cl["id"].",null,".json_encode($cl["name"]).");\n";
-				echo "\tclasses.push({id:".$cl["id"].",name:".json_encode($cl["name"])."});\n";
+			foreach ($groups as $g) {
+				echo "\tassign.addPossibleAssignment(".$g["id"].",null,".json_encode($g["name"].($g["path"] <> "" ? "(".$g["path"].")" : "")).");\n";
+				echo "\tgroups.push({id:".$g["id"].",name:".json_encode($g["name"].($g["path"] <> "" ? "(".$g["path"].")" : ""))."});\n";
 			}
 			foreach ($students as &$s) {
-				echo "\tassign.addElement(getStudent(".$s["people_id"]."),".json_encode($s["class"]).",true);\n";
+				echo "\tassign.addElement(getStudent(".$s["people_id"]."),".json_encode($s["group"]).",true);\n";
 			}
-			echo "\tif (previous_classes) assign.addUnassignedButton(null,'From '+".json_encode($previous_batch_period["name"]).",function(){fromPreviousPeriod(this,assign);});\n";
+			echo "\tif (previous_groups) assign.addUnassignedButton(null,'From '+".json_encode($previous_batch_period["name"]).",function(){fromPreviousPeriod(this,assign);});\n";
 			echo "\tassign.onchange.add_listener(changed);\n";
 			echo "\tlayout.changed(assign.container);\n";
 			echo "});\n";
@@ -218,7 +230,7 @@ class page_assign_classes extends Page {
 		}
 		?>
 		function save() {
-			var lock = lock_screen(null, "Saving class assignments...");
+			var lock = lock_screen(null, "Saving assignments...");
 			var changes = [];
 			for (var i = 0; i < assigns.length; ++i) changes.push(assigns[i].getChanges());
 			var next = function(index_assign, index_people) {
@@ -237,10 +249,10 @@ class page_assign_classes extends Page {
 				var current = peoples[index_people].current;
 				var people = peoples[index_people].element;
 				if (current == null)
-					set_lock_screen_content(lock,"Unassign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" from class "+getClassName(original).toHTML());
+					set_lock_screen_content(lock,"Unassign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" from "+group_type.name+" "+getGroupName(original).toHTML());
 				else
-					set_lock_screen_content(lock,"Assign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" to class "+getClassName(current).toHTML());
-				service.json("students","assign_class",{student:people.id,clas:current,period:<?php echo $period_id;?>},function(res){
+					set_lock_screen_content(lock,"Assign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" to "+group_type.name+" "+getGroupName(current).toHTML());
+				service.json("students_groups","assign_group",{student:people.id,group:current,period:<?php echo $period_id;?>,group_type:<?php echo $group_type_id;?>},function(res){
 					next(index_assign,index_people+1);
 				});
 			};

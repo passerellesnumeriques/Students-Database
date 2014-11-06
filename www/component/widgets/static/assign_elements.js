@@ -234,7 +234,7 @@ function assign_elements_section(assign,icon,title,css,element_display_provider)
 	};
 	this.changesSaved = function() {
 		for (var i = 0; i < t._elements.length; ++i)
-			t._elements[i].element.current = t._elements[i].element.original;
+			t._elements[i].element.original = t._elements[i].element.current;
 	};
 	
 	this.selectElements = function(elements) {

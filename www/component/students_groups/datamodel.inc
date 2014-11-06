@@ -73,7 +73,7 @@ $model->addTable("StudentGroup")
 	->addRemoveAccess("manage_batches", true)// TODO
 	->onInsert(function($fields_values, $id, $sub_model_instance){
 		$group = PNApplication::$instance->students_groups->getGroup($fields_values["group"]);
-		$group_type = PNApplication::$instance->students_group->getGroupType($group["type"]);
+		$group_type = PNApplication::$instance->students_groups->getGroupType($group["type"]);
 		$period = PNApplication::$instance->curriculum->getBatchPeriod($group["period"]);
 		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
 		$news = PNApplication::$instance->news->getRecentPost("students", "students", "% student% of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
@@ -88,7 +88,7 @@ $model->addTable("StudentGroup")
 	})
 	->onRemove(function($row, $sub_model_instance){
 		$group = PNApplication::$instance->students_groups->getGroup($row["group"]);
-		$group_type = PNApplication::$instance->students_group->getGroupType($group["type"]);
+		$group_type = PNApplication::$instance->students_groups->getGroupType($group["type"]);
 		$period = PNApplication::$instance->curriculum->getBatchPeriod($group["period"]);
 		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
 		$news = PNApplication::$instance->news->getRecentPost("students", "students", "% student% of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));

@@ -69,37 +69,6 @@ class students extends Component {
 		return true;
 	}
 	
-	public function assign_student_to_class($student_people_id, $class_id, $period_id) {
-		// check the class exists
-		if ($class_id <> null) {
-			$class = PNApplication::$instance->curriculum->getAcademicClass($class_id);
-			if ($class == null) { PNApplication::error("Invalid class id"); return false; }
-			if ($class["period"] <> $period_id) { PNApplication::error("The class is not in the given academic period"); return false; }
-		}
-		// check the student exists
-		$student = SQLQuery::create()->select("Student")->where("people", $student_people_id)->executeSingleRow();
-		if ($student == null) { PNApplication::error("Invalid student id"); return false; }
-		// check the class specialization is compatible to student specialization
-		if ($class_id <> null) {
-			if ($class["specialization"] <> null && $class["specialization"] <> $student["specialization"]) { PNApplication::error("Student's specialization does not match with class' specialization"); return false; }
-		}
-		// get the assignment of this student for this academic period
-		$q = SQLQuery::create()
-			->select("StudentClass")
-			->whereValue("StudentClass", "people", $student_people_id)
-			->field("StudentClass", "class", "class")
-			;
-		PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class", $period_id);
-		$assigned = $q->execute();
-		// do it
-		foreach ($assigned as $a)
-			SQLQuery::create()->removeKey("StudentClass", array("people"=>$student_people_id,"class"=>$a["class"]));
-		if ($class_id <> null) {
-			SQLQuery::create()->insert("StudentClass", array("people"=>$student_people_id,"class"=>$class_id));
-		}
-		return true;
-	}
-	
 	public function getStudentsQueryForBatchPeriod($period_id, $include_people_info = true, $include_excluded = false, $restrict_specialization = false, $assigned_to_classes = true) {
 		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
 		if (!$assigned_to_classes) {
