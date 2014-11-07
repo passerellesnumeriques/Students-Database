@@ -215,6 +215,10 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	public static function getSubjectsCategories() {
+		return self::SubjectCategoriesJSON(SQLQuery::create()->select("CurriculumSubjectCategory")->execute());
+	}
+	
 	/** Build a JSON structure Subject
 	 * @param array $subject the subject from the database
 	 * @return string the JSON structure

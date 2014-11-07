@@ -7,40 +7,15 @@ class page_teachers_assignments extends Page {
 		$academic_period_id = @$_GET["period"];
 		if ($academic_period_id == null) {
 			// by default, get the current one
-			$today = date("Y-m-d", time());
-			$academic_period = SQLQuery::create()
-				->select("AcademicPeriod")
-				->where("`start` <= '".$today."'")
-				->where("`end` >= '".$today."'")
-				->executeSingleRow();
-			if ($academic_period == null) {
-				// next one
-				$academic_period = SQLQuery::create()
-					->select("AcademicPeriod")
-					->where("`start` >= '".$today."'")
-					->orderBy("AcademicPeriod","start")
-					->limit(0, 1)
-					->executeSingleRow();
-				if ($academic_period == null) {
-					// last one
-					$academic_period = SQLQuery::create()
-						->select("AcademicPeriod")
-						->orderBy("AcademicPeriod","start", false)
-						->limit(0, 1)
-						->executeSingleRow();
-				}
-			}
+			$academic_period = PNApplication::$instance->curriculum->getCurrentAcademicPeriod(true);
 			$academic_period_id = @$academic_period["id"];
 			if ($academic_period_id == null) $academic_period_id = 0;
 		} else
-			$academic_period = SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$academic_period_id)->executeSingleRow();
-		
-		$years = SQLQuery::create()->select("AcademicYear")->execute();
-		$periods = SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod","start")->execute();
+			$academic_period = PNApplication::$instance->curriculum->getAcademicPeriod($academic_period_id);
 
-		require_once("AcademicPeriod.inc");
-		$ap = $academic_period <> null ? new AcademicPeriod($academic_period) : null;
-		
+		$years = PNApplication::$instance->curriculum->getAcademicYears();
+		$periods = PNApplication::$instance->curriculum->getAcademicPeriods();
+
 		$can_edit = isset($_GET["edit"]) && PNApplication::$instance->user_management->has_right("edit_curriculum");
 		
 		$locked_by = null;
@@ -54,12 +29,13 @@ class page_teachers_assignments extends Page {
 		}
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
+		require_once("component/students_groups/StudentsGroupsJSON.inc");
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		?>
 		<div style="width:100%;height:100%;display:flex;flex-direction:column">
 		<div class='page_title' style='flex:none'>
-			<img src='/static/curriculum/teacher_assign_32.png'/>
+			<img src='/static/teaching/teacher_assign_32.png'/>
 			Teachers Assignments
 			<?php 
 			if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
@@ -72,7 +48,7 @@ class page_teachers_assignments extends Page {
 			?>
 		</div>
 		<?php
-		if ($ap == null) {
+		if ($academic_period == null) {
 			echo "<div style='background-color:white;padding:15px;'><center><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> <i>No academic period defined yet.</i><center></div>";
 			return;
 		} 
@@ -99,86 +75,119 @@ class page_teachers_assignments extends Page {
 		<div style="flex:1 1 auto;display:flex;flex-direction:row">
 		<div style="flex:1 1 auto;overflow:auto;">
 		<?php 
-		if ($ap <> null)
-		foreach ($ap->batch_periods as $bp) {
-			echo "<div style='background-color:white;margin-left:5px;' class='section'>";
-			echo "<div class='page_section_title'>";
-			echo "Batch ".toHTML($bp["batch_name"]).", ".toHTML($bp["name"]);
-			echo "</div>";
-			$bp_subjects = $ap->getSubjectsForBatch($bp["id"]);
-			if (count($bp_subjects) == 0)
-				echo "<i>No subject defined for this period</i>";
-			$spes = array();
-			foreach ($bp_subjects as $s) {
-				if ($s["period"] <> $bp["id"]) continue;
-				if (!in_array($s["specialization"], $spes))
-					array_push($spes, $s["specialization"]);
-			}
-			global $specializations;
-			$specializations = $ap->specializations;
-			usort($spes, function($s1,$s2) {
-				if ($s1 == null) return -1;
-				if ($s2 == null) return 1;
-				global $specializations;
-				$sn1 = "";
-				foreach ($specializations as $s) if ($s["id"] == $s1) { $sn1 = $s["name"]; break; }
-				$sn2 = "";
-				foreach ($specializations as $s) if ($s["id"] == $s2) { $sn2 = $s["name"]; break; }
-				return strcasecmp($sn1, $sn2);
-			});
-			foreach ($spes as $spe_id) {
-				if ($spe_id <> null)
-					echo "<div class='page_section_title2'><img src='/static/curriculum/curriculum_16.png'/> Specialization ".toHTML($ap->getSpecializationName($spe_id))."</div>";
-				$subjects = $ap->getSubjectsFor($bp["id"], $spe_id, false);
-				$is_common_to_all_spes = count($spes) > 1 && $spe_id == null;
-				if ($is_common_to_all_spes)
-					$classes = $ap->getClassesForBatch($bp["id"]);
+		$batch_periods_ids = array();
+		$all_groups = array();
+		if ($academic_period <> null) {
+			$batch_periods = PNApplication::$instance->curriculum->getBatchPeriodsForAcademicPeriods(array($academic_period_id), true);
+			foreach ($batch_periods as $bp) {
+				array_push($batch_periods_ids, $bp["id"]);
+				echo "<div style='background-color:white;margin-left:5px;' class='section'>";
+				echo "<div class='page_section_title'>";
+				echo "Batch ".toHTML($bp["batch_name"]).", ".toHTML($bp["name"]);
+				echo "</div>";
+				$bp_subjects = PNApplication::$instance->curriculum->getSubjects($bp["batch"], $bp["id"]);
+				$bp_subjects_ids = array();
+				foreach ($bp_subjects as $s) array_push($bp_subjects_ids, $s["id"]);
+				$bp_subjects_teaching = SQLQuery::create()->select("SubjectTeaching")->whereIn("SubjectTeaching","subject",$bp_subjects_ids)->execute();
+				$bp_subjects_teaching_ids = array();
+				foreach ($bp_subjects_teaching as $s) array_push($bp_subjects_teaching_ids, $s["id"]);
+				if (count($bp_subjects_teaching_ids) > 0)
+					$teaching_groups = SQLQuery::create()->select("SubjectTeachingGroups")->whereIn("SubjectTeachingGroups","subject_teaching",$bp_subjects_teaching_ids)->execute();
 				else
-					$classes = $ap->getClassesFor($bp["id"], $spe_id);
-				if (count($classes) == 0) {
-					if (!$is_common_to_all_spes)
-						echo "<i>No class defined for this period</i>";
-				} else if (count($subjects) == 0) {
-					if (!$is_common_to_all_spes)
-						echo "<i>No subject defined for this period</i>";
-				} else {
-					if ($is_common_to_all_spes)
-						echo "<div class='page_section_title2'><img src='/static/curriculum/curriculum_16.png'/> Subjects common to all specializations </div>";
-					$id = $this->generateID();
-					echo "<table class='subjects_table'><tbody id='$id'>";
-					echo "<tr><th>Code</th><th>Subject Description</th><th>Hours</th><th>Class(es)</th><th>Teacher(s) assigned</th></tr>";
-					echo "</tbody></table>";
-					$subjects_classes = $ap->getMergedClasses($subjects, $classes);
-					$json = "[";
-					$first = true;
-					foreach ($subjects_classes as $sc) {
-						if ($first) $first = false; else $json .= ",";
-						$json .= "{";
-						$json .= "subject:".CurriculumJSON::SubjectJSON($sc["subject"]);
-						$json .= ",classes:[";
-						$first_merged_class = true;
-						foreach ($sc["classes"] as $scs) {
-							if ($first_merged_class) $first_merged_class = false; else $json .= ",";
-							$json .= json_encode($scs);
-						}
-						$json .= "]";
-						$json .= "}";
+					$teaching_groups = array();
+				if (count($bp_subjects) == 0)
+					echo "<i>No subject defined for this period</i>";
+				else {
+					$spes = array();
+					foreach ($bp_subjects as $s) {
+						if ($s["period"] <> $bp["id"]) continue;
+						if (!in_array($s["specialization"], $spes))
+							array_push($spes, $s["specialization"]);
 					}
-					$json .= "]";
-					$this->onload("new PeriodSubjects('$id',".$json.");");
+					global $specializations;
+					$specializations = PNApplication::$instance->curriculum->getSpecializations();
+					usort($spes, function($s1,$s2) {
+						if ($s1 == null) return -1;
+						if ($s2 == null) return 1;
+						global $specializations;
+						$sn1 = "";
+						foreach ($specializations as $s) if ($s["id"] == $s1) { $sn1 = $s["name"]; break; }
+						$sn2 = "";
+						foreach ($specializations as $s) if ($s["id"] == $s2) { $sn2 = $s["name"]; break; }
+						return strcasecmp($sn1, $sn2);
+					});
+					foreach ($spes as $spe_id) {
+						if ($spe_id <> null)
+							echo "<div class='page_section_title2'><img src='/static/curriculum/curriculum_16.png'/> Specialization ".toHTML($this->getSpecializationName($spe_id))."</div>";
+						$is_common_to_all_spes = count($spes) > 1 && $spe_id == null;
+						// get subjects for this specialization
+						$subjects = array();
+						foreach ($bp_subjects as $s) if ($s["specialization"] == $spe_id) array_push($subjects, $s);
+						// get groups for this period and spe
+						$groups = PNApplication::$instance->students_groups->getGroups(null, $bp["id"], $is_common_to_all_spes ? false : $spe_id);
+						$classes = array();
+						foreach ($groups as $g) {
+							if ($g["type"] == 1) array_push($classes, $g);
+							array_push($all_groups, $g);
+						}
+						if (count($classes) == 0 && count($groups) > 0) {
+							echo "<div><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> <i>No class defined for this period</i></div>";
+						}
+						if (count($groups) == 0) {
+							if (!$is_common_to_all_spes)
+								echo "<i>No class or group defined for this period</i>";
+						} else if (count($subjects) == 0) {
+							if (!$is_common_to_all_spes)
+								echo "<i>No subject defined for this period</i>";
+						} else {
+							if ($is_common_to_all_spes)
+								echo "<div class='page_section_title2'><img src='/static/curriculum/curriculum_16.png'/> Subjects common to all specializations </div>";
+							$id = $this->generateID();
+							echo "<table class='subjects_table'><tbody id='$id'>";
+							echo "<tr><th>Code</th><th>Subject Description</th><th>Hours</th><th>Class/Group</th><th>Teacher(s) assigned</th></tr>";
+							echo "</tbody></table>";
+							$json = "[";
+							$first = true;
+							foreach ($subjects as $s) {
+								if ($first) $first = false; else $json .= ",";
+								$json .= "{";
+								$json .= "subject:".CurriculumJSON::SubjectJSON($s);
+								$json .= ",grouping:[";
+								$first_grouping = true;
+								foreach ($bp_subjects_teaching as $st) {
+									if ($st["subject"] <> $s["id"]) continue;
+									if ($first_grouping) $first_grouping = false; else $json .= ",";
+									$json .= "{";
+									$json .= "teaching_id:".$st["id"];
+									$json .= ",groups:[";
+									$first_group = true;
+									foreach ($teaching_groups as $tg) {
+										if ($tg["subject_teaching"] <> $st["id"]) continue;
+										if ($first_group) $first_group = false; else $json .= ",";
+										$json .= json_encode($tg["group"]);
+									}
+									$json .= "]}";
+								}
+								$json .= "]";
+								$json .= "}";
+							}
+							$json .= "]";
+							$this->onload("new PeriodSubjects('$id',".$json.");");
+						}
+					}
 				}
+				echo "</div>";
 			}
-			echo "</div>";
 		}
 		?>
 		</div>
-		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white;overflow:auto;' icon='/static/curriculum/teacher_16.png' title='Available Teachers' collapsable='false'>
+		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white;overflow:auto;' icon='/static/teaching/teacher_16.png' title='Available Teachers' collapsable='false'>
 		<div id='teachers_list' style='background-color:white'>
 		<?php $id = $this->generateID();?>
 		<table class='teachers_table'><tbody id='<?php echo $id;?>'>
 		<tr><th>Teacher</th><th>Hours</th></tr>
 		</tbody></table>
-		<?php $this->onload("TeachersTable('$id');")?>
+		<?php //$this->onload("TeachersTable('$id');")?>
 		</div>
 		<?php $this->onload("sectionFromHTML('teachers_section');")?>
 		</div>
@@ -255,9 +264,44 @@ class page_teachers_assignments extends Page {
 		}
 		</style>
 		<script type='text/javascript'>
-		var academic_period = <?php echo CurriculumJSON::AcademicPeriodJSONFromDB($ap->academic_period);?>;
+		var academic_period = <?php echo CurriculumJSON::AcademicPeriodJSONFromDB($academic_period);?>;
 		var nb_weeks = (academic_period.weeks-academic_period.weeks_break);
-		var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON($ap->categories);?>;
+		var categories = <?php echo CurriculumJSON::getSubjectsCategories();?>;
+		var group_types = <?php echo StudentsGroupsJSON::getGroupsTypes(); ?>;
+		var all_groups = <?php echo json_encode($all_groups); ?>;
+		var editing = <?php echo json_encode($can_edit);?>;
+		
+
+		function getGroupType(id) {
+			for (var i = 0; i < group_types.length; ++i)
+				if (group_types[i].id == id) return group_types[i];
+			return null;
+		}
+
+		function getGroup(group_id) {
+			for (var i = 0; i < all_groups.length; ++i)
+				if (all_groups[i].id == group_id) return all_groups[i];
+			return null;
+		}
+
+		function getGroupsHTML(groups_ids) {
+			var span = document.createElement("SPAN");
+			for (var i = 0; i < groups_ids.length; ++i) {
+				if (i > 0) span.appendChild(document.createTextNode(" + "));
+				var group = getGroup(groups_ids[i]);
+				var group_type = getGroupType(group.type);
+				var s = document.createElement("SPAN");
+				s.style.whiteSpace = "nowrap";
+				s.appendChild(document.createTextNode(group_type.name+" "+group.name));
+				span.appendChild(s);
+			}
+			return span;
+		};
+
+		
+
+<?php /*
+		
 		var classes = <?php echo CurriculumJSON::AcademicClassesJSON($ap->classes);?>;
 		var subjects = <?php echo CurriculumJSON::SubjectsJSON($ap->subjects);?>;
 		var teachers = <?php echo $ap->teachersJSON();?>;
@@ -281,6 +325,14 @@ class page_teachers_assignments extends Page {
 			for (var i = 0; i < teachers.length; ++i)
 				if (teachers[i].id == people_id) return teachers[i];
 		}
+
+*/?>
+
+
+
+
+
+
 		
 		function PeriodSubjects(table_id, subjects) {
 			var table = document.getElementById(table_id);
@@ -302,26 +354,27 @@ class page_teachers_assignments extends Page {
 					td.innerHTML = "<i>Not specified</i>";
 				else
 					td.appendChild(document.createTextNode((total/nb_weeks).toFixed(2)+"h/week x "+nb_weeks+" = "+total+"h"));
-				new SubjectClasses(tr, subjects[i].classes, subjects[i].subject);
+				new SubjectGroupings(tr, subjects[i].grouping, subjects[i].subject);
 			}
 		}
-		function SubjectClasses(main_tr, classes, subject) {
+		function SubjectGroupings(main_tr, groupings, subject) {
 			this.main_tr = main_tr;
-			this.classes = classes;
+			this.groupings = groupings;
 			this.sub_tr = [];
 			this.update = function() {
 				// remove sub_tr
 				for (var i = 0; i < this.sub_tr.length; ++i) this.sub_tr[i].parentNode.removeChild(this.sub_tr[i]);
 				this.sub_tr = [];
 				// reset rowSpan
-				this.main_tr.childNodes[0].rowSpan = this.classes.length; // code
-				this.main_tr.childNodes[1].rowSpan = this.classes.length; // name
-				this.main_tr.childNodes[2].rowSpan = this.classes.length; // hours
+				var rowspan = editing ? this.groupings.length+1 : (this.groupings.length == 0 ? 1 : this.groupings.length);
+				this.main_tr.childNodes[0].rowSpan = rowspan; // code
+				this.main_tr.childNodes[1].rowSpan = rowspan; // name
+				this.main_tr.childNodes[2].rowSpan = rowspan; // hours
 				// remove first row
 				while (this.main_tr.childNodes.length > 3) this.main_tr.removeChild(this.main_tr.childNodes[3]);
 				// create each row
 				var next = this.main_tr.nextSibling;
-				for (var i = 0; i < this.classes.length; ++i) {
+				for (var i = 0; i < this.groupings.length; ++i) {
 					var tr;
 					if (i == 0) tr = this.main_tr;
 					else {
@@ -330,41 +383,63 @@ class page_teachers_assignments extends Page {
 						else this.main_tr.parentNode.appendChild(tr);
 						this.sub_tr.push(tr);
 					}
-					this.createClassRow(tr, this.classes[i], i==0, i == this.classes.length-1); 
+					this.createGroupingRow(tr, this.groupings[i], i==0, i == this.groupings.length-1 && !editing); 
+				}
+				if (this.groupings.length == 0 || editing) {
+					var td = document.createElement("TD");
+					td.colSpan = 2;
+					if (this.groupings.length == 0)
+						td.innerHTML = "<div style='color:darkorange;font-style:italic'>No class planned yet</div>";
+					if (editing) {
+						var add_button = document.createElement("BUTTON");
+						add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+						add_button.className = "flat small_icon";
+						add_button.title = "Plan a new class (one or more groups following this subject together)";
+						add_button.onclick = function() {
+							// TODO
+						};
+						td.appendChild(add_button);
+					}
+					var tr;
+					if (this.groupings.length == 0) tr = this.main_tr;
+					else {
+						tr = document.createElement("TR");
+						if (next) this.main_tr.parentNode.insertBefore(tr, next);
+						else this.main_tr.parentNode.appendChild(tr);
+						this.sub_tr.push(tr);
+					}
+					tr.appendChild(td);
 				}
 			};
-			this.getClassesText = function(classes) {
-				var s = "Class";
-				if (classes.length > 1) s += "es";
-				s += " ";
-				for (var i = 0; i < classes.length; ++i) {
-					if (i > 0) s += "+";
-					s += getClassName(classes[i]);
-				}
-				return s;
+
+			this.getAvailableGroups = function() {
+				// TODO
 			};
-			this.getClassesHTML = function(classes) {
-				var span = document.createElement("SPAN");
-				//var s = "Class";
-				//if (classes.length > 1) s += "es";
-				//s += " ";
-				//span.appendChild(document.createTextNode(s));
-				for (var i = 0; i < classes.length; ++i) {
-					if (i > 0) span.appendChild(document.createTextNode(" + "));
-					s = document.createElement("SPAN");
-					s.style.whiteSpace = "nowrap";
-					s.appendChild(document.createTextNode(getClassName(classes[i])));
-					span.appendChild(s);
-				}
-				return span;
-			};
-			this.createClassRow = function(tr, classes, first, last) {
+
+			this.createGroupingRow = function(tr, grouping, first, last) {
 				var td;
 				tr.appendChild(td = document.createElement("TD"));
-				td.appendChild(this.getClassesHTML(classes));
+				var span = getGroupsHTML(grouping.groups);
+				td.appendChild(span);
 				if (!last) td.style.borderBottom = "none";
 				if (!first) td.style.borderTop = "none";
 				<?php if ($can_edit) { ?>
+				span.style.cursor = "pointer";
+				span.onmouseover = function() { this.style.textDecoration = 'underline'; };
+				span.onmouseout = function() { this.style.textDecoration = ''; };
+				span.onclick = function() {
+					// TODO
+				};
+				var remove_button = document.createElement("BUTTON");
+				remove_button.className = "flat small_icon";
+				remove_button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+				remove_button.title = "Cancel groups and teachers assignment";
+				remove_button.style.marginLeft = "3px";
+				remove_button.onclick = function() {
+					// TODO
+				};
+
+				/*		
 				if (this.classes.length > 1) {
 					var merge = document.createElement("BUTTON");
 					merge.className = "flat small_icon";
@@ -414,10 +489,12 @@ class page_teachers_assignments extends Page {
 						});
 					};
 				}
+				*/
 				<?php } ?>
 				tr.appendChild(td = document.createElement("TD"));
 				if (!last) td.style.borderBottom = "none";
 				if (!first) td.style.borderTop = "none";
+				/*
 				var class_teachers = [];
 				var class_teachers_assigned = [];
 				for (var i = 0; i < teachers_assignments.length; ++i) {
@@ -705,10 +782,12 @@ class page_teachers_assignments extends Page {
 						assign();
 				};
 				<?php } ?>
+				*/
 			};
 			this.update();
 		}
 
+		/*
 		var teachers_rows = [];
 		function TeachersTable(table_id) {
 			var table = document.getElementById(table_id);
@@ -773,6 +852,7 @@ class page_teachers_assignments extends Page {
 					return;
 				}
 		}
+		*/
 		window.help_display_ready = true;
 		</script>
 		<?php 
@@ -785,6 +865,11 @@ class page_teachers_assignments extends Page {
 	 */
 	private function getAcademicYear($id, $years) {
 		foreach ($years as $y) if ($y["id"] == $id) return $y;
+	}
+	
+	private function getSpecializationName($spe_id) {
+		global $specializations;
+		foreach ($specializations as $s) if ($s["id"] == $spe_id) return $s["name"];
 	}
 	
 }

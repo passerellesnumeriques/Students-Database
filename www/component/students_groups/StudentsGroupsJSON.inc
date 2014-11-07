@@ -42,8 +42,13 @@ class StudentsGroupsJSON {
 		return self::GroupsTypesJSON($q->execute());
 	}
 	
-	public static function GroupsTypesStructurePerPeriod() {
-		$groups = SQLQuery::create()->select("StudentsGroup")->execute();
+	public static function GroupsTypesStructurePerPeriod($periods_ids = null) {
+		$q = SQLQuery::create()->select("StudentsGroup");
+		if ($periods_ids <> null) $q->whereIn("StudentsGroup", "period", $periods_ids);
+		$groups = $q->execute();
+		return self::GroupsTypesStructurePerPeriodFromGroups($groups);
+	}
+	public static function GroupsTypesStructurePerPeriodFromGroups($groups) {
 		$s = "[";
 		$first_period = true;
 		while (count($groups) > 0) {

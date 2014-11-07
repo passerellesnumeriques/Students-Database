@@ -63,8 +63,8 @@ foreach ($current_batches as $b) {
 	<img src='/static/teaching/teacher_white.png'/>
 	Teachers
 </a>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/teachers_assignments' style='padding-left:20px'>
-	<img src='/static/curriculum/teacher_assign_white.png'/>
+<a class='application_left_menu_item' href='/dynamic/teaching/page/teachers_assignments' style='padding-left:20px'>
+	<img src='/static/teaching/teacher_assign_white.png'/>
 	Assignments
 </a>
 <?php } else if (in_array("student",PNApplication::$instance->user_management->people_types)) { ?>

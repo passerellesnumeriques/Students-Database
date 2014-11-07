@@ -27,12 +27,31 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod", "start")->execute();
 	}
 	
-	public function getCurrentAcademicPeriod() {
+	public function getAcademicPeriod($academic_period_id) {
+		return SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$academic_period_id)->executeSingleRow();
+	}
+	
+	public function getCurrentAcademicPeriod($return_next_one_if_no_current = false) {
 		$now = date("Y-m-d",time());
-		return SQLQuery::create()
+		$p = SQLQuery::create()
 			->select("AcademicPeriod")
 			->where("start","<=",$now)
 			->where("end",">=",$now)
+			->executeSingleRow();
+		if ($p <> null) return $p;
+		// next one
+		$p = SQLQuery::create()
+			->select("AcademicPeriod")
+			->where("`start` >= '".$now."'")
+			->orderBy("AcademicPeriod","start")
+			->limit(0, 1)
+			->executeSingleRow();
+		if ($p <> null) return $p;
+		// last one
+		return SQLQuery::create()
+			->select("AcademicPeriod")
+			->orderBy("AcademicPeriod","start", false)
+			->limit(0, 1)
 			->executeSingleRow();
 	}
 	
@@ -297,11 +316,15 @@ class curriculum extends Component {
 	 * @param array $academic_periods_ids list of AcademicPeriod ID
 	 * @return array rows from the BatchPeriod table
 	 */
-	public function getBatchPeriodsForAcademicPeriods($academic_periods_ids) {
-		return SQLQuery::create()
-			->select("BatchPeriod")
-			->whereIn("BatchPeriod","academic_period",$academic_periods_ids)
-			->execute();
+	public function getBatchPeriodsForAcademicPeriods($academic_periods_ids, $join_with_batch = false) {
+		$q = SQLQuery::create()->select("BatchPeriod")->whereIn("BatchPeriod","academic_period",$academic_periods_ids);
+		if ($join_with_batch)
+			$q->join("BatchPeriod", "StudentBatch", array("batch"=>"id"))
+			  ->orderBy("StudentBatch","start_date")
+			  ->fieldsOfTable("BatchPeriod")
+			  ->field("StudentBatch","name","batch_name")
+			  ;
+		return $q->execute();
 	}
 	
 	/**
@@ -379,6 +402,18 @@ class curriculum extends Component {
 	 * @return array the result from the database
 	 */
 	public function getSubjects($batch_id, $period_id = null, $spe_id = null, $category_id = null) {
+		$q = $this->getSubjectsQueryForBatch($batch_id, $period_id, $spe_id, $category_id);
+		return $q->execute();
+	}
+	/**
+	 * Retrieve a list of subjects for the given criteria
+	 * @param integer $batch_id restrict the result to subjects for this batch
+	 * @param integer|null $period_id if specified, only subjects in this period will be returned
+	 * @param integer|null $spe_id if specified, only subjects in this specialization will be returned
+	 * @param integer|null $category_id if specified, only subjects in this category will be returned
+	 * @return array the result from the database
+	 */
+	public function getSubjectsQueryForBatch($batch_id, $period_id = null, $spe_id = null, $category_id = null) {
 		$q = SQLQuery::create()->select("CurriculumSubject");
 		if ($period_id <> null) $q->whereValue("CurriculumSubject", "period", $period_id);
 		else {
@@ -393,7 +428,7 @@ class curriculum extends Component {
 		}
 		if ($category_id <> null) $q->whereValue("CurriculumSubject", "category", $category_id);
 		$q->orderBy("CurriculumSubject","code");
-		return $q->execute();
+		return $q;
 	}
 	
 	public function getSubjectsById($subjects_ids) {

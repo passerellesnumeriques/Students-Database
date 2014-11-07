@@ -57,7 +57,7 @@ foreach ($ta_list as $ta) {
 	if ($subject_teaching_id == -1) {
 		array_push($subject_teaching, array("subject"=>$ta["subject"],"classes"=>array($ta["class"])));
 		$subject_teaching_id = count($subject_teaching);
-		$sql .= "INSERT INTO `SubjectTeaching` (`id`,`subject`) VALUE (".count($subject_teaching).",".$m["subject"].")\n";
+		$sql .= "INSERT INTO `SubjectTeaching` (`id`,`subject`) VALUE (".count($subject_teaching).",".$ta["subject"].")\n";
 		$sql .= "INSERT INTO `SubjectTeachingGroups` (`subject_teaching`,`group`) VALUE (".count($subject_teaching).",".$ta["class"].")\n";
 	}
 	$sql .= "INSERT INTO `TeacherAssignment` (`subject_teaching`,`people`,`hours`,`hours_type`) VALUE (".$subject_teaching_id.",".$ta["people"].",".($ta["hours"] == null ? "NULL" : $ta["hours"]).",".($ta["hours_type"] == null ? "NULL" : "'".$ta["hours_type"]."'").")\n";
