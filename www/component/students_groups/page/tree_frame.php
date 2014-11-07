@@ -73,7 +73,7 @@ class page_tree_frame extends Page {
 <div id="students_groups_tree_frame_container" style="width:100%;height:100%;overflow:hidden;display:flex;flex-direction:row">
 	<iframe name="students_groups_tree_frame" id="students_groups_tree_frame" style="border:none;flex:1 1 auto;"></iframe>
 	<div id="students_groups_tree_container" style="flex:none;display:flex;flex-direction:column;min-width:245px">
-		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Classes' style="flex:none">
+		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Groups' style="flex:none">
 			<?php if ($can_edit) { ?>
 			<button id='button_new_batch' class='flat' onclick='createNewBatch();'>
 				<img src='<?php echo theme::make_icon("/static/curriculum/batch_16.png", theme::$icons_10["add"]);?>'/>

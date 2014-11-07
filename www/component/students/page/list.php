@@ -6,6 +6,7 @@ class page_list extends Page {
 	public function execute() {
 		$this->requireJavascript("data_list.js");
 		require_once("component/students_groups/page/TreeFrameSelection.inc");
+		$groups_ids = TreeFrameSelection::getGroupsIdsFromParentGroup();
 		$can_manage = PNApplication::$instance->user_management->has_right("manage_batches");
 ?>
 <div id='list_container' style='width:100%;height:100%'>
@@ -48,7 +49,17 @@ var can_manage = <?php echo json_encode($can_manage);?>;
 function build_filters() {
 	var filters = [];
 	if (url.params['group'] != null) {
-		filters.push({category:'Student',name:'Group',data:{values:[url.params['group']]},force:true});
+		filters.push(<?php
+		function writeGroupFilter($ids, $i) {
+			echo "{category:'Student',name:'Group',data:{values:['".$ids[$i]."']},force:true";
+			if ($i < count($ids)-1) {
+				echo ",or:";
+				writeGroupFilter($ids, $i+1);
+			}
+			echo "}";
+		}
+		writeGroupFilter($groups_ids, 0);
+		?>);
 	} else if (url.params['period']) {
 		filters.push({category:'Student',name:'Group Type',data:{values:[url.params['group_type']]},force:true});
 		filters.push({category:'Student',name:'Period',data:{values:[url.params['period']]},force:true});

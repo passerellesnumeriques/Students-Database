@@ -69,6 +69,12 @@ class students extends Component {
 		return true;
 	}
 	
+	public function getStudentsQueryForBatches($batches_ids = null) {
+		$q = SQLQuery::create()->select("Student");
+		if ($batches_ids <> null) $q->whereIn("Student","batch",$batches_ids);
+		return $q;
+	}
+	
 	public function getStudentsQueryForBatchPeriod($period_id, $include_people_info = true, $include_excluded = false, $restrict_specialization = false, $assigned_to_classes = true) {
 		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
 		if (!$assigned_to_classes) {
