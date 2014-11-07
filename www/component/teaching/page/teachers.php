@@ -34,35 +34,31 @@ class page_teachers extends Page {
 
 		if (count($current_teachers_ids) > 0) {
 			$current_period = PNApplication::$instance->curriculum->getCurrentAcademicPeriod();
-			$current_assignments = SQLQuery::create()
-				->select("TeacherAssignment")
-				->join("TeacherAssignment","CurriculumSubject",array("subject"=>"id"))
-				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
-				->whereValue("BatchPeriod","academic_period",$current_period["id"])
-				->whereIn("TeacherAssignment","people",$current_teachers_ids)
-				->field("TeacherAssignment","people","teacher")
-				->field("CurriculumSubject","name","subject_name")
-				->groupBy("CurriculumSubject","id")
-				->execute();
+			$q = SQLQuery::create()->select("TeacherAssignment");
+			$q->join("TeacherAssignment","SubjectTeaching",array("subject_teaching"=>"id"));
+			PNApplication::$instance->curriculum->joinSubjects($q, "SubjectTeaching", "subject", true);
+			$q->whereValue("BatchPeriod","academic_period",$current_period["id"]);
+			$q->whereIn("TeacherAssignment","people",$current_teachers_ids);
+			$q->field("TeacherAssignment","people","teacher");
+			$q->field("CurriculumSubject","name","subject_name");
+			$q->groupBy("CurriculumSubject","id");
+			$current_assignments = $q->execute();
 		} else
 			$current_assignments = array();
 		
 		if (count($peoples_ids) > 0) {
-			$previous_assignments = SQLQuery::create()
-				->select("TeacherAssignment")
-				->join("TeacherAssignment","CurriculumSubject",array("subject"=>"id"))
-				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
-				->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"))
-				->join("BatchPeriod","StudentBatch",array("batch"=>"id"))
-				->where("`AcademicPeriod`.`end` < '".date("Y-m-d")."'")
-				->whereIn("TeacherAssignment","people",$peoples_ids)
-				->field("TeacherAssignment","people","teacher")
-				->field("CurriculumSubject","name","subject_name")
-				->field("BatchPeriod","name","period_name")
-				->field("StudentBatch","name","batch_name")
-				->groupBy("CurriculumSubject","id")
-				->orderBy("AcademicPeriod","start",false)
-				->execute();
+			$q = SQLQuery::create()->select("TeacherAssignment");
+			$q->join("TeacherAssignment","SubjectTeaching",array("subject_teaching"=>"id"));
+			PNApplication::$instance->curriculum->joinSubjects($q, "SubjectTeaching", "subject", true, true, true);
+			$q->where("`AcademicPeriod`.`end` < '".date("Y-m-d")."'");
+			$q->whereIn("TeacherAssignment","people",$peoples_ids);
+			$q->field("TeacherAssignment","people","teacher");
+			$q->field("CurriculumSubject","name","subject_name");
+			$q->field("BatchPeriod","name","period_name");
+			$q->field("StudentBatch","name","batch_name");
+			$q->groupBy("CurriculumSubject","id");
+			$q->orderBy("AcademicPeriod","start",false);
+			$previous_assignments = $q->execute();
 		} else
 			$previous_assignments = array();
 
@@ -79,7 +75,7 @@ class page_teachers extends Page {
 </style>
 <div class="page_container" style="width:100%;height:100%;display:flex;flex-direction:column;">
 	<div class="page_title" style="flex:none;">
-		<img src='/static/curriculum/teacher_32.png' style="vertical-align:top"/>
+		<img src='/static/teaching/teacher_32.png' style="vertical-align:top"/>
 		Teachers
 	</div>
 	<div id='list_container' style='overflow:auto;background-color:#e8e8e8;flex:1 1 auto;'>
@@ -109,7 +105,7 @@ class page_teachers extends Page {
 		$this->onload("new people_search('$search_id','teacher',function(people){ window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+people.id,null,95,95); });");
 		if ($can_edit) {
 		?>
-		<button class='action green' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/curriculum/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
+		<button class='action green' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/teaching/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
 		<?php } ?>
 	</div>
 </div>
@@ -117,7 +113,7 @@ class page_teachers extends Page {
 <script type='text/javascript'>
 function new_teacher() {
 	require("popup_window.js", function() {
-		var p = new popup_window("New Teacher", theme.build_icon("/static/curriculum/teacher_16.png",theme.icons_10.add), "");
+		var p = new popup_window("New Teacher", theme.build_icon("/static/teaching/teacher_16.png",theme.icons_10.add), "");
 		var frame = p.setContentFrame("/dynamic/people/page/popup_new_person?type=teacher&ondone=reload");
 		frame.reload = function() {
 			location.reload();

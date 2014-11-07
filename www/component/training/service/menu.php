@@ -59,8 +59,8 @@ foreach ($current_batches as $b) {
 } 
 */
 ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/teachers'>
-	<img src='/static/curriculum/teacher_white.png'/>
+<a class='application_left_menu_item' href='/dynamic/teaching/page/teachers'>
+	<img src='/static/teaching/teacher_white.png'/>
 	Teachers
 </a>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/teachers_assignments' style='padding-left:20px'>

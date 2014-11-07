@@ -406,8 +406,16 @@ class curriculum extends Component {
 	public function getSubjectsQuery($subjects_ids) {
 		return SQLQuery::create()->select("CurriculumSubject")->whereIn("CurriculumSubject", "id", $subjects_ids);
 	}
-	public function joinSubjects(&$q, $join_table, $join_key) {
+	public function joinSubjects(&$q, $join_table, $join_key, $join_with_batch_period = false, $join_with_academic_period = false, $join_with_batch = false) {
 		$q->join($join_table, "CurriculumSubject", array($join_key=>"id"));
+		if ($join_with_academic_period) $join_with_batch_period = true;
+		if ($join_with_batch) $join_with_batch_period = true;
+		if ($join_with_batch_period)
+			$q->join("CurriculumSubject", "BatchPeriod", array("period"=>"id"));
+		if ($join_with_academic_period)
+			$q->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"));
+		if ($join_with_batch)
+			$q->join("BatchPeriod","StudentBatch",array("batch"=>"id"));
 	}
 	
 	/** Retrieve teacher assignments for the given subjects
