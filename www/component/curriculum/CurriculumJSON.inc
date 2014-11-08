@@ -255,36 +255,5 @@ class CurriculumJSON {
 		return $s;
 	}
 	
-	/**
-	 * Return a JSON object TeacherAssigned
-	 * @param array $assignment row from TeacherAssignment table
-	 * @return string a JSON object TeacherAssigned
-	 */
-	public static function TeacherAssignedJSON($assignment) {
-		$s = "{";
-		$s .= "people_id:".$assignment["people"];
-		$s .= ",subject_id:".$assignment["subject"];
-		$s .= ",class_id:".$assignment["class"];
-		$s .= ",hours:".($assignment["hours"] == null ? "null" : $assignment["hours"]);
-		$s .= ",hours_type:".json_encode($assignment["hours_type"]);
-		$s .= "}";
-		return $s;
-	}
-	/**
-	 * Return a JSON array of TeacherAssigned objects
-	 * @param array $assignments rows from TeacherAssignment table
-	 * @return string a JSON array of TeacherAssigned objects
-	 */
-	public static function TeachersAssignedJSON($assignments) {
-		$s = "[";
-		$first = true;
-		foreach ($assignments as $a) {
-			if ($first) $first = false; else $s .= ",";
-			$s .= self::TeacherAssignedJSON($a);
-		}
-		$s .= "]";
-		return $s;
-	}
-	
 }
 ?>

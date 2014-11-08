@@ -28,8 +28,21 @@ class page_teachers_assignments extends Page {
 				DataBaseLock::generateScript($lock_id);
 		}
 		
+		// load teachers present during this period
+		if ($academic_period <> null) {
+			$q = SQLQuery::create()
+				->select("TeacherDates")
+				->where("`start` <= '".$academic_period["start"]."'")
+				->where("(`end` IS NULL OR `end` > '".$academic_period["start"]."')")
+				;
+			PNApplication::$instance->people->joinPeople($q, "TeacherDates", "people");
+			$teachers = $q->execute();
+		} else
+			$teachers = array();
+		
 		require_once("component/curriculum/CurriculumJSON.inc");
 		require_once("component/students_groups/StudentsGroupsJSON.inc");
+		require_once("component/people/PeopleJSON.inc");
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
 		?>
@@ -77,6 +90,7 @@ class page_teachers_assignments extends Page {
 		<?php 
 		$batch_periods_ids = array();
 		$all_groups = array();
+		$periods_js = array();
 		if ($academic_period <> null) {
 			$batch_periods = PNApplication::$instance->curriculum->getBatchPeriodsForAcademicPeriods(array($academic_period_id), true);
 			foreach ($batch_periods as $bp) {
@@ -88,13 +102,19 @@ class page_teachers_assignments extends Page {
 				$bp_subjects = PNApplication::$instance->curriculum->getSubjects($bp["batch"], $bp["id"]);
 				$bp_subjects_ids = array();
 				foreach ($bp_subjects as $s) array_push($bp_subjects_ids, $s["id"]);
-				$bp_subjects_teaching = SQLQuery::create()->select("SubjectTeaching")->whereIn("SubjectTeaching","subject",$bp_subjects_ids)->execute();
+				if (count($bp_subjects_ids) > 0)
+					$bp_subjects_teaching = SQLQuery::create()->select("SubjectTeaching")->whereIn("SubjectTeaching","subject",$bp_subjects_ids)->execute();
+				else
+					$bp_subjects_teaching = array();
 				$bp_subjects_teaching_ids = array();
 				foreach ($bp_subjects_teaching as $s) array_push($bp_subjects_teaching_ids, $s["id"]);
-				if (count($bp_subjects_teaching_ids) > 0)
+				if (count($bp_subjects_teaching_ids) > 0) {
 					$teaching_groups = SQLQuery::create()->select("SubjectTeachingGroups")->whereIn("SubjectTeachingGroups","subject_teaching",$bp_subjects_teaching_ids)->execute();
-				else
+					$teachers_assignments = SQLQuery::create()->select("TeacherAssignment")->whereIn("TeacherAssignment","subject_teaching",$bp_subjects_teaching_ids)->execute();
+				} else {
 					$teaching_groups = array();
+					$teachers_assignments = array();
+				}
 				if (count($bp_subjects) == 0)
 					echo "<i>No subject defined for this period</i>";
 				else {
@@ -128,7 +148,9 @@ class page_teachers_assignments extends Page {
 						$classes = array();
 						foreach ($groups as $g) {
 							if ($g["type"] == 1) array_push($classes, $g);
-							array_push($all_groups, $g);
+							$found = false;
+							foreach ($all_groups as $gg) if ($gg["id"] == $g["id"]) { $found = true; break; }
+							if (!$found) array_push($all_groups, $g);
 						}
 						if (count($classes) == 0 && count($groups) > 0) {
 							echo "<div><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> <i>No class defined for this period</i></div>";
@@ -166,13 +188,26 @@ class page_teachers_assignments extends Page {
 										if ($first_group) $first_group = false; else $json .= ",";
 										$json .= json_encode($tg["group"]);
 									}
-									$json .= "]}";
+									$json .= "]";
+									$json .= ",teachers:[";
+									$first_teacher = true;
+									foreach ($teachers_assignments as $ta) {
+										if ($ta["subject_teaching"] <> $st["id"]) continue;
+										if ($first_teacher) $first_teacher = false; else $json .= ",";
+										$json .= "{";
+										$json .= "people_id:".$ta["people"];
+										$json .= ",hours:".($ta["hours"] == null ? "null" : $ta["hours"]);
+										$json .= ",hours_type:".json_encode($ta["hours_type"]);
+										$json .= "}";
+									}
+									$json .= "]";
+									$json .= "}";
 								}
 								$json .= "]";
 								$json .= "}";
 							}
 							$json .= "]";
-							$this->onload("new PeriodSubjects('$id',".$json.");");
+							$periods_js[$id] = $json;
 						}
 					}
 				}
@@ -183,11 +218,10 @@ class page_teachers_assignments extends Page {
 		</div>
 		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white;overflow:auto;' icon='/static/teaching/teacher_16.png' title='Available Teachers' collapsable='false'>
 		<div id='teachers_list' style='background-color:white'>
-		<?php $id = $this->generateID();?>
-		<table class='teachers_table'><tbody id='<?php echo $id;?>'>
+		<?php $teachers_table_id = $this->generateID();?>
+		<table class='teachers_table'><tbody id='<?php echo $teachers_table_id;?>'>
 		<tr><th>Teacher</th><th>Hours</th></tr>
 		</tbody></table>
-		<?php //$this->onload("TeachersTable('$id');")?>
 		</div>
 		<?php $this->onload("sectionFromHTML('teachers_section');")?>
 		</div>
@@ -270,8 +304,16 @@ class page_teachers_assignments extends Page {
 		var group_types = <?php echo StudentsGroupsJSON::getGroupsTypes(); ?>;
 		var all_groups = <?php echo json_encode($all_groups); ?>;
 		var editing = <?php echo json_encode($can_edit);?>;
-		
+		var teachers = <?php echo PeopleJSON::Peoples($teachers);?>;
 
+		teachers.sort(function(p1,p2) {
+			return (p1.last_name+' '+p1.first_name).localeCompare(p2.last_name+' '+p2.first_name);
+		});
+		function getTeacher(people_id) {
+			for (var i = 0; i < teachers.length; ++i)
+				if (teachers[i].id == people_id) return teachers[i];
+		}
+		
 		function getGroupType(id) {
 			for (var i = 0; i < group_types.length; ++i)
 				if (group_types[i].id == id) return group_types[i];
@@ -284,57 +326,86 @@ class page_teachers_assignments extends Page {
 			return null;
 		}
 
+		function getGroupsForPeriod(period_id) {
+			var groups = [];
+			for (var i = 0; i < all_groups.length; ++i) if (all_groups[i].period == period_id) groups.push(all_groups[i]);
+			return groups;
+		}
+		function getGroupsForPeriodAndType(period_id, type_id) {
+			var groups = [];
+			for (var i = 0; i < all_groups.length; ++i) if (all_groups[i].period == period_id && all_groups[i].type == type_id) groups.push(all_groups[i]);
+			return groups;
+		}
+		function getGroupsByType(groups) {
+			var types = {};
+			for (var i = 0; i < groups.length; ++i)
+				if (typeof types[groups[i].type] == 'undefined')
+					types[groups[i].type] = [groups[i]];
+				else
+					types[groups[i].type].push(groups[i]);
+			return types;
+		}
+		function getGroupsTree(groups) {
+			roots = [];
+			buildGroupTreeLevel(roots, null, groups);
+			return roots;
+		}
+		function buildGroupTreeLevel(list, parent_id, groups) {
+			for (var i = 0; i < groups.length; i++) {
+				if (groups[i].parent != parent_id) continue;
+				var g = groups[i];
+				groups.splice(i,1);
+				i--;
+				g.sub_groups = [];
+				list.push(g);
+			}
+			if (groups.length > 0)
+				for (var i = list.length-1; i >= 0; i--)
+					buildGroupTreeLevel(list[i].sub_groups, list[i].id, groups);
+		}
+		function isParentGroup(parent_id, group) {
+			if (group.id == parent_id) return false;
+			if (group.parent == parent_id) return true;
+			if (group.parent == null) return false;
+			return isParentGroup(parent_id, getGroup(group.parent));
+		}
+
 		function getGroupsHTML(groups_ids) {
 			var span = document.createElement("SPAN");
 			for (var i = 0; i < groups_ids.length; ++i) {
-				if (i > 0) span.appendChild(document.createTextNode(" + "));
 				var group = getGroup(groups_ids[i]);
-				var group_type = getGroupType(group.type);
 				var s = document.createElement("SPAN");
 				s.style.whiteSpace = "nowrap";
-				s.appendChild(document.createTextNode(group_type.name+" "+group.name));
+				if (i > 0) span.appendChild(document.createTextNode(" + "));
+				else {
+					var group_type = getGroupType(group.type);
+					s.appendChild(document.createTextNode(group_type.name+" "));
+				}
+				s.appendChild(document.createTextNode(group.name));
 				span.appendChild(s);
 			}
 			return span;
 		};
 
-		
-
-<?php /*
-		
-		var classes = <?php echo CurriculumJSON::AcademicClassesJSON($ap->classes);?>;
-		var subjects = <?php echo CurriculumJSON::SubjectsJSON($ap->subjects);?>;
-		var teachers = <?php echo $ap->teachersJSON();?>;
-		var teachers_assignments = <?php echo CurriculumJSON::TeachersAssignedJSON($ap->teachers_assignments);?>;
-
-		teachers.sort(function(p1,p2) {
-			return (p1.last_name+' '+p1.first_name).localeCompare(p2.last_name+' '+p2.first_name);
-		});
-		
-		function getSubject(id) {
-			for (var i = 0; i < subjects.length; ++i)
-				if (subjects[i].id == id) return subjects[i];
-		}
-		
-		function getClassName(id) {
-			for (var i = 0; i < classes.length; ++i)
-				if (classes[i].id == id) return classes[i].name;
+		var periods = [];
+		function getTeacherAssignments(people_id) {
+			var list = [];
+			for (var i = 0; i < periods.length; ++i)
+				for (var j = 0; j < periods[i].subjects.length; ++j)
+					for (var k = 0; k < periods[i].subjects[j].groupings.length; ++k)
+						for (var l = 0; l < periods[i].subjects[j].groupings[k].teachers.length; ++l)
+							if (periods[i].subjects[j].groupings[k].teachers[l].people_id == people_id)
+								list.push({
+									subject: periods[i].subjects[j].subject,
+									grouping: periods[i].subjects[j].groupings[k],
+									hours: periods[i].subjects[j].groupings[k].teachers[l].hours,
+									hours_type: periods[i].subjects[j].groupings[k].teachers[l].hours_type
+								});
+			return list;
 		}
 
-		function getTeacher(people_id) {
-			for (var i = 0; i < teachers.length; ++i)
-				if (teachers[i].id == people_id) return teachers[i];
-		}
-
-*/?>
-
-
-
-
-
-
-		
 		function PeriodSubjects(table_id, subjects) {
+			this.subjects = [];
 			var table = document.getElementById(table_id);
 			var tr, td;
 			for (var i = 0; i < subjects.length; ++i) {
@@ -354,12 +425,14 @@ class page_teachers_assignments extends Page {
 					td.innerHTML = "<i>Not specified</i>";
 				else
 					td.appendChild(document.createTextNode((total/nb_weeks).toFixed(2)+"h/week x "+nb_weeks+" = "+total+"h"));
-				new SubjectGroupings(tr, subjects[i].grouping, subjects[i].subject);
+				this.subjects.push(new SubjectGroupings(tr, subjects[i].grouping, subjects[i].subject));
 			}
 		}
+		
 		function SubjectGroupings(main_tr, groupings, subject) {
 			this.main_tr = main_tr;
 			this.groupings = groupings;
+			this.subject = subject;
 			this.sub_tr = [];
 			this.update = function() {
 				// remove sub_tr
@@ -388,17 +461,31 @@ class page_teachers_assignments extends Page {
 				if (this.groupings.length == 0 || editing) {
 					var td = document.createElement("TD");
 					td.colSpan = 2;
+					if (this.groupings.length > 0) td.style.borderTop = "none";
 					if (this.groupings.length == 0)
-						td.innerHTML = "<div style='color:darkorange;font-style:italic'>No class planned yet</div>";
+						td.innerHTML = "<span style='color:darkorange;font-style:italic'>No class planned yet</span>";
 					if (editing) {
-						var add_button = document.createElement("BUTTON");
-						add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
-						add_button.className = "flat small_icon";
-						add_button.title = "Plan a new class (one or more groups following this subject together)";
-						add_button.onclick = function() {
-							// TODO
+						this.plan_button = document.createElement("BUTTON");
+						this.plan_button.style.marginLeft = "5px";
+						this.plan_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+						this.plan_button.className = "flat small_icon";
+						this.plan_button.title = "Plan a new class (one or more groups following this subject together)";
+						this.plan_button.t = this;
+						this.plan_button.onclick = function() {
+							this.t.showGroupsMenu(null, this);
 						};
-						td.appendChild(add_button);
+						this.plan_button.ondomremoved(function(e){e.t=null;});
+						// hide the button if all groups are already used
+						if (this.groupings.length > 0) {
+							var type_id = getGroup(this.groupings[0].groups[0]).type;
+							var groups = getGroupsForPeriodAndType(subject.period_id, type_id);
+							var nb_used = 0;
+							for (var i = 0; i < this.groupings.length; ++i)
+								for (var j = 0; j < this.groupings[i].groups.length; ++j)
+									nb_used++;
+							if (nb_used == groups.length) this.plan_button.style.display = "none";
+						}
+						td.appendChild(this.plan_button);
 					}
 					var tr;
 					if (this.groupings.length == 0) tr = this.main_tr;
@@ -412,8 +499,136 @@ class page_teachers_assignments extends Page {
 				}
 			};
 
-			this.getAvailableGroups = function() {
-				// TODO
+			this.showGroupsMenu = function(grouping, button) {
+				var t=this;
+				require("context_menu.js",function() {
+					var menu = new context_menu();
+					var checkboxes = [];
+					if (t.groupings.length == 0) {
+						for (var i = 0; i < group_types.length; ++i)
+							t.fillGroupsMenu(menu, group_types[i], null, checkboxes);
+					} else {
+						var group = getGroup(t.groupings[0].groups[0]);
+						var type = getGroupType(group.type);
+						t.fillGroupsMenu(menu, type, grouping, checkboxes);
+					}
+					t.refreshGroupsMenu(checkboxes, grouping);
+					menu.onclose = function() {
+						var groups_ids = [];
+						for (var i = 0; i < checkboxes.length; ++i) if (checkboxes[i].checked) groups_ids.push(checkboxes[i].group.id);
+						if (groups_ids.length == 0) {
+							// no more group
+							if (grouping == null) return; // nothing to do
+							t.removeGrouping(grouping);
+							return;
+						}
+						if (grouping == null) {
+							t.createGroupingFromGroups(groups_ids);
+							return;
+						}
+						t.setGroupingGroups(grouping, groups_ids);
+					};
+					menu.showBelowElement(button);
+				});
+			};
+			this.fillGroupsMenu = function(menu, group_type, grouping, checkboxes) {
+				var groups = getGroupsForPeriodAndType(subject.period_id, group_type.id);
+				if (groups.length == 0) return;
+				menu.addTitleItem(null, group_type.name);
+				var roots = getGroupsTree(groups);
+				this.fillGroupsMenuTree(menu, 0, roots, grouping, checkboxes);
+			};
+			this.fillGroupsMenuTree = function(menu, indent, nodes, grouping, checkboxes) {
+				for (var i = 0; i < nodes.length; ++i) {
+					var div = document.createElement("DIV");
+					var cb = document.createElement("INPUT");
+					cb.type = "checkbox";
+					cb.style.marginRight = "3px";
+					cb.style.marginBottom = "1px";
+					cb.style.verticalAlign = "bottom";
+					cb.group = nodes[i];
+					checkboxes.push(cb);
+					if (grouping) for (var j = 0; j < grouping.groups.length; ++j) if (grouping.groups[j] == nodes[i].id) cb.checked = 'checked';
+					cb.t = this;
+					cb.onchange = function() {
+						this.t.refreshGroupsMenu(checkboxes, grouping);
+					};
+					cb.ondomremoved(function(e){e.t=null;e.group=null;});
+					div.appendChild(cb);
+					div.appendChild(document.createTextNode(nodes[i].name));
+					div.style.marginLeft = indent+"px";
+					menu.addItem(div, true);
+					if (nodes[i].sub_groups)
+						this.fillGroupsMenuTree(menu, indent+20, nodes[i].sub_groups, grouping, checkboxes);
+				}
+			};
+			this.refreshGroupsMenu = function(checkboxes, grouping) {
+				var checked = [];
+				for (var i = 0; i < checkboxes.length; ++i) if (checkboxes[i].checked) checked.push(checkboxes[i]);
+				var restricted_type = null;
+				if (checked.length > 0) restricted_type = checked[0].group.type;
+				else if (this.groupings.length > 0) {
+					for (var i = 0; i < this.groupings.length; ++i)
+						if (this.groupings[i] != grouping) {
+							restricted_type = getGroup(this.groupings[i].groups[0]).type;
+							break;
+						}
+				}
+				for (var i = 0; i < checkboxes.length; ++i) {
+					var cb = checkboxes[i];
+					// disabled and unchecked if not in restricted type
+					if (restricted_type != null && cb.group.type != restricted_type) {
+						cb.disabled = 'disabled';
+						cb.checked = '';
+						cb.parentNode.style.color = '#808080';
+						continue;
+					}
+					// disabled if already used by another grouping
+					var found = false;
+					for (var j = 0; j < this.groupings.length; ++j)
+						if (this.groupings[j] != grouping) {
+							for (var k = 0; k < this.groupings[j].groups.length; ++k)
+								if (this.groupings[j].groups[k] == cb.group.id) { found = true; break; }
+							if (found) break;
+						}
+					if (found) {
+						cb.disabled = 'disabled';
+						cb.checked = '';
+						cb.parentNode.style.color = '#808080';
+						continue;
+					}
+					// disabled if already partially included by another group (a child)
+					found = false;
+					for (var j = 0; j < checked.length && !found; ++j) if (isParentGroup(checkboxes[i].group.id, checked[j].group)) found = true;
+					for (var j = 0; j < this.groupings.length && !found; ++j)
+						if (this.groupings[j] != grouping)
+							for(var k = 0; k < this.groupings[j].groups.length && !found; ++k)
+								if (isParentGroup(checkboxes[i].group.id, getGroup(this.groupings[j].groups[k])))
+									found = true;
+					if (found) {
+						cb.disabled = 'disabled';
+						cb.checked = '';
+						cb.parentNode.style.color = '#808080';
+						continue;
+					}
+					// disabled if already included by a parent group
+					found = false;
+					for (var j = 0; j < checked.length && !found; ++j) if (isParentGroup(checked[j].group.id, checkboxes[i].group)) found = true;
+					for (var j = 0; j < this.groupings.length && !found; ++j)
+						if (this.groupings[j] != grouping)
+							for(var k = 0; k < this.groupings[j].groups.length && !found; ++k)
+								if (isParentGroup(this.groupings[j].groups[k], checkboxes[i].group))
+									found = true;
+					if (found) {
+						cb.disabled = 'disabled';
+						cb.checked = '';
+						cb.parentNode.style.color = '#808080';
+						continue;
+					}
+					// enabled
+					cb.disabled = '';
+					cb.parentNode.style.color = 'black';
+				}
 			};
 
 			this.createGroupingRow = function(tr, grouping, first, last) {
@@ -427,107 +642,49 @@ class page_teachers_assignments extends Page {
 				span.style.cursor = "pointer";
 				span.onmouseover = function() { this.style.textDecoration = 'underline'; };
 				span.onmouseout = function() { this.style.textDecoration = ''; };
+				span.t = this;
 				span.onclick = function() {
-					// TODO
+					this.t.showGroupsMenu(grouping,this);
 				};
+				span.ondomremoved(function(e){e.t=null;});
 				var remove_button = document.createElement("BUTTON");
 				remove_button.className = "flat small_icon";
 				remove_button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
 				remove_button.title = "Cancel groups and teachers assignment";
 				remove_button.style.marginLeft = "3px";
+				remove_button.t = this;
 				remove_button.onclick = function() {
-					// TODO
+					this.t.removeGrouping(grouping);
 				};
-
-				/*		
-				if (this.classes.length > 1) {
-					var merge = document.createElement("BUTTON");
-					merge.className = "flat small_icon";
-					merge.innerHTML = "<img src='"+theme.icons_10.merge+"'/>";
-					merge.title = "Merge with other(s) class(es)";
-					td.appendChild(merge);
-					var t=this;
-					merge.onclick = function() {
-						var button=this;
-						require("context_menu.js",function(){
-							var menu = new context_menu();
-							menu.addTitleItem(null, "Merge "+t.getClassesText(classes)+" with");
-							for (var i = 0; i < t.classes.length; ++i) {
-								if (t.classes[i] == classes) continue;
-								menu.addIconItem(null, t.getClassesText(t.classes[i]), function(ev,to_classes) {
-									var lock = lock_screen();
-									service.json("curriculum","merge_classes",{subject:subject.id,to:to_classes[0],classes:classes},function(res) {
-										unlock_screen(lock);
-										if (!res) return;
-										for (var j = 0; j < classes.length; ++j)
-											to_classes.push(classes[j]);
-										t.classes.remove(classes);
-										t.update();
-									});
-								},t.classes[i]);
-							}
-							menu.showBelowElement(button);
-						});
-					};
-				}
-				if (classes.length > 1) {
-					var split = document.createElement("BUTTON");
-					split.className = "flat small_icon";
-					split.innerHTML = "<img src='"+theme.icons_10.split+"'/>";
-					split.title = "Split classes";
-					td.appendChild(split);
-					var t=this;
-					split.onclick = function() {
-						var lock = lock_screen();
-						service.json("curriculum","split_classes",{subject:subject.id,classes:classes},function(res){
-							unlock_screen(lock);
-							if (!res) return;
-							t.classes.remove(classes);
-							for (var i = 0; i < classes.length; ++i)
-								t.classes.push([classes[i]]);
-							t.update();
-						});
-					};
-				}
-				*/
+				remove_button.ondomremoved(function(e){e.t=null;});
+				td.appendChild(remove_button);
 				<?php } ?>
 				tr.appendChild(td = document.createElement("TD"));
 				if (!last) td.style.borderBottom = "none";
 				if (!first) td.style.borderTop = "none";
-				/*
-				var class_teachers = [];
-				var class_teachers_assigned = [];
-				for (var i = 0; i < teachers_assignments.length; ++i) {
-					var ta = teachers_assignments[i];
-					if (ta.subject_id != subject.id) continue;
-					var found = false;
-					for (var j = 0; j < classes.length; ++j)
-						if(classes[j] == ta.class_id) { found = true; break; }
-					if (!found) continue;
-					class_teachers.push(getTeacher(ta.people_id));
-					class_teachers_assigned.push(ta);
-				}
-				if (class_teachers.length == 0) {
+				if (grouping.teachers.length == 0) {
 					td.innerHTML = "<i style='color:red'>No teacher</i>";
 					<?php if ($can_edit) { ?>
 					var assign = document.createElement("BUTTON");
 					assign.className = 'flat small_icon';
 					assign.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
 					assign.title = "Assign a teacher";
+					assign.style.marginLeft = "3px";
 					td.appendChild(assign);
-					var t=this;
+					assign.t = this;
 					assign.onclick = function() {
 						var button=this;
+						var t=button.t;
 						require("context_menu.js",function() {
 							var menu = new context_menu();
 							menu.addTitleItem(null, "Assign Teacher");
 							for (var i = 0; i < teachers.length; ++i)
 								menu.addIconItem(null, teachers[i].last_name+" "+teachers[i].first_name, function(ev,teacher_id) {
 									var lock = lock_screen();
-									service.json("curriculum","assign_teacher",{people_id:teacher_id,subject_id:subject.id,classes_ids:[classes[0]]},function(res) {
+									service.json("teaching","assign_teacher",{people_id:teacher_id,subject_teaching_id:grouping.teaching_id},function(res) {
 										unlock_screen(lock);
 										if (!res) return;
-										teachers_assignments.push({people_id:teacher_id,subject_id:subject.id,class_id:classes[0]});
+										grouping.teachers.push({people_id:teacher_id,hours:null,hours_type:null});
 										t.update();
 										updateTeacherRow(teacher_id);
 									});
@@ -535,22 +692,24 @@ class page_teachers_assignments extends Page {
 							menu.showBelowElement(button);
 						});
 					};
+					assign.ondomremoved(function(e){e.t=null;});
 					<?php } ?>
 				} else {
 					var remaining_period = subject.hours;
 					if (subject.hours_type == "Per week") remaining_period *= nb_weeks;
-					for (var i = 0; i < class_teachers.length; ++i) {
+					for (var i = 0; i < grouping.teachers.length; ++i) {
 						if (i > 0) {
 							td.appendChild(document.createElement("BR"));
 							td.appendChild(document.createTextNode(" + "));
 						}
-						td.appendChild(document.createTextNode(class_teachers[i].last_name+" "+class_teachers[i].first_name));
-						if (class_teachers_assigned[i].hours != null) {
-							td.appendChild(document.createTextNode("("+class_teachers_assigned[i].hours+"h"+(class_teachers_assigned[i].hours_type == "Per week" ? "/week" : "")+")"));
-							if (class_teachers_assigned[i].hours_type == "Per week")
-								remaining_period -= class_teachers_assigned[i].hours*nb_weeks;
+						var teacher = getTeacher(grouping.teachers[i].people_id);
+						td.appendChild(document.createTextNode(teacher.last_name+" "+teacher.first_name));
+						if (grouping.teachers[i].hours != null) {
+							td.appendChild(document.createTextNode("("+grouping.teachers[i].hours+"h"+(grouping.teachers[i].hours_type == "Per week" ? "/week" : "")+")"));
+							if (grouping.teachers[i].hours_type == "Per week")
+								remaining_period -= grouping.teachers[i].hours*nb_weeks;
 							else
-								remaining_period -= class_teachers_assigned[i].hours;
+								remaining_period -= grouping.teachers[i].hours;
 						} else
 							remaining_period = 0;
 						<?php if ($can_edit) { ?>
@@ -558,8 +717,7 @@ class page_teachers_assignments extends Page {
 						schedule.className = 'flat small_icon';
 						schedule.innerHTML = "<img src='"+theme.icons_10.time+"'/>";
 						schedule.title = "Change number of hours for this teacher";
-						schedule.teacher = class_teachers[i];
-						schedule.assignment = class_teachers_assigned[i];
+						schedule.assignment = grouping.teachers[i];
 						td.appendChild(schedule);
 						schedule.onclick = function() {
 							var tt=this;
@@ -574,17 +732,18 @@ class page_teachers_assignments extends Page {
 									total_per_week = subject.hours/nb_weeks;
 								}
 								var assigned_period = 0;
-								for (var i = 0; i < class_teachers.length; ++i) {
-									if (class_teachers[i].id == tt.teacher.id) continue; // this is the current teacher
-									if (class_teachers[i].hours_type == "Per week")
-										assigned_period += class_teachers_assigned[i].hours*nb_weeks;
+								for (var i = 0; i < grouping.teachers.length; ++i) {
+									if (grouping.teachers[i].people_id == tt.assignment.people_id) continue; // this is the current teacher
+									if (grouping.teachers[i].hours_type == "Per week")
+										assigned_period += grouping.teachers[i].hours*nb_weeks;
 									else
-										assigned_period += class_teachers_assigned[i].hours;
+										assigned_period += grouping.teachers[i].hours;
 								}
 								var content = document.createElement("DIV");
 								content.style.padding = "10px";
-								content.innerHTML = "Number of hours teaching hours for ";
-								content.appendChild(document.createTextNode(tt.teacher.last_name+" "+tt.teacher.first_name+":"));
+								content.innerHTML = "Number of teaching hours for ";
+								var teacher = getTeacher(tt.assignment.people_id);
+								content.appendChild(document.createTextNode(teacher.last_name+" "+teacher.first_name+":"));
 								content.appendChild(document.createElement("BR"));
 								var current_hours = tt.assignment.hours;
 								var current_hours_type = tt.assignment.hours_type;
@@ -617,7 +776,7 @@ class page_teachers_assignments extends Page {
 									var lock = lock_screen();
 									tt.assignment.hours = field.getCurrentData();
 									tt.assignment.hours_type = select.value;
-									service.json("curriculum","assign_teacher",{people_id:tt.teacher.id,subject_id:subject.id,classes_ids:[classes[0]],hours:field.getCurrentData(),hours_type:select.value},function(res) {
+									service.json("teaching","assign_teacher",{people_id:tt.teacher.id,subject_teaching_id:grouping.teaching_id,hours:field.getCurrentData(),hours_type:select.value},function(res) {
 										t.update();
 										updateTeacherRow(tt.teacher.id);
 										unlock_screen(lock);
@@ -631,9 +790,9 @@ class page_teachers_assignments extends Page {
 						unassign.className = 'flat small_icon';
 						unassign.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
 						unassign.title = "Unassign teacher";
-						unassign.teacher = class_teachers[i];
-						unassign.assignment = class_teachers_assigned[i];
+						unassign.assignment = grouping.teachers[i];
 						td.appendChild(unassign);
+						/*
 						var t=this;
 						unassign.onclick = function() {
 							var lock = lock_screen();
@@ -645,7 +804,7 @@ class page_teachers_assignments extends Page {
 								t.update();
 								updateTeacherRow(tt.teacher.id);
 							});
-						};
+						};*/
 						<?php } ?>
 					}
 					if (remaining_period > 0) {
@@ -669,6 +828,7 @@ class page_teachers_assignments extends Page {
 						assign.title = "Assign a teacher for remaining hours";
 						td.appendChild(assign);
 						var t=this;
+						/*
 						assign.onclick = function() {
 							var button=this;
 							require("context_menu.js",function() {
@@ -693,11 +853,12 @@ class page_teachers_assignments extends Page {
 								}
 								menu.showBelowElement(button);
 							});
-						};
+						};*/
 						<?php } ?>
 					}
 				}
 				<?php if ($can_edit) { ?>
+				/*
 				td.ondragenter = function(event) {
 					if (event.dataTransfer.types.contains("teacher")) {
 						this.style.backgroundColor = "#D0D0D0";
@@ -780,14 +941,54 @@ class page_teachers_assignments extends Page {
 							});
 					} else
 						assign();
-				};
+				};*/
 				<?php } ?>
-				*/
 			};
+
+			this.removeGrouping = function(grouping) {
+				var lock = lock_screen();
+				var t=this;
+				service.json("datamodel","remove_row",{table:"SubjectTeaching",row_key:grouping.teaching_id},function(res) {
+					unlock_screen(lock);
+					if (!res) return;
+					t.update();
+					for (var i = 0; i < grouping.teachers.length; ++i)
+						updateTeacherRow(grouping.teachers[i].people_id);
+				});
+			};
+
+			this.createGroupingFromGroups = function(groups_ids) {
+				var lock = lock_screen();
+				var t=this;
+				service.json("teaching","create_teaching_group",{subject:subject.id,groups:groups_ids},function(res) {
+					unlock_screen(lock);
+					if (!res) return;
+					var grouping = {
+						teaching_id: res.id,
+						groups: groups_ids,
+						teachers: []
+					};
+					t.groupings.push(grouping);
+					t.update();
+				});
+			};
+
+			this.setGroupingGroups = function(grouping, groups_ids) {
+				var lock = lock_screen();
+				var t=this;
+				service.json("teaching","update_teaching_groups",{subject_teaching:grouping.teaching_id,groups:groups_ids},function(res) {
+					unlock_screen(lock);
+					if (!res) return;
+					grouping.groups = groups_ids;
+					t.update();
+					for (var i = 0; i < grouping.teachers.length; ++i)
+						updateTeacherRow(grouping.teachers[i].people_id);
+				});
+			};
+			
 			this.update();
 		}
 
-		/*
 		var teachers_rows = [];
 		function TeachersTable(table_id) {
 			var table = document.getElementById(table_id);
@@ -828,13 +1029,12 @@ class page_teachers_assignments extends Page {
 			//td_hours.style.whiteSpace = "nowrap";
 			this.update = function() {
 				var total = 0;
-				for (var i = 0; i < teachers_assignments.length; ++i) {
-					var ta = teachers_assignments[i];
-					if (ta.people_id != teacher.id) continue;
+				var list = getTeacherAssignments(teacher.id);
+				for (var i = 0; i < list.length; ++i) {
+					var ta = list[i];
 					if (!ta.hours) {
-						var subject = getSubject(ta.subject_id);
-						if (subject.hours_type == "Per week") total += (subject.hours*nb_weeks);
-						else total += subject.hours;
+						if (ta.subject.hours_type == "Per week") total += (ta.subject.hours*nb_weeks);
+						else total += ta.subject.hours;
 					} else {
 						if (ta.hours_type == "Per week") total += ta.hours*nb_weeks;
 						else total += ta.hours;
@@ -852,7 +1052,13 @@ class page_teachers_assignments extends Page {
 					return;
 				}
 		}
-		*/
+
+		<?php
+		foreach ($periods_js as $id=>$json)
+			echo "periods.push(new PeriodSubjects('$id',$json));\n"; 
+		?>
+		new TeachersTable('<?php echo $teachers_table_id;?>');
+		
 		window.help_display_ready = true;
 		</script>
 		<?php 

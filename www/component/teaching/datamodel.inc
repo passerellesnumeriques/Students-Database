@@ -6,7 +6,7 @@ $model->addTable("SubjectTeaching")
 	->addForeignKey("subject", "CurriculumSubject", true, false, true)
 	->addReadAccess("consult_curriculum", true)
 	->addWriteAccess("edit_curriculum", true)
-	->addInsertAccess("edit_curriculum", true)
+	//->addInsertAccess("edit_curriculum", true) insert must be done through functionality, to avoid having an empty group
 	->addRemoveAccess("edit_curriculum", true)
 	;
 $model->internalGetTable("CurriculumSubject")->addReadAccessFromForeignTable("SubjectTeaching");
