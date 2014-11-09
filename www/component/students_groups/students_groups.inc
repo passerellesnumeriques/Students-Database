@@ -142,5 +142,17 @@ class students_groups extends Component {
 		return true;
 	}
 	
+	public function getStudentGroup($people_id, $period_id, $group_type_id) {
+		return SQLQuery::create()
+			->select("StudentGroup")
+			->whereValue("StudentGroup","people",$people_id)
+			->join("StudentGroup","StudentsGroup",array("group"=>"id"))
+			->whereValue("StudentsGroup","period",$period_id)
+			->whereValue("StudentsGroup", "type", $group_type_id)
+			->fieldsOfTable("StudentsGroup")
+			->executeSingleRow()
+			;
+	}
+	
 }
 ?>

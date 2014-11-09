@@ -71,6 +71,15 @@ class teaching extends Component {
 			->executeSingleField();
 	}
 	
+	public function getGroupsForSubject($subject_id) {
+		return SQLQuery::create()
+			->select("SubjectTeaching")
+			->whereValue("SubjectTeaching","subject",$subject_id)
+			->join("SubjectTeaching","SubjectTeachingGroups",array("id"=>"subject_teaching"))
+			->field("SubjectTeachingGroups","group")
+			->executeSingleField();
+	}
+	
 	public function getGroups($subject_teaching_id) {
 		return SQLQuery::create()
 			->select("SubjectTeachingGroups")

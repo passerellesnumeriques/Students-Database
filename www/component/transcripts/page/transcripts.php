@@ -24,7 +24,7 @@ class page_transcripts extends Page {
 		} else
 			$groups = PNApplication::$instance->students_groups->getGroups(@$_GET["group_type"], $period["id"], $spe <> null ? $spe["id"] : null);
 		if (count($groups) == 0) {
-			$groups = PNApplication::$instance->curriculum->getGroups(1, $period["id"]);
+			$groups = PNApplication::$instance->students_groups->getGroups(1, $period["id"]);
 			if (count($groups) == 0)
 				echo "<div class='info_box'>No class in this period</div>";
 			else
