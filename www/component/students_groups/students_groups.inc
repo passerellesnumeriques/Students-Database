@@ -97,6 +97,19 @@ class students_groups extends Component {
 		return $q;
 	}
 	
+	public function areStudentsBelongingToGroups($students_ids, $groups_ids) {
+		$list = SQLQuery::create()->select("StudentGroup")
+			->whereIn("StudentGroup","people",$students_ids)
+			->whereIn("StudentGroup","group",$groups_ids)
+			->execute();
+		foreach ($students_ids as $people_id) {
+			$found = false;
+			foreach ($list as $s) if ($s["people"] == $people_id) { $found = true; break; }
+			if (!$found) return false; // student missing
+		}
+		return true;
+	}
+	
 	public function assign_student_to_group($student_people_id, $group_type_id, $group_id, $period_id) {
 		// check the group exists
 		if ($group_id <> null) {

@@ -7,7 +7,7 @@ class page_subject_grades extends Page {
 		if (!isset($_GET["subject"])) {
 			// direct from menu, we need to select a subject
 			if (isset($_GET["batches"])) {
-				echo "<div style='padding:5px'><div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> Please select a batch, period or class to display the subjects</div></div>";
+				echo "<div style='padding:5px'><div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> Please select a batch, period or group of students to display the corresponding subjects</div></div>";
 				return;
 			}
 			if (!isset($_GET["batch"])) {
@@ -16,10 +16,10 @@ class page_subject_grades extends Page {
 				return;
 			}
 			$batch_id = $_GET["batch"];
-			if (isset($_GET["class"])) {
-				$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
-				$period_id = $class["period"];
-				$spe_id = $class["specialization"];
+			if (isset($_GET["group"])) {
+				$group = PNApplication::$instance->students_groups->getGroup($_GET["group"]);
+				$period_id = $group["period"];
+				$spe_id = $group["specialization"];
 			} else if (isset($_GET["period"])) {
 				$period_id = $_GET["period"];
 				$spe_id = isset($_GET["specialization"]) ? $_GET["specialization"] : null;
@@ -29,20 +29,21 @@ class page_subject_grades extends Page {
 			}
 			$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id, $spe_id);
 			if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
-				for ($i = 0; $i < count($subjects); $i++) {
-					if (!PNApplication::$instance->curriculum->amIAssignedTo($subjects[$i]["id"])) {
-						array_splice($subjects, $i, 1);
-						$i--;
-					}
-				}
-				if (count($subjects) == 0) {
+				$subjects_ids = array();
+				foreach ($subjects as $s) array_push($subjects_ids, $s["id"]);
+				$subjects_ids = PNApplication::$instance->teaching->filterAssignedSubjects($subjects_ids, PNApplication::$instance->user_management->people_id);
+				if (count($subjects_ids) == 0) {
 					echo "<div class='info_box'>You are not assigned to any subject for ".($period_id <> null ? "this period" : "this batch")."</div>";
 					return;
 				}
+				for ($i = 0; $i < count($subjects); $i++)
+					if (!in_array($subjects[$i]["id"],$subjects_ids))
+						array_splice($subjects, $i--, 1);
 			} else if (count($subjects) == 0) {
 				echo "<div class='info_box'>No subject defined in the curriculum for ".($period_id <> null ? "this period" : "this batch")."</div>";
 				return;
 			}
+			
 			$batch = PNApplication::$instance->curriculum->getBatch($batch_id);
 			$period = $period_id <> null ? PNApplication::$instance->curriculum->getBatchPeriod($period_id) : null;
 			theme::css($this, "section.css");
@@ -93,23 +94,39 @@ class page_subject_grades extends Page {
 			<?php 
 			return;
 		}
+
+		// input
+		$subject_id = $_GET["subject"];
+		$group_id = @$_GET["group"];
+		$grouping_id = @$_GET["grouping"];
 		
 		// check access
+		$iam_assigned = null;
 		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
-			if (!PNApplication::$instance->curriculum->amIAssignedTo($_GET["subject"])) {
+			$iam_assigned = $grouping_id <> null ? 
+				PNApplication::$instance->teaching->isAssignedToSubjectTeaching(PNApplication::$instance->user_management->people_id, $grouping_id) :
+				PNApplication::$instance->teaching->isAssignedToSubject(PNApplication::$instance->user_management->people_id, $subject_id, $group_id);
+			if (!$iam_assigned) {
 				PNApplication::error("Access denied");
 				return;
 			}
 		}
 
 		// get subject
-		$subject_id = $_GET["subject"];
 		$q = PNApplication::$instance->curriculum->getSubjectQuery($subject_id);
 		$q->join("CurriculumSubject", "CurriculumSubjectGrading", array("id"=>"subject"));
 		$subject = $q->byPassSecurity()->executeSingleRow();
 		
 		$edit = false;
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades") || PNApplication::$instance->curriculum->amIAssignedTo($subject_id);
+		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");
+		if (!$can_edit) {
+			if ($iam_assigned == null) 
+				$iam_assigned = $grouping_id <> null ? 
+					PNApplication::$instance->teaching->isAssignedToSubjectTeaching(PNApplication::$instance->user_management->people_id, $grouping_id) :
+					PNApplication::$instance->teaching->isAssignedToSubject(PNApplication::$instance->user_management->people_id, $subject_id, $group_id);
+			$can_edit = $iam_assigned;
+			// TODO if only assigned to some groups, and all groups selected...
+		}
 		$locker = null;
 		$lock_id = null;
 		if ($can_edit && isset($_GET["edit"])) {
@@ -119,21 +136,25 @@ class page_subject_grades extends Page {
 				$edit = true;
 		}
 		
-		// get batch, period, class and specialization
-		if (isset($_GET["class"])) {
-			$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
-			$period = PNApplication::$instance->curriculum->getBatchPeriod($class["period"]);
-			$spe = $class["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($class["specialization"]) : null;
+		// get batch, period, group and specialization
+		if ($group_id <> null) {
+			$group = PNApplication::$instance->students_groups->getGroup($_GET["group"]);
+			$grouping_id = PNApplication::$instance->teaching->getGroupingIdFromGroup($subject_id, $group_id);
+			$group_type = PNApplication::$instance->students_groups->getGroupType($group["type"]);
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($group["period"]);
+			$spe = $group["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($group["specialization"]) : null;
+		} else if ($grouping_id <> null) {
+			$groups_ids = PNApplication::$instance->teaching->getGroups($grouping_id);
+			$groups = PNApplication::$instance->students_groups->getGroupsById($groups_ids);
+			$group_type = PNApplication::$instance->students_groups->getGroupType($groups[0]["type"]);
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($groups[0]["period"]);
+			$spe = $groups[0]["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($groups[0]["specialization"]) : null;
 		} else {
-			$class = null;
 			$period = PNApplication::$instance->curriculum->getBatchPeriod($subject["period"]);
 			$spe = $subject["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($subject["specialization"]) : null;
 		}
 		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
 		
-		// get teachers
-		$teachers = PNApplication::$instance->curriculum->getTeachersAssignedTo($subject_id, $class <> null ? $class["id"] : null);
-
 		// get evaluations
 		if ($subject["only_final_grade"] == null || !$subject["only_final_grade"]) {
 			$evaluation_types = SQLQuery::create()->byPassSecurity()
@@ -157,11 +178,14 @@ class page_subject_grades extends Page {
 		}
 		
 		// get the list of students
-		if ($class <> null) {
-			$q = PNApplication::$instance->students->getStudentsQueryForClass($class["id"], true);
-		} else {
+		if (isset($_GET["group"])) {
+			$q = PNApplication::$instance->students_groups->getStudentsQueryForGroup($_GET["group"]);
+			PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
+		} else if (isset($_GET["grouping"])) {
+			$q = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids);
+			PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
+		} else
 			$q = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period["id"], true, false, $spe <> null ? $spe["id"] : false);
-		}
 		$students = $q->execute();
 		$students_ids = array();
 		foreach ($students as $s) array_push($students_ids, $s["people_id"]);
@@ -178,9 +202,27 @@ class page_subject_grades extends Page {
 				->whereIn("StudentSubjectEvaluationGrade", "evaluation", $evaluations_ids)
 				->execute();
 		
-		// get all subjects and classes available to switch
-		$all_subjects = PNApplication::$instance->curriculum->getSubjects($batch["id"], $period["id"], $spe <> null ? $spe["id"] : null);
-		$all_classes = PNApplication::$instance->curriculum->getAcademicClasses($batch["id"], $period["id"], $subject["specialization"] == null ? false : $subject["specialization"]);
+		// get all subjects and groups available to switch
+		$subjects = PNApplication::$instance->curriculum->getSubjects($batch["id"], $period["id"], $spe <> null ? $spe["id"] : null);
+		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+			$subjects_ids = array();
+			foreach ($subjects as $s) array_push($subjects_ids, $s["id"]);
+			$subjects_ids = PNApplication::$instance->teaching->filterAssignedSubjects($subjects_ids, PNApplication::$instance->user_management->people_id);
+			for ($i = 0; $i < count($subjects); $i++)
+				if (!in_array($subjects[$i]["id"],$subjects_ids))
+					array_splice($subjects, $i--, 1);
+		}
+		$groupings_ids = PNApplication::$instance->teaching->getGroupingsForSubject($subject_id);
+		$groupings = array();
+		foreach ($groupings_ids as $gid) {
+			$ids = PNApplication::$instance->teaching->getGroups($gid);
+			$groups_list = PNApplication::$instance->students_groups->getGroupsById($ids);
+			array_push($groupings, array(
+				"id"=>$gid,
+				"groups"=>$groups_list,
+				"group_type"=>PNApplication::$instance->students_groups->getGroupType($groups_list[0]["type"])
+			));
+		}
 		
 		// grading systems
 		$grading_systems = include("component/transcripts/GradingSystems.inc");
@@ -205,25 +247,35 @@ class page_subject_grades extends Page {
 	<div class='page_title' style='flex:none'>
 		<img src='/static/transcripts/grades_32.png'/>
 		Grades
-		<div style='margin-left:10px;font-size:12pt;font-style:italic;display:inline-block;'>
+		<div style='margin-left:10px;font-size:12pt;font-style:italic;display:inline-block;vertical-align:bottom'>
 		<a class='black_link' onclick='selectAnotherSubject(this);return false;' id='select_subject'>
 		Subject <b style='font-weight:bold'>
 		<?php echo toHTML($subject["code"]." - ".$subject["name"]);
-		?></b></a>
+		?></b>
+		<img src='/static/widgets/select/button.gif' style='vertical-align:middle;border:none;'/>
+		</a>
 		<?php
-		echo " (";
+		echo "<br/>";
 		echo "Batch ".toHTML($batch["name"]);
 		echo ", ".toHTML($period["name"]);
 		if ($spe <> null) echo ", Specialization ".toHTML($spe["name"]);
 		?>,
-		<a class='black_link' onclick='selectAnotherClass(this);return false;' id='select_class'>
+		<a class='black_link' onclick='selectAnotherGroup(this);return false;' id='select_group'>
 		<?php 
-		if ($class <> null)
-			echo "Class ".toHTML($class["name"]);
-		else
-			echo "All classes";
-		?></a>
-		)
+		if ($group_id <> null) {
+			echo toHTML($group_type["name"])." ".toHTML($group["name"]);
+		} else if ($grouping_id <> null) {
+			echo toHTML($group_type["name"]);
+			echo " ";
+			for ($i = 0; $i < count($groups); $i++) {
+				if ($i > 0) echo " + ";
+				echo toHTML($groups[$i]["name"]);
+			}
+		} else
+			echo "All groups of students";
+		?>
+		<img src='/static/widgets/select/button.gif' style='vertical-align:middle;border:none;'/>
+		</a>
 		</div>
 	</div>
 	<?php if ($can_edit && !$edit && $locker <> null) {?>
@@ -234,13 +286,44 @@ class page_subject_grades extends Page {
 	</div>
 	<?php } ?>
 	<div style='flex:none;background-color:white;box-shadow: 1px 2px 5px 0px #808080;margin-bottom:5px;padding:5px'>
-		Teacher<?php
-		if (count($teachers) > 0) echo "s";
-		echo ": ";
-		for ($i = 0; $i < count($teachers); $i++) {
-			if ($i > 0) echo ", ";
-			echo toHTML($teachers[$i]["last_name"])." ".toHTML($teachers[$i]["first_name"]);
-		} 
+		<?php
+		// get teachers
+		if ($grouping_id <> null) {
+			$teachers = PNApplication::$instance->teaching->getTeachersAssignedForGrouping($grouping_id, true);
+			echo "Teacher";
+			if (count($teachers) > 1) echo "s";
+			echo ": ";
+			if (count($teachers) == 0)
+				echo "<span style='color:darkorange'>Nobody is assigned</span>";
+			else for ($i = 0; $i < count($teachers); $i++) {
+				if ($i > 0) echo ", ";
+				echo toHTML($teachers[$i]["last_name"])." ".toHTML($teachers[$i]["first_name"]);
+			}
+		} else if (count($groupings) == 0) {
+			echo "<span style='color:darkorange'>No class/teacher planned for this subject</span>";
+		} else {
+			$first = true;
+			foreach ($groupings as $gr) {
+				if ($first) $first = false; else echo ", ";
+				$teachers = PNApplication::$instance->teaching->getTeachersAssignedForGrouping($gr["id"], true);
+				echo "Teacher";
+				if (count($teachers) > 1) echo "s";
+				echo " for ";
+				echo $gr["group_type"]["name"];
+				echo " ";
+				for ($i = 0; $i < count($gr["groups"]); $i++) {
+					if ($i > 0) echo " + ";
+					echo $gr["groups"][$i]["name"];
+				}
+				echo ": ";
+				if (count($teachers) == 0)
+					echo "<span style='color:darkorange'>Nobody is assigned</span>";
+				else for ($i = 0; $i < count($teachers); $i++) {
+					if ($i > 0) echo ", ";
+					echo "<b>".toHTML($teachers[$i]["last_name"])." ".toHTML($teachers[$i]["first_name"])."</b>";
+				}
+			}
+		}
 		?>
 		<br/>
 		Maximum grade
@@ -343,8 +426,7 @@ if (PNApplication::$instance->help->isShown("subject_grades") && $can_edit) {
 <script type='text/javascript'>
 window.onuserinactive = function() { window.pnapplication.cancelDataUnsaved();var u = new window.URL(location.href);delete u.params.edit;location.href=u.toString(); };
 var subject_id = <?php echo $subject["id"];?>;
-var subjects = <?php echo CurriculumJSON::SubjectsJSON($all_subjects);?>;
-var classes = <?php echo CurriculumJSON::AcademicClassesJSON($all_classes);?>;
+var subjects = <?php echo CurriculumJSON::SubjectsJSON($subjects);?>;
 var students = <?php echo PeopleJSON::Peoples($students);?>;
 var only_final = <?php echo $subject["only_final_grade"] == 1 ? "true" : "false";?>;
 var original_only_final = only_final;
@@ -484,7 +566,7 @@ function computeGrades() {
 }
 
 tooltip(document.getElementById('select_subject'), "Click to select another subject");
-tooltip(document.getElementById('select_class'), "Click to select another class");
+tooltip(document.getElementById('select_group'), "Click to select another group of students");
 
 var grades_grid = new people_data_grid('grades_container', function(people_id) { return getPeople(people_id); }, "Student");
 grades_grid.grid.element.style.marginLeft = "5px";
@@ -533,21 +615,29 @@ function selectAnotherSubject(link) {
 	require("context_menu.js", function() {
 		var menu = new context_menu();
 		for (var i = 0; i < subjects.length; ++i)
-			menu.addIconItem(null, subjects[i].code+" - "+subjects[i].name, function(ev,p) {
-				w.location.href = "/dynamic/transcripts/page/subject_grades?subject="+p.subject_id+(typeof p.class_id != 'undefined' ? "&class="+p.class_id : "");
-			}, {subject_id:subjects[i].id<?php if ($class <> null) echo ",class_id:".$class["id"];?>});
+			menu.addIconItem(null, subjects[i].code+" - "+subjects[i].name, function(ev,url) {
+				w.location.href = "/dynamic/transcripts/page/subject_grades?"+url;
+			}, "subject="+subjects[i].id);
 		menu.showBelowElement(link);
 	});
 }
-function selectAnotherClass(link) {
+function selectAnotherGroup(link) {
 	var w=window;
 	require("context_menu.js", function() {
 		var menu = new context_menu();
-		for (var i = 0; i < classes.length; ++i)
-			menu.addIconItem(null, classes[i].name, function(ev,class_id) {
-				w.location.href = "/dynamic/transcripts/page/subject_grades?subject=<?php echo $subject["id"];?>&class="+class_id;
-			}, classes[i].id);
-		menu.addIconItem(null, "All classes", function() {
+		<?php
+		foreach ($groupings as $gr) {
+			$s = $gr["group_type"]["name"]." ";
+			for ($i = 0; $i < count($gr["groups"]); $i++) {
+				if ($i > 0) $s .= " + ";
+				$s .= $gr["groups"][$i]["name"];
+			}
+			echo "menu.addIconItem(null, ".json_encode($s).", function() {";
+			echo "w.location.href=".json_encode("/dynamic/transcripts/page/subject_grades?subject=".$subject["id"]."&grouping=".$gr["id"]).";";
+			echo "});\n";
+		}
+		?>
+		menu.addIconItem(null, "All groups of students", function() {
 			w.location.href = "/dynamic/transcripts/page/subject_grades?subject=<?php echo $subject["id"];?>";
 		});
 		menu.showBelowElement(link);

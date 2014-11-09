@@ -463,20 +463,12 @@ class page_teachers_assignments extends Page {
 					td.colSpan = 2;
 					if (this.groupings.length > 0) td.style.borderTop = "none";
 					if (this.groupings.length == 0)
-						td.innerHTML = "<span style='color:darkorange;font-style:italic'>No class planned yet</span>";
+						td.innerHTML = "<span style='color:red;font-style:italic'>No class planned yet</span>";
 					if (editing) {
-						this.plan_button = document.createElement("BUTTON");
-						this.plan_button.style.marginLeft = "5px";
-						this.plan_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
-						this.plan_button.className = "flat small_icon";
-						this.plan_button.title = "Plan a new class (one or more groups following this subject together)";
-						this.plan_button.t = this;
-						this.plan_button.onclick = function() {
-							this.t.showGroupsMenu(null, this);
-						};
-						this.plan_button.ondomremoved(function(e){e.t=null;});
-						// hide the button if all groups are already used
-						if (this.groupings.length > 0) {
+						// display if not all groups are already used
+						var all_used;
+						if (this.groupings.length == 0) all_used = false;
+						else {
 							var type_id = getGroup(this.groupings[0].groups[0]).type;
 							var group_type = getGroupType(type_id);
 							var groups = getGroupsForPeriodAndType(subject.period_id, type_id);
@@ -500,9 +492,23 @@ class page_teachers_assignments extends Page {
 									if (found) { used.push(groups[i].id); continue; }
 								}
 							}
-							if (used.length == groups.length) this.plan_button.style.display = "none";
+							if (used.length == groups.length) all_used = true;
 						}
-						td.appendChild(this.plan_button);
+						if (!all_used) {
+							if (this.groupings.length > 0)
+								td.innerHTML = "<span style='color:darkorange;font-style:italic'>Some groups are not planned yet</span>";
+							this.plan_button = document.createElement("BUTTON");
+							this.plan_button.style.marginLeft = "5px";
+							this.plan_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+							this.plan_button.className = "flat small_icon";
+							this.plan_button.title = "Plan a new class (one or more groups following this subject together)";
+							this.plan_button.t = this;
+							this.plan_button.onclick = function() {
+								this.t.showGroupsMenu(null, this);
+							};
+							this.plan_button.ondomremoved(function(e){e.t=null;});
+							td.appendChild(this.plan_button);
+						}
 					}
 					var tr;
 					if (this.groupings.length == 0) tr = this.main_tr;

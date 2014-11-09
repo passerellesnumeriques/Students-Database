@@ -506,14 +506,6 @@ class curriculum extends Component {
 		return $q->execute();
 	}
 	
-	public function amIAssignedTo($subject_id) {
-		return SQLQuery::create()
-			->select("TeacherAssignment")
-			->whereValue("TeacherAssignment", "people", PNApplication::$instance->user_management->people_id)
-			->whereValue("TeacherAssignment", "subject", $subject_id)
-			->executeSingleRow()
-		<> null;
-	}
 	public function getMyAssignments() {
 		return $this->getTeacherAssignments(PNApplication::$instance->user_management->people_id);
 	}
