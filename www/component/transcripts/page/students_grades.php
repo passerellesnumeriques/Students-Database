@@ -5,30 +5,33 @@ class page_students_grades extends Page {
 	
 	public function execute() {
 		$period_id = @$_GET["period"];
-		$class_id = @$_GET["class"];
-		if ($period_id == null && $class_id == null) {
+		$group_id = @$_GET["class"];
+		if ($period_id == null && $group_id == null) {
 			echo "<div style='padding:5px'><div class='info_box'>";
 			echo "<img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> ";
-			echo "To display the grades, you need first to select for which period, or which class, by using the tree on the right side.";
+			echo "To display the grades, you need first to select for which period, or which group of students, by using the tree on the right side.";
 			echo "</div></div>";
 			return;
 		}
-		if ($class_id <> null) {
-			$class = PNApplication::$instance->curriculum->getAcademicClass($class_id);
-			$period_id = $class["period"];
-			$spe_id = $class["specialization"];
+		if ($group_id <> null) {
+			$group = PNApplication::$instance->students_groups->getGroup($group_id, true);
+			$period_id = $group["period"];
+			$spe_id = $group["specialization"];
 		} else {
-			$class = null;
+			$group = null;
 			$spe_id = @$_GET["specialization"];
 		}
 		$period = PNApplication::$instance->curriculum->getBatchPeriod($period_id);
 		$batch_id = $period["batch"];
 		$batch = PNApplication::$instance->curriculum->getBatch($batch_id);
 		$spe = $spe_id <> null ? PNApplication::$instance->curriculum->getSpecialization($spe_id) : null;
+		$academic_period = PNApplication::$instance->curriculum->getAcademicPeriod($period["academic_period"]);
 		
 		// get the list of students
-		if ($class <> null) {
-			$q = PNApplication::$instance->students->getStudentsQueryForClass($class["id"], true);
+		if ($group <> null) {
+			$q = PNApplication::$instance->students_groups->getStudentsQueryForGroup($group["id"], true);
+			PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
+			PNApplication::$instance->students->removeExcluded($q, $academic_period["start"]);
 		} else {
 			$q = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $spe <> null ? $spe["id"] : false);
 		}
@@ -90,7 +93,7 @@ class page_students_grades extends Page {
 		$title = "Batch ".$batch["name"];
 		$title .= ", ".$period["name"];
 		if ($spe <> null) $title .= ", Specialization ".$spe["name"];
-		if ($class <> null) $title .= ", Class ".$class["name"];
+		if ($group <> null) $title .= ", ".$group["group_type_name"]." ".$group["name"];
 		echo toHTML($title);
 		?>
 		</span>
@@ -259,7 +262,7 @@ for (var i = 0; i < categories.length; ++i) {
 	for (var j = 0; j < cat_subjects.length; ++j) {
 		var title = document.createElement("SPAN");
 		var sname = document.createElement("A");
-		sname.href = "subject_grades?subject="+cat_subjects[j].id<?php if ($class <> null) echo "+'&class=".$class["id"]."'";?>;
+		sname.href = "subject_grades?subject="+cat_subjects[j].id<?php if ($group <> null) echo "+'&group=".$group["id"]."'";?>;
 		sname.target = "application_frame";
 		sname.appendChild(document.createTextNode(cat_subjects[j].code));
 		sname.appendChild(document.createElement("BR"));

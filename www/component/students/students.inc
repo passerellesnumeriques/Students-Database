@@ -75,29 +75,27 @@ class students extends Component {
 		return $q;
 	}
 	
-	public function getStudentsQueryForBatchPeriod($period_id, $include_people_info = true, $include_excluded = false, $restrict_specialization = false, $assigned_to_classes = true) {
+	public function getStudentsQueryForBatchPeriod($period_id, $include_people_info = true, $include_excluded = false, $restrict_specialization = false, $assigned_to_groups = true) {
 		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($period_id);
-		if (!$assigned_to_classes) {
+		if (!$assigned_to_groups) {
 			$q = SQLQuery::create()
 			->select("Student")
 			->whereValue("Student", "batch", $period["batch"])
 			;
 		} else {
-			$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"]);
-			$classes_ids = array();
-			foreach ($classes as $c) array_push($classes_ids, $c["id"]);
+			$groups = PNApplication::$instance->students_groups->getGroups(null, $period["id"], $restrict_specialization);
+			$groups_ids = array();
+			foreach ($groups as $g) array_push($groups_ids, $g["id"]);
 			
-			if (count($classes_ids) == 0)
+			if (count($groups_ids) == 0)
 				$q = SQLQuery::create()
 					->select("Student")
 					->whereValue("Student", "batch", $period["batch"])
 					;
-			else
-				$q = SQLQuery::create()
-					->select("StudentClass")
-					->whereIn("StudentClass","class",$classes_ids)
-					->join("StudentClass","Student",array("people"=>"people"))
-					;
+			else {
+				$q = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids, true);
+				$q->join("StudentGroup","Student",array("people"=>"people"));
+			}
 		}
 		$q->field("Student","people","people");
 		$q->field("Student","specialization","specialization");
@@ -115,6 +113,16 @@ class students extends Component {
 			PeopleJSON::PeopleSQL($q);
 		}
 		return $q;
+	}
+	
+	public function removeExcluded(&$q, $sql_date) {
+		$table_alias = $q->getTableAlias("Student");
+		if ($table_alias == null) {
+			$people_alias = $q->getTableAlias("People");
+			$q->join($people_alias,"Student",array("id"=>"people"));
+			$table_alias = "Student";
+		}
+		$q->where("(`$table_alias`.`exclusion_date` IS NULL OR `$table_alias`.`exclusion_date` > '$sql_date')");
 	}
 	
 	public function getStudentsQueryForClass($class_id, $include_people_info = true) {
