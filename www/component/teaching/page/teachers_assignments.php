@@ -478,12 +478,29 @@ class page_teachers_assignments extends Page {
 						// hide the button if all groups are already used
 						if (this.groupings.length > 0) {
 							var type_id = getGroup(this.groupings[0].groups[0]).type;
+							var group_type = getGroupType(type_id);
 							var groups = getGroupsForPeriodAndType(subject.period_id, type_id);
-							var nb_used = 0;
+							var used = [];
 							for (var i = 0; i < this.groupings.length; ++i)
 								for (var j = 0; j < this.groupings[i].groups.length; ++j)
-									nb_used++;
-							if (nb_used == groups.length) this.plan_button.style.display = "none";
+									used.push(this.groupings[i].groups[j]);
+							if (group_type.sub_groups) {
+								for (var i = 0; i < groups.length; ++i) {
+									if (used.contains(groups[i].id)) continue;
+									var found = false;
+									for (var j = 0; j < used.length && !found; ++j)
+										if (isParentGroup(used[j], groups[i])) found = true;
+									if (found) { used.push(groups[i].id); continue; }
+								}
+								for (var i = 0; i < groups.length; ++i) {
+									if (used.contains(groups[i].id)) continue;
+									var found = false;
+									for (var j = 0; j < used.length && !found; ++j)
+										if (isParentGroup(groups[i].id, getGroup(used[j]))) found = true;
+									if (found) { used.push(groups[i].id); continue; }
+								}
+							}
+							if (used.length == groups.length) this.plan_button.style.display = "none";
 						}
 						td.appendChild(this.plan_button);
 					}
@@ -718,6 +735,8 @@ class page_teachers_assignments extends Page {
 						schedule.innerHTML = "<img src='"+theme.icons_10.time+"'/>";
 						schedule.title = "Change number of hours for this teacher";
 						schedule.assignment = grouping.teachers[i];
+						schedule.t=this;
+						schedule.ondomremoved(function(e){e.t=null;e.assignment=null;});
 						td.appendChild(schedule);
 						schedule.onclick = function() {
 							var tt=this;
@@ -776,9 +795,9 @@ class page_teachers_assignments extends Page {
 									var lock = lock_screen();
 									tt.assignment.hours = field.getCurrentData();
 									tt.assignment.hours_type = select.value;
-									service.json("teaching","assign_teacher",{people_id:tt.teacher.id,subject_teaching_id:grouping.teaching_id,hours:field.getCurrentData(),hours_type:select.value},function(res) {
-										t.update();
-										updateTeacherRow(tt.teacher.id);
+									service.json("teaching","assign_teacher",{people_id:tt.assignment.people_id,subject_teaching_id:grouping.teaching_id,hours:field.getCurrentData(),hours_type:select.value},function(res) {
+										updateTeacherRow(tt.assignment.people_id);
+										tt.t.update();
 										unlock_screen(lock);
 										popup.close();
 									});
@@ -792,19 +811,19 @@ class page_teachers_assignments extends Page {
 						unassign.title = "Unassign teacher";
 						unassign.assignment = grouping.teachers[i];
 						td.appendChild(unassign);
-						/*
-						var t=this;
+						unassign.t=this;
 						unassign.onclick = function() {
 							var lock = lock_screen();
 							var tt=this;
-							service.json("curriculum","unassign_teacher",{people_id:tt.teacher.id,subject_id:subject.id,class_id:classes[0]},function(res) {
+							service.json("teaching","unassign_teacher",{people_id:tt.assignment.people_id,subject_teaching_id:grouping.teaching_id},function(res) {
 								unlock_screen(lock);
 								if (!res) return;
-								teachers_assignments.remove(tt.assignment);
-								t.update();
-								updateTeacherRow(tt.teacher.id);
+								grouping.teachers.removeUnique(tt.assignment);
+								updateTeacherRow(tt.assignment.people_id);
+								tt.t.update();
 							});
-						};*/
+						};
+						unassign.ondomremoved(function(e){e.t=null;e.assignment=null;});
 						<?php } ?>
 					}
 					if (remaining_period > 0) {
@@ -827,38 +846,38 @@ class page_teachers_assignments extends Page {
 						assign.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
 						assign.title = "Assign a teacher for remaining hours";
 						td.appendChild(assign);
-						var t=this;
-						/*
+						assign.t=this;
+						assign.ondomremoved(function(e){e.t=null;});
 						assign.onclick = function() {
 							var button=this;
+							var tt=this.t;
 							require("context_menu.js",function() {
 								var menu = new context_menu();
 								menu.addTitleItem(null, "Assign Teacher");
 								for (var i = 0; i < teachers.length; ++i) {
 									var found = false;
-									for (var j = 0; j < class_teachers.length; ++j) if (class_teachers[j].id == teachers[i].id) { found = true; break; }
+									for (var j = 0; j < grouping.teachers.length; ++j) if (grouping.teachers[j].people_id == teachers[i].id) { found = true; break; }
 									if (found) continue;
 									menu.addIconItem(null, teachers[i].last_name+" "+teachers[i].first_name, function(ev,teacher_id) {
 										var lock = lock_screen();
 										var hours = remaining_period;
 										if (subject.hours_type == "Per week") hours /= nb_weeks;
-										service.json("curriculum","assign_teacher",{people_id:teacher_id,subject_id:subject.id,classes_ids:[classes[0]],hours:hours,hours_type:subject.hours_type},function(res) {
+										service.json("teaching","assign_teacher",{people_id:teacher_id,subject_teaching_id:grouping.teaching_id,hours:hours,hours_type:subject.hours_type},function(res) {
 											unlock_screen(lock);
 											if (!res) return;
-											teachers_assignments.push({people_id:teacher_id,subject_id:subject.id,class_id:classes[0],hours:hours,hours_type:subject.hours_type});
-											t.update();
+											grouping.teachers.push({people_id:teacher_id,hours:hours,hours_type:subject.hours_type});
+											tt.update();
 											updateTeacherRow(teacher_id);
 										});
 									}, teachers[i].id);
 								}
 								menu.showBelowElement(button);
 							});
-						};*/
+						};
 						<?php } ?>
 					}
 				}
 				<?php if ($can_edit) { ?>
-				/*
 				td.ondragenter = function(event) {
 					if (event.dataTransfer.types.contains("teacher")) {
 						this.style.backgroundColor = "#D0D0D0";
@@ -881,27 +900,29 @@ class page_teachers_assignments extends Page {
 					this.style.backgroundColor = "";
 					this.style.outline = "";
 				};
-				var t=this;
+				td.t=this;
+				td.ondomremoved(function(e){e.t=null;});
 				td.ondrop = function(event) {
+					var t=this.t;
 					this.style.backgroundColor = "";
 					this.style.outline = "";
 					var teacher_id = event.dataTransfer.getData("teacher");
-					for (var i = 0; i < class_teachers.length; ++i) if (class_teachers[i].id == teacher_id) return; // same teacher
+					for (var i = 0; i < grouping.teachers.length; ++i) if (grouping.teachers[i].people_id == teacher_id) return; // same teacher
 					var lock = lock_screen();
 					var remaining_hours_period = subject.hours;
 					if (subject.hours_type == "Per week")
 						remaining_hours_period *= nb_weeks;
 					var total_hours_period = remaining_hours_period;
-					for (var i = 0; i < class_teachers.length; ++i) {
-						if (class_teachers[i].hours == null) { remaining_hours_period = 0; break; }
-						if (class_teachers[i].hours_type == "Per period")
-							remaining_hours_period -= class_teachers[i].hours;
+					for (var i = 0; i < grouping.teachers.length; ++i) {
+						if (grouping.teachers[i].hours == null) { remaining_hours_period = 0; break; }
+						if (grouping.teachers[i].hours_type == "Per period")
+							remaining_hours_period -= grouping.teachers[i].hours;
 						else
-							remaining_hours_period -= class_teachers[i].hours*nb_weeks;
+							remaining_hours_period -= grouping.teachers[i].hours*nb_weeks;
 					}
 					var assign = function() {
-						var data = {people_id:teacher_id,subject_id:subject.id,classes_ids:[classes[0]]};
-						var assignment = {people_id:teacher_id,subject_id:subject.id,class_id:classes[0]};
+						var data = {people_id:teacher_id,subject_teaching_id:grouping.teaching_id};
+						var assignment = {people_id:teacher_id};
 						if (remaining_hours_period > 0 && remaining_hours_period < total_hours_period) {
 							if (subject.hours_type == "Per week") {
 								data.hours = remaining_hours_period/nb_weeks;
@@ -913,26 +934,27 @@ class page_teachers_assignments extends Page {
 							assignment.hours = data.hours;
 							assignment.hours_type = data.hours_type;
 						}
-						service.json("curriculum","assign_teacher",data,function(res) {
+						service.json("teaching","assign_teacher",data,function(res) {
 							if (res)
-								teachers_assignments.push(assignment);
+								grouping.teachers.push(assignment);
 							t.update();
 							updateTeacherRow(teacher_id);
 							unlock_screen(lock);
 						});
 					};					
-					if (class_teachers.length > 0 && remaining_hours_period == 0) {
+					if (grouping.teachers.length > 0 && remaining_hours_period == 0) {
 						var nb_done = 0;
 						var done = function() {
-							if (++nb_done < class_teachers.length) return;
-							for (var i = 0; i < class_teachers.length; ++i) {
-								teachers_assignments.remove(class_teachers_assigned[i]);
-								updateTeacherRow(class_teachers[i].id);
+							if (++nb_done < grouping.teachers.length) return;
+							while (grouping.teachers.length > 0) {
+								var teacher_id = grouping.teachers[0].people_id;
+								grouping.teachers.splice(0,1);
+								updateTeacherRow(teacher_id);
 							}
 							assign();
 						};
-						for (var i = 0; i < class_teachers.length; ++i)
-							service.json("curriculum","unassign_teacher",{people_id:class_teachers[i].id,subject_id:subject.id,class_id:classes[0]},function(res) {
+						for (var i = 0; i < grouping.teachers.length; ++i)
+							service.json("teaching","unassign_teacher",{people_id:grouping.teachers[i].people_id,subject_teaching_id:grouping.teaching_id},function(res) {
 								if (!res) {
 									unlock_screen(lock);
 									return;
@@ -941,16 +963,17 @@ class page_teachers_assignments extends Page {
 							});
 					} else
 						assign();
-				};*/
+				};
 				<?php } ?>
 			};
 
 			this.removeGrouping = function(grouping) {
 				var lock = lock_screen();
 				var t=this;
-				service.json("datamodel","remove_row",{table:"SubjectTeaching",row_key:grouping.teaching_id},function(res) {
+				service.json("data_model","remove_row",{table:"SubjectTeaching",row_key:grouping.teaching_id},function(res) {
 					unlock_screen(lock);
 					if (!res) return;
+					t.groupings.removeUnique(grouping);
 					t.update();
 					for (var i = 0; i < grouping.teachers.length; ++i)
 						updateTeacherRow(grouping.teachers[i].people_id);

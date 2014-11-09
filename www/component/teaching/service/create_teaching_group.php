@@ -14,7 +14,7 @@ class service_create_teaching_group extends Service {
 		$list = array();
 		foreach ($input["groups"] as $gid)
 			array_push($list, array("subject_teaching"=>$id, "group"=>$gid));
-		SQLQuery::create()->insertMultiple("StudentTeachingGroups", $list);
+		SQLQuery::create()->insertMultiple("SubjectTeachingGroups", $list);
 		if (!PNApplication::hasErrors()) {
 			SQLQuery::commitTransaction();
 			echo "{id:$id}";

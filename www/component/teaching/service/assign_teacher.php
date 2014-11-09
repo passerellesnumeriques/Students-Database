@@ -40,7 +40,7 @@ class service_assign_teacher extends Service {
 		}
 		$subject = PNApplication::$instance->curriculum->getSubjectQuery($subject_id)->executeSingleRow();
 		$period = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($subject["period"]);
-		$nb_weeks = intval($period["weeks"])-intval($period["weeks_break"]);
+		$nb_weeks = intval($period["academic_period_weeks"])-intval($period["academic_period_weeks_break"]);
 		// TODO check dates of teacher
 		$assigned = SQLQuery::create()
 			->select("TeacherAssignment")
@@ -80,13 +80,13 @@ class service_assign_teacher extends Service {
 		if ($previous <> null)
 			SQLQuery::create()
 				->updateByKey("TeacherAssignment", 
-					array("people"=>$people_id,"subject_Teaching"=>$subject_teaching_id),
+					array("people"=>$people_id,"subject_teaching"=>$subject_teaching_id),
 					array("hours"=>$hours<>null?$hours:null,"hours_type"=>$hours<>null?$hours_type:null)
 				);
 		else
 			SQLQuery::create()->insert("TeacherAssignment", array(
 				"people"=>$people_id,
-				"subject_Teaching"=>$subject_teaching_id,
+				"subject_teaching"=>$subject_teaching_id,
 				"hours"=>$hours<>null?$hours:null,
 				"hours_type"=>$hours<>null?$hours_type:null
 			));
