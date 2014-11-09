@@ -9,6 +9,9 @@ class students_groups extends Component {
 	public function getGroupType($group_type_id) {
 		return SQLQuery::create()->select("StudentsGroupType")->where("id", $group_type_id)->executeSingleRow();
 	}
+	public function getGroupTypes($group_type_ids) {
+		return SQLQuery::create()->select("StudentsGroupType")->whereIn("StudentsGroupType","id",$group_type_ids)->execute();
+	}
 	/**
 	 * Retrieve the name of a StudentsGroupType
 	 * @param integer $group_type_id the requested group type
@@ -25,6 +28,9 @@ class students_groups extends Component {
 	 */
 	public function getGroup($group_id) {
 		return SQLQuery::create()->select("StudentsGroup")->where("id", $group_id)->executeSingleRow();
+	}
+	public function getGroupsById($groups_ids) {
+		return SQLQuery::create()->select("StudentsGroup")->whereIn("StudentsGroup","id",$groups_ids)->execute();
 	}
 	
 	public function joinStudentToGroups(&$q, $from_table, $student_column, $join_group_info = false) {

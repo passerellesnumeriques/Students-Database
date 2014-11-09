@@ -74,7 +74,7 @@ foreach ($current_batches as $b) {
 </a>
 <?php } ?>
 <?php if (in_array("teacher",PNApplication::$instance->user_management->people_types)) { ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/teacher_assignments?people=<?php echo PNApplication::$instance->user_management->people_id;?>'>
+<a class='application_left_menu_item' href='/dynamic/teaching/page/teacher_assignments?people=<?php echo PNApplication::$instance->user_management->people_id;?>'>
 	<img src='/static/curriculum/curriculum_white.png'/>
 	My Subjects
 </a>
