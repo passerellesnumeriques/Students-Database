@@ -19,8 +19,8 @@ class page_overview extends Page {
 				$period = PNApplication::$instance->curriculum->getBatchPeriod($_GET["period"]);
 			if (isset($_GET["specialization"]))
 				$spe = PNApplication::$instance->curriculum->getSpecialization($_GET["specialization"]);
-			if (isset($_GET["class"]))
-				$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
+			//if (isset($_GET["class"]))
+			//	$class = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
 		} else {
 			$batches = PNApplication::$instance->curriculum->getBatches();
 		}
@@ -40,8 +40,8 @@ class page_overview extends Page {
 				echo ", ".toHTML($period["name"]);
 			if ($spe <> null)
 				echo ", Specialization ".toHTML($spe["name"]);
-			if ($class <> null)
-				echo ", Class ".toHTML($class["name"]);
+			//if ($class <> null)
+			//	echo ", Class ".toHTML($class["name"]);
 		} else {
 			echo "All Students";
 		}

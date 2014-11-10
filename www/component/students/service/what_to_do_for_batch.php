@@ -29,22 +29,18 @@ class service_what_to_do_for_batch extends Service {
 			$problems = array();
 			$periods_ids = array(); foreach ($periods as $p) array_push($periods_ids, $p["id"]);
 			$periods_spes = PNApplication::$instance->curriculum->getBatchPeriodsSpecializations($periods_ids);
-			$classes = PNApplication::$instance->curriculum->getAcademicClasses($this->batch_id);
 			foreach ($periods as $period) {
 				$spe_list = array();
 				foreach ($periods_spes as $ps) if ($ps["period"] == $period["id"]) array_push($spe_list, $ps["specialization"]);
 				if (count($spe_list) == 0) {
 					// no specialization
-					$list = array();
-					foreach ($classes as $cl) if ($cl["period"] == $period["id"]) array_push($list, $cl);
-					if (count($list) == 0) {
+					$classes = PNApplication::$instance->students_groups->getGroups(1, $period["id"], null);
+					if (count($classes) == 0)
 						$problems[$period["name"]] = array();
-					}
 				} else {
 					foreach ($spe_list as $spe_id) {
-						$list = array();
-						foreach ($classes as $cl) if ($cl["period"] == $period["id"] && $cl["specialization"] == $spe_id) array_push($list, $cl);
-						if (count($list) == 0) {
+						$classes = PNApplication::$instance->students_groups->getGroups(1, $period["id"], $spe_id);
+						if (count($classes) == 0) {
 							if (!isset($problems[$period["name"]])) $problems[$period["name"]] = array();
 							array_push($problems[$period["name"]],$this->getSpecializationName($spe_id));
 						}
@@ -95,91 +91,43 @@ class service_what_to_do_for_batch extends Service {
 			else if ($next_period <> null) array_push($relevant_periods, $next_period);
 
 			$all_students = SQLQuery::create()->select("Student")->whereValue("Student","batch",$this->batch_id)->execute();
-			$students_ids = array();
-			foreach ($all_students as $s) array_push($students_ids, $s["people"]);
-			$students_classes = SQLQuery::create()->select("StudentClass")->whereIn("StudentClass","people",$students_ids)->execute();
-			$all_students_classes = array();
-			$additional_classes = array();
-			foreach ($students_classes as $sc) {
-				if (isset($all_students_classes[$sc["class"]])) continue;
-				$found = false;
-				foreach ($classes as $c) if ($c["id"] == $sc["class"]) { $all_students_classes[$sc["class"]] = $c; $found = true; break; }
-				if ($found) continue;
-				// different class, probably a student who changed from one batch to another
-				$all_students_classes[$sc["class"]] = $c = PNApplication::$instance->curriculum->getAcademicClass($sc["class"]);
-				$additional_classes[$c["id"]] = PNApplication::$instance->curriculum->getAcademicPeriodAndBatchPeriod($c["period"]);
-			}
-				
-			// check if students are not assigned to a class, and specialization
+			
 			$spe_checked = false;
 			foreach ($relevant_periods as $p) {
-				$spe_list = array();
-				foreach ($periods_spes as $ps) if ($ps["period"] == $p[0]["id"]) array_push($spe_list, $ps["specialization"]);
-				if (count($spe_list) == 0) {
-					// no specialization
-					$list = array();
-					foreach ($classes as $cl) if ($cl["period"] == $p[0]["id"]) array_push($list, $cl);
-					if (count($list) > 0) {
-						$classes_ids = array();
-						foreach ($list as $cl) array_push($classes_ids, $cl["id"]);
-						foreach ($additional_classes as $cl=>$per) if ($per["academic_period_id"] == $p[1]["id"]) array_push($classes_ids, $cl);
-						$students = array();
-						foreach ($all_students as $s)
-							if ($s["exclusion_date"] == null || datamodel\ColumnDate::toTimestamp($s["exclusion_date"]) > datamodel\ColumnDate::toTimestamp($p[1]["start"]))
-								array_push($students, $s["people"]);
-						foreach ($students_classes as $assign) {
-							if (!in_array($assign["class"], $classes_ids)) continue;
-							for ($i = 0; $i < count($students); $i++)
-								if ($students[$i] == $assign["people"]) {
-									array_splice($students, $i, 1);
-									break;
-								}
-						}
-						if (count($students) > 0) {
-							echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class for period ".toHTML($p[0]["name"])." of batch ".toHTML($this->getBatchName())."<br/>";
-						}
-					}
-				} else {
-					if (!$spe_checked) {
+				// get students list for this period
+				$students = array();
+				foreach ($all_students as $s)
+					if ($s["exclusion_date"] == null || datamodel\ColumnDate::toTimestamp($s["exclusion_date"]) > datamodel\ColumnDate::toTimestamp($p[1]["start"]))
+						array_push($students, $s);
+				// check if students are assigned to a specialization if needed
+				if (!$spe_checked) {
+					$spe_list = array();
+					foreach ($periods_spes as $ps) if ($ps["period"] == $p[0]["id"]) array_push($spe_list, $ps["specialization"]);
+					if (count($spe_list) > 0) {
+						// this period contains specializations
 						$spe_checked = true;
-						$students = array();
-						foreach ($all_students as $s)
-							if ($s["specialization"] == null && ($s["exclusion_date"] == null || datamodel\ColumnDate::toTimestamp($s["exclusion_date"]) > datamodel\ColumnDate::toTimestamp($p[1]["start"])))
-								array_push($students, $s["people"]);
-						if (count($students) > 0) {
-							echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a specialization for batch ".toHTML($this->getBatchName())."<br/>";
-						}
-					}
-					foreach ($spe_list as $spe_id) {
-						$list = array();
-						foreach ($classes as $cl) if ($cl["period"] == $p[0]["id"] && $cl["specialization"] == $spe_id) array_push($list, $cl);
-						if (count($list) > 0) {
-							$classes_ids = array();
-							foreach ($list as $cl) array_push($classes_ids, $cl["id"]);
-							foreach ($additional_classes as $cl=>$per) if ($per["academic_period_id"] == $p[1]["id"]) array_push($classes_ids, $cl);
-							$students = array();
-							foreach ($all_students as $s) 
-								if ($s["specialization"] == $spe_id && ($s["exclusion_date"] == null || datamodel\ColumnDate::toTimestamp($s["exclusion_date"]) > datamodel\ColumnDate::toTimestamp($p[1]["start"])))
-									array_push($students, $s["people"]);
-							foreach ($students_classes as $assign) {
-								if (!in_array($assign["class"], $classes_ids)) continue;
-								for ($i = 0; $i < count($students); $i++)
-									if ($students[$i] == $assign["people"]) {
-										array_splice($students, $i, 1);
-										break;
-									}
-							}
-							if (count($students) > 0) {
-								$peoples = PNApplication::$instance->people->getPeoples($students);
-								$names = "";
-								foreach ($peoples as $people)
-									$names .= $people["last_name"]." ".$people["first_name"]."\r\n";
-								echo "<span title=\"$names\"><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ".count($students)." student".(count($students)>1 ? "s are" : " is")." not assigned to a class in specialization ".toHTML($this->getSpecializationName($spe_id))." for period ".toHTML($p[0]["name"])." of batch ".toHTML($this->getBatchName())."</span><br/>";
-							}
-						}
+						$missing = array();
+						foreach ($students as $s) if ($s["specialization"] == null) array_push($missing, $s["people"]);
+						$this->studentsError($missing, "not assigned to a specialization for batch ".toHTML($this->getBatchName()));
 					}
 				}
-				
+				// check if students are assigned to each group type
+				$all_groups = PNApplication::$instance->students_groups->getGroups(null,$p[0]["id"]);
+				$groups_types_ids = array();
+				foreach ($all_groups as $g) if (!in_array($g["type"], $groups_types_ids)) array_push($groups_types_ids, $g["type"]);
+				foreach ($groups_types_ids as $group_type_id) {
+					$groups_ids = array();
+					foreach ($all_groups as $g) if ($g["type"] == $group_type_id) array_push($groups_ids, $g["id"]);
+					$q = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids);
+					$q->field("StudentGroup","people");
+					$ids = $q->executeSingleField();
+					$missing = array();
+					foreach ($students as $s) if (!in_array($s["people"], $ids)) array_push($missing, $s["people"]);
+					if (count($missing) > 0) {
+						$group_type = PNApplication::$instance->students_groups->getGroupType($group_type_id);
+						$this->studentsError($missing, "not assigned to a group ".toHTML($group_type["name"])." for batch ".toHTML($this->getBatchName()).", ".toHTML($p[0]["name"]));
+					}
+				}
 			}
 		}
 	}
@@ -198,6 +146,21 @@ class service_what_to_do_for_batch extends Service {
 		foreach ($this->specializations as $s)
 			if ($s["id"] == $spe_id)
 				return $s["name"];
+	}
+	
+	private function studentsError($ids, $msg) {
+		if (count($ids) == 0) return;
+		echo "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> ";
+		$peoples = PNApplication::$instance->people->getPeoples($ids);
+		$names = "";
+		foreach ($peoples as $people)
+			$names .= $people["last_name"]." ".$people["first_name"]."\r\n";
+		echo "<span title=\"$names\">";
+		echo count($ids)." student".(count($ids)>1 ? "s" : "");
+		echo "</span>";
+		echo " ".(count($ids) > 1 ? "are" : "is")." ";
+		echo $msg;
+		echo "<br/>";
 	}
 	
 }
