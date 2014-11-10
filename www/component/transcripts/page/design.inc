@@ -16,22 +16,6 @@ function generatePublishedTranscript($id, $student_id, $id_suffix = null) {
 		$subjects = PNApplication::$instance->curriculum->getSubjectsQuery($subjects_ids)->bypassSecurity($student_id == PNApplication::$instance->user_management->people_id)->join("CurriculumSubject","CurriculumSubjectGrading",array("id"=>"subject"))->execute();
 	else
 		$subjects = array();
-
-	/* TODO
-	$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($config["period"], $config["specialization"]);
-	$classes_ids = array();
-	foreach ($classes as $cl) array_push($classes_ids, $cl["id"]);
-	$classes_students = PNApplication::$instance->students->getStudentsForClasses($classes_ids, false);
-	$students_ids = array();
-	foreach ($classes_students as $s) array_push($students_ids, $s["people"]);
-	$class_grades = SQLQuery::create()->select("PublishedTranscriptStudentSubjectGrade")->whereValue("PublishedTranscriptStudentSubjectGrade","id",$id)->whereIn("PublishedTranscriptStudentSubjectGrade","people",$students_ids)->execute();
-	$class_averages = array();
-	foreach ($subjects as $subject) {
-		$total_grade = 0;
-		$nb = 0;
-		foreach ($class_grades as $cg) if ($cg["subject"] == $subject["id"]) { $total_grade += floatval($cg["grade"]); $nb++; }
-		$class_averages[$subject["id"]] = $nb > 0 ? $total_grade/$nb : null;
-	}*/
 	
 	generateTranscriptFor($id, $config, $categories, $subjects, $batch, $period, $student, $student_grades, $student_general_appreciation, $id_suffix);
 } 
@@ -393,7 +377,43 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 				if ($high > floatval($subject["max_grade"])) $high = floatval($subject["max_grade"]);
 			}
 		} else {
-			// TODO
+			$info = PNApplication::$instance->teaching->getStudentGroupingInfoForSubject($student["id"], $subject["id"]);
+			if ($info == null) {
+				// if no grouping, get all classes for the batch period and specialization
+				$groups = PNApplication::$instance->students_groups->getGroups(1, $subject["period"], $subject["specialization"] <> null ? $subject["specialization"] : false);
+				$groups_ids = array();
+				foreach ($groups as $g) array_push($groups_ids, $g["id"]);
+			} else {
+				$groups_ids = array($info["group"]["id"]);
+				foreach ($info["groups_together"] as $g) array_push($groups_ids, $g["id"]);
+			}
+			if (count($groups_ids) == 0) {
+				$av = $low = $high = null;
+			} else {
+				$q = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids,false);
+				$q->groupBy("StudentGroup","people");
+				$q->join("StudentGroup","PublishedTranscriptStudentSubjectGrade",array("people"=>"people",null=>array("id"=>$transcript_id,"subject"=>$subject["id"])));
+				$q->field("PublishedTranscriptStudentSubjectGrade","grade");
+				$q->whereNotNull("PublishedTranscriptStudentSubjectGrade","grade");
+				$grades = $q->executeSingleField();
+				if (count($grades) == 0) {
+					$av = $low = $high = null;
+				} else {
+					$total = 0;
+					$high = null;
+					$low = null;
+					foreach ($grades as $grade) {
+						$g = floatval($grade);
+						if ($high === null) $high = $low = $g;
+						else {
+							if ($g > $high) $high = $g;
+							if ($g < $low) $low = $g; 
+						}
+						$total += $g;
+					}
+					$av = $total/count($grades);
+				}
+			}
 		}
 		if (@$config["class_average"] == 1) {
 			if ($av <> null) {
@@ -448,8 +468,13 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 					$high = null;
 					$low = null;
 					foreach ($grades as $grade) {
-						if ($high === null) $high = $low = floatval($grade);
-						$total += floatval($grade);
+						$g = floatval($grade);
+						if ($high === null) $high = $low = $g;
+						else {
+							if ($g > $high) $high = $g;
+							if ($g < $low) $low = $g; 
+						}
+						$total += $g;
 					}
 					$av = $total/count($grades);
 				}

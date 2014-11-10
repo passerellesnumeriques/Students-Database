@@ -110,6 +110,15 @@ class students_groups extends Component {
 		return true;
 	}
 	
+	public function getStudentGroupsAmong($people_id, $groups_ids) {
+		return SQLQuery::create()
+			->select("StudentGroup")
+			->whereValue("StudentGroup","people",$people_id)
+			->whereIn("StudentGroup","group",$groups_ids)
+			->field("group")
+			->executeSingleField();
+	}
+	
 	public function assign_student_to_group($student_people_id, $group_type_id, $group_id, $period_id) {
 		// check the group exists
 		if ($group_id <> null) {

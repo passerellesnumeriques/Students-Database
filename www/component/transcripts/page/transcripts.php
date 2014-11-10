@@ -245,10 +245,13 @@ function printAll() {
 	set_lock_screen_content_progress(locker, nb, "Generating transcripts...", false, function(span,pb){
 		var checkEnd = function() {
 			if (--nb > 0) return;
-			unlock_screen(locker);
-			printContent(container,function() {
-				container.parentNode.removeChild(container);
-			});
+			set_lock_screen_content(locker, "Preparation of pages for printing...");
+			setTimeout(function() {
+				printContent(container,function() {
+					container.parentNode.removeChild(container);
+					unlock_screen(locker);
+				});
+			},10);
 		};
 		for (var i = 0; i < students_ids.length; ++i) {
 			var div = document.createElement("DIV");
