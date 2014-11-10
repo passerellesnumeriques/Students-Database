@@ -212,9 +212,11 @@ function changeGroupType(type_id) {
 	updateGroupTypeButtons();
 }
 function updateGroupTypeButtons() {
+	<?php if ($can_edit) { ?>
 	var g = getSelectedGroupType();
 	document.getElementById('edit_group_type').style.display = g.builtin ? "none" : "";
 	document.getElementById('remove_group_type').style.display = g.builtin ? "none" : "";
+	<?php } ?>
 }
 updateGroupTypeButtons();
 function editGroupType() {
