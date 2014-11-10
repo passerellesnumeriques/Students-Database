@@ -65,6 +65,7 @@ class service_what_to_do_for_batch extends Service {
 						echo ")";
 					}
 				}
+				echo "<br/>";
 			}
 		}
 		
