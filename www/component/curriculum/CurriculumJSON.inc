@@ -103,12 +103,10 @@ class CurriculumJSON {
 			$periods_ids = array();
 			foreach ($periods as $p) array_push($periods_ids, $p["id"]);
 			$periods_spe = SQLQuery::create()->select("BatchPeriodSpecialization")->whereIn("BatchPeriodSpecialization","period",$periods_ids)->execute();
-			$classes = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass", "period", $periods_ids)->execute();
 		} else {
 			$periods_spe = array();
-			$classes = array();
 		}
-		return self::BatchStructure($batch, $periods, $periods_spe, $classes);
+		return self::BatchStructure($batch, $periods, $periods_spe);
 	}
 	
 	/** Build a JavaScript array of Batch
@@ -119,12 +117,11 @@ class CurriculumJSON {
 		$batches = SQLQuery::create()->select("StudentBatch")->execute();
 		$periods = SQLQuery::create()->select("BatchPeriod")->execute();
 		$periods_spe = SQLQuery::create()->select("BatchPeriodSpecialization")->execute();
-		$classes = SQLQuery::create()->select("AcademicClass")->execute();
 		$s = "[";
 		$first_batch = true;
 		foreach ($batches as $batch) {
 			if ($first_batch) $first_batch = false; else $s .= ",";
-			$s .= self::BatchStructure($batch, $periods, $periods_spe, $classes);
+			$s .= self::BatchStructure($batch, $periods, $periods_spe);
 		}
 		$s .= "]";
 		return $s;
@@ -134,11 +131,10 @@ class CurriculumJSON {
 	 * @param array $batch batch
 	 * @param array $periods periods
 	 * @param array $periods_spe specializations per period
-	 * @param array $classes classes
 	 * @return string the JSON structure
 	 * @no_name_check
 	 */
-	private static function BatchStructure($batch, $periods, $periods_spe, $classes) {
+	private static function BatchStructure($batch, $periods, $periods_spe) {
 		$s = "{";
 		$s .= "id:".$batch["id"];
 		$s .= ",name:".json_encode($batch["name"]);
@@ -161,42 +157,10 @@ class CurriculumJSON {
 				$s .= $ps["specialization"];
 			}
 			$s .= "]";
-			$s .= ",classes:[";
-			$first_class = true;
-			foreach ($classes as $c) {
-				if ($c["period"] <> $period["id"]) continue;
-				if ($first_class) $first_class = false; else $s .= ",";
-				$s .= "{";
-				$s .= "id:".$c["id"];
-				$s .= ",name:".json_encode($c["name"]);
-				$s .= ",spe_id:".json_encode($c["specialization"]);
-				$s .= "}";
-			}
-			$s .= "]";
 			$s .= "}";
 		}
 		$s .= "]";
 		$s .= "}";
-		return $s;
-	}
-	
-	/**
-	 * Return a list of AcademicClass JSON objects
-	 * @param array $classes rows from AcademicClass table
-	 * @return string a JSON array containing AcademicClass objects
-	 */
-	public static function AcademicClassesJSON($classes) {
-		$s = "[";
-		$first = true;
-		foreach ($classes as $c) {
-			if ($first) $first = false; else $s .= ",";
-			$s .= "{";
-			$s .= "id:".$c["id"];
-			$s .= ",name:".json_encode($c["name"]);
-			$s .= ",spe_id:".json_encode($c["specialization"]);
-			$s .= "}";
-		}
-		$s .= "]";
 		return $s;
 	}
 	
@@ -230,6 +194,10 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	public static function getSubjectsCategories() {
+		return self::SubjectCategoriesJSON(SQLQuery::create()->select("CurriculumSubjectCategory")->execute());
+	}
+	
 	/** Build a JSON structure Subject
 	 * @param array $subject the subject from the database
 	 * @return string the JSON structure
@@ -261,37 +229,6 @@ class CurriculumJSON {
 		foreach ($subjects as $subject) {
 			if ($first) $first = false; else $s .= ",";
 			$s .= self::SubjectJSON($subject);
-		}
-		$s .= "]";
-		return $s;
-	}
-	
-	/**
-	 * Return a JSON object TeacherAssigned
-	 * @param array $assignment row from TeacherAssignment table
-	 * @return string a JSON object TeacherAssigned
-	 */
-	public static function TeacherAssignedJSON($assignment) {
-		$s = "{";
-		$s .= "people_id:".$assignment["people"];
-		$s .= ",subject_id:".$assignment["subject"];
-		$s .= ",class_id:".$assignment["class"];
-		$s .= ",hours:".($assignment["hours"] == null ? "null" : $assignment["hours"]);
-		$s .= ",hours_type:".json_encode($assignment["hours_type"]);
-		$s .= "}";
-		return $s;
-	}
-	/**
-	 * Return a JSON array of TeacherAssigned objects
-	 * @param array $assignments rows from TeacherAssignment table
-	 * @return string a JSON array of TeacherAssigned objects
-	 */
-	public static function TeachersAssignedJSON($assignments) {
-		$s = "[";
-		$first = true;
-		foreach ($assignments as $a) {
-			if ($first) $first = false; else $s .= ",";
-			$s .= self::TeacherAssignedJSON($a);
 		}
 		$s .= "]";
 		return $s;

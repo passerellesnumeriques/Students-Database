@@ -12,15 +12,15 @@ class service_menu extends Service {
 		//$current_batches = PNApplication::$instance->curriculum->getCurrentBatches();
 ?>
 <?php if (PNApplication::$instance->user_management->has_right("consult_students_list")) { ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/updates'>
+<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/students/page/updates'>
 	<img src='/static/news/news_white.png'/>
 	Updates
 </a>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/list'>
+<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/students/page/list'>
 	<img src='/static/students/students_white.png'/>
 	Students List
 </a>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/students/page/map' style='padding-left:20px'>
+<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/students/page/map' style='padding-left:20px'>
 	<img src='/static/contact/map_white.png'/>
 	Map
 </a>
@@ -33,7 +33,7 @@ class service_menu extends Service {
 <?php
 /*
 foreach ($current_batches as $b) {
-	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?node=batch".$b["id"]."#/dynamic/students/page/list'>";
+	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/students_groups/page/tree_frame?node=batch".$b["id"]."#/dynamic/students/page/list'>";
 	echo "<img src='/static/curriculum/arrow_right_white.png'/> ";
 	echo "Batch ".toHTML($b["name"]);
 	echo "</a>";
@@ -45,26 +45,26 @@ foreach ($current_batches as $b) {
 	<img src='/static/calendar/calendar_white.png'/>
 	Years and Periods
 </a>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/curriculum/page/curriculum'>
+<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/curriculum/page/curriculum'>
 	<img src='/static/curriculum/curriculum_white.png'/>
 	Curriculum
 </a>
 <?php
 /*
 foreach ($current_batches as $b) {
-	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?node=batch".$b["id"]."#/dynamic/curriculum/page/curriculum'>";
+	echo "<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/students_groups/page/tree_frame?node=batch".$b["id"]."#/dynamic/curriculum/page/curriculum'>";
 	echo "<img src='/static/curriculum/arrow_right_white.png'/> ";
 	echo "Batch ".toHTML($b["name"]);
 	echo "</a>";
 } 
 */
 ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/teachers'>
-	<img src='/static/curriculum/teacher_white.png'/>
+<a class='application_left_menu_item' href='/dynamic/teaching/page/teachers'>
+	<img src='/static/teaching/teacher_white.png'/>
 	Teachers
 </a>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/teachers_assignments' style='padding-left:20px'>
-	<img src='/static/curriculum/teacher_assign_white.png'/>
+<a class='application_left_menu_item' href='/dynamic/teaching/page/teachers_assignments' style='padding-left:20px'>
+	<img src='/static/teaching/teacher_assign_white.png'/>
 	Assignments
 </a>
 <?php } else if (in_array("student",PNApplication::$instance->user_management->people_types)) { ?>
@@ -74,33 +74,33 @@ foreach ($current_batches as $b) {
 </a>
 <?php } ?>
 <?php if (in_array("teacher",PNApplication::$instance->user_management->people_types)) { ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/teacher_assignments?people=<?php echo PNApplication::$instance->user_management->people_id;?>'>
+<a class='application_left_menu_item' href='/dynamic/teaching/page/teacher_assignments?people=<?php echo PNApplication::$instance->user_management->people_id;?>'>
 	<img src='/static/curriculum/curriculum_white.png'/>
 	My Subjects
 </a>
 <?php } ?>
 <?php if (PNApplication::$instance->user_management->has_right("consult_students_grades")) { ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/students_grades'>
+<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/transcripts/page/students_grades'>
 	<img src='/static/transcripts/grades_white.png'/>
 	Grades
 </a>
-<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/subject_grades' alternate_hrefs='/dynamic/transcripts/page/subject_grades'>
+<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/transcripts/page/subject_grades' alternate_hrefs='/dynamic/transcripts/page/subject_grades'>
 	<img src='/static/curriculum/curriculum_white.png'/>
 	By subject
 </a>
 <?php if (PNApplication::$instance->user_management->has_right("edit_transcripts_design")) { ?>
-<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/configure_transcripts'>
+<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/transcripts/page/configure_transcripts'>
 	<img src='<?php echo theme::$icons_16["config_white"];?>'/>
 	Design transcripts
 </a>
 <?php } ?>
-<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/transcripts'>
+<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/transcripts/page/transcripts'>
 	<img src='/static/transcripts/transcript_white.png'/>
 	Published
 </a>
 <?php } else {
 if (in_array("teacher",PNApplication::$instance->user_management->people_types)) { ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=training#/dynamic/transcripts/page/subject_grades' alternate_hrefs='/dynamic/transcripts/page/subject_grades'>
+<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/transcripts/page/subject_grades' alternate_hrefs='/dynamic/transcripts/page/subject_grades'>
 	<img src='/static/transcripts/grades_white.png'/>
 	Grades
 </a>

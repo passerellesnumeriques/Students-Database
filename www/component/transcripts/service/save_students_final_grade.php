@@ -15,7 +15,9 @@ class service_save_students_final_grade extends Service {
 	public function execute(&$component, $input) {
 		// check access
 		if (!PNApplication::$instance->user_management->has_right("edit_students_grades")) {
-			if (!PNApplication::$instance->curriculum->amIAssignedTo($input["subject_id"])) {
+			$students_ids = array();
+			foreach ($input["students"] as $s) array_push($students_ids, $s["people"]);
+			if (!PNApplication::$instance->teaching->isAssignedToSubjectAndStudents(PNApplication::$instance->user_management->people_id, $input["subject_id"], $students_ids)) {
 				PNApplication::error("Access denied");
 				return;
 			}

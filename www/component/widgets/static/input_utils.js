@@ -88,15 +88,15 @@ function inputAutoresize(input, min_size) {
 		window._input_autoresize_updater.update(input);
 	};
 	input.inputAutoresize_prev_onkeydown = input.onkeydown;
-	input.onkeydown = function(e) { if (this.inputAutoresize_prev_onkeydown) this.inputAutoresize_prev_onkeydown(e); update(); };
+	input.onkeydown = function(e) { if (this.inputAutoresize_prev_onkeydown) this.inputAutoresize_prev_onkeydown(e); if (update) update(); };
 	input.inputAutoresize_prev_onkeyup = input.onkeyup;
-	input.onkeyup = function(e) { if (this.inputAutoresize_prev_onkeyup) this.inputAutoresize_prev_onkeyup(e); update(); };
+	input.onkeyup = function(e) { if (this.inputAutoresize_prev_onkeyup) this.inputAutoresize_prev_onkeyup(e); if (update) update(); };
 	input.inputAutoresize_prev_oninput = input.oninput;
-	input.oninput = function(e) { if (this.inputAutoresize_prev_oninput) this.inputAutoresize_prev_oninput(e); update(); };
+	input.oninput = function(e) { if (this.inputAutoresize_prev_oninput) this.inputAutoresize_prev_oninput(e); if (update) update(); };
 	input.inputAutoresize_prev_onpropertychange = input.onpropertychange;
-	input.onpropertychange = function(e) { if (this.inputAutoresize_prev_onpropertychange) this.inputAutoresize_prev_onpropertychange(e); update(); };
+	input.onpropertychange = function(e) { if (this.inputAutoresize_prev_onpropertychange) this.inputAutoresize_prev_onpropertychange(e); if (update) update(); };
 	input.inputAutoresize_prev_onchange = input.onchange;
-	input.onchange = function(e) { if (this.inputAutoresize_prev_onchange) this.inputAutoresize_prev_onchange(e); update(); };
+	input.onchange = function(e) { if (this.inputAutoresize_prev_onchange) this.inputAutoresize_prev_onchange(e); if (update) update(); };
 	update();
 	input.autoresize = update;
 	input.setMinimumSize = function(min_size) {

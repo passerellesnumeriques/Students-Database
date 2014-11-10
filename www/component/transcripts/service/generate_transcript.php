@@ -23,7 +23,7 @@ class service_generate_transcript extends Service {
 		}
 		require_once("component/transcripts/page/design.inc");
 		if (!isset($input["id"]))
-			generateTranscript(time(), $input["period"], @$input["specialization"]);
+			generateTranscript("_".time(), $input["period"], @$input["specialization"]);
 		else
 			generatePublishedTranscript($input["id"], $input["student"], @$input["id_suffix"]);
 	}

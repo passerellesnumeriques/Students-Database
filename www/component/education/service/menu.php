@@ -10,11 +10,11 @@ class service_menu extends Service {
 	
 	public function execute(&$component, $input) {
 ?>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame#/dynamic/education/page/overview'>
+<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame#/dynamic/education/page/overview'>
 	<img src='/static/application/overview_white.png'/>
     Overview
 </a>
-<a class='application_left_menu_item' href='/dynamic/curriculum/page/tree_frame?section=education#/dynamic/students/page/list'>
+<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=education#/dynamic/students/page/list'>
 	<img src='/static/students/students_white.png'/>
     Students List
 </a>

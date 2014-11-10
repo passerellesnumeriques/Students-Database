@@ -18,18 +18,17 @@ class page_assign_specializations extends Page {
 		$q->orderBy("People", "first_name");
 		$students = $q->execute();
 		$specializations = PNApplication::$instance->curriculum->getBatchSpecializationsWithName($batch_id);
-		// search students already assign to a class with specialization, and who cannot be moved to another
+		// search students already assign to a group with specialization, and who cannot be moved to another
 		$q = SQLQuery::create() 
 			->select("Student")
 			->whereValue("Student", "batch", $batch_id)
 			->whereNotNull("Student", "specialization")
-			->join("Student", "StudentClass", array("people"=>"people"))
 			;
-		PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class");
-		$q->whereNotNull("AcademicClass", "specialization");
+		PNApplication::$instance->students_groups->joinStudentToGroups($q, "Student", "people", true);
+		$q->whereNotNull("StudentsGroup", "specialization");
 		$q->groupBy("Student", "people");
 		$q->field("Student","people");
-		$students_class_spe = $q->executeSingleField();
+		$students_group_spe = $q->executeSingleField();
 		
 		$this->requireJavascript("assign_elements.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
@@ -62,9 +61,9 @@ class page_assign_specializations extends Page {
 				else
 					popup.disableButton('save');
 			});
-			assign.setNonMovableReason("Students who cannot be moved (in gray) are already assigned to a class in a specialization. To change specialization for those students, you must first unassign them from the classes.");
+			assign.setNonMovableReason("Students who cannot be moved (in gray) are already assigned to a group/class in a specialization. To change specialization for those students, you must first unassign them from the groups/classes.");
 			<?php foreach ($specializations as $spe) echo "assign.addPossibleAssignment(".$spe["id"].",null,".json_encode($spe["name"]).");\n";?>
-			<?php foreach ($students as $s) echo "assign.addElement(".PeopleJSON::People($s).",".json_encode($s["specialization"]).",".(in_array($s["student_people"],$students_class_spe) ? "false" : "true").");\n";?>
+			<?php foreach ($students as $s) echo "assign.addElement(".PeopleJSON::People($s).",".json_encode($s["specialization"]).",".(in_array($s["student_people"],$students_group_spe) ? "false" : "true").");\n";?>
 		});
 		function save() {
 			var lock = lock_screen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving specializations...");

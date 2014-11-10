@@ -121,17 +121,26 @@ class page_configure_transcripts extends Page {
 				<div class='page_section_title'>
 					Information to include
 				</div>
-				<input type='checkbox' <?php echo @$config["subject_code"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('subject_code',this.checked?1:0);"/> Subject code<br/>
-				<input type='checkbox' <?php echo @$config["nb_hours"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('nb_hours',this.checked?1:0);"/> Nb of hours
-				<select onchange="saveTranscriptConfig('hours_type',this.value);">
-					<option value="Per week" <?php if (@$config["hours_type"] == "Per week") echo "selected='selected'";?>>Per week</option>
-					<option value="Per period" <?php if (@$config["hours_type"] == "Per period") echo "selected='selected'";?>>Total period</option>
-				</select>
-				<br/>
-				<input type='checkbox' <?php echo @$config["coefficient"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('coefficient',this.checked?1:0);"/> Coefficient<br/>
-				<input type='checkbox' <?php echo @$config["class_average"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_average',this.checked?1:0);"/> Class average<br/>
-				<input type='checkbox' <?php echo @$config["comment"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('comment',this.checked?1:0);"/> Comment<br/>
-				<input type='checkbox' <?php echo @$config["general_appreciation"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('general_appreciation',this.checked?1:0);"/> General appreciation<br/>
+				<b>General</b><div style='margin-left:10px'>
+					<input type='checkbox' <?php echo @$config["general_appreciation"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('general_appreciation',this.checked?1:0);"/> General appreciation<br/>
+				</div>
+				<b>For each subject</b><div style='margin-left:10px'>
+					<input type='checkbox' <?php echo @$config["subject_code"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('subject_code',this.checked?1:0);"/> Subject code<br/>
+					<input type='checkbox' <?php echo @$config["nb_hours"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('nb_hours',this.checked?1:0);"/> Nb of hours
+					<select onchange="saveTranscriptConfig('hours_type',this.value);">
+						<option value="Per week" <?php if (@$config["hours_type"] == "Per week") echo "selected='selected'";?>>Per week</option>
+						<option value="Per period" <?php if (@$config["hours_type"] == "Per period") echo "selected='selected'";?>>Total period</option>
+					</select>
+					<br/>
+					<input type='checkbox' <?php echo @$config["coefficient"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('coefficient',this.checked?1:0);"/> Coefficient<br/>
+					<input type='checkbox' <?php echo @$config["comment"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('comment',this.checked?1:0);"/> Comment from teacher<br/>
+					<input type='checkbox' <?php echo @$config["batch_average"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('batch_average',this.checked?1:0);"/> Batch average<br/>
+					<input type='checkbox' <?php echo @$config["batch_lowest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('batch_lowest',this.checked?1:0);"/> Batch lowest<br/>
+					<input type='checkbox' <?php echo @$config["batch_highest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('batch_highest',this.checked?1:0);"/> Batch highest<br/>
+					<input type='checkbox' <?php echo @$config["class_average"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_average',this.checked?1:0);"/> Class/Group average<br/>
+					<input type='checkbox' <?php echo @$config["class_lowest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_lowest',this.checked?1:0);"/> Class/Group lowest<br/>
+					<input type='checkbox' <?php echo @$config["class_highest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_highest',this.checked?1:0);"/> Class/Group highest<br/>
+				</div>
 			</div>
 			<div style='background-color:white;margin-bottom:5px;box-shadow: 0px 2px 2px #D0D0D0;'>
 				<div class='page_section_title'>
@@ -245,7 +254,7 @@ class page_configure_transcripts extends Page {
 			</div>
 			<div style='flex:1 1 auto;overflow:auto;text-align:center'>
 				<div id='design' style='text-align:left;background-color:white;border-radius:5px;display:inline-block;box-shadow: 2px 2px 2px 0px #808080;width:630px;height:810px;margin-bottom:5px;'>
-					<?php generateTranscriptFor($this->generateID(), $config,$categories,$selected_subjects,$period);?>
+					<?php generateTranscriptFor("_".$this->generateID(), $config,$categories,$selected_subjects,$batch,$period);?>
 				</div>
 			</div>
 		</div>

@@ -97,7 +97,7 @@ if ($type == "backup") {
 	if (file_exists($target)) {
 		$size = filesize($target);
 		if ($to < $size) {
-			echo "cache";
+			echo "cache:$size";
 			return;
 		}
 		if ($from < $size) $from = $size;

@@ -5,7 +5,7 @@ class page_transcripts extends Page {
 	
 	public function execute() {
 		if (!isset($_GET["period"])) {
-			echo "<div style='padding:5px'><div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> Please select a period, a class, or a specialization within a period</div></div>";
+			echo "<div style='padding:5px'><div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> Please select a period, a specialization within a period, or a group of students</div></div>";
 			return;
 		}
 		
@@ -18,29 +18,26 @@ class page_transcripts extends Page {
 		$title = "Batch ".toHTML($batch["name"]).", Period ".toHTML($period["name"]);
 		if ($spe <> null) $title .= ", Specialization ".toHTML($spe["name"]);
 		
-		if (isset($_GET["class"])) {
-			$cl = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
-			$classes = array($cl);
+		if (isset($_GET["group"])) {
+			$group = PNApplication::$instance->students_groups->getGroup($_GET["group"]);
+			$groups = array($group);
 		} else
-			$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"], $spe <> null ? $spe["id"] : null);
-		if (count($classes) == 0) {
-			$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($period["id"]);
-			if (count($classes) == 0)
+			$groups = PNApplication::$instance->students_groups->getGroups(@$_GET["group_type"], $period["id"], $spe <> null ? $spe["id"] : null);
+		if (count($groups) == 0) {
+			$groups = PNApplication::$instance->students_groups->getGroups(1, $period["id"]);
+			if (count($groups) == 0)
 				echo "<div class='info_box'>No class in this period</div>";
 			else
-				echo "<div class='info_box'>Please select a specialization or a class</div>";
+				echo "<div class='info_box'>Please select a specialization or a group of student</div>";
 			return;
 		}
-		$classes_ids = array();
-		foreach ($classes as $c) array_push($classes_ids, $c["id"]);
+		$groups_ids = array();
+		foreach ($groups as $g) array_push($groups_ids, $g["id"]);
 		
-		$students = PNApplication::$instance->students->getStudentsForClasses($classes_ids);
-		usort($students, function($s1,$s2) {
-			$r = strcmp($s1["last_name"],$s2["last_name"]);
-			if ($r == 0)
-				return strcmp($s1["first_name"],$s2["first_name"]);
-			return $r;
-		});
+		$q = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids);
+		PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
+		$q->orderBy("People","last_name")->orderBy("People","first_name");
+		$students = $q->execute();
 		
 		$published = SQLQuery::create()->select("PublishedTranscript")->whereValue("PublishedTranscript","period",$period["id"])->whereValue("PublishedTranscript","specialization",$spe <> null ? $spe["id"] : null)->execute();
 ?>
@@ -248,10 +245,13 @@ function printAll() {
 	set_lock_screen_content_progress(locker, nb, "Generating transcripts...", false, function(span,pb){
 		var checkEnd = function() {
 			if (--nb > 0) return;
-			unlock_screen(locker);
-			printContent(container,function() {
-				container.parentNode.removeChild(container);
-			});
+			set_lock_screen_content(locker, "Preparation of pages for printing...");
+			setTimeout(function() {
+				printContent(container,function() {
+					container.parentNode.removeChild(container);
+					unlock_screen(locker);
+				});
+			},10);
 		};
 		for (var i = 0; i < students_ids.length; ++i) {
 			var div = document.createElement("DIV");

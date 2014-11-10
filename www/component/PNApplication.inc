@@ -33,6 +33,8 @@ require_once("utilities.inc");
  * @property staff $staff
  * @property storage $storage
  * @property students $students
+ * @property students_groups $students_groups
+ * @property teaching $teaching
  * @property test $test
  * @property theme $theme
  * @property transcripts $transcripts
@@ -90,7 +92,10 @@ class PNApplication {
 			$e = $exception;
 			$message .= ": ";
 		}
-		$message .= str_replace("\n", "<br/>", htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8"));
+		if ($e instanceof ExceptionHTML)
+			$message .= $e->getMessage();
+		else
+			$message .= str_replace("\n", "<br/>", htmlentities($e->getMessage(), ENT_QUOTES, "UTF-8"));
 		$message .= " <a style='font:small' href='#' onclick=\"var e=document.getElementById('ex_".count(PNApplication::$errors)."');e.style.visibility='visible';e.style.position='static';if (layout) layout.changed(e); else if (window.parent && window.parent.layout) window.parent.layout.changed(window.frameElement);return false;\">details</a>";
 		$message .= "<ul style='margin:0px;visibility:hidden;position:absolute;top:-10000px' id='ex_".count(PNApplication::$errors)."'>";
 		do {
@@ -343,4 +348,6 @@ class PNApplication {
 		return $domains[$domain];
 	}
 }
+
+class ExceptionHTML extends Exception {}
 ?>

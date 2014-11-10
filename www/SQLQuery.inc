@@ -253,6 +253,7 @@ class SQLQuery {
 						substr($file,strlen($root)) == "data_model/DataPath.inc" ||
 						substr($file,strlen($root)) == "data_model/DataBaseLock.inc" ||
 						substr($file,strlen($root)) == "data_model/DataScreen.inc" ||
+						substr($file,strlen($root)) == "data_model/TableDefinition.inc" ||
 						substr($file,strlen($root)) == "data_model/page/data_screen.inc"
 				)) break; // generic service of data model
 				//if ($component == "data_model" && (
@@ -2114,8 +2115,11 @@ class SQLQuery {
 						if ($dm_table->hasRemoveListeners()) {
 							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
 							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$where);
-							while (($row = SQLQuery::db()->nextRow($res)) <> null)
+							while (($row = SQLQuery::db()->nextRow($res)) <> null) {
+								$error = $dm_table->fireBeforeRemove($row, $sub_model_instance);
+								if ($error <> null) throw new \ExceptionHTML("Cannot remove ".$dm_table->getRowDescription($row).": ".$error);
 								$dm_table->fireRemove($row, $sub_model);
+							}
 						}
 						$sql = "DELETE FROM `".$table_name."` WHERE ".$where;
 						SQLQuery::db()->execute($sql);

@@ -96,7 +96,12 @@ $model->addTable("TranscriptConfig")
 	->addBoolean("nb_hours", true)
 	->addEnum("hours_type", array("Per week","Per period"), true, false)
 	->addBoolean("coefficient", true)
+	->addBoolean("batch_average", true)
+	->addBoolean("batch_lowest", true)
+	->addBoolean("batch_highest", true)
 	->addBoolean("class_average", true)
+	->addBoolean("class_lowest", true)
+	->addBoolean("class_highest", true)
 	->addBoolean("comment", true)
 	->addBoolean("general_appreciation", true)
 	->addBoolean("subject_code", true)
@@ -145,7 +150,12 @@ $model->addTable("PublishedTranscript")
 	->addBoolean("nb_hours", true)
 	->addEnum("hours_type", array("Per week","Per period"), true, false)
 	->addBoolean("coefficient", true)
+	->addBoolean("batch_average", true)
+	->addBoolean("batch_lowest", true)
+	->addBoolean("batch_highest", true)
 	->addBoolean("class_average", true)
+	->addBoolean("class_lowest", true)
+	->addBoolean("class_highest", true)
 	->addBoolean("comment", true)
 	->addBoolean("general_appreciation", true)
 	->addBoolean("subject_code", true)
@@ -213,4 +223,11 @@ $model->addTable("PublishedTranscriptStudentGeneralComment")
 	->addRemoveAccess("edit_transcripts_design", true)
 	;
 
+$model->internalGetTable("BatchPeriodSpecialization")
+	->onRemove(function($row,$sm) {
+		$published = SQLQuery::create()->bypassSecurity()->select("PublishedTranscript")->whereValue("PublishedTranscript","period",$row["period"])->whereValue("PublishedTranscript","specialization",$row["specialization"])->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("PublishedTranscript", $published);
+		$config = SQLQuery::create()->bypassSecurity()->select("TranscriptConfig")->whereValue("TranscriptConfig","period",$row["period"])->whereValue("TranscriptConfig","specialization",$row["specialization"])->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("TranscriptConfig", $config);
+	});
 ?>

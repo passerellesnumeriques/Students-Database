@@ -30,21 +30,21 @@ class page_updates extends Page {
 		if ($batches <> null) {
 			$tags = "[";
 			$first = true;
-			if (isset($_GET["class"])) {
-				// restricted to a given class
+			if (isset($_GET["group"])) {
+				// restricted to a given group
 				$batch = PNApplication::$instance->curriculum->getBatch($_GET["batch"]);
 				$period = PNApplication::$instance->curriculum->getBatchPeriod($_GET["period"]);
 				$id = $this->generateID();
 				$title .= ", Period <span id='$id'>".toHTML($period["name"])."</span>";
 				$this->onload("window.top.datamodel.registerCellSpan(window, 'BatchPeriod', 'name', ".$period["id"].", document.getElementById('$id'));");
-				$cl = PNApplication::$instance->curriculum->getAcademicClass($_GET["class"]);
+				$group = PNApplication::$instance->students_groups->getGroup($_GET["group"], true);
 				$id = $this->generateID();
-				$title .= ", Class <span id='$id'>".toHTML($cl["name"])."</span>";
-				$this->onload("window.top.datamodel.registerCellSpan(window, 'AcademicClass', 'name', ".$cl["id"].", document.getElementById('$id'));");
-				$tags .= "'class".$cl["id"]."'";
+				$title .= ", ".$group["group_type_name"]." <span id='$id'>".toHTML($group["name"])."</span>";
+				$this->onload("window.top.datamodel.registerCellSpan(window, 'StudentsGroup', 'name', ".$group["id"].", document.getElementById('$id'));");
+				$tags .= "'group".$group["id"]."'";
 				$post_tags = "{\"batch".$batch["id"]."\":".json_encode("Batch ".$batch["name"]);
 				$post_tags .= ",\"period".$period["id"]."\":".json_encode("Period ".$period["name"]);
-				$post_tags .= ",\"class".$cl["id"]."\":".json_encode("Class ".$cl["name"]);
+				$post_tags .= ",\"group".$group["id"]."\":".json_encode($group["group_type_name"]." ".$group["name"]);
 				$post_tags .= "}";
 			} else if (isset($_GET["period"])) {
 				// restricted to a given period

@@ -139,6 +139,12 @@
 		<td class='name'>#Last Name#</td>
 	</tr>
 	<tr>
+		<td>Batch:</td>
+		<td>#Batch Name#</td>
+		<td>Class:</td>
+		<td>#Class Name#</td>
+	</tr>
+	<tr>
 		<td>Academic Period:</td>
 		<td>#Academic Period#</td>
 		<td>Date:</td>
@@ -154,7 +160,12 @@
 		#IF:nb_hours#<col class='info_col'/>#ENDIF#
 		#IF:coefficient#<col class='info_col'/>#ENDIF#
 		<col class='grade_col'/>
+		#IF:batch_average#<col class='grade_col'/>#ENDIF#
+		#IF:batch_lowest#<col class='grade_col'/>#ENDIF#
+		#IF:batch_highest#<col class='grade_col'/>#ENDIF#
 		#IF:class_average#<col class='grade_col'/>#ENDIF#
+		#IF:class_lowest#<col class='grade_col'/>#ENDIF#
+		#IF:class_highest#<col class='grade_col'/>#ENDIF#
 		#IF:comment#<col class='comment_col'/>#ENDIF#
 	</colgroup>
 	<tbody>
@@ -165,7 +176,12 @@
 		#IF:nb_hours#<td class='title'><div>Hrs</div></td>#ENDIF#
 		#IF:coefficient#<td class='title'><div>Coef.</div></td>#ENDIF#
 		<td class='title'><div>Grade</div></td>
-		#IF:class_average#<td class='title'><div>Class<br/>Avg</div></td>#ENDIF#
+		#IF:batch_average#<td class='title' style='font-size:90%'><div>Batch<br/>Average</div></td>#ENDIF#
+		#IF:batch_lowest#<td class='title' style='font-size:90%'><div>Batch<br/>Lowest</div></td>#ENDIF#
+		#IF:batch_highest#<td class='title' style='font-size:90%'><div>Batch<br/>Highest</div></td>#ENDIF#
+		#IF:class_average#<td class='title' style='font-size:90%'><div>Class<br/>Average</div></td>#ENDIF#
+		#IF:class_lowest#<td class='title' style='font-size:90%'><div>Class<br/>Lowest</div></td>#ENDIF#
+		#IF:class_highest#<td class='title' style='font-size:90%'><div>Class<br/>Highest</div></td>#ENDIF#
 		#IF:comment#<td class='title'><div>Comment</div></td>#ENDIF#
 	</tr>
 	#ENDIF#
@@ -176,7 +192,12 @@
 		#IF:nb_hours#<td class='info'>#SUBJECT_HOURS#</td>#ENDIF#
 		#IF:coefficient#<td class='info'>#SUBJECT_COEFFICIENT#</td>#ENDIF#
 		<td style='position:relative' class='grade'>#GRADE#</td>
+		#IF:batch_average#<td class='grade'>#BATCH_AVERAGE#</td>#ENDIF#
+		#IF:batch_lowest#<td class='grade'>#BATCH_LOWEST#</td>#ENDIF#
+		#IF:batch_highest#<td class='grade'>#BATCH_HIGHEST#</td>#ENDIF#
 		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
+		#IF:class_lowest#<td class='grade'>#CLASS_LOWEST#</td>#ENDIF#
+		#IF:class_highest#<td class='grade'>#CLASS_HIGHEST#</td>#ENDIF#
 		#IF:comment#<td class='comment'>#COMMENT#</td>#ENDIF#
 	</tr>
 	#END_SUBJECT#
@@ -186,8 +207,13 @@
 		#IF:nb_hours#<td>#TOTAL_HOURS#</td>#ENDIF#
 		#IF:coefficient#<td>#TOTAL_COEFFICIENT#</td>#ENDIF#
 		<td>#TOTAL_GRADE#</td>
+		#IF:batch_average#<td>#TOTAL_BATCH_AVERAGE#</td>#ENDIF#
+		#IF:batch_lowest#<td class='blank'></td>#ENDIF#
+		#IF:batch_highest#<td class='blank'></td>#ENDIF#
 		#IF:class_average#<td>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
-		#IF:comment#<td></td>#ENDIF#
+		#IF:class_lowest#<td class='blank'></td>#ENDIF#
+		#IF:class_highest#<td class='blank'></td>#ENDIF#
+		#IF:comment#<td class='blank'></td>#ENDIF#
 	</tr>
 	</tbody>
 </table>
@@ -198,7 +224,12 @@
 		#IF:nb_hours#<col class='info_col'/>#ENDIF#
 		#IF:coefficient#<col class='info_col'/>#ENDIF#
 		<col class='grade_col'/>
+		#IF:batch_average#<col class='grade_col'/>#ENDIF#
+		#IF:batch_lowest#<col class='grade_col'/>#ENDIF#
+		#IF:batch_highest#<col class='grade_col'/>#ENDIF#
 		#IF:class_average#<col class='grade_col'/>#ENDIF#
+		#IF:class_lowest#<col class='grade_col'/>#ENDIF#
+		#IF:class_highest#<col class='grade_col'/>#ENDIF#
 	</colgroup>
 	<tbody>
 	<tr class='subject_row'>
@@ -206,7 +237,12 @@
 		#IF:nb_hours#<td class='info'>#SUBJECT_HOURS#</td>#ENDIF#
 		#IF:coefficient#<td class='info'>#SUBJECT_COEFFICIENT#</td>#ENDIF#
 		<td style='position:relative' class='grade'>#GRADE#</td>
+		#IF:batch_average#<td class='grade'>#BATCH_AVERAGE#</td>#ENDIF#
+		#IF:batch_lowest#<td class='grade'>#BATCH_LOWEST#</td>#ENDIF#
+		#IF:batch_highest#<td class='grade'>#BATCH_HIGHEST#</td>#ENDIF#
 		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
+		#IF:class_lowest#<td class='grade'>#CLASS_LOWEST#</td>#ENDIF#
+		#IF:class_highest#<td class='grade'>#CLASS_HIGHEST#</td>#ENDIF#
 	</tr>
 	</tbody>
 </table>
@@ -216,12 +252,22 @@
 	<colgroup>
 		<col/>
 		<col class='grade_col'/>
+		#IF:batch_average#<col class='grade_col'/>#ENDIF#
+		#IF:batch_lowest#<col class='grade_col'/>#ENDIF#
+		#IF:batch_highest#<col class='grade_col'/>#ENDIF#
 		#IF:class_average#<col class='grade_col'/>#ENDIF#
+		#IF:class_lowest#<col class='grade_col'/>#ENDIF#
+		#IF:class_highest#<col class='grade_col'/>#ENDIF#
 	</colgroup>
 	<tr class='total'>
 		<td>Global Grade Point Average</td>
 		<td>#GLOBAL_GRADE#</td>
+		#IF:batch_average#<td>#GLOBAL_BATCH_AVERAGE_GRADE#</td>#ENDIF#
+		#IF:batch_lowest#<td class='blank'></td>#ENDIF#
+		#IF:batch_highest#<td class='blank'></td>#ENDIF#
 		#IF:class_average#<td>#GLOBAL_CLASS_AVERAGE_GRADE#</td>#ENDIF#
+		#IF:class_lowest#<td class='blank'></td>#ENDIF#
+		#IF:class_highest#<td class='blank'></td>#ENDIF#
 	</tr>
 </table>
 <!-- General appreciation -->

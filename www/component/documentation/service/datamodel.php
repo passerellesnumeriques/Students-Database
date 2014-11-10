@@ -74,8 +74,10 @@ class service_datamodel extends Service {
 		$pseudo_count = 1;
 		$links = array();
 		$dependencies = array();
+		$component_tables = array();
 		foreach ($model->internalGetTables() as $table) {
 			if ($cname <> null && $table->owner_component->name <> $cname) continue;
+			$component_tables[$table->getName()] = $table;
 			if ($table->getModel() instanceof SubDataModel)
 				$cols = $table->internalGetColumnsFor(1);
 			else
@@ -200,6 +202,36 @@ class service_datamodel extends Service {
 				$uml .= "}\n";
 			}
 		}
+		// dependencies from other components
+		foreach (PNApplication::$instance->components as $c) {
+			if ($c->name == $cname) continue;
+			if (!file_exists("component/".$c->name."/datamodel.inc")) continue;
+			$dependent_tables = array();
+			foreach ($model->internalGetTables() as $table) {
+				if ($cname <> null && $table->owner_component->name <> $c->name) continue;
+				if ($table->getModel() instanceof SubDataModel)
+					$cols = $table->internalGetColumnsFor(1);
+				else
+					$cols = $table->internalGetColumns();
+				foreach ($cols as $col) {
+					if ($col instanceof datamodel\ForeignKey && array_key_exists($col->foreign_table, $component_tables)) {
+						if (!array_key_exists($table->getName(), $dependent_tables)) $dependent_tables[$table->getName()] = array();
+						if (!in_array($col->foreign_table, $dependent_tables[$table->getName()]))
+							array_push($dependent_tables[$table->getName()], $col->foreign_table);
+					}
+				}
+			}
+			if (count($dependent_tables) == 0) continue;
+			if (!array_key_exists($c->name, $dependencies)) $dependencies[$c->name] = array();
+			foreach ($dependent_tables as $table_name=>$ctables) {
+				if (!in_array($table_name, $dependencies[$c->name]))
+					array_push($dependencies[$c->name], $table_name);
+				// TODO link multiplicity...
+				foreach ($ctables as $ctable)
+					array_push($links, $table_name." --> ".$ctable);
+			}
+		}
+		// packages from dependencies
 		if (count($dependencies) > 0) {
 			foreach ($dependencies as $comp=>$list) {
 				$uml .= "package ".$comp."{\n";
@@ -210,6 +242,7 @@ class service_datamodel extends Service {
 				$uml .= "}\n";
 			}
 		}
+		// links
 		foreach ($links as $link)
 			$uml .= $link."\n";
 	}

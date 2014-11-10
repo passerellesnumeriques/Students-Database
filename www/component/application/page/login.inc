@@ -114,7 +114,7 @@ if ($message <> null) {
 	<tr><td>
 		<div class='info_box'>
 			<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom' style='vertical-align:bottom'/>
-			Your version is a development version
+			Your version is a development version (<?php echo $pn_app_version;?>)
 		</div>
 		<a href="#" onclick="resetDB();return false;">Reset Database</a><br/>
 		<a href="#" onclick="cleanStorage();return false;">Clean storage</a><br/>
