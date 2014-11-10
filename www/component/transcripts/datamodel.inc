@@ -223,4 +223,11 @@ $model->addTable("PublishedTranscriptStudentGeneralComment")
 	->addRemoveAccess("edit_transcripts_design", true)
 	;
 
+$model->internalGetTable("BatchPeriodSpecialization")
+	->onRemove(function($row,$sm) {
+		$published = SQLQuery::create()->bypassSecurity()->select("PublishedTranscript")->whereValue("PublishedTranscript","period",$row["period"])->whereValue("PublishedTranscript","specialization",$row["specialization"])->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("PublishedTranscript", $published);
+		$config = SQLQuery::create()->bypassSecurity()->select("TranscriptConfig")->whereValue("TranscriptConfig","period",$row["period"])->whereValue("TranscriptConfig","specialization",$row["specialization"])->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("TranscriptConfig", $config);
+	});
 ?>

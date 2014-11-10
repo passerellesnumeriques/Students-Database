@@ -230,5 +230,20 @@ $model->addTable("CurriculumSubject")
  		return "Subject ".toHTML($row["name"])." in period ".toHTML($r["period_name"])." of batch ".toHTML($r["batch_name"]);
  	})
  	;
- 	
+$model->internalGetTable("BatchPeriodSpecialization")
+	->onBeforeRemove(function($row,$sm) {
+		$subjects = SQLQuery::create()->bypassSecurity()
+			->select("CurriculumSubject")
+			->whereValue("CurriculumSubject","period",$row["period"])
+ 			->whereValue("CurriculumSubject","specialization",$row["specialization"])
+ 			->execute();
+ 		if (count($subjects) == 0) return null; // ok
+ 		$s = "The following subjects are defined to its curriculum: ";
+ 		$first = true;
+ 		foreach ($subjects as $subject) {
+ 			if ($first) $first = false; else $s .= ", ";
+ 			$s .= toHTML($subject["name"]);
+ 		}
+ 		return $s;
+ 	});
 ?>

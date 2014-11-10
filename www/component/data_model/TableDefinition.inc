@@ -73,6 +73,8 @@ namespace datamodel {
 		private $oninsert;
 		/** @var Event */
 		private $onremove;
+		/** @var array */
+		private $onbeforeremove;
 		/** @var Event */
 		private $onupdate;
 		/** @var Event */
@@ -83,6 +85,7 @@ namespace datamodel {
 			$this->name = $name;
 			$this->oninsert = new \Event();
 			$this->onremove = new \Event();
+			$this->onbeforeremove = array();
 			$this->onupdate = new \Event();
 			$this->onbeforeupdate = new \Event();
 		}
@@ -337,6 +340,14 @@ namespace datamodel {
 			return $this->oninsert->hasListeners();
 		}
 		/**
+		 * @param function $fct takes 2 parameters: row, sub_model_instance, and must return null if the remove is allowed, or a string containing the error message
+		 * @return \datamodel\Table
+		 */
+		public function onBeforeRemove($fct) {
+			array_push($this->onbeforeremove, $fct);
+			return $this;
+		}
+		/**
 		 * @param function $fct takes 2 parameters: row, sub_model_instance
 		 * @return \datamodel\Table
 		 */
@@ -344,11 +355,18 @@ namespace datamodel {
 			$this->onremove->listenFunction($fct);
 			return $this;
 		}
+		public function fireBeforeRemove($row, $sub_model_instance) {
+			foreach ($this->onbeforeremove as $fct) {
+				$error = $fct($row, $sub_model_instance);
+				if ($error <> null) return $error;
+			}
+			return null;
+		}
 		public function fireRemove($row, $sub_model_instance) {
 			$this->onremove->fire(array($row,$sub_model_instance));
 		}
 		public function hasRemoveListeners() {
-			return $this->onremove->hasListeners();
+			return $this->onremove->hasListeners() || count($this->onbeforeremove) > 0;
 		}
 		/**
 		 * @param function $fct takes 3 parameters: fields_values, key, sub_model_instance

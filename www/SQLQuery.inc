@@ -2114,8 +2114,11 @@ class SQLQuery {
 						if ($dm_table->hasRemoveListeners()) {
 							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
 							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$where);
-							while (($row = SQLQuery::db()->nextRow($res)) <> null)
+							while (($row = SQLQuery::db()->nextRow($res)) <> null) {
+								$error = $dm_table->fireBeforeRemove($row, $sub_model_instance);
+								if ($error <> null) throw new \ExceptionHTML("Cannot remove ".$dm_table->getRowDescription($row).": ".$error);
 								$dm_table->fireRemove($row, $sub_model);
+							}
 						}
 						$sql = "DELETE FROM `".$table_name."` WHERE ".$where;
 						SQLQuery::db()->execute($sql);

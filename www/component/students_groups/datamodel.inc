@@ -58,6 +58,22 @@ $model->addTable("StudentsGroup")
 		return $group_type." <i>".toHTML($row["name"])."</i> during period <i>".toHTML($period["name"])."</i> of batch <i>".toHTML($batch["name"])."</i>";
 	})
 	;
+$model->internalGetTable("BatchPeriodSpecialization")
+	->onBeforeRemove(function($row,$sm) {
+		$groups = SQLQuery::create()->bypassSecurity()
+			->select("StudentsGroup")
+			->whereValue("StudentsGroup","period",$row["period"])
+			->whereValue("StudentsGroup","specialization",$row["specialization"])
+			->execute();
+		if (count($groups) == 0) return null; // ok
+		$s = "The following students groups are attached to it: ";
+		$first = true;
+		foreach ($groups as $g) {
+			if ($first) $first = false; else $s .= ", ";
+			$s .= toHTML($g["name"]);
+		}
+		return $s;
+	});
 
 $model->addTable("StudentGroup")
 	->addForeignKey("people", "People", true, false, true)

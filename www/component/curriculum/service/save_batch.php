@@ -76,11 +76,6 @@ class service_save_batch extends Service {
 				SQLQuery::create()->bypassSecurity()->removeKeys("BatchPeriod",$ids);
 		}
 		// periods' specializations
-		if (!$new_batch && count($periods_ids) > 0) {
-			$rows = SQLQuery::create()->bypassSecurity()->select("BatchPeriodSpecialization")->whereIn("BatchPeriodSpecialization","period",$periods_ids)->execute();
-			if (count($rows) > 0)
-				SQLQuery::create()->bypassSecurity()->removeRows("BatchPeriodSpecialization", $rows);
-		}
 		$list = array();
 		foreach ($input["periods_specializations"] as $ps) {
 			if ($ps["period_id"] <= 0) $ps["period_id"] = $new_periods_mapping[$ps["period_id"]];
@@ -88,6 +83,28 @@ class service_save_batch extends Service {
 				"period"=>$ps["period_id"],
 				"specialization"=>$ps["specialization_id"]
 			));
+		}
+		if (!$new_batch && count($periods_ids) > 0) {
+			$rows = SQLQuery::create()->bypassSecurity()->select("BatchPeriodSpecialization")->whereIn("BatchPeriodSpecialization","period",$periods_ids)->execute();
+			// remove what is already there
+			for ($i = 0; $i < count($rows); $i++) {
+				$found = false;
+				for ($j = 0; $j < count($list); $j++) {
+					if ($list[$j]["period"] == $rows[$i]["period"] && $list[$j]["specialization"] == $rows[$i]["specialization"]) {
+						$found = true;
+						array_splice($list, $j, 1);
+						break;
+					}
+				}
+				if ($found) {
+					array_splice($rows, $i, 1);
+					$i--;
+				}
+			}
+			if (count($rows) > 0) {
+				// some need to be removed
+				SQLQuery::create()->bypassSecurity()->removeRows("BatchPeriodSpecialization", $rows);
+			}
 		}
 		if (count($list) > 0)
 			SQLQuery::create()->bypassSecurity()->insertMultiple("BatchPeriodSpecialization", $list);
