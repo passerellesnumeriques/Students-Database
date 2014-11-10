@@ -113,38 +113,6 @@ class students extends Component {
 		$q->where("(`$table_alias`.`exclusion_date` IS NULL OR `$table_alias`.`exclusion_date` > '$sql_date')");
 	}
 	
-	public function getStudentsQueryForClass($class_id, $include_people_info = true) {
-		$q = SQLQuery::create()
-			->select("StudentClass")
-			->whereValue("StudentClass", "class", $class_id)
-			;
-		if ($include_people_info) {
-			PNApplication::$instance->people->joinPeople($q, "StudentClass", "people");
-			require_once("component/people/PeopleJSON.inc");
-			PeopleJSON::PeopleSQL($q);
-		}
-		return $q;
-	}
-	
-	public function getStudentsForClasses($classes_ids, $include_people_info = true) {
-		$q = SQLQuery::create()
-			->select("StudentClass")
-			->whereIn("StudentClass", "class", $classes_ids)
-			;
-		if ($include_people_info) {
-			PNApplication::$instance->people->joinPeople($q, "StudentClass", "people");
-			require_once("component/people/PeopleJSON.inc");
-			PeopleJSON::PeopleSQL($q);
-		}
-		return $q->execute();
-	}
-	
-	public function getStudentClasses($people_id) {
-		return SQLQuery::create()
-			->select("StudentClass")
-			->whereValue("StudentClass", "people", $people_id)
-			->execute();
-	}
 	public function getStudent($people_id) {
 		return SQLQuery::create()
 			->select("Student")

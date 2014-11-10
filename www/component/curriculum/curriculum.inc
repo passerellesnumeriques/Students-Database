@@ -327,66 +327,6 @@ class curriculum extends Component {
 		return $q->execute();
 	}
 	
-	/**
-	 * Retrieve the class information from database
-	 * @param integer $class_id the requested class
-	 * @return array the row from the database
-	 */
-	public function getAcademicClass($class_id) {
-		return SQLQuery::create()->select("AcademicClass")->where("id", $class_id)->executeSingleRow();
-	}
-	/**
-	 * Retrieve the classes for a given period
-	 * @param integer $period_id the requested period
-	 * @param integer|null|false $restrict_specialization specify if we should only get classes for a specific specialization in the period
-	 * @return array the result from the database
-	 */
-	public function getAcademicClassesForPeriod($period_id, $restrict_specialization = false) {
-		$q = SQLQuery::create()->select("AcademicClass")->where("period", $period_id);
-		if ($restrict_specialization !== false) {
-			if ($restrict_specialization === null)
-				$q->whereNull("AcademicClass","specialization");
-			else
-				$q->where("specialization", $restrict_specialization);
-		}
-		return $q->execute();
-	}
-	
-	/** Retrieve classes
-	 * @param integer $batch_id StudentBatch ID
-	 * @param integer|null $period_id BatchPeriod ID, or null for any period
-	 * @param integer|null|boolean $restrict_specialization Specialization ID, or null to only get classes which are not in a specialization, or false to get all periods
-	 * @return array rows from the AcademicClass table
-	 */
-	public function getAcademicClasses($batch_id, $period_id = null, $restrict_specialization = false) {
-		if ($period_id <> null) return $this->getAcademicClassesForPeriod($period_id, $restrict_specialization);
-		$periods = $this->getBatchPeriods($batch_id);
-		if (count($periods) == 0) return array();
-		$ids = array();
-		foreach ($periods as $period) array_push($ids, $period["id"]);
-		$q = SQLQuery::create()->select("AcademicClass")->whereIn("AcademicClass", "period", $ids);
-		if ($restrict_specialization !== false) {
-			if ($restrict_specialization === null)
-				$q->whereNull("AcademicClass","specialization");
-			else
-				$q->where("specialization", $restrict_specialization);
-		}
-		return $q->execute();
-	}
-	
-	/**
-	 * Join the academic class table to an SQLQuery
-	 * @param SQLQuery $q the query where to add the join
-	 * @param string $from_table name of the table to use for the join
-	 * @param string $from_table_foreign_key name of the foreign key to use for the join
-	 * @param integer|null $filter_period_id if specified, only classes in the given period will be joined
-	 */
-	public function joinAcademicClass(&$q, $from_table, $from_table_foreign_key, $filter_period_id = null) {
-		$q->join($from_table, "AcademicClass", array($from_table_foreign_key=>"id"));
-		if ($filter_period_id <> null)
-			$q->whereValue("AcademicClass", "period", $filter_period_id);
-	}
-	
 	/** Retrieve the list of subject categories
 	 * @return array the result from the database
 	 */
@@ -451,66 +391,6 @@ class curriculum extends Component {
 			$q->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"));
 		if ($join_with_batch)
 			$q->join("BatchPeriod","StudentBatch",array("batch"=>"id"));
-	}
-	
-	/** Retrieve teacher assignments for the given subjects
-	 * @param integer[] $subjects_ids list of CurriculumSubject ID 
-	 * @return array rows from TeacherAssignment table
-	 */
-	public function getTeachersAssigned($subjects_ids) {
-		if (count($subjects_ids) == 0) return array();
-		$q = SQLQuery::create()->select("TeacherAssignment")->whereIn("TeacherAssignment", "subject", $subjects_ids);
-		return $q->execute();
-	}
-	/** Retrieve teacher assignments for the given classes
-	 * @param integer[] $classes_ids list of AcademicClass ID 
-	 * @return array rows from TeacherAssignment table
-	 */
-	public function getTeachersAssignedForClasses($classes_ids) {
-		if (count($subjects_ids) == 0) return array();
-		$q = SQLQuery::create()->select("TeacherAssignment")->whereIn("TeacherAssignment", "class", $classes_ids);
-		return $q->execute();
-	}
-	/** Retrieve teacher assignments for the given periods
-	 * @param integer[] $periods_ids list of BatchPeriod ID
-	 * @param boolean $join_subject true to join the CurriculumSubject table to every assignment 
-	 * @return array rows from joined tables TeacherAssignment, BatchPeriod and AcademicClass (and optionally CurriculumSubject)
-	 */
-	public function getTeacherAssignedForBatchPeriods($periods_ids, $join_subject=false) {
-		$q = SQLQuery::create()
-			->select("BatchPeriod")
-			->whereIn("BatchPeriod","id",$periods_ids)
-			->join("BatchPeriod","AcademicClass",array("id"=>"period"))
-			->join("AcademicClass","TeacherAssignment",array("id"=>"class"))
-			->fieldsOfTable("TeacherAssignment")
-			->field("BatchPeriod","id","batch_period_id")
-			->field("AcademicClass","specialization","specialization")
-			;
-		if ($join_subject) {
-			$q->join("TeacherAssignment","CurriculumSubject",array("subject"=>"id"));
-			$q->field("CurriculumSubject", "hours", "hours");
-			$q->field("CurriculumSubject", "hours_type", "hours_type");
-		}
-		return $q->execute();
-	}
-	
-	public function getTeachersAssignedTo($subject_id, $class_id = null, $people_info = true) {
-		$q = SQLQuery::create()
-			->select("TeacherAssignment")
-			->whereValue("TeacherAssignment", "subject", $subject_id);
-		if ($class_id <> null) $q->whereValue("TeacherAssignment", "class", $class_id);
-		if ($people_info) {
-			$q->fieldsOfTable("TeacherAssignment");
-			PNApplication::$instance->people->joinPeople($q, "TeacherAssignment", "people");
-		}
-		return $q->execute();
-	}
-	
-	public function getMyAssignments() {
-		return $this->getTeacherAssignments(PNApplication::$instance->user_management->people_id);
-	}
-	public function getTeacherAssignments($people_id) {
-		return SQLQuery::create()->select("TeacherAssignment")->whereValue("TeacherAssignment","people",$people_id)->execute();
 	}
 	
 }
