@@ -724,7 +724,7 @@ function createEvaluation(type, eval) {
 	field_passing_grade.onchange.add_listener(update_passing);
 	<?php } ?>
 	grades_grid.addColumnInContainer(type.col_container,eval.col,type.col_container.sub_columns.length-1);
-	update_passing();
+	grades_grid.grid.onallrowsready(update_passing);
 }
 
 function createEvaluationType(eval) {
@@ -794,7 +794,7 @@ function createEvaluationType(eval) {
 	div.appendChild(eval.div_coef);
 	eval.col_container = new CustomDataGridColumnContainer(div, cols, eval.name);
 	grades_grid.addColumnContainer(eval.col_container, grades_grid.columns.indexOf(next_col));
-	update_passing();
+	grades_grid.grid.onallrowsready(update_passing);
 	for (var i = 0; i < eval.evaluations.length; ++i)
 		createEvaluation(eval, eval.evaluations[i]);
 }

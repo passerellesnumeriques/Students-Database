@@ -30,16 +30,10 @@ class students extends Component {
 				PNApplication::error("The student does not exist or the specialization is not available for this batch of students");
 				return false;
 			}
-			// check the student is not already assigned to a class with a different specialization
-			$q = SQLQuery::create()
-				->select("Student")
-				->whereValue("Student", "people", $student_people_id)
-				->join("Student", "StudentClass", array("people"=>"people"));
-			PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class");
-			$q->where("`AcademicClass`.`specialization` IS NOT NULL AND `AcademicClass`.`specialization`!='".SQLQuery::escape($specialization_id)."'");
-			$different_classes = $q->execute();
-			if (count($different_classes) > 0) {
-				PNApplication::error("This student is already assigned to a class with another specialization");
+			// check the student is not already assigned to a group with a different specialization
+			$student_spe = PNApplication::$instance->students_groups->getStudentGroupSpecialization($student_people_id);
+			if ($student_spe <> null) {
+				PNApplication::error("This student is already assigned to a group with another specialization");
 				return false;
 			}
 		} else {
@@ -53,15 +47,9 @@ class students extends Component {
 				return false;
 			}
 			// check the student is not already assigned to a class with a specialization
-			$q = SQLQuery::create()
-				->select("Student")
-				->whereValue("Student", "people", $student_people_id)
-				->join("Student", "StudentClass", array("people"=>"people"));
-			PNApplication::$instance->curriculum->joinAcademicClass($q, "StudentClass", "class");
-			$q->where("`AcademicClass`.`specialization` IS NOT NULL");
-			$different_classes = $q->execute();
-			if (count($different_classes) > 0) {
-				PNApplication::error("This student is already assigned to a class with a specialization");
+			$student_spe = PNApplication::$instance->students_groups->getStudentGroupSpecialization($student_people_id);
+			if ($student_spe <> null) {
+				PNApplication::error("This student is already assigned to a group with a specialization");
 				return false;
 			}
 		}

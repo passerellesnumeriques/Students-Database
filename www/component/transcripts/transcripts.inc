@@ -307,15 +307,7 @@ class transcripts extends Component {
 					array_push($type["evaluations"], $eval);
 		}
 		// get all students attached to this subject, with their grades
-		$classes = PNApplication::$instance->curriculum->getAcademicClassesForPeriod($subject["period"], $subject["specialization"] <> null ? $subject["specialization"] : false);
-		$classes_ids = array();
-		foreach ($classes as $c) array_push($classes_ids, $c["id"]);
-		if (count($classes_ids) > 0)
-			$students = PNApplication::$instance->students->getStudentsForClasses($classes_ids, false);
-		else
-			$students = array();
-		$students_ids = array();
-		foreach ($students as $s) array_push($students_ids, $s["people"]);
+		$students_ids = PNApplication::$instance->students_groups->getStudentsForPeriod($subject["period"], $subject["specialization"] <> null ? $subject["specialization"] : false);
 		$evaluations_ids = array();
 		foreach ($evaluations as $eval) array_push($evaluations_ids, $eval["id"]);
 		if (count($evaluations_ids) > 0 && count($students_ids) > 0)
@@ -330,7 +322,7 @@ class transcripts extends Component {
 		$types_to_remove = array();
 		$types_to_insert = array();
 		$finals = array();
-		foreach ($students as $student) {
+		foreach ($students_ids as $student_id) {
 			$final_grade = 0;
 			$final_weights = 0;
 			foreach ($types as &$type) {
@@ -340,7 +332,7 @@ class transcripts extends Component {
 					// look for the student grade
 					$eg = null;
 					foreach ($students_grades as $sg)
-						if ($sg["people"] == $student["people"] && $sg["evaluation"] == $eval["id"]) {
+						if ($sg["people"] == $student_id && $sg["evaluation"] == $eval["id"]) {
 							$eg = $sg;
 							break;
 						}
@@ -364,14 +356,14 @@ class transcripts extends Component {
 					}
 				}
 				// set the type grade
-				array_push($types_to_remove, array("people"=>$student["people"],"type"=>$type["id"]));
-				array_push($types_to_insert, array("people"=>$student["people"],"type"=>$type["id"],"grade"=>$type_grade));
+				array_push($types_to_remove, array("people"=>$student_id,"type"=>$type["id"]));
+				array_push($types_to_insert, array("people"=>$student_id,"type"=>$type["id"],"grade"=>$type_grade));
 			}
 			if ($final_weights == 0) $final_grade = null;
 			if ($final_grade !== null)
 				$final_grade /= $final_weights;
 			// set the final grade
-			array_push($finals, array(array("people"=>$student["people"],"subject"=>$subject_id),array("grade"=>$final_grade)));
+			array_push($finals, array(array("people"=>$student_id,"subject"=>$subject_id),array("grade"=>$final_grade)));
 		}
 		if (count($types_to_remove) > 0) {
 			$q = SQLQuery::create()->bypassSecurity()->select("StudentSubjectEvaluationTypeGrade");

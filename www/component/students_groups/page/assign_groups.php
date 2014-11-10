@@ -55,7 +55,7 @@ class page_assign_groups extends Page {
 					$list_students = array();
 					foreach ($students as &$s) if ($s["specialization"] == $spe["id"]) array_push($list_students, $s);
 					$list_groups = array();
-					foreach ($groups as $g) if ($g["specialization"] == $spe["id"]) array_push($list_groups, $cl);
+					foreach ($groups as $g) if ($g["specialization"] == $spe["id"]) array_push($list_groups, $g);
 					array_push($sections, array($spe["name"],$list_groups,$list_students));
 				}
 			} else {
