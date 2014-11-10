@@ -100,7 +100,7 @@ class teaching extends Component {
 	
 	public function getStudentGroupingInfoForSubject($people_id, $subject_id) {
 		// get list of groupings for this subject
-		$groupings = SQLQuery::create()->select("SubjectTeaching")->whereValue("SubjectTeaching","subject",$subject_id)->field("id")->executeSingleField();
+		$groupings = SQLQuery::create()->bypassSecurity(PNApplication::$instance->user_management->people_id == $people_id)->select("SubjectTeaching")->whereValue("SubjectTeaching","subject",$subject_id)->field("id")->executeSingleField();
 		if (count($groupings) == 0) return null; // no grouping for this subject
 		// get groups for all groupings
 		$groupings_groups = SQLQuery::create()->select("SubjectTeachingGroups")->whereIn("SubjectTeachingGroups","subject_teaching",$groupings)->execute();
