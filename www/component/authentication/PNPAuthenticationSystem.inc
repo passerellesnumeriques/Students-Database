@@ -13,12 +13,12 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 
 	public function authenticate($username, $password, &$error) {
 		set_time_limit(45);
-		//if (PNApplication::$instance->local_domain == "PNP") {
-		//	$c = curl_init("authentication");
-		//} else {
+		if (PNApplication::$instance->local_domain == "PNP") {
+			$c = curl_init("authentication");
+		} else {
 			$c = curl_init("authentication.pnp.studentscenter.org:800");
 			if (file_exists("conf/proxy")) include("conf/proxy");
-		//}
+		}
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
 		curl_setopt($c, CURLOPT_POST, TRUE);
@@ -69,12 +69,12 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 	 */
 	private function callService($service, $token, $params) {
 		set_time_limit(300);
-		//if (PNApplication::$instance->local_domain == "PNP") {
-		//	$c = curl_init("authentication");
-		//} else {
+		if (PNApplication::$instance->local_domain == "PNP") {
+			$c = curl_init("authentication");
+		} else {
 			$c = curl_init("authentication.pnp.studentscenter.org:800");
 			if (file_exists("conf/proxy")) include("conf/proxy");
-		//}
+		}
 		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
 		curl_setopt($c, CURLOPT_POST, TRUE);
