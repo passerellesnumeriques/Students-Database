@@ -269,4 +269,38 @@ if ($structure_name <> null) {
 }
 
 $model->addDataScreen(new TeacherDataScreen());
+
+$category = new datamodel\DataDisplayCategory("Teacher", "/static/teaching/teacher_16.png");
+$model->addDataCategory($category);
+
+$display = new datamodel\TableDataDisplay("TeacherDates", $category);
+$display->addJoinFrom("people",array("types"), function($columns) {
+	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
+	return in_array("teacher", $types);
+});
+$model->addTableDataDisplay($display);
+
+class MultipleTeacherCreationDataScreen implements datamodel\MultipleDataScreen {
+	public function getTables() { return array("TeacherDates"); }
+	public function getDataDisplay($come_from, $sub_model, $for_new_data) {
+		if (!$for_new_data) return array();
+		$start_date = new datamodel\SimpleDataDisplay("start", "Start Date", true, true);
+		$end_date = new datamodel\SimpleDataDisplay("end", "End Date", true, true);
+		$model = DataModel::get();
+		$table = $model->internalGetTable("TeacherDates");
+		$category = $model->getDataCategory("Teacher");
+		$start_date->setTableAndCategory($table, $category);
+		$end_date->setTableAndCategory($table, $category);
+		return array($start_date, $end_date);
+	}
+	public function createData($paths, $multiple) {
+		$path = $paths[0];
+		$row = array("people"=>$path->columns["people"]);
+		foreach ($path->value as $cd)
+			if ($cd["name"] == "Start Date") $row["start"] = $cd["value"];
+			else if ($cd["name"] == "End Date") $row["end"] = $cd["value"];
+		SQLQuery::create()->insert("TeacherDates", $row);
+	}
+}
+$model->addDataScreen(new MultipleTeacherCreationDataScreen());
 ?>

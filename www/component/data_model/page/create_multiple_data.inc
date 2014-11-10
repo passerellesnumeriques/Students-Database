@@ -313,19 +313,24 @@ function removeRowButton(button) {
 addRow();
 <?php if ($precreated_data <> null && count($precreated_data) > 0) { ?>
 var precreated = <?php echo json_encode($precreated_data);?>;
-for (var i = 0; i < precreated.length; ++i) {
-	for (var j = 0; j < precreated[i].length; ++j) {
-		var d = precreated[i][j];
-		var field_index = -1;
-		for (var k = 0; k < fields.length; ++k)
-			if (fields[k].category == d.category && fields[k].name == d.data) { field_index = k; break; }
-		if (field_index < 0) continue;
-		var f = grid.getCellFieldById(i, paths[field_index].path+"#"+fields[field_index].name);
-		if (!f) continue;
-		f.setData(d.value);
-		if (d.forced) f.setEditable(false);
-	}
-}
+var initPreCreated = function(i) {
+	if (i >= precreated.length) return;
+	grid.onallrowsready(function() {
+		for (var j = 0; j < precreated[i].length; ++j) {
+			var d = precreated[i][j];
+			var field_index = -1;
+			for (var k = 0; k < fields.length; ++k)
+				if (fields[k].category == d.category && fields[k].name == d.data) { field_index = k; break; }
+			if (field_index < 0) continue;
+			var f = grid.getCellFieldById(i, paths[field_index].path+"#"+fields[field_index].name);
+			if (!f) continue;
+			f.setData(d.value);
+			if (d.forced) f.setEditable(false);
+		}
+		setTimeout(function(){initPreCreated(i+1)},1);
+	});
+};
+initPreCreated(0);
 <?php } ?>
 </script>
 <?php 

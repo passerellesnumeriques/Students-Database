@@ -4,6 +4,16 @@ class page_popup_create_people extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
+		if (isset($_GET["oncancel"])) {
+			?>
+			<script type='text/javascript'>
+			var popup = window.top.get_popup_window_from_frame(window);
+			popup.onclose = function() {
+				window.frameElement.<?php echo $_GET["oncancel"];?>();
+			};
+			</script>
+			<?php
+		}
 		$types = explode(",",$_GET["types"]);
 		$types_descr = "";
 		// check first we can create people with those types

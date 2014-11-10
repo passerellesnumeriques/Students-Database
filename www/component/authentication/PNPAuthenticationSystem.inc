@@ -69,7 +69,7 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 	 */
 	private function callService($service, $token, $params) {
 		set_time_limit(300);
-			if (PNApplication::$instance->local_domain == "PNP") {
+		if (PNApplication::$instance->local_domain == "PNP") {
 			$c = curl_init("authentication");
 		} else {
 			$c = curl_init("authentication.pnp.studentscenter.org:800");
