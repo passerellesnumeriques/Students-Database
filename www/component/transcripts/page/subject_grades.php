@@ -395,7 +395,7 @@ class page_subject_grades extends Page {
 </div>
 <?php
 if (PNApplication::$instance->help->isShown("subject_grades") && $can_edit) {
-	$help_div_id = PNApplication::$instance->help->startHelp("subject_grades", $this, "right", "bottom", false);
+	$help_div_id = PNApplication::$instance->help->startHelp("subject_grades", $this, "right", "relative:grades_container:inside_top:120", false);
 	if (!$edit) {
 		echo "This screen allows you to enter the grades for the selected subject.<br/>";
 		echo "<br/>";
@@ -415,7 +415,7 @@ if (PNApplication::$instance->help->isShown("subject_grades") && $can_edit) {
 		echo "</ul>";
 		echo "<br/>";
 		echo "If you already have grades in an Excel file, you can import them using the<br/>";
-		PNApplication::$instance->help->spanArrow($this, "import", "#import_button", "horiz");
+		PNApplication::$instance->help->spanArrow($this, "import", "#import_button", "vert");
 		echo " button.";
 	}
 	PNApplication::$instance->help->endHelp($help_div_id, "subject_grades");
