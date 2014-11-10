@@ -131,7 +131,6 @@ class CurriculumJSON {
 	 * @param array $batch batch
 	 * @param array $periods periods
 	 * @param array $periods_spe specializations per period
-	 * @param array $classes classes
 	 * @return string the JSON structure
 	 * @no_name_check
 	 */

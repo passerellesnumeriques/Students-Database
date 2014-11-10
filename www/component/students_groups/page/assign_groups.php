@@ -5,10 +5,10 @@ class page_assign_groups extends Page {
 	
 	public function execute() {
 		/* different cases:
-		 *  - on a period which is not specialized: all students can be assigned in any class
-		 *  - on a period which is specialized: only students assign to a given specializtion can be assign to classes of this specialization
-		 *  - on a class which is not specialized: all students non-assigned to any class during this period can be assigned
-		 *  - on a class which is specialized: all students of this specialization and not yet assign to a class during this period can be assigned
+		 *  - on a period which is not specialized: all students can be assigned in any group
+		 *  - on a period which is specialized: only students assign to a given specializtion can be assign to groups of this specialization
+		 *  - on a class which is not specialized: all students non-assigned to any group during this period can be assigned
+		 *  - on a class which is specialized: all students of this specialization and not yet assign to a group during this period can be assigned
 		 */
 		$period_id = @$_GET["period"];
 		$sections = array();

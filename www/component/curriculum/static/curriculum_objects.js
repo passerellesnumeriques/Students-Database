@@ -67,14 +67,12 @@ function Batch(id, name, start_date, end_date, periods) {
  * @param {String} name name
  * @param {Number} academic_period AcademicPeriod id
  * @param {Array} available_specializations list of specializations' id
- * @param {Array} classes list of {@link AcademicClass}
  */
-function BatchPeriod(id, name, academic_period, available_specializations, classes) {
+function BatchPeriod(id, name, academic_period, available_specializations) {
 	this.id = id;
 	this.name = name;
 	this.academic_period = academic_period;
 	this.available_specializations = available_specializations;
-	this.classes = classes;
 }
 
 /**

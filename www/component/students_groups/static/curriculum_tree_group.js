@@ -321,7 +321,7 @@ function newGroup(parent_node) {
 		input.focus();
 	});
 }
-/** Ask the user to confirm, then remove the AcademicClass from database and from the tree
+/** Ask the user to confirm, then remove the StudentsGroup from database and from the tree
  * @param {CurriculumTreeNode_Class} class_node tree node of the class to remove
  */
 function removeGroup(group_node) {

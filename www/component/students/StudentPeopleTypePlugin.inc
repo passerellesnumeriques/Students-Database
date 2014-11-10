@@ -32,8 +32,8 @@ class StudentPeopleTypePlugin implements PeopleTypePlugin {
 	public function remove($people_id) {
 		$rows = SQLQuery::create()->bypassSecurity()->select("Student")->whereValue("Student","people",$people_id)->execute();
 		SQLQuery::create()->bypassSecurity()->removeRows("Student", $rows);
-		$rows = SQLQuery::create()->bypassSecurity()->select("StudentClass")->whereValue("StudentClass","people",$people_id)->execute();
-		SQLQuery::create()->bypassSecurity()->removeRows("StudentClass", $rows);
+		$rows = SQLQuery::create()->bypassSecurity()->select("StudentGroup")->whereValue("StudentGroup","people",$people_id)->execute();
+		SQLQuery::create()->bypassSecurity()->removeRows("StudentGroup", $rows);
 		// TODO better: we should be able to know all tables having links to students...
 		$rows = SQLQuery::create()->bypassSecurity()->select("StudentSubjectEvaluationTypeGrade")->whereValue("StudentSubjectEvaluationTypeGrade","people",$people_id)->execute();
 		SQLQuery::create()->bypassSecurity()->removeRows("StudentSubjectEvaluationTypeGrade", $rows);
