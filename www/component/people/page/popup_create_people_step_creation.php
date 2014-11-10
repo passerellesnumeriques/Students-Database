@@ -26,6 +26,7 @@ foreach ($peoples as $people) {
 ?>];
 <?php if (isset($input["donotcreate"])) {
 	echo "window.frameElement.".$input["donotcreate"]."(peoples);";
+	echo "window.popup.onclose = null;";
 	echo "window.popup.close();";
 } else { ?>
 var problems = [];
@@ -55,6 +56,7 @@ function next(index, span, pb) {
 				} catch (e) { log_exception(e); }
 			};
 		} else {
+			window.popup.onclose = null;
 			try {
 				<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
 			} catch (e) { log_exception(e); }

@@ -103,6 +103,7 @@ class page_popup_create_people_step_entry extends Page {
 					confirm_dialog("Cancel creation ?",function(yes){
 						if (yes) {
 							<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]."();"; ?>
+							popup.onclose = null;
 							popup.close();
 						}
 					});
@@ -175,6 +176,7 @@ class page_popup_create_people_step_entry extends Page {
 			});
 			popup.addCancelButton(function() {
 				<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]."();"; ?>
+				popup.onclose = null;
 				return true;
 			});
 			if (popup.isFrozen()) popup.unfreeze();
