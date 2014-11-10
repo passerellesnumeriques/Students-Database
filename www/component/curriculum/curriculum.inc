@@ -312,6 +312,10 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("BatchPeriod")->whereIn("BatchPeriod", "id", $periods_ids)->execute();
 	}
 	
+	public function joinBatchPeriod(&$q, $from_table, $from_key) {
+		$q->join($from_table, "BatchPeriod", array($from_key=>"id"));
+	}
+	
 	/** Return all BatchPeriod rows corresponding to the given academic periods
 	 * @param array $academic_periods_ids list of AcademicPeriod ID
 	 * @return array rows from the BatchPeriod table

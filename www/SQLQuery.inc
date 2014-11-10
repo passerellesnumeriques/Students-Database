@@ -253,6 +253,7 @@ class SQLQuery {
 						substr($file,strlen($root)) == "data_model/DataPath.inc" ||
 						substr($file,strlen($root)) == "data_model/DataBaseLock.inc" ||
 						substr($file,strlen($root)) == "data_model/DataScreen.inc" ||
+						substr($file,strlen($root)) == "data_model/TableDefinition.inc" ||
 						substr($file,strlen($root)) == "data_model/page/data_screen.inc"
 				)) break; // generic service of data model
 				//if ($component == "data_model" && (

@@ -209,6 +209,7 @@ function changeGroupType(type_id) {
 	group_type_id = type_id;
 	window.curriculum_root.refreshGroups();
 	item.node._onselect();
+	updateGroupTypeButtons();
 }
 function updateGroupTypeButtons() {
 	var g = getSelectedGroupType();
@@ -244,7 +245,25 @@ function editGroupType() {
 	});
 }
 function removeGroupType() {
-	// TODO
+	var locker = lock_screen();
+	require("popup_window.js");
+	var content = document.createElement("DIV");
+	content.style.padding = "10px";
+	service.html("data_model","get_remove_confirmation_content",{table:"StudentsGroupType",row_key:group_type_id},content,function() {
+		require("popup_window.js",function() {
+			var p = new popup_window("Remove Group Type",theme.icons_16.question,content);
+			p.addOkCancelButtons(function() {
+				p.freeze("Removing Group Type");
+				service.json("data_model","remove_row",{table:"StudentsGroupType",row_key:group_type_id},function(res) {
+					document.getElementById('select_group_type').value = 1;
+					changeGroupType(1);
+					p.close();
+				});
+			});
+			unlock_screen(locker);
+			p.show();
+		});
+	});
 }
 function addGroupType() {
 	require("popup_window.js",function() {

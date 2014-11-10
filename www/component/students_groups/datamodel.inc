@@ -12,6 +12,9 @@ $model->addTable("StudentsGroupType")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) {
+		return "Students Group Type <i>".toHTML($row["name"])."</i>";
+	})
 	;
 
 $model->addTable("StudentsGroup")
@@ -27,6 +30,12 @@ $model->addTable("StudentsGroup")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) {
+		$type = SQLQuery::create()->bypassSecurity()->select("StudentsGroupType")->whereValue("StudentsGroupType","id",$row["type"])->field("name")->executeSingleValue();
+		$period = PNApplication::$instance->curriculum->getBatchPeriod($row["period"]);
+		$period = DataModel::get()->internalGetTable("BatchPeriod")->getRowDescription($period);
+		return toHTML($type)." ".toHTML($row["name"])." in ".$period;
+	})
 	->onInsert(function($fields,$id,$sub_model_instance) {
 		try {
 			$period = PNApplication::$instance->curriculum->getBatchPeriod($fields["period"]);
@@ -88,6 +97,20 @@ $model->addTable("StudentGroup")
 	->addWriteAccess("manage_batches", true) // TODO
 	->addInsertAccess("manage_batches", true)// TODO
 	->addRemoveAccess("manage_batches", true)// TODO
+	->setRowDescriptionProvider(function($row) {
+		$student = PNApplication::$instance->people->getPeople($row["people"],true);
+		$q = SQLQuery::create()
+			->select("StudentsGroup")
+			->whereValue("StudentsGroup","id",$row["group"])
+			->join("StudentsGroup","StudentsGroupType",array("type"=>"id"));
+		PNApplication::$instance->curriculum->joinBatchPeriod($q, "StudentsGroup", "period");
+		$group = $q
+			->field("StudentsGroup","name","name")
+			->field("StudentsGroupType","name","type")
+			->field("BatchPeriod", "name", "period_name")
+			->limit(0,1)->executeSingleRow();
+		return "Assignment of student <i>".toHTML($student["first_name"]." ".$student["last_name"])."</i> to ".toHTML($group["type"])." <i>".toHTML($group["name"])."</i> in <i>".toHTML($group["period_name"])."</i>";
+	})
 	->onInsert(function($fields_values, $id, $sub_model_instance){
 		$group = PNApplication::$instance->students_groups->getGroup($fields_values["group"]);
 		$group_type = PNApplication::$instance->students_groups->getGroupType($group["type"]);
