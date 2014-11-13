@@ -115,7 +115,7 @@ class page_transcripts extends Page {
     content: '';
     z-index: 80;
 }
-#transcript {
+.page_layout {
 	text-align:left;
 	background-color:white;
 	border-radius:5px;
@@ -126,7 +126,7 @@ class page_transcripts extends Page {
 	margin:5px 0px;
 	border:1px solid #C0C0C0;
 }
-#transcript>.transcripts {
+.page_layout>div {
 	border-radius:5px;
 }
 </style>
@@ -164,7 +164,7 @@ class page_transcripts extends Page {
 				</div>
 			</div>
 			<div style='flex:1 1 auto;overflow:auto;text-align:center;'>
-				<div id='transcript'>
+				<div id='transcript' class='page_layout'>
 				</div>
 			</div>
 		</div>

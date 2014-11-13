@@ -104,7 +104,7 @@ class page_configure_transcripts extends Page {
 		defaultTranscriptConfig($config);
 		
 		$this->requireJavascript("color_choice.js");
-		
+		theme::css($this, "print.css");
 		?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column'>
 	<div class='page_title' style='flex:none;'>
@@ -140,6 +140,9 @@ class page_configure_transcripts extends Page {
 					<input type='checkbox' <?php echo @$config["class_average"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_average',this.checked?1:0);"/> Class/Group average<br/>
 					<input type='checkbox' <?php echo @$config["class_lowest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_lowest',this.checked?1:0);"/> Class/Group lowest<br/>
 					<input type='checkbox' <?php echo @$config["class_highest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_highest',this.checked?1:0);"/> Class/Group highest<br/>
+				</div>
+				<b>Annexes</b><div style='margin-left:10px'>
+					<input type='checkbox' <?php echo @$config["grades_details"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('grades_details',this.checked?1:0);"/> Grades details by subject<br/>
 				</div>
 			</div>
 			<div style='background-color:white;margin-bottom:5px;box-shadow: 0px 2px 2px #D0D0D0;'>
@@ -253,7 +256,7 @@ class page_configure_transcripts extends Page {
 				<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom'/> Grades are fake in this screen. This is only to give an idea how the transcripts will be.
 			</div>
 			<div style='flex:1 1 auto;overflow:auto;text-align:center'>
-				<div id='design' style='text-align:left;background-color:white;border-radius:5px;display:inline-block;box-shadow: 2px 2px 2px 0px #808080;width:630px;height:810px;margin-bottom:5px;'>
+				<div id='design'>
 					<?php generateTranscriptFor("_".$this->generateID(), $config,$categories,$selected_subjects,$batch,$period);?>
 				</div>
 			</div>
@@ -341,9 +344,95 @@ for (var i = 0; i < added_subjects.length; ++i) {
 	for (var j = 0; j < other_subjects.length; ++j) if (other_subjects[j].id == added_subjects[i]) { s = other_subjects[j]; break; }
 	appendSubject(s);
 }
+function buildPages(content) {
+	if (content.offsetHeight < 780) {
+		addClassName(content, "page_layout");
+		return;
+	}
+	var knowledge = [];
+	var page_header = null;
+	var page_footer = null;
+	var sections = [];
+	for (var i = 0; i < content.childNodes.length; ++i) {
+		if (content.childNodes[i].nodeType != 1) continue;
+		if (hasClassName(content.childNodes[i], "page_layout_header"))
+			page_header = content.childNodes[i];
+		else if (hasClassName(content.childNodes[i], "page_layout_footer"))
+			page_footer = content.childNodes[i];
+		else if (hasClassName(content.childNodes[i], "page_layout_section"))
+			sections.push(content.childNodes[i]);
+	}
+	var fixed = page_header ? getHeight(page_header,knowledge) : 0;
+	fixed += page_footer ? getHeight(page_footer,knowledge) : 0;
+	// first page
+	var h = fixed;
+	var i = 0;
+	do {
+		h += getHeight(sections[i],knowledge);
+		i++;
+	} while (i < sections.length && h+getHeight(sections[i],knowledge) < 760);
+	content.style.position = "relative";
+	var pages_numbers = [];
+	var f = document.createElement("DIV");
+	f.style.position = "absolute";
+	f.style.bottom = "5px";
+	f.style.right = "5px";
+	content.appendChild(f);
+	pages_numbers.push(f);
+	addClassName(content, "page_layout");
+	// next pages
+	var next = content.nextSibling;
+	while (i < sections.length) {
+		var page = document.createElement("DIV");
+		page.style.position = "relative";
+		page.className = content.className;
+		if (page_header) {
+			var header = document.createElement("DIV");
+			header.className = page_header.className;
+			header.innerHTML = page_header.innerHTML;
+			page.appendChild(header);
+		}
+		h = fixed;
+		do {
+			sections[i] = page.appendChild(sections[i]);
+			h += getHeight(sections[i],knowledge);
+			i++;
+		} while (i < sections.length && h+getHeight(sections[i],knowledge) < 760);
+		if (page_footer) {
+			var footer = document.createElement("DIV");
+			footer.className = page_footer.className;
+			footer.innerHTML = page_footer.innerHTML;
+			page.appendChild(footer);
+		}
+		f = document.createElement("DIV");
+		f.style.position = "absolute";
+		f.style.bottom = "5px";
+		f.style.right = "5px";
+		page.appendChild(f);
+		pages_numbers.push(f);
+		if (next) content.parentNode.insertBefore(page, next);
+		else content.parentNode.appendChild(page);
+	}
+	for (var i = 0; i < pages_numbers.length; ++i) {
+		pages_numbers[i].innerHTML = "Page "+(i+1)+" / "+(pages_numbers.length);
+	}
+}
+function makePageLayout() {
+	var design = document.getElementById('design');
+	var pages = [];
+	for (var i = 0; i < design.childNodes.length; ++i) {
+		var page = design.childNodes[i];
+		if (page.nodeType != 1) continue;
+		if (page.nodeName == "DIV") pages.push(design.childNodes[i]);
+	}
+	for (var i = 0; i < pages.length; ++i)
+		buildPages(pages[i]);
+}
+makePageLayout();
 function refreshDesign() {
 	var locker = lock_screen(null, "Reloading transcript");
 	service.html("transcripts","generate_transcript",{period:<?php echo $_GET["period"];?>,specialization:<?php echo isset($_GET["specialization"]) ? $_GET["specialization"] : "null";?>},document.getElementById('design'),function() {
+		makePageLayout();
 		unlock_screen(locker);
 	});
 }

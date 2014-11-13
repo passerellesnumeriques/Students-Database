@@ -1,8 +1,6 @@
 <style type='text/css'>
 .transcripts {
 	font-family: Verdana;
-	padding:10px 20px;
-	background-color: white;
 }
 .transcripts .title {
 	font-size:22pt;
@@ -122,37 +120,40 @@
 </style>
 <div class='transcripts' id='#ID#'>
 <!-- Header / Title -->
-<div class='title'>
-	<div style='display:inline-block;width:120px'>
-	<img src='/static/application/logo.png' width=70 height=70 style='vertical-align:top;'/>
+<div class='page_layout_header'>
+	<div class='title'>
+		<div style='display:inline-block;width:120px'>
+		<img src='/static/application/logo.png' width=70 height=70 style='vertical-align:top;'/>
+		</div>
+		<div style='display:inline-block;width:450px;vertical-align:top'>
+			OFFICIAL TRANSCRIPT OF ACADEMIC RECORDS
+		</div>
 	</div>
-	<div style='display:inline-block;width:450px;vertical-align:top'>
-		OFFICIAL TRANSCRIPT OF ACADEMIC RECORDS
-	</div>
+	<!-- Student's information -->
+	<table class='student_information'>
+		<tr>
+			<td>First Name:</td>
+			<td class='name'>#First Name#</td>
+			<td>Last Name:</td>
+			<td class='name'>#Last Name#</td>
+		</tr>
+		<tr>
+			<td>Batch:</td>
+			<td>#Batch Name#</td>
+			<td>Class:</td>
+			<td>#Class Name#</td>
+		</tr>
+		<tr>
+			<td>Academic Period:</td>
+			<td>#Academic Period#</td>
+			<td>Date:</td>
+			<td>#Academic Period Date#</td>
+		</tr>
+	</table>
 </div>
-<!-- Student's information -->
-<table class='student_information'>
-	<tr>
-		<td>First Name:</td>
-		<td class='name'>#First Name#</td>
-		<td>Last Name:</td>
-		<td class='name'>#Last Name#</td>
-	</tr>
-	<tr>
-		<td>Batch:</td>
-		<td>#Batch Name#</td>
-		<td>Class:</td>
-		<td>#Class Name#</td>
-	</tr>
-	<tr>
-		<td>Academic Period:</td>
-		<td>#Academic Period#</td>
-		<td>Date:</td>
-		<td>#Academic Period Date#</td>
-	</tr>
-</table>
 <!-- Grades -->
 #SUBJECT_CATEGORY#
+<div class="page_layout_section">
 <table class='grades'>
 	<colgroup>
 		<col class='subject_category_col'/>
@@ -217,8 +218,10 @@
 	</tr>
 	</tbody>
 </table>
+</div>
 #END_SUBJECT_CATEGORY#
 #SINGLE_SUBJECT#
+<div class="page_layout_section">
 <table class='grades' style='margin-top:10px'>
 		<col class='subject_name_col'/>
 		#IF:nb_hours#<col class='info_col'/>#ENDIF#
@@ -246,7 +249,9 @@
 	</tr>
 	</tbody>
 </table>
+</div>
 #END_SINGLE_SUBJECT#
+<div class="page_layout_section">
 <!-- Global results -->
 <table class='grades total'>
 	<colgroup>
@@ -284,6 +289,7 @@
 	#Location#
 	#Signatory Name#
 	#Signatory Title#
+</div>
 </div>
 </div>
 <script type='text/javascript'>

@@ -1,0 +1,87 @@
+.grades_details {
+	font-family: Verdana;
+}
+.grades_details .title {
+	font-size:22pt;
+	display:flex;
+	flex-direction: row;
+	align-items: center;
+}
+.grades_details .student_information {
+	width: 100%;
+	margin-top:10px;
+	margin-bottom: 10px;
+}
+.grades_details .student_information td {
+	text-align: left;
+}
+.grades_details .student_information .name {
+	font-weight: bold;
+}
+.grades_details .subject_container {
+	border: 1px solid black;
+	padding: 5px;
+}
+.grades_details .subject_info {
+	display: flex;
+	flex-direction: row;
+	border-bottom: 1px solid black;
+	margin-bottom: 3px;
+}
+.grades_details .subject_info .subject_info_title {
+	font-weight: bold;
+	margin-left: 20px;
+}
+.grades_details .subject_info .subject_info_title:first-child {
+	margin-left: 0px;
+}
+.grades_details .subject_info .subject_info_data {
+	font-family: Courier New;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+.grades_details .grades_table {
+	border-spacing: 0px;
+}
+.grades_details .grades_table td {
+	border-right: 1px solid #808080;
+}
+.grades_details .grades_table td:last-child {
+	border-right: none;
+}
+.grades_details .grades_title td {
+	font-weight: bold;
+	text-align: center;
+	padding: 0px 3px;
+}
+.grades_details .evaluation_type>td {
+	font-weight: bold;
+	border-bottom: 1px solid black;
+}
+.grades_details .evaluation>td.evaluation_name {
+}
+.grades_details .evaluation>td.max_grade {
+	font-family: Courier New;
+	padding: 0px 3px;
+	text-align: center;
+}
+.grades_details .evaluation>td.grade {
+	font-family: Courier New;
+	padding: 0px 3px;
+	text-align: center;
+}
+.grades_details .evaluation>td.coef {
+	padding: 0px 3px;
+	text-align: center;
+}
+.grades_details .evaluation_type_total>td {
+	border-top: 1px solid #808080;
+	padding-bottom: 5px;
+}
+.grades_details .evaluation_type_total>td.grade {
+	font-weight: bold;
+	font-family: Courier New;
+	padding: 0px 3px;
+	text-align: center;
+	border-top: 1px solid #808080;
+}

@@ -22,7 +22,30 @@ class service_publish extends Service {
 		require_once("component/transcripts/page/design.inc");
 		defaultTranscriptConfig($config);
 		
-		$subjects_ids = SQLQuery::create()->select("TranscriptSubjects")->whereValue("TranscriptSubjects","period",$period_id)->whereValue("TranscriptSubjects","specialization",$spe_id)->field("subject")->executeSingleField();
+		$sids = SQLQuery::create()->select("TranscriptSubjects")->whereValue("TranscriptSubjects","period",$period_id)->whereValue("TranscriptSubjects","specialization",$spe_id)->field("subject")->executeSingleField();
+		$subjects_infos = SQLQuery::create()->select("CurriculumSubjectGrading")->whereIn("CurriculumSubjectGrading","subject",$sids)->execute();
+		$subjects = array();
+		$subjects_ids = array();
+		if (@$config["grades_details"] == 1) $subjects_detailed = array();
+		foreach ($sids as $sid) {
+			$info = null;
+			foreach ($subjects_infos as $si) if ($si["subject"] == $sid) { $info = $si; break; }
+			if ($info == null || !isset($info["max_grade"]) || !isset($info["passing_grade"])) continue;
+			array_push($subjects_ids, $sid);
+			array_push($subjects, array(
+				"transcript"=>@$input["id"],
+				"subject"=>$sid,
+				"max_grade"=>$info["max_grade"],
+				"passing_grade"=>$info["passing_grade"]
+			));
+			if (@$config["grades_details"] == 1 && $info["only_final_grade"] <> 1)
+				array_push($subjects_detailed, $sid);
+		}
+		
+		if (count($subjects) == 0) {
+			PNApplication::error("You cannot publish this transcript because none of the subjects are configured.");
+			return;
+		}
 		
 		$students_ids = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, false, false, $spe_id <> null ? $spe_id : false)->field("Student","people")->executeSingleField();
 		if (count($students_ids) == 0) {
@@ -41,6 +64,11 @@ class service_publish extends Service {
 		
 		$students_comments = SQLQuery::create()->select("StudentTranscriptGeneralComment")->whereValue("StudentTranscriptGeneralComment","period",$period_id)->whereIn("StudentTranscriptGeneralComment","people",$students_ids)->execute();
 		
+		if (@$config["grades_details"] == 1) {
+			//$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereIn("CurriculumSubjectEvaluationType","subject",$subjects_detailed)->execute();
+			// TODO
+		}
+		
 		if (isset($input["id"])) {
 			// update
 			$id = $input["id"];
@@ -49,11 +77,17 @@ class service_publish extends Service {
 			SQLQuery::create()->removeRows("PublishedTranscriptStudentSubjectGrade", $rows);
 			$rows = SQLQuery::create()->select("PublishedTranscriptStudentGeneralComment")->whereValue("PublishedTranscriptStudentGeneralComment","id",$id)->execute();
 			SQLQuery::create()->removeRows("PublishedTranscriptStudentGeneralComment", $rows);
+			$rows = SQLQuery::create()->select("PublishedTranscriptSubject")->whereValue("PublishedTranscriptSubject","transcript",$id)->execute();
+			SQLQuery::create()->removeRows("PublishedTranscriptSubject", $rows);
 		} else {
 			// new one
 			$config["name"] = $input["name"];
 			$id = SQLQuery::create()->insert("PublishedTranscript", $config);
+			for ($i = 0; $i < count($subjects); $i++)
+				$subjects[$i]["transcript"] = $id;
 		}
+		
+		SQLQuery::create()->insertMultiple("PublishedTranscriptSubject", $subjects);
 		
 		$to_insert = array();
 		foreach ($students_grades as $sg)

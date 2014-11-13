@@ -337,6 +337,9 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 		echo "});\n";
 		echo "</script>\n";
 	}
+	
+	if (@$config["grades_details"] == 1)
+		generateGradesDetails($transcript_id, $subjects, $student, $batch, $period, $class_name);
 }
 
 function generateSubjectSection($cat, $subject, $subj_content, $config, $period, $student_grades, $student, $transcript_id, $id_suffix, &$script_grades, $grading_systems, &$total_class_av, &$total_batch_av, &$total_class_coef, &$total_batch_coef) {
@@ -501,6 +504,124 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 		}
 	}
 	return $subj_content;
+}
+
+function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, $period, $class_name) {
+	$subjects = array();
+	foreach ($all_subjects as $s) {
+		if (substr($transcript_id,0,1) == "_") {
+			// fake
+			$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType","subject",$s["id"])->execute();
+			if (count($types) == 0) continue;
+			$subject = $s;
+			$subject["types"] = $types;
+			$types_ids = array();
+			foreach ($types as $t) array_push($types_ids, $t["id"]);
+			$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation","type",$types_ids)->execute();
+			for ($i = 0; $i < count($subject["types"]); $i++) {
+				$subject["types"][$i]["evaluations"] = array();
+				foreach ($evaluations as $e) {
+					$e["student_grade"] = 10; // TODO
+					if ($e["type"] == $subject["types"][$i]["id"])
+						array_push($subject["types"][$i]["evaluations"], $e);
+				}
+				$subject["types"][$i]["student_grade"] = 20; // TODO
+			}
+			array_push($subjects, $subject);
+		} else {
+			// published
+			$types = SQLQuery::create()->select("PublishedTranscriptEvaluationType")->whereValue("PublishedTranscriptEvaluationType","subject",$s["id"])->whereValue("PublishedTranscriptEvaluationType","transcript",$transcript_id)->execute();
+			if (count($types) == 0) continue;
+			$subject = $s;
+			$subject["types"] = $types;
+			$types_ids = array();
+			foreach ($types as $t) array_push($types_ids, $t["id"]);
+			$evaluations = SQLQuery::create()->select("PublishedTranscriptEvaluation")->whereIn("PublishedTranscriptEvaluation","type",$types_ids)->execute();
+			$types_grades = SQLQuery::create()->select("PublishedTranscriptStudentEvaluationTypeGrade")->whereIn("PublishedTranscriptStudentEvaluationTypeGrade","type",$types_ids)->whereValue("PublishedTranscriptStudentEvaluationTypeGrade","people",$student["id"])->execute();
+			$eval_ids = array();
+			foreach ($evaluations as $e) array_push($eval_ids, $e["id"]);
+			if (count($eval_ids) > 0)
+				$eval_grade = SQLQuery::create()->select("PublishedTranscriptStudentEvaluationGrade")->whereIn("PublishedTranscriptStudentEvaluationGrade","evaluation",$eval_ids)->whereValue("PublishedTranscriptStudentEvaluationGrade","people",$student["id"])->execute();
+			else
+				$eval_grade = array();
+			for ($i = 0; $i < count($subject["types"]); $i++) {
+				$subject["types"][$i]["evaluations"] = array();
+				foreach ($evaluations as $e) {
+					foreach ($eval_grade as $g) if ($g["evaluation"] == $e["id"]) { $e["student_grade"] = $g["grade"]; break; }
+					if ($e["type"] == $subject["types"][$i]["id"])
+						array_push($subject["types"][$i]["evaluations"], $e);
+				}
+				foreach ($types_grades as $g)
+					if ($g["type"] == $subject["types"][$i]["id"])
+						$subject["types"][$i]["student_grade"] = $g["grade"];
+			}
+			array_push($subjects, $subject);
+		}
+	}
+	if (count($subjects) == 0) return;
+	echo "<style type='text/css'>".file_get_contents(dirname(__FILE__)."/grades_details.css")."</style>";
+	echo "<div class='grades_details'>";
+	$header = file_get_contents(dirname(__FILE__)."/grades_details_header.html");
+	$header = str_replace("#First Name#", $student["first_name"], $header);
+	$header = str_replace("#Last Name#", $student["last_name"], $header);
+	$header = str_replace("#Batch Name#", $batch["name"], $header);
+	$header = str_replace("#Class Name#", $class_name, $header);
+	$header = str_replace("#Academic Period#", $period["name"], $header);
+	$header = str_replace("#Academic Period Date#", date("d M Y",strtotime($period["academic_period_start"]))." to ".date("d M Y",strtotime($period["academic_period_end"])), $header);
+	echo $header;
+	foreach ($subjects as $subject) {
+		echo "<div class='subject_container'>";
+			echo "<div class='subject_info'>";
+				echo "<div class='subject_info_title'>Subject Code</div>";
+				echo "<div class='subject_info_data'>".toHTML($subject["code"])."</div>";
+				echo "<div class='subject_info_title'>Subject Name</div>";
+				echo "<div class='subject_info_data'>".toHTML($subject["name"])."</div>";
+			echo "</div>";
+			echo "<table class='grades_table'>";
+			echo "<tr class='grades_title'>";
+			echo "<td>Evaluation</td>";
+			echo "<td>Grade</td>";
+			echo "<td>Max Pts</td>";
+			echo "<td>Coef.</td>";
+			echo "</tr>";
+			foreach ($subject["types"] as $type) {
+				echo "<tr class='evaluation_type'>";
+				echo "<td colspan=4>";
+				echo toHTML($type["name"]);
+				echo "</td>";
+				echo "</tr>";
+				foreach ($type["evaluations"] as $e) {
+					echo "<tr class='evaluation'>";
+					echo "<td class='evaluation_name'>";
+					echo toHTML($e["name"]);
+					echo "</td>";
+					if (array_key_exists("student_grade", $e) && $e["student_grade"] !== null) {
+						echo "<td class='grade'>";
+						echo toHTML($e["student_grade"]);
+						echo "</td>";
+					} else {
+						echo "<td class='grade no_grade'>Absent</td>";
+					}
+					echo "<td class='max_grade'>";
+					echo toHTML($e["max_grade"]);
+					echo "</td>";
+					echo "<td class='coef'>";
+					echo toHTML($e["weight"]);
+					echo "</td>";
+					echo "</tr>";
+				}
+				echo "<tr class='evaluation_type_total'>";
+				echo "<td>TOTAL</td>";
+				echo "<td class='grade'>";
+				echo "TODO"; // TODO
+				echo "</td>";
+				echo "<td colspan=2></td>";
+				echo "</tr>";
+			}
+			echo "</table>";
+		echo "</div>";
+	}
+	echo "</div>";
 }
 
 function processTranscriptCondition(&$content, $condition_name, $condition_result) {
