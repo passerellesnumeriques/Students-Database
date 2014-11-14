@@ -33,7 +33,8 @@ function calendar_view_agenda(view, container) {
 	this.back = function() {
 		this.start_date = new Date(this.start_date.getTime()-1*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		this._reloadTable();
 		view.loadEvents();
 	};
@@ -41,7 +42,8 @@ function calendar_view_agenda(view, container) {
 	this.backStep = function() {
 		this.start_date = new Date(this.start_date.getTime()-30*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		this._reloadTable();
 		view.loadEvents();
 	};
@@ -49,7 +51,8 @@ function calendar_view_agenda(view, container) {
 	this.forward = function() {
 		this.start_date = new Date(this.start_date.getTime()+1*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		this._reloadTable();
 		view.loadEvents();
 	};
@@ -57,7 +60,8 @@ function calendar_view_agenda(view, container) {
 	this.forwardStep = function() {
 		this.start_date = new Date(this.start_date.getTime()+30*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+30*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		this._reloadTable();
 		view.loadEvents();
 	};

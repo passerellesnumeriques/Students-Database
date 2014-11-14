@@ -11,7 +11,7 @@ if (typeof get_script_path != 'undefined') {
  */
 function calendar_view_week(view, container) {
 
-	this.start_date = view.cursor_date;
+	this.start_date = new Date(view.cursor_date.getTime());
 	/** First day of the week to display */
 	if (this.start_date.getDay() == 0) this.start_date = new Date(this.start_date.getTime()-6*24*60*60*1000);
 	else if (this.start_date.getDay() > 1) this.start_date = new Date(this.start_date.getTime()-(this.start_date.getDay()-1)*24*60*60*1000);
@@ -59,7 +59,8 @@ function calendar_view_week(view, container) {
 	this.back = function() {
 		this.start_date = new Date(this.start_date.getTime()-1*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+7*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		for (var i = 0; i < 7; ++i) {
 			var d = new Date(t.start_date.getTime()+i*24*60*60*1000);
 			t._setDayTitle(t.day_title[i], t.day_box[i].clientWidth, d);
@@ -77,7 +78,8 @@ function calendar_view_week(view, container) {
 	this.backStep = function() {
 		this.start_date = new Date(this.start_date.getTime()-7*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+7*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		for (var i = 0; i < 7; ++i) {
 			var d = new Date(t.start_date.getTime()+i*24*60*60*1000);
 			t._setDayTitle(t.day_title[i], t.day_box[i].clientWidth, d);
@@ -95,7 +97,8 @@ function calendar_view_week(view, container) {
 	this.forward = function() {
 		this.start_date = new Date(this.start_date.getTime()+1*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+7*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		for (var i = 0; i < 7; ++i) {
 			var d = new Date(t.start_date.getTime()+i*24*60*60*1000);
 			t._setDayTitle(t.day_title[i], t.day_box[i].clientWidth, d);
@@ -113,7 +116,8 @@ function calendar_view_week(view, container) {
 	this.forwardStep = function() {
 		this.start_date = new Date(this.start_date.getTime()+7*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+7*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		for (var i = 0; i < 7; ++i) {
 			var d = new Date(t.start_date.getTime()+i*24*60*60*1000);
 			t._setDayTitle(t.day_title[i], t.day_box[i].clientWidth, d);

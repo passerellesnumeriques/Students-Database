@@ -69,7 +69,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			t.position_div = document.createElement("DIV");
 			t.position_div.style.display = "inline-block";
 			t.position_div.style.textAlign = "center";
-			t.position_div.style.marginTop = "3px";
+			t.position_div.style.marginTop = "6px";
 			t.position_div.style.whiteSpace = "nowrap";
 			t.position_back_step = document.createElement("IMG"); t.position_div.appendChild(t.position_back_step);
 			t.position_back = document.createElement("IMG"); t.position_div.appendChild(t.position_back);
@@ -78,6 +78,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			t.position_forward_step = document.createElement("IMG"); t.position_div.appendChild(t.position_forward_step);
 			t.position_text.style.paddingLeft = "2px";
 			t.position_text.style.paddingRight = "2px";
+			t.position_text.style.verticalAlign = "middle";
 			t.position_back.style.verticalAlign = "middle";
 			t.position_back.style.cursor = "pointer";
 			t.position_back.style.padding = "1px";

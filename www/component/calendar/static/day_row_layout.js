@@ -23,7 +23,9 @@ function day_row_layout(calendar_manager) {
 			var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
 			var day1 = Math.floor((ev.start.getTime()-first_day.getTime())/(24*60*60*1000));
 			if (day1 >= day_boxes.length) continue; // after
-			var day_end = Math.floor((ev.end.getTime()-first_day.getTime())/(24*60*60*1000));
+			var day_end = (ev.end.getTime()-ev.start.getTime())/(24*60*60*1000);
+			if (day_end > Math.floor(day_end)) day_end = Math.floor(day_end);
+			day_end += day1;
 			if (day_end < 0) continue; // before
 			var real_day1 = day1;
 			if (day1 < 0) day1 = 0;
@@ -62,7 +64,7 @@ function day_row_layout(calendar_manager) {
 			div.style.padding = "1px";
 			div.style.fontSize = '8pt';
 			div.innerHTML = ev.title;
-			div.title = cal.name+"\r\n"+ev.title+"\r\n"+ev.description;
+			div.title = cal.name+"\r\n"+ev.title+"\r\n";
 			div.style.cursor = "pointer";
 			div.event = ev;
 			div.onclick = function() {
