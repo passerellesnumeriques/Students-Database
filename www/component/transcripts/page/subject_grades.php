@@ -107,8 +107,12 @@ class page_subject_grades extends Page {
 				PNApplication::$instance->teaching->isAssignedToSubjectTeaching(PNApplication::$instance->user_management->people_id, $grouping_id) :
 				PNApplication::$instance->teaching->isAssignedToSubject(PNApplication::$instance->user_management->people_id, $subject_id, $group_id);
 			if (!$iam_assigned) {
-				PNApplication::error("Access denied");
-				return;
+				// if not assigned, allow if at least assigned to some other groups of students, else access is denied
+				$assigned_groups = PNApplication::$instance->teaching->getAssignedGroups(PNApplication::$instance->user_management->people_id, $subject_id);
+				if (count($assigned_groups) == 0) {
+					PNApplication::error("Access denied");
+					return;
+				}
 			}
 		}
 
@@ -116,25 +120,6 @@ class page_subject_grades extends Page {
 		$q = PNApplication::$instance->curriculum->getSubjectQuery($subject_id);
 		$q->join("CurriculumSubject", "CurriculumSubjectGrading", array("id"=>"subject"));
 		$subject = $q->byPassSecurity()->executeSingleRow();
-		
-		$edit = false;
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");
-		if (!$can_edit) {
-			if ($iam_assigned == null) 
-				$iam_assigned = $grouping_id <> null ? 
-					PNApplication::$instance->teaching->isAssignedToSubjectTeaching(PNApplication::$instance->user_management->people_id, $grouping_id) :
-					PNApplication::$instance->teaching->isAssignedToSubject(PNApplication::$instance->user_management->people_id, $subject_id, $group_id);
-			$can_edit = $iam_assigned;
-			// TODO if only assigned to some groups, and all groups selected...
-		}
-		$locker = null;
-		$lock_id = null;
-		if ($can_edit && isset($_GET["edit"])) {
-			require_once("component/data_model/DataBaseLock.inc");
-			$lock_id = DataBaseLock::lockRow("CurriculumSubjectGrading", $subject["id"], $locker, true);
-			if ($lock_id <> null)
-				$edit = true;
-		}
 		
 		// get batch, period, group and specialization
 		if ($group_id <> null) {
@@ -155,6 +140,37 @@ class page_subject_grades extends Page {
 			$spe = $subject["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($subject["specialization"]) : null;
 		}
 		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+		
+		$edit = false;
+		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");
+		if (!$can_edit) {
+			if ($iam_assigned == null) 
+				$iam_assigned = $grouping_id <> null ? 
+					PNApplication::$instance->teaching->isAssignedToSubjectTeaching(PNApplication::$instance->user_management->people_id, $grouping_id) :
+					PNApplication::$instance->teaching->isAssignedToSubject(PNApplication::$instance->user_management->people_id, $subject_id, $group_id);
+			$can_edit = $iam_assigned;
+		}
+		$locker = null;
+		$lock_id = null;
+		$not_assigned_to_group = false;
+		if ($can_edit && isset($_GET["edit"])) {
+			if ($iam_assigned <> null) {
+				// if only assigned to some groups, check the correct group is selected
+				$assigned_groups = PNApplication::$instance->teaching->getAssignedGroups(PNApplication::$instance->user_management->people_id, $subject_id);
+				if ($group_id <> null) $ok = array_search($group_id, $assigned_groups) !== false;
+				else {
+					$ok = true;
+					foreach ($groups_ids as $gid) if (array_search($gid, $assigned_groups) === false) { $ok = false; break; }
+				}
+			} else $ok = true;
+			if ($ok) {
+				require_once("component/data_model/DataBaseLock.inc");
+				$lock_id = DataBaseLock::lockRow("CurriculumSubjectGrading", $subject["id"], $locker, true);
+				if ($lock_id <> null)
+					$edit = true;
+			} else
+				$not_assigned_to_group = true;
+		}
 		
 		// get evaluations
 		if ($subject["only_final_grade"] == null || !$subject["only_final_grade"]) {
@@ -283,6 +299,13 @@ class page_subject_grades extends Page {
 	<div style='flex:none;'>
 		<div class='info_box'>
 			<img src='<?php echo theme::$icons_16["warning"];?>' style='vertical-align:bottom'/> You cannot edit the grades of this subject because <i><b><?php echo $locker;?></b></i> is currently editing them
+		</div>
+	</div>
+	<?php } ?>
+	<?php if ($not_assigned_to_group) {?>
+	<div style='flex:none;'>
+		<div class='info_box'>
+			<img src='<?php echo theme::$icons_16["warning"];?>' style='vertical-align:bottom'/> You cannot edit the grades because you are not assigned to all the students. Please select your group first.
 		</div>
 	</div>
 	<?php } ?>

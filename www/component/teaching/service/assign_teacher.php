@@ -65,7 +65,7 @@ class service_assign_teacher extends Service {
 		}
 		if ($already_assigned_period >= $subject_period) {
 			SQLQuery::rollbackTransaction();
-			PNApplication::error("All hours are already assigned");;
+			PNApplication::error("All hours are already assigned".$already_assigned_period."/".$subject_period);
 			return;
 		}
 		if ($hours <> null) {
