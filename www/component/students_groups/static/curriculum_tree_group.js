@@ -149,10 +149,10 @@ function newGroup(parent_node) {
 		var possible_periods_node = [];
 		var from_period_index = -1;
 		if (parent_node instanceof CurriculumTreeNode_BatchPeriod) {
-			// independent from specialization => possible periods are all periods without specialization
+			// independent from specialization => possible periods are all periods without specialization if the group type depends on specializations
 			var batch_node = parent_node.parent;
 			for (var i = 0; i < batch_node.item.children.length; ++i)
-				if (batch_node.item.children[i].node.period.available_specializations.length == 0) {
+				if (batch_node.item.children[i].node.period.available_specializations.length == 0 || !gt.specialization_dependent) {
 					if (batch_node.item.children[i].node.period.id == parent_node.period.id) from_period_index = possible_periods.length;
 					possible_periods.push(batch_node.item.children[i].node.period);
 					possible_periods_node.push(batch_node.item.children[i].node);
