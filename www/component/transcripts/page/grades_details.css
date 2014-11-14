@@ -19,14 +19,14 @@
 	font-weight: bold;
 }
 .grades_details .subject_container {
-	border: 1px solid black;
-	padding: 5px;
+}
+.grades_details .subject_info_container {
+	border-bottom: 1px solid black;
+	margin-bottom: 3px;
 }
 .grades_details .subject_info {
 	display: flex;
 	flex-direction: row;
-	border-bottom: 1px solid black;
-	margin-bottom: 3px;
 }
 .grades_details .subject_info .subject_info_title {
 	font-weight: bold;
@@ -41,10 +41,13 @@
 	margin-right: 5px;
 }
 .grades_details .grades_table {
+	border: 1px solid black;
 	border-spacing: 0px;
+	border-collapse: collapse;
 }
 .grades_details .grades_table td {
 	border-right: 1px solid #808080;
+	padding: 2px 5px;
 }
 .grades_details .grades_table td:last-child {
 	border-right: none;
@@ -52,36 +55,35 @@
 .grades_details .grades_title td {
 	font-weight: bold;
 	text-align: center;
-	padding: 0px 3px;
+	border-bottom: 1px solid black;
 }
-.grades_details .evaluation_type>td {
+.grades_details tr.grades>td.evaluation_type {
 	font-weight: bold;
 	border-bottom: 1px solid black;
 }
-.grades_details .evaluation>td.evaluation_name {
+.grades_details tr.grades>td.evaluation_name {
 }
-.grades_details .evaluation>td.max_grade {
+.grades_details tr.grades>td.max_grade {
 	font-family: Courier New;
-	padding: 0px 3px;
 	text-align: center;
 }
-.grades_details .evaluation>td.grade {
+.grades_details tr.grades>td.grade {
 	font-family: Courier New;
-	padding: 0px 3px;
 	text-align: center;
 }
-.grades_details .evaluation>td.coef {
-	padding: 0px 3px;
+.grades_details tr.grades>td.coef {
 	text-align: center;
 }
-.grades_details .evaluation_type_total>td {
+.grades_details tr.grades>td.evaluation_type_total_title {
 	border-top: 1px solid #808080;
-	padding-bottom: 5px;
+	border-bottom: 1px solid black;
 }
-.grades_details .evaluation_type_total>td.grade {
+.grades_details tr.grades>td.evaluation_type_total_grade {
 	font-weight: bold;
-	font-family: Courier New;
-	padding: 0px 3px;
-	text-align: center;
 	border-top: 1px solid #808080;
+	border-bottom: 1px solid black;
+}
+.grades_details tr.subject_total>td {
+	font-weight: bold;
+	font-size: 120%;
 }

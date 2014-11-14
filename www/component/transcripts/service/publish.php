@@ -64,9 +64,15 @@ class service_publish extends Service {
 		
 		$students_comments = SQLQuery::create()->select("StudentTranscriptGeneralComment")->whereValue("StudentTranscriptGeneralComment","period",$period_id)->whereIn("StudentTranscriptGeneralComment","people",$students_ids)->execute();
 		
-		if (@$config["grades_details"] == 1) {
-			//$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereIn("CurriculumSubjectEvaluationType","subject",$subjects_detailed)->execute();
-			// TODO
+		if (@$config["grades_details"] == 1 && count($subjects_detailed) > 0) {
+			$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereIn("CurriculumSubjectEvaluationType","subject",$subjects_detailed)->execute();
+			$types_ids = array();
+			foreach ($types as $t) array_push($types_ids, $t["id"]);
+			$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation","type",$types_ids)->execute();
+			$eval_ids = array();
+			foreach ($evaluations as $e) array_push($eval_ids, $e["id"]);
+			$students_types_grades = SQLQuery::create()->select("StudentSubjectEvaluationTypeGrade")->whereIn("StudentSubjectEvaluationTypeGrade","type",$types_ids)->whereIn("StudentSubjectEvaluationTypeGrade","people",$students_ids)->execute();
+			$students_eval_grades = SQLQuery::create()->select("StudentSubjectEvaluationGrade")->whereIn("StudentSubjectEvaluationGrade","evaluation",$eval_ids)->whereIn("StudentSubjectEvaluationGrade","people",$students_ids)->execute();
 		}
 		
 		if (isset($input["id"])) {
@@ -79,6 +85,9 @@ class service_publish extends Service {
 			SQLQuery::create()->removeRows("PublishedTranscriptStudentGeneralComment", $rows);
 			$rows = SQLQuery::create()->select("PublishedTranscriptSubject")->whereValue("PublishedTranscriptSubject","transcript",$id)->execute();
 			SQLQuery::create()->removeRows("PublishedTranscriptSubject", $rows);
+			$rows = SQLQuery::create()->select("PublishedTranscriptEvaluationType")->whereValue("PublishedTranscriptEvaluationType","transcript",$id)->execute();
+			SQLQuery::create()->removeRows("PublishedTranscriptEvaluationType", $rows);
+			// other detailed grades data are automatically removed when removing the data from PublishedTranscriptEvaluationType
 		} else {
 			// new one
 			$config["name"] = $input["name"];
@@ -110,6 +119,50 @@ class service_publish extends Service {
 			));
 		if (count($to_insert) > 0)
 			SQLQuery::create()->insertMultiple("PublishedTranscriptStudentGeneralComment", $to_insert);
+		
+		if (@$config["grades_details"] == 1 && count($subjects_detailed) > 0) {
+			// PublishedTranscriptEvaluationType
+			foreach ($types as $eval_type) {
+				$type_id = SQLQuery::create()->insert("PublishedTranscriptEvaluationType", array(
+					"transcript"=>$id,
+					"subject"=>$eval_type["subject"],
+					"name"=>$eval_type["name"],
+					"weight"=>$eval_type["weight"],
+				));
+				// students' grade by type
+				$to_insert = array();
+				foreach ($students_types_grades as $sg) {
+					if ($sg["type"] <> $eval_type["id"]) continue;
+					array_push($to_insert, array(
+						"people"=>$sg["people"],
+						"type"=>$type_id,
+						"grade"=>$sg["grade"]
+					));
+				}
+				if (count($to_insert) > 0)
+					SQLQuery::create()->insertMultiple("PublishedTranscriptStudentEvaluationTypeGrade", $to_insert);
+				// evaluations
+				foreach ($evaluations as $e) {
+					$eval_id = SQLQuery::create()->insert("PublishedTranscriptEvaluation", array(
+						"type"=>$type_id,
+						"name"=>$e["name"],
+						"weight"=>$e["weight"],
+						"max_grade"=>$e["max_grade"],
+					));
+					$to_insert = array();
+					foreach ($students_eval_grades as $sg) {
+						if ($sg["evaluation"] <> $e["id"]) continue;
+						array_push($to_insert, array(
+							"people"=>$sg["people"],
+							"evaluation"=>$eval_id,
+							"grade"=>$sg["grade"]
+						));
+					}
+					if (count($to_insert) > 0)
+						SQLQuery::create()->insertMultiple("PublishedTranscriptStudentEvaluationGrade", $to_insert);
+				}
+			}
+		}
 		
 		if (PNApplication::hasErrors())
 			return;
