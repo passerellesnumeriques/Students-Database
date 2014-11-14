@@ -150,6 +150,7 @@ class page_subject_grades extends Page {
 			$period = PNApplication::$instance->curriculum->getBatchPeriod($groups[0]["period"]);
 			$spe = $groups[0]["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($groups[0]["specialization"]) : null;
 		} else {
+			$groups_ids = PNApplication::$instance->teaching->getGroupsForSubject($subject_id);
 			$period = PNApplication::$instance->curriculum->getBatchPeriod($subject["period"]);
 			$spe = $subject["specialization"] <> null ? PNApplication::$instance->curriculum->getSpecialization($subject["specialization"]) : null;
 		}
@@ -181,7 +182,7 @@ class page_subject_grades extends Page {
 		if (isset($_GET["group"])) {
 			$q = PNApplication::$instance->students_groups->getStudentsQueryForGroup($_GET["group"]);
 			PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
-		} else if (isset($_GET["grouping"])) {
+		} else if (count($groups_ids) > 0) {
 			$q = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids);
 			PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
 		} else
