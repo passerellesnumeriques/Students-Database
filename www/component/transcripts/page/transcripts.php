@@ -40,6 +40,8 @@ class page_transcripts extends Page {
 		$students = $q->execute();
 		
 		$published = SQLQuery::create()->select("PublishedTranscript")->whereValue("PublishedTranscript","period",$period["id"])->whereValue("PublishedTranscript","specialization",$spe <> null ? $spe["id"] : null)->execute();
+		
+		theme::css($this, "print.css");
 ?>
 <style type='text/css'>
 #transcripts_header {
@@ -115,20 +117,6 @@ class page_transcripts extends Page {
     content: '';
     z-index: 80;
 }
-.page_layout {
-	text-align:left;
-	background-color:white;
-	border-radius:5px;
-	display:inline-block;
-	box-shadow: 2px 2px 2px 0px #808080;
-	width:630px;
-	height:810px;
-	margin:5px 0px;
-	border:1px solid #C0C0C0;
-}
-.page_layout>div {
-	border-radius:5px;
-}
 </style>
 <div style='width:100%;height:100%;display:flex;flex-direction:column'>
 	<div class='page_title' style='flex:none'>
@@ -164,7 +152,7 @@ class page_transcripts extends Page {
 				</div>
 			</div>
 			<div style='flex:1 1 auto;overflow:auto;text-align:center;'>
-				<div id='transcript' class='page_layout'>
+				<div id='transcript'>
 				</div>
 			</div>
 		</div>
@@ -205,6 +193,90 @@ function selectTranscript(id,div,name) {
 	refreshTranscript();
 }
 
+function buildPages(content) {
+	if (content.offsetHeight < 780) {
+		addClassName(content, "page_layout");
+		return;
+	}
+	var knowledge = [];
+	var page_header = null;
+	var page_footer = null;
+	var sections = [];
+	for (var i = 0; i < content.childNodes.length; ++i) {
+		if (content.childNodes[i].nodeType != 1) continue;
+		if (hasClassName(content.childNodes[i], "page_layout_header"))
+			page_header = content.childNodes[i];
+		else if (hasClassName(content.childNodes[i], "page_layout_footer"))
+			page_footer = content.childNodes[i];
+		else if (hasClassName(content.childNodes[i], "page_layout_section"))
+			sections.push(content.childNodes[i]);
+	}
+	var fixed = page_header ? getHeight(page_header,knowledge) : 0;
+	fixed += page_footer ? getHeight(page_footer,knowledge) : 0;
+	// first page
+	var h = fixed;
+	var i = 0;
+	do {
+		h += getHeight(sections[i],knowledge);
+		i++;
+	} while (i < sections.length && h+getHeight(sections[i],knowledge) < 760);
+	content.style.position = "relative";
+	var pages_numbers = [];
+	var f = document.createElement("DIV");
+	f.style.position = "absolute";
+	f.style.bottom = "5px";
+	f.style.right = "5px";
+	content.appendChild(f);
+	pages_numbers.push(f);
+	addClassName(content, "page_layout");
+	// next pages
+	var next = content.nextSibling;
+	while (i < sections.length) {
+		var page = document.createElement("DIV");
+		page.style.position = "relative";
+		page.className = content.className;
+		if (page_header) {
+			var header = document.createElement("DIV");
+			header.className = page_header.className;
+			header.innerHTML = page_header.innerHTML;
+			page.appendChild(header);
+		}
+		h = fixed;
+		do {
+			sections[i] = page.appendChild(sections[i]);
+			h += getHeight(sections[i],knowledge);
+			i++;
+		} while (i < sections.length && h+getHeight(sections[i],knowledge) < 760);
+		if (page_footer) {
+			var footer = document.createElement("DIV");
+			footer.className = page_footer.className;
+			footer.innerHTML = page_footer.innerHTML;
+			page.appendChild(footer);
+		}
+		f = document.createElement("DIV");
+		f.style.position = "absolute";
+		f.style.bottom = "5px";
+		f.style.right = "5px";
+		page.appendChild(f);
+		pages_numbers.push(f);
+		if (next) content.parentNode.insertBefore(page, next);
+		else content.parentNode.appendChild(page);
+	}
+	for (var i = 0; i < pages_numbers.length; ++i) {
+		pages_numbers[i].innerHTML = "Page "+(i+1)+" / "+(pages_numbers.length);
+	}
+}
+function makePageLayout(container) {
+	var pages = [];
+	for (var i = 0; i < container.childNodes.length; ++i) {
+		var page = container.childNodes[i];
+		if (page.nodeType != 1) continue;
+		if (page.nodeName == "DIV") pages.push(page);
+	}
+	for (var i = 0; i < pages.length; ++i)
+		buildPages(pages[i]);
+}
+
 function refreshTranscript() {
 	var transcript = document.getElementById('transcript');
 	var print_button = document.getElementById('print_button');
@@ -224,6 +296,7 @@ function refreshTranscript() {
 	print_button.disabled = "";
 	var locker = lock_screen(null, "Reloading transcript");
 	service.html("transcripts","generate_transcript",{id:selected_transcript,student:selected_student},document.getElementById('transcript'),function() {
+		makePageLayout(document.getElementById('transcript'));
 		unlock_screen(locker);
 	});
 }
@@ -259,7 +332,8 @@ function printAll() {
 			div.style.breakAfter = "always";
 			//div.style.height = "810px";
 			container.appendChild(div);
-			service.html("transcripts","generate_transcript",{id:selected_transcript,student:students_ids[i],id_suffix:"_to_print"},div,function() {
+			service.html("transcripts","generate_transcript",{id:selected_transcript,student:students_ids[i],id_suffix:"_to_print"},div,function(div) {
+				makePageLayout(div);
 				pb.addAmount(1);
 				checkEnd();
 			});

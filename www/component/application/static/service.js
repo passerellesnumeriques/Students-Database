@@ -145,7 +145,7 @@ window.service = {
 				container._attachedScripts.push(s);
 			}
 			layout.changed(container);
-			if (ondone) ondone();
+			if (ondone) ondone(container);
 		});
 	},
 

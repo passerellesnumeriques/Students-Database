@@ -9,8 +9,8 @@ function generatePublishedTranscript($id, $student_id, $id_suffix = null) {
 	$student_general_appreciation = SQLQuery::create()->select("PublishedTranscriptStudentGeneralComment")->whereValue("PublishedTranscriptStudentGeneralComment","id",$id)->whereValue("PublishedTranscriptStudentGeneralComment","people",$student_id)->field("comment")->executeSingleValue();
 	if ($student_general_appreciation == null) $student_general_appreciation = " ";
 	
-	$q = SQLQuery::create()->select("PublishedTranscriptSubject")->whereValue("PublishedTranscriptSubject","transcript",$id);
-	$q->join("PublishedTranscriptSubject","CurriculumSubjectGrading",array("id"=>"subject"));
+	$q = SQLQuery::create()->bypassSecurity($student_id == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptSubject")->whereValue("PublishedTranscriptSubject","transcript",$id);
+	$q->join("PublishedTranscriptSubject","CurriculumSubjectGrading",array("subject"=>"subject"));
 	PNApplication::$instance->curriculum->joinSubjects($q, "PublishedTranscriptSubject", "subject");
 	$subjects = $q->execute();
 	
@@ -336,7 +336,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 	}
 	
 	if (@$config["grades_details"] == 1)
-		generateGradesDetails($transcript_id, $subjects, $student, $batch, $period, $class_name, $student_grades);
+		generateGradesDetails($transcript_id, $subjects, $student, $batch, $period, $class_name, $student_grades, $id_suffix, $config, $grading_systems);
 }
 
 function generateSubjectSection($cat, $subject, $subj_content, $config, $period, $student_grades, $student, $transcript_id, $id_suffix, &$script_grades, $grading_systems, &$total_class_av, &$total_batch_av, &$total_class_coef, &$total_batch_coef) {
@@ -503,7 +503,7 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 	return $subj_content;
 }
 
-function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, $period, $class_name, $student_grades) {
+function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, $period, $class_name, $student_grades, $id_suffix, $config, $grading_systems) {
 	$subjects = array();
 	foreach ($all_subjects as $s) {
 		if (substr($transcript_id,0,1) == "_") {
@@ -517,13 +517,19 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 			$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation","type",$types_ids)->execute();
 			$student_grade = 0;
 			$student_grade_coef = 0;
+			$good = rand(0,2);
 			for ($i = 0; $i < count($subject["types"]); $i++) {
 				$subject["types"][$i]["evaluations"] = array();
 				$total = 0;
 				$total_coef = 0;
 				foreach ($evaluations as $e) {
-					$e["student_grade"] = rand(0,100)*floatval($e["max_grade"])/100;
-					$total += $e["student_grade"]*100/floatval($e["max_grade"]);
+					switch ($good) {
+						case 0: $g = rand(floatval($subject["passing_grade"])+0.2*(floatval($subject["max_grade"])-floatval($subject["passing_grade"])),floatval($subject["max_grade"]))*100/floatval($subject["max_grade"]); break;
+						case 1: $g = rand(floatval($subject["passing_grade"]),floatval($subject["max_grade"]))*100/floatval($subject["max_grade"]); break;
+						case 2: $g = rand(0,100);
+					}
+					$e["student_grade"] = $g*floatval($e["max_grade"])/100;
+					$total += ($e["student_grade"]*100/floatval($e["max_grade"]))*intval($e["weight"]);
 					$total_coef += intval($e["weight"]);
 					if ($e["type"] == $subject["types"][$i]["id"])
 						array_push($subject["types"][$i]["evaluations"], $e);
@@ -536,18 +542,18 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 			array_push($subjects, $subject);
 		} else {
 			// published
-			$types = SQLQuery::create()->select("PublishedTranscriptEvaluationType")->whereValue("PublishedTranscriptEvaluationType","subject",$s["id"])->whereValue("PublishedTranscriptEvaluationType","transcript",$transcript_id)->execute();
+			$types = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptEvaluationType")->whereValue("PublishedTranscriptEvaluationType","subject",$s["id"])->whereValue("PublishedTranscriptEvaluationType","transcript",$transcript_id)->execute();
 			if (count($types) == 0) continue;
 			$subject = $s;
 			$subject["types"] = $types;
 			$types_ids = array();
 			foreach ($types as $t) array_push($types_ids, $t["id"]);
-			$evaluations = SQLQuery::create()->select("PublishedTranscriptEvaluation")->whereIn("PublishedTranscriptEvaluation","type",$types_ids)->execute();
-			$types_grades = SQLQuery::create()->select("PublishedTranscriptStudentEvaluationTypeGrade")->whereIn("PublishedTranscriptStudentEvaluationTypeGrade","type",$types_ids)->whereValue("PublishedTranscriptStudentEvaluationTypeGrade","people",$student["id"])->execute();
+			$evaluations = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptEvaluation")->whereIn("PublishedTranscriptEvaluation","type",$types_ids)->execute();
+			$types_grades = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptStudentEvaluationTypeGrade")->whereIn("PublishedTranscriptStudentEvaluationTypeGrade","type",$types_ids)->whereValue("PublishedTranscriptStudentEvaluationTypeGrade","people",$student["id"])->execute();
 			$eval_ids = array();
 			foreach ($evaluations as $e) array_push($eval_ids, $e["id"]);
 			if (count($eval_ids) > 0)
-				$eval_grade = SQLQuery::create()->select("PublishedTranscriptStudentEvaluationGrade")->whereIn("PublishedTranscriptStudentEvaluationGrade","evaluation",$eval_ids)->whereValue("PublishedTranscriptStudentEvaluationGrade","people",$student["id"])->execute();
+				$eval_grade = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptStudentEvaluationGrade")->whereIn("PublishedTranscriptStudentEvaluationGrade","evaluation",$eval_ids)->whereValue("PublishedTranscriptStudentEvaluationGrade","people",$student["id"])->execute();
 			else
 				$eval_grade = array();
 			for ($i = 0; $i < count($subject["types"]); $i++) {
@@ -577,6 +583,7 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 	$header = str_replace("#Academic Period#", $period["name"], $header);
 	$header = str_replace("#Academic Period Date#", date("d M Y",strtotime($period["academic_period_start"]))." to ".date("d M Y",strtotime($period["academic_period_end"])), $header);
 	echo $header;
+	$script = "";
 	foreach ($subjects as $subject) {
 		echo "<div class='subject_container'>";
 			echo "<div class='subject_info_container'>";
@@ -590,7 +597,7 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 					echo "<div class='subject_info_title'>Passing Grade</div>";
 					echo "<div class='subject_info_data'>".$subject["passing_grade"]." / ".$subject["max_grade"]."</div>";
 				echo "</div>";
-				$groups_ids = PNApplication::$instance->teaching->getGroupsForSubject($subject["id"]);
+				$groups_ids = PNApplication::$instance->teaching->getGroupsForSubject($subject["id"], $student["id"] == PNApplication::$instance->user_management->people_id);
 				if (count($groups_ids) > 0) {
 					$teachers = null;
 					if ($student["id"] == 0) {
@@ -601,11 +608,11 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 							if ($teachers <> null && count($teachers) > 0) break;
 						}
 					} else {
-						$group_id = PNApplication::$instance->students_groups->getStudentGroupsAmong($student["id"], $groups_ids);
-						if ($group_id <> null) {
-							$grouping_id = PNApplication::$instance->teaching->getGroupingIdFromGroup($subject["id"], $group_id);
+						$groups_ids = PNApplication::$instance->students_groups->getStudentGroupsAmong($student["id"], $groups_ids);
+						if (count($groups_ids) > 0) {
+							$grouping_id = PNApplication::$instance->teaching->getGroupingIdFromGroup($subject["id"], $groups_ids[0], $student["id"] == PNApplication::$instance->user_management->people_id);
 							if ($grouping_id <> null) {
-								$teachers = PNApplication::$instance->teaching->getTeachersAssignedForGrouping($grouping_id);
+								$teachers = PNApplication::$instance->teaching->getTeachersAssignedForGrouping($grouping_id, true, $student["id"] == PNApplication::$instance->user_management->people_id);
 							}
 						}
 					}
@@ -662,8 +669,9 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 				echo "<td class='evaluation_type_total_title'>TOTAL</td>";
 				echo "<td class='evaluation_type_total_grade grade' colspan=2>";
 				if ($type["student_grade"] !== null) {
-					echo number_format($type["student_grade"],2);
-					echo " %";
+					$id = "grades_details_".$subject["id"]."_".$student["id"]."_eval_type_".$type["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+					echo "<div id='$id'>".number_format($type["student_grade"],2)."</div>";
+					$script .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($type["student_grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 				}
 				echo "</td>";
 				echo "<td colspan=1></td>";
@@ -673,8 +681,9 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 			echo "<td colspan=2>Final Grade</td>";
 			echo "<td class='grade' colspan=2>";
 			if ($student_grade !== null) {
-				echo number_format($student_grade,2)." %";
-				// TODO grading system
+				$id = "grades_details_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+				echo "<div id='$id'>".number_format($type["student_grade"],2)."</div>";
+				$script .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 			}
 			echo "</td>";
 			echo "<td></td>";
@@ -682,6 +691,12 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 		echo "</div>";
 	}
 	echo "</div>";
+	echo "<script type='text/javascript'>\n";
+	echo "require([['typed_field.js','field_grade.js']],function(){\n";
+	echo "var e,f;\n";
+	echo $script;
+	echo "});\n";
+	echo "</script>\n";
 }
 
 function processTranscriptCondition(&$content, $condition_name, $condition_result) {
