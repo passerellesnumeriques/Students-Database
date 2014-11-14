@@ -60,11 +60,23 @@ function getScrollableContainer(element) {
  * Scroll all necessary scrollable elements to make the given element visible in the screen.
  * @param element
  */
-function scrollToSee(element) {
+function scrollToSee(element, middle) {
 	var parent = getScrollableContainer(element);
 	if (!parent) return;
 	var x1 = absoluteLeft(element, parent);
 	var y1 = absoluteTop(element, parent);
+	if (middle) {
+		if (y1 < parent.scrollTop || y1+element.offsetHeight > parent.scrollTop+parent.clientHeight) {
+			if (parent.scrollHeight > parent.clientHeight) {
+				if (y1+parent.clientHeight < parent.scrollHeight)
+					y1 += Math.floor(parent.clientHeight/2);
+				else {
+					var y = Math.floor(parent.scrollHeight-parent.clientHeight/2-element.offsetHeight/2);
+					if (y > y1) y1 = y; else y1 = Math.floor(parent.scrollHeight-element.offsetHeight/2);
+				}
+			}
+		}
+	}
 	var x2 = x1+element.offsetWidth;
 	var y2 = y1+element.offsetHeight;
 	if (y1 < parent.scrollTop) {

@@ -66,8 +66,12 @@ class page_assign_groups extends Page {
 			// we are on a group
 			$group = PNApplication::$instance->students_groups->getGroup($_GET["group"]);
 			$period_id = $group["period"];
+			$group_type_id = $group["type"];
+			$group_type = PNApplication::$instance->students_groups->getGroupType($group_type_id);
 			// get groups with the same specialization
 			$groups = PNApplication::$instance->students_groups->getGroups($group_type_id, $period_id, $group["specialization"]);
+			$groups_tree = PNApplication::$instance->students_groups->buildGroupTree($groups);
+			$groups = PNApplication::$instance->students_groups->getFinalGroupsFromTree($groups_tree);
 			if ($group["specialization"] <> null) {
 				// specialized group
 				// get students from the specialization

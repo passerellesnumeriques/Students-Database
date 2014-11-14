@@ -331,9 +331,10 @@ class page_teachers_assignments extends Page {
 			for (var i = 0; i < all_groups.length; ++i) if (all_groups[i].period == period_id) groups.push(all_groups[i]);
 			return groups;
 		}
-		function getGroupsForPeriodAndType(period_id, type_id) {
+		function getGroupsForPeriodAndType(period_id, type_id, spe_id) {
 			var groups = [];
-			for (var i = 0; i < all_groups.length; ++i) if (all_groups[i].period == period_id && all_groups[i].type == type_id) groups.push(all_groups[i]);
+			var gt = getGroupType(type_id);
+			for (var i = 0; i < all_groups.length; ++i) if (all_groups[i].period == period_id && all_groups[i].type == type_id && (spe_id == null || !gt.specialization_dependent || all_groups[i].specialization == spe_id)) groups.push(all_groups[i]);
 			return groups;
 		}
 		function getGroupsByType(groups) {
@@ -471,7 +472,7 @@ class page_teachers_assignments extends Page {
 						else {
 							var type_id = getGroup(this.groupings[0].groups[0]).type;
 							var group_type = getGroupType(type_id);
-							var groups = getGroupsForPeriodAndType(subject.period_id, type_id);
+							var groups = getGroupsForPeriodAndType(subject.period_id, type_id, subject.specialization_id);
 							var used = [];
 							for (var i = 0; i < this.groupings.length; ++i)
 								for (var j = 0; j < this.groupings[i].groups.length; ++j)
@@ -555,7 +556,7 @@ class page_teachers_assignments extends Page {
 				});
 			};
 			this.fillGroupsMenu = function(menu, group_type, grouping, checkboxes) {
-				var groups = getGroupsForPeriodAndType(subject.period_id, group_type.id);
+				var groups = getGroupsForPeriodAndType(subject.period_id, group_type.id, subject.specialization_id);
 				if (groups.length == 0) return;
 				menu.addTitleItem(null, group_type.name);
 				var roots = getGroupsTree(groups);

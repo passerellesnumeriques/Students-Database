@@ -56,12 +56,14 @@ CurriculumTreeNode.prototype = {
 		if (info) footer.appendChild(info);
 		layout.changed(document.getElementById('tree_footer').parentNode);
 		
-		// make sure it is visible (scroll if necessary)
-		if (this.item.tr)
-			scrollToSee(this.item.tr);
-		
 		// Update frame
 		nodeSelected(this);
+		
+		// make sure it is visible (scroll if necessary)
+		if (this.item.tr) {
+			var t=this;
+			setTimeout(function() { scrollToSee(t.item.tr, true); },25);
+		}
 	},
 	/** Searches the given tag
 	 * @param {String} tag the tag to search

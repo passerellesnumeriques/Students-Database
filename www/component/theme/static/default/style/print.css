@@ -1,0 +1,28 @@
+@media screen {
+	.page_layout {
+		text-align:left;
+		background-color:white;
+		border-radius:5px;
+		display:inline-block;
+		box-shadow: 2px 2px 2px 0px #808080;
+		width:630px;
+		height:810px;
+		margin:5px 0px;
+		border:1px solid #C0C0C0;
+		padding:10px 20px;
+		background-color: white;
+	}
+}
+@media print {
+	.page_layout {
+		text-align:left;
+		background-color:white;
+		display:inline-block;
+		width:630px;
+		height:810px;
+		margin:5px 0px;
+		padding:10px 20px;
+		background-color: white;
+		page-break-after: always;
+	}	
+}

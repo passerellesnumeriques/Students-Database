@@ -23,7 +23,7 @@ class page_print extends Page {
 	<button class='action' onclick="getIFrameWindow(document.getElementById('print_content')).print();"><img src='<?php echo theme::$icons_16["print"];?>'/> Print</button>
 	</div>
 	<div id='content' style='flex:1 1 auto;overflow:hidden;text-align:center;display:flex;flex-direction:row;justify-content:center;'>
-		<iframe name='print_content' id='print_content' style='border:none;flex:0 1 auto' src='/dynamic/application/page/blank'></iframe>
+		<iframe name='print_content' id='print_content' style='border:none;flex:0 1 auto;' src='/dynamic/application/page/blank'></iframe>
 	</div>
 </div>
 <script type='text/javascript'>
@@ -100,6 +100,7 @@ window.setPrintContent = function(container, onready) {
 		n.textContent = node.textContent;
 		head.appendChild(n);
 	}
+	win.document.documentElement.style.backgroundColor = "white";
 	win.document.body.style.backgroundColor = "white";
 	win.document.body.style.WebkitPrintColorAdjust = "exact";
 	if (onready) onready();

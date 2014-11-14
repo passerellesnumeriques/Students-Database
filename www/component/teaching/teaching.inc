@@ -54,8 +54,8 @@ class teaching extends Component {
 		return PNApplication::$instance->students_groups->areStudentsBelongingToGroups($students_ids, $groups_ids);
 	}
 	
-	public function getTeachersAssignedForGrouping($grouping_id, $include_people_info = true) {
-		$q = SQLQuery::create()->select("TeacherAssignment")->whereValue("TeacherAssignment","subject_teaching",$grouping_id);
+	public function getTeachersAssignedForGrouping($grouping_id, $include_people_info = true, $bypass_security = false) {
+		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("TeacherAssignment")->whereValue("TeacherAssignment","subject_teaching",$grouping_id);
 		if ($include_people_info) {
 			$q->fieldsOfTable("TeacherAssignment");
 			PNApplication::$instance->people->joinPeople($q, "TeacherAssignment", "people", false);
@@ -63,16 +63,29 @@ class teaching extends Component {
 		return $q->execute();
 	}
 	
-	public function getGroupingsForSubject($subject_id) {
+	public function getAssignedGroups($teacher_id, $subject_id) {
 		return SQLQuery::create()
+			->select("TeacherAssignment")
+			->whereValue("TeacherAssignment", "people", $teacher_id)
+			->join("TeacherAssignment","SubjectTeaching",array("subject_teaching"=>"id"))
+			->whereValue("SubjectTeaching", "subject", $subject_id)
+			->join("SubjectTeaching","SubjectTeachingGroups",array("id"=>"subject_teaching"))
+			->field("SubjectTeachingGroups","group","group")
+			->executeSingleField();
+	}
+	
+	public function getGroupingsForSubject($subject_id, $bypass_security = false) {
+		return SQLQuery::create()
+			->bypassSecurity($bypass_security)
 			->select("SubjectTeaching")
 			->whereValue("SubjectTeaching","subject",$subject_id)
 			->field("SubjectTeaching","id")
 			->executeSingleField();
 	}
 	
-	public function getGroupsForSubject($subject_id) {
+	public function getGroupsForSubject($subject_id, $bypass_security = false) {
 		return SQLQuery::create()
+			->bypassSecurity($bypass_security)
 			->select("SubjectTeaching")
 			->whereValue("SubjectTeaching","subject",$subject_id)
 			->join("SubjectTeaching","SubjectTeachingGroups",array("id"=>"subject_teaching"))
@@ -80,16 +93,18 @@ class teaching extends Component {
 			->executeSingleField();
 	}
 	
-	public function getGroups($subject_teaching_id) {
+	public function getGroups($subject_teaching_id, $bypass_security = false) {
 		return SQLQuery::create()
+			->bypassSecurity($bypass_security)
 			->select("SubjectTeachingGroups")
 			->whereValue("SubjectTeachingGroups","subject_teaching",$subject_teaching_id)
 			->field("group")
 			->executeSingleField();
 	}
 	
-	public function getGroupingIdFromGroup($subject_id, $group_id) {
+	public function getGroupingIdFromGroup($subject_id, $group_id, $bypass_security = false) {
 		return SQLQuery::create()
+			->bypassSecurity($bypass_security)
 			->select("SubjectTeaching")
 			->whereValue("SubjectTeaching","subject",$subject_id)
 			->join("SubjectTeaching","SubjectTeachingGroups",array("id"=>"subject_teaching"))
