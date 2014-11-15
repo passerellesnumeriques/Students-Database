@@ -57,8 +57,8 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			t.view_tabs.addItem("Day", "day");
 			t.view_tabs.addItem("Week", "week");
 			t.view_tabs.addItem("Month", "month");
-			t.view_tabs.addItem("Year", "year");
-			t.view_tabs.addItem("Agenda", "agenda");
+			//t.view_tabs.addItem("Year", "year");
+			//t.view_tabs.addItem("Agenda", "agenda");
 			t.view_tabs.select(t.view_name);
 			t.view_tabs.element.style.display = "inline-block";
 			t.view_tabs.element.style.flex = "none";
