@@ -121,6 +121,7 @@ function calendar_view_month(view, container) {
 	};
 	
 	this._init = function() {
+		container.style.overflow = "auto";
 		this._table = document.createElement("TABLE");
 		this._table.style.borderCollapse = "collapse";
 		this._table.style.borderSpacing = "0px";
