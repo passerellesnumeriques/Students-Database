@@ -23,6 +23,20 @@ class page_assign_groups extends Page {
 			$students = $q_students->execute();
 			$students_ids = array();
 			foreach ($students as $s) array_push($students_ids, $s["people"]);
+			// try to find students who are assigned, but not anymore in this batch...
+			$groups = PNApplication::$instance->students_groups->getGroups($group_type_id, $period_id);
+			$groups_ids = array();
+			foreach ($groups as $g) array_push($groups_ids, $g["id"]);
+			$assigned_students_ids = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids)->field("people")->executeSingleField();
+			$additional_students = array();
+			foreach ($assigned_students_ids as $student_id)
+				if (!in_array($student_id, $students_ids))
+					array_push($additional_students, $student_id);
+			if (count($additional_students) > 0) {
+				$list = PNApplication::$instance->students->getStudents($additional_students, true);
+				$students = array_merge($students, $list);
+				$students_ids = array_merge($students_ids, $additional_students);
+			}
 			// get group assignment
 			if (count($students) > 0) {
 				$students_groups = SQLQuery::create()->select("StudentGroup")
@@ -46,7 +60,6 @@ class page_assign_groups extends Page {
 			}
 			// check if this period is specialized and the groups are specialization dependent
 			$specializations = $group_type["specialization_dependent"] == 1 ? PNApplication::$instance->curriculum->getBatchPeriodSpecializationsWithName($period_id) : array();
-			$groups = PNApplication::$instance->students_groups->getGroups($group_type_id, $period_id);
 			$groups_tree = PNApplication::$instance->students_groups->buildGroupTree($groups);
 			$groups = PNApplication::$instance->students_groups->getFinalGroupsFromTree($groups_tree);
 			if (count($specializations) > 0) {
@@ -69,8 +82,8 @@ class page_assign_groups extends Page {
 			$group_type_id = $group["type"];
 			$group_type = PNApplication::$instance->students_groups->getGroupType($group_type_id);
 			// get groups with the same specialization
-			$groups = PNApplication::$instance->students_groups->getGroups($group_type_id, $period_id, $group["specialization"]);
-			$groups_tree = PNApplication::$instance->students_groups->buildGroupTree($groups);
+			$all_groups = PNApplication::$instance->students_groups->getGroups($group_type_id, $period_id, $group["specialization"]);
+			$groups_tree = PNApplication::$instance->students_groups->buildGroupTree($all_groups);
 			$groups = PNApplication::$instance->students_groups->getFinalGroupsFromTree($groups_tree);
 			if ($group["specialization"] <> null) {
 				// specialized group
@@ -88,6 +101,19 @@ class page_assign_groups extends Page {
 			}
 			$students_ids = array();
 			foreach ($students as &$s) array_push($students_ids, $s["people"]);
+			// try to find students who are assigned, but not anymore in this batch...
+			$groups_ids = array();
+			foreach ($all_groups as $g) array_push($groups_ids, $g["id"]);
+			$assigned_students_ids = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids)->field("people")->executeSingleField();
+			$additional_students = array();
+			foreach ($assigned_students_ids as $student_id)
+				if (!in_array($student_id, $students_ids))
+					array_push($additional_students, $student_id);
+				if (count($additional_students) > 0) {
+					$list = PNApplication::$instance->students->getStudents($additional_students, true);
+					$students = array_merge($students, $list);
+					$students_ids = array_merge($students_ids, $additional_students);
+				}
 			// get group assignment
 			if (count($students) > 0) {
 				$students_groups = SQLQuery::create()->select("StudentGroup")
