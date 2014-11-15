@@ -5,20 +5,22 @@
  */
 function calendar_view_month(view, container) {
 
-	/** {Date} The first day of the month to display */
-	this.month = view.cursor_date.getMonth()+1;
-	this.start_date = new Date(view.cursor_date.getTime());
-	this.start_date.setDate(1);
-	this.start_date.setHours(0,0,0,0);
-	this.end_date = new Date(this.start_date.getTime());
-	this.end_date.setMonth(this.end_date.getMonth()+1);
-	this.end_date.setDate(this.end_date.getDate()-1);
-	this.end_date.setHours(23,59,59,999);
-	// go back to a Monday
-	while (this.start_date.getDay() != 1) this.start_date.setTime(this.start_date.getTime()-24*60*60*1000);
-	/** {Date} The last day of the month to display */
-	// go to next Sunday
-	while (this.end_date.getDay() != 0) this.end_date.setTime(this.end_date.getTime()+24*60*60*1000);
+	this._adjustDates = function() {
+		this.month = view.cursor_date.getMonth()+1;
+		this.start_date = new Date(view.cursor_date.getTime());
+		this.start_date.setDate(1);
+		this.start_date.setHours(0,0,0,0);
+		this.end_date = new Date(this.start_date.getTime());
+		this.end_date.setMonth(this.end_date.getMonth()+1);
+		this.end_date.setDate(this.end_date.getDate()-1);
+		this.end_date.setHours(23,59,59,999);
+		// go back to a Monday
+		while (this.start_date.getDay() != 1) this.start_date.setTime(this.start_date.getTime()-24*60*60*1000);
+		/** {Date} The last day of the month to display */
+		// go to next Sunday
+		while (this.end_date.getDay() != 0) this.end_date.setTime(this.end_date.getTime()+24*60*60*1000);		
+	};
+	this._adjustDates();
 	
 	var t=this;
 
@@ -29,14 +31,45 @@ function calendar_view_month(view, container) {
 	this.getPositionText = function(shorter) {
 		switch (shorter) {
 		case 0: // normal
-			return getMonthName(this.month);
+			return getMonthName(this.month)+" "+view.cursor_date.getFullYear();
 		case 1: // short name
+			return getMonthShortName(this.month)+" "+view.cursor_date.getFullYear();
+		case 2: // remove year
 			return getMonthShortName(this.month);
 		}
 		return null;
 	};
 	
-	// TODO back and forward
+	/** Goes one month before */
+	this.back = function() {
+		view.cursor_date.setMonth(view.cursor_date.getMonth()-1);
+		this._adjustDates();
+		this._reloadEvents();
+	};
+	/** Goes one year before */
+	this.backStep = function() {
+		view.cursor_date.setFullYear(view.cursor_date.getFullYear()-1);
+		this._adjustDates();
+		this._reloadEvents();
+	};
+	/** Goes one month after */
+	this.forward = function() {
+		view.cursor_date.setMonth(view.cursor_date.getMonth()+1);
+		this._adjustDates();
+		this._reloadEvents();
+	};
+	/** Goes one year after */
+	this.forwardStep = function() {
+		view.cursor_date.setFullYear(view.cursor_date.getFullYear()+1);
+		this._adjustDates();
+		this._reloadEvents();
+	};
+	
+	this._reloadEvents = function() {
+		container.removeAllChildren();
+		this._init();
+		view.loadEvents();
+	};
 	
 	/** Called by the CalendarView when a new event should be displayed.
 	 * @param {Object} ev the event to display
@@ -63,11 +96,34 @@ function calendar_view_month(view, container) {
 			for (var week = start_week; week <= end_week; ++week) {
 				// create a div
 				var div = this._createEventDiv(ev);
+				div.style.position = "relative"; // make it visible over table cells borders
 				// calculate where it should be displayed
 				var start_col = week > start_week ? 0 : start_day;
 				var end_col = week < end_week ? 6 : end_day;
 				div._start_col = start_col;
 				div._end_col = end_col;
+				div._insidePadding = 2;
+				// add arrows if needed
+				if (week > start_week || (week == 0 && first_day < first_day_visible)) {
+					var img = document.createElement("IMG");
+					img.src = theme.icons_10.arrow_left_black;
+					img.style.position = "absolute";
+					img.style.top = "2px";
+					img.style.left = "0px";
+					div.style.paddingLeft = "9px";
+					div._insidePadding += 8;
+					div.appendChild(img);
+				}
+				if (week < end_week || (week == this._tbody.childNodes.length && last_day > last_day_visible)) {
+					var img = document.createElement("IMG");
+					img.src = theme.icons_10.arrow_right_black;
+					img.style.position = "absolute";
+					img.style.top = "2px";
+					img.style.right = "0px";
+					div.style.paddingRight = "9px";
+					div._insidePadding += 8;
+					div.appendChild(img);					
+				}
 				// insert the div at the first day
 				var content = this._tbody.childNodes[week].childNodes[start_col].childNodes[0].childNodes[1];
 				content.insertBefore(div, content.firstChild);
@@ -77,8 +133,6 @@ function calendar_view_month(view, container) {
 					var td = this._tbody.childNodes[week].childNodes[i];
 					td._overriding_divs.push(div);
 				}
-				
-				// TODO add arrows if needed
 			}
 		} else {
 			var td = this._getTD(ev.start);
@@ -106,7 +160,27 @@ function calendar_view_month(view, container) {
 	 * @param {String} uid the uid of the event to remove
 	 */
 	this.removeEvent = function(uid) {
-		// TODO
+		for (var week = 0; week < this._tbody.childNodes.length; ++week) {
+			var tr = this._tbody.childNodes[week];
+			for (var day = 0; day < tr.childNodes.length; ++day) {
+				var td = tr.childNodes[day];
+				for (var i = 0; i < td._overriding_divs.length; ++i)
+					if (td._overriding_divs[i].event.uid == uid) {
+						td._overriding_divs.splice(i,1);
+						i--;
+						layout.changed(td);
+					}
+				var content = td.childNodes[0].childNodes[1];
+				for (var i = 0; i < content.childNodes.length; ++i) {
+					var div = content.childNodes[i];
+					if (div.event.uid == uid) {
+						content.removeChild(div);
+						i--;
+						layout.changed(content);
+					}
+				}
+			}
+		}
 	};
 	
 	this._createEventDiv = function(ev) {
@@ -162,7 +236,7 @@ function calendar_view_month(view, container) {
 				var space = 0;
 				for (var i = 0; i < td._overriding_divs.length; ++i) {
 					var div = td._overriding_divs[i];
-					var h = div.offsetTop+div.offsetHeight-div.parentNode.offsetTop;
+					var h = div.offsetTop+div.offsetHeight;
 					if (space < h) space = h;
 				}
 				var content = td.childNodes[0].childNodes[1];
@@ -176,7 +250,8 @@ function calendar_view_month(view, container) {
 							width += tr.childNodes[col].childNodes[0].offsetWidth+1;
 							//if (col == 0 || col == 6) width -= 1;
 						}
-						div.style.width = (width-7)+"px";
+						width -= 5+div._insidePadding;
+						div.style.width = width+"px";
 					}
 				}
 			}
@@ -253,7 +328,7 @@ function calendar_view_month(view, container) {
 				var div = document.createElement("DIV");
 				td.appendChild(div);
 				var header = document.createElement("DIV");
-				header.style.borderBottom = "2px solid black";
+				header.style.borderBottom = "2px solid "+(is_today ? "#008000" : "black");
 				header.style.backgroundColor = is_today ? "#D0FFD0" : same_month ? "#000000" : "#606060";
 				header.style.textAlign = "center";
 				header.style.fontWeight = "bold";
@@ -263,11 +338,13 @@ function calendar_view_month(view, container) {
 				content.style.minHeight = "10px";
 				content.style.padding = "1px";
 				content.style.paddingBottom = "0px";
+				content.style.position = "relative"; // make offset of divs inside relative to this one
 				div.appendChild(header);
 				div.appendChild(content);
 				if (is_today) {
 					td.style.borderColor = "#008000";
 					if (td.previousSibling) td.previousSibling.style.borderRightColor = "#008000";
+					if (tr.previousSibling) tr.previousSibling.childNodes[j].style.borderBottomColor = "#008000";
 				}
 			}
 		}
