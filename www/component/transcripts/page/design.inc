@@ -211,7 +211,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 				$student_grade = null;
 				foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g["grade"]; break; }
 				if ($student_grade === null) continue;
-				$total_grade += (floatval($student_grade)*100/floatval($subject["max_grade"]))*intval($subject["coefficient"]);
+				$total_grade += floatval($student_grade)*intval($subject["coefficient"]);
 				$total_coef += intval($subject["coefficient"]);
 				$passing += floatval($subject["passing_grade"])*intval($subject["coefficient"]);
 				$hours = $subject["hours"];
@@ -303,7 +303,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 		$student_grade = null;
 		foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g["grade"]; break; }
 		if ($student_grade === null) continue;
-		$total_grade += floatval($student_grade)*100/floatval($subject["max_grade"])*intval($subject["coefficient"]);
+		$total_grade += floatval($student_grade)*intval($subject["coefficient"]);
 		$total_coef += intval($subject["coefficient"]);
 		$passing += floatval($subject["passing_grade"])*intval($subject["coefficient"]);
 	}
