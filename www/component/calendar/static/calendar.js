@@ -474,7 +474,7 @@ function CalendarControl(container, cal, manager) {
 							cal.rename(name,function(){
 								t.name.innerHTML = name;
 							});
-						}, function(){});
+						});
 					});
 				menu.showBelowElement(t.menu_button);
 			});

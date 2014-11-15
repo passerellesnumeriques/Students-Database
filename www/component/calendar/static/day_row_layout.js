@@ -60,6 +60,7 @@ function day_row_layout(calendar_manager) {
 			var w = 0;
 			for (var day = day1; day <= day_end; ++day) w += day_boxes[day].offsetWidth;
 			w -= 2+4+(day_end-day1)+4;
+			w += 2;
 			div.style.width = w+"px";
 			div.style.padding = "1px";
 			div.style.fontSize = '8pt';

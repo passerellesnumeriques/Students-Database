@@ -139,7 +139,7 @@ function calendar_view_week(view, container) {
 		container.style.flexDirection = "column";
 		this.header = document.createElement("DIV");
 		this.header.style.flex = "none";
-		this.header.style.height = "16px";
+		this.header.style.height = "15px";
 		this.header.style.borderBottom = "1px solid black";
 		this.day_row_container_ = document.createElement("DIV");
 		this.day_row_container = document.createElement("DIV");
@@ -162,7 +162,9 @@ function calendar_view_week(view, container) {
 		this.corner = document.createElement("DIV");
 		this.corner.style.position = "absolute";
 		this.corner.style.width = "45px";
-		this.corner.style.height = "15px";
+		this.corner.style.paddingLeft = "1px";
+		this.corner.style.paddingTop = "2px";
+		this.corner.style.height = "13px";
 		this.corner.style.fontSize = '8pt';
 		var tz = -(new Date().getTimezoneOffset());
 		this.corner.innerHTML = "GMT";
