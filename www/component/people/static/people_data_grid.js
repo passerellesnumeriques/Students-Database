@@ -1,6 +1,6 @@
 // #depends[/static/data_model/custom_data_grid.js]
 
-function people_data_grid(container, people_getter, people_columns_container_title) {
+function people_data_grid(container, people_getter, people_columns_container_title, additional_columns_in_container) {
 	custom_data_grid.call(this, container, function(obj) {
 		var people = people_getter(obj);
 		return people.id;
@@ -26,6 +26,9 @@ function people_data_grid(container, people_getter, people_columns_container_tit
 	col.addSorting();
 	columns.push(new CustomDataGridColumn(col, function(obj) { return people_getter(obj).birthdate; }, false));
 	if (people_columns_container_title) {
+		if (additional_columns_in_container)
+			for (var i = 0; i < additional_columns_in_container.length; ++i)
+				columns.push(additional_columns_in_container[i]);
 		var cc = new CustomDataGridColumnContainer(people_columns_container_title, columns);
 		this.addColumnContainer(cc);
 	} else {

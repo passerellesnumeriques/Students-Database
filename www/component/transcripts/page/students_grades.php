@@ -32,6 +32,7 @@ class page_students_grades extends Page {
 			$q = PNApplication::$instance->students_groups->getStudentsQueryForGroup($group["id"], true);
 			PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
 			PNApplication::$instance->students->removeExcluded($q, $academic_period["start"]);
+			PNApplication::$instance->students->joinStudent($q, "StudentGroup", "people");
 		} else {
 			$q = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $spe <> null ? $spe["id"] : false);
 		}
@@ -88,9 +89,11 @@ class page_students_grades extends Page {
 		$this->requireJavascript("grid.js");
 		$this->requireJavascript("custom_data_grid.js");
 		$this->requireJavascript("people_data_grid.js");
+		$this->requireJavascript("student_data_grid.js");
 		theme::css($this, "grid.css");
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
+		require_once("component/students/StudentsJSON.inc");
 		?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;background-color:white'>
 	<div class='page_title' style='flex:none'>
@@ -164,7 +167,7 @@ if (PNApplication::$instance->help->isShown("students_grades")) {
 	PNApplication::$instance->help->availableHelp("students_grades");
 ?>
 <script type='text/javascript'>
-var students = <?php echo PeopleJSON::Peoples($students);?>;
+var students = <?php echo StudentsJSON::Students($students);?>;
 var students_comments = <?php echo json_encode($students_comments);?>;
 var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON($categories);?>;
 var subjects = <?php echo CurriculumJSON::SubjectsJSON($subjects);?>;
@@ -261,7 +264,7 @@ function getStudentRank(people_id) {
 	return rank;
 }
 
-var grades_grid = new people_data_grid('grades_container', function(people) { return people; }, "Student");
+var grades_grid = new student_data_grid('grades_container', function(student) { return student; }, "Student");
 grades_grid.setColumnsChooserButton(document.getElementById('columns_chooser_button'));
 grades_grid.setExportButton(document.getElementById('export_button'),<?php echo json_encode("Grades of ".$title);?>,'Grades');
 grades_grid.setPrintButton(document.getElementById('print_button'));
@@ -326,7 +329,7 @@ grades_grid.addColumn(new CustomDataGridColumn(new GridColumn("student_comment",
 }, true, null));
 // add every student
 for (var i = 0; i < students.length; ++i)
-	grades_grid.addPeople(students[i]);
+	grades_grid.addStudent(students[i]);
 
 
 function changeGradingSystem(name, system) {

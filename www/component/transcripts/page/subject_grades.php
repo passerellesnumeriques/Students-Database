@@ -198,9 +198,11 @@ class page_subject_grades extends Page {
 		if (isset($_GET["group"])) {
 			$q = PNApplication::$instance->students_groups->getStudentsQueryForGroup($_GET["group"]);
 			PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
+			PNApplication::$instance->students->joinStudent($q, "StudentGroup", "people");
 		} else if (count($groups_ids) > 0) {
 			$q = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids);
 			PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
+			PNApplication::$instance->students->joinStudent($q, "StudentGroup", "people");
 		} else
 			$q = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period["id"], true, false, $spe <> null ? $spe["id"] : false);
 		$students = $q->execute();
@@ -251,9 +253,11 @@ class page_subject_grades extends Page {
 		}
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
+		require_once("component/students/StudentsJSON.inc");
 		$this->requireJavascript("grid.js");
 		$this->requireJavascript("custom_data_grid.js");
 		$this->requireJavascript("people_data_grid.js");
+		$this->requireJavascript("student_data_grid.js");
 		theme::css($this, "grid.css");
 		if ($edit) {
 			$this->requireJavascript("typed_field.js");
@@ -451,7 +455,7 @@ if (PNApplication::$instance->help->isShown("subject_grades") && $can_edit) {
 window.onuserinactive = function() { window.pnapplication.cancelDataUnsaved();var u = new window.URL(location.href);delete u.params.edit;location.href=u.toString(); };
 var subject_id = <?php echo $subject["id"];?>;
 var subjects = <?php echo CurriculumJSON::SubjectsJSON($subjects);?>;
-var students = <?php echo PeopleJSON::Peoples($students);?>;
+var students = <?php echo StudentsJSON::Students($students);?>;
 var only_final = <?php echo $subject["only_final_grade"] == 1 ? "true" : "false";?>;
 var original_only_final = only_final;
 var subject_max_grade = <?php echo json_encode($subject["max_grade"]);?>;
@@ -592,7 +596,7 @@ function computeGrades() {
 tooltip(document.getElementById('select_subject'), "Click to select another subject");
 tooltip(document.getElementById('select_group'), "Click to select another group of students");
 
-var grades_grid = new people_data_grid('grades_container', function(people_id) { return getPeople(people_id); }, "Student");
+var grades_grid = new student_data_grid('grades_container', function(people_id) { return getPeople(people_id); }, "Student");
 grades_grid.grid.element.style.marginLeft = "5px";
 grades_grid.grid.table.parentNode.style.width = "";
 grades_grid.addPeopleProfileAction();
