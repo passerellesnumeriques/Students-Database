@@ -16,6 +16,7 @@ class page_send_feedback extends Page {
 	Which type of feedback would you like to send ?<br/>
 		<input type='radio' name='type' value='issue' onchange='validateForm();'/> You have an issue / encounter a bug in the application<br/>
 		<input type='radio' name='type' value='suggestion' onchange='validateForm();'/> You have a suggestion/idea to improve the application<br/>
+		<input type='radio' name='type' value='help' onchange='validateForm();'/> You need help on a screen<br/>
 	<br/>
 	On which part ?
 	<select name='app_part' onchange='validateForm();'>

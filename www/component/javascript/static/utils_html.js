@@ -236,31 +236,32 @@ function createTooltip(element, content) {
 		div.innerHTML = content;
 		content = div;
 	}
-	content.style.position = "absolute";
-	var x = absoluteLeft(element);
+	content.style.position = "fixed";
+	var win = getWindowFromElement(element);
+	var pos = getFixedPosition(element, true);
 	var w = element.offsetWidth;
-	var ww = getWindowWidth();
-	if (x <= ww/2) {
+	var ww = win.getWindowWidth();
+	if (pos.x <= ww/2) {
 		content.className = "tooltip";
 		if (w < 44) {
-			x = x-22+Math.floor(w/2);
-			if (x < 0) x = 0;
+			pos.x = pos.x-22+Math.floor(w/2);
+			if (pos.x < 0) pos.x = 0;
 		}
-		content.style.left = x+"px";
+		content.style.left = pos.x+"px";
 	} else {
 		content.className = "tooltip_right";
-		x = (ww-(x+w));
+		pos.x = (ww-(pos.x+w));
 		if (w < 44) {
-			x = x-22+Math.floor(w/2);
-			if (x >= ww) x = ww-1;
+			pos.x = pos.x-22+Math.floor(w/2);
+			if (pos.x >= ww) pos.x = ww-1;
 		}
-		if (x < 0) {
-			x = 0;
+		if (pos.x < 0) {
+			pos.x = 0;
 			content.className = "tooltip_right tooltip_veryright";
 		}
-		content.style.right = x+"px";
+		content.style.right = pos.x+"px";
 	}
-	content.style.top = (absoluteTop(element)+element.offsetHeight+5)+"px";
+	content.style.top = (pos.y+element.offsetHeight+5)+"px";
 	content.style.zIndex = 100;
 	removeTooltip();
 	if (typeof animation != 'undefined') {
@@ -269,7 +270,7 @@ function createTooltip(element, content) {
 		animation.fadeIn(content, 200);
 	} else {
 	}
-	document.body.appendChild(content);
+	win.document.body.appendChild(content);
 	element._tooltip = window.top._current_tooltip = content;
 	content._element = element;
 	element._tooltip_timeout = setTimeout(function (){

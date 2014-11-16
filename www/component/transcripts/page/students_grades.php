@@ -32,6 +32,7 @@ class page_students_grades extends Page {
 			$q = PNApplication::$instance->students_groups->getStudentsQueryForGroup($group["id"], true);
 			PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
 			PNApplication::$instance->students->removeExcluded($q, $academic_period["start"]);
+			PNApplication::$instance->students->joinStudent($q, "StudentGroup", "people");
 		} else {
 			$q = PNApplication::$instance->students->getStudentsQueryForBatchPeriod($period_id, true, false, $spe <> null ? $spe["id"] : false);
 		}
@@ -72,6 +73,14 @@ class page_students_grades extends Page {
 			$grading_system = $d["transcripts"]["default_grading_system"];
 		}
 		// other display settings
+		if (isset($_COOKIE["display_code"]))
+			$display_code = $_COOKIE["display_code"];
+		else
+			$display_code = "1";
+		if (isset($_COOKIE["display_name"]))
+			$display_name = $_COOKIE["display_name"];
+		else
+			$display_name = "1";
 		if (isset($_COOKIE["display_coef"]))
 			$display_coef = $_COOKIE["display_coef"];
 		else
@@ -80,12 +89,18 @@ class page_students_grades extends Page {
 		$this->requireJavascript("grid.js");
 		$this->requireJavascript("custom_data_grid.js");
 		$this->requireJavascript("people_data_grid.js");
+		$this->requireJavascript("student_data_grid.js");
 		theme::css($this, "grid.css");
 		
 		require_once("component/curriculum/CurriculumJSON.inc");
+		require_once("component/students/StudentsJSON.inc");
 		?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;background-color:white'>
 	<div class='page_title' style='flex:none'>
+		<div style='float:right'>
+			<button class='flat' id='export_button'><img src='<?php echo theme::$icons_16["_export"];?>'/> Export</button>
+			<button class='flat' id='print_button'><img src='<?php echo theme::$icons_16["print"];?>'/> Print</button>
+		</div>
 		<img src='/static/transcripts/grades_32.png'/>
 		Grades
 		<span style='margin-left:10px;font-size:12pt;font-style:italic;'>
@@ -115,11 +130,12 @@ class page_students_grades extends Page {
 			?>
 			</select>
 			<span style='margin-left:10px'></span>
-			<input type='checkbox' style='vertical-align:middle;' onchange='setDisplayCoef(this.checked);' <?php if ($display_coef == 1) echo " checked='checked'";?>/><span onclick="this.previousSibling.checked = this.previousSibling.checked ? '' : 'checked';">Display coefficients</span>
+			Display subject
+			<input type='checkbox' style='vertical-align:middle;' onchange='setDisplayCode(this.checked);' <?php if ($display_code == 1) echo " checked='checked'";?>/><span onclick="this.previousSibling.checked = this.previousSibling.checked ? '' : 'checked';">code</span>
+			<input type='checkbox' style='vertical-align:middle;' onchange='setDisplayName(this.checked);' <?php if ($display_name == 1) echo " checked='checked'";?>/><span onclick="this.previousSibling.checked = this.previousSibling.checked ? '' : 'checked';">name</span>
+			<input type='checkbox' style='vertical-align:middle;' onchange='setDisplayCoef(this.checked);' <?php if ($display_coef == 1) echo " checked='checked'";?>/><span onclick="this.previousSibling.checked = this.previousSibling.checked ? '' : 'checked';">coefficient</span>
 			<span style='margin-left:10px'></span>
 			<button class='flat' id='columns_chooser_button'><img src='/static/data_model/table_column.png'/> Choose columns</button>
-			<button class='flat' id='export_button'><img src='<?php echo theme::$icons_16["_export"];?>'/> Export</button>
-			<button class='flat' id='print_button'><img src='<?php echo theme::$icons_16["print"];?>'/> Print</button>
 		</div>
 	</div>
 	<div style='flex:1 1 auto;overflow:auto' id='grades_container'>
@@ -151,7 +167,7 @@ if (PNApplication::$instance->help->isShown("students_grades")) {
 	PNApplication::$instance->help->availableHelp("students_grades");
 ?>
 <script type='text/javascript'>
-var students = <?php echo PeopleJSON::Peoples($students);?>;
+var students = <?php echo StudentsJSON::Students($students);?>;
 var students_comments = <?php echo json_encode($students_comments);?>;
 var categories = <?php echo CurriculumJSON::SubjectCategoriesJSON($categories);?>;
 var subjects = <?php echo CurriculumJSON::SubjectsJSON($subjects);?>;
@@ -248,7 +264,7 @@ function getStudentRank(people_id) {
 	return rank;
 }
 
-var grades_grid = new people_data_grid('grades_container', function(people) { return people; }, "Student");
+var grades_grid = new student_data_grid('grades_container', function(student) { return student; }, "Student");
 grades_grid.setColumnsChooserButton(document.getElementById('columns_chooser_button'));
 grades_grid.setExportButton(document.getElementById('export_button'),<?php echo json_encode("Grades of ".$title);?>,'Grades');
 grades_grid.setPrintButton(document.getElementById('print_button'));
@@ -264,20 +280,27 @@ for (var i = 0; i < categories.length; ++i) {
 		var sname = document.createElement("A");
 		sname.href = "subject_grades?subject="+cat_subjects[j].id<?php if ($group <> null) echo "+'&group=".$group["id"]."'";?>;
 		sname.target = "application_frame";
-		sname.appendChild(document.createTextNode(cat_subjects[j].code));
-		sname.appendChild(document.createElement("BR"));
-		sname.appendChild(document.createTextNode(cat_subjects[j].name));
+		var span_code = document.createElement("SPAN");
+		span_code.appendChild(document.createTextNode(cat_subjects[j].code));
+		span_code.appendChild(document.createElement("BR"));
+		span_code.style.display = <?php if ($display_code == 1) echo "''"; else echo "'none'";?>;
+		sname.appendChild(span_code);
+		var span_name = document.createElement("SPAN");
+		span_name.appendChild(document.createTextNode(cat_subjects[j].name));
+		span_name.appendChild(document.createElement("BR"));
+		span_name.style.display = <?php if ($display_name == 1) echo "''"; else echo "'none'";?>;
 		sname.className = "black_link";
+		sname.appendChild(span_name);
 		tooltip(sname, "Click to open grades of subject <i>"+cat_subjects[j].name+"</i>");
 		title.appendChild(sname);
 		var span_coef = document.createElement("SPAN");
 		span_coef.style.fontWeight = "normal";
-		span_coef.style.visibility = <?php if ($display_coef == 1) echo "'visible'"; else echo "'hidden'";?>;
-		span_coef.style.position = <?php if ($display_coef == 1) echo "'static'"; else echo "'absolute'";?>;
-		span_coef.appendChild(document.createElement("BR"));
+		span_coef.style.display = <?php if ($display_coef == 1) echo "''"; else echo "'none'";?>;
 		span_coef.appendChild(document.createTextNode("Coef. "+cat_subjects[j].coefficient));
 		title.appendChild(span_coef);
 		title.span_coef = span_coef;
+		title.span_code = span_code;
+		title.span_name = span_name;
 		var sg = getSubjectGrading(cat_subjects[j].id);
 		var col = new GridColumn("subject"+cat_subjects[j].id,title,null,"center","field_grade",false,null,null,{max:sg ? sg.max_grade : 1,passing:sg ? sg.passing_grade : 0.5,system:<?php echo json_encode($grading_systems[$grading_system]);?>});
 		addClassName(col.th, "subject_column_title");
@@ -306,7 +329,7 @@ grades_grid.addColumn(new CustomDataGridColumn(new GridColumn("student_comment",
 }, true, null));
 // add every student
 for (var i = 0; i < students.length; ++i)
-	grades_grid.addPeople(students[i]);
+	grades_grid.addStudent(students[i]);
 
 
 function changeGradingSystem(name, system) {
@@ -325,13 +348,30 @@ function changeGradingSystem(name, system) {
 		field.setGradingSystem(system);
 	}
 }
+function setDisplayCode(display) {
+	setCookie("display_code",display?1:0,365*24*60,"/dynamic/transcripts/page/students_grades");
+	var columns = grades_grid.getAllFinalColumns();
+	for (var i = 0; i < columns.length; ++i) {
+		if (typeof columns[i].grid_column.title.span_code == 'undefined') continue;
+		columns[i].grid_column.title.span_code.style.display = display ? "" : "none";
+		layout.changed(columns[i].grid_column.title.span_code.parentNode);
+	}
+}
+function setDisplayName(display) {
+	setCookie("display_name",display?1:0,365*24*60,"/dynamic/transcripts/page/students_grades");
+	var columns = grades_grid.getAllFinalColumns();
+	for (var i = 0; i < columns.length; ++i) {
+		if (typeof columns[i].grid_column.title.span_name == 'undefined') continue;
+		columns[i].grid_column.title.span_name.style.display = display ? "" : "none";
+		layout.changed(columns[i].grid_column.title.span_name.parentNode);
+	}
+}
 function setDisplayCoef(display) {
-	setCookie("display_coef",name,365*24*60,"/dynamic/transcripts/page/students_grade");
+	setCookie("display_coef",display?1:0,365*24*60,"/dynamic/transcripts/page/students_grades");
 	var columns = grades_grid.getAllFinalColumns();
 	for (var i = 0; i < columns.length; ++i) {
 		if (typeof columns[i].grid_column.title.span_coef == 'undefined') continue;
-		columns[i].grid_column.title.span_coef.style.visibility = display ? "visible" : "hidden";
-		columns[i].grid_column.title.span_coef.style.position = display ? "static" : "absolute";
+		columns[i].grid_column.title.span_coef.style.display = display ? "" : "none";
 		layout.changed(columns[i].grid_column.title.span_coef.parentNode);
 	}
 }

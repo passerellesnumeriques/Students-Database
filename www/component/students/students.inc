@@ -87,6 +87,9 @@ class students extends Component {
 		}
 		$q->field("Student","people","people");
 		$q->field("Student","specialization","specialization");
+		$q->field("Student","exclusion_date","exclusion_date");
+		$q->field("Student","exclusion_reason","exclusion_reason");
+		$q->field("Student","university_id","university_id");
 		if ($restrict_specialization !== false) {
 			if ($restrict_specialization === null)
 				$q->whereNull("Student", "specialization");
@@ -99,6 +102,15 @@ class students extends Component {
 			PNApplication::$instance->people->joinPeople($q, "Student", "people");
 		}
 		return $q;
+	}
+	
+	public function joinStudent(&$q, $from_table, $from_people_key) {
+		$q->join($from_table, "Student", array($from_people_key=>"people"));
+		$q->field("Student","people","people");
+		$q->field("Student","specialization","specialization");
+		$q->field("Student","exclusion_date","exclusion_date");
+		$q->field("Student","exclusion_reason","exclusion_reason");
+		$q->field("Student","university_id","university_id");
 	}
 	
 	public function removeExcluded(&$q, $sql_date) {

@@ -61,7 +61,8 @@ function calendar_view_day(view, container) {
 	this.back = function() {
 		this.start_date = new Date(this.start_date.getTime()-24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		this._showNow();
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
@@ -75,7 +76,8 @@ function calendar_view_day(view, container) {
 	this.backStep = function() {
 		this.start_date = new Date(this.start_date.getTime()-7*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+1*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		this._showNow();
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
@@ -89,7 +91,8 @@ function calendar_view_day(view, container) {
 	this.forward = function() {
 		this.start_date = new Date(this.start_date.getTime()+24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		this._showNow();
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
@@ -103,7 +106,8 @@ function calendar_view_day(view, container) {
 	this.forwardStep = function() {
 		this.start_date = new Date(this.start_date.getTime()+7*24*60*60*1000);
 		this.end_date = new Date(this.start_date.getTime()+1*24*60*60*1000-1);
-		view.cursor_date = this.start_date;
+		if (view.cursor_date.getTime() < this.start_date.getTime()) view.cursor_date.setTime(this.start_date.getTime());
+		else if (view.cursor_date.getTime() > this.end_date.getTime()) view.cursor_date.setTime(this.end_date.getTime());
 		this._showNow();
 		this.day_title.innerHTML = this.start_date.toDateString();
 		if (this.day_column)
@@ -144,9 +148,12 @@ function calendar_view_day(view, container) {
 		t.header.style.display = "flex";
 		t.header.style.flexDirection = "row";
 		this.corner = document.createElement("DIV");
-		this.corner.style.minWidth = "50px";
-		this.corner.style.maxWidth = "50px";
+		this.corner.style.minWidth = "44px";
+		this.corner.style.maxWidth = "44px";
+		this.corner.style.paddingLeft = "1px";
+		this.corner.style.paddingTop = "2px";
 		this.corner.style.flex = "none";
+		this.corner.style.fontSize = '8pt';
 		var tz = -(new Date().getTimezoneOffset());
 		this.corner.innerHTML = "GMT";
 		if (tz != 0) {
@@ -167,20 +174,20 @@ function calendar_view_day(view, container) {
 		this.day_box.style.borderBottom = "1px solid black";
 		this.day_box.style.height = "10px";
 		this.day_box.style.position = "absolute";
-		this.day_box.style.left = "50px";
+		this.day_box.style.left = "45px";
 		this.day_row_container.appendChild(this.day_box);
 		
 		this.content.style.position = "relative";
 		this.time_title = document.createElement("DIV");
 		this.time_title.style.position = "absolute";
-		this.time_title.style.width = "50px";
+		this.time_title.style.width = "45px";
 		this.time_title.style.left = "0px";
 		this.time_title.style.top = "0px";
 		this.time_title.style.borderRight = "1px solid black";
 		this.content.appendChild(this.time_title);
 		this.day_content = document.createElement("DIV");
 		this.day_content.style.position = "absolute";
-		this.day_content.style.left = "51px";
+		this.day_content.style.left = "46px";
 		this.day_content.style.top = "0px";
 		this.content.appendChild(this.day_content);
 		
@@ -209,7 +216,7 @@ function calendar_view_day(view, container) {
 			line.style.borderTop = "1px dotted #808080";
 			line.style.height = "1px";
 			line.style.position = "absolute";
-			line.style.left = "51px";
+			line.style.left = "46px";
 			line.style.top = y+"px";
 			this.content.appendChild(line);
 			this._time_lines.push(line);
@@ -219,7 +226,7 @@ function calendar_view_day(view, container) {
 			d.innerHTML = _2digits(date.getHours())+":"+_2digits(date.getMinutes());
 			d.style.top = (y-8)+"px";
 			d.style.position = "absolute";
-			d.style.width = "50px";
+			d.style.width = "45px";
 			d.style.textAlign = "right";
 			d.style.left = "0px";
 			this.time_title.appendChild(d);
@@ -261,6 +268,7 @@ function calendar_view_day(view, container) {
 			t._timeout = setTimeout(function(){
 				var w = container.clientWidth-51-window.top.browser_scroll_bar_size;
 				w -= (t.content.offsetWidth-t.content.clientWidth);
+				w--;
 				if (t._now) t._now.style.width = w+"px";
 				t.day_content.style.width = w+"px";
 				t.day_box.style.width = w+"px";

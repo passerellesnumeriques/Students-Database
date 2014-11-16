@@ -18,12 +18,14 @@ class service_exclude_student extends Service {
 			echo "false";
 			return;
 		}
+		$people = PNApplication::$instance->people->getPeople($people_id);
 		if ($date == null && $reason == null) {
 			if ($student["exclusion_date"] == null) {
 				echo "true";
 				return;
 			}
 			SQLQuery::create()->updateByKey("Student", $people_id, array("exclusion_date"=>null,"exclusion_reason"=>null));
+			PNApplication::$instance->news->post("students", "students", array("batch".$student["batch"]), "activity", "Student <i>".toHTML($people["first_name"])." ".toHTML($people["last_name"])."</i> is back to PN!");
 			echo "true";
 			return;
 		}
@@ -37,6 +39,7 @@ class service_exclude_student extends Service {
 			return;
 		}
 		SQLQuery::create()->updateByKey("Student", $people_id, array("exclusion_date"=>$date,"exclusion_reason"=>$reason));
+		PNApplication::$instance->news->post("students", "students", array("batch".$student["batch"]), "activity", "Student <i>".toHTML($people["first_name"])." ".toHTML($people["last_name"])."</i> has been excluded from PN because of: <i>".toHTML($reason)."</i>");
 		echo "true";
 	}
 	
