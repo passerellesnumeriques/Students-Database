@@ -42,6 +42,7 @@ class page_teachers extends Page {
 			$q->field("TeacherAssignment","people","teacher");
 			$q->field("CurriculumSubject","name","subject_name");
 			$q->groupBy("CurriculumSubject","id");
+			$q->groupBy("TeacherAssignment","people");
 			$current_assignments = $q->execute();
 		} else
 			$current_assignments = array();
@@ -57,6 +58,7 @@ class page_teachers extends Page {
 			$q->field("BatchPeriod","name","period_name");
 			$q->field("StudentBatch","name","batch_name");
 			$q->groupBy("CurriculumSubject","id");
+			$q->groupBy("TeacherAssignment","people");
 			$q->orderBy("AcademicPeriod","start",false);
 			$previous_assignments = $q->execute();
 		} else
