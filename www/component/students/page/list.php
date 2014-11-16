@@ -281,18 +281,28 @@ new data_list(
 function reload_list() {
 	window.students_list.reloadData();
 }
-var to_do_div = null;
+var to_do_item = null;
 function refreshToDo(ondone) {
+	if (to_do_item) {
+		window.students_list.removeFooterTool(to_do_item);
+		to_do_item = null;
+	}	
 	service.customOutput("students","what_to_do_for_batch",{batch:batches[0]},function(res){
 		if (res && res.length > 0) {
-			if (!to_do_div) {
-				to_do_div = document.createElement("DIV");
-				to_do_div.style.maxHeight = "50px";
-				to_do_div.style.overflow = "auto";
-				to_do_div.className = "warning_footer";
-				window.students_list.addFooter(to_do_div);
-			}
-			to_do_div.innerHTML = res;
+			to_do_item = document.createElement("BUTTON");
+			to_do_item.className = "action";
+			to_do_item.innerHTML = "<img src='"+theme.icons_16.warning+"'/> Actions needed";
+			to_do_item.onclick = function() {
+				var to_do_div = document.createElement("DIV");
+				to_do_div.style.padding = "5px";
+				to_do_div.innerHTML = res;
+				require("popup_window.js",function() {
+					var p = new popup_window("Actions needed on Batch",null,to_do_div);
+					p.addCloseButton();
+					p.show();
+				});
+			};
+			to_do_item = window.students_list.addFooterTool(to_do_item);
 			if (ondone) ondone();
 		}
 	});

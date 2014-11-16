@@ -108,6 +108,12 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		t.footer_tools.appendChild(item);
 		layout.changed(t.footer_tools);
+		return item;
+	};
+	t.removeFooterTool = function(item) {
+		if (!t.footer_tools) return;
+		t.footer_tools.removeChild(item);
+		layout.changed(t.footer_tools);
 	};
 	t.addFooter = function(html) {
 		var item = document.createElement("DIV");
