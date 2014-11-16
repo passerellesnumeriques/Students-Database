@@ -441,12 +441,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			var thumb_container = document.createElement("DIV");
 			thumb_container.style.overflow = "auto";
 			thumb_container.style.flex = "1 1 auto";
+			thumb_container.style.display = "none";
+			t.thumb_container = thumb_container;
 
 			var div_picture_size = document.createElement("DIV");
 			div_picture_size.appendChild(document.createTextNode("Pic.size"));
 			div_picture_size.style.marginRight = "3px";
 			div_picture_size.style.fontSize = "11px";
-			div_picture_size.style.display = "inline-block";
+			div_picture_size.style.display = "none";
 			var select_size = document.createElement("SELECT");
 			select_size.style.fontSize = "11px";
 			div_picture_size.appendChild(select_size);
@@ -482,54 +484,57 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					}
 				}
 			};
+			
+			thumb_container.style.overflow = "auto";
+			container.insertBefore(thumb_container, t.header.nextSibling);
+			header.appendChild(div_picture_size);
 
 			var original_load = t._loadData;
 			tabs.onselect = function(id) {
 				switch (id) {
 				case "text":
 					t._loadData = original_load;
-					if (thumb_container.parentNode) container.removeChild(thumb_container);
-					if (div_picture_size.parentNode) header.removeChild(div_picture_size);
-					//if (!t.header_right.parentNode) t.header.appendChild(t.header_right);
-					if (!t.grid_container.parentNode) container.insertBefore(t.grid_container, t.header.nextSibling);
+					thumb_container.style.display = "none";
+					div_picture_size.style.display = "none";
+					t.grid_container.style.display = "flex";
 					if (t.grid.getColumnById("data_list_picture") != null)
 						t.grid.removeColumn(t.grid.getColumnIndex(col_picture));
 					break;
 				case "detail":
-					t._loadData = original_load;
-					if (thumb_container.parentNode) container.removeChild(thumb_container);
-					if (!div_picture_size.parentNode) header.appendChild(div_picture_size);
-					//if (!t.header_right.parentNode) t.header.appendChild(t.header_right);
-					if (!t.grid_container.parentNode) container.insertBefore(t.grid_container, t.header.nextSibling);
-					if (t.grid.getColumnById("data_list_picture") == null) {
+					t._loadData = function() {
+						original_load(function() {
+							t.grid.onallrowsready(function() {
+								if (t.grid.getColumnById("data_list_picture") == null) return;
+								for (var i = 0; i < t.grid.getNbRows(); ++i) {
+									var field = t.grid.getCellField(i, 0);
+									if (field == null) continue;
+									picture_provider(field.getHTMLElement(), t.getTableKeyForRow(table, i), t._pic_width, t._pic_height);
+								}
+							});
+						});
+					};
+					thumb_container.style.display = "none";
+					div_picture_size.style.display = "inline-block";
+					t.grid_container.style.display = "flex";
+					if (t.grid.getColumnById("data_list_picture") == null)
 						t.grid.addColumn(col_picture, 0);
-						for (var i = 0; i < t.grid.getNbRows(); ++i) {
-							var field = t.grid.getCellField(i, 0);
-							if (field == null) continue;
-							picture_provider(field.getHTMLElement(), t.getTableKeyForRow(table, i), t._pic_width, t._pic_height);
-						}
-					} else
-						t._loadData();
+					t._loadData();
 					break;
 				case "thumb":
-					if (t.grid_container.parentNode) container.removeChild(t.grid_container);
-					//if (t.header_right.parentNode) t.header.removeChild(t.header_right);
-					if (!div_picture_size.parentNode) header.appendChild(div_picture_size);
-					if (!thumb_container.parentNode) {
-						t._loadData = function(onready) {
-							original_load(function() {
-								thumbnail_provider(function(pics) {
-									pic_list.setPictures(pics);
-									if (onready) onready();
-								});								
-							});
-						};
-						thumbnail_provider(function(pics) {
-							pic_list.setPictures(pics);
+					thumb_container.style.display = "block";
+					div_picture_size.style.display = "inline-block";
+					t.grid_container.style.display = "none";
+					t._loadData = function(onready) {
+						original_load(function() {
+							thumbnail_provider(function(pics) {
+								pic_list.setPictures(pics);
+								if (onready) onready();
+							});								
 						});
-						thumb_container.style.overflow = "auto";
-						container.insertBefore(thumb_container, t.header.nextSibling);
-					}
+					};
+					thumbnail_provider(function(pics) {
+						pic_list.setPictures(pics);
+					});
 					break;
 				};
 				layout.changed(container);
@@ -538,10 +543,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	};
 	
 	t.print = function() {
-		if (t.header.nextSibling == t.grid_container)
+		if (t.grid_container.style.display != "none")
 			t.grid.print();
 		else
-			printContent(t.header.nextSibling);
+			printContent(t.thumb_container);
 	};
 	
 	t.orderBy = function(field_category, field_name, field_sub_index, asc) {
@@ -1125,7 +1130,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 							cols.push(t.grid.columns[j]);
 							break;
 						}
-				var col_pic = t.grid.getColumnById("data_list_picture"); 
 				for (var i = 0; i < t.data.length; ++i) {
 					var row = {row_id:i,row_data:[]};
 					for (var j = 0; j < t.show_fields.length; ++j)
@@ -1147,8 +1151,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 							}
 						}
 					}
-					if (col_pic != null)
-						row.row_data.splice(0,0,{col_id:"data_list_picture",data_id:null,data:null});
 					data.push(row);
 					if (t._col_actions)
 						row.row_data.push({col_id:'actions',data_id:null,data:""});
@@ -1156,13 +1158,6 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				t.grid.setData(data);
 				if (t._col_actions)
 					t._populateActions();
-				if (col_pic != null) {
-					for (var i = 0; i < t.grid.getNbRows(); ++i) {
-						var field = t.grid.getCellField(i, 0);
-						if (field == null) return;
-						t._picture_provider(field.getHTMLElement(), t.getTableKeyForRow(t._picture_table, i), t._pic_width, t._pic_height);
-					}
-				}
 				// register events
 				for (var i = 0; i < t.grid.table.childNodes.length; ++i) {
 					var row = t.grid.table.childNodes[i];
