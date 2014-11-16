@@ -746,7 +746,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		this.view.removeEvent(ev.uid);
 	};
 	
-	require(["calendar_objects.js","color.js"],function() {
+	require(["calendar_objects.js","color.js","event_div.js"],function() {
 		var add_event_listener = function(ev) { t.addEvent(ev); };
 		var remove_event_listener = function(ev) { t.removeEvent(ev); };
 		var update_event_listener = function(ev) {

@@ -185,35 +185,9 @@ function calendar_view_month(view, container) {
 	
 	this._createEventDiv = function(ev) {
 		var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
-		var div = document.createElement("DIV");
-		div.style.backgroundColor = "#"+cal.color;
-		require("color.js", function() {
-			div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(cal.color), 0x60));
-		});
+		var div = createEventDiv(ev,cal);
 		div.style.overflow = 'hidden';
-		div.style.padding = "1px";
-		div.style.fontSize = '8pt';
 		div.style.marginBottom = "1px";
-		if (!ev.all_day) {
-			var time = document.createElement("SPAN");
-			time.style.fontSize = "90%";
-			time.style.color = "#404040";
-			time.style.marginRight = "3px";
-			var time_str = ev.start.getHours()+":"+_2digits(ev.start.getMinutes());
-			time_str += "-"+ev.end.getHours()+":"+_2digits(ev.end.getMinutes());
-			time.appendChild(document.createTextNode(time_str));
-			div.appendChild(time);
-		}
-		div.appendChild(document.createTextNode(ev.title));
-		div.title = cal.name+"\r\n"+ev.title+"\r\n"+ev.description;
-		div.style.cursor = "pointer";
-		div.event = ev;
-		div.onclick = function() {
-			var ev = this.event;
-			require("event_screen.js",function() {
-				event_screen(ev.original_event, cal);
-			});
-		};
 		return div;
 	};
 	

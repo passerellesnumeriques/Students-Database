@@ -106,16 +106,18 @@ if ($message <> null) {
 ?>
 <table class='login_table' style='margin-top:20px;flex:none;'>
 	<tr>
-		<td colspan=3 class='login_table_header' align=center>
+		<td colspan=2 class='login_table_header' align=center>
 			<img src='/static/development/debug.png'/>
 			Development
 		</td>
 	</tr>
-	<tr><td>
+	<tr><td colspan=2>
 		<div class='info_box'>
 			<img src='<?php echo theme::$icons_16["info"];?>' style='vertical-align:bottom' style='vertical-align:bottom'/>
 			Your version is a development version (<?php echo $pn_app_version;?>)
 		</div>
+	</td></tr>
+	<tr><td valign=top>
 		<a href="#" onclick="resetDB();return false;">Reset Database</a><br/>
 		<a href="#" onclick="cleanStorage();return false;">Clean storage</a><br/>
 		<a href="#" onclick="exportStorage();return false;">Export storage</a><br/>
@@ -125,7 +127,14 @@ if ($message <> null) {
 		<a href="?destroy_session=true">Destroy session</a><br/>
 		<a href="?uninstall=true">Reset installation</a><br/>
 		<a href="/deploy/" target="_blank">Deploy new version</a><br/>
-		<span id='libraries_updates'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/>Checking libraries versions...</span>
+	</td><td valign=top>
+		External libraries:<ul>
+			<li>tinyMCE: <span id='library_tinymce'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>PHPExcel: <span id='library_phpexcel'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>mPDF: <span id='library_mpdf'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>Google Calendar: <span id='library_google_calendar'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>Google OAuth2: <span id='library_google_oauth2'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+		</ul>
 	</td></tr>
 </table>
 <script type="text/javascript">
@@ -142,17 +151,23 @@ function exportStorage() {
 	popup_frame(null,"Export Storage", "/dynamic/development/page/export_storage", null, 90, 90, function(frame,pop) {
 	});
 }
-service.json("development","check_libraries_updates",null,function(res) {
-	var span = document.getElementById('libraries_updates');
-	if (!res || res.length == 0)
-		span.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> All libraries are up to date";
-	else {
-		span.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> Some libraries are not up to date:<br/>";
-		for (var i = 0; i < res.length; ++i) {
-			span.innerHTML += res[i].name+": current version is "+res[i].current_version+", new available version is "+res[i].new_version+"<br/>";
+var libraries = ["tinymce","phpexcel","mpdf","google_calendar","google_oauth2"];
+function checkLibraryUpdates(lib) {
+	service.json("development","check_libraries_updates",{library:lib},function(res) {
+		var span = document.getElementById('library_'+lib);
+		if (!res)
+			span.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> Unable to get latest version";
+		else if (res.error)
+			span.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res.error;
+		else {
+			if (res.latest == res.current)
+				span.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Up to date ("+res.latest+")";
+			else
+				span.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> Version "+res.latest+" available (currently in use: "+res.current+")";
 		}
-	}
-});
+	});
+}
+for (var i = 0; i < libraries.length; ++i) checkLibraryUpdates(libraries[i]);
 <?php if (rand(0,3)==0) { ?>
 setTimeout(function() {
 	service.json("administration","store_stats",null,function(res){});

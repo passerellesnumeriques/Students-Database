@@ -27,6 +27,11 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	require([["typed_field.js",["field_date.js","field_time.js"]],"popup_window.js","calendar_view.js"],function() {
 		var o;
 		var calendar = ev ? window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id) : null;
+		if (ev && !calendar) {
+			// calendar provider no more available
+			alert("Sorry but this event is not available any more. You may have been disconnected.");
+			return;
+		}
 		var ro = ev && !calendar.saveEvent;
 
 		t.content = document.createElement("DIV");
@@ -426,7 +431,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 				t.to_date.setData(t.getDateString(end));
 				t.to_time.setData(end.getHours()*60+end.getMinutes());
 				if (new_all_day) {
-					ev.all_day.checked = 'checked';
+					t.all_day.checked = 'checked';
 					t.from_time_span.style.visibility = 'hidden';
 					t.from_time_span.style.position = 'absolute';
 					t.to_time_span.style.visibility = 'hidden';

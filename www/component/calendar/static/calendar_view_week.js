@@ -196,6 +196,15 @@ function calendar_view_week(view, container) {
 			this.day_box[i].style.height = "10px";
 			this.day_box[i].style.position = "absolute";
 			this.day_row_container.appendChild(this.day_box[i]);
+			this.day_box[i].date = new Date(t.start_date.getTime()+i*24*60*60*1000);
+			this.day_box[i].onclick = function(e) {
+				var date = new Date(this.date.getTime());
+				require("event_screen.js",function() {
+					event_screen(null,view.calendar_manager.calendars[view.calendar_manager.default_calendar_index],date,true);
+				});
+				stopEventPropagation(e);
+				return false;				
+			};
 		}
 		this.header.style.position = "relative";
 		
