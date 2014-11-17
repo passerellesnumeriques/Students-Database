@@ -14,6 +14,7 @@ class service_check_libraries_updates extends Service {
 			case "tinymce": $this->checkTinyMCE(); break;
 			case "google_calendar": $this->checkGoogleCalendar(); break;
 			case "google_oauth2": $this->checkGoogleOAuth2(); break;
+			case "google_php_api": $this->checkGoogleAPI(); break;
 			default: echo "{error:".json_encode("Unknown library ".$input["library"])."}";
 		}
 	}
@@ -123,6 +124,30 @@ class service_check_libraries_updates extends Service {
 		$v = @$json["items"][0]["version"];
 		if ($v == null) return null;
 		$c = file_get_contents("component/google/oauth2.version");
+		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
+	}
+
+	private function checkGoogleAPI() {
+		$c = curl_init("https://api.github.com/repos/google/google-api-php-client/releases");
+		if (file_exists("conf/proxy")) include("conf/proxy");
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
+		global $pn_app_version;
+		curl_setopt($c, CURLOPT_HTTPHEADER, array(
+			"User-Agent: Students-Management-Software/".$pn_app_version.".dev"
+		));
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
+		curl_setopt($c, CURLOPT_TIMEOUT, 200);
+		set_time_limit(240);
+		$result = curl_exec($c);
+		if ($result === false) { echo "{error:".json_encode(curl_error($c))."}"; curl_close($c); return; }
+		curl_close($c);
+		$json = json_decode($result, true);
+		if ($json === null) { echo "{error:'Invalid response returned from GitHub',response:".json_encode($result)."}"; return; }
+		$v = @$json[0]["tag_name"];
+		if ($v == null) { echo "{error:'No release found in GitHub'}"; return; }
+		$c = file_get_contents("component/google/lib_api/version");
 		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
 	}
 }

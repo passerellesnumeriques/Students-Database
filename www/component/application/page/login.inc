@@ -134,6 +134,7 @@ if ($message <> null) {
 			<li>mPDF: <span id='library_mpdf'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 			<li>Google Calendar: <span id='library_google_calendar'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 			<li>Google OAuth2: <span id='library_google_oauth2'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>Google PHP API: <span id='library_google_php_api'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 		</ul>
 	</td></tr>
 </table>
@@ -151,7 +152,7 @@ function exportStorage() {
 	popup_frame(null,"Export Storage", "/dynamic/development/page/export_storage", null, 90, 90, function(frame,pop) {
 	});
 }
-var libraries = ["tinymce","phpexcel","mpdf","google_calendar","google_oauth2"];
+var libraries = ["tinymce","phpexcel","mpdf","google_calendar","google_oauth2","google_php_api"];
 function checkLibraryUpdates(lib) {
 	service.json("development","check_libraries_updates",{library:lib},function(res) {
 		var span = document.getElementById('library_'+lib);
