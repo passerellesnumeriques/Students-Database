@@ -190,11 +190,12 @@ class PNGoogleCalendar extends PNGoogle {
 			$gcal = null;
 			foreach ($google as $g) if ($g->getId() == $cal["google_id"]) { $gcal = $g; break; }
 			if ($gcal == null) continue; // should never happen
-			if ($gcal->getSummary() <> "[SMS] ".$cal["name"] || $gcal->getLocation() <> PNApplication::$instance->local_domain."_".$cal["id"]) {
+			if ($gcal->getSummary() <> "[SMS] ".$pn_cal["name"] || $gcal->getLocation() <> PNApplication::$instance->local_domain."_".$pn_cal["id"]) {
 				// needs to be renamed
-				$gcal->setSummary("[SMS] ".$cal["name"]);
-				$gcal->setLocation(PNApplication::$instance->local_domain."_".$cal["id"]);
-				$this->service->calendars->update($gcal->getId(), $gcal);
+				$g = $this->service->calendars->get($gcal->getId());
+				$g->setSummary("[SMS] ".$pn_cal["name"]);
+				$g->setLocation(PNApplication::$instance->local_domain."_".$pn_cal["id"]);
+				$this->service->calendars->update($gcal->getId(), $g);
 			}
 		}
 		// 4.2 custom calendars

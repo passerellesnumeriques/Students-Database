@@ -4,10 +4,6 @@
  */ 
 class calendar extends Component {
 	
-	public function init() {
-		PNApplication::$instance->user_management->local_user_created->listen($this, "localUserCreated");
-	}
-	
 	/**
 	 * Create a new shared (not presonal) calendar. 
 	 * @param string $calendar_name name of the calendar
@@ -98,14 +94,6 @@ class calendar extends Component {
 		return true;
 	}
 	
-	/**
-	 * Called when an event is raised to signal that a new local user has just been created
-	 * @param number $user_id user id
-	 */
-	public function localUserCreated($user_id) {
-		$this->createUserCalendar($user_id, "Personal", "A0A0FF", null);
-	}
-
 	/**
 	 * Check if the current user can read the calendar
 	 * @param number $calendar_id calendar id

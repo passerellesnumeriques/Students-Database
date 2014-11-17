@@ -18,4 +18,11 @@ $model->addTable("PNCustomGoogleCalendar")
 	->addString("google_id", 255, 0, false, true)
 	->setPrimary("pn_id")
 	;
+
+$model->addTable("GoogleCalendarSynchro")
+	->addString("google_id", 255, 0, false, true)
+	->addInteger("timestamp", 32, null, null, false, false)
+	->setPrimary("google_id")
+	;
+
 ?>
