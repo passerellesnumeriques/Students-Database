@@ -20,12 +20,43 @@ fwrite($f, "Automatic Maintenance");
 fclose($f);
 @unlink("maintenance_time");
 @unlink("maintenance/ask_cancel");
-include("install_config.inc");
-require_once("component/PNApplication.inc");
-require_once("SQLQuery.inc");
-PNApplication::$instance = new PNApplication();
-PNApplication::$instance->init();
-PNApplication::$instance->cron->executeMaintenanceTasks();
+@unlink("data/cron/cron_maintenance_errors");
+
+function cron_maintenance_shutdown_catch() {
+	$msg = "Cron didn't finish correctly.";
+	$error = error_get_last();
+	if ($error <> null)
+		$msg.= " Last error was in ".$error["file"]." line ".$error["line"].": ".$error["message"];
+	$content = ob_get_clean();
+	if ($content <> "")
+		$msg .= "<br/>Output generated at failing time:<br/>".str_replace("\n", "<br/>", toHTML($content));
+	PNApplication::errorHTML($msg);
+}
+
+register_shutdown_function("cron_maintenance_shutdown_catch");
+set_error_handler(function($severity, $message, $filename, $lineno) {
+	if (error_reporting() == 0) return true;
+	PNApplication::error("PHP Error: ".$message." in ".$filename.":".$lineno);
+	return true;
+});
+
+try {
+	include("install_config.inc");
+	require_once("component/PNApplication.inc");
+	require_once("SQLQuery.inc");
+	PNApplication::$instance = new PNApplication();
+	PNApplication::$instance->init();
+	PNApplication::$instance->cron->executeMaintenanceTasks();
+} catch (Exception $e) {
+	PNApplication::error($e);
+}
+restore_error_handler();
+if (PNApplication::hasErrors()) {
+	$f = fopen("data/cron/cron_maintenance_errors","w");
+	fwrite($f,json_encode(PNApplication::$errors));
+	fclose($f);
+}
+	
 @unlink("maintenance/password");
 @unlink("maintenance/origin");
 @unlink("maintenance/ask_cancel");

@@ -11,6 +11,7 @@ class service_get_my_calendars extends Service {
 		$readable = $component->getAccessibleCalendars();
 		if (count($readable) > 0) { 
 			$writable = $component->getWritableCalendars();
+			$owned = $component->getOwnedCalendars();
 			$list = SQLQuery::create()->bypassSecurity()
 				->select("Calendar")
 				->whereIn("Calendar", "id", $readable)
@@ -37,6 +38,7 @@ class service_get_my_calendars extends Service {
 			echo ",writable:".json_encode(in_array($cal["id"], $writable));
 			echo ",show:".($cal["show"] !== null ? ($cal["show"] == false ? "false" : "true") : "true");
 			echo ",icon:".json_encode($cal["icon"]);
+			echo ",removable:".json_encode(in_array($cal["id"], $owned));
 			echo "}";
 		}
 		require_once("component/calendar/CustomCalendarPlugin.inc");
@@ -52,6 +54,7 @@ class service_get_my_calendars extends Service {
 					echo ",writable:false";
 					echo ",show:true";
 					echo ",icon:".json_encode($pi->getIcon());
+					echo ",removable:false";
 					echo "}";
 				}
 		echo "]";

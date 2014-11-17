@@ -159,6 +159,15 @@ class page_app_admin extends Page {
 			echo date("d M Y H:i", $info["mtime"])." (in ".$seconds." second".(floatval($seconds) > 1 ? "s" : "").")";
 		} 
 		?><br/>
+		<?php
+		if (file_exists("data/cron/cron_errors")) {
+			$json = file_get_contents("data/cron/cron_errors");
+			$json = json_decode($json);
+			foreach ($json as $err) {
+				echo "<img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> ".$err."<br/>";
+			}
+		} 
+		?>
 		<br/>
 		<div class='page_section_title3'>Maintenance mode tasks</div>
 		<table class='all_borders'>
@@ -207,6 +216,15 @@ class page_app_admin extends Page {
 			echo date("d M Y H:i", $info["mtime"])." (in $timing)";
 		} 
 		?><br/>
+		<?php
+		if (file_exists("data/cron/cron_maintenance_errors")) {
+			$json = file_get_contents("data/cron/cron_maintenance_errors");
+			$json = json_decode($json);
+			foreach ($json as $err) {
+				echo "<img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> ".$err."<br/>";
+			}
+		} 
+		?>
 		<div class='info_box'>
 			<img src='<?php echo theme::$icons_16["help"];?>' style='vertical-align:bottom'/>
 			How to configure scheduled tasks ?<br/>

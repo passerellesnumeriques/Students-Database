@@ -10,18 +10,27 @@ class service_menu extends Service {
 		
 	public function execute(&$component, $input) {
 		require_once("component/administration/AdministrationPlugin.inc");
-		foreach (PNApplication::$instance->components as $name=>$c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof AdministrationPlugin)) continue;
-				foreach ($pi->getAdministrationPages() as $page) {
-					if (!$page->canAccess()) continue;
-					echo "<a class='application_left_menu_item'";
-					echo " href='".$page->getPage()."'";
-					echo ">";
-					echo "<img src='".$page->getIcon16()."'/> ";
-					echo toHTML($page->getTitle());
-				}
-			}
+		$pages = array();
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi)
+				if ($pi instanceof AdministrationPlugin)
+					foreach ($pi->getAdministrationPages() as $page)
+						if ($page->canAccess())
+							array_push($pages, $page);
+		usort($pages, function($p1,$p2) {
+			$s1 = $p1->getTitle();
+			if ($s1 == "Dashboard") return -1;
+			$s2 = $p2->getTitle();
+			if ($s2 == "Dashboard") return 1;
+			return strcasecmp($s1, $s2);
+		});
+		
+		foreach ($pages as $page) {
+			echo "<a class='application_left_menu_item'";
+			echo " href='".$page->getPage()."'";
+			echo ">";
+			echo "<img src='".$page->getIcon16()."'/> ";
+			echo toHTML($page->getTitle());
 		}
 	}
 	

@@ -172,6 +172,18 @@ class calendar extends Component {
 		return $ids;
 	}
 	
+	/**
+	 * Return a list of calendars the current user own, and can modify and remove
+	 * @return multitype:number ids of the calendars the current user own
+	 */
+	public function getOwnedCalendars() {
+		$ids = array();
+		$res = SQLQuery::create()->bypassSecurity()->select("UserCalendar")->where("user",PNApplication::$instance->user_management->user_id)->execute();
+		foreach ($res as $r)
+			array_push($ids, $r["calendar"]);
+		return $ids;
+	}
+	
 	/** Remove an event
 	 * @param number $event_id id of the event to remove
 	 * @param number $calendar_id calendar id from which the event is
@@ -323,6 +335,34 @@ class calendar extends Component {
 			$q->where("`$event_alias`.`start` > '$now'");
 		else
 			$q->where("`$event_alias`.`end` > '$now'");
+	}
+	
+	public function getAllCalendarsWithoutSecurity() {
+		return SQLQuery::create()->bypassSecurity()->select("Calendar")->execute();
+	}
+	/**
+	 * @return CustomCalendarPlugin[]
+	 */
+	public function getAllCustomCalendars() {
+		require_once("component/calendar/CustomCalendarPlugin.inc");
+		$list = array();
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi)
+				if ($pi instanceof CustomCalendarPlugin)
+					array_push($list, $pi);
+		return $list;
+	}
+	
+	public function getUsersWhoCanReadCalendar($calendar_id) {
+		// get user calendars
+		$list = SQLQuery::create()->bypassSecurity()->select("UserCalendar")->whereValue("UserCalendar","calendar",$calendar_id)->field("user")->distinct()->executeSingleField();
+		if (count($list) == 0) {
+			// it should be a shared calendar
+			$rights = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->whereValue("CalendarRights","calendar",$calendar_id)->field("CalendarRights","right_name","name")->field("CalendarRights","right_value","value")->execute();
+			if (count($rights) > 0)
+				$list = PNApplication::$instance->user_management->getUsersHavingRights($rights, false);
+		}
+		return $list;
 	}
 }
 ?>

@@ -49,21 +49,27 @@ class page_dashboard extends Page {
 	<div id="section_menu" style='padding:10px 5px;'>
 <?php 
 require_once("component/administration/AdministrationPlugin.inc");
-foreach (PNApplication::$instance->components as $name=>$c) {
-	foreach ($c->getPluginImplementations() as $pi) {
-		if (!($pi instanceof AdministrationPlugin)) continue;
-		if ($pi instanceof AdministrationDashboardPlugin) continue;
-		foreach ($pi->getAdministrationPages() as $page) {
-			if (!$page->canAccess()) continue;
-			echo "<a class='section_box'";
-			echo " href='".$page->getPage()."'";
-			echo ">";
-			echo "<div><img src='".$page->getIcon32()."'/></div>";
-			echo "<div>".toHTML($page->getTitle())."</div>";
-			echo "<div>".toHTML($page->getInfoText())."</div>";
-			echo "</a>";
-		}
-	}
+$pages = array();
+foreach (PNApplication::$instance->components as $c)
+	foreach ($c->getPluginImplementations() as $pi)
+		if ($pi instanceof AdministrationPlugin && !($pi instanceof AdministrationDashboardPlugin))
+			foreach ($pi->getAdministrationPages() as $page)
+				if ($page->canAccess())
+					array_push($pages, $page);
+usort($pages, function($p1,$p2) {
+	$s1 = $p1->getTitle();
+	$s2 = $p2->getTitle();
+	return strcasecmp($s1, $s2);
+});
+
+foreach ($pages as $page) {
+	echo "<a class='section_box'";
+	echo " href='".$page->getPage()."'";
+	echo ">";
+	echo "<div><img src='".$page->getIcon32()."'/></div>";
+	echo "<div>".toHTML($page->getTitle())."</div>";
+	echo "<div>".toHTML($page->getInfoText())."</div>";
+	echo "</a>";
 }
 ?>
 	</div>

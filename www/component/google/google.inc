@@ -5,6 +5,15 @@ class google extends Component {
 		Component::allowServiceWithoutLogin("google", "get_user");
 		Component::allowPageWithoutLogin("google", "auth");
 	}
+	
+	public function getPluginImplementations() {
+		require_once("GoogleAdministrationPlugin.inc");
+		require_once("CronPlugin.inc");
+		return array(
+			new GoogleAdministrationPlugin(),
+			new GoogleCronPlugin()
+		);
+	}
 
 	private static $api_keys = array(
 		"AIzaSyCxPeiBwgOJorQ9Vt07Gwtqb4ZWkkc8NvE", // Students Management Software project

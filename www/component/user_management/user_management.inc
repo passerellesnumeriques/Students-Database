@@ -620,6 +620,60 @@ class user_management extends Component {
 		return $q->execute();
 	}
 	
+	public function getUsersHavingRights($rights, $needs_all = true) {
+		if (count($rights) == 0)
+			return SQLQuery::create()->bypassSecurity()->select("Users")->field("id")->executeSingleField();
+		// first, get list of administrators who have all rights
+		$list = SQLQuery::create()->bypassSecurity()->select("UserRole")->whereValue("UserRole","role",-1)->field("user")->distinct()->executeSingleField();
+		// get all remaining users
+		$users_to_check = SQLQuery::create()->bypassSecurity()->select("Users")->whereNotIn("Users", "id", $list)->field("id")->executeSingleField();
+		if (count($users_to_check) > 0) {
+			if ($this->all_rights == null) $this->load_all_rights();
+			foreach ($rights as $right) {
+				if (!isset($this->all_rights[$right["name"]])) {
+					PNApplication::error("Unknown right '".$right["name"]."'");
+					return null;
+				}
+			}
+			$roles_rights = SQLQuery::create()->bypassSecurity()->select("RoleRights")->execute();
+			$users_rights = SQLQuery::create()->bypassSecurity()->select("UserRights")->whereNotIn("UserRights", "user", $list)->execute();
+			$users_roles = SQLQuery::create()->bypassSecurity()->select("UserRole")->whereNotIn("UserRole", "user", $list)->execute();
+			foreach ($users_to_check as $user_id) {
+				$ok = $needs_all ? true : false;
+				foreach ($rights as $right) {
+					$r = $this->all_rights[$right["name"]];
+					$val = $r->parse_value($right["value"]);
+					$found = false;
+					foreach ($users_rights as $ur)
+						if ($ur["user"] == $user_id && $ur["right"] == $right["name"]) {
+							$v = $r->parse_value($ur["value"]);
+							if ($v == $val || $r->get_higher_value($v, $val) == $v) {
+								$found = true;
+								break;
+							}
+						}
+					if (!$found)
+						foreach ($users_roles as $user_role) {
+							if ($user_role["user"] == $user_id)
+								foreach ($roles_rights as $rr)
+									if ($rr["role"] == $user_role["role"] && $rr["right"] == $right["name"]) {
+										$v = $r->parse_value($rr["value"]);
+										if ($v == $val || $r->get_higher_value($v, $val) == $v) {
+											$found = true;
+											break;
+										}
+									}
+							if ($found) break;
+						}
+					if ($found && !$needs_all) { $ok = true; break; }
+					if (!$found && $needs_all) { $ok = false; break; }
+				}
+				if ($ok) array_push($list, $user_id);
+			}
+		}
+		return $list;
+	}
+	
 }
 
 /**

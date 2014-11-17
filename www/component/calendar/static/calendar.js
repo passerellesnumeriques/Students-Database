@@ -44,7 +44,8 @@ function CalendarManager() {
 		  function() { t.on_refresh_done.fire(cal); },
 		  function(ev) { t.on_event_added.fire(ev); },
 		  function(ev) { t.on_event_updated.fire(ev); },
-		  function(ev) { t.on_event_removed.fire(ev); }
+		  function(ev) { t.on_event_removed.fire(ev); },
+		  function(cal) { t.removeCalendar(cal); }
 		]};
 		this._calendars_listeners.push(listeners);
 		cal.onrefresh.add_listener(listeners.listeners[0]);
@@ -52,6 +53,7 @@ function CalendarManager() {
 		cal.on_event_added.add_listener(listeners.listeners[2]);
 		cal.on_event_updated.add_listener(listeners.listeners[3]);
 		cal.on_event_removed.add_listener(listeners.listeners[4]);
+		cal.on_removed.add_listener(listeners.listeners[5]);
 		if (!cal.last_update) cal.last_update = 0;
 		if (cal.show && cal.last_update < new Date().getTime() - 60000)
 			cal.refresh();
@@ -64,6 +66,7 @@ function CalendarManager() {
 	 * @param {Calendar} cal the calendar to remove
 	 */
 	this.removeCalendar = function(cal) {
+		if (!this.calendars.contains(cal)) return;
 		for (var i = 0; i < this._calendars_listeners.length; ++i) {
 			if (this._calendars_listeners[i].calendar == cal) {
 				var listeners = this._calendars_listeners[i].listeners;
@@ -72,6 +75,7 @@ function CalendarManager() {
 				cal.on_event_added.remove_listener(listeners[2]);
 				cal.on_event_updated.remove_listener(listeners[3]);
 				cal.on_event_removed.remove_listener(listeners[4]);
+				cal.on_removed.remove_listener(listeners[5]);
 				this._calendars_listeners.splice(i,1);
 				break;
 			}
@@ -176,6 +180,7 @@ CalendarsProvider.prototype = {
 				if (!found) t.on_calendar_added.fire(list[i]);
 			}
 			for (var i = 0; i < removed.length; ++i) {
+				removed[i].on_removed.fire(removed[i]);
 				t.on_calendar_removed.fire(removed[i]);
 				removed[i].cleanup();
 			}
@@ -345,6 +350,8 @@ function Calendar(provider, name, color, show, icon) {
 	this.on_event_updated = new Custom_Event();
 	/** Event called when an event disappear from this calendar */
 	this.on_event_removed = new Custom_Event();
+	/** Event called when this calendar is removed */
+	this.on_removed = new Custom_Event();
 	/** list of events in the calendar */
 	this.events = [];
 	/** called to refresh the calendar. It must be overrided by the implementation of the calendar.
@@ -383,6 +390,7 @@ function Calendar(provider, name, color, show, icon) {
 	this.saveColor = null; // function(color) {}; to be defined if supported
 	/** {Function} function to rename the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.rename = null; // must be overriden if this is supported
+	this.remove = null; // must be overriden if this is supported
 	
 	this.cleanup = function() {
 		for (var i = 0; i < this.events.length; ++i)
@@ -476,6 +484,13 @@ function CalendarControl(container, cal, manager) {
 							});
 						});
 					});
+				if (cal.remove != null)
+					menu.addIconItem(theme.icons_16.remove, "Remove", function() {
+						confirm_dialog("Are you sure you want to completely remove this calendar ?", function(yes) {
+							if (!yes) return;
+							cal.remove();
+						});
+					});
 				menu.showBelowElement(t.menu_button);
 			});
 		};
@@ -491,6 +506,9 @@ function CalendarControl(container, cal, manager) {
 			if (!t.loading) return;
 			t.div.removeChild(t.loading);
 			t.loading = null;
+		});
+		cal.on_removed.add_listener(function() {
+			t.div.parentNode.removeChild(t.div);
 		});
 		if (cal.updating) start_refresh();
 	};
@@ -508,7 +526,7 @@ function CalendarControl(container, cal, manager) {
  * @param {Boolean} writable indicates if the calendar can be modified
  * @param {String} icon icon of the calendar
  */
-function PNCalendar(provider, id, name, color, show, writable, icon) {
+function PNCalendar(provider, id, name, color, show, writable, icon, removable) {
 	Calendar.call(this, provider, name, color, show, icon);
 	/** Id of this PN Calendar */
 	this.id = id;
@@ -586,6 +604,16 @@ function PNCalendar(provider, id, name, color, show, writable, icon) {
 				if (ondone) ondone();
 			});
 		};
+		if (removable) {
+			this.remove = function() {
+				service.json("calendar", "remove_calendar",{id:t.id},function(res) {
+					if (!res) return;
+					t.provider.calendars.removeUnique(t);
+					t.provider.on_calendar_removed.fire(t);
+					t.on_removed.fire(t);
+				});
+			};
+		}
 	}
 }
 PNCalendar.prototype = new Calendar();
@@ -604,7 +632,7 @@ function PNCalendarsProvider() {
 			if (!PNCalendar) return;
 			var list = [];
 			for (var i = 0; i < calendars.length; ++i)
-				list.push(new PNCalendar(t, calendars[i].id, calendars[i].name, calendars[i].color, calendars[i].show, calendars[i].writable, calendars[i].icon));
+				list.push(new PNCalendar(t, calendars[i].id, calendars[i].name, calendars[i].color, calendars[i].show, calendars[i].writable, calendars[i].icon, calendars[i].removable));
 			try { handler(list); } catch (e) {} // in case the page requesting it already disappear
 		});
 	};
@@ -620,7 +648,10 @@ function PNCalendarsProvider() {
 	this.createCalendar = function(name, color, icon, oncreate) {
 		service.json("calendar", "create_user_calendar", {name:name,color:color,icon:icon},function(res) {
 			if (!res || !res.id) return;
-			oncreate(new PNCalendar(t, res.id, name, color, true, true, icon));
+			var cal = new PNCalendar(t, res.id, name, color, true, true, icon);
+			t.calendars.push(cal);
+			t.on_calendar_added(cal);
+			oncreate(cal);
 		});
 	};
 }

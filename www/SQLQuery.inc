@@ -686,6 +686,7 @@ class SQLQuery {
 			foreach ($this->tables as $name=>$alias)
 				$table = $name;
 		}
+		if (count($values) == 0) return; // nothing
 		$w = "`".$this->resolveWhereTable($table)."`.`".$field."` NOT IN (";
 		$first = true;
 		foreach ($values as $value) {
