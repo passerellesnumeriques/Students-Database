@@ -6,7 +6,10 @@ class service_recover extends Service {
 	public function outputDocumentation() {}
 	public function execute(&$component, $input) {
 		require_once("component/application/Backup.inc");
-		Backup::recoverBackup($input["time"], $input["version"]);
+		if (!isset($input["datamodel_version"]) || $input["datamodel_version"] == "current")
+			Backup::recoverBackup($input["time"], $input["version"]);
+		else
+			Backup::importBackup($input["time"], $input["version"], $input["datamodel_version"]);
 		echo "true";
 	}
 }

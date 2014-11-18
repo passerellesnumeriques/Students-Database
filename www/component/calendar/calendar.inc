@@ -13,7 +13,7 @@ class calendar extends Component {
 	 * @param array $writable_rights associative array of right name =&gt; right value, needed to access the calendar in write access
 	 * @return boolean|number the calendar id, or false if it failed.
 	 */
-	public function createSharedCalendar($calendar_name, $calendar_color, $calendar_icon, $readable_rights, $writable_rights) {
+	public function createSharedCalendar($calendar_name, $calendar_color, $calendar_icon, $readable_rights, $writable_rights, $internal_data = null) {
 		foreach ($readable_rights as $name=>$value)
 			if (!PNApplication::$instance->user_management->has_right($name, $value)) {
 				PNApplication::error("You cannot create a calendar with right ".$name." because you don't have this right");
@@ -32,6 +32,7 @@ class calendar extends Component {
 			array(
 				"name"=>$calendar_name,
 				"type"=>"internal",
+				"data"=>$internal_data,
 				"color"=>$calendar_color,
 				"icon"=>$calendar_icon
 			)
