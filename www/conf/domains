@@ -25,10 +25,6 @@ $conf = array(
 		"transcripts"=>array(
 			"default_grading_system"=>"Percentage"
 		),
-		"google"=>array(
-			"client_id"=>"522826546811-f5ciks5hf46r69otq0107jo30uv1mrdj.apps.googleusercontent.com",
-			"api_key"=>"AIzaSyBota3grF8-abcdi6gJJRrrkO4KGPUUPrQ"
-		)
 	),
 	"PNP" => array(
 		"geography"=>array(
@@ -59,10 +55,6 @@ $conf = array(
 		"transcripts"=>array(
 			"default_grading_system"=>"USC"
 		),
-		"google"=>array(
-			"client_id"=>"886486971286-d8l06vatk9thb2cmsk14aijn232r45v4.apps.googleusercontent.com",
-			"api_key"=>"AIzaSyCicuTpXjwNw8K7KJ7kd5-mAlu2fd-RUxI"
-		)
 	),
 	"PNV" => array(
 		"geography"=>array(
@@ -87,16 +79,8 @@ $conf = array(
 		"transcripts"=>array(
 			"default_grading_system"=>"/10.00"
 		),
-		"google"=>array(
-			"client_id"=>"1062336655897-n4cv0ipt7lqgioc5c9efaink18k0rrjp.apps.googleusercontent.com",
-			"api_key"=>"AIzaSyAGKZG_GUrR8aKqx6ZR939ZK9VTk12uNsg"
-		)
 	),
 );
-/*
-    "client_id"=>"668569616064-nu94pmbtml2i2qrnhhkajcf82ju6f2mb.apps.googleusercontent.com",
-    "api_key"=>"AIzaSyBmCvj7e_p9QwoxBoD08xHKvuTDUaBt6ZQ"
-*/
 
 return $conf;
 ?>

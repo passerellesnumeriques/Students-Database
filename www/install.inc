@@ -497,7 +497,10 @@ function checkEnd() {
 			progress.appendChild(d);
 			d.innerHTML = 
 				"<br/>"+
-				"Installation done. Please schedule the following tasks (in /etc/crontab for Unix, or in the Task Scheduler for Windows):<ul>"+
+				"Installation done.<br/>"+
+				"<b>Please request for your <i>secrets</i> files, to be able to use external services like Google.</b><br/>"+
+				"<br/>"+
+				"Please schedule the following tasks (in /etc/crontab for Unix, or in the Task Scheduler for Windows):<ul>"+
 				"<li>Execute, with PHP command line, the file cron.php regularly (at least every 5 minutes is good, recommended is every 2 minutes)</li>"+
 				"<li>Execute, with PHP command line, the file cron_maintenance.php every night (when no user will use the application).<br/>"+
 				"This task will put the software into maintenance mode (the users cannot access it), in order to perform some tasks<br/>"+

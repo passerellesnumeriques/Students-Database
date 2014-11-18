@@ -1,3 +1,5 @@
 /proxy
 /*.password
 /*.remote
+/google_service
+/secrets.inc

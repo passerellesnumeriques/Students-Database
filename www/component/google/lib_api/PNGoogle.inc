@@ -1,8 +1,6 @@
 <?php 
 class PNGoogle {
 
-	protected static $service_account_name = "668569616064-8cn91oiqe6qtbe4sde84u9ugoiaf0ptv@developer.gserviceaccount.com";
-	
 	/** @var Google_Client */
 	protected $client;
 	
@@ -19,9 +17,10 @@ class PNGoogle {
 		// authentication
 		require_once("Google/Auth/AssertionCredentials.php");
 		$this->client->setApplicationName("Students Management Software");
-		$key = file_get_contents("component/google/lib_api/key.p12");
+		$secrets = include("conf/secrets.inc");
+		$key = file_get_contents("conf/".$secrets["Google"]["service_key"]);
 		$cred = new Google_Auth_AssertionCredentials(
-			self::$service_account_name,
+			$secrets["Google"]["service_account"],
 			array('https://www.googleapis.com/auth/calendar'),
 			$key
 		);

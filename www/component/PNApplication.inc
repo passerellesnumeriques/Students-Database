@@ -253,7 +253,7 @@ class PNApplication {
 	 * Called at the beginning of any request, it calls the initRequest on all components
 	 */
 	public function initRequest() {
-		date_default_timezone_set(timezone_name_from_abbr("",$this->timezone_offset*60,1));
+		date_default_timezone_set(timezone_name_from_abbr("",$this->timezone_offset*60,0));
 #DEV
 		$done = array();
 		foreach ($this->components as $c) $this->initRequestForComponent($c, $done);

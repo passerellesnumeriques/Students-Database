@@ -51,10 +51,11 @@ class PNGoogleCalendar extends PNGoogle {
 	public function getAcls($calendar_id, $remove_internals = true) {
 		$acls = array();
 		$list = $this->service->acl->listAcl($calendar_id, array("maxResults"=>250));
+		$secrets = include("conf/secrets.inc");
 		while(true) {
 			foreach ($list->getItems() as $acl) {
 				if ($remove_internals && (
-					$acl->getScope()->getValue() == PNGoogle::$service_account_name ||
+					$acl->getScope()->getValue() == $secrets["Google"]["service_account"] ||
 					$acl->getScope()->getValue() == $calendar_id
 				)) continue;
 				array_push($acls, $acl);
@@ -87,7 +88,6 @@ class PNGoogleCalendar extends PNGoogle {
 		$google = array();
 		foreach ($list as $gcal) array_push($google, $gcal);
 		// 1-create missing google calendars
-		// 1.1 normal calendars
 		$pn = PNApplication::$instance->calendar->getAllCalendarsWithoutSecurity();
 		$pn_google = SQLQuery::create()->bypassSecurity()->select("PNGoogleCalendar")->execute();
 		// check our google ids, and remove those which are not anymore in Google, so we will create them again
@@ -115,28 +115,7 @@ class PNGoogleCalendar extends PNGoogle {
 				}
 			}
 		}
-		// 1.2 custom calendars
-		$pn_custom = PNApplication::$instance->calendar->getAllCustomCalendars();
-		$pn_custom_google = SQLQuery::create()->bypassSecurity()->select("PNCustomGoogleCalendar")->execute();
-		foreach ($pn_custom as $cal) {
-			$google_id = null;
-			foreach ($pn_custom_google as $g) if ($g["pn_id"] == $cal->getId()) { $google_id = $g["google_id"]; break; }
-			if ($google_id == null) {
-				// does not exist yet in Google
-				// TODO
-			} else {
-				$found = false;
-				foreach ($google as $gcal)
-					if ($gcal->getId() == $google_id) { $found = true; break; }
-				if (!$found) {
-					// it is not anymore in Google, we need to create it again, and update the google_id in the database
-					// TODO
-				}
-			}
-		}
-		// TODO
 		// 2-remove calendars
-		// 2.1 normal calendars
 		$to_remove = array();
 		for ($i = 0; $i < count($pn_google); $i++) {
 			$cal = $pn_google[$i];
@@ -153,8 +132,6 @@ class PNGoogleCalendar extends PNGoogle {
 			}
 		}
 		SQLQuery::create()->bypassSecurity()->removeKeys("PNGoogleCalendar", $to_remove);
-		// 2.2 custom calendars
-		// TODO
 		// 3-share
 		// 3.1 normal calendars
 		foreach ($pn_google as $cal) {
@@ -179,10 +156,7 @@ class PNGoogleCalendar extends PNGoogle {
 				}
 			}
 		}
-		// 3.2 custom calendars
-		// TODO
 		// 4-rename calendars if needed
-		// 4.1 normal calendars
 		foreach ($pn_google as $cal) {
 			$pn_cal = null;
 			foreach ($pn as $c) if ($c["id"] == $cal["pn_id"]) { $pn_cal = $c; break; }
@@ -198,8 +172,6 @@ class PNGoogleCalendar extends PNGoogle {
 				$this->service->calendars->update($gcal->getId(), $g);
 			}
 		}
-		// 4.2 custom calendars
-		// TODO
 	}
 	
 }

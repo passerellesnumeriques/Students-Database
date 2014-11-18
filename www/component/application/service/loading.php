@@ -53,7 +53,14 @@ $total = 0;
 foreach ($mandatory as $s) $total += $s[1];
 foreach ($optional as $s) $total += $s[1];
 ?>
+window.top.google_local_config = {};
+<?php 
+$secrets = include("conf/secrets.inc");
+echo "window.top.google_local_config.api_key = ".json_encode($secrets["Google"]["client_api_key"]).";";
+echo "window.top.google_local_config.client_id = ".json_encode($secrets["Google"]["client_id"]).";";
+?>
 window.top.google_local_config = <?php
+
 $d = PNApplication::$instance->getDomainDescriptor(); 
 echo json_encode($d["google"]);
 ?>;
