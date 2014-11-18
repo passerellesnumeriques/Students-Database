@@ -83,6 +83,33 @@ class PNGoogleCalendar extends PNGoogle {
 		$this->service->acl->delete($calendar_id, $rule_id);
 	}
 	
+	public function getAllEvents($calendar_id) {
+		$events = array();
+		$list = $this->service->events->listEvents($calendar_id, array("maxResults"=>2500,"alwaysIncludeEmail"=>true));
+		while(true) {
+			foreach ($list->getItems() as $event)
+				array_push($events, $event);
+			$pageToken = $list->getNextPageToken();
+			if ($pageToken)
+				$list = $this->service->events->listEvents($calendar_id, array("maxResults"=>2500,"alwaysIncludeEmail"=>true,"pageToken"=>$pageToken));
+			else
+				break;
+		}
+		return $events;
+	}
+	
+	public function removeEvent($calendar_id, $event_id, $send_notifications = false) {
+		$this->service->events->delete($calendar_id, $event_id, array("sendNotifications"=>$send_notifications));
+	}
+	
+	public function addEvent($calendar_id, $event, $send_notifications = false) {
+		$this->service->events->insert($calendar_id, $event, array("sendNotifications"=>$send_notifications));
+	}
+	
+	public function updateEvent($calendar_id, $event_id, $event, $send_notifications = false) {
+		$this->service->events->update($calendar_id, $event_id, $event, array("sendNotifications"=>$send_notifications));
+	}
+	
 	public function synchCalendarsList() {
 		$list = $this->getGoogleCalendars();
 		$google = array();
@@ -172,6 +199,81 @@ class PNGoogleCalendar extends PNGoogle {
 				$this->service->calendars->update($gcal->getId(), $g);
 			}
 		}
+	}
+	
+	public static function timestampToDate($timestamp) {
+		$date = new Google_Service_Calendar_EventDateTime();
+		$date->setDate(gmdate("Y-m-d",$timestamp));
+		return $date;
+	}
+	public static function timestampToDateTime($timestamp) {
+		$date = new Google_Service_Calendar_EventDateTime();
+		$date->setDateTime(gmdate("Y-m-d")."T".gmdate("H:i:s")."Z");
+		return $date;
+	}
+	
+	public static function PNEventToGoogleEvent($pn) {
+		$ev = new Google_Service_Calendar_Event();
+		$ev->setICalUID($pn["uid"]);
+		$ev->setSummary($pn["title"]);
+		$ev->setDescription($pn["description"]);
+		if ($pn["all_day"] == 1) {
+			$ev->setStart(self::timestampToDate(intval($pn["start"])));
+			$days = intval($pn["end"])-intval($pn["start"]);
+			$days = floor($days/(24*60*60));
+			$days++;
+			$ev->setEnd(self::timestampToDate(intval($pn["start"])+$days*24*60*60));
+		} else {
+			$ev->setStart(self::timestampToDateTime(intval($pn["start"])));
+			$ev->setEnd(self::timestampToDateTime(intval($pn["end"])));
+		}
+		$ev->setLocation($pn["location_freetext"]);
+		$creator = new Google_Service_Calendar_EventCreator();
+		$creator->setDisplayName("Students Management Software");
+		$ev->setCreator($creator);
+		// TODO location with geography
+		// TODO attendees, organizer...
+		return $ev;
+	}
+	
+	public function synchCalendar($pn_id, $google_id, $last_update) {
+		$gevents = $this->getAllEvents($google_id);
+		$pnevents = PNApplication::$instance->calendar->getAllCalendarEventsWithoutSecurity($pn_id);
+		foreach ($gevents as $gev) {
+			/* @var $gev Google_Service_Calendar_Event */
+			$pn = null;
+			foreach ($pnevents as $e)
+				if ($e["uid"] == $gev->iCalUID) {
+					$pn = $e;
+					unset($pnevents[$e["id"]]);
+					break;
+				}
+			if ($pn == null) {
+				// event has been removed: remove it from Google
+				try {
+					$this->removeEvent($google_id, $gev->getId());
+				} catch (Exception $e) {
+					PNApplication::error("Error removing Google Event ".$gev->getId(), $e);
+				}
+				continue;
+			}
+			if (intval($pn["last_modified"]) < $last_update) continue; // not modified
+			// event modified: update it in Google
+			try {
+				$this->updateEvent($google_id, $gev->getId(), self::PNEventToGoogleEvent($pn));
+			} catch (Exception $e) {
+				PNApplication::error("Error updating event ".$pn["id"], $e);
+			}
+		}
+		// add new events in Google
+		foreach ($pnevents as $pn) {
+			try {
+				$this->addEvent($google_id, self::PNEventToGoogleEvent($pn), true);
+			} catch (Exception $e) {
+				PNApplication::error("Error creating event ".$pn["id"], $e);
+			}
+		}
+		return true;
 	}
 	
 }

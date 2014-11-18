@@ -329,6 +329,24 @@ class calendar extends Component {
 	public function getAllCalendarsWithoutSecurity() {
 		return SQLQuery::create()->bypassSecurity()->select("Calendar")->execute();
 	}
+	
+	public function getAllCalendarEventsWithoutSecurity($calendar_id) {
+		$events = SQLQuery::create()->bypassSecurity()->select("CalendarEvent")->whereValue("CalendarEvent","calendar",$calendar_id)->execute();
+		if (count($events) == 0) return array();
+		$ids = array();
+		$list = array();
+		foreach ($events as $e) {
+			$e["attendees"] = array();
+			$e["frequency"] = null;
+			$list[$e["id"]] = $e;
+			array_push($ids, $e["id"]);
+		}
+		$attendees = SQLQuery::create()->bypassSecurity()->select("CalendarEventAttendee")->whereIn("CalendarEventAttendee","event",$ids)->execute();
+		$frequencies = SQLQuery::create()->bypassSecurity()->select("CalendarEventFrequency")->whereIn("CalendarEventFrequency","event",$ids)->execute();
+		foreach ($attendees as $a) array_push($list[$a["event"]]["attendees"], $a);
+		foreach ($frequencies as $f) $list[$f["event"]]["frequency"] = $f;
+		return $list;
+	}
 	/**
 	 * @return CustomCalendarPlugin[]
 	 */

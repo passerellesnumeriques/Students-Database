@@ -35,7 +35,11 @@ class cron extends Component {
 			}
 			@unlink("data/cron/".$task->task_id.".errors");
 			$task_start = microtime(true);
-			include($task->file);
+			try {
+				include($task->file);
+			} catch (Exception $e) {
+				PNApplication::error($e);
+			}
 			$task_end = microtime(true);
 			$f = fopen("data/cron/".$task->task_id,"w");
 			fwrite($f, number_format($task_end-$task_start,2));
@@ -67,7 +71,11 @@ class cron extends Component {
 		foreach ($this->getMaintenanceTasks() as $task) {
 			@unlink("data/cron/".$task->task_id.".errors");
 			$task_start = microtime(true);
-			include($task->file);
+			try {
+				include($task->file);
+			} catch (Exception $e) {
+				PNApplication::error($e);
+			}
 			$task_end = microtime(true);
 			$f = fopen("data/cron/".$task->task_id,"w");
 			fwrite($f, number_format($task_end-$task_start,2));

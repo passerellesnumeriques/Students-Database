@@ -59,11 +59,6 @@ $secrets = include("conf/secrets.inc");
 echo "window.top.google_local_config.api_key = ".json_encode($secrets["Google"]["client_api_key"]).";";
 echo "window.top.google_local_config.client_id = ".json_encode($secrets["Google"]["client_id"]).";";
 ?>
-window.top.google_local_config = <?php
-
-$d = PNApplication::$instance->getDomainDescriptor(); 
-echo json_encode($d["google"]);
-?>;
 window.top.pn_app_version = <?php
 global $pn_app_version;
 echo json_encode($pn_app_version); 
