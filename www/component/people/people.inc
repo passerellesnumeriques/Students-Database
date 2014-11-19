@@ -160,6 +160,10 @@ class people extends Component {
 		return $q;
 	}
 	
+	public function getPeoplesByType($type) {
+		return SQLQuery::create()->select("People")->where("`types` LIKE '%/$type/%'")->execute();
+	}
+	
 	public function &searchPeopleByFirstAndLastName($first_name, $last_name) {
 		$q = SQLQuery::create()
 			->select("People")

@@ -321,5 +321,16 @@ class contact extends Component {
 		ContactJSON::PostalAddressSQL($q);
 		return $q->execute();
 	}
+	
+	public function getPeoplesContacts($peoples_ids, $contacts_types = null) {
+		$q = SQLQuery::create()->select("PeopleContact")
+			->whereIn("PeopleContact", "people", $peoples_ids)
+			->join("PeopleContact", "Contact", array("contact"=>"id"));
+		if ($contacts_types <> null)
+			$q->whereIn("Contact", "type", $contacts_types);
+		$q->fieldsOfTable("Contact");
+		$q->field("PeopleContact","people","people");
+		return $q->execute();
+	}
 }
 ?>

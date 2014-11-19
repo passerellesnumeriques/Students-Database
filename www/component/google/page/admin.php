@@ -75,21 +75,43 @@ theme::css($this, "section.css");
 			?>
 			<form method='POST' enctype="multipart/form-data" name='google_conf'>
 			<input type='hidden' name='action' value='configuration'/>
-			<div class='page_section_title2'>Web Client Keys</div>
+			<div class='page_section_title2'>User Access Keys</div>
+			<div class='info_box'>
+				<img src='<?php echo theme::$icons_16["help"];?>' style='vertical-align:bottom'/>
+				User Access allows the software to use Google functionalities:<ul>
+					<li>Google Maps: to display maps in the software, or search for places</li>
+					<li>Access to information about the user (its email address, calendars...). This will be only allowed by users who explicitly allows this software to access those information.</li>
+				</ul>
+				There are 2 types of access:<ul>
+					<li>Web Client: for requests coming directly from the browser of the user</li>
+					<li>Server: for requests coming from the server</li>
+				</ul>
+			</div>
+			<div class='page_section_title3'>Web Client</div>
 			<div style='padding:5px;line-height:25px;'>
 				Client ID <input type='text' size=80 name='client_id' value='<?php if ($conf) echo $conf["client_id"]; ?>'/><br/>
 				API Key <input type='text' size=80 name='client_api_key' value='<?php if ($conf) echo $conf["client_id"]; ?>'/><br/>
 			</div>
-			<div class='page_section_title2'>Server Keys</div>
+			<div class='page_section_title3'>Server</div>
 			<div style='padding:5px;line-height:25px;'>
 				<textarea name='server_keys' style='width:90%;'><?php if ($conf) foreach ($conf["server_keys"] as $key) echo $key."\n"; ?></textarea>
 			</div>
 			<div class='page_section_title2'>Service Account</div>
+			<div class='info_box'>
+				<img src='<?php echo theme::$icons_16["help"];?>' style='vertical-align:bottom'/>
+				The Service Account allows the software to have its own Google account.<br/>
+				This is used by the software for instance to create Google Calendars, on its own account, and share them to the real users. 
+			</div>
 			<div style='padding:5px;line-height:25px;'>
 				EMail <input type='text' size=80 name='service_account' value='<?php if ($conf) echo $conf["service_account"]; ?>'/><br/>
 				Security Key: <?php if ($conf) echo $conf["service_key"]; ?> <input type='file' name='service_key'/><br/>
 			</div>
 			<div class='page_section_title2'>Administration Service Account</div>
+			<div class='info_box'>
+				<img src='<?php echo theme::$icons_16["help"];?>' style='vertical-align:bottom'/>
+				The Administration Service Account allows the software to access to the list of users in passerellesnumeriques.org<br/>
+				The allowed accesses to the software are in read-only, so there is no risk the software will modify any information about the users. 
+			</div>
 			<div style='padding:5px;line-height:25px;'>
 				EMail <input type='text' size=80 name='service_account_admin' value='<?php if ($conf) echo $conf["service_account_admin"]; ?>'/><br/>
 				Security Key: <?php if ($conf) echo $conf["service_key_admin"]; ?> <input type='file' name='service_key_admin'/><br/>

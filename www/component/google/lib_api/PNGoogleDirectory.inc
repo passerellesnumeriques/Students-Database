@@ -55,5 +55,23 @@ class PNGoogleDirectory extends PNGoogle_Admin {
 			array_push($org["sub_organizations"], $so);
 		}
 	}
+	
+	/**
+	 * @param string $org_path Organization Unit Path
+	 * @return Google_Service_Directory_User[]
+	 */
+	public function getUsersFromOrg($org_path) {
+		$users = array();
+		$list = $this->service->users->listUsers(array("customer"=>"my_customer","query"=>"orgUnitPath=$org_path","maxResults"=>500));
+		while(true) {
+			foreach ($list->getUsers() as $u) array_push($users, $u);
+			$pageToken = $list->getNextPageToken();
+			if ($pageToken)
+				$list = $this->service->users->listUsers(array("customer"=>"my_customer","query"=>"orgUnitPath=$org_path","maxResults"=>500,"pageToken"=>$pageToken));
+			else
+				break;
+		}
+		return $users;
+	}
 }
 ?>
