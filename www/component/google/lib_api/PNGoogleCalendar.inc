@@ -125,7 +125,7 @@ class PNGoogleCalendar extends PNGoogle {
 			foreach ($google as $gcal)
 				if ($gcal->getId() == $cal["google_id"]) { $found = true; break; }
 			if (!$found) {
-				array_push($not_anymore_in_google, $cal["pn_id"]);
+				array_push($not_anymore_in_google, $cal["google_id"]);
 				array_splice($pn_google, $i, 1);
 				$i--;
 			}
@@ -135,8 +135,7 @@ class PNGoogleCalendar extends PNGoogle {
 		// create missings
 		foreach ($pn as $cal) {
 			$google_id = null;
-			if (!in_array($cal["id"], $not_anymore_in_google))
-				foreach ($pn_google as $c) if ($c["pn_id"] == $cal["id"]) { $google_id = $c["google_id"]; break; }
+			foreach ($pn_google as $c) if ($c["pn_id"] == $cal["id"]) { $google_id = $c["google_id"]; break; }
 			if ($google_id == null) {
 				$gcal = $this->addCalendar("[SMS] ".$cal["name"], "Students Management Software Calendar", PNApplication::$instance->local_domain."_".$cal["id"]);
 				if ($gcal <> null && $gcal->getId() <> null) {

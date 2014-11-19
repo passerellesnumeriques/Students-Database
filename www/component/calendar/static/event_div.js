@@ -1,5 +1,6 @@
 function createEventDiv(ev, calendar) {
 	if (!calendar) calendar = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
+	if (!calendar) return null;
 	if (ev.all_day)
 		return createAllDayEventDiv(ev, calendar);
 	return createTimedEventDiv(ev, calendar);

@@ -96,6 +96,7 @@ function calendar_view_month(view, container) {
 			for (var week = start_week; week <= end_week; ++week) {
 				// create a div
 				var div = this._createEventDiv(ev);
+				if (!div) return; // event does not exist anymore
 				div.style.position = "relative"; // make it visible over table cells borders
 				// calculate where it should be displayed
 				var start_col = week > start_week ? 0 : start_day;
@@ -138,6 +139,7 @@ function calendar_view_month(view, container) {
 			var td = this._getTD(ev.start);
 			if (!td) return;
 			var div = this._createEventDiv(ev);
+			if (!div) return; // event does not exist anymore
 			var content = td.childNodes[0].childNodes[1];
 			if (ev.all_day) {
 				// insert after last all_day event
@@ -185,7 +187,9 @@ function calendar_view_month(view, container) {
 	
 	this._createEventDiv = function(ev) {
 		var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
+		if (!cal) return null; // calendar has been removed
 		var div = createEventDiv(ev,cal);
+		if (!div) return null;
 		div.style.overflow = 'hidden';
 		div.style.marginBottom = "1px";
 		return div;

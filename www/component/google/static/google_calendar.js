@@ -8,6 +8,8 @@ function load_google_calendars(ondone, feedback_handler) {
 			var calendars = [];
 			if (resp.items)
 			for (var i = 0; i < resp.items.length; ++i) {
+				// check if this is a calendar from us
+				if (resp.items[i].description == "Students Management Software Calendar") continue;
 				// accessRole=reader,owner,writer
 				var write = resp.items[i].accessRole == "owner" || resp.items[i].accessRole == "writer"; 
 				var cal = new GoogleCalendar(resp.items[i].id, resp.items[i].summary, resp.items[i].backgroundColor.substring(1), resp.items[i].selected, write);

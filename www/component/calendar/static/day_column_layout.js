@@ -47,11 +47,13 @@ function DayColumnLayout(calendar_manager) {
 	 */
 	this.addEvent = function(event, container, x, w, y, scale_time, scale_height) {
 		var cal = window.top.CalendarsProviders.getProvider(event.calendar_provider_id).getCalendar(event.calendar_id);
+		if (!cal) return; // calendar has been removed
 		var min = event.start.getHours()*60+event.start.getMinutes();
 		var y1 = Math.floor(min*scale_height/scale_time)+y;
 		min = event.end.getHours()*60+event.end.getMinutes();
 		var y2 = Math.floor(min*scale_height/scale_time)+y;
 		var div = createEventDiv(event,cal);
+		if (!div) return;
 		div.style.position = "absolute";
 		div.style.top = y1+"px";
 		div.style.height = (y2-y1-3)+"px";
