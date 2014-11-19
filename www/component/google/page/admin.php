@@ -20,6 +20,10 @@ if (isset($_POST["action"])) {
 			else if (!isset($_FILES["service_key"])) echo "No service account key<br/>";
 			else if ($_FILES["service_key"]["error"] == 4) echo "No service account key file uploaded<br/>";
 			else if ($_FILES["service_key"]["error"] <> 0) echo "Error uploading service account key file: ".$_FILES["service_key"]["error"]."<br/>";
+			else if (!isset($_POST["service_account_admin"])) echo "No admin service account email<br/>";
+			else if (!isset($_FILES["service_key_admin"])) echo "No admin service account key<br/>";
+			else if ($_FILES["service_key_admin"]["error"] == 4) echo "No admin service account key file uploaded<br/>";
+			else if ($_FILES["service_key_admin"]["error"] <> 0) echo "Error uploading admin service account key file: ".$_FILES["service_key"]["error"]."<br/>";
 			else {
 				$list = explode("\n", $_POST["server_keys"]);
 				$server_keys = array();
@@ -31,6 +35,7 @@ if (isset($_POST["action"])) {
 				if (count($server_keys) == 0) echo "No server key<br/>";
 				else {
 					move_uploaded_file($_FILES['service_key']['tmp_name'], "conf/google_service.p12");
+					move_uploaded_file($_FILES['service_key_admin']['tmp_name'], "conf/google_admin.p12");
 					$conf = "<?php return array(\n";
 					$conf .= "\t'client_id'=>'".trim($_POST["client_id"])."',\n";
 					$conf .= "\t'client_api_key'=>'".trim($_POST["client_api_key"])."',\n";
@@ -42,7 +47,9 @@ if (isset($_POST["action"])) {
 					}
 					$conf .= "\t),\n";
 					$conf .= "\t'service_account'=>'".trim($_POST["service_account"])."',\n";
-					$conf .= "\t'service_key'=>'google_service.p12'\n";
+					$conf .= "\t'service_key'=>'google_service.p12',\n";
+					$conf .= "\t'service_account_admin'=>'".trim($_POST["service_account_admin"])."',\n";
+					$conf .= "\t'service_key_admin'=>'google_admin.p12'\n";
 					$conf .= "); ?>";
 					$f = fopen("conf/google.inc","w");
 					fwrite($f, $conf);
@@ -78,25 +85,29 @@ theme::css($this, "section.css");
 				<textarea name='server_keys' style='width:90%;'><?php if ($conf) foreach ($conf["server_keys"] as $key) echo $key."\n"; ?></textarea>
 			</div>
 			<div class='page_section_title2'>Service Account</div>
-				<div style='padding:5px;line-height:25px;'>
-					EMail <input type='text' size=80 name='service_account' value='<?php if ($conf) echo $conf["service_account"]; ?>'/><br/>
-					Security Key: <?php if ($conf) echo $conf["service_key"]; ?> <input type='file' name='service_key'/><br/>
-				</div>
+			<div style='padding:5px;line-height:25px;'>
+				EMail <input type='text' size=80 name='service_account' value='<?php if ($conf) echo $conf["service_account"]; ?>'/><br/>
+				Security Key: <?php if ($conf) echo $conf["service_key"]; ?> <input type='file' name='service_key'/><br/>
+			</div>
+			<div class='page_section_title2'>Administration Service Account</div>
+			<div style='padding:5px;line-height:25px;'>
+				EMail <input type='text' size=80 name='service_account_admin' value='<?php if ($conf) echo $conf["service_account_admin"]; ?>'/><br/>
+				Security Key: <?php if ($conf) echo $conf["service_key_admin"]; ?> <input type='file' name='service_key_admin'/><br/>
+			</div>
 			<div>
 				<button class='action' onclick="document.forms['google_conf'].submit();">Save New Configuration</button>
 			</div>
 			</form>
 		</div>
 	</div>
-<?php if ($this->component->isInstalled()) {
-require_once("component/google/lib_api/PNGoogleCalendar.inc");
-$gcal = new PNGoogleCalendar();
-?>
+<?php if ($this->component->isInstalled()) { ?>
 	<div id='section_calendars' title='Calendars'>
 		<div style='padding:5px;'>
 			<table class='all_borders'>
 				<tr><th>ID</th><th>Summary</th><th>Description</th><th>Location</th><th>Access</th><th>Last Synch</th><th></th></tr>
 				<?php 
+				require_once("component/google/lib_api/PNGoogleCalendar.inc");
+				$gcal = new PNGoogleCalendar();
 				$list = $gcal->getGoogleCalendars();
 				$synch = SQLQuery::create()->bypassSecurity()->select("GoogleCalendarSynchro")->execute();
 				foreach ($list as $cal) {
@@ -129,16 +140,37 @@ $gcal = new PNGoogleCalendar();
 			</table>
 		</div>
 	</div>
+	
+	<div id='section_users' title='Organizations and Users'>
+		<div style='padding:5px;'>
+			<?php
+			require_once("component/google/lib_api/PNGoogleDirectory.inc");
+			$dir = new PNGoogleDirectory();
+			$root = $dir->getHierarchy();
+			$this->generateSubOrganizations($root, 0);
+			?>
+		</div>
+	</div>
 <?php } ?>
 </div>
 <script type='text/javascript'>
 sectionFromHTML('section_conf');
 <?php if ($this->component->isInstalled()) { ?>
 sectionFromHTML('section_calendars');
+sectionFromHTML('section_users');
 <?php } ?>
 </script>
 <?php 				
 	}
 	
+	private function generateSubOrganizations($node, $indent) {
+		foreach ($node["sub_organizations"] as $so) {
+			echo "<div style='margin-left:".$indent."px;'>";
+			echo "<b>".$so["org"]->name."</b>";
+			echo " ".count($so["users"])." users";
+			$this->generateSubOrganizations($so, $indent+20);
+			echo "</div>";
+		}
+	}
 }
 ?>

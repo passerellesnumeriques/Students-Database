@@ -19,10 +19,10 @@ class page_test extends Page {
 		// authentication
 		require_once("Google/Auth/AssertionCredentials.php");
 		$this->client->setApplicationName("Students Management Software");
-		$secrets = include("conf/secrets.inc");
-		$key = file_get_contents("conf/".$secrets["Google"]["service_key"]);
+		$secrets = include("conf/google.inc");
+		$key = file_get_contents("conf/".$secrets["service_key"]);
 		$cred = new Google_Auth_AssertionCredentials(
-			$secrets["Google"]["service_account"],
+			$secrets["service_account"],
 			array('https://www.googleapis.com/auth/calendar'),
 			$key
 		);

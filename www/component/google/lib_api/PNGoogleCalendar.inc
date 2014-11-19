@@ -1,12 +1,12 @@
 <?php 
 require_once("PNGoogle.inc");
-class PNGoogleCalendar extends PNGoogle {
+class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 	
 	/** @var Google_Service_Calendar */
 	protected $service;
 	
 	public function __construct() {
-		parent::__construct();
+		parent::__construct(array('https://www.googleapis.com/auth/calendar'));
 		// connect to Google Calendar service
 		require_once("Google/Service/Calendar.php");
 		$this->service = new Google_Service_Calendar($this->client);
