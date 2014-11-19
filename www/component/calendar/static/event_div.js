@@ -15,7 +15,7 @@ function _createAbstractEventDiv(ev, cal) {
 	div.style.padding = "1px";
 	div.style.fontSize = '8pt';
 	div.appendChild(document.createTextNode(ev.title));
-	div.title = cal.name+"\r\n"+ev.title+"\r\n"+ev.description;
+	div.title = cal.name+"\r\n"+ev.title+(ev.description ? "\r\n"+ev.description : "");
 	div.style.cursor = "pointer";
 	div.event = ev;
 	div.onclick = function(e) {

@@ -316,7 +316,7 @@ if (window == window.top && !window.top.CalendarsProviders) {
 		});
 	};
 	listen_login_logout();
-	setTimeout(function() { window.top.CalendarsProviders._refresh(); }, 60*1000);
+	setInterval(function() { if (window.top.CalendarsProviders) window.top.CalendarsProviders._refresh(); }, 60*1000);
 }
 
 /**
