@@ -3,47 +3,52 @@ class page_test extends Page {
 	
 	public function getRequiredRights() { return array(); }
 	
+	/** @var Google_Client */
+	private $client;
+	
 	public function execute() {
 		set_include_path(get_include_path() . PATH_SEPARATOR . realpath("component/google/lib_api"));
 		// initialize Google client
 		require_once("Google/Client.php");
-		$client = new Google_Client();
+		$this->client = new Google_Client();
 		require_once("Google/IO/Curl.php");
-		$io = new Google_IO_Curl($client);
+		$io = new Google_IO_Curl($this->client);
 		// TODO proxy
-		$client->setIo($io);
+		$this->client->setIo($io);
 
 		// authentication
 		require_once("Google/Auth/AssertionCredentials.php");
-		$client->setApplicationName("Students Management Software");
-		$service_account_name = "668569616064-8cn91oiqe6qtbe4sde84u9ugoiaf0ptv@developer.gserviceaccount.com";
-		$key = file_get_contents("component/google/lib_api/key.p12");
+		$this->client->setApplicationName("Students Management Software");
+		$secrets = include("conf/secrets.inc");
+		$key = file_get_contents("conf/".$secrets["Google"]["service_key"]);
 		$cred = new Google_Auth_AssertionCredentials(
-			$service_account_name,
+			$secrets["Google"]["service_account"],
 			array('https://www.googleapis.com/auth/calendar'),
 			$key
 		);
-		$client->setAssertionCredentials($cred);
-		if($client->getAuth()->isAccessTokenExpired()) {
-			$client->getAuth()->refreshTokenWithAssertion($cred);
+		$this->client->setAssertionCredentials($cred);
+		if($this->client->getAuth()->isAccessTokenExpired()) {
+			$this->client->getAuth()->refreshTokenWithAssertion($cred);
 		}
 		
-		// connect to Google Calendar service
-		require_once("Google/Service/Calendar.php");
-		$service = new Google_Service_Calendar($client);
-		
 		switch (@$_POST["fct"]) {
-			case "create_calendar": $this->createCalendar($service); break;
-			case "open_calendar": $this->openCalendar($service); break;
-			case "share_calendar": $this->shareCalendar($service); break;
-			default: $this->listCalendars($service); break;
+			case "create_calendar": $this->createCalendar(); break;
+			case "open_calendar": $this->openCalendar(); break;
+			case "share_calendar": $this->shareCalendar(); break;
+			case "calendar_list": $this->listCalendars(); break;
+			default: $this->homePage(); break;
 		}
 	}
 	
-	/**
-	 * @param Google_Service_Calendar $service
-	 */
-	private function listCalendars($service) {
+	private function homePage() {
+		echo "<h1>Test Connection with Google</h1>";
+		echo "<form method='POST'><input type='hidden' name='fct' value='calendar_list'/><input type='submit' value='Calendars'/></form>";
+	}
+	
+	private function listCalendars() {
+		// connect to Google Calendar service
+		require_once("Google/Service/Calendar.php");
+		$service = new Google_Service_Calendar($this->client);
 		echo "<h1>Calendars</h1>";
 		echo "<table>";
 		echo "<tr><th>ID</th><th>Summary</th><th>Description</th><th>Location</th><th>Timezone</th><th></th></tr>";
@@ -79,24 +84,25 @@ class page_test extends Page {
 		echo "Description <input type='text' name='description'/><br/>";
 		echo "<input type='submit' value='Create'/>";
 		echo "</form>";
+		echo "<a href='/dynamic/development/page/test'>Back to home page</a>";
 	}
 	
-	/**
-	 * @param Google_Service_Calendar $service
-	 */
-	private function createCalendar($service) {
+	private function createCalendar() {
+		// connect to Google Calendar service
+		require_once("Google/Service/Calendar.php");
+		$service = new Google_Service_Calendar($this->client);
 		$cal = new Google_Service_Calendar_Calendar();
 		$cal->setSummary($_POST["summary"]);
 		$cal->setDescription($_POST["description"]);
 		$service->calendars->insert($cal);
 		echo "Calendar created.<br/>";
-		echo "<form method='POST'><input type='submit' value='Back to calendars list'/></form>";
+		echo "<form method='POST'><input type='hidden' name='fct' value='calendar_list'/><input type='submit' value='Back to calendars list'/></form>";
 	}
 	
-	/**
-	 * @param Google_Service_Calendar $service
-	 */
-	private function openCalendar($service) {
+	private function openCalendar() {
+		// connect to Google Calendar service
+		require_once("Google/Service/Calendar.php");
+		$service = new Google_Service_Calendar($this->client);
 		echo "<h1>Calendar</h1>";
 		$cal = $service->calendars->get($_POST["calendar_id"]);
 		echo "ID: ".$cal->getId()."<br/>";
@@ -137,12 +143,13 @@ class page_test extends Page {
 		echo "<input type='text' name='email'/>";
 		echo "<input type='submit' value='Share'/>";
 		echo "</form>";
+		echo "<form method='POST'><input type='hidden' name='fct' value='calendar_list'/><input type='submit' value='Back to calendars list'/></form>";
 	}
 	
-	/**
-	 * @param Google_Service_Calendar $service
-	 */
-	private function shareCalendar($service) {
+	private function shareCalendar() {
+		// connect to Google Calendar service
+		require_once("Google/Service/Calendar.php");
+		$service = new Google_Service_Calendar($this->client);
 		$calendar_id = $_POST["calendar_id"];
 		$email = $_POST["email"];
 		$rule = new Google_Service_Calendar_AclRule();
