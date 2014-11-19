@@ -49,6 +49,7 @@ if (window == window.top && !window.top.google) {
 				return;
 			}
 			window.top.google.connected_pn_email = pn_email;
+			window.top.google.user = null;
 			window.top.google.connection_status = 0;
 			window.top.google.connection_event.fire();
 			var received = false;
@@ -71,11 +72,11 @@ if (window == window.top && !window.top.google) {
 						var req = window.top.gapi.client.plus.people.get({'userId':'me'});
 						req.execute(function(resp){
 							window.top.google.user = resp;
-							window.top.google.connection_status = 1;
-							window.top.google.connection_event.fire();
-							setTimeout(function() { window.top.google.connect(window.top.connected_pn_email); }, (parseInt(auth_result.expires_in)-60)*1000);
 						});
 					});
+					window.top.google.connection_status = 1;
+					window.top.google.connection_event.fire();
+					setTimeout(function() { window.top.google.connect(window.top.connected_pn_email); }, (parseInt(auth_result.expires_in)-60)*1000);
 					return;
 				}
 				window.top.google.connection_error = "authentication failed";

@@ -10,6 +10,8 @@ if (!Refresh.Web) Refresh.Web = {};
 
 Refresh.Web.Color = function(init) {	
 	var color = {
+		onchanged:null,
+		
 		r: 0,
 		g: 0,
 		b: 0,
@@ -30,7 +32,8 @@ Refresh.Web.Color = function(init) {
 			this.s = newHsv.s;
 			this.v = newHsv.v;
 			
-			this.hex = Refresh.Web.ColorMethods.rgbToHex(this);					
+			this.hex = Refresh.Web.ColorMethods.rgbToHex(this);
+			if (this.onchanged) this.onchanged();
 		},
 		
 		setHsv: function(h, s, v) {
@@ -43,7 +46,8 @@ Refresh.Web.Color = function(init) {
 			this.g = newRgb.g;
 			this.b = newRgb.b;	
 			
-			this.hex = Refresh.Web.ColorMethods.rgbToHex(newRgb);	
+			this.hex = Refresh.Web.ColorMethods.rgbToHex(newRgb);
+			if (this.onchanged) this.onchanged();
 		},
 		
 		setHex: function(hex) {
@@ -57,7 +61,8 @@ Refresh.Web.Color = function(init) {
 			var newHsv = Refresh.Web.ColorMethods.rgbToHsv(newRgb);
 			this.h = newHsv.h;
 			this.s = newHsv.s;
-			this.v = newHsv.v;			
+			this.v = newHsv.v;
+			if (this.onchanged) this.onchanged();
 		}
 	};
 	

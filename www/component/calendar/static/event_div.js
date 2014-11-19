@@ -10,7 +10,9 @@ function _createAbstractEventDiv(ev, cal) {
 	var div = document.createElement("DIV");
 	div.style.backgroundColor = "#"+cal.color;
 	require("color.js", function() {
-		div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(cal.color), 0x60));
+		var col = parse_hex_color(cal.color);
+		if (col[0]+col[1]+col[2] < 0x60*3) div.style.color = "white"; else div.style.color = "black";
+		div.style.border = "1px solid "+color_string(color_darker(col, 0x60));
 	});
 	div.style.padding = "1px";
 	div.style.fontSize = '8pt';

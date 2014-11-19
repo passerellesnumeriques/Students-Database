@@ -20,8 +20,10 @@ function google_status(container) {
 		}
 		t.icon.src = url;
 		if (w.top.google.connection_status == 1) {
-			t.icon.title = "Google Account: "+window.top.google.user.displayName;
-		}
+			if (!window.top.google.user) t.icon.title = "Connected to Google";
+			else t.icon.title = "Connected to Google: "+window.top.google.user.displayName;
+		} else
+			t.icon.title = "Click to connect with your PN Google Account";
 	};
 	
 	window.top.addJavascript("/static/google/google.js",function() {

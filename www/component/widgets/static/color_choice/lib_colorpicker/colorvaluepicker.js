@@ -74,6 +74,7 @@ Refresh.Web.ColorValuePicker.prototype = {
 		this._valueInput.value = this.color.v;		
 
 	},
+	onchanged: null,
 	_onHsvKeyUp: function(e) {
 		if (e.target.value == '') return;
 		this.validateHsv(e);
@@ -122,6 +123,7 @@ Refresh.Web.ColorValuePicker.prototype = {
 		hex = hex.replace(/[^A-F0-9]/g, '0');
 		if (hex.length > 6) hex = hex.substring(0, 6);
 		this._hexInput.value = hex;
+		if (this.onchanged) this.onchanged(this._hexInput.value);
 	},
 	_keyNeedsValidation: function(e) {
 
@@ -155,6 +157,7 @@ Refresh.Web.ColorValuePicker.prototype = {
 		this._hueInput.value = this.color.h;
 		this._saturationInput.value = this.color.s;
 		this._valueInput.value = this.color.v;
+		if (this.onchanged) this.onchanged(this._hexInput.value);
 	},
 	setValuesFromHsv: function() {
 		this.color.setHsv(this._hueInput.value, this._saturationInput.value, this._valueInput.value);		
@@ -163,6 +166,7 @@ Refresh.Web.ColorValuePicker.prototype = {
 		this._redInput.value = this.color.r;
 		this._greenInput.value = this.color.g;
 		this._blueInput.value = this.color.b;
+		if (this.onchanged) this.onchanged(this._hexInput.value);
 	},
 	setValuesFromHex: function() {
 		this.color.setHex(this._hexInput.value);
@@ -174,5 +178,6 @@ Refresh.Web.ColorValuePicker.prototype = {
 		this._hueInput.value = this.color.h;
 		this._saturationInput.value = this.color.s;
 		this._valueInput.value = this.color.v;
+		if (this.onchanged) this.onchanged(this._hexInput.value);
 	}
 };

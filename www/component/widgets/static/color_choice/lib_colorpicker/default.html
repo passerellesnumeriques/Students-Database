@@ -194,6 +194,8 @@
 	
 	Event.observe(window,'load',function() {
 		cp1 = new Refresh.Web.ColorPicker('cp1',{startHex: location.hash.substring(1), startMode:'s'});
+		if (window.frameElement.oncolorchanged)
+			cp1.onchanged = function(hex) { window.frameElement.oncolorchanged(hex); };
 	});
 	
 	
