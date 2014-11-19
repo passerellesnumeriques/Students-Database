@@ -74,6 +74,7 @@ window.top.require("calendar.js",function() {
 	init_top_calendar_manager();
 });
 document.body.style.overflow = "hidden";
+<?php if (PNApplication::$instance->google->isInstalled()) { ?>
 // connect to Google
 window.top.require("google.js");
 window.top.require("google_maps.js");
@@ -82,6 +83,7 @@ $google_account = PNApplication::$instance->google->getConnectedAccount();
 if ($google_account <> null)
 	echo "window.top.require('google.js',function(){window.top.google.connect(".json_encode($google_account["google_login"]).");});";
 ?>
+<?php } /* if Google installed */ else echo "window.top.require('google_not_installed.js');"; ?>
 // ping
 if (!window.top.pingInterval) {
 	window.top._ping_pending = 0;

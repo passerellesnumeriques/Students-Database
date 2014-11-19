@@ -32,13 +32,19 @@ if (PNApplication::$instance->user_management->username == null) {
 	array_push($optional, "/static/application/service.js");
 	array_push($optional, "/static/widgets/status.js");
 	array_push($optional, "/static/widgets/status_ui_top.js");
-	array_push($optional_delayed, "/static/google/google.js");
+	if (PNApplication::$instance->google->isInstalled())
+		array_push($optional_delayed, "/static/google/google.js");
+	else
+		array_push($optional_delayed, "/static/google/google_not_installed.js");
 } else {
 	array_push($mandatory, "/static/application/service.js");
 	array_push($optional, "/static/javascript/animation.js");
 	array_push($optional, "/static/widgets/status.js");
 	array_push($optional, "/static/widgets/status_ui_top.js");
-	array_push($optional_delayed, "/static/google/google.js");
+	if (PNApplication::$instance->google->isInstalled())
+		array_push($optional_delayed, "/static/google/google.js");
+	else
+		array_push($optional_delayed, "/static/google/google_not_installed.js");
 }
 function get_script_info(&$a) {
 	for ($i = 0; $i < count($a); ++$i) {
@@ -53,11 +59,13 @@ $total = 0;
 foreach ($mandatory as $s) $total += $s[1];
 foreach ($optional as $s) $total += $s[1];
 ?>
-window.top.google_local_config = {};
 <?php 
-$secrets = include("conf/secrets.inc");
-echo "window.top.google_local_config.api_key = ".json_encode($secrets["Google"]["client_api_key"]).";";
-echo "window.top.google_local_config.client_id = ".json_encode($secrets["Google"]["client_id"]).";";
+if (PNApplication::$instance->google->isInstalled()) {
+	$secrets = include("conf/google.inc");
+	echo "window.top.google_local_config = {};";
+	echo "window.top.google_local_config.api_key = ".json_encode($secrets["client_api_key"]).";";
+	echo "window.top.google_local_config.client_id = ".json_encode($secrets["client_id"]).";";
+}
 ?>
 window.top.pn_app_version = <?php
 global $pn_app_version;

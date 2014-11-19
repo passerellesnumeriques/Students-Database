@@ -1,5 +1,6 @@
 if (window == window.top && !window.top.google) {
 	window.top.google = {
+		installed: true,
 		connection_status: -1, // -1 = not connected, 0 = connection pending, 1 = connected
 		connection_event: new Custom_Event(),
 		connected_pn_email: null,

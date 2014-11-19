@@ -51,11 +51,11 @@ class PNGoogleCalendar extends PNGoogle {
 	public function getAcls($calendar_id, $remove_internals = true) {
 		$acls = array();
 		$list = $this->service->acl->listAcl($calendar_id, array("maxResults"=>250));
-		$secrets = include("conf/secrets.inc");
+		$secrets = include("conf/google.inc");
 		while(true) {
 			foreach ($list->getItems() as $acl) {
 				if ($remove_internals && (
-					$acl->getScope()->getValue() == $secrets["Google"]["service_account"] ||
+					$acl->getScope()->getValue() == $secrets["service_account"] ||
 					$acl->getScope()->getValue() == $calendar_id
 				)) continue;
 				array_push($acls, $acl);

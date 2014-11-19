@@ -1,4 +1,8 @@
-<?php 
+<?php
+if (!PNApplication::$instance->google->isInstalled()) {
+	PNApplication::error("Google is not configured.");
+	return;
+}
 $calendars = SQLQuery::create()->bypassSecurity()->select("PNGoogleCalendar")->execute();
 $google_ids = array();
 foreach ($calendars as $c) array_push($google_ids, $c["google_id"]);

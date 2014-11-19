@@ -523,6 +523,7 @@ function initFooter() {
 	});
 	*/
 	// Google
+	<?php if (PNApplication::$instance->google->isInstalled()) { ?>
 	var span_google_status = document.createElement("SPAN");
 	span_google_status.style.position = "absolute";
 	span_google_status.style.bottom = "0px";
@@ -533,6 +534,7 @@ function initFooter() {
 		new google_status(span_google_status);
 	});
 	<?php
+	}
 #DEV
 	?>
 	var span_debug_status = document.createElement("SPAN");

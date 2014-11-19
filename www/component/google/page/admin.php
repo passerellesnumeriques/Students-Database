@@ -4,15 +4,53 @@ class page_admin extends Page {
 	public function getRequiredRights() { return array("admin_google"); }
 	
 	public function execute() {
-require_once("component/google/lib_api/PNGoogleCalendar.inc");
-$gcal = new PNGoogleCalendar();
-
 if (isset($_POST["action"])) {
 	switch ($_POST["action"]) {
 		case "remove_calendar":
+			require_once("component/google/lib_api/PNGoogleCalendar.inc");
+			$gcal = new PNGoogleCalendar();
 			$gcal->removeCalendar($_POST["calendar_id"]);
 			echo "<script type='text/javascript'>location.assign('/dynamic/google/page/admin');</script>";
-			break;
+			return;
+		case "configuration":
+			if (!isset($_POST["client_id"]) || trim($_POST["client_id"]) == "") echo "Missing Client ID<br/>";
+			else if (!isset($_POST["client_api_key"]) || trim($_POST["client_api_key"]) == "") echo "Missing API Key<br/>";
+			else if (!isset($_POST["server_keys"]) || trim($_POST["client_api_key"]) == "") echo "No server key<br/>";
+			else if (!isset($_POST["service_account"])) echo "No service account email<br/>";
+			else if (!isset($_FILES["service_key"])) echo "No service account key<br/>";
+			else if ($_FILES["service_key"]["error"] == 4) echo "No service account key file uploaded<br/>";
+			else if ($_FILES["service_key"]["error"] <> 0) echo "Error uploading service account key file: ".$_FILES["service_key"]["error"]."<br/>";
+			else {
+				$list = explode("\n", $_POST["server_keys"]);
+				$server_keys = array();
+				foreach ($list as $key) {
+					$key = trim($key);
+					if ($key == "") continue;
+					array_push($server_keys, $key);
+				}
+				if (count($server_keys) == 0) echo "No server key<br/>";
+				else {
+					move_uploaded_file($_FILES['service_key']['tmp_name'], "conf/google_service.p12");
+					$conf = "<?php return array(\n";
+					$conf .= "\t'client_id'=>'".trim($_POST["client_id"])."',\n";
+					$conf .= "\t'client_api_key'=>'".trim($_POST["client_api_key"])."',\n";
+					$conf .= "\t'server_keys'=>array(\n";
+					for ($i = 0; $i < count($server_keys); $i++) {
+						$conf .= "\t\t'".$server_keys[$i]."'";
+						if ($i < count($server_keys)-1) $conf .= ",";
+						$conf .= "\n";
+					}
+					$conf .= "\t),\n";
+					$conf .= "\t'service_account'=>'".trim($_POST["service_account"])."',\n";
+					$conf .= "\t'service_key'=>'google_service.p12'\n";
+					$conf .= "); ?>";
+					$f = fopen("conf/google.inc","w");
+					fwrite($f, $conf);
+					fclose($f);
+					echo "Configuration saved.<br/><a href='/dynamic/google/page/admin'>Back to administration page</a>";
+				}
+			}
+			return;
 	}
 }
 		
@@ -20,6 +58,40 @@ $this->requireJavascript("section.js");
 theme::css($this, "section.css");
 ?>
 <div style='padding:10px'>
+	<div id='section_conf' title='Configuration'>
+		<div>
+			<?php
+			if (!$this->component->isInstalled()) {
+				echo "<div class='error_box'>Google is not yet configured, please provide Google API keys below</div>";
+				$conf = null;
+			} else $conf = include("conf/google.inc");
+			?>
+			<form method='POST' enctype="multipart/form-data" name='google_conf'>
+			<input type='hidden' name='action' value='configuration'/>
+			<div class='page_section_title2'>Web Client Keys</div>
+			<div style='padding:5px;line-height:25px;'>
+				Client ID <input type='text' size=80 name='client_id' value='<?php if ($conf) echo $conf["client_id"]; ?>'/><br/>
+				API Key <input type='text' size=80 name='client_api_key' value='<?php if ($conf) echo $conf["client_id"]; ?>'/><br/>
+			</div>
+			<div class='page_section_title2'>Server Keys</div>
+			<div style='padding:5px;line-height:25px;'>
+				<textarea name='server_keys' style='width:90%;'><?php if ($conf) foreach ($conf["server_keys"] as $key) echo $key."\n"; ?></textarea>
+			</div>
+			<div class='page_section_title2'>Service Account</div>
+				<div style='padding:5px;line-height:25px;'>
+					EMail <input type='text' size=80 name='service_account' value='<?php if ($conf) echo $conf["service_account"]; ?>'/><br/>
+					Security Key: <?php if ($conf) echo $conf["service_key"]; ?> <input type='file' name='service_key'/><br/>
+				</div>
+			<div>
+				<button class='action' onclick="document.forms['google_conf'].submit();">Save New Configuration</button>
+			</div>
+			</form>
+		</div>
+	</div>
+<?php if ($this->component->isInstalled()) {
+require_once("component/google/lib_api/PNGoogleCalendar.inc");
+$gcal = new PNGoogleCalendar();
+?>
 	<div id='section_calendars' title='Calendars'>
 		<div style='padding:5px;'>
 			<table class='all_borders'>
@@ -57,9 +129,13 @@ theme::css($this, "section.css");
 			</table>
 		</div>
 	</div>
+<?php } ?>
 </div>
 <script type='text/javascript'>
+sectionFromHTML('section_conf');
+<?php if ($this->component->isInstalled()) { ?>
 sectionFromHTML('section_calendars');
+<?php } ?>
 </script>
 <?php 				
 	}

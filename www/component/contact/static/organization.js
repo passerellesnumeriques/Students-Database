@@ -342,42 +342,44 @@ function organization(container, org, existing_types, can_edit) {
 		});
 		
 		// google
-		var google_title = document.createElement("DIV");
-		container.appendChild(google_title);
-		google_title.innerHTML = "<img src='/static/google/google.png' style='vertical-align:middle'/> Search and Import from Google: ";
-		t.google_search_input = document.createElement("INPUT");
-		t.google_search_input.type = "text";
-		t.google_search_input.value = org.name;
-		require("input_utils.js", function() {
-			inputAutoresize(t.google_search_input, 15);
-		});
-		google_title.appendChild(t.google_search_input);
-		google_title.style.borderTop = "1px solid #808080";
-		google_title.style.borderBottom = "1px solid #808080";
-		google_title.style.padding = "3px";
-		google_title.style.backgroundColor = "#D0F0D0";
-		var search_button = document.createElement("BUTTON");
-		search_button.innerHTML = "Search";
-		search_button.marginLeft = "10px";
-		google_title.appendChild(search_button);
-		search_button.onclick = function() {
-			this.disabled = "disabled";
-			var b=this;
-			t.searchGoogle(function(){
-				b.disabled = "";
+		if (window.top.google.installed) {
+			var google_title = document.createElement("DIV");
+			container.appendChild(google_title);
+			google_title.innerHTML = "<img src='/static/google/google.png' style='vertical-align:middle'/> Search and Import from Google: ";
+			t.google_search_input = document.createElement("INPUT");
+			t.google_search_input.type = "text";
+			t.google_search_input.value = org.name;
+			require("input_utils.js", function() {
+				inputAutoresize(t.google_search_input, 15);
 			});
-		};
-		google_title.appendChild(document.createElement("BR"));
-		var note = document.createElement("I");
-		note.innerHTML = "Tip: if you don't find in Google just with the name of the organization, try to add the location (i.e. xxx, Paris)";
-		google_title.appendChild(note);
-		t._google_results_container = document.createElement("DIV");
-		container.appendChild(t._google_results_container);
-		t._google_results_container.style.backgroundColor = "white";
-		t._google_results_container.style.textAlign = "left";
-		t._google_results_container.style.maxWidth = "600px";
-		t._google_results_container.style.maxHeight = "250px";
-		t._google_results_container.style.overflowY = "auto";
+			google_title.appendChild(t.google_search_input);
+			google_title.style.borderTop = "1px solid #808080";
+			google_title.style.borderBottom = "1px solid #808080";
+			google_title.style.padding = "3px";
+			google_title.style.backgroundColor = "#D0F0D0";
+			var search_button = document.createElement("BUTTON");
+			search_button.innerHTML = "Search";
+			search_button.marginLeft = "10px";
+			google_title.appendChild(search_button);
+			search_button.onclick = function() {
+				this.disabled = "disabled";
+				var b=this;
+				t.searchGoogle(function(){
+					b.disabled = "";
+				});
+			};
+			google_title.appendChild(document.createElement("BR"));
+			var note = document.createElement("I");
+			note.innerHTML = "Tip: if you don't find in Google just with the name of the organization, try to add the location (i.e. xxx, Paris)";
+			google_title.appendChild(note);
+			t._google_results_container = document.createElement("DIV");
+			container.appendChild(t._google_results_container);
+			t._google_results_container.style.backgroundColor = "white";
+			t._google_results_container.style.textAlign = "left";
+			t._google_results_container.style.maxWidth = "600px";
+			t._google_results_container.style.maxHeight = "250px";
+			t._google_results_container.style.overflowY = "auto";
+		}
 		
 		layout.changed(container);
 	};

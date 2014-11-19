@@ -128,7 +128,7 @@ if (PNApplication::$instance->current_domain <> PNApplication::$instance->local_
 		}
 		?>
 	</div>
-<?php
+<?php if (PNApplication::$instance->google->isInstalled()) {
 $google_account = PNApplication::$instance->google->getConnectedAccount();
 if ($google_account == null || $google_account["google_login"] == null) {
 ?>
@@ -136,6 +136,7 @@ if ($google_account == null || $google_account["google_login"] == null) {
 	<img src='/static/google/google_32.png' style='vertical-align:bottom'/> <span onclick="window.top.google.connectAccount(function(){location.reload();});" style='cursor:pointer' onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='';">Connect your PN Google account to this application</span>
 </div>
 <?php 
+}
 }
 if (PNApplication::$instance->user_management->has_right("manage_application")) {
 global $pn_app_version;

@@ -498,7 +498,6 @@ function checkEnd() {
 			d.innerHTML = 
 				"<br/>"+
 				"Installation done.<br/>"+
-				"<b>Please request for your <i>secrets</i> files, to be able to use external services like Google.</b><br/>"+
 				"<br/>"+
 				"Please schedule the following tasks (in /etc/crontab for Unix, or in the Task Scheduler for Windows):<ul>"+
 				"<li>Execute, with PHP command line, the file cron.php regularly (at least every 5 minutes is good, recommended is every 2 minutes)</li>"+

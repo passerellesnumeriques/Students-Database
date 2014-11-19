@@ -18,7 +18,7 @@ function loadGoogleMaps(callback) {
 					window.top.initGoogleMaps = null;
 					window.top.loadGoogleMaps(function(){});
 				},10000);
-				window.top.googleMapJS = window.top.addJavascript("http://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=false&callback=initGoogleMaps&key=AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
+				window.top.googleMapJS = window.top.addJavascript("http://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=false&callback=initGoogleMaps&key="+window.top.google._api_key);
 			} else
 				window.top.initGoogleMapsEvent.add_listener(callback);
 		} else
