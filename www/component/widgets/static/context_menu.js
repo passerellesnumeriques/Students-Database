@@ -308,6 +308,7 @@ function context_menu(menu) {
 		if (typeof window.top.animation != 'undefined') {
 			if (menu.anim) window.top.animation.stop(menu.anim);
 			menu.anim = window.top.animation.fadeOut(menu,300,function() {
+				if (!t) return;
 				if (t.removeOnClose)
 					try { menu.parentNode.removeChild(menu); } catch (e) {}
 			});

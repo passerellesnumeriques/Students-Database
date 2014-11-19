@@ -135,8 +135,9 @@ if ($message <> null) {
 			<li>tinyMCE: <span id='library_tinymce'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 			<li>PHPExcel: <span id='library_phpexcel'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 			<li>mPDF: <span id='library_mpdf'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
-			<li>Google Calendar: <span id='library_google_calendar'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 			<li>Google OAuth2: <span id='library_google_oauth2'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>Google Calendar: <span id='library_google_calendar'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>Google Plus: <span id='library_google_plus'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 			<li>Google PHP API: <span id='library_google_php_api'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 		</ul>
 	</td></tr>
@@ -160,7 +161,7 @@ function exportStorage() {
 	popup_frame(null,"Export Storage", "/dynamic/development/page/export_storage", null, 90, 90, function(frame,pop) {
 	});
 }
-var libraries = ["tinymce","phpexcel","mpdf","google_calendar","google_oauth2","google_php_api"];
+var libraries = ["tinymce","phpexcel","mpdf","google_oauth2","google_calendar","google_plus","google_php_api"];
 function checkLibraryUpdates(lib) {
 	service.json("development","check_libraries_updates",{library:lib},function(res) {
 		var span = document.getElementById('library_'+lib);

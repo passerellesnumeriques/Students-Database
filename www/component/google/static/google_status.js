@@ -20,12 +20,7 @@ function google_status(container) {
 		}
 		t.icon.src = url;
 		if (w.top.google.connection_status == 1) {
-			w.top.addJavascript("/static/google/userprofile.js",function(){
-				w.top.google_userprofile(function(profile){
-					t.profile = profile;
-					t.icon.title = "Google Account: "+profile.name;
-				});
-			});
+			t.icon.title = "Google Account: "+window.top.google.user.displayName;
 		}
 	};
 	
@@ -51,13 +46,31 @@ function google_status(container) {
 						window.top.google.connect(window.top.google.connected_pn_email, true);
 					});
 				}
-			} else if (window.top.google.connection_status == 0 || !t.profile) {
+			} else if (window.top.google.connection_status == 0) {
 				t.menu.addIconItem(theme.icons_16.loading, "Connection to Google in progress...", function() {
 					if (t.menu)
 						t.menu.hide();
 				});
 			} else {
-				t.menu.addTitleItem("/static/google/google.png", "Connected ("+t.profile.name+")");
+				t.menu.addTitleItem("/static/google/google.png", "Connected To Google");
+				var table = document.createElement("TABLE");
+				var tr = document.createElement("TR"); table.appendChild(tr);
+				var td = document.createElement("TD"); tr.appendChild(td);
+				var img = document.createElement("IMG");
+				img.src = window.top.google.user.image.url;
+				td.appendChild(img);
+				td = document.createElement("TD"); tr.appendChild(td);
+				td.style.verticalAlign = "middle";
+				var div = document.createElement("DIV");
+				div.appendChild(document.createTextNode(window.top.google.user.displayName));
+				td.appendChild(div);
+				for (var i = 0; i < window.top.google.user.emails.length; ++i) {
+					var div = document.createElement("DIV");
+					div.appendChild(document.createTextNode(window.top.google.user.emails[i].value));
+					td.appendChild(div);
+				}
+				t.menu.addItem(table);
+				img.onload = function() { t.menu.showAboveElement(t.icon); };
 			}
 			t.menu.showAboveElement(t.icon);
 		});
