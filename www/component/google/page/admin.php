@@ -11,7 +11,7 @@ if (isset($_POST["action"])) {
 	switch ($_POST["action"]) {
 		case "remove_calendar":
 			$gcal->removeCalendar($_POST["calendar_id"]);
-			echo "<script type='text/javascript'>location.reload();</script>";
+			echo "<script type='text/javascript'>location.assign('/dynamic/google/page/admin');</script>";
 			break;
 	}
 }

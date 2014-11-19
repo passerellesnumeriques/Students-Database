@@ -119,11 +119,16 @@ class PNGoogleCalendar extends PNGoogle {
 		$pn_google = SQLQuery::create()->bypassSecurity()->select("PNGoogleCalendar")->execute();
 		// check our google ids, and remove those which are not anymore in Google, so we will create them again
 		$not_anymore_in_google = array();
-		foreach ($pn_google as $cal) {
+		for ($i = 0; $i < count($pn_google); $i++) {
+			$cal = $pn_google[$i];
 			$found = false;
 			foreach ($google as $gcal)
 				if ($gcal->getId() == $cal["google_id"]) { $found = true; break; }
-			if (!$found) array_push($not_anymore_in_google, $cal["pn_id"]);
+			if (!$found) {
+				array_push($not_anymore_in_google, $cal["pn_id"]);
+				array_splice($pn_google, $i, 1);
+				$i--;
+			}
 		}
 		if (count($not_anymore_in_google) > 0)
 			SQLQuery::create()->bypassSecurity()->removeKeys("PNGoogleCalendar", $not_anymore_in_google);
@@ -208,7 +213,7 @@ class PNGoogleCalendar extends PNGoogle {
 	}
 	public static function timestampToDateTime($timestamp) {
 		$date = new Google_Service_Calendar_EventDateTime();
-		$date->setDateTime(gmdate("Y-m-d")."T".gmdate("H:i:s")."Z");
+		$date->setDateTime(gmdate("Y-m-d",$timestamp)."T".gmdate("H:i:s",$timestamp)."Z");
 		return $date;
 	}
 	
@@ -237,8 +242,18 @@ class PNGoogleCalendar extends PNGoogle {
 	}
 	
 	public function synchCalendar($pn_id, $google_id, $last_update) {
-		$gevents = $this->getAllEvents($google_id);
+		try {
+			$gevents = $this->getAllEvents($google_id);
+		} catch (Google_Service_Exception $e) {
+			if ($e->getCode() == 404) return true; // not found = calendar removed, let's wait the calendars synch task
+			PNApplication::error("Unable to retrieve Google calendar events", $e);
+			return false;
+		} catch (Exception $e) {
+			PNApplication::error("Unable to retrieve Google calendar events", $e);
+			return false;
+		}
 		$pnevents = PNApplication::$instance->calendar->getAllCalendarEventsWithoutSecurity($pn_id);
+		$err = false;
 		foreach ($gevents as $gev) {
 			/* @var $gev Google_Service_Calendar_Event */
 			$pn = null;
@@ -254,6 +269,7 @@ class PNGoogleCalendar extends PNGoogle {
 					$this->removeEvent($google_id, $gev->getId());
 				} catch (Exception $e) {
 					PNApplication::error("Error removing Google Event ".$gev->getId(), $e);
+					$err = true;
 				}
 				continue;
 			}
@@ -263,6 +279,7 @@ class PNGoogleCalendar extends PNGoogle {
 				$this->updateEvent($google_id, $gev->getId(), self::PNEventToGoogleEvent($pn));
 			} catch (Exception $e) {
 				PNApplication::error("Error updating event ".$pn["id"], $e);
+				$err = true;
 			}
 		}
 		// add new events in Google
@@ -270,10 +287,11 @@ class PNGoogleCalendar extends PNGoogle {
 			try {
 				$this->addEvent($google_id, self::PNEventToGoogleEvent($pn), true);
 			} catch (Exception $e) {
-				PNApplication::error("Error creating event ".$pn["id"], $e);
+				PNApplication::error("Error creating event ".$pn["id"]."[".$pn["uid"]."] (".$pn["title"].") from calendar ".$pn_id, $e);
+				$err = true;
 			}
 		}
-		return true;
+		return $err == false;
 	}
 	
 }
