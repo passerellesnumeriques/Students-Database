@@ -16,6 +16,7 @@ return array(
 		new BooleanRight("edit_application_form_fields","Edit the list of information we can specify for each applicant",array(true=>array("edit_applicants"=>true))),
 		// general
 		new BooleanRight("manage_selection_campaign","Add/Remove/Configure a selection campaign",array(true=>array("can_access_selection_data"=>true))),
+		new BooleanRight("manage_trips","Add/Remove/Edit trips",array(true=>array("can_access_selection_data"=>true))),
 	)),
 );
 

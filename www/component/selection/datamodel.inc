@@ -34,4 +34,5 @@ include "datamodel_interview.inc";
 include "datamodel_applicant.inc";		
 include "datamodel_applicant_exam.inc";
 include "datamodel_applicant_interview.inc";
+include "datamodel_trip.inc";
 ?>

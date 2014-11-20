@@ -1,0 +1,36 @@
+.trip_node_container {
+}
+.trip_node {
+	display: inline-block;
+	border: 1px solid #0000FF;
+	border-radius: 5px;
+	background-color: white;
+}
+.trip_node_title {
+	border-bottom: 1px solid #0000FF;
+	border-top-left-radius: 3px;
+	border-top-right-radius: 3px;
+	padding: 2px 5px;
+	background-color: #0000FF;
+	color: #FFFFFF;
+}
+.trip_node_footer {
+	border-top: 1px solid #8080FF;
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	background-color: #C0C0E8;
+}
+.trip_connection_container {
+	text-align: center;
+	background-image: url(/static/selection/trip/road.png);
+	background-repeat: repeat-y;
+	background-position-x: center;
+}
+.trip_connection_node {
+	display: inline-block;
+	margin-top: 50px;
+	margin-bottom: 50px;
+	border: 1px solid black;
+	border-radius: 5px;
+	background-color: white;
+}
