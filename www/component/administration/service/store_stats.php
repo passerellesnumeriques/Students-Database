@@ -19,7 +19,12 @@ class service_store_stats extends Service {
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_POSTFIELDS, array(
 			"product"=>"students_management_software",
-			"version"=>$pn_app_version,
+#DEV			
+			"version"=>$pn_app_version.".dev",
+#END
+#PROD			
+#			"version"=>$pn_app_version,
+#END
 			"domain"=>PNApplication::$instance->local_domain,
 			"user"=>$user,
 			"host"=>$_SERVER["HTTP_HOST"]

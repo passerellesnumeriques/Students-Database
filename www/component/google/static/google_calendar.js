@@ -159,11 +159,14 @@ function GoogleCalendar(id, name, color, show, writable) {
 					for (var j = 0; j < removed_events.length; ++j) {
 						if (ev.uid == removed_events[j].uid) {
 							found = true;
-							t.events.push(ev);
-							if (ev.last_modified != removed_events[j].last_modified)
+							if (ev.last_modified != removed_events[j].last_modified) {
+								t.events.push(ev);
 								t.on_event_updated.fire(ev);
-							for (var n in removed_events[j])
-								removed_events[j][n] = null;
+								for (var n in removed_events[j])
+									removed_events[j][n] = null;
+							} else {
+								t.events.push(removed_events[j]);
+							}
 							removed_events.splice(j,1);
 							break;
 						}

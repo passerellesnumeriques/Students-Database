@@ -164,12 +164,6 @@ service.json("administration","latest_version",null,function(res) {
 service.json("administration","store_stats",null,function(res){});
 </script>
 <?php 
-} else if (rand(0,9)==0) {
-?>
-<script type='text/javascript'>
-service.json("administration","store_stats",null,function(res){});
-</script>
-<?php 
 }
 if (@$_COOKIE["test_deploy"] == "true") {
 ?>
@@ -318,6 +312,8 @@ require("news.js",function() {
 		window.updates.post();
 	};
 });
+
+service.json("administration","store_stats",null,function(res){});
 </script>
 <?php 		
 	}

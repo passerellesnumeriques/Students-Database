@@ -292,6 +292,7 @@ if (window == window.top && !window.top.CalendarsProviders) {
 			var now = new Date().getTime();
 			for (var i = 0; i < this._providers.length; ++i) {
 				if (!force && now - this._providers[i]._last_auto_refresh < this._providers[i].minimum_time_to_autorefresh) continue;
+				this._providers[i]._last_auto_refresh = new Date().getTime();
 				for (var j = 0; j < this._providers[i].calendars.length; ++j)
 					this._providers[i].calendars[j].refresh();
 			}
@@ -544,11 +545,14 @@ function PNCalendar(provider, id, name, color, show, writable, icon, removable) 
 						for (var j = 0; j < removed_events.length; ++j) {
 							if (ev.uid == removed_events[j].uid) {
 								found = true;
-								t.events.push(ev);
-								if (ev.last_modified != removed_events[j].last_modified)
+								if (ev.last_modified != removed_events[j].last_modified) {
+									t.events.push(ev);
 									t.on_event_updated.fire(ev);
-								for (var n in removed_events[j])
-									removed_events[j][n] = null;
+									for (var n in removed_events[j])
+										removed_events[j][n] = null;
+								} else {
+									t.events.push(removed_events[j]);
+								}
 								removed_events.splice(j,1);
 								break;
 							}
