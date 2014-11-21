@@ -160,9 +160,12 @@ CalendarsProvider.prototype = {
 	/** {Custom_Event} event raised when a calendar disappears on this provider */
 	on_calendar_removed: new Custom_Event(),
 	/** {Number} minimum time (in milliseconds) before calendars from this provider can be automatically refreshed */
-	minimum_time_to_autorefresh: 5*60*1000,
+	minimum_time_to_autorefresh_calendar: 5*60*1000,
+	minimum_time_to_autorefresh_calendars_list: 15*60*1000,
+	_last_refresh_calendars_list: 0,
 	/** Reload the list of calendars from this provider */
 	refreshCalendars: function() {
+		this._last_refresh_calendars_list = new Date().getTime();
 		var t=this;
 		this._retrieveCalendars(function (list) {
 			var removed = [];
@@ -258,13 +261,13 @@ if (window == window.top && !window.top.CalendarsProviders) {
 		 * @param {CalendarsProvider} provider the new calendar provider
 		 */
 		add: function(provider) {
-			provider._last_auto_refresh = new Date().getTime();
 			for (var i = 0; i < this._providers.length; ++i)
 				if (this._providers[i].getProviderName() == provider.getProviderName())
 					return; // same
 			this._providers.push(provider);
 			for (var i = 0; i < this._handlers.length; ++i)
 				this._handlers[i](provider);
+			provider.refreshCalendars();
 		},
 		/** List of providers */
 		_providers: [],
@@ -287,14 +290,21 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				if (this._providers[i].id == id) return this._providers[i];
 			return null;
 		},
-		/** Internal function to refresh the list of calendars on all providers */
-		_refresh: function(force) {
+		_refreshCalendarsList: function(force) {
 			var now = new Date().getTime();
 			for (var i = 0; i < this._providers.length; ++i) {
-				if (!force && now - this._providers[i]._last_auto_refresh < this._providers[i].minimum_time_to_autorefresh) continue;
-				this._providers[i]._last_auto_refresh = new Date().getTime();
-				for (var j = 0; j < this._providers[i].calendars.length; ++j)
+				if (!force && now - this._providers[i]._last_refresh_calendars_list < this._providers[i].minimum_time_to_autorefresh_calendars_list) continue;
+				this._providers[i].refreshCalendars();
+			}
+		},
+		/** Internal function to refresh the list of calendars on all providers */
+		_refreshCalendars: function(force) {
+			var now = new Date().getTime();
+			for (var i = 0; i < this._providers.length; ++i) {
+				for (var j = 0; j < this._providers[i].calendars.length; ++j) {
+					if (!force && now - this._providers[i].calendars[j]._last_refresh < this._providers[i].minimum_time_to_autorefresh_calendar) continue;
 					this._providers[i].calendars[j].refresh();
+				}
 			}
 		}
 	};
@@ -313,11 +323,13 @@ if (window == window.top && !window.top.CalendarsProviders) {
 			}
 		});
 		window.top.pnapplication.onlogin.add_listener(function() {
-			window.top.CalendarsProviders._refresh(true);
+			window.top.CalendarsProviders._refreshCalendarsList(true);
+			window.top.CalendarsProviders._refreshCalendars(true);
 		});
 	};
 	listen_login_logout();
-	setInterval(function() { if (window.top.CalendarsProviders) window.top.CalendarsProviders._refresh(); }, 60*1000);
+	setInterval(function() { if (window.top.CalendarsProviders) window.top.CalendarsProviders._refreshCalendarsList(); }, 150*1000);
+	setInterval(function() { if (window.top.CalendarsProviders) window.top.CalendarsProviders._refreshCalendars(); }, 45*1000);
 }
 
 /**
@@ -355,11 +367,13 @@ function Calendar(provider, name, color, show, icon) {
 	this.on_removed = new Custom_Event();
 	/** list of events in the calendar */
 	this.events = [];
+	this._last_refresh = 0;
 	/** called to refresh the calendar. It must be overrided by the implementation of the calendar.
 	 * @param {Function} ondone to be called when the refresh is done
 	 */
 	this.refresh = function(ondone) {
 		if (this.updating) return; // already in progress
+		this._last_refresh = new Date().getTime();
 		this.updating = true;
 		this.onrefresh.fire();
 		var t=this;
@@ -627,7 +641,8 @@ PNCalendar.prototype.constructor = PNCalendar;
 function PNCalendarsProvider() {
 	CalendarsProvider.call(this,"PN");
 	var t=this;
-	this.minimum_time_to_autorefresh = 2*60*1000; // we are in local, we can refresh regularly
+	this.minimum_time_to_autorefresh_calendar = 2*60*1000; // we are in local, we can refresh regularly
+	this.minimum_time_to_autorefresh_calendars_list = 5*60*1000; // we are in local, we can refresh regularly
 	this._retrieveCalendars = function(handler) {
 		t.connectionStatus("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading PN Calendars...");
 		service.json("calendar", "get_my_calendars", {}, function(calendars) {

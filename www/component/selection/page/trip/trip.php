@@ -17,15 +17,16 @@ function InputOver(value, onchange) {
 	this.container = document.createElement("DIV");
 	this.container.style.position = "relative";
 	this.container.appendChild(document.createTextNode(value));
-	this.container.style.height = "20px";
-	this.container.style.paddingLeft = "3px";
-	this.container.style.paddingRight = "3px";
-	this.container.style.paddingTop = "3px";
+	this.container.style.height = "16px";
+	this.container.style.paddingLeft = "0px";
+	this.container.style.marginRight = "2px";
+	this.container.style.paddingTop = "2px";
 	this.input = document.createElement("INPUT");
 	this.input.style.position = "absolute";
 	this.input.style.top = "0px";
 	this.input.style.left = "-2px";
 	this.input.style.width = "100%";
+	this.input.style.padding = "0px";
 	this.container.appendChild(this.input);
 	this.input.value = value;
 	setOpacity(this.input, 0);
@@ -46,9 +47,45 @@ function InputOver(value, onchange) {
 	};
 }
 
+function Where(container) {
+	// TODO
+}
+
+function When(container) {
+	// TODO
+}
+
+function Who(container) {
+	// TODO
+}
+
+function Activity(what) {
+	this.createContent = function(table) {
+		var tr, td;
+		table.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td = document.createElement("TD"));
+		td.appendChild(this.div_number = document.createElement("DIV"));
+		td.rowSpan = 2;
+		this.div_number.className = "trip_node_activity_number";
+		tr.appendChild(td = document.createElement("TD"));
+		td.innerHTML = "What ?";
+		td.className = "trip_node_activity_header";
+		tr.appendChild(td = document.createElement("TD"));
+		this.what = new InputOver(what);
+		td.appendChild(this.what.container);
+
+		table.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td = document.createElement("TD"));
+		td.innerHTML = "TODO";
+		tr.appendChild(td = document.createElement("TD"));
+		td.innerHTML = "TODO";
+	};
+	this.setNumber = function(num) {
+		this.div_number.innerHTML = num;
+	};
+}
+
 function TripNode(title) {
-	this.title = title;
-	
 	this.container = document.createElement("TABLE");
 	this.container.className = "trip_node_container";
 	var tr = document.createElement("TR"); this.container.appendChild(tr);
@@ -60,7 +97,9 @@ function TripNode(title) {
 
 	this.header = document.createElement("DIV");
 	this.header.className = "trip_node_title";
-	this.header.appendChild(new InputOver(title, function(){}).container);
+	this.title = new InputOver(title);
+	this.header.appendChild(this.title.container);
+	this.title.input.style.textAlign = "center";
 	this.node.appendChild(this.header);
 	this.content = document.createElement("DIV");
 	this.content.className = "trip_node_content";
@@ -69,11 +108,23 @@ function TripNode(title) {
 	this.footer.className = "trip_node_footer";
 	this.node.appendChild(this.footer);
 
-	this.content.innerHTML = "coucou";
-	this.footer.innerHTML = "hehe";
-
 	this.tr2 = document.createElement("TR");
 	this.container.appendChild(this.tr2);
+
+	this.activities_table = document.createElement("TABLE");
+	this.activities_table.className = "trip_node_activities_table";
+	this.activities_table.appendChild(document.createElement("TBODY"));
+	this.content.appendChild(this.activities_table);
+	
+	this.footer.innerHTML = "TODO";
+
+	this.activities = [];
+	
+	this.addActivity = function(activity) {
+		this.activities.push(activity);
+		activity.createContent(this.activities_table.childNodes[0]);
+		activity.setNumber(this.activities.length);
+	};
 	
 	this.addConnection = function(connection) {
 		td = document.createElement("TD");
@@ -100,6 +151,8 @@ var container = document.getElementById('trip_container');
 <?php if ($trip_id == null) { ?>
 var departure = new TripNode("Departure");
 container.appendChild(departure.container);
+var departure_meeting = new Activity("Meeting for Departure");
+departure.addActivity(departure_meeting);
 
 var arrival = new TripNode("Arrival");
 var conn = new TripConnection(arrival);

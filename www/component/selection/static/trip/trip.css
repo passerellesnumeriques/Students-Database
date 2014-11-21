@@ -20,6 +20,26 @@
 	border-bottom-right-radius: 4px;
 	background-color: #C0C0E8;
 }
+.trip_node_activities_table {
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+.trip_node_activities_table>tbody>tr>td {
+	padding: 0px;
+	vertical-align: top;
+	text-align: left;
+}
+.trip_node_activity_number {
+	background-color: #A0A0A0;
+	border-bottom-right-radius: 5px;
+	padding: 1px 3px;
+	color: white;
+}
+.trip_node_activities_table>tbody>tr>td.trip_node_activity_header {
+	font-weight: bold;
+	color: #606060;
+	padding: 1px 4px;
+}
 .trip_connection_container {
 	text-align: center;
 	background-image: url(/static/selection/trip/road.png);

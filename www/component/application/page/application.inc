@@ -53,10 +53,6 @@ function init_top_calendar_manager() {
 			if (!window.top.calendar_manager) return;
 			window.top.calendar_manager.removeCalendar(cal);
 		});
-		provider._refresh_interval = window.top.setInterval(function() {
-			provider.refreshCalendars();
-		},5*60*1000);
-		provider.refreshCalendars();
 	});
 	if (!window.top._logout_remove_calendars) {
 		window.top._logout_remove_calendars = function() {
