@@ -30,6 +30,33 @@ function mini_popup(title) {
 		this._div = null;
 	};
 	
+	this.addFooter = function(element) {
+		if (!this._footer) {
+			this._footer = document.createElement("DIV");
+			this._footer.className = "mini_popup_footer";
+			this._div.appendChild(this._footer);
+		}
+		this._footer.appendChild(element);
+		layout.changed(this._footer);
+	};
+	
+	this.addButton = function(icon, text, onclick, onclick_param) {
+		var button = document.createElement("BUTTON");
+		button.className = "flat";
+		button.innerHTML = (icon ? "<img src='"+icon+"' style='padding-bottom:3px'/> " : "")+text;
+		button.onclick = function(ev) {
+			onclick(ev, onclick_param);
+		};
+		this.addFooter(button);
+	};
+	
+	this.addOkButton = function(onclick, onclick_param) {
+		var t=this;
+		this.addButton(theme.icons_10.ok, "Ok", function(ev, p) {
+			if (onclick(ev,p)) t.close();
+		},onclick_param);
+	};
+	
 	this._init = function() {
 		this._div = document.createElement("DIV");
 		this._div.className = "mini_popup";
@@ -47,6 +74,7 @@ function mini_popup(title) {
 		this.content = document.createElement("DIV");
 		this.content.className = "mini_popup_content";
 		this._div.appendChild(this.content);
+		this._footer = null;
 		this._div.style.display = "none";
 		this._div.style.position = "fixed";
 		this._div.style.top = "-10000px";

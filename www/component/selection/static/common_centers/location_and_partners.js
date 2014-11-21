@@ -185,12 +185,22 @@ function location_and_partners(popup, section_location, section_other_partners, 
 				t._address_container.appendChild(a.element);
 				layout.changed(section_location.element);
 			});
+			if (this._warning_host) { this._warning_host.parentNode.removeChild(this._warning_host); this._warning_host = null; } 
 		} else if (this.geographic_area_text != null) {
 			// we only have a geographic area
-			this._address_container.innerHTML = this.geographic_area_text.text+"<br/><img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> <i style='color:#FF8000'>Not complete: please select a hosting partner</i>";
+			this._address_container.innerHTML = this.geographic_area_text.text;
+			if (!this._warning_host) {
+				this._warning_host = document.createElement("DIV");
+				this._warning_host.style.display = "inline-block";
+				this._warning_host.style.marginLeft = "4px";
+				this._warning_host.style.marginRight = "4px";
+				this._warning_host.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> <i style='color:#FF8000'>Please select a hosting partner</i>";
+				section_location.addToolBottom(this._warning_host);
+			}
 		} else {
 			// nothing
 			this._address_container.innerHTML = "<center style='color:red'><img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> <i>Please select a location</i></center>";
+			if (this._warning_host) { this._warning_host.parentNode.removeChild(this._warning_host); this._warning_host = null; }
 		}
 		layout.changed(section_location.element);
 	};

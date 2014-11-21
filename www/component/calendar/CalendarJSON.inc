@@ -11,7 +11,7 @@ class CalendarJSON {
 	 * @returns String CalendarEvent JSON
 	 * @no_name_check
 	 */
-	public static function CalendarEventFromID($id, $calendar_id){
+	public static function CalendarEventFromID($id, $calendar_id, $use_date_object = false){
 		//Check the right
 		if (!PNApplication::$instance->calendar->canReadCalendar($calendar_id)) {
 			PNApplication::error("Access denied");
@@ -23,7 +23,7 @@ class CalendarJSON {
 			->whereValue("CalendarEvent", "id", $id);
 		self::CalendarEventSQL($q);
 		$row = $q->executeSingleRow();
-		return self::CalendarEvent($row);
+		return self::CalendarEvent($row, $use_date_object);
 	}
 	
 	/**
