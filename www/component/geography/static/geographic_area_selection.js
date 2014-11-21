@@ -192,7 +192,7 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 	* @method geographic_area_selection#createAutoFillInput
 	* @parameter parent the container
 	*/
-	this.createAutoFillInput = function(){
+	this.createAutoFillInput = function(onready){
 		require("autocomplete.js",function(){
 			var div = document.createElement("DIV");
 			container.appendChild(div);
@@ -208,6 +208,7 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 			ac.input.style.background = "#ffffff url('"+theme.icons_16.search+"') no-repeat 3px 1px";
 			ac.input.style.padding = "2px 4px 2px 23px";
 			ac.input.style.width = "90%";
+			onready();
 		});
 	};
 	
@@ -277,11 +278,15 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 			}
 			container.appendChild(table);
 			t.setAreaId(area_id);
-			if (add_custom_search)
-				t.createAutoFillInput();
-			if (onready) onready(t);
-			layout.changed(container);
+			var ready = function() {
+				if (onready) onready(t);
+				layout.changed(container);
+			};
 			window.top.geography.startComputingSearchDictionary(country_data);
+			if (add_custom_search)
+				t.createAutoFillInput(ready);
+			else
+				ready();
 		});
 	});
 	

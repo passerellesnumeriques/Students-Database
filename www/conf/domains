@@ -28,7 +28,9 @@ $conf = array(
 	),
 	"PNP" => array(
 		"geography"=>array(
-			"country_code"=>"ph"
+			"country_code"=>"ph",
+			"pn_area_id"=>11690, // Cebu City
+			"pn_area_division"=>1
 		),
 		"curriculum"=>array(
 			"preset_periods"=>array(

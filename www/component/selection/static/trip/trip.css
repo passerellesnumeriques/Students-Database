@@ -1,4 +1,5 @@
 .trip_node_container {
+	min-width: 100%;
 }
 .trip_node {
 	display: inline-block;
@@ -13,6 +14,10 @@
 	padding: 2px 5px;
 	background-color: #0000FF;
 	color: #FFFFFF;
+	cursor: pointer;
+}
+.trip_node_title:hover {
+	text-decoration: underline;
 }
 .trip_node_footer {
 	border-top: 1px solid #8080FF;
@@ -29,16 +34,20 @@
 	vertical-align: top;
 	text-align: left;
 }
+.trip_node_activities_table>tbody>tr.trip_node_activity_first_row>td {
+	border-top: 1px solid #A0A0A0;
+}
 .trip_node_activity_number {
 	background-color: #A0A0A0;
 	border-bottom-right-radius: 5px;
-	padding: 1px 3px;
+	padding: 2px 5px;
 	color: white;
 }
 .trip_node_activities_table>tbody>tr>td.trip_node_activity_header {
 	font-weight: bold;
 	color: #606060;
 	padding: 1px 4px;
+	white-space: nowrap;
 }
 .trip_connection_container {
 	text-align: center;

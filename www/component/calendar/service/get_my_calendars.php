@@ -8,6 +8,10 @@ class service_get_my_calendars extends Service {
 	public function documentation() { echo "Get the list of accessible calendars by the user"; }
 	
 	public function execute(&$component, $input) {
+		if (PNApplication::$instance->user_management->username == null) {
+			echo "[]";
+			return;
+		}
 		$readable = $component->getAccessibleCalendars();
 		if (count($readable) > 0) { 
 			$writable = $component->getWritableCalendars();

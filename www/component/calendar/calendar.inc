@@ -4,6 +4,10 @@
  */ 
 class calendar extends Component {
 	
+	public function initRequest() {
+		Component::allowServiceWithoutLogin("calendar", "get_my_calendars");
+	}
+	
 	/**
 	 * Create a new shared (not presonal) calendar. 
 	 * @param string $calendar_name name of the calendar
