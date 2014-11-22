@@ -47,16 +47,17 @@ function calendar_view_upcoming(view, container) {
 	this._getDateText = function(date) {
 		var today = new Date();
 		today.setHours(0,0,0,0);
+		var s = "";
+		if (date.getTime() < today.getTime()) s += "Since ";
 		if (date.getTime() >= today.getTime()-24*60*60*1000 && date.getTime() < today.getTime()) {
-			return "Yesterday ("+date.toDateString()+")";
-		}
-		if (date.getTime() >= today.getTime() && date.getTime() < today.getTime()+24*60*60*1000) {
-			return "Today ("+date.toDateString()+")";
-		}
-		if (date.getTime() >= today.getTime()+24*60*60*1000 && date.getTime() < today.getTime()+2*24*60*60*1000) {
-			return "Tomorrow ("+date.toDateString()+")";
-		}
-		return date.toDateString();
+			s += "Yesterday ("+date.toDateString()+")";
+		} else if (date.getTime() >= today.getTime() && date.getTime() < today.getTime()+24*60*60*1000) {
+			s += "Today ("+date.toDateString()+")";
+		} else if (date.getTime() >= today.getTime()+24*60*60*1000 && date.getTime() < today.getTime()+2*24*60*60*1000) {
+			s += "Tomorrow ("+date.toDateString()+")";
+		} else
+			s += date.toDateString();
+		return s;
 	};
 	
 	/** Called by the CalendarView when a new event should be displayed.

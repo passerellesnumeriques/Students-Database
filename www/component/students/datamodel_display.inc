@@ -6,6 +6,10 @@ $category = $model->getDataCategory("Student");
 $display = new datamodel\TableDataDisplay("Student", $category);
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("batch", "name", "Batch", true, null, "center"));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("specialization", "name", "Specialization", false, null, "center"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("university_id",
+		PNApplication::$instance->current_domain == "PNP" ? "USC ID" :
+		"Student ID"
+		, false, true));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("exclusion_reason", "Exclusion Reason", true));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("exclusion_date", "Exclusion Date", true));
 $display->addFollow("people");

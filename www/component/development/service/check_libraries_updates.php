@@ -8,24 +8,14 @@ class service_check_libraries_updates extends Service {
 	public function outputDocumentation() {}
 	
 	public function execute(&$component, $input) {
-		echo "[";
-		$first = true;
-		$php_excel = $this->checkPHPExcel();
-		if ($php_excel <> null) {
-			if ($first) $first = false; else echo ",";
-			echo "{name:'PHPExcel',".$php_excel."}";
+		switch ($input["library"]) {
+			case "phpexcel": $this->checkPHPExcel(); break;
+			case "mpdf": $this->checkMPDF(); break;
+			case "tinymce": $this->checkTinyMCE(); break;
+			case "google_calendar": $this->checkGoogleCalendar(); break;
+			case "google_oauth2": $this->checkGoogleOAuth2(); break;
+			default: echo "{error:".json_encode("Unknown library ".$input["library"])."}";
 		}
-		$mpdf = $this->checkMPDF();
-		if ($mpdf <> null) {
-			if ($first) $first = false; else echo ",";
-			echo "{name:'mPDF',".$mpdf."}";
-		}
-		$tinymce = $this->checkTinyMCE();
-		if ($tinymce <> null) {
-			if ($first) $first = false; else echo ",";
-			echo "{name:'tinymce',".$tinymce."}";
-		}
-		echo "]";
 	}
 		
 	private function checkPHPExcel() {
@@ -38,8 +28,8 @@ class service_check_libraries_updates extends Service {
 		curl_setopt($c, CURLOPT_TIMEOUT, 200);
 		set_time_limit(240);
 		$result = curl_exec($c);
+		if ($result === false) { echo "{error:".json_encode(curl_error($c))."}"; curl_close($c); return; }
 		curl_close($c);
-		if ($result === false) return null;
 		$i = strpos($result, "rating_header");
 		if ($i === false) return null;
 		$j = strpos($result, "<td>", $i);
@@ -51,7 +41,7 @@ class service_check_libraries_updates extends Service {
 		if ($i === false) return null;
 		$v = trim(substr($v, $i+1));
 		$c = file_get_contents("component/lib_php_excel/version");
-		return $this->compareVersions($v, $c);
+		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
 	}
 	
 	private function checkMPDF() {
@@ -64,15 +54,15 @@ class service_check_libraries_updates extends Service {
 		curl_setopt($c, CURLOPT_TIMEOUT, 200);
 		set_time_limit(240);
 		$result = curl_exec($c);
+		if ($result === false) { echo "{error:".json_encode(curl_error($c))."}"; curl_close($c); return; }
 		curl_close($c);
-		if ($result === false) return null;
 		$i = strpos($result, "Download mPDF Version");
 		if ($i === false) return null;
 		$j = strpos($result, "(", $i);
 		if ($j === false) return null;
 		$v = trim(substr($result,$i+21,$j-$i-21));
 		$c = file_get_contents("component/lib_mpdf/version");
-		return $this->compareVersions($v, $c);
+		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
 	}
 	
 	private function checkTinyMCE() {
@@ -85,29 +75,55 @@ class service_check_libraries_updates extends Service {
 		curl_setopt($c, CURLOPT_TIMEOUT, 200);
 		set_time_limit(240);
 		$result = curl_exec($c);
+		if ($result === false) { echo "{error:".json_encode(curl_error($c))."}"; curl_close($c); return; }
 		curl_close($c);
-		if ($result === false) return null;
 		$i = strpos($result, "<td><a href=\"/develop/changelog/?type=tinymce\">TinyMCE");
 		if ($i === false) return null;
 		$j = strpos($result, "</a>", $i);
 		if ($j === false) return null;
 		$v = trim(substr($result,$i+54,$j-$i-54));
 		$c = file_get_contents("component/lib_tinymce/version");
-		return $this->compareVersions($v, $c);
+		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
 	}
-	
-	private function compareVersions($latest, $current) {
-		$l = explode(".",$latest);
-		$c = explode(".",$current);
-		for ($i = 0; $i < count($l) && $i < count($c); ++$i) {
-			$a = intval($l[$i]);
-			$b = intval($c[$i]);
-			if ($a > $b) return "new_version:".json_encode($latest).",current_version:".json_encode($current);
-			if ($a < $b) return null;
-		}
-		if (count($l) > count($c)) return "new_version:".json_encode($latest).",current_version:".json_encode($current);
-		return null;
+
+	private function checkGoogleCalendar() {
+		$c = curl_init("https://www.googleapis.com/discovery/v1/apis?name=calendar&preferred=true");
+		if (file_exists("conf/proxy")) include("conf/proxy");
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
+		curl_setopt($c, CURLOPT_TIMEOUT, 200);
+		set_time_limit(240);
+		$result = curl_exec($c);
+		if ($result === false) { echo "{error:".json_encode(curl_error($c))."}"; curl_close($c); return; }
+		curl_close($c);
+		$json = json_decode($result, true);
+		if ($json === null) return null;
+		$v = @$json["items"][0]["version"];
+		if ($v == null) return null;
+		$c = file_get_contents("component/google/calendar.version");
+		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
 	}
-	
+
+	private function checkGoogleOAuth2() {
+		$c = curl_init("https://www.googleapis.com/discovery/v1/apis?name=oauth2&preferred=true");
+		if (file_exists("conf/proxy")) include("conf/proxy");
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
+		curl_setopt($c, CURLOPT_TIMEOUT, 200);
+		set_time_limit(240);
+		$result = curl_exec($c);
+		if ($result === false) { echo "{error:".json_encode(curl_error($c))."}"; curl_close($c); return; }
+		curl_close($c);
+		$json = json_decode($result, true);
+		if ($json === null) return null;
+		$v = @$json["items"][0]["version"];
+		if ($v == null) return null;
+		$c = file_get_contents("component/google/oauth2.version");
+		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
+	}
 }
 ?>

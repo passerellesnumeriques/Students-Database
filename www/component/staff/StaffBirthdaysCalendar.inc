@@ -5,7 +5,7 @@ class StaffBirthdaysCalendar implements CustomCalendarPlugin {
 	public function getId() { return "staff_birthdays"; }
 	public function getName() { return "Staff Birthdays"; }
 	public function getIcon() { return "/static/people/birthday.gif"; }
-	public function getDefaultColor() { return "FF80FF"; }
+	public function getDefaultColor() { return "E070E0"; }
 	public function canAccess() {
 		if (in_array("staff",PNApplication::$instance->user_management->people_types))
 			return true;

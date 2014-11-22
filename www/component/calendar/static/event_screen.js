@@ -27,6 +27,11 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	require([["typed_field.js",["field_date.js","field_time.js"]],"popup_window.js","calendar_view.js"],function() {
 		var o;
 		var calendar = ev ? window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id) : null;
+		if (ev && !calendar) {
+			// calendar provider no more available
+			alert("Sorry but this event is not available any more. You may have been disconnected.");
+			return;
+		}
 		var ro = ev && !calendar.saveEvent;
 
 		t.content = document.createElement("DIV");
@@ -365,9 +370,15 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 			t.title.value = ev.title;
 			t.description.value = ev.description;
 			t.from_date.setData(t.getDateString(ev.start));
-			t.from_time.setData(ev.start.getHours()*60+ev.start.getMinutes());
-			t.to_date.setData(t.getDateString(ev.end));
-			t.to_time.setData(ev.end.getHours()*60+ev.end.getMinutes());
+			if (ev.all_day) {
+				var nb_days = Math.floor((ev.end.getTime()-ev.start.getTime())/(24*60*60*1000));
+				var new_end = new Date(ev.start.getTime()+nb_days*24*60*60*1000);
+				t.to_date.setData(t.getDateString(new_end));
+			} else {
+				t.from_time.setData(ev.start.getHours()*60+ev.start.getMinutes());
+				t.to_date.setData(t.getDateString(ev.end));
+				t.to_time.setData(ev.end.getHours()*60+ev.end.getMinutes());
+			}
 			if (ev.all_day) {
 				t.all_day.checked = 'checked';
 				t.from_time_span.style.visibility = 'hidden';
@@ -420,7 +431,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 				t.to_date.setData(t.getDateString(end));
 				t.to_time.setData(end.getHours()*60+end.getMinutes());
 				if (new_all_day) {
-					ev.all_day.checked = 'checked';
+					t.all_day.checked = 'checked';
 					t.from_time_span.style.visibility = 'hidden';
 					t.from_time_span.style.position = 'absolute';
 					t.to_time_span.style.visibility = 'hidden';
@@ -452,11 +463,25 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 			e.start = parseSQLDate(t.from_date.getCurrentData());
 			if (!e.all_day)
 				e.start.setHours(0,t.from_time.getCurrentMinutes(),0,0);
+			else
+				e.start.setHours(0,0,0,0);
 			e.end = parseSQLDate(t.to_date.getCurrentData());
 			if (!e.all_day)
 				e.end.setHours(0,t.to_time.getCurrentMinutes(),0,0);
 			else
 				e.end.setHours(23,59,59,999);
+			if (e.all_day) {
+				var convertUTC = function(d) {
+					var u = new Date();
+					u.setUTCFullYear(d.getFullYear());
+					u.setUTCMonth(d.getMonth());
+					u.setUTCDate(d.getDate());
+					u.setUTCHours(d.getHours(),d.getMinutes(),d.getSeconds(),d.getMilliseconds());
+					return u;
+				};
+				e.start = convertUTC(e.start);
+				e.end = convertUTC(e.end);
+			}
 			if (e.end.getTime() <= e.start.getTime()) {
 				alert("The end of the event must be after its start ! Please correct the dates and times.");
 				return;

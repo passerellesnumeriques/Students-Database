@@ -51,39 +51,14 @@ function DayColumnLayout(calendar_manager) {
 		var y1 = Math.floor(min*scale_height/scale_time)+y;
 		min = event.end.getHours()*60+event.end.getMinutes();
 		var y2 = Math.floor(min*scale_height/scale_time)+y;
-		var div = document.createElement("DIV");
+		var div = createEventDiv(event,cal);
 		div.style.position = "absolute";
-		require("color.js", function() {
-			div.style.border = "1px solid "+color_string(color_darker(parse_hex_color(cal.color), 0x60));
-		});
-		div.style.backgroundColor = "#"+cal.color;
 		div.style.top = y1+"px";
 		div.style.height = (y2-y1-3)+"px";
 		div.style.left = x+"px";
 		div.style.width = (w-3)+"px";
 		div.style.zIndex = 2;
-		div.style.padding = "1px";
-		var head = document.createElement("DIV");
-		head.style.fontSize = "8pt";
-		head.style.color = "#404040";
-		var time_str = event.start.getHours()+":"+_2digits(event.start.getMinutes());
-		time_str += "-"+event.end.getHours()+":"+_2digits(event.end.getMinutes());
-		head.appendChild(document.createTextNode(time_str));
-		div.appendChild(head);
-		var title = document.createElement("SPAN");
-		title.appendChild(document.createTextNode(event.title));
-		title.style.fontSize = '9pt';
-		div.appendChild(title);
 		div.style.overflow = "hidden";
-		div.title = cal.name+"\r\n"+time_str+"\r\n"+event.title+"\r\n"+event.description;
-		div.style.cursor = "pointer";
-		div.onclick = function(e) {
-			require("event_screen.js",function() {
-				event_screen(event.original_event, cal);
-			});
-			stopEventPropagation(e);
-			return false;
-		};
 		container.appendChild(div);
 		this.events.push(div);
 	};
