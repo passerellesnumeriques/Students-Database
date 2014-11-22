@@ -164,7 +164,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		this._map_container.style.top = "-1000px";
 		//this._map_container.style.width = "100%";
 		this._map_container.style.height = "100%";
-		this._map_container.style.minHeight = "150px";
+		this._map_container.style.minHeight = "180px";
 		this._map_container.style.width = "250px";
 		// refresh with actual values
 		this._refreshAddress();

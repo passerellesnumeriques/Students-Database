@@ -2,31 +2,44 @@
 /* @var $model DataModel */
 
 $model->addTable("SelectionCampaign")
-		->addPrimaryKey("id")
-		->addString("name")
-		->addForeignKey("calendar","Calendar",false,false,false,false)//Not automatically removed, must use the calendar functionalities
-		->addReadAccess("can_access_selection_data",true)
-		->addWriteAccess("manage_selection_campaign",true)
-		->addInsertAccess("manage_selection_campaign",true)
-		->addRemoveAccess("manage_selection_campaign",true)
-	 	->onInsert(function($fields,$id,$sub_model_instance) {
-			try {
-				PNApplication::$instance->news->post("selection", null, array("campaign".$id), "activity", "Creation of campaign <i>".$fields["name"]."</i>");
-			} catch (Exception $e) { PNApplication::error($e); }
-	 	})
-		;
+	->addPrimaryKey("id")
+	->addString("name")
+	->addForeignKey("calendar","Calendar",false,false,false,false)//Not automatically removed, must use the calendar functionalities
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("manage_selection_campaign",true)
+	->addInsertAccess("manage_selection_campaign",true)
+	->addRemoveAccess("manage_selection_campaign",true)
+ 	->onInsert(function($fields,$id,$sub_model_instance) {
+		try {
+			PNApplication::$instance->news->post("selection", null, array("campaign".$id), "activity", "Creation of campaign <i>".$fields["name"]."</i>");
+		} catch (Exception $e) { PNApplication::error($e); }
+ 	})
+	;
 		
 $sm = $model->addSubModel("SelectionCampaign");
 
 $sm->addTable("SelectionCampaignConfig")
-		->addString("name",255,1,false,true)//the name must be unique (key...)
-		->addString("value",255,1,false,false)
-		->setRoot()
-		->addReadAccess("can_access_selection_data",true)
-		->addInsertAccess("manage_selection_campaign",true)
-		->addRemoveAccess("manage_selection_campaign",true)
-		->addWriteAccess("manage_selection_campaign",true)
-		->setPrimary("name");
+	->addString("name",255,1,false,true)//the name must be unique (key...)
+	->addString("value",255,1,false,false)
+	->setRoot()
+	->addReadAccess("can_access_selection_data",true)
+	->addInsertAccess("manage_selection_campaign",true)
+	->addRemoveAccess("manage_selection_campaign",true)
+	->addWriteAccess("manage_selection_campaign",true)
+	->setPrimary("name");
+
+$sm->addTable("StaffStatus")
+	->addForeignKey("people", "People", true, false, false, false, true)
+	->setPrimary("people")
+	->addBoolean("is",false)
+	->addBoolean("exam",false)
+	->addBoolean("interview",false)
+	->addBoolean("si",false)
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("manage_selection_campaign",true)
+	->addInsertAccess("manage_selection_campaign",true)
+	->addRemoveAccess("manage_selection_campaign",true)
+	;
 
 include "datamodel_is.inc";
 include "datamodel_exam.inc";

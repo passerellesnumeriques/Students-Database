@@ -17,6 +17,7 @@ return array(
 		// general
 		new BooleanRight("manage_selection_campaign","Add/Remove/Configure a selection campaign",array(true=>array("can_access_selection_data"=>true))),
 		new BooleanRight("manage_trips","Add/Remove/Edit trips",array(true=>array("can_access_selection_data"=>true))),
+		new BooleanRight("manage_staff_status","Edit staff status (who can do interviews, investigations...)",array(true=>array("can_access_selection_data"=>true,"consult_staff_list"=>true))),
 	)),
 );
 

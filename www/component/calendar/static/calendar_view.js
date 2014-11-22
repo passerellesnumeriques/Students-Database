@@ -24,6 +24,16 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	/** name of the view to be displayed */
 	this.view_name = view_name;
 	
+	container.ondomremoved(function() {
+		t.calendar_manager = calendar_manager = null;
+		t.view_tabs = null;
+		t.header = null;
+		t.position_div = t.position_back = t.position_back_step = t.position_forward = t.position_forward_step = t.position_text = null;
+		t.zoom_div = t.zoom_plus = t.zoom_minus = t.zoom_text = null;
+		t.view = null;
+		t = null;
+	});
+	
 	/** create the UI elements to display calendars */
 	this._init = function() {
 		while (container.childNodes.length > 0)

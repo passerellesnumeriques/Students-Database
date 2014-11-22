@@ -23,6 +23,12 @@ function calendar_view_week(view, container) {
 	this.events = [[],[],[],[],[],[],[]];
 	var t=this;
 	
+	container.ondomremoved(function() {
+		view = null;
+		t.events = null;
+		t = null;
+	});
+	
 	/** Returns a text to describe the zoom value for this view
 	 * @param {Number} zoom current zoom value
 	 * @returns {String} the text
@@ -294,6 +300,7 @@ function calendar_view_week(view, container) {
 	this._now = null;
 	/** Displays/layout the line indicating the actual time */
 	this._showNow = function() {
+		if (!t) return;
 		var now = new Date();
 		if (t._now) { t._now.parentNode.removeChild(t._now); t._now = null; }
 		if (t._showNowTimeout) clearTimeout(t._showNowTimeout);

@@ -35,6 +35,7 @@ class page_is_profile extends SelectionPage {
 		}
 		$all_configs = include("component/selection/config.inc");
 		$this->requireJavascript("is_date.js");
+		$this->requireJavascript("who.js");
 		$this->requireJavascript("is_statistics.js");
 		?>
 		<div style='width:100%;height:100%;overflow:auto;'>
@@ -62,6 +63,12 @@ class page_is_profile extends SelectionPage {
 				<?php echo json_encode($this->component->getOneConfigAttributeValue("default_duration_IS"));?>,
 				<?php echo json_encode($editable);?>,
 				<?php echo json_encode($all_configs["default_duration_IS"][2]);?>
+			); 
+			</script>
+			<div id='is_who'></div>
+			<script type='text/javascript'>
+			window.is_who = new who_section(
+				'is_who'
 			); 
 			</script>
 			<div id='is_stats'></div>
