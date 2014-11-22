@@ -11,6 +11,8 @@ class service_common_centers_who extends Service {
 		$q = PNApplication::$instance->staff->getCurrentStaffsQuery(true, true, true);
 		$q->join("People","StaffStatus",array("id"=>"people"));
 		$q->field("StaffStatus",$input["type"],"can_do");
+		$q->orderBy("People", "last_name", true);
+		$q->orderBy("People", "first_name", true);
 		$staffs = $q->execute();
 		echo "{";
 		echo "selection_team:[";

@@ -26,7 +26,27 @@ function who_section(container,peoples,can_edit,type) {
 	};
 	
 	this._createCustomPeopleDIV = function(custom_name, div) {
+		var img = document.createElement("IMG");
+		img.src = "/static/selection/common_centers/who_black.png";
+		div.appendChild(img);
+		div.appendChild(document.createElement("BR"));
 		div.appendChild(document.createTextNode(custom_name));
+		div.style.textAlign = "center";
+		if (can_edit) {
+			var remove_button = document.createElement("BUTTON");
+			remove_button.className = "flat small_icon";
+			remove_button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+			remove_button.style.marginLeft = "4px";
+			remove_button.style.verticalAlign = "top";
+			remove_button.style.marginTop = "2px";
+			remove_button.onclick = function() {
+				t.peoples.removeUnique(custom_name);
+				div.parentNode.removeChild(div);
+				if (t.peoples.length == 0) t._addNobody();
+				pnapplication.dataUnsaved('who');
+			};
+			div.appendChild(remove_button);
+		}
 	};
 	this._createKnownPeopleDIV = function(people, div, readonly) {
 		var pic_container = document.createElement("DIV");
@@ -96,10 +116,7 @@ function who_section(container,peoples,can_edit,type) {
 				tr.appendChild(createHeader("Other staffs"));
 				tr.appendChild(createHeader("Someone else ?"));
 				
-				var createPeoples = function(peoples) {
-					var td = document.createElement("TD");
-					td.style.verticalAlign = "top";
-					td.style.border = "1px solid #A0A0A0";
+				var createPeoples = function(td, peoples) {
 					for (var i = 0; i < peoples.length; ++i) {
 						var div = document.createElement("DIV");
 						div.style.padding = "2px 5px";
@@ -123,13 +140,94 @@ function who_section(container,peoples,can_edit,type) {
 						div.style.display = "inline-block";
 						td.appendChild(div);
 					}
+				};
+				var createPeoplesTD = function(peoples) {
+					var td = document.createElement("TD");
+					td.style.verticalAlign = "top";
+					td.style.border = "1px solid #A0A0A0";
+					createPeoples(td, peoples);
 					return td;
 				};
 				tr = document.createElement("TR");
 				table.appendChild(tr);
-				tr.appendChild(createPeoples(res.selection_team));
-				tr.appendChild(createPeoples(res.staffs));
-				// TODO someone else
+				tr.appendChild(createPeoplesTD(res.selection_team));
+				tr.appendChild(createPeoplesTD(res.staffs));
+				
+				var td = document.createElement("TD");
+				td.style.verticalAlign = "top";
+				td.style.border = "1px solid #A0A0A0";
+				tr.appendChild(td);
+				var table_else = document.createElement("TABLE");
+				td.appendChild(table_else);
+				table_else.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.whiteSpace = "nowrap";
+				td.innerHTML = "First Name";
+				tr.appendChild(td = document.createElement("TD"));
+				var input_fn = document.createElement("INPUT");
+				input_fn.type = "text";
+				td.appendChild(input_fn);
+				table_else.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.style.whiteSpace = "nowrap";
+				td.innerHTML = "Last Name";
+				tr.appendChild(td = document.createElement("TD"));
+				var input_ln = document.createElement("INPUT");
+				input_ln.type = "text";
+				td.appendChild(input_ln);
+				table_else.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.colSpan = 2;
+				td.style.verticalAlign = "top";
+				var td_results = td;
+				table_else.appendChild(tr = document.createElement("TR"));
+				tr.appendChild(td = document.createElement("TD"));
+				td.colSpan = 2;
+				var td_button = td;
+				var button = document.createElement("BUTTON");
+				button.className = "action";
+				button.innerHTML = "Not in the list, but add him/her";
+				td_button.appendChild(button);
+				button.onclick = function() {
+					var name = input_fn.value + " " + input_ln.value;
+					name = name.trim();
+					t.addPeople(name);
+					p.close();
+				};
+				
+				var searching = null;
+				var search = function() {
+					if (searching) searching.cancel = true;
+					var s = {cancel:false};
+					searching = s;
+					td_results.removeAllChildren();
+					td_results.innerHTML = "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Searching...";
+					td_button.style.display = "none";
+					var name = input_fn.value + " " + input_ln.value;
+					name = name.trim();
+					if (name.length < 3) {
+						td_results.removeAllChildren();
+						searching = null;
+						return;
+					}
+					service.json("people","search",{name:name,include_picture:true,exclude_types:["staff"]},function(list) {
+						if (s.cancel) return;
+						if (searching == s) searching = null;
+						td_results.removeAllChildren();
+						if (list.length == 0)
+							td_results.innerHTML = "<i>Nobody found with this name</i>";
+						else {
+							var peoples = [];
+							for (var i = 0; i < list.length; ++i)
+								peoples.push({people:list[i],can_do:false});
+							createPeoples(td_results, peoples)
+						}
+						td_button.style.display = "";
+					});
+				};
+				input_fn.onkeyup = function() { setTimeout(search, 1); };
+				input_ln.onkeyup = function() { setTimeout(search, 1); };
+				
 				layout.changed(p.content);
 			});
 		});

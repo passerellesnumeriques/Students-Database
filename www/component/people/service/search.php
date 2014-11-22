@@ -4,7 +4,7 @@ class service_search extends Service {
 	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Search people"; }
-	public function inputDocumentation() { echo "name, types"; }
+	public function inputDocumentation() { echo "name, types, exclude_types, include_picture"; }
 	public function outputDocumentation() { echo "list of People objects"; }
 	
 	public function execute(&$component, $input) {
@@ -16,6 +16,14 @@ class service_search extends Service {
 				$w .= "`types` LIKE '%/".SQLQuery::escape($input["types"][$i])."/%'";
 			}
 			$q->where("(".$w.")");
+		}
+		if (isset($input["exclude_types"])) {
+			$w = "";
+			for ($i = 0; $i < count($input["exclude_types"]); $i++) {
+				if ($i > 0) $w .= " OR ";
+				$w .= "`types` LIKE '%/".SQLQuery::escape($input["exclude_types"][$i])."/%'";
+			}
+			$q->where("(NOT(".$w."))");
 		}
 		$multiple_conditions = array();
 		if (isset($input["name"])) {
@@ -46,7 +54,7 @@ class service_search extends Service {
 		
 		// search
 		require_once("component/people/PeopleJSON.inc");
-		PeopleJSON::PeopleSQL($q, false);
+		PeopleJSON::PeopleSQL($q, @$input["include_picture"] === true);
 		$list = array();
 		if (count($multiple_conditions) == 0) {
 			$list = $q->execute();
