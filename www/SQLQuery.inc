@@ -1967,8 +1967,12 @@ class SQLQuery {
 	
 		// insert
 		$sql = "INSERT INTO `".$t->getSQLName($this->sub_models)."` (";
+		$columns = array();
+		foreach ($rows as &$fields_values)
+			foreach ($fields_values as $name=>$value)
+				if (!in_array($name, $columns)) array_push($columns, $name);
 		$first = true;
-		foreach ($fields_values as $name=>$value) {
+		foreach ($columns as $name) {
 			if ($first) $first = false; else $sql .= ",";
 			$sql .= "`".$name."`";
 		}
@@ -1978,7 +1982,8 @@ class SQLQuery {
 			if ($first_value) $first_value = false; else $sql .= ",";
 			$sql .= "(";
 			$first = true;
-			foreach ($fields_values as $name=>$value) {
+			foreach ($columns as $name) {
+				$value = array_key_exists($name, $fields_values) ? $fields_values[$name] : "";
 				if ($first) $first = false; else $sql .= ",";
 				if ($value === null) $sql .= "NULL"; else $sql .= "'".SQLQuery::escape($value)."'";
 			}
