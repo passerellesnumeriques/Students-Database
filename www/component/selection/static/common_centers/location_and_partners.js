@@ -141,6 +141,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		address_title.innerHTML = "Address";
 		address_title.style.padding = "1px 2px";
 		address_title.style.marginTop = "2px";
+		address_title.style.fontStyle = "italic";
+		address_title.style.color = "#606060";
+		address_title.style.textDecoration = "underline";
 		left.appendChild(address_title);
 		this._address_container = document.createElement("DIV");
 		this._address_container.style.padding = "1px 2px";
@@ -270,9 +273,11 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		var tr = document.createElement("TR"); table.appendChild(tr);
 		var th;
 		tr.appendChild(th = document.createElement("TH"));
+		th.colSpan = 2;
+		th.style.fontStyle = "italic";
+		th.style.color = "#606060";
+		th.style.textDecoration = "underline";
 		th.appendChild(document.createTextNode("Hosting Partner"));
-		tr.appendChild(th = document.createElement("TH"));
-		th.appendChild(document.createTextNode("Contact Point(s)"));
 		new partnerRow(table, host, editable, function(org) {
 			// remove any non-valid contact point
 			for (var i = 0; i < host.selected_contact_points_id.length; ++i) {
@@ -290,6 +295,20 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			host.organization = org;
 			window.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 		});
+		// move contacts
+		tr.nextSibling.childNodes[0].colSpan = 2;
+		tr2 = document.createElement("TR");
+		tr2.appendChild(th = document.createElement("TH"));
+		th.colSpan = 2;
+		th.appendChild(document.createTextNode("Contact Point(s)"));
+		th.style.fontStyle = "italic";
+		th.style.color = "#606060";
+		th.style.textDecoration = "underline";
+		table.appendChild(tr2);
+		var tr2 = document.createElement("TR");
+		tr2.appendChild(tr.nextSibling.childNodes[1]);
+		tr2.appendChild(tr.nextSibling.childNodes[1]);
+		table.appendChild(tr2);
 	};
 	
 	// Other Partners
