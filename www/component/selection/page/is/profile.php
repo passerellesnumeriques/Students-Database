@@ -68,7 +68,28 @@ class page_is_profile extends SelectionPage {
 			<div id='is_who'></div>
 			<script type='text/javascript'>
 			window.is_who = new who_section(
-				'is_who'
+				'is_who',
+				[<?php
+				if ($id <> null) {
+					$q = SQLQuery::create()->select("InformationSessionAnimator")->whereValue("InformationSessionAnimator","information_session",$id);
+					PNApplication::$instance->people->joinPeople($q, "InformationSessionAnimator", "people", true);
+					require_once("component/people/PeopleJSON.inc");
+					$q->field("InformationSessionAnimator","custom_name","custom_name");
+					$q->join("People","StaffStatus",array("id"=>"people"));
+					$q->field("StaffStatus","is","can_do");
+					$list = $q->execute();
+					$first = true;
+					foreach ($list as $animator) {
+						if ($first) $first = false; else echo ",";
+						if ($animator["people_id"] <> null)
+							echo "{people:".PeopleJSON::People($animator).",can_do:".json_encode($animator["can_do"] == 1)."}";
+						else
+							echo json_encode($animator["custom_name"]);
+					}
+				} 
+				?>],
+				<?php echo json_encode($editable);?>,
+				'is'
 			); 
 			</script>
 			<div id='is_stats'></div>
@@ -128,6 +149,12 @@ class page_is_profile extends SelectionPage {
 				var p = {host:partner.host,host_address:partner.host_address_id,organization:partner.organization.id,contact_points_selected:partner.selected_contact_points_id};
 				data.partners.push(p);
 			}
+			data.who = [];
+			for (var i = 0; i < window.is_who.peoples.length; ++i)
+				if (typeof window.is_who.peoples[i] == 'string')
+					data.who.push(window.is_who.peoples[i]);
+				else
+					data.who.push(window.is_who.peoples[i].people.id);
 
 			service.json("selection","is/save",{event:event, data:data},function(res){
 				if(!res) {
