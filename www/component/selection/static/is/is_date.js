@@ -25,14 +25,9 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			var s = getDayShortName(d.getDay(),true)+" "+_2digits(d.getDate())+" "+getMonthShortName(d.getMonth()+1)+" "+d.getFullYear();
 			if (default_duration != "All day") {
 				s += " from ";
-				if (d.getHours() < 12) s += _2digits(d.getHours())+":"+_2digits(d.getMinutes())+"AM";
-				else if (d.getHours() == 12) s += "12:"+_2digits(d.getMinutes())+"PM";
-				else s += _2digits(d.getHours()-12)+":"+_2digits(d.getMinutes())+"PM";
+				s += getTimeString(d);
 				s += " to ";
-				d = this._event.end;
-				if (d.getHours() < 12) s += _2digits(d.getHours())+":"+_2digits(d.getMinutes())+"AM";
-				else if (d.getHours() == 12) s += "12:"+_2digits(d.getMinutes())+"PM";
-				else s += _2digits(d.getHours()-12)+":"+_2digits(d.getMinutes())+"PM";
+				s += getTimeString(this._event.end);
 			}
 			this._link.innerHTML = s;
 			this._remove_button.style.display = can_manage ? "" : "none";

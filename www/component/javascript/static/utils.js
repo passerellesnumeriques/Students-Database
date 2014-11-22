@@ -538,6 +538,12 @@ function getDayLetter(d, from_date) {
 	}
 }
 
+function getTimeString(d) {
+	if (d.getHours() < 12) return _2digits(d.getHours())+":"+_2digits(d.getMinutes())+"AM";
+	if (d.getHours() == 12) return "12:"+_2digits(d.getMinutes())+"PM";
+	return _2digits(d.getHours()-12)+":"+_2digits(d.getMinutes())+"PM";
+}
+
 function wordsMatch(s1, s2, ignore_case) {
 	if (ignore_case) {
 		s1 = s1.latinize().toLowerCase();

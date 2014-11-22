@@ -89,7 +89,8 @@ class page_is_profile extends SelectionPage {
 				} 
 				?>],
 				<?php echo json_encode($editable);?>,
-				'is'
+				'is',
+				"Who will conduct this Information Session ?"
 			); 
 			</script>
 			<div id='is_stats'></div>

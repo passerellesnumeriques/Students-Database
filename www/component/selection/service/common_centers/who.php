@@ -10,7 +10,8 @@ class service_common_centers_who extends Service {
 	public function execute(&$component, $input) {
 		$q = PNApplication::$instance->staff->getCurrentStaffsQuery(true, true, true);
 		$q->join("People","StaffStatus",array("id"=>"people"));
-		$q->field("StaffStatus",$input["type"],"can_do");
+		if (isset($input["type"]))
+			$q->field("StaffStatus",$input["type"],"can_do");
 		$q->orderBy("People", "last_name", true);
 		$q->orderBy("People", "first_name", true);
 		$staffs = $q->execute();
@@ -20,14 +21,14 @@ class service_common_centers_who extends Service {
 		foreach ($staffs as $staff) {
 			if ($staff["staff_department"] <> "Selection") continue;
 			if ($first) $first = false; else echo ",";
-			echo "{people:".PeopleJSON::People($staff).",can_do:".json_encode($staff["can_do"] == 1)."}";
+			echo "{people:".PeopleJSON::People($staff).",can_do:".json_encode(isset($input["type"]) && $staff["can_do"] == 1)."}";
 		}
 		echo "],staffs:[";
 		$first = true;
 		foreach ($staffs as $staff) {
 			if ($staff["staff_department"] == "Selection") continue;
 			if ($first) $first = false; else echo ",";
-			echo "{people:".PeopleJSON::People($staff).",can_do:".json_encode($staff["can_do"] == 1)."}";
+			echo "{people:".PeopleJSON::People($staff).",can_do:".json_encode(isset($input["type"]) && $staff["can_do"] == 1)."}";
 		}
 		echo "]";
 		echo "}";

@@ -1,8 +1,8 @@
-function who_section(container,peoples,can_edit,type) {
+function who_container(container,peoples,can_edit,type) {
 	var t=this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	
-	require(["section.js","profile_picture.js"]);
+	require("profile_picture.js");
 	if (can_edit) require("mini_popup.js");
 	
 	this.peoples = peoples;
@@ -87,9 +87,9 @@ function who_section(container,peoples,can_edit,type) {
 		});
 	};
 	
-	this.addSomeonePopup = function(button) {
+	this.addSomeonePopup = function(button, title) {
 		require("mini_popup.js",function() {
-			var p = new mini_popup("Who will conduct this Information Session ?");
+			var p = new mini_popup(title);
 			p.content.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
 			p.showBelowElement(button);
 			var list = [];
@@ -243,24 +243,36 @@ function who_section(container,peoples,can_edit,type) {
 		layout.changed(t._content);
 	};
 	
-	require("section.js", function() {
-		t._content = document.createElement("DIV");
-		t.section = new section("/static/selection/common_centers/who_black.png","Who ?",t._content,false,false,"soft");
+	this.createAddButton = function(add_people_question) {
+		var add_button = document.createElement("BUTTON");
+		add_button.className = "flat icon";
+		add_button.innerHTML = "<img src='"+theme.build_icon('/static/people/people_16.png',theme.icons_10.add)+"'/>";
+		add_button.onclick = function() {
+			t.addSomeonePopup(this, add_people_question);
+		};
+		add_button.title = "Add someone";
+		return add_button;
+	};
+	
+	t._content = document.createElement("DIV");
+	container.appendChild(t._content);
+
+	if (peoples.length == 0)
+		t._addNobody();
+	else
+		for (var i = 0; i < peoples.length; ++i)
+			t._createPeopleDIV(peoples[i]);
+}
+
+function who_section(container,peoples,can_edit,type,add_people_question) {
+	var t=this;
+	if (typeof container == 'string') container = document.getElementById(container);
+	require("section.js",function() {
+		var div = document.createElement("DIV");
+		t.section = new section("/static/selection/common_centers/who_black.png","Who ?",div,false,false,"soft");
 		container.appendChild(t.section.element);
-		if (peoples.length == 0)
-			t._addNobody();
-		else
-			for (var i = 0; i < peoples.length; ++i)
-				t._createPeopleDIV(peoples[i]);
-		if (can_edit) {
-			var add_button = document.createElement("BUTTON");
-			add_button.className = "flat icon";
-			add_button.innerHTML = "<img src='"+theme.build_icon('/static/people/people_16.png',theme.icons_10.add)+"'/>";
-			add_button.onclick = function() {
-				t.addSomeonePopup(this);
-			};
-			add_button.title = "Add someone";
-			t.section.addToolRight(add_button);
-		}
+		who_container.call(t,div,peoples,can_edit,type);
+		if (can_edit)
+			t.section.addToolRight(t.createAddButton(add_people_question));
 	});
 }

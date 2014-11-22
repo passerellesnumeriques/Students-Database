@@ -259,6 +259,7 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 				tr.appendChild(td = document.createElement("TD"));
 				td.appendChild(select = document.createElement('SELECT'));
 				t.selects.push(select);
+				select.style.minWidth = "100%";
 				o = document.createElement('OPTION');
 				o.value = -1;
 				o.text = "";
