@@ -14,6 +14,7 @@
 	border: 1px solid #0000FF;
 	border-radius: 5px;
 	background-color: white;
+	box-shadow: 2px 2px 2px 0px #A0A0C0;
 }
 .trip_node_title {
 	border-bottom: 1px solid #0000FF;

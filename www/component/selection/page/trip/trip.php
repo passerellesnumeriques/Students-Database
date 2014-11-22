@@ -35,11 +35,12 @@ var pn_area;
  * Connection 
  */
  
-function TripConnection(origin, destination) {
+function TripConnection(origin, destination, peoples) {
 	this.origin = origin;
 	this.destination = destination;
-	this.peoples = [];
+	this.peoples = peoples ? peoples : [];
 	if (origin) origin.addConnection(this);
+	if (destination) destination.from = this;
 }
 TripConnection.prototype = {
 	origin: null,
@@ -150,6 +151,7 @@ function TripNode(area) {
 
 	this.activities = [];
 	this.connections = [];
+	this.from = null;
 
 	if (can_edit)
 		this.header.onclick = function() {
@@ -174,7 +176,7 @@ function TripNode(area) {
 			td.appendChild(add_activity);
 			tr.appendChild(td);
 			this.activities_table.appendChild(tr);
-			add_activity.innerHTML = "<img src='"+theme.icons_10.add+"' style='vertical-align:middle'/> Add something to do";
+			add_activity.innerHTML = "<img src='"+theme.icons_10.add+"' style='vertical-align:middle;margin-bottom:3px;'/> Add something to do";
 			add_activity.onclick = function() {
 				// TODO
 				var a = new CustomActivity("");
@@ -187,20 +189,19 @@ function TripNode(area) {
 			travel.onclick = function() {
 				var p = new mini_popup("Travel from "+t.header.childNodes[0].nodeValue+" to Where ?");
 				new geographic_area_selection(p.content, window.top.default_country_id, null, 'vertical', true, function(sel) {
-					var button = document.createElement("BUTTON");
-					button.className = "flat";
-					button.innerHTML = "<img src='"+theme.icons_10.ok+"' style='vertical-align:middle'/> Ok";
-					button.onclick = function() {
-						if (!sel.selected_area_id) return;
+					var div = document.createElement("DIV");
+					div.className = "mini_popup_header mini_popup_title";
+					div.innerHTML = "With Who ?";
+					div.style.marginTop = "6px";
+					p.content.appendChild(div);
+					var who = new WhoFrom(p.content, t.whoIsThere());
+					p.addOkButton(function() {
+						if (!sel.selected_area_id) return false;
 						var area = window.top.geography.searchArea(country_data, sel.selected_area_id);
 						var destination = new TripNode(area);
-						var conn = new TripConnection(t, destination);
-						p.close();
-					};
-					var div = document.createElement("DIV");
-					div.style.textAlign = "right";
-					div.appendChild(button);
-					p.content.appendChild(div);
+						var conn = new TripConnection(t, destination, who.selected);
+						return true;
+					});
 					p.showBelowElement(travel);
 				});
 			};
@@ -208,6 +209,10 @@ function TripNode(area) {
 		}
 	};
 	this._init();
+
+	this.whoIsThere = function() {
+		return this.from.peoples;
+	};
 	
 	this.addActivity = function(activity) {
 		activity.node = this;
@@ -232,6 +237,14 @@ function TripNode(area) {
 		td.style.verticalAlign = "top";
 		this.tr2.appendChild(td);
 		this.node.parentNode.colSpan = this.tr2.childNodes.length;
+		if (this.connections.length == 1) { // the first one
+			this.road_below = document.createElement("DIV");
+			this.road_below.style.backgroundImage = "url(/static/selection/trip/road.png)";
+			this.road_below.style.backgroundRepeat = "repeat-y";
+			this.road_below.style.backgroundPositionX = "center";
+			this.road_below.style.height = "10px";
+			this.node.parentNode.appendChild(this.road_below);
+		}
 		td.appendChild(connection.create());
 		td.appendChild(connection.destination.container);
 		connection.destination.container.style.width = "100%";
@@ -413,6 +426,36 @@ function When(container, when, can_edit) {
 		t.link = null;
 		t = null;
 	});
+}
+
+function WhoFrom(container, peoples, selected) {
+	this.selected = selected ? selected : [];
+	for (var i = 0; i < peoples.length; ++i) {
+		var div = document.createElement("DIV");
+		var cb = document.createElement("INPUT");
+		cb.type = "checkbox";
+		cb.style.margin = "0px";
+		cb.style.marginRight = "3px";
+		cb.style.verticalAlign = "middle";
+		cb._index = i;
+		cb._t = this;
+		if (selected) {
+			if (this.selected.contains(peoples[i])) cb.checked = checked;
+		} else {
+			cb.checked = true;
+			this.selected.push(peoples[i]);
+		}
+		cb.onchange = function() {
+			if (this.checked)
+				this._t.selected.push(peoples[this._index]);
+			else
+				this._t.selected.removeUnique(peoples[this._index]);
+		};
+		cb.ondomremoved(function() { this._t = null; });
+		div.appendChild(cb);
+		div.appendChild(document.createTextNode(typeof peoples[i] == 'string' ? peoples[i] : peoples[i].people.first_name+" "+peoples[i].people.last_name));
+		container.appendChild(div);
+	}
 }
 
 /*
