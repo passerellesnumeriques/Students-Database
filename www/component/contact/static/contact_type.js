@@ -193,10 +193,12 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		}
 		remove_button.style.cursor = 'pointer';
 		remove_button.style.verticalAlign = 'bottom';
-		remove_button.onclick = function(){
+		remove_button.onclick = function(ev){
 			if (edit)
 				edit.editable_field.unedit();
 			confirm_dialog("Are you sure you want to remove this "+contact_type_name+"?", function(text){if(text) t.removeContact(contact);});
+			stopEventPropagation(ev);
+			return false;
 		};
 		container.appendChild(remove_button);
 	};
