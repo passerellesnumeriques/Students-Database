@@ -2,6 +2,7 @@
 /* @var $model DataModel */
 /* @var $sm SubDataModel */
 
+/*
 $sm->addTable("Trip")
 	->addPrimaryKey("id")
 	->addString("name", 200, 1, false, false)
@@ -44,4 +45,5 @@ $sm->addTable("TripConnection")
 	->addString("comment",2000,0,true,false)
 	->addReadAccess("can_access_selection_data",true)
 	;
+*/
 ?>

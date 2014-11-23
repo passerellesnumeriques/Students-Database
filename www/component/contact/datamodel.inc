@@ -669,9 +669,4 @@ $model->addTable("ContactPoint")
 	})
 	;
 	
-$model->addTable("Place")
-	->addPrimaryKey("id")
-	->addString("name",250,1,false,false)
-	->addForeignKey("address", "PostalAddress", true, true, false, false, true)
-	;
 ?>
