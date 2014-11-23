@@ -18,6 +18,7 @@ class page_trip_trip extends SelectionPage {
 		$this->requireJavascript("field_timestamp.js");
 		$this->requireJavascript("who.js");
 		$this->requireJavascript("input_utils.js");
+		$this->requireJavascript("context_menu.js");
 ?>
 <table class='trip_table'><tbody><tr><td id='trip_container'></td></tr></tbody></table>
 <script type='text/javascript'>
@@ -46,8 +47,27 @@ TripConnection.prototype = {
 	origin: null,
 	destination: null,
 	peoples: null,
-	_whoPopup: function() {
-		// TODO
+	_whoPopup: function(button) {
+		var p = new mini_popup("Who is travelling ?");
+		var selected = arrayCopy(this.peoples);
+		var who = new WhoFrom(p.content, this.origin.whoIsThere(), selected);
+		var t=this;
+		p.addOkButton(function() {
+			var added = [];
+			for (var i = 0; i < who.selected.length; ++i)
+				if (!t.peoples.contains(who.selected[i]))
+					added.push(who.selected[i]);
+			var removed = [];
+			for (var i = 0; i < t.peoples.length; ++i)
+				if (!who.selected.contains(t.peoples[i]))
+					removed.push(t.peoples[i]);
+			for (var i = 0; i < removed.length; ++i)
+				t.who.removePeople(removed[i]);
+			for (var i = 0; i < added.length; ++i)
+				t.who.addPeople(added[i]);
+			return true;
+		});
+		p.showBelowElement(button);
 	},
 	_createWho: function() {
 		var title = document.createElement("DIV");
@@ -65,6 +85,13 @@ TripConnection.prototype = {
 		}
 		this.node.appendChild(title);
 		this.who = new who_container(this.node,this.peoples,can_edit);
+		var t=this;
+		this.who.onadded.add_listener(function(people) {
+			t.destination.peopleAdded(people);
+		});
+		this.who.onremoved.add_listener(function(people) {
+			t.destination.peopleRemoved(people);
+		});
 	},
 	create: function() {
 		this.container = document.createElement("DIV");
@@ -95,6 +122,12 @@ TripConnection.prototype = {
 			div.style.width = "100%";
 		}
 		this.container.appendChild(div);
+	},
+	peopleAdded: function(people) {
+	},
+	peopleRemoved: function(people) {
+		if (!this.peoples.contains(people)) return;
+		this.who.removePeople(people);
 	}
 };
 function InitialConnection(departure) {
@@ -178,9 +211,24 @@ function TripNode(area) {
 			this.activities_table.appendChild(tr);
 			add_activity.innerHTML = "<img src='"+theme.icons_10.add+"' style='vertical-align:middle;margin-bottom:3px;'/> Add something to do";
 			add_activity.onclick = function() {
-				// TODO
-				var a = new CustomActivity("");
-				t.addActivity(a);
+				var menu = new context_menu();
+				menu.addTitleItem(null, "What will you do in "+t.header.childNodes[0].nodeValue+" ?");
+				menu.addIconItem("/static/selection/is/is_16.png", "An Information Session", function() {
+				});
+				menu.addIconItem("/static/selection/exam/exam_subject_16.png", "An Exam", function() {
+				});
+				menu.addIconItem("/static/selection/interview/interview_16.png", "An Interview", function() {
+				});
+				menu.addIconItem("/static/selection/si/si_16.png", "A Social Investigation", function() {
+				});
+				menu.addIconItem("/static/selection/trip/eat_16.png", "Eat", function() {
+				});
+				menu.addIconItem("/static/selection/trip/sleep_16.png", "Sleep", function() {
+				});
+				menu.addIconItem(null, "Something else", function() {
+					t.addActivity(new CustomActivity(""));
+				});
+				menu.showBelowElement(this);
 			};
 		
 			var travel = document.createElement("BUTTON");
@@ -212,6 +260,18 @@ function TripNode(area) {
 
 	this.whoIsThere = function() {
 		return this.from.peoples;
+	};
+	this.peopleAdded = function(people) {
+		for (var i = 0; i < this.activities.length; ++i)
+			this.activities[i].peopleAdded(people);
+		for (var i = 0; i < this.connections.length; ++i)
+			this.connections[i].peopleAdded(people);
+	};
+	this.peopleRemoved = function(people) {
+		for (var i = 0; i < this.activities.length; ++i)
+			this.activities[i].peopleRemoved(people);
+		for (var i = 0; i < this.connections.length; ++i)
+			this.connections[i].peopleRemoved(people);
 	};
 	
 	this.addActivity = function(activity) {
@@ -267,6 +327,9 @@ Activity.prototype = {
 	trs: [],
 	what: null,
 	when: null,
+	where: null,
+	who: null,
+	cost: null,
 	_createWhat: function(td) {
 		if (can_edit) {
 			var w = new InputOver(this.what);
@@ -280,6 +343,47 @@ Activity.prototype = {
 		var w = new When(td, this.when, can_edit);
 		var t=this;
 		w.onchange.add_listener(function(w) {t.when = w.getTimestamp();});
+	},
+	_createWhere: function(td) {
+		// TODO
+	},
+	_createWho: function(td) {
+		if (this.who === null)
+			this.who = arrayCopy(this.node.whoIsThere());
+		this._who_link = document.createElement(can_edit ? "A" : "SPAN");
+		this._who_link.className = "black_link";
+		this._who_link.href = "#";
+		td.appendChild(this._who_link);
+		if (can_edit) {
+			var t=this;
+			this._who_link.onclick = function() {
+				var p = new mini_popup("Who is participating ?");
+				var who = new WhoFrom(p.content, t.node.whoIsThere(), t.who);
+				p.addOkButton(function() {
+					t._updateWho();
+					return true;
+				});
+				p.showBelowElement(t._who_link);
+				return false;
+			};
+		}
+		this._updateWho();
+	},
+	_updateWho: function() {
+		var s = "";
+		if (this.who.length == 0)
+			s = "Nobody";
+		else
+			for (var i = 0; i < this.who.length; ++i) {
+				if (i > 0) s+= ", ";
+				if (typeof this.who[i] == 'string') s += this.who[i];
+				else s += this.who[i].people.first_name+' '+this.who[i].people.last_name;
+			}
+		this._who_link.removeAllChildren();
+		this._who_link.appendChild(document.createTextNode(s));
+	},
+	_createHowMuch: function(td) {
+		// TODO
 	},
 	createContent: function(table) {
 		var t=this;
@@ -320,38 +424,47 @@ Activity.prototype = {
 			this._createWhen(td);
 		}
 
-		/* TODO
-		table.appendChild(tr = document.createElement("TR"));
-		this.trs.push(tr);
-		tr.appendChild(td = document.createElement("TD"));
-		td.innerHTML = "Where ?";
-		td.className = "trip_node_activity_header";
-		tr.appendChild(td = document.createElement("TD"));
-		td.innerHTML = "TODO";
+		if (this._createWhere) {
+			td_number.rowSpan++;
+			table.appendChild(tr = document.createElement("TR"));
+			this.trs.push(tr);
+			tr.appendChild(td = document.createElement("TD"));
+			td.innerHTML = "Where ?";
+			td.className = "trip_node_activity_header";
+			tr.appendChild(td = document.createElement("TD"));
+			this._createWhere(td);
+		}
 
-		table.appendChild(tr = document.createElement("TR"));
-		this.trs.push(tr);
-		tr.appendChild(td = document.createElement("TD"));
-		td.innerHTML = "Who ?";
-		td.className = "trip_node_activity_header";
-		tr.appendChild(td2 = document.createElement("TD"));
-		this.who = new who_container(td2, [], true);
-		td.appendChild(document.createElement("BR"));
-		td.appendChild(this.who.createAddButton());
+		if (this._createWho) {
+			td_number.rowSpan++;
+			table.appendChild(tr = document.createElement("TR"));
+			this.trs.push(tr);
+			tr.appendChild(td = document.createElement("TD"));
+			td.innerHTML = "Who ?";
+			td.className = "trip_node_activity_header";
+			tr.appendChild(td = document.createElement("TD"));
+			this._createWho(td);
+		}
+		
+		if (this._createHowMuch) {
+			td_number.rowSpan++;
+			table.appendChild(tr = document.createElement("TR"));
+			this.trs.push(tr);
+			tr.appendChild(td = document.createElement("TD"));
+			td.innerHTML = "Cost";
+			td.className = "trip_node_activity_header";
+			tr.appendChild(td = document.createElement("TD"));
+			this._createHowMuch(td);
+		}
 
-		table.appendChild(tr = document.createElement("TR"));
-		this.trs.push(tr);
-		tr.appendChild(td = document.createElement("TD"));
-		td.innerHTML = "Cost ?";
-		td.className = "trip_node_activity_header";
-		tr.appendChild(td = document.createElement("TD"));
-		td.innerHTML = "TODO";
-		*/
 		this.trs[0].ondomremoved(function() {
 			t.node = null;
 			t.div_number = null;
 			t.what = null;
 			t.when = null;
+			t.where = null;
+			t.who = null;
+			t.cost = null;
 			t.trs = null;
 			t = null;	
 		});
@@ -359,6 +472,12 @@ Activity.prototype = {
 	},
 	setNumber: function(num) {
 		this.div_number.innerHTML = num;
+	},
+	peopleAdded: function(people) {},
+	peopleRemoved: function(people) {
+		if (this.who === null) return;
+		this.who.removeUnique(people);
+		this._updateWho();
 	}
 };
 function CustomActivity(what, when) {
@@ -440,9 +559,9 @@ function WhoFrom(container, peoples, selected) {
 		cb._index = i;
 		cb._t = this;
 		if (selected) {
-			if (this.selected.contains(peoples[i])) cb.checked = checked;
+			if (this.selected.contains(peoples[i])) cb.checked = 'checked';
 		} else {
-			cb.checked = true;
+			cb.checked = 'checked';
 			this.selected.push(peoples[i]);
 		}
 		cb.onchange = function() {

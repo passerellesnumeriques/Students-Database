@@ -183,7 +183,7 @@ function InputOver(value, onchange) {
 	this.input.onchange = function() {
 		t.container.childNodes[0].nodeValue = t.input.value;
 		layout.changed(t.container);
-		this.onchange.fire(this);
+		t.onchange.fire(t);
 	};
 	this.onchange = new Custom_Event();
 }

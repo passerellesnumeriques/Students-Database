@@ -7,12 +7,25 @@ function who_container(container,peoples,can_edit,type) {
 	
 	this.peoples = peoples;
 	
+	this.onadded = new Custom_Event();
+	this.onremoved = new Custom_Event();
+	
 	this.addPeople = function(people) {
 		this.peoples.push(people);
 		if (this.peoples.length == 1) // first one
 			t._content.removeAllChildren();
 		this._createPeopleDIV(people);
 		pnapplication.dataUnsaved('who');
+		this.onadded.fire(people);
+	};
+	this.removePeople = function(people) {
+		t.peoples.removeUnique(people);
+		var div = null;
+		for (var i = 0; i < t._content.childNodes.length; ++i) if (t._content.childNodes[i]._people == people) { div = t._content.childNodes[i]; break; }
+		div.parentNode.removeChild(div);
+		if (t.peoples.length == 0) t._addNobody();
+		pnapplication.dataUnsaved('who');
+		this.onremoved.fire(people);
 	};
 	
 	this._createPeopleDIV = function(people) {
@@ -22,6 +35,7 @@ function who_container(container,peoples,can_edit,type) {
 		t._content.appendChild(div);
 		if (typeof people == 'string') this._createCustomPeopleDIV(people, div);
 		else this._createKnownPeopleDIV(people, div);
+		div._people = people;
 		layout.changed(t._content);
 	};
 	
@@ -39,12 +53,7 @@ function who_container(container,peoples,can_edit,type) {
 			remove_button.style.marginLeft = "4px";
 			remove_button.style.verticalAlign = "top";
 			remove_button.style.marginTop = "2px";
-			remove_button.onclick = function() {
-				t.peoples.removeUnique(custom_name);
-				div.parentNode.removeChild(div);
-				if (t.peoples.length == 0) t._addNobody();
-				pnapplication.dataUnsaved('who');
-			};
+			remove_button.onclick = function() { t.removePeople(custom_name); };
 			div.appendChild(remove_button);
 		}
 	};
@@ -74,12 +83,7 @@ function who_container(container,peoples,can_edit,type) {
 			remove_button.style.marginLeft = "4px";
 			remove_button.style.verticalAlign = "top";
 			remove_button.style.marginTop = "2px";
-			remove_button.onclick = function() {
-				t.peoples.removeUnique(people);
-				div.parentNode.removeChild(div);
-				if (t.peoples.length == 0) t._addNobody();
-				pnapplication.dataUnsaved('who');
-			};
+			remove_button.onclick = function() { t.removePeople(people); };
 			name.appendChild(remove_button);
 		}
 		require("profile_picture.js", function() {
