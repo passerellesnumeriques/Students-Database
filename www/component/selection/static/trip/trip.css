@@ -69,6 +69,7 @@
 	background-position-x: center;
 }
 .trip_connection_node {
+	text-align: left;
 	display: inline-block;
 	border: 1px solid black;
 	border-radius: 5px;

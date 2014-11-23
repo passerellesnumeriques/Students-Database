@@ -47,6 +47,33 @@ TripConnection.prototype = {
 	origin: null,
 	destination: null,
 	peoples: null,
+	departure: null,
+	arrival: null,
+	_createHow: function() {
+		var span = document.createElement("SPAN");
+		span.className = "title";
+		span.innerHTML = "How ?";
+		this.node.appendChild(span);
+		// TODO
+		this.node.appendChild(document.createElement("BR"));
+	},
+	_createWhen: function() {
+		var t=this;
+		var span = document.createElement("SPAN");
+		span.className = "title";
+		span.innerHTML = "Departure: ";
+		this.node.appendChild(span);
+		new When(this.node, this.departure, can_edit, function() { return t.getMinimumDepartureDate(true); }, function() { return t.getMaximumDepartureDate(true); }).
+			onchange.add_listener(function(w) { t.departure = w.when; });
+		this.node.appendChild(document.createElement("BR"));
+		span = document.createElement("SPAN");
+		span.className = "title";
+		span.innerHTML = "Arrival: ";
+		this.node.appendChild(span);
+		new When(this.node, this.arrival, can_edit, function() { return t.getMinimumArrivalDate(true); }, function() { return t.getMaximumArrivalDate(true); }).
+			onchange.add_listener(function(w) { t.arrival = w.when; });
+		this.node.appendChild(document.createElement("BR"));
+	},
 	_whoPopup: function(button) {
 		var p = new mini_popup("Who is travelling ?");
 		var selected = arrayCopy(this.peoples);
@@ -101,6 +128,10 @@ TripConnection.prototype = {
 		this.node.style.marginTop = this.origin ? "30px" : "0px";
 		this.node.style.marginBottom = this.origin ? "30px" : "10px";
 		this.container.appendChild(this.node);
+		if (this.origin) {
+			this._createWhen();
+			this._createHow();
+		}
 		this._createWho();
 		return this.container;
 	},
@@ -128,6 +159,26 @@ TripConnection.prototype = {
 	peopleRemoved: function(people) {
 		if (!this.peoples.contains(people)) return;
 		this.who.removePeople(people);
+	},
+	getMinimumArrivalDate: function(ignore_arrival) {
+		if (this.arrival && !ignore_arrival) return this.arrival;
+		if (this.departure) return this.departure;
+		if (!this.origin) return null;
+		return this.origin.getMinimumEndingDate();
+	},
+	getMinimumDepartureDate: function(ignore_departure) {
+		if (this.departure && !ignore_departure) return this.departure;
+		if (!this.origin) return null;
+		return this.origin.getMinimumEndingDate();
+	},
+	getMaximumDepartureDate: function(ignore_departure) {
+		if (this.departure && !ignore_departure) return this.departure;
+		if (this.arrival) return this.arrival;
+		return this.destination.getMaximumStartingDate();
+	},
+	getMaximumArrivalDate: function(ignore_arrival) {
+		if (this.arrival && !ignore_arrival) return this.arrival;
+		return this.destination.getMaximumStartingDate();
 	}
 };
 function InitialConnection(departure) {
@@ -211,22 +262,72 @@ function TripNode(area) {
 			this.activities_table.appendChild(tr);
 			add_activity.innerHTML = "<img src='"+theme.icons_10.add+"' style='vertical-align:middle;margin-bottom:3px;'/> Add something to do";
 			add_activity.onclick = function() {
+				var button = this;
 				var menu = new context_menu();
 				menu.addTitleItem(null, "What will you do in "+t.header.childNodes[0].nodeValue+" ?");
 				menu.addIconItem("/static/selection/is/is_16.png", "An Information Session", function() {
+					var locker = lock_screen(null, "Loading Information Sessions List...");
+					// TODO max date, according to people
+					service.json("selection","is/search",{min_date:dateToSQL(t.getMinimumEndingDate()),max_date:null,area_id:t.area.area_id}, function(res) {
+						unlock_screen(locker);
+						menu = new context_menu();
+						menu.addTitleItem("/static/selection/is/is_16.png","Which Information Session are you going to conduct here ?");
+						if (res.length == 0)
+							menu.addHtmlItem("<i>There are no Information Session avaiable</i>");
+						else
+							for (var i = 0; i < res.length; ++i) {
+								var div = document.createElement("DIV");
+								var s = res[i].name;
+								if (res[i].start_date) {
+									var d = new Date(parseInt(res[i].start_date)*1000);
+									s += " on "+getDateString(d)+" at "+getTimeString(d);
+								}
+								var div2 = document.createElement("DIV");
+								div2.appendChild(document.createTextNode(s));
+								div.appendChild(div2);
+								if (res.geographic_area_name) {
+									div2 = document.createElement("DIV");
+									div2.style.marginLeft = "10px";
+									div2.appendChild(document.createTextNode(" at "+res.geographic_area_name));
+									div.appendChild(div2);
+								}
+								if (res[i].who.length > 0) {
+									s = " with ";
+									for (var j = 0; j < res[i].who.length; ++j) {
+										if (j > 0) s += ", ";
+										if (typeof res[i].who[j] == 'string') s += res[i].who[j];
+										else s += res[i].who[j].people.first_name+' '+res[i].who[j].people.last_name;
+									}
+									div2 = document.createElement("DIV");
+									div2.style.marginLeft = "10px";
+									div2.appendChild(document.createTextNode(s));
+									div.appendChild(div2);
+								}
+								div._is = res[i];
+								menu.addHtmlItem(div, function() {
+									new InformationSessionActivity(t,this._is);
+								});
+							}
+						menu.showBelowElement(button);
+					});
 				});
 				menu.addIconItem("/static/selection/exam/exam_subject_16.png", "An Exam", function() {
+					// TODO
 				});
 				menu.addIconItem("/static/selection/interview/interview_16.png", "An Interview", function() {
+					// TODO
 				});
 				menu.addIconItem("/static/selection/si/si_16.png", "A Social Investigation", function() {
+					// TODO
 				});
 				menu.addIconItem("/static/selection/trip/eat_16.png", "Eat", function() {
+					// TODO
 				});
 				menu.addIconItem("/static/selection/trip/sleep_16.png", "Sleep", function() {
+					// TODO
 				});
 				menu.addIconItem(null, "Something else", function() {
-					t.addActivity(new CustomActivity(""));
+					new CustomActivity(t,"");
 				});
 				menu.showBelowElement(this);
 			};
@@ -273,9 +374,16 @@ function TripNode(area) {
 		for (var i = 0; i < this.connections.length; ++i)
 			this.connections[i].peopleRemoved(people);
 	};
+	this.getMinimumEndingDate = function() {
+		if (this.activities.length > 0) return this.activities[this.activities.length-1].getMinimumEndingDate();
+		return from.getMinimumArrivalDate();
+	};
+	this.getMaximumStartingDate = function() {
+		if (this.activities.length > 0) return this.activities[0].getMaximumStartingDate();
+		return null; // improve ?
+	};
 	
 	this.addActivity = function(activity) {
-		activity.node = this;
 		this.activities.push(activity);
 		activity.createContent(this.activities_table.childNodes[0]);
 		activity.setNumber(this.activities.length);
@@ -319,17 +427,21 @@ function TripNode(area) {
  * Activity
  */
 
-function Activity() {
+function Activity(node) {
+	this.node = node;
+	this.trs = [];
+	if (node) node.addActivity(this);
 }
 Activity.prototype = {
 	node: null,
 	div_dumber: null,
-	trs: [],
+	trs: null,
 	what: null,
 	when: null,
 	where: null,
 	who: null,
 	cost: null,
+	removable: true,
 	_createWhat: function(td) {
 		if (can_edit) {
 			var w = new InputOver(this.what);
@@ -340,21 +452,25 @@ Activity.prototype = {
 			td.appendChild(document.createTextNode(what));
 	},
 	_createWhen: function(td) {
-		var w = new When(td, this.when, can_edit);
 		var t=this;
+		var w = new When(td, this.when, can_edit, function() {
+			return t.getMinimumEndingDate(true);
+		},function() {
+			return t.getMaximumStartingDate(true);
+		});
 		w.onchange.add_listener(function(w) {t.when = w.getTimestamp();});
 	},
 	_createWhere: function(td) {
 		// TODO
 	},
-	_createWho: function(td) {
+	_createWho: function(td, readonly) {
 		if (this.who === null)
 			this.who = arrayCopy(this.node.whoIsThere());
 		this._who_link = document.createElement(can_edit ? "A" : "SPAN");
 		this._who_link.className = "black_link";
 		this._who_link.href = "#";
 		td.appendChild(this._who_link);
-		if (can_edit) {
+		if (can_edit && !readonly) {
 			var t=this;
 			this._who_link.onclick = function() {
 				var p = new mini_popup("Who is participating ?");
@@ -396,7 +512,7 @@ Activity.prototype = {
 		td.rowSpan = 1;
 		var td_number = td;
 		this.div_number.className = "trip_node_activity_number";
-		if (can_edit) {
+		if (can_edit && this.removable) {
 			var remove_button = document.createElement("BUTTON");
 			remove_button.className = "flat icon";
 			remove_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
@@ -478,30 +594,68 @@ Activity.prototype = {
 		if (this.who === null) return;
 		this.who.removeUnique(people);
 		this._updateWho();
+	},
+	getMinimumEndingDate: function(ignore_when) {
+		if (this.when && !ignore_when) return this.when;
+		var index = this.node.activities.indexOf(this);
+		if (index > 0) return this.node.activities[index-1].getMinimumEndingDate();
+		return this.node.from.getMinimumArrivalDate();
+	},
+	getMaximumStartingDate: function(ignore_when) {
+		if (this.when && !ignore_when) return this.when;
+		var index = this.node.activities.indexOf(this);
+		if (index < this.node.activities.length-1) return this.node.activities[index+1].getMaximumStartingDate();
+		return null; // improve ?
 	}
+	// TODO add a warning if some people are not available (already gone)
 };
-function CustomActivity(what, when) {
+function CustomActivity(node, what, when) {
 	this.what = what;
 	this.when = when;
-	Activity.call(this);
+	Activity.call(this, node);
 }
 CustomActivity.prototype = new Activity;
 CustomActivity.prototype.constructor = CustomActivity;
 
-function DepartureMeeting() {
-	Activity.call(this);
+function DepartureMeeting(departure_node) {
 	this._createWhat = function(td) {
 		td.innerHTML = "Meeting for Departure";
 	};
+	this._createWho = null;
+	this._createHowMuch = null;
+	this.who = departure_node.from.peoples;
+	this.removable = false;
+	Activity.call(this, departure_node);
 }
 DepartureMeeting.prototype = new Activity;
 DepartureMeeting.prototype.constructor = DepartureMeeting;
- 
+
+function InformationSessionActivity(node, is) {
+	this._createWhat = function(td) { td.innerHTML = "<img src='/static/selection/is/is_16.png' style='vertical-align:bottom'/> Information Session"; };
+	this._createWhen = function(td) {
+		if (!is.start_date) {
+			td.innerHTML = "<i>unknown</i>";
+			return;
+		}
+		var d = new Date(parseInt(is.start_date)*1000);
+		td.innerHTML = getDateString(d)+" at "+getTimeString(d);
+	};
+	this.who = is.who;
+	this._createWho = function(td) {
+		Activity.prototype._createWho.call(this, td, true);
+		// TODO warning if people missing in the trip
+	};
+	this._createHowMuch = null;
+	Activity.call(this, node);
+}
+InformationSessionActivity.prototype = new Activity;
+InformationSessionActivity.prototype.constructor = InformationSessionActivity;
+
 /*
  * Utilities
  */
 
-function When(container, when, can_edit) {
+function When(container, when, can_edit, minimum_provider, maximum_provider) {
 	this.when = when;
 	this.link = can_edit ? document.createElement("A") : document.createElement("SPAN");
 	this.link.className = "black_link";
@@ -526,10 +680,12 @@ function When(container, when, can_edit) {
 	};
 	this.onchange = new Custom_Event();
 	var t=this;
-	if (this.can_edit)
+	if (can_edit)
 		this.link.onclick = function() {
 			var p = new mini_popup("When ?");
-			var f = new field_timestamp(t.when ? t.when.getTime() : null,true,{can_be_null:true,data_is_seconds:false,show_time:true});
+			var min = minimum_provider ? dateToSQL(minimum_provider()) : null;
+			var max = maximum_provider ? dateToSQL(maximum_provider()) : null;
+			var f = new field_timestamp(t.when ? t.when.getTime() : null,true,{can_be_null:true,data_is_seconds:false,show_time:true,minimum_date:min,maximum_date:max});
 			p.content.appendChild(f.getHTMLElement());
 			p.showBelowElement(t.link);
 			f.onchange.add_listener(function() {
@@ -586,6 +742,7 @@ var container = document.getElementById('trip_container');
 window.top.require("geography.js",function() {
 	window.top.geography.getCountryData(window.top.default_country_id,function(cd) {
 		country_data = cd;
+		window.top.geography.startComputingSearchDictionary(country_data);
 		pn_area = window.top.geography.getAreaFromDivision(country_data, pn_area_id, pn_area_division);
 		<?php if ($trip_id == null) { ?>
 		var departure = new TripNode(pn_area);
@@ -593,7 +750,7 @@ window.top.require("geography.js",function() {
 		container.appendChild(start.create());
 		container.appendChild(departure.container);
 		layout.changed(container);
-		departure.addActivity(new DepartureMeeting());
+		new DepartureMeeting(departure);
 
 		popup.addOkCancelButtons(function() {
 			// TODO create
