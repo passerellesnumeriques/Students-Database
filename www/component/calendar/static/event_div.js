@@ -35,21 +35,24 @@ function createTimedEventDiv(ev, cal) {
 	var div = _createAbstractEventDiv(ev, cal);
 	var head = document.createElement("DIV");
 	head.style.display = "inline-block";
-	setBorderRadius(head,0,0,0,0,0,0,3,3);
+	setBorderRadius(head,4,4,0,0,0,0,3,3);
 	head.style.fontSize = "90%";
 	head.style.color = "#FFFFFF";
 	require("color.js", function() {
 		head.style.backgroundColor = color_string(color_darker(parse_hex_color(cal.color), 0x60));
 	});
-	head.style.padding = "1px";
+	head.style.paddingLeft = "1px";
 	head.style.paddingRight = "2px";
 	head.style.marginRight = "2px";
 	head.style.marginLeft = "-1px";
+	head.style.verticalAlign = "top";
 	div.style.paddingTop = "0px";
 	div.style.paddingBottom = "0px";
-	var time_str = ev.start.getHours()+":"+_2digits(ev.start.getMinutes());
-	time_str += "-"+ev.end.getHours()+":"+_2digits(ev.end.getMinutes());
-	head.appendChild(document.createTextNode(time_str));
+	div.style.lineHeight = "10px";
+	setBorderRadius(div,4,4,4,4,4,4,4,4);
+	setBoxShadow(div,1,2,5,0,'#'+cal.color)
+	head.appendChild(document.createTextNode(getTimeString(ev.start,true)+"-"+getTimeString(ev.end,true)));
+	head.style.whiteSpace = "nowrap";
 	div.insertBefore(head, div.childNodes[0]);
 	return div;
 }

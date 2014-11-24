@@ -418,9 +418,11 @@ function getDateString(d) {
 	return _2digits(d.getDate())+" "+getMonthName(d.getMonth()+1)+" "+d.getFullYear();
 }
 
-function getTimeString(d) {
-	if (d == null) return "";
-	return _2digits(d.getHours())+":"+_2digits(d.getMinutes());
+function getTimeString(d,short) {
+	if (d == null) return null;
+	if (d.getHours() < 12) return d.getHours()+(!short || d.getMinutes() > 0 ? ":"+_2digits(d.getMinutes()) : "")+"AM";
+	if (d.getHours() == 12) return "12"+(!short || d.getMinutes() > 0 ? ":"+_2digits(d.getMinutes()) : "")+"PM";
+	return (d.getHours()-12)+(!short || d.getMinutes() > 0 ? ":"+_2digits(d.getMinutes()) : "")+"PM";
 }
 
 function getMinutesTimeString(minutes) {
@@ -536,12 +538,6 @@ function getDayLetter(d, from_date) {
 	case 6: return "S";
 	default: return "Invalid Day ("+d+")";
 	}
-}
-
-function getTimeString(d) {
-	if (d.getHours() < 12) return _2digits(d.getHours())+":"+_2digits(d.getMinutes())+"AM";
-	if (d.getHours() == 12) return "12:"+_2digits(d.getMinutes())+"PM";
-	return _2digits(d.getHours()-12)+":"+_2digits(d.getMinutes())+"PM";
 }
 
 function wordsMatch(s1, s2, ignore_case) {
