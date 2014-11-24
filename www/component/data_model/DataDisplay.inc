@@ -1582,30 +1582,37 @@ class CountDataValueDataDisplay extends DataDisplay {
 			$key_alias = $q->generateFieldAlias();
 			$q->field($table_alias, $t->getPrimaryKey()->name, $key_alias);
 		}
-		if ($this->foreign_key <> null) {
-			// we go to a different table
-			if ($this->table <> null) {
-				// reverse link
-				$ft_alias = $q->getTableAlias($this->table);
-				if ($ft_alias == null) {
-					$ft_alias = $q->generateTableAlias();
-					$q->join($table_alias, $this->table, array($t->getPrimaryKey()->name=>$this->foreign_key), $ft_alias);
-				}
-				$table_alias = $ft_alias;
-			} else {
-				$fk = $t->internalGetColumnFor($this->foreign_key, $path->sub_model);
-				$ft_alias = $q->getTableAlias($fk->foreign_table);
-				if ($ft_alias == null) {
-					$ft_alias = $q->generateTableAlias();
-					$ft = \DataModel::get()->internalGetTable($fk->foreign_table);
-					$q->join($table_alias, $fk->foreign_table, array($this->foreign_key=>$ft->getPrimaryKey()->name), $ft_alias);
-				}
-				$table_alias = $ft_alias;
-			}
-		}
+		$table_count = \DataModel::get()->getTable($this->table);
+		$sub_q = \SQLQuery::create()
+			->select($this->table)
+			->where("`".$table_count->getSQLNameFor($path->sub_model)."`.`".$this->foreign_key."`=`".$table_alias."`.`".$t->getPrimaryKey()->name."`")
+			->expression("SUM(case when `".$table_count->getSQLNameFor($path->sub_model)."`.`".$this->column."`".($this->value === null ? " IS NULL" : "='".\SQLQuery::escape($this->value)."'")." then 1 else 0 end)","count_data_value")
+			;
 		$data_alias = $q->generateFieldAlias();
-		$q->expression("SUM(case when `$table_alias`.`".$this->column."`".($this->value === null ? " IS NULL" : "='".\SQLQuery::escape($this->value)."'")." then 1 else 0 end)", $data_alias);
+		$q->fieldSubQuery($sub_q, $data_alias);
 		return array("key"=>$key_alias,"data"=>$data_alias);
+		
+// 		if ($this->foreign_key <> null) {
+// 			// we go to a different table
+// 			if ($this->table <> null) {
+// 				// reverse link
+// 				$ft_alias = $q->getTableAlias($this->table);
+// 				if ($ft_alias == null) {
+// 					$ft_alias = $q->generateTableAlias();
+// 					$q->join($table_alias, $this->table, array($t->getPrimaryKey()->name=>$this->foreign_key), $ft_alias);
+// 				}
+// 				$table_alias = $ft_alias;
+// 			} else {
+// 				$fk = $t->internalGetColumnFor($this->foreign_key, $path->sub_model);
+// 				$ft_alias = $q->getTableAlias($fk->foreign_table);
+// 				if ($ft_alias == null) {
+// 					$ft_alias = $q->generateTableAlias();
+// 					$ft = \DataModel::get()->internalGetTable($fk->foreign_table);
+// 					$q->join($table_alias, $fk->foreign_table, array($this->foreign_key=>$ft->getPrimaryKey()->name), $ft_alias);
+// 				}
+// 				$table_alias = $ft_alias;
+// 			}
+// 		}
 	}
 
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
