@@ -102,8 +102,23 @@ class service_is_save extends Service{
 						unset($event["id"]);
 					$event["calendar_id"] = PNApplication::$instance->selection->getCalendarId();
 					$event["attendees"] = array();
-					// TODO organizer Selection
-					// TODO add people
+					array_push($event["attendees"], array(
+						"name"=>"Selection",
+						"role"=>"ORGANIZER_ONLY",
+						"participation"=>"YES"
+					));
+					$people_ids = array();
+					foreach ($data["who"] as $who)
+						if (ctype_digit($who))
+							array_push($people_ids, $who);
+					if (count($people_ids) > 0)
+						$emails = PNApplication::$instance->contact->getPeoplesPreferredEMail($people_ids, true);
+					foreach ($data["who"] as $who) {
+						if (ctype_digit($who))
+							array_push($event["attendees"], array("people"=>$who,"email"=>$emails[$who],"role"=>"REQUESTED","participation"=>"UNKNOWN"));
+						else
+							array_push($event["attendees"], array("name"=>$who,"role"=>"REQUESTED","participation"=>"UNKNOWN"));
+					}
 					$event["title"] = "InfoSession @ ".PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 					if (!$insert_IS) {
 						$event["app_link"] = "popup:/dynamic/selection/page/is/profile?id=".$data["id"];
@@ -121,6 +136,24 @@ class service_is_save extends Service{
 				if (!$insert_IS) {
 					$event["app_link"] = "popup:/dynamic/selection/page/is/profile?id=".$data["id"];
 					$event["app_link_name"] = "This event is an Information Session: click to see it";
+				}
+				$event["attendees"] = array();
+				array_push($event["attendees"], array(
+					"name"=>"Selection",
+					"role"=>"ORGANIZER_ONLY",
+					"participation"=>"YES"
+				));
+				$people_ids = array();
+				foreach ($data["who"] as $who)
+					if (ctype_digit($who))
+						array_push($people_ids, $who);
+				if (count($people_ids) > 0)
+					$emails = PNApplication::$instance->contact->getPeoplesPreferredEMail($people_ids, true);
+				foreach ($data["who"] as $who) {
+					if (ctype_digit($who))
+						array_push($event["attendees"], array("people"=>$who,"email"=>$emails[$who],"role"=>"REQUESTED","participation"=>"UNKNOWN"));
+					else
+						array_push($event["attendees"], array("name"=>$who,"role"=>"REQUESTED","participation"=>"UNKNOWN"));
 				}
 				$data["date"] = $event["id"];
 				try{
@@ -168,20 +201,6 @@ class service_is_save extends Service{
 				//No need to try catch, the method called handles this
 				PNApplication::$instance->selection
 					->savePartnersAndContactsPoints($data["id"],$rows_IS_partner,$rows_IS_contact_point,"InformationSession","information_session");
-				// save who
-				if (!$insert_IS) {
-					$rows = SQLQuery::create()->select("InformationSessionAnimator")->whereValue("InformationSessionAnimator","information_session",$data["id"])->execute();
-					SQLQuery::create()->removeRows("InformationSessionAnimator", $rows);
-				}
-				$to_insert = array();
-				foreach ($data["who"] as $who) {
-					if (ctype_digit($who))
-						array_push($to_insert, array("people"=>$who,"information_session"=>$data["id"]));
-					else
-						array_push($to_insert, array("custom_name"=>$who,"information_session"=>$data["id"]));
-				}
-				if (count($to_insert) > 0)
-					SQLQuery::create()->insertMultiple("InformationSessionAnimator", $to_insert);
 			}
 				
 			if(!$everything_ok || PNApplication::hasErrors()){

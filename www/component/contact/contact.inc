@@ -336,5 +336,33 @@ class contact extends Component {
 	public function getEMails($contacts_ids, $bypass_security = false) {
 		return SQLQuery::create()->bypassSecurity($bypass_security)->select("Contact")->whereIn("Contact","id",$contacts_ids)->whereValue("Contact","type","email")->execute();
 	}
+	
+	public function getPeoplesPreferredEMail($peoples_ids, $bypass_security = false) {
+		$emails = SQLQuery::create()->bypassSecurity($bypass_security)
+			->select("PeopleContact")
+			->whereIn("PeopleContact","people",$peoples_ids)
+			->join("PeopleContact","Contact",array("contact"=>"id"))
+			->whereValue("Contact","type","email")
+			->field("PeopleContact","people","people")
+			->field("Contact","contact","contact")
+			->execute();
+		$result = array();
+		foreach ($peoples_ids as $id) {
+			$result[$id] = null;
+			foreach ($emails as $e) {
+				if ($e["people"] <> $id) continue;
+				$email = $e["contact"];
+				$i = strpos($email, "@");
+				if ($i === false) continue;
+				$domain = substr($email, $i+1);
+				if (strpos($email, "passerellesnumeriques.org") == strlen($email)-25) {
+					$result[$id] = $email;
+					break;
+				}
+				if ($result[$id] == null) $result[$id] = $email;
+			}
+		}
+		return $result;
+	}
 }
 ?>

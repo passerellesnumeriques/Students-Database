@@ -14,6 +14,8 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	
 	require("section.js");
 	
+	this.onchange = new Custom_Event();
+	
 	this._update = function() {
 		if (!this._event || !this._event.start) {
 			this._link.innerHTML = "Not yet specified";
@@ -78,6 +80,7 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 				t._event.end = new Date(t._event.start.getTime()+select_duration.value*60*60*1000);
 				t._update();
 				window.pnapplication.dataUnsaved("SelectionISDate");
+				t.onchange.fire();
 				return true;
 			});
 			// show
@@ -93,6 +96,7 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			window.pnapplication.dataUnsaved("SelectionISDate");
 		this._event.start = this._event.end = null;
 		this._update();
+		this.onchange.fire();
 	};
 	
 	require("section.js",function() {
@@ -113,16 +117,22 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		t.section = new section("/static/selection/date_clock_picker.png","Date",t._content,false,false,"soft");
 		container.appendChild(t.section.element);
 		// load event, then update
-		if((IS_id != -1 && IS_id != "-1") && (event_id != null && event_id != "null") && t._event == null){
-			service.json("calendar","get_event",{id:event_id, calendar_id:calendar_id},function(res){
-				t._event = res;
-				t._update();
-			});
+		if (event_id != null && typeof event_id == 'object') {
+			t._event = event_id;
+			event_id = t._event.id;
+			t._update();
 		} else {
-			require("calendar_objects.js",function() {
-				t._event = new CalendarEvent(-1, 'PN', calendar_id, null, null, null, false, 0, null, null, null, "Selection", "UNKNOWN", "OPTIONAL");
-				t._update();
-			});
+			if((IS_id != -1 && IS_id != "-1") && (event_id != null && event_id != "null") && t._event == null){
+				service.json("calendar","get_event",{id:event_id, calendar_id:calendar_id},function(res){
+					t._event = res;
+					t._update();
+				});
+			} else {
+				require("calendar_objects.js",function() {
+					t._event = new CalendarEvent(-1, 'PN', calendar_id, null, null, null, false, 0, null, null, null, null);
+					t._update();
+				});
+			}
 		}
 		require(["mini_popup.js",["typed_field.js",["field_date.js","field_time.js"]]]);
 	});

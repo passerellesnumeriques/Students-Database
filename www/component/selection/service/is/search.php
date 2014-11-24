@@ -41,12 +41,8 @@ class service_is_search extends Service {
 		
 		if (count($list) > 0) {
 			$ids = array();
-			foreach ($list as $is) array_push($ids, $is["is_id"]);
-			$q = SQLQuery::create()->select("InformationSessionAnimator")->whereIn("InformationSessionAnimator","information_session",$ids);
-			PNApplication::$instance->people->joinPeople($q, "InformationSessionAnimator", "people", false);
-			$q->field("InformationSessionAnimator","information_session","is");
-			$q->field("InformationSessionAnimator","custom_name","custom_name");
-			$who = $q->execute();
+			foreach ($list as $is) array_push($ids, $is["event_id"]);
+			$who = PNApplication::$instance->calendar->getEventsAttendees($ids, true, true);
 		} else
 			$who = array();
 		
@@ -64,12 +60,12 @@ class service_is_search extends Service {
 			echo ",partner_name:".json_encode($is["partner_name"]);
 			echo ",who:[";
 			$first_who = true;
-			foreach ($who as $w) {
-				if ($w["is"] <> $is["is_id"]) continue;
-				if ($first_who) $first_who = false; else echo ",";
-				if ($w["custom_name"] <> null) echo json_encode($w["custom_name"]);
-				else echo "{people:".PeopleJSON::People($w)."}";
-			}
+			if (isset($who[$is["event_id"]]))
+				foreach ($who[$is["event_id"]] as $w) {
+					if ($first_who) $first_who = false; else echo ",";
+					if ($w["people_id"] == null) echo json_encode($w["attendee_name"]);
+					else echo "{people:".PeopleJSON::People($w)."}";
+				}
 			echo "]";
 			echo "}";
 		}

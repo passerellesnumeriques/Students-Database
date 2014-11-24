@@ -55,16 +55,4 @@ $sm->addTable("InformationSessionContactPoint")
 	->addRemoveAccess("manage_information_session",true)
 	;
 
-$sm->addTable("InformationSessionAnimator")
-	->addPrimaryKey("id")
-	->addForeignKey("information_session", "InformationSession", true, false, true)
-	->addForeignKey("people", "People", true, false, true, true, false)
-	->addString("custom_name", 200, 1, true, false)
-	->addReadAccess("see_information_session", true)
-	->addWriteAccess("manage_information_session",true)
-	->addInsertAccess("manage_information_session",true)
-	->addRemoveAccess("manage_information_session",true);
-	;
-$model->internalGetTable("People")
-	->addReadAccessFromForeignTable("InformationSessionAnimator");
 ?>

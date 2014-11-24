@@ -4,21 +4,25 @@
  */ 
 class CalendarJSON {
 	
-	public static function Event($id, $calendar_id) {
+	public static function getEventFromDB($id, $calendar_id) {
 		//Check the right
 		if (!PNApplication::$instance->calendar->canReadCalendar($calendar_id)) {
 			PNApplication::error("Access denied");
 			return false;
 		}
 		$q = SQLQuery::create()->bypassSecurity()
-			->select("CalendarEvent")
-			->whereValue("CalendarEvent", "id", $id)
-			->whereValue("CalendarEvent", "calendar", $calendar_id) // make sure the calendar is correct, so the access right check before was correct
-			->join("CalendarEvent","CalendarEventFrequency",array("id"=>"event"))
-			;
+		->select("CalendarEvent")
+		->whereValue("CalendarEvent", "id", $id)
+		->whereValue("CalendarEvent", "calendar", $calendar_id) // make sure the calendar is correct, so the access right check before was correct
+		->join("CalendarEvent","CalendarEventFrequency",array("id"=>"event"))
+		;
 		$row = $q->executeSingleRow();
 		$row["attendees"] = SQLQuery::create()->bypassSecurity()->select("CalendarEventAttendee")->whereValue("CalendarEventAttendee","event",$id)->execute();
-		return self::JSON($row);
+		return $row;
+	}
+	
+	public static function Event($id, $calendar_id) {
+		return self::JSON(self::getEventFromDB($id, $calendar_id));
 	}
 	
 	public static function Events($ids, $calendar_id) {
@@ -67,7 +71,7 @@ class CalendarJSON {
 		if (count($peoples) > 0 || count($emails) > 0)
 			for ($i = count($attendees)-1; $i >= 0; $i--) {
 				if ($attendees[$i]["people"] <> null)
-					foreach ($peoples as $p) if ($p["people_id"] == $attendees[$i]["people"]) { $attendees[$i]["name"] = $p["first_name"]." ".$p["last_name"]; break; }
+					foreach ($peoples as $p) if ($p["id"] == $attendees[$i]["people"]) { $attendees[$i]["name"] = $p["first_name"]." ".$p["last_name"]; break; }
 				if ($attendees[$i]["people_email"] <> null)
 					foreach ($emails as $e) if ($e["id"] == $attendees[$i]["people_email"]) { $attendees[$i]["email"] = $e["contact"]; break; }
 			}
