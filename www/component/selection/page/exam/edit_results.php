@@ -29,8 +29,8 @@ class page_exam_edit_results extends SelectionPage {
 		$subjects = SQLQuery::create()->select("ExamSubject")->execute();
 		$subjects_parts = SQLQuery::create()->select("ExamSubjectPart")->execute();
 		$questions = SQLQuery::create()->select("ExamSubjectQuestion")->execute();
+		$subjects_versions = SQLQuery::create()->select("ExamSubjectVersion")->orderBy("ExamSubjectVersion","id")->execute();
 		if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) {
-			$subjects_versions = SQLQuery::create()->select("ExamSubjectVersion")->orderBy("ExamSubjectVersion","id")->execute();
 			$answers = SQLQuery::create()->select("ExamSubjectAnswer")->execute();
 		}
 		// put the parts inside the subjects
@@ -149,6 +149,7 @@ foreach ($applicants_ids as $id) {
 	if ($first_app) $first_app = false; else echo ",";
 	echo "'$id':{";
 	$first_subject = true;
+	if (isset($applicants_subjects[$id]))
 	foreach ($applicants_subjects[$id] as $as) {
 		if ($first_subject) $first_subject = false; else echo ",";
 		echo "'".$as["exam_subject"]."':{";
@@ -1399,7 +1400,7 @@ function save() {
 				if (!applicants_results[app.people_id]) continue;
 				if (!applicants_results[app.people_id][subjects[j].id]) continue;
 				var res = applicants_results[app.people_id][subjects[j].id];
-				s.version = res.version;
+				s.version = subjects[j].versions.length > 1 ? res.version : subjects[j].versions[0];
 				s.parts = [];
 				for (var k = 0; k < subjects[j].parts.length; ++k) {
 					if (edit_mode.value == "parts_scores") {
