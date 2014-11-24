@@ -520,15 +520,32 @@ function CalendarControl(container, cal, manager) {
 			t.div.appendChild(t.loading);
 		};
 		cal.onrefresh.add_listener(start_refresh);
-		cal.onrefreshdone.add_listener(function(){
-			if (!t.loading) return;
+		var refresh_done = function(){
+			if (!t.loading || !t.div) return;
 			t.div.removeChild(t.loading);
 			t.loading = null;
-		});
-		cal.on_removed.add_listener(function() {
+		};
+		cal.onrefreshdone.add_listener(refresh_done);
+		var calendar_removed = function() {
 			t.div.parentNode.removeChild(t.div);
-		});
+		};
+		cal.on_removed.add_listener(calendar_removed);
 		if (cal.updating) start_refresh();
+		this.div.ondomremoved(function() {
+			cal.onrefresh.remove_listener(start_refresh);
+			cal.onrefreshdone.remove_listener(refresh_done);
+			cal.on_removed.remove_listener(calendar_removed);
+			start_refresh = null;
+			refresh_done = null;
+			calendar_removed = null;
+			t.div = null;
+			t.loading = null;
+			t.menu_button = null;
+			t.name = null;
+			t.box = null;
+			t.icon = null;
+			t = null;
+		});
 	};
 	this._init();
 }

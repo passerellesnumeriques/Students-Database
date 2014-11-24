@@ -147,7 +147,8 @@ Element.prototype.removeChild = function(e) {
 	_domRemoved(e);
 	try { return this._removeChild(e); }
 	catch (err) {
-		log_exception(err, "Remove child failed");
+		if (log_exception)
+			log_exception(err, "Remove child failed");
 		return null;
 	}
 };
