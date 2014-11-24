@@ -231,12 +231,39 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 			$ev->setStart(self::timestampToDateTime(intval($pn["start"])));
 			$ev->setEnd(self::timestampToDateTime(intval($pn["end"])));
 		}
+		// TODO recurrence
 		$ev->setLocation($pn["location_freetext"]);
+		// TODO location with geography
 		$creator = new Google_Service_Calendar_EventCreator();
 		$creator->setDisplayName("Students Management Software");
 		$ev->setCreator($creator);
-		// TODO location with geography
-		// TODO attendees, organizer...
+		if (@$pn["attendees"] <> null && count($pn["attendees"]) > 0) {
+			$list = array();
+			foreach ($pn["attendees"] as $a) {
+				if ($a["role"] == "ORGANIZER_ONLY") {
+					$o = new Google_Service_Calendar_EventOrganizer();
+					$o->setDisplayName(@$a["name"]);
+					$o->setEmail(@$a["email"]);
+					$ev->setOrganizer($o);
+				} else {
+					$at = new Google_Service_Calendar_EventAttendee();
+					$at->setDisplayName(@$a["name"]);
+					$at->setEmail(@$a["email"]);
+					switch (@$a["participation"]) {
+						case "YES": $at->setResponseStatus("accepted"); break;
+						case "NO": $at->setResponseStatus("declined"); break;
+						case "UNKNOWN": $at->setResponseStatus("needsAction"); break;
+						case "TENTATIVE": $at->setResponseStatus("tentative"); break;
+					}
+					switch (@$a["role"]) {
+						case "REQUESTED": $at->setOptional(false); break;
+						case "OPTIONAL": $at->setOptional(true); break;
+					}
+					array_push($list, $at);
+				}
+			}
+			if (count($list) > 0) $ev->setAttendees($list);
+		}
 		return $ev;
 	}
 	
@@ -265,7 +292,7 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 			if ($pn == null) {
 				// event has been removed: remove it from Google
 				try {
-					$this->removeEvent($google_id, $gev->getId());
+					$this->removeEvent($google_id, $gev->getId(), true);
 				} catch (Exception $e) {
 					PNApplication::error("Error removing Google Event ".$gev->getId(), $e);
 					$err = true;
@@ -275,7 +302,7 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 			if (intval($pn["last_modified"]) < $last_update) continue; // not modified
 			// event modified: update it in Google
 			try {
-				$this->updateEvent($google_id, $gev->getId(), self::PNEventToGoogleEvent($pn));
+				$this->updateEvent($google_id, $gev->getId(), self::PNEventToGoogleEvent($pn), true);
 			} catch (Exception $e) {
 				PNApplication::error("Error updating event ".$pn["id"], $e);
 				$err = true;
