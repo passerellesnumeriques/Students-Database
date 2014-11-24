@@ -101,7 +101,9 @@ class service_is_save extends Service{
 					if(isset($event["id"]))
 						unset($event["id"]);
 					$event["calendar_id"] = PNApplication::$instance->selection->getCalendarId();
-					$event["organizer"] = "Selection";
+					$event["attendees"] = array();
+					// TODO organizer Selection
+					// TODO add people
 					$event["title"] = "InfoSession @ ".PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 					if (!$insert_IS) {
 						$event["app_link"] = "popup:/dynamic/selection/page/is/profile?id=".$data["id"];

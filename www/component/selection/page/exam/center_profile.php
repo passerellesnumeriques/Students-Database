@@ -51,16 +51,13 @@ class page_exam_center_profile extends SelectionPage {
 			SelectionExamJSON::ExamCenterRoomSQL($q);
 			$rooms = $q->execute();
 			
-			$q = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession", "exam_center", $id);
-			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
-			CalendarJSON::CalendarEventSQL($q);
-			$sessions = $q->execute(); 
+			$sessions_events_ids = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession", "exam_center", $id)->field("event")->executeSingleField();
 			
 			$linked_is_id = SQLQuery::create()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "exam_center", $id)->field("information_session")->executeSingleField();
 		} else {
 			$applicants = array();
 			$rooms = array();
-			$sessions = array();
+			$sessions_events_ids = array();
 			$linked_is_id = array();
 		}
 		$q = SQLQuery::create()->select("InformationSession");
@@ -126,7 +123,7 @@ class page_exam_center_profile extends SelectionPage {
 				'exam_sessions_container',
 				'rooms',
 				<?php echo SelectionExamJSON::ExamCenterRooms($rooms);?>,
-				<?php echo CalendarJSON::CalendarEvents($sessions, true); ?>,
+				<?php echo CalendarJSON::Events($sessions_events_ids, PNApplication::$instance->selection->getCalendarId()); ?>,
 				<?php echo SelectionApplicantJSON::ApplicantsJSON($applicants); ?>,
 				window.linked_is,
 				<?php echo intval($this->component->getOneConfigAttributeValue("default_duration_exam_session"))*60;?>,

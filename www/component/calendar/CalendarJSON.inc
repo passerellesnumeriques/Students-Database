@@ -4,100 +4,102 @@
  */ 
 class CalendarJSON {
 	
-	/**
-	 * Retrieve a CalendarEvent JSON object from the database, after checking that the user is allowed to
-	 * @param number $id CalendarEvent ID
-	 * @param number $calendar_id Calendar ID
-	 * @returns String CalendarEvent JSON
-	 * @no_name_check
-	 */
-	public static function CalendarEventFromID($id, $calendar_id, $use_date_object = false){
+	public static function Event($id, $calendar_id) {
 		//Check the right
 		if (!PNApplication::$instance->calendar->canReadCalendar($calendar_id)) {
 			PNApplication::error("Access denied");
 			return false;
 		}
-		$q = SQLQuery::create()
-			->bypassSecurity()
+		$q = SQLQuery::create()->bypassSecurity()
 			->select("CalendarEvent")
-			->whereValue("CalendarEvent", "id", $id);
-		self::CalendarEventSQL($q);
+			->whereValue("CalendarEvent", "id", $id)
+			->whereValue("CalendarEvent", "calendar", $calendar_id) // make sure the calendar is correct, so the access right check before was correct
+			->join("CalendarEvent","CalendarEventFrequency",array("id"=>"event"))
+			;
 		$row = $q->executeSingleRow();
-		return self::CalendarEvent($row, $use_date_object);
+		$row["attendees"] = SQLQuery::create()->bypassSecurity()->select("CalendarEventAttendee")->whereValue("CalendarEventAttendee","event",$id)->execute();
+		return self::JSON($row);
 	}
 	
-	/**
-	 * Prepare a query to retrieve the data from CalendarEvent table
-	 * @param SQLQuery $q query to prepare
-	 * @no_name_check
-	 */
-	public static function CalendarEventSQL(&$q){
-		$alias = $q->getTableAlias("CalendarEvent");
-		if($alias == null)
-			$alias = "CalendarEvent";
-		$q
-			->field($alias,"id")
-			->field($alias,"uid")
-			->field($alias,"calendar")
-			->field($alias,"start")
-			->field($alias,"end")
-			->field($alias,"all_day")
-			->field($alias,"last_modified")
-			->field($alias,"title")
-			->field($alias,"description")
-			->field($alias,"location_freetext")
-			->field($alias,"organizer")
-			->field($alias,"participation")
-			->field($alias,"role")
-			->field($alias,"app_link")
-			->field($alias,"app_link_name");
-	}
-	
-	/**
-	 * Get a CalendarEvent JSON object from the data retrieved from the database
-	 * @param Array $row the row retrieved from CalendarEvent table
-	 * @param Boolean $use_date_object if true, the start and end will be using Date Javascript object, if false this is a timestamp in seconds
-	 * @return string CalendarEvent JSON object
-	 * @no_name_check
-	 */
-	public static function CalendarEvent($row, $use_date_object = false){
-		$data = "{";
-		$data .= "id:".$row["id"];
-		$data .= ",calendar_provider_id:'PN'";
-		$data .= ",calendar_id:".$row["calendar"];
-		$data .= ",uid:".json_encode($row["uid"]);
-		$data .= ",start:".($use_date_object ? "new Date(".$row["start"]."*1000)" : $row["start"]);
-		$data .= ",end:".($use_date_object ? "new Date(".$row["end"]."*1000)" : $row["end"]);
-		$data .= ",all_day:".($row["all_day"] == "1" ? "true" : "false");
-		$data .= ",last_modified:".json_encode($row["last_modified"]);
-		$data .= ",title:".json_encode($row["title"]);
-		$data .= ",description:".json_encode($row["description"]);
-		$data .= ",location_freetext:".json_encode($row["location_freetext"]);
-		$data .= ",organizer:".json_encode($row["organizer"]);
-		$data .= ",participation:".json_encode($row["participation"]);
-		$data .= ",role:".json_encode($row["role"]);
-		$data .= ",app_link:".json_encode($row["app_link"]);
-		$data .= ",app_link_name:".json_encode($row["app_link_name"]);
-		$data .= "}";
+	public static function Events($ids, $calendar_id) {
+		if (count($ids) == 0) return "[]";
+		//Check the right
+		if (!PNApplication::$instance->calendar->canReadCalendar($calendar_id)) {
+			PNApplication::error("Access denied");
+			return false;
+		}
+		$q = SQLQuery::create()->bypassSecurity()
+			->select("CalendarEvent")
+			->whereIn("CalendarEvent", "id", $ids)
+			->whereValue("CalendarEvent", "calendar", $calendar_id) // make sure the calendar is correct, so the access right check before was correct
+			->join("CalendarEvent","CalendarEventFrequency",array("id"=>"event"))
+			;
+		$rows = $q->execute();
+		$attendees = SQLQuery::create()->bypassSecurity()->select("CalendarEventAttendee")->whereIn("CalendarEventAttendee","event",$ids)->execute();
+		for ($i = 0; $i < count($rows); $i++) {
+			$rows[$i]["attendees"] = array();
+			foreach ($attendees as $a) if ($a["event"] == $rows[$i]["id"]) array_push($rows[$i]["attendees"], $a);
+		}
+		$data = "[";
+		$first = true;
+		foreach ($rows as $row) {
+			if ($first) $first = false; else $data .= ",";
+			$data .= self::JSON($row);
+		}
+		$data .= "]";
 		return $data;
 	}
 	
-	/**
-	 * Get an array of CalendarEvent JSON object from the data retrieved from the database
-	 * @param Array $rows the rows retrieved from CalendarEvent table
-	 * @param Boolean $use_date_object if true, the start and end will be using Date Javascript object, if false this is a timestamp in seconds
-	 * @return string an array of CalendarEvent JSON object
-	 * @no_name_check
-	 */
-	public static function CalendarEvents($rows, $use_date_object = false) {
-		$s = "[";
-		$first = true;
-		foreach ($rows as $row) {
-			if ($first) $first = false; else $s .= ",";
-			$s .= self::CalendarEvent($row, $use_date_object);
+	public static function JSON($row) {
+		$data = "{";
+		$data .= "id:".$row["id"];
+		$data .= ",calendar_provider_id:'PN'";
+		$data .= ",calendar_id:".(ctype_digit($row["calendar"]) ? $row["calendar"] : json_encode($row["calendar"]));
+		$data .= ",uid:".json_encode($row["uid"]);
+		$data .= ",start:new Date(".$row["start"]."*1000)";
+		$data .= ",end:new Date(".$row["end"]."*1000)";
+		$data .= ",all_day:".($row["all_day"] == "1" ? "true" : "false");
+		$data .= ",last_modified:".json_encode($row["last_modified"]);
+		$data .= ",title:".json_encode($row["title"]);
+		$data .= ",description:".json_encode(@$row["description"]);
+		$data .= ",location_freetext:".json_encode(@$row["location_freetext"]);
+		$data .= ",app_link:".json_encode(@$row["app_link"]);
+		$data .= ",app_link_name:".json_encode(@$row["app_link_name"]);
+		$data .= ",frequency:";
+		if (@$row["frequency"] == null) $data .= "null";
+		else {
+			$data .= "{";
+			$data .= "frequency:".json_encode($row["frequency"]);
+			$data .= ",until:".(@$row["until"] <> null ? "new Date(".$row["until"]."*1000)" : "null");
+			$data .= ",count:".(@$row["count"] > 0 ? $row["count"] : "null");
+			$data .= ",interval:".(@$row["interval"] > 0 ? $row["interval"] : "null");
+			$data .= ",by_month:".json_encode(@$row["by_month"]);
+			$data .= ",by_week_no:".json_encode(@$row["by_week_no"]);
+			$data .= ",by_year_day:".json_encode(@$row["by_year_day"]);
+			$data .= ",by_month_day:".json_encode(@$row["by_month_day"]);
+			$data .= ",by_week_day:".json_encode(@$row["by_week_day"]);
+			$data .= ",by_hour:".json_encode(@$row["by_hour"]);
+			$data .= ",by_setpos:".json_encode(@$row["by_setpos"]);
+			$data .= ",week_start:".json_encode(@$row["week_start"]);
+			$data .= "}";
 		}
-		$s .= "]";
-		return $s;
+		$data .= ",attendees:[";
+		$first = true;
+		if (@$row["attendees"] <> null)
+		foreach ($row["attendees"] as $a) {
+			if ($first) $first = false; else $data .= ",";
+			$data .= "{";
+			$data .= "name:".json_encode($a["name"]);
+			$data .= ",email:".json_encode($a["email"]);
+			$data .= ",participation:".json_encode($a["participation"]);
+			$data .= ",role:".json_encode($a["role"]);
+			$data .= ",people_id:".json_encode($a["people"]);
+			$data .= ",contact_id:".json_encode($a["people_email"]);
+			$data .= "}";
+		}
+		$data .= "]";
+		$data .= "}";
+		return $data;
 	}
 	
 }

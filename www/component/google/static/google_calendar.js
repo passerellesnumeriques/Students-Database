@@ -88,7 +88,7 @@ function GoogleCalendar(id, name, color, show, writable) {
 				t.events = [];
 				for (var i = 0; i < google_events.length; ++i) {
 					var gev = google_events[i];
-					var ev = new CalendarEvent(-1, 'Google', t.id, gev.iCalUID, null, null, false, gev.last_modified, gev.summary, gev.description ? gev.description : "", "", "", "", "");
+					var ev = new CalendarEvent(-1, 'Google', t.id, gev.iCalUID, null, null, false, gev.last_modified, gev.summary, gev.description ? gev.description : "", "");
 					if (gev.location) ev.location_freetext = gev.location;
 					if (gev.start && gev.start.date) {
 						ev.start = new Date();
@@ -140,6 +140,12 @@ function GoogleCalendar(id, name, color, show, writable) {
 								break;
 							}
 						}
+					}
+					if (gev.organizer) {
+						// TODO
+					}
+					if (gev.attendees) {
+						// TODO
 					}
 					var err = null;
 					if (!ev.start) err = "No start date";

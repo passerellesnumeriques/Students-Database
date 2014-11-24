@@ -281,6 +281,9 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				handler_for_each_provider(this._providers[i]);
 			this._handlers.push(handler_for_each_provider);
 		},
+		getCurrentProviders: function() {
+			return arrayCopy(this._providers);
+		},
 		/** Retrieve a calendar provider by id
 		 * @param {String} id identifier of the provider
 		 * @returns {CalendarsProvider} the provider, or null if it does not exist

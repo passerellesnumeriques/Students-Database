@@ -181,9 +181,9 @@ class service_exam_save_center extends Service {
 				if (!isset($center["name"])) $center["name"] = SQLQuery::create()->select("ExamCenter")->whereValue("ExamCenter","id",$center_id)->field("name")->executeSingleValue();
 				$event["title"] = "Written Exam in ".$center["name"];
 				// set information
-				$event["organizer"] = "Selection";
-				$event["participation"] = "YES";
-				$event["role"] = "REQUESTED";
+				$event["attendees"] = array();
+				// TODO organizer Selection
+				// TODO add people
 				// TODO set app_link and app_link_name
 				if ($event["id"] < 0) {
 					// this is a new session

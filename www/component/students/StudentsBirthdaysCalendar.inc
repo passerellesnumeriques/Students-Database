@@ -41,10 +41,7 @@ class StudentsBirthdaysCalendar implements CustomCalendarPlugin {
 					"last_modified"=>\datamodel\ColumnDate::toTimestamp($student["birth"]),
 					"title"=>$student["first_name"]." ".$student["last_name"],
 					"description"=>"Birthday of student ".$student["first_name"]." ".$student["last_name"],
-					"frequency"=>array(
-						"frequency"=>"YEARLY",
-						"until"=>null
-					),
+					"frequency"=>"YEARLY",
 					"app_link_name"=>"Open profile of ".$student["first_name"]." ".$student["last_name"],
 					"app_link"=>"popup:/dynamic/people/page/profile?people=".$student["people_id"]
 				);

@@ -152,10 +152,19 @@ function inputDefaultText(input, default_text) {
 	if (document.activeElement == input) input.onfocus(); else input.onblur();
 }
 
-function InputOver(value, onchange) {
+function InputOver(value, default_text) {
+	if (!value) value = "";
 	this.container = document.createElement("DIV");
 	this.container.style.position = "relative";
-	this.container.appendChild(document.createTextNode(value));
+	this.span = document.createElement("SPAN");
+	if (value.length > 0 || !default_text) {
+		this.span.appendChild(document.createTextNode(value));
+	} else { 
+		this.span.appendChild(document.createTextNode(default_text));
+		this.span.style.fontStyle = "italic";
+		setOpacity(this.span, 0.5);
+	}
+	this.container.appendChild(this.span);
 	this.container.style.height = "16px";
 	this.container.style.paddingLeft = "0px";
 	this.container.style.marginRight = "2px";
@@ -166,12 +175,17 @@ function InputOver(value, onchange) {
 	this.input.style.left = "-2px";
 	this.input.style.width = "100%";
 	this.input.style.padding = "0px";
+	if (default_text) this.input.placeholder = default_text;
 	this.container.appendChild(this.input);
 	this.input.value = value;
 	setOpacity(this.input, 0);
 	var t=this;
 	this.container.onmouseover = function() {
-		setOpacity(t.input, 100);
+		var style = getComputedStyle(this);
+		t.input.style.fontSize = style.fontSize;
+		t.input.style.fontWeight = style.fontWeight;
+		t.input.style.fontStyle = style.fontStyle;
+		setOpacity(t.input, 1);
 	};
 	this.container.onmouseout = function() {
 		if (t.input === document.activeElement) return;
@@ -181,7 +195,15 @@ function InputOver(value, onchange) {
 		setOpacity(t.input, 0);
 	};
 	this.input.onchange = function() {
-		t.container.childNodes[0].nodeValue = t.input.value;
+		if (!default_text || t.input.value.length > 0) {
+			t.span.style.fontStyle = "";
+			t.span.childNodes[0].nodeValue = t.input.value;
+			setOpacity(t.span, 1);
+		} else {
+			t.span.style.fontStyle = "italic"; 
+			t.span.childNodes[0].nodeValue = default_text;
+			setOpacity(t.span, 0.5);
+		}
 		layout.changed(t.container);
 		t.onchange.fire(t);
 	};

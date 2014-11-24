@@ -114,10 +114,10 @@ function arrayEquivalent(a1, a2) {
 	return true;
 }
 
-function arrayCopy(a) {
+function arrayCopy(a, to_copy) {
 	var c = [];
 	for (var i = 0; i < a.length; ++i)
-		c.push(a[i]);
+		c.push(to_copy ? to_copy(a[i]) : a[i]);
 	return c;
 }
 
