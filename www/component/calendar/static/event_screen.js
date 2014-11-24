@@ -45,7 +45,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		td.innerHTML = "Who";
 		this._styleLeftTitle(td);
 		tr.appendChild(td = document.createElement("TD"));
-		// TODO
+		this.who = new event_screen_who(td, ev ? ev.attendees : [], this.editable);
 		
 		var popup = new popup_window("Event", "/static/calendar/event.png",this._table);
 		popup.show();
@@ -547,4 +547,36 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 			repeat_until.onchange.add_listener(function() { getFrequency(); });
 		});
 	}
+}
+
+function event_screen_who(container, attendees, editable) {
+	this.attendees = attendees;
+	container.appendChild(this._table = document.createElement("TABLE"));
+	this.createAttendee = function(a) {
+		var tr, td;
+		this._table.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td = document.createElement("TD"));
+		td.rowSpan = 2;
+		var picture_url = null;
+		if (a.people) picture_url = "/dynamic/people/service/picture?people="+a.people+"&redirect=1";
+		else if (a.email) picture_url = "/dynamic/contact/service/picture_from_email?email="+a.email;
+		if (picture_url) {
+			var img = document.createElement("IMG");
+			img.style.height = "100%";
+			img.style.maxHeight = "45px";
+			img.src = picture_url;
+			td.appendChild(img);
+		}
+		tr.appendChild(td = document.createElement("TD"));
+		td.style.verticalAlign = "bottom";
+		if (a.name)	td.appendChild(document.createTextNode(a.name));
+		this._table.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td = document.createElement("TD"));
+		td.style.verticalAlign = "top";
+		td.style.color = "#606060";
+		td.style.fontStyle = "italic";
+		td.style.fontSize = "9pt";
+		if (a.email) td.appendChild(document.createTextNode(a.email));
+	};
+	for (var i = 0; i < attendees.length; ++i) this.createAttendee(attendees[i]);
 }

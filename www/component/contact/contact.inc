@@ -332,5 +332,9 @@ class contact extends Component {
 		$q->field("PeopleContact","people","people");
 		return $q->execute();
 	}
+	
+	public function getEMails($contacts_ids, $bypass_security = false) {
+		return SQLQuery::create()->bypassSecurity($bypass_security)->select("Contact")->whereIn("Contact","id",$contacts_ids)->whereValue("Contact","type","email")->execute();
+	}
 }
 ?>

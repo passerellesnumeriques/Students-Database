@@ -285,8 +285,11 @@ class storage extends Component {
 		if ($revision_alias <> null)
 			$q->field("Storage", "revision", $revision_alias);
 	}
+	function getRevision($id) {
+		return SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage","id",$id)->field("revision")->executeSingleValue();
+	}
 	function getFileType($id) {
-		return SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage","id",$id)->field("type")->executeSingleField();
+		return SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage","id",$id)->field("type")->executeSingleValue();
 	}
 	
 	function convertTempFile($id, $type) {

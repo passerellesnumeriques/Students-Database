@@ -5,6 +5,7 @@ class service_picture extends Service {
 	public function inputDocumentation() { echo "<code>people</code>: id of the people to get the picture"; }
 	public function outputDocumentation() { echo "storage_id and revision, or sex (if no picture)"; }
 	public function execute(&$component, $input) {
+		if (!isset($input["people"]) && isset($_GET["people"])) $input = $_GET;
 		$people_id = $input["people"];
 		/* accept to access the picture of anyone...
 		if (!$component->canRead($people_id)) {
@@ -22,9 +23,15 @@ class service_picture extends Service {
 		PNApplication::$instance->storage->joinRevision($q, "People", "picture", "revision");
 		$people = $q->executeSingleRow();
 		if ($people["picture"] <> null) {
-			echo "{storage_id:".$people["picture"].",revision:".$people["revision"]."}";
+			if (@$input["redirect"] == "1")
+				header("Location: /dynamic/storage/service/get?id=".$people["picture"]."&revision=".$people["revision"]);
+			else
+				echo "{storage_id:".$people["picture"].",revision:".$people["revision"]."}";
 		} else {
-			echo "{sex:".json_encode($people["sex"])."}";
+			if (@$input["redirect"] == "1")
+				header("Location: /static/people/default_".($people["sex"] == "F" ? "female" : "male").".jpg");
+			else
+				echo "{sex:".json_encode($people["sex"])."}";
 		}
 	}
 }

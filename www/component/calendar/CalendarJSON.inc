@@ -35,11 +35,7 @@ class CalendarJSON {
 			->join("CalendarEvent","CalendarEventFrequency",array("id"=>"event"))
 			;
 		$rows = $q->execute();
-		$attendees = SQLQuery::create()->bypassSecurity()->select("CalendarEventAttendee")->whereIn("CalendarEventAttendee","event",$ids)->execute();
-		for ($i = 0; $i < count($rows); $i++) {
-			$rows[$i]["attendees"] = array();
-			foreach ($attendees as $a) if ($a["event"] == $rows[$i]["id"]) array_push($rows[$i]["attendees"], $a);
-		}
+		self::addAttendees($rows, $ids);
 		$data = "[";
 		$first = true;
 		foreach ($rows as $row) {
@@ -48,6 +44,37 @@ class CalendarJSON {
 		}
 		$data .= "]";
 		return $data;
+	}
+	
+	public static function addAttendees(&$events, $events_ids = null) {
+		if ($events_ids == null) {
+			$events_ids = array();
+			foreach ($events as $e) array_push($events_ids, $e["id"]);
+		}
+		if (count($events) == 0) return;
+		$attendees = SQLQuery::create()->bypassSecurity()
+			->select("CalendarEventAttendee")
+			->whereIn("CalendarEventAttendee","event",$events_ids)
+			->execute();
+		$people_ids = array();
+		$contact_ids = array();
+		foreach ($attendees as $a) {
+			if ($a["people"] && !in_array($a["people"], $people_ids)) array_push($people_ids, $a["people"]);
+			if ($a["people_email"] && !in_array($a["people_email"], $contact_ids)) array_push($contact_ids, $a["people_email"]);
+		}
+		$peoples = count($people_ids) > 0 ? PNApplication::$instance->people->getPeoples($people_ids,false,false,true) : array();
+		$emails = count($contact_ids) > 0 ? PNApplication::$instance->contact->getEMails($contact_ids,true) : array();
+		if (count($peoples) > 0 || count($emails) > 0)
+			for ($i = count($attendees)-1; $i >= 0; $i--) {
+				if ($attendees[$i]["people"] <> null)
+					foreach ($peoples as $p) if ($p["people_id"] == $attendees[$i]["people"]) { $attendees[$i]["name"] = $p["first_name"]." ".$p["last_name"]; break; }
+				if ($attendees[$i]["people_email"] <> null)
+					foreach ($emails as $e) if ($e["id"] == $attendees[$i]["people_email"]) { $attendees[$i]["email"] = $e["contact"]; break; }
+			}
+		for ($i = count($events)-1; $i >= 0; $i--) {
+			$events[$i]["attendees"] = array();
+			foreach ($attendees as $a) if ($a["event"] == $events[$i]["id"]) array_push($events[$i]["attendees"], $a);
+		}
 	}
 	
 	public static function JSON($row) {
@@ -89,12 +116,12 @@ class CalendarJSON {
 		foreach ($row["attendees"] as $a) {
 			if ($first) $first = false; else $data .= ",";
 			$data .= "{";
-			$data .= "name:".json_encode($a["name"]);
-			$data .= ",email:".json_encode($a["email"]);
-			$data .= ",participation:".json_encode($a["participation"]);
-			$data .= ",role:".json_encode($a["role"]);
-			$data .= ",people_id:".json_encode($a["people"]);
-			$data .= ",contact_id:".json_encode($a["people_email"]);
+			$data .= "name:".json_encode(@$a["name"]);
+			$data .= ",email:".json_encode(@$a["email"]);
+			$data .= ",participation:".json_encode(@$a["participation"]);
+			$data .= ",role:".json_encode(@$a["role"]);
+			$data .= ",people:".json_encode(@$a["people"]);
+			$data .= ",people_email:".json_encode(@$a["people_email"]);
 			$data .= "}";
 		}
 		$data .= "]";

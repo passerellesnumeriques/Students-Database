@@ -139,7 +139,7 @@ class people extends Component {
 		return SQLQuery::create()->bypassSecurity($bypass_security)->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
 	}
 	
-	public function getPeoples($peoples_ids,$include_picture_revision=false,$sort = false) {
+	public function getPeoples($peoples_ids,$include_picture_revision=false,$sort=false,$bypass_security=false) {
 		if (count($peoples_ids) == 0) return array();
 		$q = SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids);
 		if ($sort)
@@ -148,6 +148,7 @@ class people extends Component {
 			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
 			$q->fieldsOfTable("People");
 		}
+		if ($bypass_security) $q->bypassSecurity();
 		return $q->execute();
 	}
 	public function getPeoplesSQLQuery($peoples_ids,$include_picture_revision=false) {

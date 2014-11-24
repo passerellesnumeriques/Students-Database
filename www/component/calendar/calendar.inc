@@ -300,8 +300,26 @@ class calendar extends Component {
 		if (count($existings) > 0)
 			SQLQuery::create()->bypassSecurity()->removeRows($existings);
 		if (count($attendees) > 0) {
-			for ($i = 0; $i < count($attendees); $i++)
+			$peoples_ids = array();
+			$contacts_ids = array();
+			for ($i = count($attendees)-1; $i >= 0; $i--) {
 				$attendees[$i]["event"] = $event_id;
+				if ($attendees[$i]["people"] > 0 && !in_array($attendees[$i]["people"], $peoples_ids)) array_push($peoples_ids, $attendees[$i]["people"]);
+				if ($attendees[$i]["people_email"] > 0 && !in_array($attendees[$i]["people_email"], $contacts_ids)) array_push($contacts_ids, $attendees[$i]["people_email"]);
+			}
+			if (count($peoples_ids) > 0)
+				$peoples = PNApplication::$instance->people->getPeoples($peoples_ids,false,false,true);
+			else
+				$peoples = array();
+			if (count($contacts_ids) > 0)
+				$emails = PNApplication::$instance->contact->getEMails($contacts_ids,true);
+			else
+				$emails = array();
+			if (count($peoples) > 0 || count($emails) > 0)
+				for ($i = count($attendees)-1; $i >= 0; $i--) {
+					if ($attendees[$i]["people"] > 0) foreach ($peoples as $p) if ($p["people_id"] == $attendees[$i]["people"]) { $attendees[$i]["name"] = $p["first_name"]." ".$p["last_name"]; break; }
+					if ($attendees[$i]["people_email"] > 0) foreach ($emails as $e) if ($e["id"] == $attendees[$i]["people_email"]) { $attendees[$i]["email"] = $e["contact"]; break; }
+				}
 			SQLQuery::create()->insertMultiple("CalendarEventAttendee", $attendees);
 		}
 	}

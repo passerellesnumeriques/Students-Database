@@ -141,15 +141,14 @@ function copyCalendarEventFrequency(f) {
 	);
 }
 
-function CalendarEventAttendee(name, role, participation, organizer, email, people_id, contact_id, picture_url) {
+function CalendarEventAttendee(name, role, participation, organizer, email, people, people_email) {
 	this.name = name;
 	this.role = role;
 	this.participation = participation;
 	this.organizer = organizer;
 	this.email = email;
-	this.people_id = people_id;
-	this.contact_id = contact_id;
-	this.picture_url = picture_url;
+	this.people = people;
+	this.people_email = people_email;
 }
 function copyCalendarEventAttendee(a) {
 	if (a == null) return null;
@@ -159,8 +158,7 @@ function copyCalendarEventAttendee(a) {
 		a.participation,
 		a.organizer,
 		a.email,
-		a.people_id,
-		a.contact_id,
-		a.picture_url
+		a.people,
+		a.people_email
 	);
 }

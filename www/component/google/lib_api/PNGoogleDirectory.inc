@@ -73,5 +73,12 @@ class PNGoogleDirectory extends PNGoogle_Admin {
 		}
 		return $users;
 	}
+	
+	public function getProfilePicture($email) {
+		$photo = $this->service->users_photos->get($email);
+		if ($photo <> null)
+			return $photo->getPhotoData();
+		return null;
+	}
 }
 ?>
