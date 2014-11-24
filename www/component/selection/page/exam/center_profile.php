@@ -77,6 +77,7 @@ class page_exam_center_profile extends SelectionPage {
 		$this->requireJavascript("custom_data_grid.js");
 		$this->requireJavascript("people_data_grid.js");
 		$this->requireJavascript("applicant_data_grid.js");
+		$this->requireJavascript("who.js");
 		?>
 		<div>
 		<div id='section_center' title='Exam Center Information' collapsable='true' style='margin:10px;'>

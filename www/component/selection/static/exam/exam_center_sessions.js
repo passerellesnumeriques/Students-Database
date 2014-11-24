@@ -718,6 +718,12 @@ function ExamSessionSection(container, event, sessions, can_edit) {
 		header.appendChild(this.nb_applicants_span);
 		header.appendChild(document.createTextNode(" applicant(s) for this session."));
 		
+		var wc = document.createElement("DIV"); content.appendChild(wc);
+		wc.style.borderBottom = "1px solid #808080";
+		// TODO
+		this.who = new who_container(wc, [], can_edit, 'exam');
+		wc.appendChild(this.who.createAddButton("Which staff will be at this exam session ?"));
+		
 		this.rooms_container = document.createElement("DIV");
 		content.appendChild(this.rooms_container);
 		
@@ -725,9 +731,9 @@ function ExamSessionSection(container, event, sessions, can_edit) {
 	};
 	this._rooms = [];
 	this.refresh = function() {
-		this.span_date.innerHTML = getDateString(event.start);
-		this.span_start_time.innerHTML = getTimeString(event.start);
-		this.span_end_time.innerHTML = getTimeString(event.end);
+		this.span_date.innerHTML = getDateString(event.start,true);
+		this.span_start_time.innerHTML = getTimeString(event.start,true);
+		this.span_end_time.innerHTML = getTimeString(event.end,true);
 		
 		this.rooms_container.removeAllChildren();
 		this._rooms = [];

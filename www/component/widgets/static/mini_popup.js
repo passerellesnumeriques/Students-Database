@@ -11,6 +11,10 @@ function mini_popup(title) {
 		window.top.require("position.js",function() {
 			window.top.positionBelowElement(t._div, element, min_width_from_element);
 			setOpacity(t._div, 1);
+			layout.listenElementSizeChanged(t._div,function() {
+				if (!t || !t._div) return;
+				window.top.positionBelowElement(t._div, element, min_width_from_element);
+			});
 		});
 		element.ondomremoved(function() { t.close(); });
 	};
@@ -20,6 +24,10 @@ function mini_popup(title) {
 		window.top.require("position.js",function() {
 			window.top.positionAboveElement(t._div, element, min_width_from_element);
 			setOpacity(t._div, 1);
+			layout.listenElementSizeChanged(t._div,function() {
+				if (!t || !t._div) return;
+				window.top.positionAboveElement(t._div, element, min_width_from_element);
+			});
 		});
 		element.ondomremoved(function() { t.close(); });
 	};

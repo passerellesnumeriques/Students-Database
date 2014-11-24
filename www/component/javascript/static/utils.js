@@ -414,9 +414,9 @@ function HexDigit(val) {
  * @param {Date} d the date
  * @returns {String} the string representation
  */
-function getDateString(d) {
+function getDateString(d,short) {
 	if (d == null) return "";
-	return _2digits(d.getDate())+" "+getMonthName(d.getMonth()+1)+" "+d.getFullYear();
+	return _2digits(d.getDate())+" "+(short ? getMonthShortName(d.getMonth()+1) : getMonthName(d.getMonth()+1))+" "+d.getFullYear();
 }
 
 function getTimeString(d,short) {
