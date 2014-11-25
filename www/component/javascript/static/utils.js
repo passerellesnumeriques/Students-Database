@@ -74,9 +74,10 @@ function isLetter(c) {
 	if (ord >= 65 && ord <= 90) return true;
 	return false;
 }
+var ascii_0 = 48, ascii_9 = ascii_0+9;
 function isDigit(c) {
 	var ord = c.charCodeAt(0);
-	return ord >= 48 && ord <= 57;
+	return ord >= ascii_0 && ord <= ascii_9;
 }
 
 /**
@@ -421,31 +422,137 @@ function getDateString(d,short) {
 
 function getTimeString(d,short) {
 	if (d == null) return null;
-	if (d.getHours() < 12) return d.getHours()+(!short || d.getMinutes() > 0 ? ":"+_2digits(d.getMinutes()) : "")+"AM";
-	if (d.getHours() == 12) return "12"+(!short || d.getMinutes() > 0 ? ":"+_2digits(d.getMinutes()) : "")+"PM";
-	return (d.getHours()-12)+(!short || d.getMinutes() > 0 ? ":"+_2digits(d.getMinutes()) : "")+"PM";
+	return getTimeStringFromMinutes(d.getHours()*60+d.getMinutes(), short);
 }
 
-function getMinutesTimeString(minutes) {
-	if (minutes == null) minutes = 0;
-	return _2digits(Math.floor(minutes/60))+":"+_2digits(minutes%60);
+function getTimeStringFromMinutes(minutes, short) {
+	var h = Math.floor(minutes/60);
+	var m = minutes-h*60;
+	if (h < 12) return h+(!short || m > 0 ? ":"+_2digits(m) : "")+"AM";
+	if (h == 12) return "12"+(!short || m > 0 ? ":"+_2digits(m) : "")+"PM";
+	return (h-12)+(!short || m > 0 ? ":"+_2digits(m) : "")+"PM";
+}
+
+function getDurationStringFromMinutes(minutes) {
+	if (minutes == null) return "";
+	var h = Math.floor(minutes/60);
+	var m = minutes-h*60;
+	if (m == 0) return h+"h";
+	return h+"h"+_2digits(m)
 }
 
 function parseTimeStringToMinutes(s) {
-	var i = s.indexOf(':');
-	var h,m;
-	if (i < 0) {
-		h = parseInt(s);
-		m = 0;
-	} else {
-		h = parseInt(s.substring(0,i));
-		m = parseInt(s.substring(i+1));
+	if (s == null || s.length == 0) return null;
+	// first, we expect 1 or 2 digits for the hours
+	var d1 = s.charCodeAt(0);
+	if (d1 < ascii_0 || d1 > ascii_9) return null; // not a digit
+	d1 -= ascii_0;
+	if (s.length == 1) return d1*60; // only 1 digit => considered as a number of hours
+	var d2 = s.charCodeAt(1);
+	var i;
+	if (d2 >= ascii_0 && d2 <= ascii_9) {
+		// we have a second digit
+		d2 -= ascii_0;
+		d1 = d1*10+d2;
+		i = 2;
+		if (d1 > 23) return null; // invalid number: we cannot have a value more than 23 hours
+		if (s.length == 2) return d1*60; // we have only those 2 digits => considered as number of hours
+	} else
+		i = 1;
+	// after hours, we may have minutes, or AM/PM
+	d2 = s.charAt(i);
+	if (d2 == ":") {
+		// we now expect minutes
+		i++;
+		if (s.length == i) return d1*60; // we have 'xx:' => we just consider xx as hours
+		d2 = s.charCodeAt(i);
+		if (d2 >= ascii_0 && d2 <= ascii_9) {
+			// we have a digit, so we have the minutes
+			d2 -= ascii_0;
+			i++;
+			if (s.length == i) return d1*60+d2; // we have xx:x => return it
+			var d3 = s.charCodeAt(i);
+			if (d3 >= ascii_0 && d3 <= ascii_9) {
+				// we have a second digit
+				d3 -= ascii_0;
+				d2 = d2*10+d3;
+				i++;
+				if (s.length == i) return d1*60+d2; // we have xx:xx => return it
+			}
+		}
+	} else
+		d2 = 0; // no minutes
+	var c = s.charAt(i);
+	if (c == 'a' || c == 'A') {
+		var c2 = s.length > i ? s.charAt(i+1) : null;
+		if (c2 == 'm' || c2  == 'M') {
+			// we got the AM
+			if (d1 > 12) return null; // invalid number of hours
+			return d1*60+d2;
+		}
+	} else if (c == 'p' || c == 'P') {
+		var c2 = s.length > i ? s.charAt(i+1) : null;
+		if (c2 == 'm' || c2  == 'M') {
+			// we got the PM
+			if (d1 > 12) return null; // invalid number of hours
+			if (d1 == 12) return d1*60+d2; // 12PM is noon
+			return (d1+12)*60+d2;
+		}
 	}
-	if (isNaN(h)) h = 0; else if (h > 23) h = 23; else if (h < 0) h = 0;
-	if (isNaN(m)) m = 0; else if (m > 59) m = 59; else if (m < 0) m = 0;
-	return h*60+m;
+	// if we are here, there is something unexpected at the end, we just ignore it
+	return d1*60+d2;
 }
 
+function parseDurationStringToMinutes(s) {
+	if (s == null || s.length == 0) return null;
+	// first, we expect 1 or 2 digits for the hours or minutes
+	var d1 = s.charCodeAt(0);
+	if (d1 < ascii_0 || d1 > ascii_9) return null; // not a digit
+	d1 -= ascii_0;
+	if (s.length == 1) return d1*60; // only 1 digit => considered as a number of hours
+	var d2 = s.charCodeAt(1);
+	var i;
+	if (d2 >= ascii_0 && d2 <= ascii_9) {
+		// we have a second digit
+		d2 -= ascii_0;
+		d1 = d1*10+d2;
+		i = 2;
+		if (s.length == 2) return d1*60; // we have only those 2 digits => considered as number of hours
+	} else
+		i = 1;
+	// after the first number, we may have ':' to separate from minutes, or the unit 'h' or 'm'
+	d2 = s.charAt(i);
+	if (d2 == 'h' || d2 == 'H') {
+		// first number was hours
+		d1 *= 60;
+		i++;
+	} else if (d2 == 'm' || d2 == 'M') {
+		// first number was minutes
+		return d1;
+	} else if (d2 == ':') {
+		// first number was hours
+		d1 *= 60;
+		i++;
+	} else
+		return null; // unexpected character
+	if (s.length == i) return d1; // we reached the end
+	// if we are here, we got 'xx:' or 'xxh', so now we expect a number of minutes
+	d2 = s.charCodeAt(i);
+	if (d2 >= ascii_0 && d2 <= ascii_9) {
+		// we have a digit, so we have the minutes
+		d2 -= ascii_0;
+		i++;
+		if (s.length == i) return d1*60+d2; // we have xx:x => return it
+		var d3 = s.charCodeAt(i);
+		if (d3 >= ascii_0 && d3 <= ascii_9) {
+			// we have a second digit
+			d3 -= ascii_0;
+			d2 = d2*10+d3;
+		}
+		return d1+d2;
+	}
+	return d1;
+}
 
 /** Return the name of the given month
  * @param {Number} month between 1 and 12

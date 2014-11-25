@@ -37,23 +37,32 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	};
 	
 	this._popupDate = function() {
-		require(["mini_popup.js",["typed_field.js",["field_date.js","field_time.js"]]],function() {
+		var javascripts = ["mini_popup.js","date_picker.js"];
+		if (default_duration != "All day") javascripts.push(["typed_field.js","field_time.js"]);
+		require(javascripts,function() {
 			var p = new mini_popup("When will occurs this Information Session ?");
 			// Date
 			var div_date = document.createElement("DIV");
 			p.content.appendChild(div_date);
-			var date = new field_date(t._event.start ? dateToSQL(t._event.start) : null, true);
-			div_date.appendChild(date.getHTMLElement());
+			div_date.style.display = "inline-block";
+			div_date.style.verticalAlign = "middle";
+			var date = new date_picker(t._event.start, null, null);
+			div_date.appendChild(date.getElement());
 			// Time and duration
 			var start = null;
 			var select_duration = null;
 			if(default_duration != "All day") {
 				var div_time = document.createElement("DIV");
 				p.content.appendChild(div_time);
+				div_time.style.display = "inline-block";
+				div_time.style.verticalAlign = "middle";
+				div_time.style.lineHeight = "20px";
+				div_time.style.marginLeft = "5px";
 				// starting time
 				div_time.appendChild(document.createTextNode("Starting time: "));
 				start = new field_time(t._event.start ? t._event.start.getHours()*60+t._event.start.getMinutes() : null,true,{can_be_null:false});
 				div_time.appendChild(start.getHTMLElement());
+				div_time.appendChild(document.createElement("BR"));
 				// duration
 				div_time.appendChild(document.createTextNode(" Duration: "));
 				select_duration = document.createElement("SELECT");
@@ -72,9 +81,10 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			}
 			// ok button
 			p.addOkButton(function() {
-				if (!date.getCurrentData()) return false;
+				if (!date.getDate) return false;
+				var d = date.getDate();
+				if (!d) return false;
 				if (start && start.getCurrentData() === null) return false;
-				var d = parseSQLDate(date.getCurrentData());
 				d.setHours(0,start.getCurrentMinutes(),0,0);
 				t._event.start = d;
 				t._event.end = new Date(t._event.start.getTime()+select_duration.value*60*60*1000);
