@@ -89,6 +89,7 @@ field_timestamp.prototype._create = function(data) {
 			this.element.style.border = error ? "1px solid red" : "";
 		};
 	} else {
+		this.element.style.whiteSpace = "nowrap";
 		if (this.config && this.config.style)
 			for (var s in this.config.style)
 				this.element.style[s] = this.config.style[s];

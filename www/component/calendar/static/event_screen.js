@@ -9,7 +9,9 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	var t=this;
 	/** Copy of the given event, that will be manipulated and updated according to the screen, without modifying directly the event (in case the user finally cancel) */
 	this.event = copyCalendarEvent(ev);
-	this.editable = ev ? (typeof window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id).saveEvent) == 'function' : true;
+	this.original_calendar = ev ? window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id) : null;
+	this.editable = ev ? (typeof this.original_calendar.saveEvent) == 'function' : true;
+	this.removable = ev ? (typeof this.original_calendar.removeEvent) == 'function' : false;
 
 	this.populateEvent = function(event) {
 		var err = this.calendar.populate(event);
@@ -25,8 +27,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	this.saveEvent = function(event) {
 		var calendar = window.top.CalendarsProviders.getProvider(event.calendar_provider_id).getCalendar(event.calendar_id);
 		if (ev && (ev.calendar_id != event.calendar_id || ev.calendar_provider_id != event.calendar_provider_id)) {
-			var from = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
-			if (!confirm("You are going to move the event to a different calendar. Are you sure you want to remove it from "+from.name+" and create it into "+calendar.name+" ?"))
+			if (!confirm("You are going to move the event to a different calendar. Are you sure you want to remove it from "+t.original_calendar.name+" and create it into "+calendar.name+" ?"))
 				return;
 			// TODO
 			return;
@@ -36,6 +37,8 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	
 	this._init = function() {
 		this._table = document.createElement("TABLE");
+		this._table.style.borderCollapse = "collapse";
+		this._table.style.borderSpacing = "0px";
 		var tr,td;
 		
 		// Calendar
@@ -49,31 +52,38 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		// What
 		this._table.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td = document.createElement("TD"));
+		td.style.borderTop = "1px solid #A0A0A0";
 		td.innerHTML = "What";
 		this._styleLeftTitle(td);
 		tr.appendChild(td = document.createElement("TD"));
+		td.style.borderTop = "1px solid #A0A0A0";
 		this.what = new event_screen_what(td, ev ? ev.title : null, ev ? ev.description : null, this.editable);
 		
 		// When
 		this._table.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td = document.createElement("TD"));
+		td.style.borderTop = "1px solid #A0A0A0";
 		td.innerHTML = "When";
 		this._styleLeftTitle(td);
 		tr.appendChild(td = document.createElement("TD"));
+		td.style.borderTop = "1px solid #A0A0A0";
 		this.when = new event_screen_when(td, ev ? ev.start : new_datetime, ev ? ev.end : new Date(new_datetime.getTime()+60*60*1000), ev ? ev.all_day : new_all_day, ev ? ev.frequency : null, this.editable);
 		
 		// Who
 		this._table.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td = document.createElement("TD"));
+		td.style.borderTop = "1px solid #A0A0A0";
 		td.innerHTML = "Who";
 		this._styleLeftTitle(td);
 		tr.appendChild(td = document.createElement("TD"));
+		td.style.borderTop = "1px solid #A0A0A0";
 		this.who = new event_screen_who(td, ev ? ev.attendees : [], this.editable);
 		
 		// app link
 		if (ev && ev.app_link) {
 			this._table.appendChild(tr = document.createElement("TR"));
 			tr.appendChild(td = document.createElement("TD"));
+			td.style.borderTop = "1px solid #A0A0A0";
 			td.colSpan = 2;
 			var link = document.createElement("A");
 			link.style.fontWeight = "bold";
@@ -114,6 +124,14 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 					t.saveEvent(event);
 					popup.close();
 				});
+			if (this.removable)
+				popup.addIconTextButton(theme.icons_16.remove, "Remove this event", 'remove', function() {
+					confirm_dialog("Are you sure you want to remove this event ?", function(yes) {
+						if (!yes) return;
+						t.original_calendar.removeEvent(ev);
+						popup.close();
+					});
+				});
 			popup.addCloseButton();
 		}
 		popup.show();
@@ -122,7 +140,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		td.style.color = "#606060";
 		td.style.fontWeight = "bold";
 		td.style.verticalAlign = "top";
-		td.style.textAlign = "right";
+		td.style.textAlign = "left";
 	};
 	require("popup_window.js",function() {
 		t._init();
@@ -397,7 +415,8 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 			container.appendChild(div);
 			var repeat_div = document.createElement("DIV");
 			container.appendChild(repeat_div);
-			repeat_div.style.marginLeft = '15px';
+			repeat_div.style.marginLeft = '25px';
+			repeat_div.style.whiteSpace = 'nowrap';
 			var frequency = document.createElement("SELECT");
 			var o;
 			o = document.createElement("OPTION"); o.value = 'DAILY'; o.text = 'Daily'; frequency.add(o);
@@ -417,19 +436,19 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 			repeat_div.appendChild(repeat_on_div);
 			repeat_on_div.appendChild(document.createTextNode("Repeat on: "));
 			var repeat_on_MO = document.createElement("INPUT"); repeat_on_MO.type = 'checkbox'; repeat_on_MO.style.verticalAlign = 'middle';
-			repeat_on_div.appendChild(repeat_on_MO); repeat_on_div.appendChild(document.createTextNode(" Mon"));
+			repeat_on_div.appendChild(repeat_on_MO); repeat_on_div.appendChild(document.createTextNode("Mon"));
 			var repeat_on_TU = document.createElement("INPUT"); repeat_on_TU.type = 'checkbox'; repeat_on_TU.style.verticalAlign = 'middle';
-			repeat_on_div.appendChild(repeat_on_TU); repeat_on_div.appendChild(document.createTextNode(" Tue"));
+			repeat_on_div.appendChild(repeat_on_TU); repeat_on_div.appendChild(document.createTextNode("Tue"));
 			var repeat_on_WE = document.createElement("INPUT"); repeat_on_WE.type = 'checkbox'; repeat_on_WE.style.verticalAlign = 'middle';
-			repeat_on_div.appendChild(repeat_on_WE); repeat_on_div.appendChild(document.createTextNode(" Wed"));
+			repeat_on_div.appendChild(repeat_on_WE); repeat_on_div.appendChild(document.createTextNode("Wed"));
 			var repeat_on_TH = document.createElement("INPUT"); repeat_on_TH.type = 'checkbox'; repeat_on_TH.style.verticalAlign = 'middle';
-			repeat_on_div.appendChild(repeat_on_TH); repeat_on_div.appendChild(document.createTextNode(" Thu"));
+			repeat_on_div.appendChild(repeat_on_TH); repeat_on_div.appendChild(document.createTextNode("Thu"));
 			var repeat_on_FR = document.createElement("INPUT"); repeat_on_FR.type = 'checkbox'; repeat_on_FR.style.verticalAlign = 'middle';
-			repeat_on_div.appendChild(repeat_on_FR); repeat_on_div.appendChild(document.createTextNode(" Fri"));
+			repeat_on_div.appendChild(repeat_on_FR); repeat_on_div.appendChild(document.createTextNode("Fri"));
 			var repeat_on_SA = document.createElement("INPUT"); repeat_on_SA.type = 'checkbox'; repeat_on_SA.style.verticalAlign = 'middle';
-			repeat_on_div.appendChild(repeat_on_SA); repeat_on_div.appendChild(document.createTextNode(" Sat"));
+			repeat_on_div.appendChild(repeat_on_SA); repeat_on_div.appendChild(document.createTextNode("Sat"));
 			var repeat_on_SU = document.createElement("INPUT"); repeat_on_SU.type = 'checkbox'; repeat_on_SU.style.verticalAlign = 'middle';
-			repeat_on_div.appendChild(repeat_on_SU); repeat_on_div.appendChild(document.createTextNode(" Sun"));
+			repeat_on_div.appendChild(repeat_on_SU); repeat_on_div.appendChild(document.createTextNode("Sun"));
 			var repeat_by_div = document.createElement("DIV");
 			repeat_div.appendChild(repeat_by_div);
 			repeat_by_div.style.display = "none";
@@ -523,6 +542,7 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 					from_time_span.style.display = "";
 					to_time_span.style.display = "";
 				}
+				layout.changed(from_time_span.parentNode);
 			};
 			from_date.onchange.add_listener(function() {
 				var d = from_date.getCurrentData();
@@ -587,6 +607,7 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 					repeat_div.style.display = "none";
 					t.frequency = null;
 				}
+				layout.changed(repeat_div.parentNode);
 			};
 			frequency.onchange = function() {
 				if (this.value == 'DAILY') {
@@ -607,6 +628,7 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 					repeat_by_div.style.display = 'none';
 				}
 				getFrequency();
+				layout.changed(repeat_div);
 			};
 			interval.onchange = function() { getFrequency(); };
 			repeat_on_MO.onchange = function() { getFrequency(); };

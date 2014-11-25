@@ -330,6 +330,7 @@ function calendar_view_week(view, container) {
 		if (typeof setTimeout == 'undefined') return; // not there anymore
 		if (!t._timeout)
 			t._timeout = setTimeout(function(){
+				if (!t) return;
 				var w = container.clientWidth-51-window.top.browser_scroll_bar_size;
 				w -= (t.content.offsetWidth-t.content.clientWidth);
 				for (var i = 0; i < t._time_lines.length; ++i)

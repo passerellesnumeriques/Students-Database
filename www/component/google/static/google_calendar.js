@@ -221,9 +221,11 @@ function GoogleCalendar(id, name, color, show, writable) {
 		});
 	};
 	if (writable) {
+		/*
 		this.saveEvent = function(event) {
 			// TODO
 		};
+		*/
 	}
 }
 GoogleCalendar.prototype = new Calendar();

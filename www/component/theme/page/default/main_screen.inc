@@ -202,7 +202,7 @@ global $pn_app_version;
 						echo " menu=\"".$section->getMenuURL()."\"";
 						echo " page=\"".$section->getDefaultPageURL()."\"";
 						echo ">";
-						echo "<a href='/?section=".$section->getId()."' target='_blank'>";
+						echo "<a href='/?section=".$section->getId()."' target='_blank' onclick='return false;'>";
 						echo "<img src=\"".$section->getIcon16White()."\"/>";
 						echo toHTML($section->getName());
 						echo "</a>";

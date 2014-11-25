@@ -398,6 +398,7 @@ function Calendar(provider, name, color, show, icon) {
 	};
 	/** {Function} function called to save an event. If it is not defined, it means the calendar is read only. This function takes the event to save as parameter. */
 	this.saveEvent = null; // must be overriden if the calendar supports modifications
+	this.removeEvent = null; // must be overriden if the calendar supports remove
 	/** Save the visibility of the calendar (if supported by the provider)
 	 * @param {Boolean} show visibility: true to be visible, false to be hidden
 	 */
@@ -633,6 +634,17 @@ function PNCalendar(provider, id, name, color, show, writable, icon, removable) 
 							break;
 						}
 				}
+			});
+		};
+		this.removeEvent = function(event) {
+			service.json("calendar","remove_event",{calendar:event.calendar_id,event:event.id},function(res) {
+				if (!res) return;
+				for (var i = 0; i < t.events.length; ++i)
+					if (t.events[i].uid == event.uid) {
+						t.events.splice(i,1);
+						t.on_event_removed.fire(event);
+						break;
+					}
 			});
 		};
 		this.rename = function(name,ondone) {

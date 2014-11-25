@@ -55,7 +55,10 @@ function DayColumnLayout(calendar_manager) {
 		if (!cal) return; // calendar has been removed
 		var min = event.start.getHours()*60+event.start.getMinutes();
 		var y1 = Math.floor(min*scale_height/scale_time)+y;
-		min = event.end.getHours()*60+event.end.getMinutes();
+		if (event.end.getDate() != event.start.getDate() || event.end.getMonth() != event.start.getMonth() || event.end.getFullYear() != event.start.getFullYear())
+			min = 24*60;
+		else
+			min = event.end.getHours()*60+event.end.getMinutes();
 		var y2 = Math.floor(min*scale_height/scale_time)+y;
 		var div = createEventDiv(event,cal);
 		if (!div) return;
