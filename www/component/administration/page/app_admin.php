@@ -519,10 +519,6 @@ require("deploy_utils.js",function() {
 });
 
 
-section_sessions.addButton(null,"Remove all sessions except mine","action",function() {
-	alert("TODO");
-});
-
 function startMaintenance() {
 	var form = document.forms['maintenance'];
 	var timing = form.elements['timing'].value;

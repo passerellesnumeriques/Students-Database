@@ -1,4 +1,7 @@
-<?php 
+<?php
+/**
+ * Alumni component
+ */ 
 class alumni extends Component {
 	
 	public function getPluginImplementations() {
