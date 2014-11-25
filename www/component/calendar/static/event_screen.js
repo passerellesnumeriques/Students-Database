@@ -11,6 +11,29 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	this.event = copyCalendarEvent(ev);
 	this.editable = ev ? (typeof window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id).saveEvent) == 'function' : true;
 
+	this.populateEvent = function(event) {
+		var err = this.calendar.populate(event);
+		if (err) return err;
+		err = this.what.populate(event);
+		if (err) return err;
+		err = this.when.populate(event);
+		if (err) return err;
+		err = this.who.populate(event);
+		if (err) return err;
+		return null;
+	};
+	this.saveEvent = function(event) {
+		var calendar = window.top.CalendarsProviders.getProvider(event.calendar_provider_id).getCalendar(event.calendar_id);
+		if (ev && (ev.calendar_id != event.calendar_id || ev.calendar_provider_id != event.calendar_provider_id)) {
+			var from = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
+			if (!confirm("You are going to move the event to a different calendar. Are you sure you want to remove it from "+from.name+" and create it into "+calendar.name+" ?"))
+				return;
+			// TODO
+			return;
+		}
+		calendar.saveEvent(event);
+	};
+	
 	this._init = function() {
 		this._table = document.createElement("TABLE");
 		var tr,td;
@@ -47,7 +70,52 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		tr.appendChild(td = document.createElement("TD"));
 		this.who = new event_screen_who(td, ev ? ev.attendees : [], this.editable);
 		
+		// app link
+		if (ev && ev.app_link) {
+			this._table.appendChild(tr = document.createElement("TR"));
+			tr.appendChild(td = document.createElement("TD"));
+			td.colSpan = 2;
+			var link = document.createElement("A");
+			link.style.fontWeight = "bold";
+			if (ev.app_link.startsWith("popup:")) {
+				link.href = '#';
+				link.onclick = function() {
+					window.top.require("popup_window.js", function() {
+						var popup = new window.top.popup_window(ev.title,null,"");
+						popup.setContentFrame(ev.app_link.substring(6));
+						popup.showPercent(95,95);
+					});
+					return false;
+				};
+			} else
+				link.href = ev.app_link;
+			link.innerHTML = ev.app_link_name;
+			td.appendChild(link);
+		}
+		
 		var popup = new popup_window("Event", "/static/calendar/event.png",this._table);
+		if (!ev) {
+			popup.addCreateButton(function() {
+				var event = new CalendarEvent();
+				var err = t.populateEvent(event);
+				if (err) { alert(err); return; }
+				t.saveEvent(event);
+				popup.close();
+			});
+			popup.addCancelButton();
+		} else {
+			if (this.editable)
+				popup.addSaveButton(function() {
+					var event = new CalendarEvent();
+					event.id = ev.id;
+					event.uid = ev.uid;
+					var err = t.populateEvent(event);
+					if (err) { alert(err); return; }
+					t.saveEvent(event);
+					popup.close();
+				});
+			popup.addCloseButton();
+		}
 		popup.show();
 	};
 	this._styleLeftTitle = function(td) {
@@ -154,11 +222,21 @@ function event_screen_calendar_selector(container, calendar, editable, is_new) {
 			});
 		};
 	}
+	
+	this.populate = function(event) {
+		event.calendar_provider_id = this.selected_calendar.provider.id;
+		event.calendar_id = this.selected_calendar.id;
+	}
 }
 
 function event_screen_what(container, title, description, editable) {
 	this.title = title ? title : "";
 	this.description = description ? description : "";
+	this.populate = function(event) {
+		if (this.title.length == 0) return "Please enter a title for your event";
+		event.title = this.title;
+		event.description = this.description;
+	};
 	var t=this;
 	this._init = function() {
 		// title
@@ -545,6 +623,37 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 			repeat_count.onchange = function() { getFrequency(); };
 			repeat_until_date.onchange = function() { getFrequency(); };
 			repeat_until.onchange.add_listener(function() { getFrequency(); });
+			
+			t.populate = function(event) {
+				var from = parseSQLDate(from_date.getCurrentData());
+				if (!from) return "You must enter a starting date";
+				var to = parseSQLDate(to_date.getCurrentData());
+				if (!to) return "Please enter valid dates";
+				if (cb_all_day.checked) {
+					event.all_day = true;
+					// make the dates as UTC
+					event.start = new Date();
+					event.start.setUTCFullYear(from.getFullYear());
+					event.start.setUTCMonth(from.getMonth());
+					event.start.setUTCDate(from.getDate());
+					event.end = new Date();
+					event.end.setUTCFullYear(to.getFullYear());
+					event.end.setUTCMonth(to.getMonth());
+					event.end.setUTCDate(to.getDate());
+				} else {
+					event.all_day = false;
+					// get the time
+					event.start = from;
+					event.start.setHours(0,from_time.getCurrentMinutes(),0,0);
+					event.end = to;
+					event.end.setHours(0,to_time.getCurrentMinutes(),0,0);
+				}
+				if (repeat.checked) {
+					getFrequency();
+					event.frequency = t.frequency;
+				} else
+					event.frequency = null;
+			};
 		});
 	}
 }
@@ -558,12 +667,12 @@ function event_screen_who(container, attendees, editable) {
 		tr.appendChild(td = document.createElement("TD"));
 		td.rowSpan = 2;
 		var picture_url = null;
-		if (a.people) picture_url = "/dynamic/people/service/picture?people="+a.people+"&redirect=1";
+		if (a.people > 0) picture_url = "/dynamic/people/service/picture?people="+a.people+"&redirect=1";
 		else if (a.email) picture_url = "/dynamic/contact/service/picture_from_email?email="+a.email;
 		if (picture_url) {
 			var img = document.createElement("IMG");
 			img.style.height = "100%";
-			img.style.maxHeight = "45px";
+			img.style.maxHeight = "40px";
 			img.src = picture_url;
 			td.appendChild(img);
 		}
@@ -577,6 +686,9 @@ function event_screen_who(container, attendees, editable) {
 		td.style.fontStyle = "italic";
 		td.style.fontSize = "9pt";
 		if (a.email) td.appendChild(document.createTextNode(a.email));
+	};
+	this.populate = function(event) {
+		event.attendees = arrayCopy(this.attendees, copyCalendarEventAttendee);
 	};
 	for (var i = 0; i < attendees.length; ++i) this.createAttendee(attendees[i]);
 }

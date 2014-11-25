@@ -8,6 +8,11 @@ function DayColumnLayout(calendar_manager) {
 	var t=this;
 	/** List of events in the day */
 	this.events = [];
+	
+	this._leftSpace = 0;
+	this._rightSpace = 2;
+	this._topSpace = 0;
+	this._bottomSpace = 0;
 
 	/** Layout and display the given events
 	 * @param {Array} events the list of events
@@ -55,10 +60,10 @@ function DayColumnLayout(calendar_manager) {
 		var div = createEventDiv(event,cal);
 		if (!div) return;
 		div.style.position = "absolute";
-		div.style.top = y1+"px";
-		div.style.height = (y2-y1-3)+"px";
-		div.style.left = x+"px";
-		div.style.width = (w-3)+"px";
+		div.style.top = (y1+t._topSpace)+"px";
+		div.style.height = (y2-y1-2-t._topSpace-t._bottomSpace)+"px";
+		div.style.left = (x+t._leftSpace)+"px";
+		div.style.width = (w-3-t._leftSpace-t._rightSpace)+"px";
 		div.style.zIndex = 2;
 		div.style.overflow = "hidden";
 		container.appendChild(div);
@@ -80,7 +85,7 @@ function DayColumnLayout(calendar_manager) {
 	 */
 	this._layoutBoxes = function(cx, cw, cy, ch) {
 		for (var i = 0; i < this.events.length; ++i) {
-			this.events[i].pos = {x:this.events[i].offsetLeft,w:this.events[i].offsetWidth-1};
+			this.events[i].pos = {x:this.events[i].offsetLeft-t._leftSpace,w:this.events[i].offsetWidth-1+t._leftSpace+t._rightSpace};
 			this.events[i].conflicts = [];
 		}
 		for (var y = cy; y < cy+ch; y++) {
@@ -112,8 +117,8 @@ function DayColumnLayout(calendar_manager) {
 						while (s != null && s.w < min_w) s = space.get(conflicts);
 						if (s != null) {
 							// some space is available
-							boxes[i].style.left = s.x+"px";
-							boxes[i].style.width = (s.w-3)+"px";
+							boxes[i].style.left = (s.x+t._leftSpace)+"px";
+							boxes[i].style.width = (s.w-3-t._leftSpace-t._rightSpace)+"px";
 							boxes[i].pos.x = s.x;
 							boxes[i].pos.w = s.w;
 							continue;
@@ -130,7 +135,7 @@ function DayColumnLayout(calendar_manager) {
 						// or among conflicts
 						// TODO
 						var new_w = Math.floor(cw/(lowest_ratio+1));
-						boxes[lowest_index].style.width = (new_w-3)+"px";
+						boxes[lowest_index].style.width = (new_w-3-t._leftSpace-t._rightSpace)+"px";
 						boxes[lowest_index].pos.w = new_w;
 						all_ok = false;
 						break;
@@ -156,8 +161,8 @@ function DayColumnLayout(calendar_manager) {
 		var boxes = [];
 		for (var i = 0; i < this.events.length; ++i) {
 			var box = this.events[i];
-			if (box.offsetTop > y) continue;
-			if (box.offsetTop+box.offsetHeight < y) continue;
+			if (box.offsetTop-t._topSpace > y) continue;
+			if (box.offsetTop+box.offsetHeight+t._bottomSpace < y) continue;
 			boxes.push(box);
 		}
 		return boxes;

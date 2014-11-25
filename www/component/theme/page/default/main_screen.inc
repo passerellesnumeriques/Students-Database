@@ -68,6 +68,10 @@ global $pn_app_version;
 	padding: 3px 2px 0px 2px;
 	cursor: pointer;
 }
+.application_menu_item>a {
+	text-decoration: none;
+	color: white;
+}
 .application_menu_item>img {
 	vertical-align:bottom;
 	margin-right: 1px;
@@ -198,8 +202,10 @@ global $pn_app_version;
 						echo " menu=\"".$section->getMenuURL()."\"";
 						echo " page=\"".$section->getDefaultPageURL()."\"";
 						echo ">";
+						echo "<a href='/?section=".$section->getId()."' target='_blank'>";
 						echo "<img src=\"".$section->getIcon16White()."\"/>";
 						echo toHTML($section->getName());
+						echo "</a>";
 						echo "</div>";
 					}
 					?>
