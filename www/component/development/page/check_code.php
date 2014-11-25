@@ -431,6 +431,10 @@ setTimeout(function() {
 				if ($filename == "test") continue;
 				if ($filename == "development") continue;
 				if ($filename == "documentation") continue;
+				if ($filename == "updates") continue;
+				if ($filename == "data") continue;
+				if ($filename == "maintenance") continue;
+				if ($filename == "conf") continue;
 				if (substr($filename, 0, 4) == "lib_") continue;
 				if ($first) $first = false; else echo ",";
 				echo "{type:'dir',name:".json_encode($filename).",content:";
@@ -439,6 +443,9 @@ setTimeout(function() {
 			} else {
 				if (substr($filename, 0, 9) == "datamodel") continue;
 				if ($filename == "init_data.inc") continue;
+				if ($filename == "deploy.script.php") continue;
+				if ($filename == "cron.php") continue;
+				if ($filename == "cron_maintenance.php") continue;
 				$i = strrpos($filename, ".");
 				if ($i === FALSE) continue;
 				$ext = strtolower(substr($filename,$i+1));
