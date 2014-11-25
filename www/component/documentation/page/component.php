@@ -33,6 +33,7 @@ class page_component extends Page {
 			if ($ext == "php" || $ext == "inc") {
 				if (substr($filename, 0, 9) == "datamodel") continue;
 				if ($filename == "init_data.inc") continue;
+				if ($filename == "deploy.script.php") continue;
 				array_push($files, "component/$name/$filename");
 			}
 		}
