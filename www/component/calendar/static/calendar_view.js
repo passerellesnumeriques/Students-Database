@@ -767,6 +767,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		t.calendar_manager.on_event_removed.add_listener(remove_event_listener);
 		t.calendar_manager.on_event_updated.add_listener(update_event_listener);
 		pnapplication.onclose.add_listener(function() {
+			if (!t) return;
 			t.calendar_manager.on_event_added.remove_listener(add_event_listener);
 			t.calendar_manager.on_event_removed.remove_listener(remove_event_listener);
 			t.calendar_manager.on_event_updated.remove_listener(update_event_listener);

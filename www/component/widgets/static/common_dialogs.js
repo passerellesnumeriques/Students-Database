@@ -141,6 +141,8 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 		p.onclose = function() {
 			var r=result; result=null;
 			ok_handler(r,p);
+			input.onkeyup = null;
+			input.onblur = null;
 			p = null;
 			content = null;
 			input = null;

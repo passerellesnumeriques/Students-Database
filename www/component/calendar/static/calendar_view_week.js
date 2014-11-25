@@ -420,5 +420,5 @@ function calendar_view_week(view, container) {
 	};
 	
 	this._init();
-	layout.listenElementSizeChanged(container, function() { t._layout(); });
+	layout.listenElementSizeChanged(container, function() { if (t) t._layout(); });
 }
