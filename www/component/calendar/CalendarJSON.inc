@@ -11,11 +11,11 @@ class CalendarJSON {
 			return false;
 		}
 		$q = SQLQuery::create()->bypassSecurity()
-		->select("CalendarEvent")
-		->whereValue("CalendarEvent", "id", $id)
-		->whereValue("CalendarEvent", "calendar", $calendar_id) // make sure the calendar is correct, so the access right check before was correct
-		->join("CalendarEvent","CalendarEventFrequency",array("id"=>"event"))
-		;
+			->select("CalendarEvent")
+			->whereValue("CalendarEvent", "id", $id)
+			->whereValue("CalendarEvent", "calendar", $calendar_id) // make sure the calendar is correct, so the access right check before was correct
+			->join("CalendarEvent","CalendarEventFrequency",array("id"=>"event"))
+			;
 		$row = $q->executeSingleRow();
 		$row["attendees"] = SQLQuery::create()->bypassSecurity()->select("CalendarEventAttendee")->whereValue("CalendarEventAttendee","event",$id)->execute();
 		return $row;
@@ -24,9 +24,9 @@ class CalendarJSON {
 	public static function Event($id, $calendar_id) {
 		return self::JSON(self::getEventFromDB($id, $calendar_id));
 	}
-	
-	public static function Events($ids, $calendar_id) {
-		if (count($ids) == 0) return "[]";
+
+	public static function getEventsFromDB($ids, $calendar_id) {
+		if (count($ids) == 0) return array();
 		//Check the right
 		if (!PNApplication::$instance->calendar->canReadCalendar($calendar_id)) {
 			PNApplication::error("Access denied");
@@ -40,14 +40,11 @@ class CalendarJSON {
 			;
 		$rows = $q->execute();
 		self::addAttendees($rows, $ids);
-		$data = "[";
-		$first = true;
-		foreach ($rows as $row) {
-			if ($first) $first = false; else $data .= ",";
-			$data .= self::JSON($row);
-		}
-		$data .= "]";
-		return $data;
+		return $rows;
+	}
+	public static function Events($ids, $calendar_id) {
+		$rows = self::getEventsFromDB($ids, $calendar_id);
+		return self::JSONList($rows);
 	}
 	
 	public static function addAttendees(&$events, $events_ids = null) {
@@ -79,6 +76,17 @@ class CalendarJSON {
 			$events[$i]["attendees"] = array();
 			foreach ($attendees as $a) if ($a["event"] == $events[$i]["id"]) array_push($events[$i]["attendees"], $a);
 		}
+	}
+	
+	public static function JSONList($rows) {
+		$data = "[";
+		$first = true;
+		foreach ($rows as $row) {
+			if ($first) $first = false; else $data .= ",";
+			$data .= self::JSON($row);
+		}
+		$data .= "]";
+		return $data;
 	}
 	
 	public static function JSON($row) {
@@ -126,6 +134,7 @@ class CalendarJSON {
 			$data .= ",role:".json_encode(@$a["role"]);
 			$data .= ",people:".json_encode(@$a["people"]);
 			$data .= ",people_email:".json_encode(@$a["people_email"]);
+			$data .= ",organizer:".json_encode(@$a["organizer"] == 1);
 			$data .= "}";
 		}
 		$data .= "]";

@@ -179,11 +179,30 @@ class service_exam_save_center extends Service {
 				$event["calendar"] = $component->getCalendarId();
 				// set the title
 				if (!isset($center["name"])) $center["name"] = SQLQuery::create()->select("ExamCenter")->whereValue("ExamCenter","id",$center_id)->field("name")->executeSingleValue();
-				$event["title"] = "Written Exam in ".$center["name"];
+				$event["title"] = "Written Exam @ ".$center["name"];
 				// set information
+				$attendees = @$event["attendees"];
 				$event["attendees"] = array();
-				// TODO organizer Selection
-				// TODO add people
+				array_push($event["attendees"], array(
+					"name"=>"Selection",
+					"role"=>"ORGANIZER_ONLY",
+					"participation"=>"YES"
+				));
+				if ($attendees <> null) {
+					$people_ids = array();
+					foreach ($attendees as $a) {
+						if ($a["people"] > 0) array_push($people_ids, $a["people"]);
+						$a["role"] = "REQUESTED";
+					}
+					if (count($people_ids) > 0) {
+						$emails = PNApplication::$instance->contact->getPeoplesPreferredEMail($people_ids, true);
+						foreach ($attendees as $a) if ($a["people"] > 0) $a["email"]=$emails[$a["people"]];
+					}
+					foreach ($attendees as $a) {
+						unset($a["organizer"]);
+						array_push($event["attendees"], $a);
+					}
+				}
 				// TODO set app_link and app_link_name
 				if ($event["id"] < 0) {
 					// this is a new session

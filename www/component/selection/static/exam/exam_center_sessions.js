@@ -3,7 +3,7 @@ if (typeof require != 'undefined') {
 	require(["event_date_time_duration.js","popup_window.js","calendar_objects.js"]);
 }
 
-function exam_center_sessions(container, rooms_container, rooms, sessions, applicants, linked_is, default_duration, calendar_id, can_edit) {
+function exam_center_sessions(container, rooms_container, rooms, sessions, applicants, linked_is, default_duration, calendar_id, peoples, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (typeof rooms_container == 'string') rooms_container = document.getElementById(rooms_container);
 	
@@ -153,7 +153,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 						new Date(d.getTime()+date.duration*60*1000)
 					);
 					t.sessions.push(event);
-					t._createSession(event);
+					t._createSession(event, []);
 					popup.close();
 					window.pnapplication.dataUnsaved("ExamCenterSessions");
 				};
@@ -174,8 +174,8 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 				return this.sessions[i];
 		return null;
 	};
-	this._createSession = function(event) {
-		this._sessions_sections.push(new ExamSessionSection(this._sessions_container, event, this, can_edit));
+	this._createSession = function(event, peoples) {
+		this._sessions_sections.push(new ExamSessionSection(this._sessions_container, event, peoples, this, can_edit));
 		this._span_nb_sessions.innerHTML = this.sessions.length;
 		layout.changed(this._sessions_container);
 	};
@@ -371,8 +371,31 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		this._initNotAssignedList();
 		
 		// sessions and rooms
-		for (var i = 0; i < this.sessions.length; ++i)
-			this._createSession(this.sessions[i]);
+		for (var i = 0; i < this.sessions.length; ++i) {
+			var ev = this.sessions[i];
+			var who = [];
+			for (var j = 0; j < ev.attendees.length; ++j) {
+				if (ev.attendees[j].organizer && ev.attendees[j].name == "Selection") {
+					ev.attendees.splice(j,1);
+					j--;
+					continue;
+				}
+				if (ev.attendees[j].people > 0) {
+					var p = null;
+					for (var k = 0; k < peoples.length; ++k)
+						if (peoples[k].people.id == ev.attendees[j].people) { p = peoples[k]; break; }
+					if (p) {
+						who.push(p);
+						continue;
+					}
+				}
+				if (ev.attendees[j].name)
+					who.push(ev.attendees[j].name);
+				else if (ev.attendees[j].email)
+					who.push(ev.attendees[j].email);
+			}
+			this._createSession(ev, who);
+		}
 		
 		// listen to events on linked information sessions
 		var t=this;
@@ -593,7 +616,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	this._init();
 }
 
-function ExamSessionSection(container, event, sessions, can_edit) {
+function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 	this.event = event;
 	this.sessions = sessions;
 	this.getRoomSection = function(room_id) {
@@ -720,9 +743,31 @@ function ExamSessionSection(container, event, sessions, can_edit) {
 		
 		var wc = document.createElement("DIV"); content.appendChild(wc);
 		wc.style.borderBottom = "1px solid #808080";
-		// TODO
-		this.who = new who_container(wc, [], can_edit, 'exam');
+		this.who = new who_container(wc, peoples, can_edit, 'exam');
 		wc.appendChild(this.who.createAddButton("Which staff will be at this exam session ?"));
+		this.who.onadded.add_listener(function(people) {
+			var a;
+			if (typeof people == 'string') {
+				a = new CalendarEventAttendee(people,calendar_event_role_requested,calendar_event_participation_unknown,false);
+			} else {
+				a = new CalendarEventAttendee(people.people.first_name+' '+people.people.last_name,calendar_event_role_requested,calendar_event_participation_unknown,false,null,people.people.id);
+			}
+			event.attendees.push(a);
+		});
+		this.who.onremoved.add_listener(function(people) {
+			if (typeof people == 'string') {
+				for (var i = 0; i < event.attendees.length; ++i)
+					if (event.attendees[i].people == null && event.attendees[i].name == people) {
+						event.attendees.splice(i,1);
+						break;
+					}
+			} else
+				for (var i = 0; i < event.attendees.length; ++i)
+					if (event.attendees[i].people == people.people.id) {
+						event.attendees.splice(i,1);
+						break;
+					}
+		});
 		
 		this.rooms_container = document.createElement("DIV");
 		content.appendChild(this.rooms_container);

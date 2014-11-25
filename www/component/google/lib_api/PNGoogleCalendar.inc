@@ -260,6 +260,12 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 						case "OPTIONAL": $at->setOptional(true); break;
 					}
 					array_push($list, $at);
+					if (@$a["organizer"] == 1) {
+						$o = new Google_Service_Calendar_EventOrganizer();
+						$o->setDisplayName(@$a["name"]);
+						$o->setEmail(@$a["email"]);
+						$ev->setOrganizer($o);
+					}
 				}
 			}
 			if (count($list) > 0) $ev->setAttendees($list);
