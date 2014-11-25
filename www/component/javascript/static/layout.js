@@ -111,7 +111,7 @@ window.layout = {
 	_process_timeout: null,
 	_layouts_short_time: 0,
 	_layout_needed: function() {
-		if (layout._process_timeout != null) return;
+		if (layout._process_timeout != null || this._paused) return;
 		var f = function() {
 			if (window.closing) return;
 			if (layout._last_layout_activity < new Date().getTime() - 1000)
