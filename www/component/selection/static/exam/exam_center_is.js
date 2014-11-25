@@ -40,8 +40,7 @@ function exam_center_is(container, all_is, linked_is, can_edit) {
 	
 	this.linkIS = function(is_id) {
 		this.linked_ids.push(is_id);
-		this._addISRow(is_id);
-		this._loadApplicants(is_id);
+		this._addISRow(is_id,true);
 		getWindowFromElement(this._table).pnapplication.dataUnsaved("ExamCenterInformationSession");
 		layout.changed(this._table);
 	};
@@ -63,7 +62,7 @@ function exam_center_is(container, all_is, linked_is, can_edit) {
 		layout.changed(this._table);
 	};
 	
-	this._addISRow = function(is_id) {
+	this._addISRow = function(is_id,is_new) {
 		var is = null;
 		for (var i = 0; i < all_is.length; ++i) if (all_is[i].id == is_id) { is = all_is[i]; break; }
 		var tr, td;
@@ -120,15 +119,18 @@ function exam_center_is(container, all_is, linked_is, can_edit) {
 				this.t.setHostFromIS(is_id);
 			};
 		}
+		
+		this._loadApplicants(is_id, is_new);
 	};
 	
-	this._loadApplicants = function(is_id) {
+	this._loadApplicants = function(is_id, add_applicants) {
 		var is = null;
 		for (var i = 0; i < all_is.length; ++i) if (all_is[i].id == is_id) { is = all_is[i]; break; }
 		var popup = window.parent.get_popup_window_from_frame(window);
-		popup.freeze("Loading applicants from Information Session "+is.name+"...");
+		if (add_applicants)
+			popup.freeze("Loading applicants from Information Session "+is.name+"...");
 		var t=this;
-		service.json("selection", "applicant/get_applicants",{information_session:is_id,excluded:false}, function(res) {
+		var applicants_loaded = function() {
 			// get TR for this IS
 			var tr = null;
 			var rows = getTableRows(t._table);
@@ -136,15 +138,20 @@ function exam_center_is(container, all_is, linked_is, can_edit) {
 			if (tr)
 				tr.unlink_button.disabled = '';
 
-			popup.unfreeze();
-			if (!res) return;
-			t.onapplicantsadded.fire(res);
+			if (add_applicants) popup.unfreeze();
+			if (!is._applicants) return;
+			if (add_applicants) t.onapplicantsadded.fire(is._applicants);
 			// update nb applicants in the table
 			if (tr) {
-				tr.applicants_list = res;
-				tr.is_applicants.innerHTML = " ("+res.length+" applicant"+(res.length > 1 ? "s" : "")+")";
+				tr.applicants_list = is._applicants;
+				tr.is_applicants.innerHTML = " ("+is._applicants.length+" applicant"+(is._applicants.length > 1 ? "s" : "")+")";
 				layout.changed(t._table);
 			}
+		};
+		if (is._applicants) applicants_loaded();
+		else service.json("selection", "applicant/get_applicants",{information_session:is_id,excluded:false}, function(res) {
+			is._applicants = res;
+			applicants_loaded();
 		});
 	};
 	

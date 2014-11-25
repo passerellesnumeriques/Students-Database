@@ -478,6 +478,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	};
 	this._initRooms = function() {
 		this._table_rooms = document.createElement("TABLE");
+		this._table_rooms.className = "grid";
 		this._section_rooms = new section(null, "Available Rooms", this._table_rooms, false, false, "soft", false);
 		rooms_container.appendChild(this._section_rooms.element);
 		if (can_edit) {

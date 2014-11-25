@@ -122,8 +122,8 @@ class page_exam_center_profile extends SelectionPage {
 						<?php echo $editable ? "true" : "false";?>
 					);
 					</script>
-				</div>
-				<div style='display:inline-block;margin-top:10px;vertical-align:top;' id='rooms'>
+					<div style='' id='rooms'>
+					</div>
 				</div>
 				<div style='display:inline-block;margin:10px;vertical-align:top;' id='location_and_partners'>
 				<?php

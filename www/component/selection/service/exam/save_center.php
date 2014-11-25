@@ -106,11 +106,18 @@ class service_exam_save_center extends Service {
 		// 3 - Save linked IS
 		if (isset($input["linked_is"])) {
 			// remove current links
-			if (!$is_new)
-				SQLQuery::create()->removeLinkedData("ExamCenterInformationSession", "ExamCenter", $center_id);
+			if (!$is_new) {
+				$to_remove = SQLQuery::create()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession","exam_center",$center_id)->execute();
+				SQLQuery::create()->removeRows("ExamCenterInformationSession",$to_remove);
+			}
 			// for linked is, make sure it is not actually linked to another center
-			foreach ($input["linked_is"] as $is_id)
-				SQLQuery::create()->removeLinkedData("ExamCenterInformationSession", "InformationSession", $is_id);
+			if (count($input["linked_is"]) > 0) {
+				$already_linked = SQLQuery::create()->select("ExamCenterInformationSession")->whereIn("ExamCenterInformationSession","information_session",$input["linked_is"])->execute();
+				if (count($already_linked) > 0) {
+					PNApplication::error("Information session(s) already linked to another exam center");
+					return;
+				}
+			}
 			// add links
 			$list = array();
 			foreach ($input["linked_is"] as $is_id)
