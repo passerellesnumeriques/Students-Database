@@ -90,7 +90,7 @@ theme::css($this, "section.css");
 			<div class='page_section_title3'>Web Client</div>
 			<div style='padding:5px;line-height:25px;'>
 				Client ID <input type='text' size=80 name='client_id' value='<?php if ($conf) echo $conf["client_id"]; ?>'/><br/>
-				API Key <input type='text' size=80 name='client_api_key' value='<?php if ($conf) echo $conf["client_id"]; ?>'/><br/>
+				API Key <input type='text' size=80 name='client_api_key' value='<?php if ($conf) echo $conf["client_api_key"]; ?>'/><br/>
 			</div>
 			<div class='page_section_title3'>Server</div>
 			<div style='padding:5px;line-height:25px;'>
@@ -184,14 +184,41 @@ sectionFromHTML('section_users');
 </script>
 <?php 				
 	}
-	
+
 	private function generateSubOrganizations($node, $indent) {
 		foreach ($node["sub_organizations"] as $so) {
 			echo "<div style='margin-left:".$indent."px;'>";
 			echo "<b>".$so["org"]->name."</b>";
-			echo " ".count($so["users"])." users";
+			echo " ";
+			$id = $this->generateID();
+			echo "<a class='black_link' href='#' onclick='$id(this);return false;'>";
+			echo count($so["users"])." users";
+			echo "</a>";
 			$this->generateSubOrganizations($so, $indent+20);
 			echo "</div>";
+			echo "<div style='display:none' id='$id'>";
+			$images = array();
+			foreach ($so["users"] as $u) {
+				/* @var $u Google_Service_Directory_User */
+				echo "<div style='border-bottom:1px solid #808080;margin-bottom: 1px;white-space:nowrap;'>";
+				echo toHTML($u->getName()->getFullName());
+				echo " (".$u->getPrimaryEmail().")";
+				if ($u->getThumbnailPhotoUrl() <> null) {
+					$iid = $this->generateID();
+					$images[$iid] = $u->getThumbnailPhotoUrl();
+					echo " <img id='$iid' style='vertical-align:middle;' no_wait='true'/>";
+				}
+				echo "</div>";
+			}
+			echo "</div>";
+			echo "<script type='text/javascript'>";
+			echo "function $id(link) {";
+			echo "require('popup_window.js',function() { var d = document.createElement('DIV'); d.innerHTML = document.getElementById('$id').innerHTML; var p = new popup_window('Users',null,d);p.show();});";
+			echo "}";
+			echo "setTimeout(function(){var i;";
+			foreach ($images as $iid=>$url) echo "i=document.getElementById('$iid');i.style.maxHeight='50px';i.src='$url';";
+			echo "},2000);";
+			echo "</script>";
 		}
 	}
 }

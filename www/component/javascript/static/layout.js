@@ -346,7 +346,7 @@ window.layout = {
 		var images = document.getElementsByTagName("IMG");
 		for (var i = 0; i < images.length; ++i) {
 			var img = images[i];
-			if (img._layout_done) continue; // already processed
+			if (img._layout_done || img.hasAttribute("no_wait")) continue; // already processed
 			if (img.complete || img.height != 0) continue; // already loaded
 			if (img._bg) continue; // background loading
 			return false;
