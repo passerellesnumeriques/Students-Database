@@ -157,7 +157,7 @@ class Backup {
 		} else {
 			$output = array();
 			$ret = 0;
-			exec("/usr/bin/zip \"".$zip_path."\" \"".$dir_path."\"/*", $output, $ret);
+			exec("/usr/bin/zip \"".$zip_path."\" \"".$dir_path."\"/"."*", $output, $ret);
 			if ($ret <> 0 && (!$handle_empty || $ret <> 18))
 				throw new Exception("Error creating zip file ".$zip_path." from directory ".$dir_path." (".$ret.")");
 		}
