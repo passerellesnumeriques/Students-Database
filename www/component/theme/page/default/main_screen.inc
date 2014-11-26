@@ -492,7 +492,19 @@ function pageLoaded(url) {
 			var iu = new URL(item.getAttribute("href"));
 			var ok = true;
 			for (var name in u.params)
-				if (typeof iu.params[name] == 'undefined' || iu.params["name"] != u.params["name"]) { ok = false; break; }
+				if (typeof iu.params[name] == 'undefined' || iu.params[name] != u.params[name]) { ok = false; break; }
+			if (ok) oks2.push(item);
+		}
+		if (oks2.length > 0) oks = oks2;
+	}
+	if (oks.length > 0) {
+		var oks2 = [];
+		for (var i = 0; i < oks.length; ++i) {
+			var item = oks[i];
+			var iu = new URL(item.getAttribute("href"));
+			var ok = true;
+			for (var name in iu.params)
+				if (typeof u.params[name] == 'undefined' || u.params[name] != iu.params[name]) { ok = false; break; }
 			if (ok) oks2.push(item);
 		}
 		if (oks2.length > 0) oks = oks2;

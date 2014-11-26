@@ -27,6 +27,11 @@ class page_exam_results extends SelectionPage {
 <!-- main structure of the exam results page -->
 <div style="width:100%;height:100%;display:flex;flex-direction:column">
 	<div class="page_title" style="flex:none">
+		<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
+		<button class='action red' style='float:right' onclick='resetAll();'>
+			Reset all results
+		</button>
+		<?php } ?>
 		<img src='/static/transcripts/transcript_32.png'/>
 		Written Exam Results
 	</div>
@@ -71,13 +76,16 @@ class page_exam_results extends SelectionPage {
 					$exam_center_id=null;
 					foreach($exam_sessions as $exam_session){
 						$session_name=date("d M Y",$exam_session['start'])." (".date("h:ia",$exam_session['start'])." to ".date("h:ia",$exam_session['end']).")";
+						$session_date_id = $this->generateID();
 						if ($exam_center_id<>$exam_session['center_id']){ // Group for a same exam center
-							$exam_center_id=$exam_session['center_id'] ?>
+							$exam_center_id=$exam_session['center_id'];
+							$center_row_id = $this->generateID();
+							 ?>
 							<tr class="exam_center_row" >
-								<th colspan="4" ><?php echo $exam_session['name'];?></th>
+								<th colspan="4" id='<?php echo $center_row_id; ?>'><?php echo $exam_session['name'];?></th>
 						    </tr><?php } //end of if statement ?> 
-							<tr class="clickable_row" style="cursor: pointer" session_id="<?php echo $exam_session['session_id'];?>" room_id="<?php echo $exam_session['room_id'];?>" exam_center_id="<?php echo $exam_center_id;?>" > 
-								<td><?php echo $session_name; ?></td>
+							<tr class="clickable_row" style="cursor: pointer" session_id="<?php echo $exam_session['session_id'];?>" room_id="<?php echo $exam_session['room_id'];?>" exam_center_id="<?php echo $exam_center_id;?>" center_row_id='<?php echo $center_row_id; ?>' date_id='<?php echo $session_date_id; ?>' > 
+								<td id='<?php echo $session_date_id;?>'><?php echo $session_name; ?></td>
 								<td><?php echo $exam_session['room_name']; ?></td>
 								<td><?php echo $exam_session['applicants']; ?></td>
 								<td><?php
@@ -123,6 +131,7 @@ class page_exam_results extends SelectionPage {
 	<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
 	<div class="page_footer" style="flex:none">
 		<button id="edit_results_button" class="action" disabled="disabled" onclick="editResults();">Edit Results</button>
+		<button id="remove_results_button" class="action red" disabled="disabled" onclick="resetSession();">Reset results</button>
 	</div>
 	<?php } ?>
 </div>
@@ -175,6 +184,8 @@ function initResults(){
 		selected["exam_center_id"]=this.getAttribute("exam_center_id");
 		selected["session_id"]=this.getAttribute("session_id");
 		selected["room_id"]=this.getAttribute("room_id");
+		selected["exam_center_name"]=document.getElementById(this.getAttribute("center_row_id")).innerHTML;
+		selected["session_date"]=document.getElementById(this.getAttribute("date_id")).innerHTML;
 	      
 		// update applicants list
 		updateApplicantsList();
@@ -182,6 +193,7 @@ function initResults(){
 		document.getElementById("session_applicants_list").style.display = selected["session_id"] != null ? "" : "none";
 		<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
 		document.getElementById('edit_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
+		document.getElementById('remove_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
 		<?php } ?>
 	});
 }
@@ -211,6 +223,51 @@ function editResults() {
 			function(frame, pop) {}
 		);
 	}
+}
+
+function serviceReset(session_id, reset_attendance) {
+	var locker = lock_screen(null,"Removing results of applicants...");
+	service.json("selection","exam/reset_results",{session:session_id, attendance:reset_attendance},function(res) {
+		unlock_screen(locker);
+		location.reload();
+	});
+}
+
+function resetSession() {
+	if(!selected["session_id"]) return;
+	require("popup_window.js",function() {
+		var div = document.createElement("DIV");
+		div.innerHTML = "<table><tr><td><img src='"+theme.icons_32.warning+"'/></td><td>You are going to remove the written exams results for applicants from the session done on <b>"+selected["session_date"]+"</b> in center <b>"+selected["exam_center_name"]+"</b> !<br/>Do you want also to reset the attendance ?</td></tr></table>";
+		var p = new popup_window("Reset Written Exam Results",null,div);
+		p.addIconTextButton(null,"Reset results AND attendance",'all',function() {
+			serviceReset(null,true);
+			p.close();
+		});
+		p.addIconTextButton(null,"Reset only the results, keep the attendance",'results_only',function() {
+			serviceReset(null,false);
+			p.close();
+		});
+		p.addCancelButton();
+		p.show();
+	});
+}
+
+function resetAll() {
+	require("popup_window.js",function() {
+		var div = document.createElement("DIV");
+		div.innerHTML = "<table><tr><td><img src='"+theme.icons_32.warning+"'/></td><td>You are going to remove the written exams results for <b>all applicants</b> !<br/>Do you want also to reset the attendance ?</td></tr></table>";
+		var p = new popup_window("Reset Written Exam Results",null,div);
+		p.addIconTextButton(null,"Reset results AND attendance",'all',function() {
+			serviceReset(null,true);
+			p.close();
+		});
+		p.addIconTextButton(null,"Reset only the results, keep the attendance",'results_only',function() {
+			serviceReset(null,false);
+			p.close();
+		});
+		p.addCancelButton();
+		p.show();
+	});
 }
 
 sectionFromHTML('sessions_list');
