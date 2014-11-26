@@ -254,9 +254,6 @@ class page_teachers_assignments extends Page {
 				echo "First, for each subject, you need to specify if several classes are following the subject together ";
 				echo "(for example, a lecture subject may be given to 2 classes at the same time, while laboratory is ";
 				echo "given for each class separately).<br/>";
-				echo "On each subject, use the <img src='".theme::$icons_10["merge"]."'/> button to merge classes,";
-				echo "or the <img src='".theme::$icons_10["split"]."'/> button to split classes.<br/>";
-				echo "This will be used to calculate teachers' load (and so do not count 2 times the hours of a subject if 2 classes are together).<br/>";
 				echo "<br/>";
 				echo "To assign a teacher to a subject/class, you can<ul>";
 				echo "<li>Use the <img src='".theme::$icons_10["add"]."'/> button</li>";
@@ -525,8 +522,8 @@ class page_teachers_assignments extends Page {
 
 			this.showGroupsMenu = function(grouping, button) {
 				var t=this;
-				require("context_menu.js",function() {
-					var menu = new context_menu();
+				require("mini_popup.js",function() {
+					var menu = new mini_popup("Which groups ?");
 					var checkboxes = [];
 					if (t.groupings.length == 0) {
 						for (var i = 0; i < group_types.length; ++i)
@@ -537,28 +534,32 @@ class page_teachers_assignments extends Page {
 						t.fillGroupsMenu(menu, type, grouping, checkboxes);
 					}
 					t.refreshGroupsMenu(checkboxes, grouping);
-					menu.onclose = function() {
+					menu.addOkButton(function() {
 						var groups_ids = [];
 						for (var i = 0; i < checkboxes.length; ++i) if (checkboxes[i].checked) groups_ids.push(checkboxes[i].group.id);
 						if (groups_ids.length == 0) {
 							// no more group
-							if (grouping == null) return; // nothing to do
+							if (grouping == null) return true; // nothing to do
 							t.removeGrouping(grouping);
-							return;
+							return true;
 						}
 						if (grouping == null) {
 							t.createGroupingFromGroups(groups_ids);
-							return;
+							return true;
 						}
 						t.setGroupingGroups(grouping, groups_ids);
-					};
+						return true;
+					});
 					menu.showBelowElement(button);
 				});
 			};
 			this.fillGroupsMenu = function(menu, group_type, grouping, checkboxes) {
 				var groups = getGroupsForPeriodAndType(subject.period_id, group_type.id, subject.specialization_id);
 				if (groups.length == 0) return;
-				menu.addTitleItem(null, group_type.name);
+				var div = document.createElement("DIV");
+				div.className = "mini_popup_section_title";
+				div.appendChild(document.createTextNode(group_type.name));
+				menu.content.appendChild(div);
 				var roots = getGroupsTree(groups);
 				this.fillGroupsMenuTree(menu, 0, roots, grouping, checkboxes);
 			};
@@ -581,7 +582,7 @@ class page_teachers_assignments extends Page {
 					div.appendChild(cb);
 					div.appendChild(document.createTextNode(nodes[i].name));
 					div.style.marginLeft = indent+"px";
-					menu.addItem(div, true);
+					menu.content.appendChild(div);
 					if (nodes[i].sub_groups)
 						this.fillGroupsMenuTree(menu, indent+20, nodes[i].sub_groups, grouping, checkboxes);
 				}
