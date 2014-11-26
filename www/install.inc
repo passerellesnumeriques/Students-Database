@@ -505,7 +505,7 @@ function checkEnd() {
 				"This task will put the software into maintenance mode (the users cannot access it), in order to perform some tasks<br/>"+
 				"on the database and files (backup, healthy checks...).</li>"+
 				"</ul>"+
-				"You can find more detailed explaination of how to configure those tasks here: <a href='/static/cron/setup_linux.html' target='_blank'>for Linux server</a>, or <a href='/static/cron/setup_windows.html' target='_blank'>for Windows server</a>"+
+				"You can find more detailed explaination on how to configure those tasks here: <a href='/static/cron/setup_linux.html' target='_blank'>for Linux server</a>, or <a href='/static/cron/setup_windows.html' target='_blank'>for Windows server</a>"+
 				"<br/><br/>"+
 				"Please note also that this installation created a directory <b>data</b>. This directory will contains files uploaded by users (documents, pictures...)<br/>"+
 				"so it may grow over time. You may want to replace it with a link to another partition/hard drive than the one where you installed this web application.<br/><br/>"+

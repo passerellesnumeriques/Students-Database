@@ -833,13 +833,20 @@ function RoomSection(container, room, session_section, can_edit) {
 		this.room_section.element.style.verticalAlign = "top";
 		container.appendChild(this.room_section.element);
 		var t=this;
-		this.applicants_list = new applicant_data_grid(content, function(obj) { return obj; });
+		this.applicants_list = new applicant_data_grid(content, function(obj) { return obj; },true);
 		var listener = function() {
 			room_usage.innerHTML = t.applicants_list.getList().length;
 		};
 		listener();
 		this.applicants_list.object_added.add_listener(listener);
 		this.applicants_list.object_removed.add_listener(listener);
+		var print = document.createElement("BUTTON");
+		print.className = "flat icon";
+		print.innerHTML = "<img src='"+theme.icons_16.print+"'/>";
+		print.onclick = function() {
+			t.applicants_list.grid.print();
+		};
+		this.room_section.addToolRight(print);
 		if (can_edit)
 		this.applicants_list.addDropSupport("applicant", function(people_id) {
 			// check applicant before drop
