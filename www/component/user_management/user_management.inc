@@ -387,8 +387,9 @@ class user_management extends Component {
 		if ($this->all_rights == null) $this->load_all_rights();
 		$this->rights = array();
 		$this->is_admin = array();
+		global $db_config;
 		foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
-			SQLQuery::getDataBaseAccessWithoutSecurity()->selectDatabase("students_".$domain);
+			SQLQuery::getDataBaseAccessWithoutSecurity()->selectDatabase($db_config["prefix"].$domain);
 			$domain_user_id = SQLQuery::create()->bypassSecurity()->select("Users")->whereValue("Users","domain",$this->domain)->whereValue("Users","username",$this->username)->field("Users","id")->executeSingleValue();
 			if ($domain_user_id == null) {
 				$this->rights[$domain] = array();
