@@ -14,6 +14,11 @@ include("header.inc");
 			<li>Create the deployed version, by copying files and optimizing them a bit to improve performance</li>
 			<li>Create the zip files to put in SourceForge</li>
 		</ol>
+		For which channel are you going to deploy a new version ?<br/>
+		<form name='channel_choice' onsubmit='return false;'>
+		<input type='radio' name='channel' value='stable' checked='checked' id='stable'/> Stable<br/>
+		<input type='radio' name='channel' value='beta' id='beta'/> Beta<br/>
+		</form>
 	</div>
 </div>
 <div class='footer' style='flex:none' id='footer'>
@@ -23,7 +28,8 @@ include("header.inc");
 function go() {
 	document.getElementById('content').innerHTML = "Retrieving latest deployed version...";
 	document.getElementById('footer').style.display = 'none';
-	location.href='version_and_path_form.php';
+	var channel = document.getElementById('stable').checked ? 'stable' : 'beta';
+	location.href='version_and_path_form.php?channel='+channel;
 }
 </script>
 <?php  include("footer.inc");?>

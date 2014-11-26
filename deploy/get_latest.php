@@ -45,7 +45,31 @@ function remove_directory($path) {
 }
 
 $latest = $_POST["latest"];
-require_once("update_urls.inc");
+
+function getVersionsListURL() {
+	global $www;
+	$s = file_get_contents("$www/conf/update_urls");
+	$channel = $_POST["channel"];
+	$s = str_replace("##CHANNEL##",$channel,$s);
+	$lines = explode("\n",$s);
+	foreach ($lines as $line) {
+		if (substr($line,0,9) == "versions=")
+			return trim(substr($line,9));
+	}
+	return null;
+}
+function getUpdateURL($filename) {
+	global $www;
+	$s = file_get_contents("$www/conf/update_urls");
+	$channel = $_POST["channel"];
+	$s = str_replace("##CHANNEL##",$channel,$s);
+	$lines = explode("\n",$s);
+	foreach ($lines as $line) {
+		if (substr($line,0,7) == "update=")
+			return str_replace("##FILE##", $filename, trim(substr($line,7)));
+	}
+	return null;
+}
 // download datamodel
 download(getUpdateURL("Students_Management_Software_".$latest."_datamodel.zip"), $_POST["path"]."/latest/datamodel.zip");
 // download list of versions
@@ -81,6 +105,7 @@ Retrieving datamodel information...
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
+<input type='hidden' name='channel' value='<?php echo $_POST["channel"];?>'/>
 </form>
 
 </div>

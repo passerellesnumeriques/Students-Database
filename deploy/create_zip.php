@@ -150,7 +150,7 @@ New list of available versions is:<ul>
 <span id='message'></span><br/>
 <br/>
 Once tested, we recommend you to double check the migration scripts.<br/>
-Then, you can finally upload the files located from directory <code><i><?php echo realpath($_POST["path"]."/to_deploy");?></i></code> to <a href='https://sourceforge.net/projects/studentsdatabase/files/updates/' target='_blank'>SourceForge</a>:<ul> 
+Then, you can finally upload the files located from directory <code><i><?php echo realpath($_POST["path"]."/to_deploy");?></i></code> to <a href='https://sourceforge.net/projects/studentsdatabase/files/updates/<?php echo $_POST["channel"];?>/' target='_blank'>SourceForge</a>:<ul> 
 	<li><code><i><?php echo $filename;?></i></code></li>
 	<li><code><i><?php echo $filename.".checksum";?></i></code></li>
 	<li><code><i><?php echo $filename_migration;?></i></code></li>

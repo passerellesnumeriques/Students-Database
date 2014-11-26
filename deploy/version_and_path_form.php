@@ -10,10 +10,23 @@ include("header.inc");
 Current development version: <?php echo $current_version;?><br/>
 
 Latest deployed version: <?php 
+global $www;
 $here = realpath(dirname(__FILE__));
 $www = realpath($here."/../www");
 set_include_path($here . PATH_SEPARATOR . $www);
-require_once("update_urls.inc");
+function getLatestVersionURL() {
+	global $www;
+	$s = file_get_contents("$www/conf/update_urls");
+	$channel = file_get_contents("$www/conf/channel");
+	$s = str_replace("##CHANNEL##",$_GET["channel"],$s);
+	$lines = explode("\n",$s);
+	foreach ($lines as $line) {
+		if (substr($line,0,7) == "latest=")
+			return trim(substr($line,7));
+	}
+	return null;
+}
+
 $url = getLatestVersionURL();
 $c = curl_init($url);
 if (file_exists("$www/conf/proxy")) include("$www/conf/proxy");
@@ -29,6 +42,7 @@ echo $result;
 curl_close($c);
 ?>
 <input type='hidden' name='latest' value='<?php echo $result;?>'/>
+<input type='hidden' name='channel' value='<?php echo $_GET["channel"];?>'/>
 <br/>
 <br/>
 Enter the new version to deploy: <input type='text' name='version' value='<?php echo $current_version;?>'/><br/>

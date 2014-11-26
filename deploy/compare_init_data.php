@@ -113,6 +113,7 @@ include("header.inc");
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
+<input type='hidden' name='channel' value='<?php echo $_POST["channel"];?>'/>
 </form>
 <?php 
 if (count($migration) > 0) {

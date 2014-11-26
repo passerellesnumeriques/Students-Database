@@ -108,7 +108,7 @@ if (!file_exists(realpath(dirname(__FILE__)."/conf/channel"))) {
 	} else { ?>
 		<form method="GET">
 		Which channel do you want to install ?<br/>
-		<input type='radio' name='channel' value='stable'/> Stable (recommended)<br/>
+		<input type='radio' name='channel' value='stable' checked='checked'/> Stable (recommended)<br/>
 		<input type='radio' name='channel' value='beta'/> Beta (for tests purpose only)<br/>
 		<input type='submit' value='Ok'/>
 		</form>

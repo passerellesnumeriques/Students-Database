@@ -24,6 +24,11 @@ function scripts_directory($directory_path) {
 }
 scripts_directory(realpath($_POST["path"]."/www"));
 
+// mark the version with the channel
+$f = fopen(realpath($_POST["path"]."/www/conf/channel"), "w");
+fwrite($f, $_POST["channel"]);
+fclose($f);
+
 if ($has_errors) die();
 ?>
 <?php include("header.inc");?>
@@ -35,6 +40,7 @@ Preparing initial data for fresh installations...
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
+<input type='hidden' name='channel' value='<?php echo $_POST["channel"];?>'/>
 </form>
 
 </div>
