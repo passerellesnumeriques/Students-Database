@@ -32,7 +32,7 @@ function optimize_php($path) {
 			continue;
 		}
 		if ($mode == "DEV") continue;
-		if ($mode == "PROD" || ($mode == "CHANNEL_STABLE" && $_POST["channel"] == "stable") || ($model == "CHANNEL_BETA" && $_POST["channel"] == "beta")) {
+		if ($mode == "PROD" || ($mode == "CHANNEL_STABLE" && $_POST["channel"] == "stable") || ($mode == "CHANNEL_BETA" && $_POST["channel"] == "beta")) {
 			if (substr($line,0,1) <> "#") die("Lines inside #".$mode." must start with a # in ".$path.": ".$line);
 			$line = substr($line,1); // remove the leading #
 			// replace strings
