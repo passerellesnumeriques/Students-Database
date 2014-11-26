@@ -25,7 +25,7 @@ function scripts_directory($directory_path) {
 scripts_directory(realpath($_POST["path"]."/www"));
 
 // mark the version with the channel
-$f = fopen(realpath($_POST["path"]."/www/conf/channel"), "w");
+$f = fopen(realpath($_POST["path"])."/www/conf/channel", "w");
 fwrite($f, $_POST["channel"]);
 fclose($f);
 

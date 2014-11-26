@@ -100,9 +100,9 @@ button:focus {
 		</div>
 		<div id='content'>
 <?php 
-if (!file_exists(realpath(dirname(__FILE__)."/conf/channel"))) {
+if (!file_exists(realpath(dirname(__FILE__))."/conf/channel")) {
 	if (isset($_GET["channel"])) {
-		$f = fopen(realpath(dirname(__FILE__)."/conf/channel"), "w");
+		$f = fopen(realpath(dirname(__FILE__))."/conf/channel", "w");
 		fwrite($f, $_GET["channel"]);
 		fclose($f);
 	} else { ?>
@@ -118,7 +118,7 @@ if (!file_exists(realpath(dirname(__FILE__)."/conf/channel"))) {
 		</div>
 	</div>
 </div>
-<?php if (file_exists(realpath(dirname(__FILE__)."/conf/channel"))) { ?>
+<?php if (file_exists(realpath(dirname(__FILE__))."/conf/channel")) { ?>
 <script type='text/javascript'>
 var content = document.getElementById('content');
 function request(url,params,handler) {
