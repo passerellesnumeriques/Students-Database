@@ -26,9 +26,9 @@ include("header.inc");
 </div>
 <script type='text/javascript'>
 function go() {
+	var channel = document.getElementById('stable').checked ? 'stable' : 'beta';
 	document.getElementById('content').innerHTML = "Retrieving latest deployed version...";
 	document.getElementById('footer').style.display = 'none';
-	var channel = document.getElementById('stable').checked ? 'stable' : 'beta';
 	location.href='version_and_path_form.php?channel='+channel;
 }
 </script>
