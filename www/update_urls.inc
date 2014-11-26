@@ -1,6 +1,8 @@
 <?php 
 function getLatestVersionURL() {
 	$s = file_get_contents(dirname(__FILE__)."/conf/update_urls");
+	$channel = file_get_contents(dirname(__FILE__)."/conf/channel");
+	$s = str_replace("##CHANNEL##",$channel,$s);
 	$lines = explode("\n",$s);
 	foreach ($lines as $line) {
 		if (substr($line,0,7) == "latest=")
@@ -10,6 +12,8 @@ function getLatestVersionURL() {
 }
 function getVersionsListURL() {
 	$s = file_get_contents(dirname(__FILE__)."/conf/update_urls");
+	$channel = file_get_contents(dirname(__FILE__)."/conf/channel");
+	$s = str_replace("##CHANNEL##",$channel,$s);
 	$lines = explode("\n",$s);
 	foreach ($lines as $line) {
 		if (substr($line,0,9) == "versions=")
@@ -19,6 +23,8 @@ function getVersionsListURL() {
 }
 function getGenericUpdateURL() {
 	$s = file_get_contents(dirname(__FILE__)."/conf/update_urls");
+	$channel = file_get_contents(dirname(__FILE__)."/conf/channel");
+	$s = str_replace("##CHANNEL##",$channel,$s);
 	$lines = explode("\n",$s);
 	foreach ($lines as $line) {
 		if (substr($line,0,7) == "update=")
@@ -28,6 +34,8 @@ function getGenericUpdateURL() {
 }
 function getUpdateURL($filename) {
 	$s = file_get_contents(dirname(__FILE__)."/conf/update_urls");
+	$channel = file_get_contents(dirname(__FILE__)."/conf/channel");
+	$s = str_replace("##CHANNEL##",$channel,$s);
 	$lines = explode("\n",$s);
 	foreach ($lines as $line) {
 		if (substr($line,0,7) == "update=")

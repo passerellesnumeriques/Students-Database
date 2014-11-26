@@ -140,6 +140,8 @@ if ($type == "backup") {
 if ($type == "software") {
 	$version = $_GET["version"];
 	$urls = file_get_contents("../../www/conf/update_urls");
+	$channel = file_get_contents("../../www/conf/channel");
+	$urls = str_replace("##CHANNEL##",$channel,$urls);
 	$urls = explode("\n",$urls);
 	$update_url = null;
 	foreach ($urls as $url) if (substr($url,0,7) == "update=") { $update_url = substr($url,7); break; }
