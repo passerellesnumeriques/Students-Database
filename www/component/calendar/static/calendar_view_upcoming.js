@@ -105,7 +105,7 @@ function calendar_view_upcoming(view, container) {
 		var li = document.createElement("LI");
 		li.onmouseover = function() { this.style.textDecoration = "underline"; };
 		li.onmouseout = function() { this.style.textDecoration = "none"; };
-		li.title = "Calendar "+cal.name+"\r\n"+ev.description;
+		li.title = "Calendar "+cal.name+(ev.description ? "\r\n"+ev.description : "");
 		li.style.cursor = "pointer";
 		li.style.fontSize = "9pt";
 		li.event = ev;

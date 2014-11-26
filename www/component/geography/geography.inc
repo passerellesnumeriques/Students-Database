@@ -50,6 +50,7 @@ class geography extends Component {
 		}
 		$area_alias = $q->generateTableAlias();
 		$q->join($table_from, "GeographicArea", array($table_from_foreign_key=>"id"), $area_alias);
+		return $area_alias;
 	}
 	
 	/**

@@ -189,9 +189,17 @@ function useTemplate(ev,id) {
 								} else {
 									where = {type:'reset',row:0};
 								}
-								p.set_freeze_content("Importing data "+e.data+" using template...");
+								p.set_freeze_content("Importing data <b>"+e.data+"</b> using the template...");
 								setTimeout(function(){
+									if (imp.frame_import) {
+										var w = getIFrameWindow(imp.frame_import);
+										if (w && w.layout) w.layout.pause();
+									}
 									imp._importData(sheet, range, field_index, where, function() {
+										if (imp.frame_import) {
+											var w = getIFrameWindow(imp.frame_import);
+											if (w && w.layout) w.layout.resume();
+										}
 										next(i+1);
 									});
 								},1);

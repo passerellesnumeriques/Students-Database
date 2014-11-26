@@ -1,5 +1,6 @@
 if (window == window.top && !window.top.google) {
 	window.top.google = {
+		installed: true,
 		connection_status: -1, // -1 = not connected, 0 = connection pending, 1 = connected
 		connection_event: new Custom_Event(),
 		connected_pn_email: null,
@@ -8,7 +9,7 @@ if (window == window.top && !window.top.google) {
 
 		_client_id: window.top.google_local_config.client_id,
 		_api_key: window.top.google_local_config.api_key,
-		_scopes: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar",
+		_scopes: "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/plus.me",
 
 		need_connection: function(on_connected) {
 			if (window.top.google.connection_status == 1)
@@ -48,6 +49,7 @@ if (window == window.top && !window.top.google) {
 				return;
 			}
 			window.top.google.connected_pn_email = pn_email;
+			window.top.google.user = null;
 			window.top.google.connection_status = 0;
 			window.top.google.connection_event.fire();
 			var received = false;
@@ -66,9 +68,15 @@ if (window == window.top && !window.top.google) {
 			},function(auth_result){
 				received = true;
 				if (auth_result && !auth_result.error) {
+					window.top.gapi.client.load('plus','v1',function(){
+						var req = window.top.gapi.client.plus.people.get({'userId':'me'});
+						req.execute(function(resp){
+							window.top.google.user = resp;
+						});
+					});
 					window.top.google.connection_status = 1;
 					window.top.google.connection_event.fire();
-					setTimeout(function() { window.top.google.connect(window.top.connected_pn_email); }, (parseInt(auth_result.expires_in)-30)*1000);
+					setTimeout(function() { window.top.google.connect(window.top.connected_pn_email); }, (parseInt(auth_result.expires_in)-60)*1000);
 					return;
 				}
 				window.top.google.connection_error = "authentication failed";

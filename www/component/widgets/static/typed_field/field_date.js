@@ -138,13 +138,13 @@ field_date.prototype._create = function(data) {
 				if (!t.config) return;
 				if (t.config.minimum) {
 					t.config.minimum = undefined;
-					t.select.setLimits(new Date(1900,0,1), t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31));
+					if (t.select) t.select.setLimits(new Date(1900,0,1), t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31));
 				}
 			} else {
 				if (!t.config)
 					t.config = {};
 				t.config.minimum = min;
-				t.select.setLimits(parseSQLDate(min), t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31));
+				if (t.select) t.select.setLimits(parseSQLDate(min), t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31));
 			}
 		};
 		this.setMaximum = function(max) {
@@ -152,13 +152,13 @@ field_date.prototype._create = function(data) {
 				if (!t.config) return;
 				if (t.config.maximum) {
 					t.config.maximum = undefined;
-					t.select.setLimits(t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1), new Date(new Date().getFullYear()+100,11,31));
+					if (t.select) t.select.setLimits(t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1), new Date(new Date().getFullYear()+100,11,31));
 				}
 			} else {
 				if (!t.config)
 					t.config = {};
 				t.config.maximum = max;
-				t.select.setLimits(t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1), parseSQLDate(max));
+				if (t.select) t.select.setLimits(t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1), parseSQLDate(max));
 			}
 		};
 	} else {

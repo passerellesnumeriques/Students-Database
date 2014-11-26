@@ -68,6 +68,10 @@ global $pn_app_version;
 	padding: 3px 2px 0px 2px;
 	cursor: pointer;
 }
+.application_menu_item>a {
+	text-decoration: none;
+	color: white;
+}
 .application_menu_item>img {
 	vertical-align:bottom;
 	margin-right: 1px;
@@ -198,8 +202,10 @@ global $pn_app_version;
 						echo " menu=\"".$section->getMenuURL()."\"";
 						echo " page=\"".$section->getDefaultPageURL()."\"";
 						echo ">";
+						echo "<a href='/?section=".$section->getId()."' target='_blank' onclick='return false;'>";
 						echo "<img src=\"".$section->getIcon16White()."\"/>";
 						echo toHTML($section->getName());
+						echo "</a>";
 						echo "</div>";
 					}
 					?>
@@ -486,7 +492,19 @@ function pageLoaded(url) {
 			var iu = new URL(item.getAttribute("href"));
 			var ok = true;
 			for (var name in u.params)
-				if (typeof iu.params[name] == 'undefined' || iu.params["name"] != u.params["name"]) { ok = false; break; }
+				if (typeof iu.params[name] == 'undefined' || iu.params[name] != u.params[name]) { ok = false; break; }
+			if (ok) oks2.push(item);
+		}
+		if (oks2.length > 0) oks = oks2;
+	}
+	if (oks.length > 0) {
+		var oks2 = [];
+		for (var i = 0; i < oks.length; ++i) {
+			var item = oks[i];
+			var iu = new URL(item.getAttribute("href"));
+			var ok = true;
+			for (var name in iu.params)
+				if (typeof u.params[name] == 'undefined' || u.params[name] != iu.params[name]) { ok = false; break; }
 			if (ok) oks2.push(item);
 		}
 		if (oks2.length > 0) oks = oks2;
@@ -523,6 +541,7 @@ function initFooter() {
 	});
 	*/
 	// Google
+	<?php if (PNApplication::$instance->google->isInstalled()) { ?>
 	var span_google_status = document.createElement("SPAN");
 	span_google_status.style.position = "absolute";
 	span_google_status.style.bottom = "0px";
@@ -533,6 +552,7 @@ function initFooter() {
 		new google_status(span_google_status);
 	});
 	<?php
+	}
 #DEV
 	?>
 	var span_debug_status = document.createElement("SPAN");

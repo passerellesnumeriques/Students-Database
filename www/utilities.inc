@@ -12,6 +12,10 @@ function latinize($s) {
 	return str_replace(array_keys($latin_map), array_values($latin_map), $s);
 }
 
+function sameString($s1, $s2) {
+	return strtolower(latinize(trim($s1))) == strtolower(latinize(trim($s2)));
+}
+
 function str_similar($s1, $s2) {
 	$l = strlen($s1);
 	if ($l < 2 || strlen($s2) < 2) return $s1 == $s2;

@@ -59,6 +59,21 @@ new data_list(
 			};
 			list.addHeader(create_staff);
 		<?php } ?>
+
+		var google = document.createElement("BUTTON");
+		google.className = "flat";
+		google.innerHTML = "<img src='/static/google/google.png'/> Synch from Google";
+		google.onclick = function() {
+			if (!window.top.google.installed) {
+				alert("Google is not yet configured. Please ask your administrator to configure it.");
+				return;
+			}
+			popup_frame("/static/google/google.png", "Synchronize Staff information from Google", "/dynamic/staff/page/synch_google", null, null, null, function(frame,popup) {
+				frame.synch_done = function() { list.reloadData(); };
+			});
+		};
+		list.addHeader(google);
+		
 		<?php } ?>
 		
 		list.makeRowsClickable(function(row){

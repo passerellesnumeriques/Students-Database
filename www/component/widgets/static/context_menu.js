@@ -1,5 +1,7 @@
-if (typeof window.top.require != 'undefined')
+if (typeof window.top.require != 'undefined') {
 	window.top.require("animation.js");
+	window.top.require("position.js");
+}
 if (typeof theme != 'undefined')
 	theme.css("context_menu.css");
 /**
@@ -150,111 +152,37 @@ function context_menu(menu) {
 	 * @param from the element below which the menu will be displayed
 	 */
 	t.showBelowElement = function(from, min_width_is_from) {
-		menu.style.visibility = "visible";
-		menu.style.display = "";
-		menu.style.position = "fixed";
-		t.show_from = from;
-		menu.style.top = "0px";
-		menu.style.left = "0px";
-		menu.style.width = "";
-		menu.style.height = "";
-		var win = getWindowFromElement(from);
-		var x,y,w,h;
-		var pos = win.getFixedPosition(from);
-		x = pos.x;
-		y = pos.y;
-		w = menu.offsetWidth;
-		h = menu.offsetHeight;
-		if (min_width_is_from && w < from.offsetWidth) {
-			setWidth(menu, w = from.offsetWidth, []);
-		}
-		if (y+from.offsetHeight+h > window.top.getWindowHeight()) {
-			// not enough space below
-			var space_below = window.top.getWindowHeight()-(y+from.offsetHeight);
-			var space_above = y;
-			if (space_above > space_below) {
-				y = y-h;
-				if (y < 0) {
-					// not enough space: scroll bar
-					y = 0;
-					menu.style.overflowY = 'scroll';
-					menu.style.height = space_above+"px";
-				}
-			} else {
-				// not enough space: scroll bar
-				y = y+from.offsetHeight;
-				menu.style.overflowY = 'scroll';
-				menu.style.height = space_below+"px";
-			}
-		} else {
-			// by default, show it below
-			y = y+from.offsetHeight;
-		}
-		if (x+w > window.top.getWindowWidth()) {
-			if (x+from.offsetWidth < window.top.getWindowWidth()-5)
-				x = window.top.getWindowWidth()-w-5;
-			else
-				x = window.top.getWindowWidth()-w;
-		}
-		t.showAt(x,y,from);
+		window.top.require("position.js", function() {
+			menu.style.visibility = "visible";
+			menu.style.display = "";
+			t.show_from = from;
+			window.top.positionBelowElement(menu, from, min_width_is_from, function(x,y) { t._shownAt(x,y,from); });
+		});
 	};
 	/** Display the menu above the given element
 	 * @method context_menu#showAboveElement
 	 * @param from the element above which the menu will be displayed
 	 */
 	t.showAboveElement = function(from, min_width_is_from) {
-		menu.style.visibility = "visible";
-		menu.style.display = "";
-		menu.style.position = "fixed";
-		t.show_from = from;
-		menu.style.top = "0px";
-		menu.style.width = "0px";
-		menu.style.width = "";
-		menu.style.height = "";
-		var win = getWindowFromElement(from);
-		var x,y,w,h;
-		var pos = win.getFixedPosition(from);
-		x = pos.x;
-		y = pos.y;
-		w = menu.offsetWidth;
-		h = menu.offsetHeight;
-		if (min_width_is_from && w < from.offsetWidth) {
-			setWidth(menu, w = from.offsetWidth, []);
-		}
-		if (y-h < 0) {
-			// not enough space above
-			var space_below = window.top.getWindowHeight()-(y+from.offsetHeight);
-			var space_above = y;
-			if (space_below > space_above) {
-				y = y+from.offsetHeight;
-				if (y+h > window.top.getWindowHeight()) {
-					// not enough space: scroll bar
-					y = 0;
-					menu.style.overflowY = 'scroll';
-					menu.style.height = space_above+"px";
-				}
-			} else {
-				// not enough space: scroll bar
-				y = 0;
-				menu.style.overflowY = 'scroll';
-				menu.style.height = space_below+"px";
-			}
-		} else {
-			// by default, show it above
-			y = y-h;
-		}
-		if (x+w > window.top.getWindowWidth()) {
-			if (x+from.offsetWidth < window.top.getWindowWidth()-5)
-				x = window.top.getWindowWidth()-w-5;
-			else
-				x = window.top.getWindowWidth()-w;
-		}
-		t.showAt(x,y,from);
+		window.top.require("position.js", function() {
+			menu.style.visibility = "visible";
+			menu.style.display = "";
+			t.show_from = from;
+			window.top.positionAboveElement(menu, from, min_width_is_from, function(x,y) { t._shownAt(x,y,from); });
+		});
 	};
 	/** Display the menu at the given position (using absolute positioning)
 	 * @member context_menu#showAt
 	 */
-	t.showAt = function(x,y,from) {
+	t.showAt = function(x,y) {
+		menu.style.visibility = "visible";
+		menu.style.display = "";
+		menu.style.position = "fixed";
+		menu.style.top = y+"px";
+		menu.style.left = x+"px";
+		t._showAt(x,y,null);
+	};
+	t._shownAt = function(x,y,from) {
 		var e = from;
 		var from_inside_menu = false;
 		while (e && e != from.ownerDocument.body) { if (e.className == 'context_menu') { from_inside_menu = true; break; } e = e.parentNode; }
@@ -263,11 +191,6 @@ function context_menu(menu) {
 			t.parent_menu_listener = t.parent_menu.hide_if_outside_menu;
 			t.parent_menu.hide_if_outside_menu = function(){};
 		}
-		menu.style.visibility = "visible";
-		menu.style.display = "";
-		menu.style.position = "fixed";
-		menu.style.top = y+"px";
-		menu.style.left = x+"px";
 		t.show_at = [x,y];
 //		for (var i = 0; i < document.body.childNodes.length; ++i)
 //			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = -10;
@@ -308,6 +231,7 @@ function context_menu(menu) {
 		if (typeof window.top.animation != 'undefined') {
 			if (menu.anim) window.top.animation.stop(menu.anim);
 			menu.anim = window.top.animation.fadeOut(menu,300,function() {
+				if (!t) return;
 				if (t.removeOnClose)
 					try { menu.parentNode.removeChild(menu); } catch (e) {}
 			});

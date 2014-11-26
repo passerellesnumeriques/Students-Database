@@ -12,6 +12,7 @@ class service_get extends Service {
 	public function execute(&$component, $input) {
 		$calendar_id = $input["id"];
 		$since = @$input["since"];
+		require_once("component/calendar/CalendarJSON.inc");
 		
 		if (is_numeric($calendar_id)) {
 		
@@ -21,32 +22,7 @@ class service_get extends Service {
 			}
 			
 			$events = SQLQuery::create()->bypassSecurity()->select("CalendarEvent")->where("calendar", $calendar_id)->join("CalendarEvent", "CalendarEventFrequency", array("id"=>"event"))->execute();
-			//$attendees = SQLQuery::create()->bypassSecurity()->select("CalendarEvent")->where("calendar", $calendar_id)->join("CalendarEvent", "CalendarEventAttendee", array("id"=>"event"))->execute();
-			echo "[";
-			$first = true;
-			foreach ($events as $ev) {
-				if ($first) $first = false; else echo ",";
-				echo "new CalendarEvent(";
-				echo $ev["id"];
-				echo ",'PN'";
-				echo ",".$ev["calendar"];
-				echo ",".json_encode($ev["uid"]);
-				echo ",".$ev["start"];
-				echo ",".$ev["end"];
-				echo ",".($ev["all_day"] == "1" ? "true" : "false");
-				echo ",".json_encode($ev["last_modified"]);
-				echo ",".json_encode($ev["title"]);
-				echo ",".json_encode($ev["description"]);
-				echo ",".json_encode($ev["location_freetext"]);
-				echo ",".json_encode($ev["organizer"]);
-				echo ",".json_encode($ev["participation"]);
-				echo ",".json_encode($ev["role"]);
-				echo ",null"; // TODO frequency
-				echo ",".json_encode($ev["app_link"]);
-				echo ",".json_encode($ev["app_link_name"]);
-				echo ")";
-			}
-			echo "]";
+			CalendarJSON::addAttendees($events);
 		} else {
 			$plugin = null;
 			require_once("component/calendar/CustomCalendarPlugin.inc");
@@ -62,32 +38,17 @@ class service_get extends Service {
 				PNApplication::error("Access denied to calendar ".$plugin->getName());
 				return;
 			}
-			echo "[";
-			$first = true;
-			foreach ($plugin->getEvents() as $ev) {
-				if ($first) $first = false; else echo ",";
-				echo "new CalendarEvent(";
-				echo $ev["id"];
-				echo ",'PN'";
-				echo ",".json_encode($plugin->getId());
-				echo ",".json_encode($ev["uid"]);
-				echo ",".$ev["start"];
-				echo ",".$ev["end"];
-				echo ",".json_encode($ev["all_day"]);
-				echo ",".json_encode($ev["last_modified"]);
-				echo ",".json_encode($ev["title"]);
-				echo ",".json_encode($ev["description"]);
-				echo ",".json_encode(@$ev["location_freetext"]);
-				echo ",".json_encode(@$ev["organizer"]);
-				echo ",".json_encode(@$ev["participation"]);
-				echo ",".json_encode(@$ev["role"]);
-				echo ",".json_encode(@$ev["frequency"]);
-				echo ",".json_encode(@$ev["app_link"]);
-				echo ",".json_encode(@$ev["app_link_name"]);
-				echo ")";
-			}
-			echo "]";
+			$events = $plugin->getEvents();
+			for ($i = count($events)-1; $i >= 0; $i--)
+				$events[$i]["calendar"] = $plugin->getId();
 		}
+		echo "[";
+		$first = true;
+		foreach ($events as $ev) {
+			if ($first) $first = false; else echo ",";
+			echo CalendarJSON::JSON($ev);
+		}
+		echo "]";
 	}	
 	
 }

@@ -10,6 +10,7 @@ class service_exam_status extends Service {
 	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
+		// TODO sessions without anyone assigned
 		// number of exam centers
 		$nb_centers = SQLQuery::create()->select("ExamCenter")->count("nb_centers")->executeSingleValue();
 

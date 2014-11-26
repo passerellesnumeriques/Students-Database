@@ -1,3 +1,6 @@
 /proxy
 /*.password
 /*.remote
+/google.inc
+/google_service.p12
+/google_admin.p12

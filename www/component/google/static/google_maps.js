@@ -18,7 +18,7 @@ function loadGoogleMaps(callback) {
 					window.top.initGoogleMaps = null;
 					window.top.loadGoogleMaps(function(){});
 				},10000);
-				window.top.googleMapJS = window.top.addJavascript("http://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=false&callback=initGoogleMaps&key=AIzaSyBy-4f3HsbxvXJ6sULM87k35JrsGSGs3q8");
+				window.top.googleMapJS = window.top.addJavascript("http://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=false&callback=initGoogleMaps&key="+window.top.google._api_key);
 			} else
 				window.top.initGoogleMapsEvent.add_listener(callback);
 		} else
@@ -55,6 +55,7 @@ function GoogleMap(container, onready) {
 	this._current_move = null;
 	this.fitToBounds = function(south, west, north, east, trial) {
 		if (this._current_move) clearTimeout(this._current_move);
+		if (!t) return;
 		this._current_move = null;
 		var cur_bounds = this.map.getBounds();
 		var cur_center = this.map.getCenter();
@@ -64,7 +65,6 @@ function GoogleMap(container, onready) {
 			return;
 		}
 		if (cur_bounds) {
-			var t=this;
 			var cur_south = cur_bounds.getSouthWest().lat();
 			var cur_west = cur_bounds.getSouthWest().lng();
 			var cur_north = cur_bounds.getNorthEast().lat();
@@ -88,7 +88,7 @@ function GoogleMap(container, onready) {
 				var lat = new_center.lat() < cur_south ? cur_south+(cur_north-cur_south)/10 : new_center.lat() > cur_north ? cur_north-(cur_north-cur_south)/10 : new_center.lat();
 				var lng = new_center.lng() < cur_west ? cur_west+(cur_east-cur_west)/10 : new_center.lng() > cur_east ? cur_east-(cur_east-cur_west)/10 : new_center.lng();
 				t.onNextIdle(function() {
-					t.fitToBounds(south, west, north, east);
+					if (t) t.fitToBounds(south, west, north, east);
 				},1000);
 				this.map.panTo(new window.top.google.maps.LatLng(lat,lng));
 				if (cur_zoom > 1 && (new_center.lat() < lat-cur_width/2 || new_center.lat() > lat+cur_width/2 || new_center.lng() < lng-cur_height/2 || new_center.lng() > lng+(cur_height/2)))
@@ -102,7 +102,7 @@ function GoogleMap(container, onready) {
 				if (new_width < cur_width*0.1 || new_height < cur_height*0.1) {
 					// we are zooming a lot, let's do it in several step
 					t.onNextIdle(function() {
-						t.fitToBounds(south,west,north,east);
+						if (t) t.fitToBounds(south,west,north,east);
 					},1000);
 					t.map.setZoom(cur_zoom+1);
 					t.map.setCenter(new_center);
@@ -119,21 +119,21 @@ function GoogleMap(container, onready) {
 				if (new_width > cur_width*2 || new_height > cur_height*2) {
 					// we are zooming a lot, let's do it in several step
 					t.onNextIdle(function() {
-						t.fitToBounds(south,west,north,east);
+						if (t) t.fitToBounds(south,west,north,east);
 					},1000);
 					t.map.setZoom(cur_zoom-1);
 					t.map.setCenter(new_center);
 					return;
 				} else {
 					//t.onNextIdle(function() {
-					//	t.map.fitBounds(t.createBounds(south, west, north, east));
+					//	if (t) t.map.fitBounds(t.createBounds(south, west, north, east));
 					//},300);
 					//t.map.panToBounds(t.createBounds(south, west, north, east));
 					//return;
 				}
 			} else {
 				//t.onNextIdle(function() {
-				//	t.map.fitBounds(t.createBounds(south, west, north, east));
+				//	if (t) t.map.fitBounds(t.createBounds(south, west, north, east));
 				//},300);
 				//t.map.panToBounds(t.createBounds(south, west, north, east));
 				//return;
@@ -238,13 +238,16 @@ function GoogleMap(container, onready) {
 	
 	this.onNextIdle = function(listener, timeout) {
 		window.top.google.maps.event.addListenerOnce(this.map, 'idle', function() {
+			if (!t) return;
 			var done = false;
 			window.top.google.maps.event.addListenerOnce(t.map, 'tilesloaded', function() {
+				if (!t) return;
 				if (done) return;
 				done = true;
 				listener();
 			});
 			if (timeout) setTimeout(function() {
+				if (!t) return;
 				if (done) return;
 				done = true;
 				listener();
@@ -293,12 +296,19 @@ function GoogleMap(container, onready) {
 			};
 			t.map.controls[window.top.google.maps.ControlPosition.RIGHT_TOP].push(div);
 			layout.listenElementSizeChanged(container, function() {
+				if (!t) return;
 				window.top.google.maps.event.trigger(t.map, 'resize');
 			});
 			window.top.google.maps.event.trigger(t.map, 'resize');
 			window.top.google.maps.event.addListenerOnce(t.map, "tilesloaded", function() {
+				if (!t) return;
 				window.top.google.maps.event.trigger(t.map, 'resize');
 				onready(t);
+			});
+			container.ondomremoved(function() {
+				t.map = null;
+				t.shapes = null;
+				t = null;
 			});
 		});
 	};

@@ -103,6 +103,14 @@ foreach ($campaigns as $c) {
 	
 <div class="application_left_menu_separator"></div>
 
+<a class='application_left_menu_item' href='/dynamic/selection/page/staff/status'>
+	<img src='/static/application/pn_letters_white_16.png'/>
+	Staff Status
+</a>
+<a class='application_left_menu_item' href='/dynamic/selection/page/trip/list'>
+	<img src='/static/selection/trip/bus_white_16.png'/>
+	Trips
+</a>
 <a class='application_left_menu_item' href='/dynamic/selection/page/applicant/list'>
 	<img src='/static/selection/applicant/applicants_white.png'/>
 	Applicants List

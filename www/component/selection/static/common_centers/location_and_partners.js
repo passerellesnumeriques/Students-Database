@@ -141,6 +141,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		address_title.innerHTML = "Address";
 		address_title.style.padding = "1px 2px";
 		address_title.style.marginTop = "2px";
+		address_title.style.fontStyle = "italic";
+		address_title.style.color = "#606060";
+		address_title.style.textDecoration = "underline";
 		left.appendChild(address_title);
 		this._address_container = document.createElement("DIV");
 		this._address_container.style.padding = "1px 2px";
@@ -164,7 +167,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		this._map_container.style.top = "-1000px";
 		//this._map_container.style.width = "100%";
 		this._map_container.style.height = "100%";
-		this._map_container.style.minHeight = "150px";
+		this._map_container.style.minHeight = "180px";
 		this._map_container.style.width = "250px";
 		// refresh with actual values
 		this._refreshAddress();
@@ -185,12 +188,22 @@ function location_and_partners(popup, section_location, section_other_partners, 
 				t._address_container.appendChild(a.element);
 				layout.changed(section_location.element);
 			});
+			if (this._warning_host) { this._warning_host.parentNode.removeChild(this._warning_host); this._warning_host = null; } 
 		} else if (this.geographic_area_text != null) {
 			// we only have a geographic area
-			this._address_container.innerHTML = this.geographic_area_text.text+"<br/><img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> <i style='color:#FF8000'>Not complete: please select a hosting partner</i>";
+			this._address_container.innerHTML = this.geographic_area_text.text;
+			if (!this._warning_host) {
+				this._warning_host = document.createElement("DIV");
+				this._warning_host.style.display = "inline-block";
+				this._warning_host.style.marginLeft = "4px";
+				this._warning_host.style.marginRight = "4px";
+				this._warning_host.innerHTML = "<img src='"+theme.icons_16.warning+"' style='vertical-align:bottom'/> <i style='color:#FF8000'>Please select a hosting partner</i>";
+				section_location.addToolBottom(this._warning_host);
+			}
 		} else {
 			// nothing
 			this._address_container.innerHTML = "<center style='color:red'><img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> <i>Please select a location</i></center>";
+			if (this._warning_host) { this._warning_host.parentNode.removeChild(this._warning_host); this._warning_host = null; }
 		}
 		layout.changed(section_location.element);
 	};
@@ -260,9 +273,11 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		var tr = document.createElement("TR"); table.appendChild(tr);
 		var th;
 		tr.appendChild(th = document.createElement("TH"));
+		th.colSpan = 2;
+		th.style.fontStyle = "italic";
+		th.style.color = "#606060";
+		th.style.textDecoration = "underline";
 		th.appendChild(document.createTextNode("Hosting Partner"));
-		tr.appendChild(th = document.createElement("TH"));
-		th.appendChild(document.createTextNode("Contact Point(s)"));
 		new partnerRow(table, host, editable, function(org) {
 			// remove any non-valid contact point
 			for (var i = 0; i < host.selected_contact_points_id.length; ++i) {
@@ -280,6 +295,20 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			host.organization = org;
 			window.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 		});
+		// move contacts
+		tr.nextSibling.childNodes[0].colSpan = 2;
+		tr2 = document.createElement("TR");
+		tr2.appendChild(th = document.createElement("TH"));
+		th.colSpan = 2;
+		th.appendChild(document.createTextNode("Contact Point(s)"));
+		th.style.fontStyle = "italic";
+		th.style.color = "#606060";
+		th.style.textDecoration = "underline";
+		table.appendChild(tr2);
+		var tr2 = document.createElement("TR");
+		tr2.appendChild(tr.nextSibling.childNodes[1]);
+		tr2.appendChild(tr.nextSibling.childNodes[1]);
+		table.appendChild(tr2);
 	};
 	
 	// Other Partners

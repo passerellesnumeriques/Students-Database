@@ -51,16 +51,29 @@ class page_exam_center_profile extends SelectionPage {
 			SelectionExamJSON::ExamCenterRoomSQL($q);
 			$rooms = $q->execute();
 			
-			$q = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession", "exam_center", $id);
-			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
-			CalendarJSON::CalendarEventSQL($q);
-			$sessions = $q->execute(); 
+			$sessions_events_ids = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession", "exam_center", $id)->field("event")->executeSingleField();
+			$sessions_events = CalendarJSON::getEventsFromDB($sessions_events_ids, PNApplication::$instance->selection->getCalendarId());
+			
+			$peoples_ids = array();
+			foreach ($sessions_events as $ev)
+				foreach ($ev["attendees"] as $a)
+					if ($a["people"] > 0 && !in_array($a["people"], $peoples_ids))
+						array_push($peoples_ids, $a["people"]);
+			if (count($peoples_ids) > 0) {
+				$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true, false, false, true);
+				$can_do = SQLQuery::create()->select("StaffStatus")->whereIn("StaffStatus","people",$peoples_ids)->field("people")->field("exam")->execute();
+			} else {
+				$peoples = array();
+				$can_do = array();
+			}
 			
 			$linked_is_id = SQLQuery::create()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "exam_center", $id)->field("information_session")->executeSingleField();
 		} else {
 			$applicants = array();
 			$rooms = array();
-			$sessions = array();
+			$sessions_events = array();
+			$peoples = array();
+			$can_do = array();
 			$linked_is_id = array();
 		}
 		$q = SQLQuery::create()->select("InformationSession");
@@ -80,6 +93,8 @@ class page_exam_center_profile extends SelectionPage {
 		$this->requireJavascript("custom_data_grid.js");
 		$this->requireJavascript("people_data_grid.js");
 		$this->requireJavascript("applicant_data_grid.js");
+		$this->requireJavascript("who.js");
+		$this->requireJavascript("calendar_objects.js");
 		?>
 		<div>
 		<div id='section_center' title='Exam Center Information' collapsable='true' style='margin:10px;'>
@@ -107,8 +122,8 @@ class page_exam_center_profile extends SelectionPage {
 						<?php echo $editable ? "true" : "false";?>
 					);
 					</script>
-				</div>
-				<div style='display:inline-block;margin-top:10px;vertical-align:top;' id='rooms'>
+					<div style='' id='rooms'>
+					</div>
 				</div>
 				<div style='display:inline-block;margin:10px;vertical-align:top;' id='location_and_partners'>
 				<?php
@@ -126,11 +141,23 @@ class page_exam_center_profile extends SelectionPage {
 				'exam_sessions_container',
 				'rooms',
 				<?php echo SelectionExamJSON::ExamCenterRooms($rooms);?>,
-				<?php echo CalendarJSON::CalendarEvents($sessions, true); ?>,
+				<?php echo CalendarJSON::JSONList($sessions_events); ?>,
 				<?php echo SelectionApplicantJSON::ApplicantsJSON($applicants); ?>,
 				window.linked_is,
 				<?php echo intval($this->component->getOneConfigAttributeValue("default_duration_exam_session"))*60;?>,
 				<?php echo $calendar_id;?>,
+				[<?php 
+				$first = true;
+				foreach ($peoples as $p) {
+					if ($first) $first = false; else echo ",";
+					echo "{people:".PeopleJSON::People($p);
+					echo ",can_do:";
+					$val = false;
+					foreach ($can_do as $c) if ($c["people"] == $p["people_id"]) { $val = $c["exam"]; break; }
+					echo json_encode($val);
+					echo "}";
+				}
+				?>],
 				<?php echo $editable ? "true" : "false";?>
 			);
 			</script>
@@ -174,7 +201,7 @@ class page_exam_center_profile extends SelectionPage {
 				// rooms changed
 				data.rooms = window.center_sessions.rooms;
 			}
-			if (window.pnapplication.isDataUnsaved("ExamCenterSessions")) {
+			if (window.pnapplication.isDataUnsaved("ExamCenterSessions") || window.pnapplication.isDataUnsaved('who')) {
 				// sessions changed
 				data.sessions = window.center_sessions.sessions;
 			}

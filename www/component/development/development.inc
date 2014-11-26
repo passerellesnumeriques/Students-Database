@@ -10,12 +10,16 @@ class development extends Component {
 	public function initRequest() {
 		//Component::allowPageWithoutLogin("development", "tools");
 		Component::allowPageWithoutLogin("development", "reset_db");
+		Component::allowPageWithoutLogin("development", "db_tools");
 		Component::allowPageWithoutLogin("development", "clean_storage");
 		Component::allowPageWithoutLogin("development", "export_storage");
 		//Component::allowPageWithoutLogin("development", "export_data");
 		Component::allowPageWithoutLogin("development", "check_code");
 		Component::allowPageWithoutLogin("development", "server_variables");
+		Component::allowPageWithoutLogin("development", "test");
 		Component::allowServiceWithoutLogin("development", "create_db");
+		Component::allowServiceWithoutLogin("development", "empty_db");
+		Component::allowServiceWithoutLogin("development", "create_datamodel");
 		Component::allowServiceWithoutLogin("development", "reset_storage");
 		Component::allowServiceWithoutLogin("development", "init_data");
 		Component::allowServiceWithoutLogin("development", "test_data");
@@ -28,6 +32,7 @@ class development extends Component {
 		Component::allowServiceWithoutLogin("development", "backup");
 		Component::allowServiceWithoutLogin("development", "get_backups");
 		Component::allowServiceWithoutLogin("development", "recover");
+		Component::allowServiceWithoutLogin("development", "download");
 		
 		for ($i = 0; $i < 15; $i++) {
 			if ($i >= count($this->requests)) break;

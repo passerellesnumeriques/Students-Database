@@ -38,5 +38,17 @@ class staff extends Component {
 		return $q;
 	}
 	
+	public function getCurrentStaffsQuery($include_people_info = false, $include_people_picture_info = false, $include_department_name = false) {
+		$q = SQLQuery::create()->select("StaffPosition")->whereNull("StaffPosition", "end");
+		if ($include_people_info)
+			PNApplication::$instance->people->joinPeople($q, "StaffPosition", "people", $include_people_picture_info);
+		if ($include_department_name) {
+			$q->join("StaffPosition", "PNDepartment", array("department"=>"id"));
+			$q->field("PNDepartment","name","staff_department");
+		}
+		$q->field("StaffPosition","position","staff_position");
+		return $q;
+	}
+	
 }
 ?>

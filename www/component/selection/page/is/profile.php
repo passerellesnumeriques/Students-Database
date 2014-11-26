@@ -19,6 +19,10 @@ class page_is_profile extends SelectionPage {
 			GeographyJSON::GeographicAreaTextSQL($q);
 			$q->fieldsOfTable("InformationSession");
 			$session = $q->executeSingleRow();
+			if (@$session["date"] <> null) {
+				require_once("component/calendar/CalendarJSON.inc");
+				$event = CalendarJSON::getEventFromDB($session["date"], $this->component->getCalendarId());
+			}
 		} else
 			$session = null;
 		if (@$_GET["readonly"] == "true") $editable = false;
@@ -35,6 +39,7 @@ class page_is_profile extends SelectionPage {
 		}
 		$all_configs = include("component/selection/config.inc");
 		$this->requireJavascript("is_date.js");
+		$this->requireJavascript("who.js");
 		$this->requireJavascript("is_statistics.js");
 		?>
 		<div style='width:100%;height:100%;overflow:auto;'>
@@ -56,13 +61,65 @@ class page_is_profile extends SelectionPage {
 			<script type='text/javascript'>
 			window.is_schedule = new is_date(
 				'is_schedule', 
-				<?php echo json_encode(@$session["date"]);?>,
+				<?php if (@$session["date"] <> null) echo CalendarJSON::JSON($event); else echo "null";?>,
 				<?php echo $session <> null ? $session["id"] : "-1";?>,
 				<?php echo $this->component->getCalendarId();?>,
 				<?php echo json_encode($this->component->getOneConfigAttributeValue("default_duration_IS"));?>,
 				<?php echo json_encode($editable);?>,
 				<?php echo json_encode($all_configs["default_duration_IS"][2]);?>
 			); 
+			</script>
+			<div id='is_who'></div>
+			<script type='text/javascript'>
+			function addWho() {
+				window.is_who = new who_section(
+					'is_who',
+					[<?php
+					if (@$session["date"] <> null) {
+						$people_ids = array();
+						foreach ($event["attendees"] as $a) if ($a["people"] && !in_array($a["people"], $people_ids)) array_push($people_ids, $a["people"]);
+						if (count($people_ids) > 0) {
+							$peoples = PNApplication::$instance->people->getPeoples($people_ids, true, false, true, true);
+							$can_do = SQLQuery::create()->select("StaffStatus")->whereIn("StaffStatus","people",$people_ids)->field("people")->field("is")->execute();
+						} else {
+							$peoples = array();
+							$can_do = array();
+						}
+						$first = true;
+						foreach ($event["attendees"] as $a) {
+							if ($a["role"] == "ORGANIZER_ONLY") continue;
+							if ($first) $first = false; else echo ",";
+							if ($a["people"] > 0) {
+								echo "{people:";
+								foreach ($peoples as $p) if ($p["people_id"] == $a["people"]) { echo PeopleJSON::People($p); break; }
+								echo ",can_do:";
+								$value = false;
+								foreach ($can_do as $c) if ($c["people"] == $a["people"]) { $value = $c["is"] == 1; break; }
+								echo json_encode($value);
+								echo "}";
+							} else
+								echo json_encode($a["name"]);
+						}
+					} 
+					?>],
+					<?php echo json_encode($editable);?>,
+					'is',
+					"Who will conduct this Information Session ?"
+				); 
+			}
+			function removeWho() {
+				window.is_who = null;
+				document.getElementById('is_who').removeAllChildren();
+			}
+			window.is_who = null;
+			<?php if (@$session["date"] <> null) echo "addWho();";?>
+			window.is_schedule.onchange.add_listener(function() {
+				var ev = window.is_schedule.getEvent();
+				if (ev && ev.start) {
+					if (!window.is_who) addWho();
+				} else if (window.is_who)
+					removeWho();
+			});
 			</script>
 			<div id='is_stats'></div>
 			<script type='text/javascript'>
@@ -121,6 +178,13 @@ class page_is_profile extends SelectionPage {
 				var p = {host:partner.host,host_address:partner.host_address_id,organization:partner.organization.id,contact_points_selected:partner.selected_contact_points_id};
 				data.partners.push(p);
 			}
+			data.who = [];
+			if (window.is_who)
+				for (var i = 0; i < window.is_who.peoples.length; ++i)
+					if (typeof window.is_who.peoples[i] == 'string')
+						data.who.push(window.is_who.peoples[i]);
+					else
+						data.who.push(window.is_who.peoples[i].people.id);
 
 			service.json("selection","is/save",{event:event, data:data},function(res){
 				if(!res) {

@@ -4,8 +4,8 @@ class service_download_update extends Service {
 	public function getRequiredRights() { return array("manage_application"); }
 	
 	public function documentation() { echo "Functionalities to download an update"; }
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function inputDocumentation() { echo "download, getsize, url, rest, range_from, range_to, target, step";}
+	public function outputDocumentation() { echo "depends on the input..."; }
 	public function getOutputFormat($input) { return "text/plain"; }
 	
 	public function execute(&$component, $input) {

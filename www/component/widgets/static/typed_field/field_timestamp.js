@@ -37,7 +37,10 @@ field_timestamp.prototype._create = function(data) {
 		require(this.config && this.config.show_time ? ["field_date.js","field_time.js"] : "field_date.js", function() {
 			var d = t._data == null ? null : new Date(t._data*(t.config && t.config.data_is_seconds ? 1000  : 1));
 			var date = d == null ? null : dateToSQL(d);
-			t._field_date = new field_date(date,true,{});
+			var cfg = {};
+			if (t.config && t.config.minimum_date) cfg.minimum = t.config.minimum_date;
+			if (t.config && t.config.maximum_date) cfg.maximum = t.config.maximum_date;
+			t._field_date = new field_date(date,true,cfg);
 			t._field_date.onchange.add_listener(function() { t._datachange(); });
 			t.element.appendChild(t._field_date.getHTMLElement());
 			t._field_date.getHTMLElement().style.verticalAlign = "bottom";
@@ -86,6 +89,7 @@ field_timestamp.prototype._create = function(data) {
 			this.element.style.border = error ? "1px solid red" : "";
 		};
 	} else {
+		this.element.style.whiteSpace = "nowrap";
 		if (this.config && this.config.style)
 			for (var s in this.config.style)
 				this.element.style[s] = this.config.style[s];

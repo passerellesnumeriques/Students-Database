@@ -47,10 +47,10 @@ class service_exam_save_results extends Service {
 			$subjects[$subjects_parts[$q["exam_subject_part"]]["exam_subject"]]["parts"][$q["exam_subject_part"]]["questions"][$q["id"]] = $q;
 			array_push($subjects[$subjects_parts[$q["exam_subject_part"]]["exam_subject"]]["questions_ids"], $q["id"]);
 		}
+		$_subjects_versions = SQLQuery::create()->bypassSecurity()->select("ExamSubjectVersion")->orderBy("ExamSubjectVersion","id")->execute();
+		foreach ($_subjects_versions as $version)
+			array_push($subjects[$version["exam_subject"]]["versions"], $version["id"]);
 		if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) {
-			$_subjects_versions = SQLQuery::create()->bypassSecurity()->select("ExamSubjectVersion")->orderBy("ExamSubjectVersion","id")->execute();
-			foreach ($_subjects_versions as $version)
-				array_push($subjects[$version["exam_subject"]]["versions"], $version["id"]);
 			$_answers = SQLQuery::create()->bypassSecurity()->select("ExamSubjectAnswer")->execute();
 			foreach ($_answers as $a) {
 				$q = $questions[$a["exam_subject_question"]];

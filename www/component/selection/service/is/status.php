@@ -10,6 +10,7 @@ class service_is_status extends Service {
 	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
+		// TODO sessions without anyone assigned
 		// *** Sessions ***
 
 		// number of sessions done

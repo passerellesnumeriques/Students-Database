@@ -668,4 +668,5 @@ $model->addTable("ContactPoint")
 		return $final;
 	})
 	;
+	
 ?>

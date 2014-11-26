@@ -686,6 +686,7 @@ class SQLQuery {
 			foreach ($this->tables as $name=>$alias)
 				$table = $name;
 		}
+		if (count($values) == 0) return; // nothing
 		$w = "`".$this->resolveWhereTable($table)."`.`".$field."` NOT IN (";
 		$first = true;
 		foreach ($values as $value) {
@@ -2379,7 +2380,7 @@ class SQLQuery {
 				$primary = $t->getPrimaryKey();
 				if ($primary <> null) {
 					// search keys for rows matching
-					$q = SQLQuery::create()->bypassSecurity($this->bypass_security)
+					$q = SQLQuery::create()->bypassSecurity($this->bypass_security || $t->canRemoveFromForeignTable($table->getName()))
 #DEV
 						->noWarning()
 #END
@@ -2395,7 +2396,7 @@ class SQLQuery {
 				} else {
 					// no primary key, this must be done with a where
 					if (!$this->bypass_security && !$t->canRemoveAny()) {
-						$q = SQLQuery::create()->bypassSecurity($this->bypass_security)
+						$q = SQLQuery::create()->bypassSecurity($this->bypass_security || $t->canRemoveFromForeignTable($table->getName()))
 #DEV
 							->noWarning()
 #END
@@ -2417,7 +2418,7 @@ class SQLQuery {
 						array_push($to_remove[$t->getSQLNameFor($sm)]["where"], array($col->name=>$key));
 				}
 			} else {
-				if (!$this->bypass_security) {
+				if (!$this->bypass_security && !$t->canPutNullFromForeignTable($table->getName())) {
 					if (!$t->mayModify())
 						throw new Exception("Access denied: cannot modify table '".$t->getName()."': necessary to remove link to table '".$table->getName()."'");
 		

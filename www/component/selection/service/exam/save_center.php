@@ -106,11 +106,18 @@ class service_exam_save_center extends Service {
 		// 3 - Save linked IS
 		if (isset($input["linked_is"])) {
 			// remove current links
-			if (!$is_new)
-				SQLQuery::create()->removeLinkedData("ExamCenterInformationSession", "ExamCenter", $center_id);
+			if (!$is_new) {
+				$to_remove = SQLQuery::create()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession","exam_center",$center_id)->execute();
+				SQLQuery::create()->removeRows("ExamCenterInformationSession",$to_remove);
+			}
 			// for linked is, make sure it is not actually linked to another center
-			foreach ($input["linked_is"] as $is_id)
-				SQLQuery::create()->removeLinkedData("ExamCenterInformationSession", "InformationSession", $is_id);
+			if (count($input["linked_is"]) > 0) {
+				$already_linked = SQLQuery::create()->select("ExamCenterInformationSession")->whereIn("ExamCenterInformationSession","information_session",$input["linked_is"])->execute();
+				if (count($already_linked) > 0) {
+					PNApplication::error("Information session(s) already linked to another exam center");
+					return;
+				}
+			}
 			// add links
 			$list = array();
 			foreach ($input["linked_is"] as $is_id)
@@ -179,12 +186,32 @@ class service_exam_save_center extends Service {
 				$event["calendar"] = $component->getCalendarId();
 				// set the title
 				if (!isset($center["name"])) $center["name"] = SQLQuery::create()->select("ExamCenter")->whereValue("ExamCenter","id",$center_id)->field("name")->executeSingleValue();
-				$event["title"] = "Written Exam in ".$center["name"];
+				$event["title"] = "Written Exam @ ".$center["name"];
 				// set information
-				$event["organizer"] = "Selection";
-				$event["participation"] = "YES";
-				$event["role"] = "REQUESTED";
-				// TODO set app_link and app_link_name
+				$attendees = @$event["attendees"];
+				$event["attendees"] = array();
+				array_push($event["attendees"], array(
+					"name"=>"Selection",
+					"role"=>"ORGANIZER_ONLY",
+					"participation"=>"YES"
+				));
+				if ($attendees <> null) {
+					$people_ids = array();
+					foreach ($attendees as $a) {
+						if ($a["people"] > 0) array_push($people_ids, $a["people"]);
+						$a["role"] = "REQUESTED";
+					}
+					if (count($people_ids) > 0) {
+						$emails = PNApplication::$instance->contact->getPeoplesPreferredEMail($people_ids, true);
+						foreach ($attendees as $a) if ($a["people"] > 0) $a["email"]=$emails[$a["people"]];
+					}
+					foreach ($attendees as $a) {
+						unset($a["organizer"]);
+						array_push($event["attendees"], $a);
+					}
+				}
+				$event["app_link"] = "popup:/dynamic/selection/page/exam/center_profile?id=".$center_id;
+				$event["app_link_name"] = "This event is a Written Exam session: click to open the exam center";
 				if ($event["id"] < 0) {
 					// this is a new session
 					$given_id = $event["id"];

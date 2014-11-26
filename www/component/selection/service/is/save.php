@@ -101,10 +101,27 @@ class service_is_save extends Service{
 					if(isset($event["id"]))
 						unset($event["id"]);
 					$event["calendar_id"] = PNApplication::$instance->selection->getCalendarId();
-					$event["organizer"] = "Selection";
-					$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
+					$event["attendees"] = array();
+					array_push($event["attendees"], array(
+						"name"=>"Selection",
+						"role"=>"ORGANIZER_ONLY",
+						"participation"=>"YES"
+					));
+					$people_ids = array();
+					foreach ($data["who"] as $who)
+						if (ctype_digit($who))
+							array_push($people_ids, $who);
+					if (count($people_ids) > 0)
+						$emails = PNApplication::$instance->contact->getPeoplesPreferredEMail($people_ids, true);
+					foreach ($data["who"] as $who) {
+						if (ctype_digit($who))
+							array_push($event["attendees"], array("people"=>$who,"email"=>$emails[$who],"role"=>"REQUESTED","participation"=>"UNKNOWN"));
+						else
+							array_push($event["attendees"], array("name"=>$who,"role"=>"REQUESTED","participation"=>"UNKNOWN"));
+					}
+					$event["title"] = "InfoSession @ ".PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 					if (!$insert_IS) {
-						$event["app_link"] = "/dynamic/selection/page/is/profile?id=".$data["id"];
+						$event["app_link"] = "popup:/dynamic/selection/page/is/profile?id=".$data["id"];
 						$event["app_link_name"] = "This event is an Information Session: click to see it";
 					}
 					PNApplication::$instance->calendar->saveEvent($event);
@@ -115,10 +132,28 @@ class service_is_save extends Service{
 				}
 				$data["date"] = $event_id;
 			} else if($update_event && $everything_ok){
-				$event["title"] = PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
+				$event["title"] = "InfoSession @ ".PNApplication::$instance->geography->getGeographicAreaText($data["geographic_area"]);
 				if (!$insert_IS) {
-					$event["app_link"] = "/dynamic/selection/page/is/profile?id=".$data["id"];
+					$event["app_link"] = "popup:/dynamic/selection/page/is/profile?id=".$data["id"];
 					$event["app_link_name"] = "This event is an Information Session: click to see it";
+				}
+				$event["attendees"] = array();
+				array_push($event["attendees"], array(
+					"name"=>"Selection",
+					"role"=>"ORGANIZER_ONLY",
+					"participation"=>"YES"
+				));
+				$people_ids = array();
+				foreach ($data["who"] as $who)
+					if (ctype_digit($who))
+						array_push($people_ids, $who);
+				if (count($people_ids) > 0)
+					$emails = PNApplication::$instance->contact->getPeoplesPreferredEMail($people_ids, true);
+				foreach ($data["who"] as $who) {
+					if (ctype_digit($who))
+						array_push($event["attendees"], array("people"=>$who,"email"=>$emails[$who],"role"=>"REQUESTED","participation"=>"UNKNOWN"));
+					else
+						array_push($event["attendees"], array("name"=>$who,"role"=>"REQUESTED","participation"=>"UNKNOWN"));
 				}
 				$data["date"] = $event["id"];
 				try{
@@ -142,7 +177,7 @@ class service_is_save extends Service{
 					$new_IS_id = prepareDataAndSaveIS($data,true);
 					$data["id"] = $new_IS_id;
 					if ($add_event) {
-						$event["app_link"] = "/dynamic/selection/page/is/profile?id=".$data["id"];
+						$event["app_link"] = "popup:/dynamic/selection/page/is/profile?id=".$data["id"];
 						$event["app_link_name"] = "This event is an Information Session: click to see it";
 						PNApplication::$instance->calendar->saveEvent($event);
 					}

@@ -39,6 +39,11 @@
     align-items: center;
     justify-content: center;
 }
+.data_list>.header>.header_left .results_number {
+	font-weight: bold;
+	color: #404080;
+	font-size: 12pt;
+}
 .data_list>.header>.header_center {
 	border-left: 1px solid #808080;
 	flex: 1 1 auto;

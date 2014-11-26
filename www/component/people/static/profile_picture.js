@@ -22,6 +22,9 @@ function profile_picture(container, width, height, halign, valign) {
 	
 	this.adjustPicture = function(recall) {
 		if (!t || !t.picture) return;
+		if (!t.picture.parentNode) {
+			t.picture_container.appendChild(t.picture);
+		}
 		var resize_ratio = 1;
 		var h = t.picture.naturalHeight;
 		var w = t.picture.naturalWidth;
@@ -42,6 +45,7 @@ function profile_picture(container, width, height, halign, valign) {
 			setTimeout(function() {
 				if (t) t.adjustPicture(recall+1);
 			},1+recall*10);
+			return;
 		}
 		if (h > t.height) {
 			resize_ratio = t.height/h;
@@ -66,9 +70,6 @@ function profile_picture(container, width, height, halign, valign) {
 			default: t.picture.style.top = Math.floor(t.picture_container.clientHeight/2-h/2)+'px';
 			}
 			t.picture.style.position = "absolute";
-		}
-		if (!t.picture.parentNode) {
-			t.picture_container.appendChild(t.picture);
 		}
 		if (t.width >= 75 && t.height >= 75) {
 			t.controls.style.display = "flex";

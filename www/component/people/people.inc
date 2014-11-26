@@ -139,15 +139,19 @@ class people extends Component {
 		return SQLQuery::create()->bypassSecurity($bypass_security)->select("People")->whereValue("People","id",$people_id)->executeSingleRow();
 	}
 	
-	public function getPeoples($peoples_ids,$include_picture_revision=false,$sort = false) {
+	public function getPeoples($peoples_ids,$include_picture_revision=false,$sort=false,$bypass_security=false,$json_format=false) {
 		if (count($peoples_ids) == 0) return array();
 		$q = SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids);
 		if ($sort)
 			$q->orderBy("People","last_name")->orderBY("People","first_name");
-		if ($include_picture_revision) {
+		if ($json_format) {
+			require_once("component/people/PeopleJSON.inc");
+			PeopleJSON::PeopleSQL($q, $include_picture_revision);
+		} else if ($include_picture_revision) {
 			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
 			$q->fieldsOfTable("People");
 		}
+		if ($bypass_security) $q->bypassSecurity();
 		return $q->execute();
 	}
 	public function getPeoplesSQLQuery($peoples_ids,$include_picture_revision=false) {
@@ -158,6 +162,10 @@ class people extends Component {
 			$q->fieldsOfTable("People");
 		}
 		return $q;
+	}
+	
+	public function getPeoplesByType($type) {
+		return SQLQuery::create()->select("People")->where("`types` LIKE '%/$type/%'")->execute();
 	}
 	
 	public function &searchPeopleByFirstAndLastName($first_name, $last_name) {

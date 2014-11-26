@@ -54,4 +54,5 @@ $sm->addTable("InformationSessionContactPoint")
 	->addInsertAccess("manage_information_session",true)
 	->addRemoveAccess("manage_information_session",true)
 	;
+
 ?>

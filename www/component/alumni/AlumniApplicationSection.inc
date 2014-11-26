@@ -1,5 +1,8 @@
 <?php 
 require_once("component/application/ApplicationSectionPlugin.inc");
+/**
+ * Provides the Alumni section to the application
+ */
 class AlumniApplicationSection implements ApplicationSectionPlugin {
 	
 	public function getId() { return "alumni"; }

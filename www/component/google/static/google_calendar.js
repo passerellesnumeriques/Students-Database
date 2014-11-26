@@ -8,6 +8,8 @@ function load_google_calendars(ondone, feedback_handler) {
 			var calendars = [];
 			if (resp.items)
 			for (var i = 0; i < resp.items.length; ++i) {
+				// check if this is a calendar from us
+				if (resp.items[i].description == "Students Management Software Calendar") continue;
 				// accessRole=reader,owner,writer
 				var write = resp.items[i].accessRole == "owner" || resp.items[i].accessRole == "writer"; 
 				var cal = new GoogleCalendar(resp.items[i].id, resp.items[i].summary, resp.items[i].backgroundColor.substring(1), resp.items[i].selected, write);
@@ -86,7 +88,7 @@ function GoogleCalendar(id, name, color, show, writable) {
 				t.events = [];
 				for (var i = 0; i < google_events.length; ++i) {
 					var gev = google_events[i];
-					var ev = new CalendarEvent(-1, 'Google', t.id, gev.iCalUID, null, null, false, gev.last_modified, gev.summary, gev.description ? gev.description : "", "", "", "", "");
+					var ev = new CalendarEvent(-1, 'Google', t.id, gev.iCalUID, null, null, false, gev.last_modified, gev.summary, gev.description ? gev.description : "", "");
 					if (gev.location) ev.location_freetext = gev.location;
 					if (gev.start && gev.start.date) {
 						ev.start = new Date();
@@ -139,6 +141,35 @@ function GoogleCalendar(id, name, color, show, writable) {
 							}
 						}
 					}
+					if (gev.attendees) {
+						for (var j = 0; j < gev.attendees.length; ++j) {
+							var a = new CalendarEventAttendee(gev.attendees[j].displayName, null, null, gev.attendees[j].organizer, gev.attendees[j].email);
+							switch (gev.attendees[j].responseStatus) {
+							case "needsAction": a.participation = calendar_event_participation_unknown; break;
+							case "declined": a.participation = calendar_event_participation_no; break;
+							case "tentative": a.participation = calendar_event_participation_tentative; break;
+							case "accepted": a.participation = calendar_event_participation_yes; break;
+							}
+							if (typeof gev.attendees[j].optional != 'undefined')
+								a.role = gev.attendees[j].optional ? calendar_event_role_optional : calendar_event_role_requested;
+							else if (gev.attendees[j].organizer)
+								a.role = calendar_event_role_organizer_only;
+							ev.attendees.push(a);
+						}
+					}
+					if (gev.organizer) {
+						var already = false;
+						for (var j = 0; j < ev.attendees.length; ++j) if (ev.attendees[j].organizer) { already = true; break; }
+						if (!already) {
+							ev.attendees.push(new CalendarEventAttendee(
+								gev.organizer.displayName,
+								calendar_event_role_organizer_only,
+								calendar_event_participation_no,
+								true,
+								gev.organizer.email
+							));
+						}
+					}
 					var err = null;
 					if (!ev.start) err = "No start date";
 					else if (isNaN(ev.start.getDay())) err = "Invalid start date";
@@ -157,11 +188,14 @@ function GoogleCalendar(id, name, color, show, writable) {
 					for (var j = 0; j < removed_events.length; ++j) {
 						if (ev.uid == removed_events[j].uid) {
 							found = true;
-							t.events.push(ev);
-							if (ev.last_modified != removed_events[j].last_modified)
+							if (ev.last_modified != removed_events[j].last_modified) {
+								t.events.push(ev);
 								t.on_event_updated.fire(ev);
-							for (var n in removed_events[j])
-								removed_events[j][n] = null;
+								for (var n in removed_events[j])
+									removed_events[j][n] = null;
+							} else {
+								t.events.push(removed_events[j]);
+							}
 							removed_events.splice(j,1);
 							break;
 						}
@@ -187,9 +221,11 @@ function GoogleCalendar(id, name, color, show, writable) {
 		});
 	};
 	if (writable) {
+		/*
 		this.saveEvent = function(event) {
 			// TODO
 		};
+		*/
 	}
 }
 GoogleCalendar.prototype = new Calendar();
@@ -234,7 +270,8 @@ function GoogleCalendarsProvider() {
 	CalendarsProvider.call(this,"Google");
 	var t=this;
 	// limit to 10 minutes to avoid reaching the maximum of 100 000 request per day
-	this.minimum_time_to_autorefresh = 10*60*1000;
+	this.minimum_time_to_autorefresh_calendar = 10*60*1000;
+	this.minimum_time_to_autorefresh_calendars_list = 20*60*1000;
 	this._retrieveCalendars = function(handler) {
 		if (window.closing) return;
 		load_google_calendars(function(calendars) {

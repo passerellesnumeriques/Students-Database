@@ -15,6 +15,7 @@ window.calendar_event_role_requested = "REQUESTED";
 window.calendar_event_role_optional = "OPTIONAL";
 /** for information only, but participant does not need to participate */
 window.calendar_event_role_for_info = "FOR_INFO";
+window.calendar_event_role_organizer_only = "ORGANIZER_ONLY";
 
 /**
  * Object representing a calendar event, used between front-end and back-end
@@ -29,14 +30,11 @@ window.calendar_event_role_for_info = "FOR_INFO";
  * @param {String} title title of the event
  * @param {String} description text giving more details about the event
  * @param {String} location_freetext where this event occurs
- * @param {String} organizer person organizing the event
- * @param {String} participation participation of the organizer
- * @param {String} role role of the organizer
  * @param {CalendarEventFrequency} frequency recurrence
  * @param {String} app_link url
  * @param {String} app_link_name name to display
  */
-function CalendarEvent(id, calendar_provider_id, calendar_id, uid, start, end, all_day, last_modified, title, description, location_freetext, organizer, participation, role, frequency, app_link, app_link_name) {
+function CalendarEvent(id, calendar_provider_id, calendar_id, uid, start, end, all_day, last_modified, title, description, location_freetext, frequency, app_link, app_link_name, attendees) {
 	this.id = id;
 	this.calendar_provider_id = calendar_provider_id;
 	this.calendar_id = calendar_id;
@@ -50,12 +48,10 @@ function CalendarEvent(id, calendar_provider_id, calendar_id, uid, start, end, a
 	this.title = title;
 	this.description = description;
 	this.location_freetext = location_freetext;
-	this.organizer = organizer;
-	this.participation = participation;
-	this.role = role;
 	this.frequency = frequency;
 	this.app_link = app_link;
 	this.app_link_name = app_link_name;
+	this.attendees = attendees ? attendees : [];
 }
 /**
  * Create a copy of this event
@@ -76,12 +72,10 @@ function copyCalendarEvent(ev) {
 		ev.title,
 		ev.description,
 		ev.location_freetext,
-		ev.organizer,
-		ev.participation,
-		ev.role,
 		copyCalendarEventFrequency(ev.frequency),
 		ev.app_link,
-		ev.app_link_name
+		ev.app_link_name,
+		arrayCopy(ev.attendees, copyCalendarEventAttendee)
 	);
 };
 
@@ -144,5 +138,27 @@ function copyCalendarEventFrequency(f) {
 		f.by_hour,
 		f.by_setpos,
 		f.week_start
+	);
+}
+
+function CalendarEventAttendee(name, role, participation, organizer, email, people, people_email) {
+	this.name = name;
+	this.role = role;
+	this.participation = participation;
+	this.organizer = organizer;
+	this.email = email;
+	this.people = people;
+	this.people_email = people_email;
+}
+function copyCalendarEventAttendee(a) {
+	if (a == null) return null;
+	return new CalendarEventAttendee(
+		a.name,
+		a.role,
+		a.participation,
+		a.organizer,
+		a.email,
+		a.people,
+		a.people_email
 	);
 }

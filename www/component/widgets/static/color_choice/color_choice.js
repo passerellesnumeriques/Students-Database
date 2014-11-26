@@ -66,8 +66,11 @@ function color_choice(container, current_color) {
 				this.innerHTML = "Default Colors";
 				var frame = document.createElement("IFRAME");
 				t.frame = frame;
+				frame.oncolorchanged = function(hex) {
+					t.setColor('#'+hex);
+				};
 				frame.src = "/static/widgets/color_choice/lib_colorpicker/default.html"+color_string(t.color);
-				frame.onload = function() { 
+				frame.onload = function() {
 					layout.changed(container);
 				};
 				frame.style.height = "280px";

@@ -664,9 +664,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					_page_size_div.appendChild(t._page_size_field.getHTMLElement());
 				});
 			});
-		}
+		} else div.className = "results_number";
 		// + refresh
 		div = document.createElement("BUTTON");
+		div.style.marginLeft = "2px";
 		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 		div.title = "Refresh";
 		img.src = theme.icons_16.refresh;

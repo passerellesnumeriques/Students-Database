@@ -111,6 +111,8 @@ Refresh.Web.ColorPicker.prototype = {
 
 		// attach color values
 		this._cvp = new Refresh.Web.ColorValuePicker(this.id);
+		var t=this;
+		this._cvp.onchanged = function(hex) { if (t.onchanged) t.onchanged(hex); }
 
 		// link up events
 		var cp = this;
@@ -136,6 +138,7 @@ Refresh.Web.ColorPicker.prototype = {
 		
 		this.color = null;
 	},
+	onchanged: null,
 	show: function() {
 		this._map.Arrow.style.display = '';
 		this._slider.Arrow.style.display = '';

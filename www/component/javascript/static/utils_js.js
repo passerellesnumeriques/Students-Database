@@ -114,6 +114,13 @@ function arrayEquivalent(a1, a2) {
 	return true;
 }
 
+function arrayCopy(a, to_copy) {
+	var c = [];
+	for (var i = 0; i < a.length; ++i)
+		c.push(to_copy ? to_copy(a[i]) : a[i]);
+	return c;
+}
+
 function debug_object_to_string(o, indent) {
 	if (!indent) indent = "";
 	if (typeof o == 'object') {

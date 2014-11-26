@@ -111,7 +111,7 @@ window.layout = {
 	_process_timeout: null,
 	_layouts_short_time: 0,
 	_layout_needed: function() {
-		if (layout._process_timeout != null) return;
+		if (layout._process_timeout != null || this._paused) return;
 		var f = function() {
 			if (window.closing) return;
 			if (layout._last_layout_activity < new Date().getTime() - 1000)
@@ -346,7 +346,7 @@ window.layout = {
 		var images = document.getElementsByTagName("IMG");
 		for (var i = 0; i < images.length; ++i) {
 			var img = images[i];
-			if (img._layout_done) continue; // already processed
+			if (img._layout_done || img.hasAttribute("no_wait")) continue; // already processed
 			if (img.complete || img.height != 0) continue; // already loaded
 			if (img._bg) continue; // background loading
 			return false;

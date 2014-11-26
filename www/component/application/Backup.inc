@@ -157,7 +157,7 @@ class Backup {
 		} else {
 			$output = array();
 			$ret = 0;
-			exec("/usr/bin/zip \"".$zip_path."\" \"".$dir_path."\"/*", $output, $ret);
+			exec("/usr/bin/zip \"".$zip_path."\" \"".$dir_path."\"/"."*", $output, $ret);
 			if ($ret <> 0 && (!$handle_empty || $ret <> 18))
 				throw new Exception("Error creating zip file ".$zip_path." from directory ".$dir_path." (".$ret.")");
 		}
@@ -285,6 +285,111 @@ class Backup {
 		if ($directory <> null)
 			unzipFile(realpath("$directory/storage.zip"), realpath("data/$domain/storage"));
 		if (file_exists("data/$domain/storage/empty")) rmdir("data/$domain/storage/empty");
+	}
+	
+	public static function importBackup($time, $version, $dm_version) {
+		// first, we need the datamodel, so we can create sub model tables
+		if (!file_exists("data/datamodels")) mkdir("data/datamodels");
+		if (!file_exists("data/datamodels/datamodel_".$dm_version.".json")) {
+			if (!file_exists("data/datamodels/Students_Management_Software_".$dm_version."_datamodel.zip")) {
+				// we need to download it
+				// TODO
+			}
+			// extract the datamodel
+			set_time_limit(60);
+			try {
+				@unlink("data/datamodels/datamodel.json");
+				$zip = new ZipArchive();
+				$zip->open("data/datamodels/Students_Management_Software_".$dm_version."_datamodel.zip");
+				$zip->extractTo("data/datamodels", "datamodel.json");
+				$zip->close();
+				rename("data/datamodels/datamodel.json", "data/datamodels/datamodel_$dm_version.json");
+			} catch (Exception $e) {
+				@unlink("data/datamodels/Students_Management_Software_".$dm_version."_datamodel.zip");
+				PNApplication::error("Invalid datamodel ZIP file, we removed it, please download it again.", $e);
+				return false;
+			}
+		}
+		// get the datamodel specification
+		$json = file_get_contents("data/datamodels/datamodel_$dm_version.json");
+		if ($json == null) return false;
+		$json = json_decode($json, true);
+		if ($json == null) {
+			PNApplication::error("Invalid DataModel JSON specification");
+			return false;
+		}
+		$spec = $json["result"];
+		$model = $spec["model"];
+		// connect to Database
+		set_time_limit(30);
+		global $db_config;
+		require_once("DataBaseSystem_".$db_config["type"].".inc");
+		$db_system_class = "DataBaseSystem_".$db_config["type"];
+		/* @var $db_system DataBaseSystem */
+		$db_system = new $db_system_class;
+		$res = $db_system->connect($db_config["server"], $db_config["user"], $db_config["password"]);
+		if ($res <> DataBaseSystem::ERR_OK) {
+			switch ($res) {
+				case DataBaseSystem::ERR_CANNOT_CONNECT_TO_SERVER: PNApplication::error("Unable to connect to the database server"); break;
+				case DataBaseSystem::ERR_INVALID_CREDENTIALS: PNApplication::error("Invalid credentials to connect to the database server"); break;
+				default: PNApplication::error("Unknown result when connecting to the database server"); break;
+			}
+			return false;
+		}
+		$db_system->execute("USE ".$db_config["prefix"].$domain);
+		// extract Database backup
+		set_time_limit(60);
+		if (file_exists("data/recover")) self::removeDirectory("data/recover");
+		mkdir("data/recover");
+		mkdir("data/recover/db");
+		require_once("component/application/service/deploy_utils.inc");
+		unzipFile(realpath("data/backups/$version/$time/db.zip"), realpath("data/recover/db"));
+		// import tables on root model
+		foreach ($model["tables"] as $table) {
+			if (file_exists("data/recover/db/".$table["name"])) {
+				DataBaseUtilities::importSQL($db_system, "data/recover/db/".$table["name"]);
+			}
+		}
+		// import sub models
+		foreach ($model["sub_models"] as $sm) {
+			$sm_table_name = $sm["parent_table"];
+			$sm_table_spec = null;
+			foreach ($model["tables"] as $table) if ($table["name"] == $sm_table_name) { $sm_table_spec = $table; break; }
+			if ($sm_table_spec == null) {
+				PNApplication::error("Invalid sub-model parent table: ".$sm_table_name." does not exist");
+				return false;
+			}
+			$pk = @$sm_table_spec["key"];
+			if ($pk == null) {
+				PNApplication::error("Invalid sub-model: parent table $sm_table_name does not have a primary key");
+				return false;
+			}
+			$res = $db_system->execute("SELECT `$pk` FROM `$sm_table_name`");
+			if ($res)
+				while (($row = $db_system->nextRowArray($res)) <> null) {
+					$sm_instance = $row[0];
+					foreach ($sm["tables"] as $table) {
+						if (file_exists("data/recover/db/".$table["name"]."_".$sm_instance)) {
+							DataBaseUtilities::importSQL($db_system, "data/recover/db/".$table["name"]."_".$sm_instance);
+						}
+					}
+				}
+		}
+		
+		@mkdir("data/$domain");
+		// recover custom tables
+		if (file_exists("data/$domain/custom_tables")) self::removeDirectory("data/$domain/custom_tables");
+		if (file_exists("$directory/custom_tables.zip")) {
+			mkdir("data/$domain/custom_tables");
+			unzipFile(realpath("data/backups/$version/$time/custom_tables.zip"), realpath("data/$domain/custom_tables"));
+		}
+		// recover storage
+		if (file_exists("data/$domain/storage")) self::removeDirectory("data/$domain/storage");
+		mkdir("data/$domain/storage");
+		set_time_limit(60*60);
+		unzipFile(realpath("data/backups/$version/$time/storage.zip"), realpath("data/$domain/storage"));
+		if (file_exists("data/$domain/storage/empty")) rmdir("data/$domain/storage/empty");
+		return true;
 	}
 	
 }

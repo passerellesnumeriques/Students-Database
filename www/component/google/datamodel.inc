@@ -6,4 +6,17 @@ $model->addTable("GoogleUser")
 	->addString("google_login", 255, 10,true,false)
 	->setPrimary("user")
 	;
+
+$model->addTable("PNGoogleCalendar")
+	->addForeignKey("pn_id", "Calendar", false, false, true, true, false)
+	->addString("google_id", 255, 0, false, true)
+	->setPrimary("google_id")
+	;
+
+$model->addTable("GoogleCalendarSynchro")
+	->addString("google_id", 255, 0, false, true)
+	->addInteger("timestamp", 32, null, null, false, false)
+	->setPrimary("google_id")
+	;
+
 ?>

@@ -118,11 +118,14 @@ if ($message <> null) {
 		</div>
 	</td></tr>
 	<tr><td valign=top>
+		<!-- 
 		<a href="#" onclick="resetDB();return false;">Reset Database</a><br/>
 		<a href="#" onclick="cleanStorage();return false;">Clean storage</a><br/>
 		<a href="#" onclick="exportStorage();return false;">Export storage</a><br/>
-		<a href="/dynamic/documentation/page/index" target="_blank">Technical Documentation</a><br/>
+		-->
+		<a href="#" onclick="DBTools();return false;">Database Tools</a><br/>
 		<a href="/dynamic/development/page/check_code" target="_blank">Check code</a><br/>
+		<a href="/dynamic/documentation/page/index" target="_blank">Technical Documentation</a><br/>
 		<a href="/dynamic/test/page/home" target="_blank">Tests</a><br/>
 		<a href="?destroy_session=true">Destroy session</a><br/>
 		<a href="?uninstall=true">Reset installation</a><br/>
@@ -132,14 +135,21 @@ if ($message <> null) {
 			<li>tinyMCE: <span id='library_tinymce'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 			<li>PHPExcel: <span id='library_phpexcel'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 			<li>mPDF: <span id='library_mpdf'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
-			<li>Google Calendar: <span id='library_google_calendar'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 			<li>Google OAuth2: <span id='library_google_oauth2'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>Google Calendar: <span id='library_google_calendar'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>Google Plus: <span id='library_google_plus'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
+			<li>Google PHP API: <span id='library_google_php_api'><img src='<?php echo theme::$icons_16["loading"];?>' style='vertical-align:bottom;'/></span></li>
 		</ul>
 	</td></tr>
 </table>
 <script type="text/javascript">
 function resetDB() {
 	popup_frame(null,"Reset Database", "/dynamic/development/page/reset_db?domain=<?php echo PNApplication::$instance->local_domain;?>", null, 90, 90, function(frame,pop) {
+		pop.onclose = function() { window.top.location.reload(); };
+	});
+}
+function DBTools() {
+	popup_frame(null,"Database Tools", "/dynamic/development/page/db_tools", null, 90, 90, function(frame,pop) {
 		pop.onclose = function() { window.top.location.reload(); };
 	});
 }
@@ -151,7 +161,7 @@ function exportStorage() {
 	popup_frame(null,"Export Storage", "/dynamic/development/page/export_storage", null, 90, 90, function(frame,pop) {
 	});
 }
-var libraries = ["tinymce","phpexcel","mpdf","google_calendar","google_oauth2"];
+var libraries = ["tinymce","phpexcel","mpdf","google_oauth2","google_calendar","google_plus","google_php_api"];
 function checkLibraryUpdates(lib) {
 	service.json("development","check_libraries_updates",{library:lib},function(res) {
 		var span = document.getElementById('library_'+lib);
