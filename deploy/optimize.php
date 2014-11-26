@@ -23,9 +23,11 @@ function optimize_php($path) {
 		} else if ($line == "#CHANNEL_STABLE") {
 			if ($mode <> null) die("Found tag #CHANNEL_STABLE while still in #".$mode." in ".$path);
 			$mode = "CHANNEL_STABLE";
+			continue;
 		} else if ($line == "#CHANNEL_BETA") {
 			if ($mode <> null) die("Found tag #CHANNEL_BETA while still in #".$mode." in ".$path);
 			$mode = "CHANNEL_BETA";
+			continue;
 		} else if ($line == "#END") {
 			if ($mode == null) die("Found tag #END without opening #DEV or #PROD in ".$path);
 			$mode = null;
