@@ -50,21 +50,26 @@ $f = fopen(realpath($_POST["path"])."/to_deploy/".$filename,"r");
 $f2 = fopen(realpath($_POST["path"])."/to_deploy/".$filename.".checksum","w");
 do {
 	$s = fread($f, 1024);
-	while (strlen($s) < 1024) {
-		$s2 = fread($f, 1024-strlen($s));
-		if (strlen($s2) == 0) break;
+	$nb = strlen($s);
+	while ($nb < 1024) {
+		$s2 = fread($f, 1024-$nb);
+		$nb2 = strlen($s2);
+		if ($nb2 == 0) break;
 		$s .= $s2;
-	} 
-	if (strlen($s) == 0) break;
+		$nb += $nb2;
+	}
+	if ($nb == 0) break;
 	$bytes = unpack("C*",$s);
-	$cs = 0;
-	for ($i = 1; $i <= count($bytes); $i++) $cs += $bytes[$i];
-	$cs %= 256;
-	$byte = pack("C",$cs);
-	fwrite($f2, $byte);
+	$cs = pack("C", array_sum($bytes)%256);
+	fwrite($f2, $cs);
 } while (true);
 fclose($f);
 fclose($f2);
+// create the md5
+$md5 = md5_file(realpath($_POST["path"])."/to_deploy/".$filename, false);
+$f = fopen(realpath($_POST["path"])."/to_deploy/".$filename.".md5","w");
+fwrite($f, $md5);
+fclose($f);
 
 set_time_limit(240);
 $filename_migration = "Students_Management_Software_".$_POST["latest"]."_to_".$_POST["version"].".zip";
@@ -94,14 +99,16 @@ do {
 	}
 	if (strlen($s) == 0) break;
 	$bytes = unpack("C*",$s);
-	$cs = 0;
-	for ($i = 1; $i <= count($bytes); $i++) $cs += $bytes[$i];
-	$cs %= 256;
-	$byte = pack("C",$cs);
-	fwrite($f2, $byte);
+	$cs = pack("C", array_sum($bytes)%256);
+	fwrite($f2, $cs);
 } while (true);
 fclose($f);
 fclose($f2);
+// create the md5
+$md5 = md5_file(realpath($_POST["path"])."/to_deploy/".$filename_migration, false);
+$f = fopen(realpath($_POST["path"])."/to_deploy/".$filename_migration.".md5","w");
+fwrite($f, $md5);
+fclose($f);
 
 // create datamodel zip
 $filename_datamodel = "Students_Management_Software_".$_POST["version"]."_datamodel.zip";

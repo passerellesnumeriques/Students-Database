@@ -63,28 +63,23 @@ class service_download_update extends Service {
 	private function checkSum($path) {
 		$f = fopen($path,"r");
 		$f2 = fopen($path.".checksum","r");
-		//$pos = 0;
 		do {
 			set_time_limit(60);
 			$s = fread($f, 1024);
-			while (strlen($s) < 1024) {
-				$s2 = fread($f, 1024-strlen($s));
-				if (strlen($s2) == 0) break;
+			$nb = strlen($s);
+			while ($nb < 1024) {
+				$s2 = fread($f, 1024-$nb);
+				$nb2 = strlen($s2);
+				if ($nb2 == 0) break;
 				$s .= $s2;
-			} 
-			if (strlen($s) == 0) {
-				$s = fread($f2, 1);
-				if (strlen($s) <> 0) { /*echo "still";*/ return false; }
-				break;
+				$nb += $nb2;
 			}
+			if ($nb == 0) break;
 			$bytes = unpack("C*",$s);
-			$cs = 0;
-			for ($i = 1; $i <= count($bytes); $i++) $cs += $bytes[$i];
-			$cs %= 256;
+			$cs = pack("C", array_sum($bytes)%256);
 			$s = fread($f2, 1);
 			$bytes = unpack("C",$s);
 			if ($bytes[1] <> $cs) { /*echo "invalid at ".$pos." expected is ".$cs." found is ".$bytes[1];*/ return false; }
-			//$pos++;
 		} while (true);
 		fclose($f);
 		fclose($f2);
