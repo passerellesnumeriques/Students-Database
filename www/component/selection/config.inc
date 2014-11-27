@@ -15,7 +15,7 @@
 return array(
 	// Applicants
  	"generate_applicant_id" => array("Automatically generate the selection applicant ID.<br/><i>Note: Otherwize, you will have to manually set it (only <b>numbers</b> are allowed)</i>",true,array(true,false),"boolean","Applicants",array()),
-	  // "number_of_applicant_id_digits" => array("Number of digits for the generated applicant ID<br><i>Note: be aware that you need at least one ID per student</i>","4",array("4","5","6"),"enum","Applicant",array("generate_applicant_id"=>true)),
+	"number_of_applicant_id_digits" => array("Number of digits for the generated applicant ID<br><i>Note: be aware that you need at least one ID per student</i>","4",array("4","5","6"),"enum","Applicants",array("generate_applicant_id"=>true)),
 	"forbid_too_old_applicants" => array("Set a maximum age for the applicants",false,array(true,false),"boolean","Applicants",array()),
 	//the param above is set as false by default because no default date is set, so the user will be obliged to fulfill the date field if he validates that param
 	"limit_date_of_birth" => array("Pick the date of birth representing the oldest allowed applicant","",array(),"date","Applicants",array("forbid_too_old_applicants" => true)),

@@ -16,8 +16,11 @@ abstract class SelectionPage extends Page{
 		/* Check the user is allowed to read the selection data */
 		if(!$can_access_selection_data) echo "<div style='padding:5px'><div class='error_box'><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> You are not allowed to access to the selection data</div></div>";
 		else{
-			if($id <> null) $this->executeSelectionPage();
-			else {
+			if($id <> null) {
+				if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id"))
+					$this->onload("window.top._applicant_id_padding=".PNApplication::$instance->selection->getOneConfigAttributeValue("number_of_applicant_id_digits").";");
+				$this->executeSelectionPage();
+			} else {
 				$campaigns = SQLQuery::create()->select("SelectionCampaign")->execute();
 				if (count($campaigns) == 0) {
 					if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {

@@ -55,6 +55,16 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 	
 	public function getHorizontalAlign() { return "right"; }
 	
+	public function getTypedField($sub_model) {
+		$cfg = "{";
+		$cfg .= "can_be_null:false";
+		$cfg .= ",min:1";
+		if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id"))
+			$cfg .= ",pad:".PNApplication::$instance->selection->getOneConfigAttributeValue("number_of_applicant_id_digits");
+		$cfg .= "}";
+		return array("field_integer",$cfg);
+	}
+	
 }
 
 class ApplicantExclusionReason extends datamodel\DataDisplay {

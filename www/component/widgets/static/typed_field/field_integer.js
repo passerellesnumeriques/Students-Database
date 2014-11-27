@@ -149,12 +149,17 @@ field_integer.prototype._create = function(data) {
 			t.setData(getValueFromInput());
 		};
 	} else {
-		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));
+		this.element.appendChild(this.text = document.createTextNode(""));
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseInt(data);
 			if (isNaN(data)) data = null;
 			if (data === null) this.text.nodeValue = "";
-			else this.text.nodeValue = data;
+			else if (this.config && this.config.pad) {
+				var s = ""+data;
+				while (s.length < this.config.pad) s = "0"+s;
+				this.text.nodeValue = s;
+			} else
+				this.text.nodeValue = data;
 			return data;
 		};
 		this.signal_error = function(error) {
@@ -165,6 +170,7 @@ field_integer.prototype._create = function(data) {
 			if (this._data === null && this.config && !this.config.can_be_null) this.signal_error("Please enter a value");
 			else this.signal_error(null);
 		};
+		this._setData(data);
 	}
 };
 field_integer.prototype.setLimits = function(min,max) {
