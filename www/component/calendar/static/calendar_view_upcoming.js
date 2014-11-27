@@ -64,6 +64,18 @@ function calendar_view_upcoming(view, container) {
 	 * @param {Object} ev the event to display
 	 */
 	this.addEvent = function(ev) {
+		if (ev.all_day) {
+			// check this is not in fact in the past
+			var utc = new Date(ev.end.getTime()-1);
+			var end = new Date();
+			end.setFullYear(utc.getUTCFullYear());
+			end.setMonth(utc.getUTCMonth());
+			end.setDate(utc.getUTCDate());
+			end.setHours(0,0,0,0);
+			var today = new Date();
+			today.setHours(0,0,0,0);
+			if (end.getTime() < today.getTime()) return;
+		}
 		var row = null;
 		for (var i = 0; i < this._rows.length; ++i)
 			if (ev.start.getTime() >= this._rows[i].date.getTime() && ev.start.getTime() < this._rows[i].date.getTime()+24*60*60*1000) {
