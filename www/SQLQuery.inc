@@ -599,6 +599,9 @@ class SQLQuery {
 		return $this;
 	}
 	public function &whereKeyIn($table, $keys) {
+#PROD
+#if (count($keys) == 0) { array_push($this->where, "(0)"); return $this; }
+#END
 		if (!($table instanceof \datamodel\Table)) {
 			if ($this->bypass_security)
 				$table = DataModel::get()->internalGetTable($table);
@@ -661,6 +664,9 @@ class SQLQuery {
 			foreach ($this->tables as $name=>$alias)
 				$table = $name;
 		}
+#PROD
+#if (count($values) == 0) { array_push($this->where, "(0)"); return $this; }
+#END
 		$w = "`".$this->resolveWhereTable($table)."`.`".$field."` IN (";
 		$first = true;
 		foreach ($values as $value) {
@@ -686,7 +692,7 @@ class SQLQuery {
 			foreach ($this->tables as $name=>$alias)
 				$table = $name;
 		}
-		if (count($values) == 0) return; // nothing
+		if (count($values) == 0) return $this; // nothing
 		$w = "`".$this->resolveWhereTable($table)."`.`".$field."` NOT IN (";
 		$first = true;
 		foreach ($values as $value) {
@@ -1893,6 +1899,7 @@ class SQLQuery {
 	 * @throws Exception in case of error (security or database)
 	 */
 	public function insertMultiple($table, $rows, $lock_id = null) {
+		if (count($rows) == 0) return array();
 		/* @var $t datamodel\Table */
 		if ($this->bypass_security)
 			$t = DataModel::get()->internalGetTable($table);

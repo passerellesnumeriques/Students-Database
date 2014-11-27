@@ -99,9 +99,26 @@ button:focus {
 			Students Management Software - Installation
 		</div>
 		<div id='content'>
+<?php 
+if (!file_exists(realpath(dirname(__FILE__))."/conf/channel")) {
+	if (isset($_GET["channel"])) {
+		$f = fopen(realpath(dirname(__FILE__))."/conf/channel", "w");
+		fwrite($f, $_GET["channel"]);
+		fclose($f);
+	} else { ?>
+		<form method="GET">
+		Which channel do you want to install ?<br/>
+		<input type='radio' name='channel' value='stable' checked='checked'/> Stable (recommended)<br/>
+		<input type='radio' name='channel' value='beta'/> Beta (for tests purpose only)<br/>
+		<input type='submit' value='Ok'/>
+		</form>
+	<?php }
+}
+?>
 		</div>
 	</div>
 </div>
+<?php if (file_exists(realpath(dirname(__FILE__))."/conf/channel")) { ?>
 <script type='text/javascript'>
 var content = document.getElementById('content');
 function request(url,params,handler) {
@@ -166,5 +183,6 @@ function getLatestVersion() {
 }
 getLatestVersion();
 </script>
+<?php } ?>
 </body>
 </html>

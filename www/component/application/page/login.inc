@@ -185,7 +185,10 @@ setTimeout(function() {
 <?php } ?>
 </script>
 <?php
-#END 
+#END
+#CHANNEL_BETA
+#echo "<div class='info_box' style='margin-top:10px'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You are using a <i>Beta</i> version, this should be for testing purpose only</div>";
+#END
 ?>
 </form>
 <style type="text/css">

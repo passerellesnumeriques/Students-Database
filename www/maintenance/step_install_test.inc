@@ -33,6 +33,10 @@ if (isset($_GET["install"])) {
 			PNApplication::error("Error unzipping software (".$ret.")");
 	}
 	
+	$current_channel = file_get_contents("conf/channel");
+	$install_channel = file_get_contents("maintenance/update/www/conf/channel");
+	if ($current_channel <> $insall_channel) die("Your are trying to install an update from the channel ".$install_channel.", while your current version comes from channel ".$current_channel);
+	
 	copy("install_config.inc","maintenance/update/www/install_config.inc");
 	
 	// instantiate new PNApplication

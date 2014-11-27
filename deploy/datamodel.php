@@ -22,6 +22,7 @@ $header = "<script type='text/javascript' src='/static/javascript/utils.js'></sc
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
+<input type='hidden' name='channel' value='<?php echo $_POST["channel"];?>'/>
 <input type='hidden' name='changes' value=''/>
 <input type='hidden' name='datamodel_json' value=''/>
 <input type='hidden' name='datamodel_sql' value=''/>

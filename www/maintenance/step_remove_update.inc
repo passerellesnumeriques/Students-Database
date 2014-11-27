@@ -7,7 +7,7 @@ while (($filename = readdir($dir)) <> null) {
 	$i = strrpos($filename, ".");
 	if ($i === false) continue;
 	$ext = substr($filename, $i+1);
-	if ($ext == "checksum") {
+	if ($ext == "checksum" || $ext == "md5") {
 		$ext = substr($filename, 0, $i);
 		$i = strrpos($ext, ".");
 		if ($i !== false) $ext = substr($ext, $i+1);

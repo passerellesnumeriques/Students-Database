@@ -113,6 +113,7 @@ include("header.inc");
 <input type='hidden' name='version' value='<?php echo $_POST["version"];?>'/>
 <input type='hidden' name='path' value='<?php echo $_POST["path"];?>'/>
 <input type='hidden' name='latest' value='<?php echo $_POST["latest"];?>'/>
+<input type='hidden' name='channel' value='<?php echo $_POST["channel"];?>'/>
 </form>
 <?php 
 if (count($migration) > 0) {
@@ -126,7 +127,7 @@ if (count($change) == 0 && count($add) == 0 && count($remove) == 0) {
 	// no change
 	?>
 	No change in the initial data.<br/>
-	Generating zip files and checksums...
+	Generating zip files...
 	</div>
 	<script type='text/javascript'>
 	document.forms['deploy'].submit();
@@ -372,6 +373,6 @@ if ($has_sql) {
 
 ?>
 Are you sure you made the necessary migration scripts ?<br/>
-<button onclick="this.parentNode.insertBefore(document.createTextNode('Generating zip files and checksums...'),this);this.parentNode.removeChild(this);document.forms['deploy'].submit();">Yes, finish to generate the release</button>
+<button onclick="this.parentNode.insertBefore(document.createTextNode('Generating zip files...'),this);this.parentNode.removeChild(this);document.forms['deploy'].submit();">Yes, finish to generate the release</button>
 </div>
 <?php include("footer.inc"); ?>
