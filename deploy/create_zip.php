@@ -44,27 +44,6 @@ if ($zip->open(realpath($_POST["path"])."/to_deploy/".$filename, ZipArchive::CRE
 zip_directory(realpath($_POST["path"]."/www"), "");
 $zip->close();
 
-set_time_limit(240);
-// create the checksum
-$f = fopen(realpath($_POST["path"])."/to_deploy/".$filename,"r");
-$f2 = fopen(realpath($_POST["path"])."/to_deploy/".$filename.".checksum","w");
-do {
-	$s = fread($f, 1024);
-	$nb = strlen($s);
-	while ($nb < 1024) {
-		$s2 = fread($f, 1024-$nb);
-		$nb2 = strlen($s2);
-		if ($nb2 == 0) break;
-		$s .= $s2;
-		$nb += $nb2;
-	}
-	if ($nb == 0) break;
-	$bytes = unpack("C*",$s);
-	$cs = pack("C", array_sum($bytes)%256);
-	fwrite($f2, $cs);
-} while (true);
-fclose($f);
-fclose($f2);
 // create the md5
 $md5 = md5_file(realpath($_POST["path"])."/to_deploy/".$filename, false);
 $f = fopen(realpath($_POST["path"])."/to_deploy/".$filename.".md5","w");
@@ -87,23 +66,6 @@ if (file_exists(realpath($_POST["path"])."/migration/data.sql"))
 	$zip->addFile(realpath($_POST["path"])."/migration/data.sql", "data.sql");
 $zip->close();
 
-// create the checksum
-$f = fopen(realpath($_POST["path"])."/to_deploy/".$filename_migration,"r");
-$f2 = fopen(realpath($_POST["path"])."/to_deploy/".$filename_migration.".checksum","w");
-do {
-	$s = fread($f, 1024);
-	while (strlen($s) < 1024) {
-		$s2 = fread($f, 1024-strlen($s));
-		if (strlen($s2) == 0) break;
-		$s .= $s2;
-	}
-	if (strlen($s) == 0) break;
-	$bytes = unpack("C*",$s);
-	$cs = pack("C", array_sum($bytes)%256);
-	fwrite($f2, $cs);
-} while (true);
-fclose($f);
-fclose($f2);
 // create the md5
 $md5 = md5_file(realpath($_POST["path"])."/to_deploy/".$filename_migration, false);
 $f = fopen(realpath($_POST["path"])."/to_deploy/".$filename_migration.".md5","w");
