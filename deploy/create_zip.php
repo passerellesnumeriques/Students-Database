@@ -159,9 +159,9 @@ New list of available versions is:<ul>
 Once tested, we recommend you to double check the migration scripts.<br/>
 Then, you can finally upload the files located from directory <code><i><?php echo realpath($_POST["path"]."/to_deploy");?></i></code> to <a href='https://sourceforge.net/projects/studentsdatabase/files/updates/<?php echo $_POST["channel"];?>/' target='_blank'>SourceForge</a>:<ul> 
 	<li><code><i><?php echo $filename;?></i></code></li>
-	<li><code><i><?php echo $filename.".checksum";?></i></code></li>
+	<li><code><i><?php echo $filename.".md5";?></i></code></li>
 	<li><code><i><?php echo $filename_migration;?></i></code></li>
-	<li><code><i><?php echo $filename_migration.".checksum";?></i></code></li>
+	<li><code><i><?php echo $filename_migration.".md5";?></i></code></li>
 	<li><code><i><?php echo $filename_datamodel;?></i></code></li>
 	<li><code><i><?php echo $filename_init_data;?></i></code></li>
 	<li><code><i>versions.txt</i></code> (this one should be uploaded when all previous files are already uploaded)</li>

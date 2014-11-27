@@ -127,7 +127,7 @@ if (count($change) == 0 && count($add) == 0 && count($remove) == 0) {
 	// no change
 	?>
 	No change in the initial data.<br/>
-	Generating zip files and checksums...
+	Generating zip files...
 	</div>
 	<script type='text/javascript'>
 	document.forms['deploy'].submit();
@@ -373,6 +373,6 @@ if ($has_sql) {
 
 ?>
 Are you sure you made the necessary migration scripts ?<br/>
-<button onclick="this.parentNode.insertBefore(document.createTextNode('Generating zip files and checksums...'),this);this.parentNode.removeChild(this);document.forms['deploy'].submit();">Yes, finish to generate the release</button>
+<button onclick="this.parentNode.insertBefore(document.createTextNode('Generating zip files...'),this);this.parentNode.removeChild(this);document.forms['deploy'].submit();">Yes, finish to generate the release</button>
 </div>
 <?php include("footer.inc"); ?>

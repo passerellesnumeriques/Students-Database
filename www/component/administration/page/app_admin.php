@@ -360,12 +360,12 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset,
 			msg.appendChild(button);
 			return;
 		}
-		// download checksum
-		msg.innerHTML = "Downloading checksum for version "+new_versions[new_version_index];
+		// download md5
+		msg.innerHTML = "Downloading md5 for version "+new_versions[new_version_index];
 		progress = document.createElement("SPAN");
 		progress.style.marginLeft = "10px";
 		msg.appendChild(progress);
-		download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip.checksum", progress, function(error) {
+		download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+new_versions[new_version_index]+".zip.md5"), "data/updates/Students_Management_Software_"+new_versions[new_version_index]+".zip.md5", progress, function(error) {
 			if (error) {
 				icon.src = theme.icons_16.error;
 				msg.innerHTML = error;
@@ -404,12 +404,12 @@ function download_new_version(new_versions, new_version_index, icon, msg, reset,
 							msg.appendChild(button);
 							return;
 						}
-						// download checksum
-						msg.innerHTML = "Downloading checksum for migration scripts";
+						// download md5
+						msg.innerHTML = "Downloading md5 for migration scripts";
 						progress = document.createElement("SPAN");
 						progress.style.marginLeft = "10px";
 						msg.appendChild(progress);
-						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.checksum", progress, function(error) {
+						download("/dynamic/administration/service/download_update?download=true"+(reset ? "&reset=true" : ""), getUpdateURL("Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.md5"), "data/updates/Students_Management_Software_"+prev_version+"_to_"+new_version+".zip.md5", progress, function(error) {
 							if (error) {
 								icon.src = theme.icons_16.error;
 								msg.innerHTML = error;

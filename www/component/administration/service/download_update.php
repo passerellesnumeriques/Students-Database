@@ -43,47 +43,19 @@ class service_download_update extends Service {
 		switch ($input["step"]) {
 			case "check_if_done":
 				if (!file_exists("data/updates/Students_Management_Software_".$input["version"].".zip") ||
-					!file_exists("data/updates/Students_Management_Software_".$input["version"].".zip.checksum")) {
+					!file_exists("data/updates/Students_Management_Software_".$input["version"].".zip.md5")) {
 						echo "not_downloaded";
 						return;
 					}
-				if (!$this->checkSum(realpath("data/updates/Students_Management_Software_".$input["version"].".zip"))) {
+				$md5 = md5_file("data/updates/Students_Management_Software_".$input["version"].".zip", false);
+				$md5_ = file_get_contents("data/updates/Students_Management_Software_".$input["version"].".zip.md5");
+				if ($md5 <> $md5_) {
 					echo "invalid_download";
 					return;
 				}
 				echo "OK";
 				return;
 		}
-	}
-	
-	/** Check a downloaded file using checksum
-	 * @param string $path path of the file to check
-	 * @return boolean true if it succeed
-	 */
-	private function checkSum($path) {
-		$f = fopen($path,"r");
-		$f2 = fopen($path.".checksum","r");
-		do {
-			set_time_limit(60);
-			$s = fread($f, 1024);
-			$nb = strlen($s);
-			while ($nb < 1024) {
-				$s2 = fread($f, 1024-$nb);
-				$nb2 = strlen($s2);
-				if ($nb2 == 0) break;
-				$s .= $s2;
-				$nb += $nb2;
-			}
-			if ($nb == 0) break;
-			$bytes = unpack("C*",$s);
-			$cs = pack("C", array_sum($bytes)%256);
-			$s = fread($f2, 1);
-			$bytes = unpack("C",$s);
-			if ($bytes[1] <> $cs) { /*echo "invalid at ".$pos." expected is ".$cs." found is ".$bytes[1];*/ return false; }
-		} while (true);
-		fclose($f);
-		fclose($f2);
-		return true;
 	}
 	
 }

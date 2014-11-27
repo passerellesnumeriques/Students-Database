@@ -55,7 +55,7 @@ if (!file_exists($_POST["path"])) die("Unable to create directory ".$_POST["path
 
 mkdir($_POST["path"]."/latest"); // here we will download information about latest version
 mkdir($_POST["path"]."/www"); // here we will prepare the new version
-mkdir($_POST["path"]."/to_deploy"); // here we will generate zip files and checksums
+mkdir($_POST["path"]."/to_deploy"); // here we will generate zip files and md5
 mkdir($_POST["path"]."/init_data"); // here we will prepare init data
 mkdir($_POST["path"]."/datamodel"); // here we will prepare new datamodel
 mkdir($_POST["path"]."/migration"); // here we will prepare migration scripts
