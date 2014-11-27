@@ -14,20 +14,20 @@ global $www;
 $here = realpath(dirname(__FILE__));
 $www = realpath($here."/../www");
 set_include_path($here . PATH_SEPARATOR . $www);
-function getLatestVersionURL() {
+function getVersionsListURL() {
 	global $www;
 	$s = file_get_contents("$www/conf/update_urls");
 	$channel = file_get_contents("$www/conf/channel");
 	$s = str_replace("##CHANNEL##",$_GET["channel"],$s);
 	$lines = explode("\n",$s);
 	foreach ($lines as $line) {
-		if (substr($line,0,7) == "latest=")
-			return trim(substr($line,7));
+		if (substr($line,0,9) == "versions=")
+			return trim(substr($line,9));
 	}
 	return null;
 }
 
-$url = getLatestVersionURL();
+$url = getVersionsListURL();
 $c = curl_init($url);
 if (file_exists("$www/conf/proxy")) include("$www/conf/proxy");
 curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
@@ -38,10 +38,22 @@ curl_setopt($c, CURLOPT_TIMEOUT, 25);
 set_time_limit(90);
 $result = curl_exec($c);
 if ($result == false) die("<span style='color:red'>Error downloading ".$url.": ".curl_error($c)."</span>");
-echo $result;
 curl_close($c);
+$versions = explode("\n",$result);
+echo $versions[count($versions)-1];
+$current_index = array_search($current_version, $versions);
 ?>
-<input type='hidden' name='latest' value='<?php echo $result;?>'/>
+<br/>Use version
+<select name='latest'>
+<?php
+for ($i = 0; $i < count($versions); $i++) {
+	echo "<option value='".$versions[$i]."'";
+	if ($current_index === $i+1 || ($current_index === false && $i == count($versions)-1)) echo " selected='selected'";
+	echo ">".$versions[$i]."</option>";
+} 
+?>
+</select> 
+as the previous one
 <input type='hidden' name='channel' value='<?php echo $_GET["channel"];?>'/>
 <br/>
 <br/>

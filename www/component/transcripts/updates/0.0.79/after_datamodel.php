@@ -4,7 +4,8 @@ $transcripts = SQLQuery::create()->bypassSecurity()->select("PublishedTranscript
 $to_insert = array();
 foreach ($transcripts as $transcript) {
 	$subjects_ids = SQLQuery::create()->bypassSecurity()->select("TranscriptSubjects")->whereValue("TranscriptSubjects","period",$transcript["period"])->whereValue("TranscriptSubjects","specialization",$transcript["specialization"])->field("subject")->executeSingleField();
-	$subjects_info = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectGrading")->whereIn("CurriculumSubjectGrading","subject",$subjects_ids)->execute();
+	if (count($subjects_ids) > 0)
+		$subjects_info = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectGrading")->whereIn("CurriculumSubjectGrading","subject",$subjects_ids)->execute();
 	foreach ($subjects_ids as $subject_id) {
 		$info = null;
 		foreach ($subjects_info as $si) if ($si["subject"] == $subject_id) { $info = $si; break; }
@@ -17,5 +18,6 @@ foreach ($transcripts as $transcript) {
 		));
 	}
 }
-SQLQuery::create()->bypassSecurity()->insertMultiple("PublishedTranscriptSubject", $to_insert);
+if (count($to_insert) > 0)
+	SQLQuery::create()->bypassSecurity()->insertMultiple("PublishedTranscriptSubject", $to_insert);
 ?>
