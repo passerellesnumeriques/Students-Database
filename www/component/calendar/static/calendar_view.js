@@ -270,14 +270,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	 */
 	this.addEvent = function(ev, try_counter) {
 		if (!container.parentNode || !container.ownerDocument || !getWindowFromDocument(container.ownerDocument)) return;
-		if (this.view == null || typeof this.view == 'undefined') {
-			if (!try_counter) try_counter = 0;
-			if (try_counter == 100) {
-				return;
-			}
-			setTimeout(function() { t.addEvent(ev, try_counter+1); }, 100); 
-			return;
-		};
+		if (this.view == null || typeof this.view == 'undefined') return; // ignore, as when the view will be ready, we will load all events
 		var e = copyCalendarEvent(ev);
 		e.original_event = ev;
 		if (ev.start.getTime() > this.view.end_date.getTime()) return; // after end
