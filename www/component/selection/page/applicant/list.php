@@ -146,7 +146,13 @@ class page_applicant_list extends SelectionPage {
 			});
 		}
 		function excludeStudents() {
-			alert("TODO");
+			var applicants_rows = dl.grid.getSelectionByRowId();
+			var applicants_ids = [];
+			for (var i = 0; i < applicants_rows.length; ++i)
+				applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
+			popup_frame(null, "Exclude applicants from the selection process", "/dynamic/selection/page/applicant/exclude?ondone=refreshList", {applicants:applicants_ids}, null, null, function(frame,popup) {
+				frame.refreshList = reload_list;
+			});
 		}
 		</script>
 		<?php 
