@@ -8,6 +8,7 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 	
 	public function finalizeCreateData($key, $sub_model, &$table_fields, $come_from) {
 		if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id")) {
+			// TODO use database AUTO_INCREMENT
 			$applicant_id = SQLQuery::create()->select("Applicant")->expression("MAX(`applicant_id`)+1", "new_id")->executeSingleValue();
 			if ($applicant_id == null) $applicant_id = 1; // first one
 			$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "applicant_id", $applicant_id);
