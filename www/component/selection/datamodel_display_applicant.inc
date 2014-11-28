@@ -151,9 +151,16 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 		$html = "";
 		switch ($data->getDisplayName()) {
 			case "Information Session":
-				if ($can_edit && !$is_new) {
+				if (PNApplication::$instance->user_management->has_right("edit_applicants") && !$is_new) {
 					$html .= "<td>";
 					$html .= "<button class='flat small' title='Change Information Session' onclick='changeIS(this);return false;'><img src='".theme::make_icon("/static/selection/is/is_16.png", theme::$icons_10["_import"])."'/></button>";
+					$html .= "</td>";
+				}
+				break;
+			case "Exam Center":
+				if (PNApplication::$instance->user_management->has_right("edit_applicants") && !$is_new) {
+					$html .= "<td>";
+					$html .= "<button class='flat small' title='Change Exam Center' onclick='changeExamCenter(this);return false;'><img src='".theme::make_icon("/static/selection/exam/exam_center_16.png", theme::$icons_10["_import"])."'/></button>";
 					$html .= "</td>";
 				}
 				break;
@@ -170,6 +177,9 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 				$html .= "require('assign_is.js', function() {";
 					$html .= "assign_is(button, [".$applicant_id."], function() {location.reload();});";
 				$html .= "});";
+			$html .= "}";
+			$html .= "function changeExamCenter() {";
+				$html .= "popup_frame('/static/selection/exam/exam_center_16.png', 'Assign applicants to an exam center', '/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refresh', {applicants:[".$applicant_id."]}, null, null, function(frame,popup) { frame.refresh=function() {location.reload();}; });";
 			$html .= "}";
 			$html .= "</script>";
 		}

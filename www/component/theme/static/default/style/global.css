@@ -364,7 +364,7 @@ table.data_screen>tbody>tr.sub_data>td:first-child {
 	padding-left: 15px;
 	padding-right: 2px;
 }
-table.data_screen>tbody>tr>td:last-child {
+table.data_screen>tbody>tr>td:nth-child(2) {
 	font-weight: bold;
 	padding-left: 2px;
 	padding-right: 5px;
