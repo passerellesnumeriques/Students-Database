@@ -4,6 +4,7 @@ class page_print extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
+		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : null;
 		theme::css($this, "header_bar.css");
 ?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;'>
@@ -23,7 +24,7 @@ class page_print extends Page {
 	<button class='action' onclick="getIFrameWindow(document.getElementById('print_content')).print();"><img src='<?php echo theme::$icons_16["print"];?>'/> Print</button>
 	</div>
 	<div id='content' style='flex:1 1 auto;overflow:hidden;text-align:center;display:flex;flex-direction:row;justify-content:center;'>
-		<iframe name='print_content' id='print_content' style='border:none;flex:0 1 auto;' src='/dynamic/application/page/blank'></iframe>
+		<iframe name='print_content' id='print_content' style='border:none;flex:0 1 auto;' <?php if (!isset($input["template"])) echo "src='/dynamic/application/page/template?name=blank'";?>></iframe>
 	</div>
 </div>
 <script type='text/javascript'>
@@ -55,16 +56,26 @@ function refreshSize() {
 	//frame.style.height = "100%";
 }
 
+<?php if (isset($input["template"])) { ?>
+postFrame("/dynamic/application/page/template?name=<?php echo $input["template"];?>", <?php echo json_encode(@$input["params"]);?>, document.getElementById('print_content'));
 waitFrameContentReady(document.getElementById('print_content'), function(win) { return win._page_ready; }, function(win) {
 	win.document.body.style.backgroundColor = 'white';
 	refreshSize();
 	window.printing_ready = true;
 });
+<?php } else { ?>
+waitFrameContentReady(document.getElementById('print_content'), function(win) { return win._page_ready; }, function(win) {
+	win.document.body.style.backgroundColor = 'white';
+	refreshSize();
+	window.printing_ready = true;
+});
+<?php } ?>
 
 window.setPrintContent = function(container, onready) {
 	var win = getIFrameWindow(document.getElementById('print_content'));
-	win.document.body.innerHTML = container.innerHTML;
-	win.document.body.style.backgroundColor = "white";
+	var content = win.document.getElementById('content');
+	content.innerHTML = container.innerHTML;
+	content.style.backgroundColor = "white";
 	var container_win = getWindowFromElement(container);
 	var container_head = container_win.document.getElementsByTagName("HEAD")[0];
 	var head = win.document.getElementsByTagName("HEAD")[0];

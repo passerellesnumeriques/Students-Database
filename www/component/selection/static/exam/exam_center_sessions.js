@@ -844,7 +844,7 @@ function RoomSection(container, room, session_section, can_edit) {
 		print.className = "flat icon";
 		print.innerHTML = "<img src='"+theme.icons_16.print+"'/>";
 		print.onclick = function() {
-			t.applicants_list.grid.print();
+			t.applicants_list.grid.print("pn_document",{titles:["Written Exam"],sub_titles:[getDateString(session_section.event.start),"Room "+room.name,"Applicants List"],content_style:"display:flex;flex-direction:column;align-items:center;"});
 		};
 		this.room_section.addToolRight(print);
 		if (can_edit)

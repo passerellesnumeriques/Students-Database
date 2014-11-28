@@ -319,9 +319,9 @@ function tooltip(element, content) {
 	};
 }
 
-function printContent(container, onready, filename) {
+function printContent(container, onready, filename, template_name, template_parameters) {
 	if (typeof container == 'string') container = document.getElementById(container);
-	window.top.popup_frame(theme.icons_16.print, "Print", "/dynamic/application/page/print"+(filename?"?filename="+encodeURIComponent(filename):""), null, 95, 95, function(frame,pop){
+	window.top.popup_frame(theme.icons_16.print, "Print", "/dynamic/application/page/print"+(filename?"?filename="+encodeURIComponent(filename):""), template_name ? {template:template_name,params:template_parameters} : null, 95, 95, function(frame,pop){
 		waitFrameContentReady(frame, 
 			function(win) {
 				return win.printing_ready;

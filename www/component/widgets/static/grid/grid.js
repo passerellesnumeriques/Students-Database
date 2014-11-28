@@ -1400,7 +1400,7 @@ function grid(element) {
 			t._selection_changed();
 	};
 	
-	t.print = function() {
+	t.print = function(template,template_parameters) {
 		var container = document.createElement("DIV");
 		var table = document.createElement("TABLE");
 		table.className = "grid";
@@ -1449,7 +1449,7 @@ function grid(element) {
 				}
 			}
 		}
-		printContent(container);
+		printContent(container, null, null, template, template_parameters);
 	};
 	
 	t.showHideColumnsMenu = function(below_this_element, onchange) {
