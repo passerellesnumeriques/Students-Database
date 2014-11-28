@@ -309,7 +309,7 @@ window.datamodel = {
 		});
 	},
 	
-	confirm_remove: function(table,row_key,onremoved) {
+	confirm_remove: function(table,row_key,onremoved,oncanceled) {
 		var popup_ready = false;
 		var content_html = null;
 		var ready = function() {
@@ -329,10 +329,15 @@ window.datamodel = {
 					}
 					popup.unfreeze();
 				});
+			},function() {
+				if (oncanceled) oncanceled();
+				return true;
 			});
 			popup.show();
 		};
+		var locker = lock_screen();
 		service.customOutput("data_model","get_remove_confirmation_content",{table:table,row_key:row_key},function(html) {
+			unlock_screen(locker);
 			content_html = html;
 			ready();
 		});

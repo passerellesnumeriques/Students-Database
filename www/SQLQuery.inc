@@ -2220,7 +2220,8 @@ class SQLQuery {
 	 * @param array $to_update list of entries to update with NULL value to remove links
 	 * @param array $sub_models_to_remove list of sub models which will be removed
 	 */
-	private function browseTablesForRemove(&$table, $sub_model_instance, $keys, $from_table, &$locks, &$to_remove, &$to_update, &$sub_models_to_remove) {
+	public function browseTablesForRemove(&$table, $sub_model_instance, $keys, $from_table, &$locks, &$to_remove, &$to_update, &$sub_models_to_remove) {
+		require_once("component/data_model/DataBaseLock.inc");
 		// remove keys that are already marked as to_remove
 		if (isset($to_remove[$table->getSQLNameFor($sub_model_instance)])) {
 			for ($i = 0; $i < count($keys); $i++) {
@@ -2357,10 +2358,8 @@ class SQLQuery {
 			// we are on the root model, we may have link everywhere
 			foreach (DataModel::get()->internalGetTables() as $t) {
 				if ($t->getModel() instanceof SubDataModel) {
-					foreach ($t->getModel()->getExistingInstances() as $smi) {
-						$sm = $smi;
-						$this->checkForeignKeysForRemove($table, $sub_model_instance, $keys, $t, $sm, $locks, $to_remove, $to_update, $sub_models_to_remove);
-					}
+					foreach ($t->getModel()->getExistingInstances() as $smi)
+						$this->checkForeignKeysForRemove($table, $sub_model_instance, $keys, $t, $smi, $locks, $to_remove, $to_update, $sub_models_to_remove);
 				} else {
 					$this->checkForeignKeysForRemove($table, $sub_model_instance, $keys, $t, null, $locks, $to_remove, $to_update, $sub_models_to_remove);
 				}
@@ -2438,8 +2437,8 @@ class SQLQuery {
 							;
 						$table_alias = $q->generateTableAlias();
 						$q->select(array($t->getName()=>$table_alias));
-						if ($t->getModel() instanceof SubDataModel)
-							$q->selectSubModel($t->getModel()->getParentTable(), $sub_model_instance);
+						if ($sm <> null)
+							$q->selectSubModel($t->getModel()->getParentTable(), $sm);
 						$q->whereIn($table_alias, $col->name, $keys);
 						$t->prepareSelectToDetermineWriteAccess($q, $table_alias);
 						$prepared_rows = $q->execute();
