@@ -179,7 +179,7 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 				$html .= "});";
 			$html .= "}";
 			$html .= "function changeExamCenter() {";
-				$html .= "popup_frame('/static/selection/exam/exam_center_16.png', 'Assign applicants to an exam center', '/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refresh', {applicants:[".$applicant_id."]}, null, null, function(frame,popup) { frame.refresh=function() {location.reload();}; });";
+				$html .= "popup_frame('/static/selection/exam/exam_center_16.png', 'Assign applicant to an exam center', '/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refresh', {applicants:[".$applicant_id."]}, null, null, function(frame,popup) { frame.refresh=function() {location.reload();}; });";
 			$html .= "}";
 			$html .= "</script>";
 		}
