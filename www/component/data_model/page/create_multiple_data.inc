@@ -69,10 +69,24 @@ $page->requireJavascript("datadisplay.js");
 	
 $page->requireJavascript("grid.js");
 $grid_id = $page->generateID();
-echo "<div id='$grid_id'></div>";
 ?>
+<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
+	<div style='flex:none;background-color:white;box-shadow: 1px 2px 5px 0px #808080;margin-bottom:3px;padding:2px' class='grid_font'>
+		Customize this screen: 
+		<button class='flat grid_font' onclick='showHideColumns(this);'>
+			<img src='/static/data_model/table_column.png'/>
+			Hide/Show columns
+		</button>
+	</div>
+	<div id='<?php echo $grid_id;?>' style='flex:1 1 auto'></div>
+</div>
 <script type='text/javascript'>
 var grid = new grid('<?php echo $grid_id;?>');
+grid.makeScrollable();
+
+function showHideColumns(button) {
+	grid.showHideColumnsMenu(button);
+}
 
 function datachanged(field) {
 	var row = grid.getContainingRow(field.getHTMLElement());

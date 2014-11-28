@@ -7,6 +7,7 @@ field_parent.prototype = new typed_field();
 field_parent.prototype.constructor = field_parent;	
 field_parent.prototype.canBeNull = function() { return true; };
 field_parent.prototype._create = function(data) {
+	if (!data) return; // must be set
 	if (typeof this.config.sub_data_index == 'undefined') {
 		this._setData = function(data) {
 			var text = "";

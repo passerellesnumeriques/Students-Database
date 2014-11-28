@@ -2,7 +2,7 @@ table.grid {
 	border-collapse: collapse;
 	border-spacing: 0px;
 }
-table.grid, table.grid input, table.grid select, table.grid table {
+table.grid, table.grid input, table.grid select, table.grid table, .grid_font {
 	font-size: 11px;
 }
 table.grid>tbody>td, table.grid>tbody>th {

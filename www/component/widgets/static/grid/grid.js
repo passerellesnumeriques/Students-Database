@@ -36,6 +36,7 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		this.levels = 2;
 		for (var i = 0; i < this.sub_columns.length; ++i) {
 			this.sub_columns[i].parent_column = this;
+			if (this.sub_columns[i].isHidden()) continue;
 			if (this.sub_columns[i] instanceof GridColumn) {
 				this.nb_columns++;
 				continue;
@@ -44,6 +45,7 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 			this.nb_columns += sub_columns[i].nb_columns;
 		}
 		this.th.colSpan = this.nb_columns;
+		this.th.style.display = this.nb_columns == 0 ? "none" : "";
 		if (this.parent_column) this.parent_column._updateLevels();
 	};
 	this.increaseRowSpan = function() {
@@ -80,6 +82,16 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		this._updateLevels();
 		this.grid._subColumnAdded(this, col);
 	};
+	this.isHidden = function() {
+		for (var i = 0; i < this.sub_columns.length; ++i)
+			if (!this.sub_columns[i].isHidden()) return false;
+		return true;
+	};
+	this.canBeHidden = function() {
+		for (var i = 0; i < this.sub_columns.length; ++i)
+			if (!this.sub_columns[i].canBeHidden()) return false;
+		return true;
+	};
 }
 
 function GridColumn(id, title, width, align, field_type, editable, onchanged, onunchanged, field_args, attached_data) {
@@ -101,6 +113,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	this.onunchanged = onunchanged;
 	this.field_args = field_args;
 	this.attached_data = attached_data;
+	this.hidden = false;
 	var t=this;
 	require([["typed_field.js",field_type+".js"]], function() { t._loaded = true; t.onloaded.fire(); });
 	// init
@@ -282,6 +295,26 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			return false;
 		});
 		this.addAction(a);
+	};
+	
+	this.isHidden = function() { return this.hidden; };
+	this.canBeHidden = function() {
+		var f = new window[field_type](null,true,field_args);
+		return f.canBeNull();
+	};
+	this.hide = function(hidden) {
+		if (hidden == this.hidden) return;
+		this.hidden = hidden;
+		this.th.style.display = hidden ? "none" : "";
+		// hide td for each row
+		var index = this.grid.columns.indexOf(this);
+		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
+			var tr = this.grid.table.childNodes[i];
+			tr.childNodes[index].style.display = hidden ? "none" : "";
+		}
+		// refresh container if needed
+		if (this.parent_column) this.parent_column._updateLevels();
+		layout.changed(this.th.parentNode); // parent node, because if hidden layout will ignore this event
 	};
 	
 	this._refresh_title = function() {
@@ -960,14 +993,13 @@ function grid(element) {
 				t.element.parentNode.style.maxWidth = t.element.parentNode.style.width;
 			}
 			// take header info
-			var head_height = t.thead.offsetHeight;
 			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));
 			var head_width = t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1);
 			// take the width of each th
 			if (t.selectable)
 				t.thead.childNodes[0].childNodes[0]._width = getWidth(t.thead.childNodes[0].childNodes[0], knowledge);
 			for (var i = 0; i < t.columns.length; ++i)
-				t.columns[i].th._width = getWidth(t.columns[i].th, knowledge);
+				t.columns[i].th._width = t.columns[i].isHidden() ? 0 : getWidth(t.columns[i].th, knowledge);
 			//setWidth(t.element, total_width, knowledge);
 			// take the width of each column
 			var widths = [];
@@ -1003,6 +1035,7 @@ function grid(element) {
 				t.colgroup.childNodes[i].style.minWidth = widths[i]+"px";
 				var td = document.createElement("TD");
 				td.style.padding = "0px";
+				if (widths[i] == 0) td.style.display = "none";
 				var div = document.createElement("DIV");
 				td.appendChild(div);
 				tr.appendChild(td);
@@ -1013,7 +1046,6 @@ function grid(element) {
 			}
 			tr.style.height = "0px";
 			// put the thead as relative
-			t.element.style.paddingTop = head_height+"px";
 			t.element.style.position = "relative";
 			t.grid_element.style.overflow = "auto";
 			if (t.element.style.height) t.grid_element.style.maxHeight = t.element.style.height;
@@ -1022,6 +1054,8 @@ function grid(element) {
 			t.thead.style.left = head_scroll+"px";
 			t.thead.style.overflow = "hidden";
 			setWidth(t.thead, head_width, thead_knowledge); 
+			var head_height = t.thead.offsetHeight;
+			t.element.style.paddingTop = (head_height-1)+"px";
 			//t.table.parentNode.style.marginRight = "1px";
 			layout.changed(t.element);
 		};
@@ -1417,6 +1451,48 @@ function grid(element) {
 		printContent(container);
 	};
 	
+	t.showHideColumnsMenu = function(below_this_element) {
+		require("context_menu.js", function() {
+			var menu = new context_menu();
+			for (var i = 0; i < t.header_rows[0].childNodes.length; ++i)
+				t._buildColumnsChooser(menu, t.header_rows[0].childNodes[i].col, 0);
+			menu.showBelowElement(below_this_element);
+		});
+	};
+	t._buildColumnsChooser = function(menu, col, indent) {
+		if (col.title == "") return;
+		var div = document.createElement("DIV");
+		div.style.marginLeft = indent+'px';
+		var cb = document.createElement("INPUT");
+		cb.type = 'checkbox';
+		cb.style.verticalAlign = "middle";
+		cb.style.marginRight = "3px";
+		cb.checked = col.isHidden() ? "" : "checked";
+		cb.disabled = col.canBeHidden() ? "" : "disabled";
+		div.appendChild(cb);
+		div.appendChild(document.createTextNode(col.text_title ? col.text_title : col.title));
+		menu.addItem(div, true);
+		var sub_cb = [];
+		if (col instanceof GridColumnContainer) {
+			for (var i = 0; i < col.sub_columns.length; ++i)
+				sub_cb.push(t._buildColumnsChooser(menu, col.sub_columns[i], indent + 20));
+		}
+		cb.onchange = function() {
+			if (col instanceof GridColumnContainer) {
+				for (var i = 0; i < sub_cb.length; ++i) {
+					sub_cb[i].checked = this.checked ? "checked" : "";
+					sub_cb[i].onchange();
+				}
+			} else {
+				if (this.checked)
+					col.hide(false);
+				else
+					col.hide(true);
+			}
+		};
+		return cb;
+	};
+	
 	/* --- internal functions --- */
 	t._createTable = function() {
 		t.grid_element = document.createElement("DIV");
@@ -1480,6 +1556,7 @@ function grid(element) {
 		getCell = null;
 	};
 	t._create_cell = function(column, data, parent, ondone, ondone_param) {
+		parent.style.display = column.hidden ? "none" : "";
 		t._cells_loading++;
 		t._create_field(column, column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
 			parent.field = field;

@@ -12,7 +12,8 @@ function field_addresses(data,editable,config){
 	typed_field.call(this, data, editable, config);
 }
 field_addresses.prototype = new typed_field_multiple();
-field_addresses.prototype.constructor = field_addresses;		
+field_addresses.prototype.constructor = field_addresses;
+field_addresses.prototype.canBeNull = function() { return true; };
 field_addresses.prototype._create = function(data) {
 	if (typeof this.config.sub_data_index == 'undefined') {
 		if (this.editable) {

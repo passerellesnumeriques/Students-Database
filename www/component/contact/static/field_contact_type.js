@@ -17,8 +17,10 @@ function field_contact_type(data,editable,config) {
 	typed_field_multiple.call(this, data, editable, config);
 }
 field_contact_type.prototype = new typed_field_multiple();
-field_contact_type.prototype.constructor = field_contact_type;		
+field_contact_type.prototype.constructor = field_contact_type;	
+field_contact_type.prototype.canBeNull = function() { return true; };
 field_contact_type.prototype._create = function(data) {
+	if (!data) return; // must be set
 	if (this.editable) {
 		var t=this;
 		require("contact_type.js",function() {
