@@ -150,6 +150,8 @@ typed_field.prototype = {
 	
 	isMultiple: function() { return false; },
 	
+	helpFillMultipleItems: undefined,
+	
 	register_datamodel_cell: function(table, column, row_key) {
 		var t=this;
 		window.top.datamodel.registerCellWidget(window, table, column, row_key, this.element, function(){

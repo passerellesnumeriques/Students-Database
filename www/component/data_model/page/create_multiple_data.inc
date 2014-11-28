@@ -100,41 +100,26 @@ function datachanged(field) {
 
 function addColumnActions(col) {
 	var needFieldInfo = function() {
-		var f = new window[col.field_type](col.attached_data.new_data,true,col.field_args);
-		if (typeof f.getPossibleValues != 'undefined') {
-			col.addAction(new GridColumnAction('set_all',theme.icons_10.pen,function(ev) {
-				var div = document.createElement("DIV");
-				div.appendChild(document.createTextNode("Select the value to set on all rows: "));
-				var sel = document.createElement("SELECT");
-				div.appendChild(sel);
-				var o = document.createElement("OPTION");
-				o.text = "";
-				o.value = null;
-				sel.add(o);
-				var values = f.getPossibleValues();
-				for (var i = 0; i < values.length; ++i) {
-					o = document.createElement("OPTION");
-					o.text = values[i];
-					o.value = values[i];
-					sel.add(o);
-				}
-				require("popup_window.js",function() {
-					var popup = new popup_window("Set values for all rows",null,div);
-					popup.addOkCancelButtons(function() {
-						var value = sel.options[sel.selectedIndex].value;
+		if (typeof window[col.field_type].prototype.helpFillMultipleItems != 'undefined') {
+			var f = new window[col.field_type](col.attached_data.new_data,true,col.field_args);
+			var helper = f.helpFillMultipleItems();
+			col.addAction(new GridColumnAction('set_all',theme.icons_10.pen,function(ev,action,col) {
+				require("mini_popup.js",function() {
+					var p = new mini_popup(helper.title);
+					p.content.appendChild(helper.content);
+					p.addOkButton(function() {
 						if (grid.getNbRows() == 1)
-							grid.getCellField(0,grid.getColumnIndex(col)).setData(value,false,true);
+							helper.apply(grid.getCellField(0,grid.getColumnIndex(col)))
 						else {
 							var col_index = grid.getColumnIndex(col);
 							for (var i = 0; i < grid.getNbRows()-1; ++i)
-								grid.getCellField(i,col_index).setData(value,false,true);
+								helper.apply(grid.getCellField(i,col_index));
 						}
-						popup.close();
+						return true;
 					});
-					popup.show();
+					p.showBelowElement(action.element);
 				});
-				// TODO
-			},'Enter a value for all rows'));
+			},helper.title));
 		}
 	};
 	if (col._loaded)
