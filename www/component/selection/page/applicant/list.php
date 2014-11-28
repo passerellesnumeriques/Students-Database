@@ -137,7 +137,13 @@ class page_applicant_list extends SelectionPage {
 			});
 		}
 		function assignExamCenter(button) {
-			alert("TODO");
+			var applicants_rows = dl.grid.getSelectionByRowId();
+			var applicants_ids = [];
+			for (var i = 0; i < applicants_rows.length; ++i)
+				applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
+			popup_frame("/static/selection/exam/exam_center_16.png", "Assign applicants to an exam center", "/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refreshList", {applicants:applicants_ids}, null, null, function(frame,popup) {
+				frame.refreshList = reload_list;
+			});
 		}
 		function excludeStudents() {
 			alert("TODO");
