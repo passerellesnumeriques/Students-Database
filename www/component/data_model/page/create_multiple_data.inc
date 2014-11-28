@@ -85,7 +85,9 @@ var grid = new grid('<?php echo $grid_id;?>');
 grid.makeScrollable();
 
 function showHideColumns(button) {
-	grid.showHideColumnsMenu(button);
+	grid.showHideColumnsMenu(button, function() {
+		grid.saveState();
+	});
 }
 
 function datachanged(field) {
@@ -346,6 +348,7 @@ var initPreCreated = function(i) {
 };
 initPreCreated(0);
 <?php } ?>
+grid.loadState();
 </script>
 <?php 
 }

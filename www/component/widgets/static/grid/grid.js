@@ -1451,15 +1451,15 @@ function grid(element) {
 		printContent(container);
 	};
 	
-	t.showHideColumnsMenu = function(below_this_element) {
+	t.showHideColumnsMenu = function(below_this_element, onchange) {
 		require("context_menu.js", function() {
 			var menu = new context_menu();
 			for (var i = 0; i < t.header_rows[0].childNodes.length; ++i)
-				t._buildColumnsChooser(menu, t.header_rows[0].childNodes[i].col, 0);
+				t._buildColumnsChooser(menu, t.header_rows[0].childNodes[i].col, 0, onchange);
 			menu.showBelowElement(below_this_element);
 		});
 	};
-	t._buildColumnsChooser = function(menu, col, indent) {
+	t._buildColumnsChooser = function(menu, col, indent, onchange) {
 		if (col.title == "") return;
 		var div = document.createElement("DIV");
 		div.style.marginLeft = indent+'px';
@@ -1475,13 +1475,13 @@ function grid(element) {
 		var sub_cb = [];
 		if (col instanceof GridColumnContainer) {
 			for (var i = 0; i < col.sub_columns.length; ++i)
-				sub_cb.push(t._buildColumnsChooser(menu, col.sub_columns[i], indent + 20));
+				sub_cb.push(t._buildColumnsChooser(menu, col.sub_columns[i], indent + 20, onchange));
 		}
-		cb.onchange = function() {
+		cb.onchange = function(ev,recurs) {
 			if (col instanceof GridColumnContainer) {
 				for (var i = 0; i < sub_cb.length; ++i) {
 					sub_cb[i].checked = this.checked ? "checked" : "";
-					sub_cb[i].onchange();
+					sub_cb[i].onchange(ev,true);
 				}
 			} else {
 				if (this.checked)
@@ -1489,8 +1489,35 @@ function grid(element) {
 				else
 					col.hide(true);
 			}
+			if (!recurs && onchange) onchange();
 		};
 		return cb;
+	};
+	t.saveState = function() {
+		if (!window.localStorage || !window.JSON) return; // HTML5 not supported
+		var state = { hidden_columns: [] };
+		for (var i = 0; i < this.columns.length; ++i)
+			if (this.columns[i].isHidden())
+				state.hidden_columns.push(this.columns[i].id);
+		var stored = window.localStorage.getItem("grid_state");
+		if (!stored) stored = {};
+		else stored = JSON.parse(stored);
+		stored[location.pathname] = state;
+		window.localStorage.setItem("grid_state", JSON.stringify(stored));
+	};
+	t.loadState = function() {
+		if (!window.localStorage || !window.JSON) return; // HTML5 not supported
+		var stored = window.localStorage.getItem("grid_state");
+		if (!stored) return; // nothing stored
+		stored = JSON.parse(stored);
+		if (!stored[location.pathname]) return; // nothing stored for this URL
+		var state = stored[location.pathname];
+		if (state["hidden_columns"])
+			for (var i = 0; i < state.hidden_columns.length; ++i) {
+				var col = this.getColumnById(state.hidden_columns[i]);
+				if (!col) return;
+				col.hide(true);
+			}
 	};
 	
 	/* --- internal functions --- */
