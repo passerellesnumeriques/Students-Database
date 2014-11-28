@@ -125,6 +125,7 @@ class storage extends Component {
 		closedir($dir);
 		if (count($ids_founds) > 0) {
 			$rows = SQLQuery::create()->bypassSecurity()->select("Storage")->whereIn("Storage","id",$ids_founds)->field("id")->executeSingleField();
+			if (PNApplication::hasErrors()) return; // do not continue, to make sure we won't remove files which we should not
 			foreach ($rows as $row) {
 				for ($i = 0; $i < count($ids_founds); $i++) {
 					if ($ids_founds[$i] == $row) {
