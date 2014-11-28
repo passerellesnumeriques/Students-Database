@@ -203,11 +203,11 @@ abstract class DataDisplay {
 				if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
 				$w = "";
 				foreach ($filter["values"] as $enum_value) {
-					if ($enum_value == "") continue;
+					if ($enum_value === "") continue;
 					if (strlen($w) > 0) $w .= " OR ";
 					$w .= $expression;
-					if ($enum_value == "NULL") $w .= " IS NULL";
-					else if ($enum_value == "NOT_NULL") $w .= " IS NOT NULL";
+					if ($enum_value === "NULL") $w .= " IS NULL";
+					else if ($enum_value === "NOT_NULL") $w .= " IS NOT NULL";
 					else $w .= "='".\SQLQuery::escape($enum_value)."'";
 				}
 				if ($w == "") return null;
