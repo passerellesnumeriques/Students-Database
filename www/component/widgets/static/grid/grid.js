@@ -1400,7 +1400,7 @@ function grid(element) {
 			t._selection_changed();
 	};
 	
-	t.print = function(template,template_parameters) {
+	t.print = function(template,template_parameters,onprintready) {
 		var container = document.createElement("DIV");
 		var table = document.createElement("TABLE");
 		table.className = "grid";
@@ -1416,13 +1416,17 @@ function grid(element) {
 				tr.appendChild(td = document.createElement("TH"));
 				td.colSpan = th.colSpan;
 				td.rowSpan = th.rowSpan;
-				if (th.col.text_title)
-					td.appendChild(document.createTextNode(th.col.text_title));
-				else if (th.col.title instanceof Element)
-					td.innerHTML = th.col.title.outerHTML;
-				else
-					td.innerHTML = th.col.title;
-				td.style.textAlign = th.style.textAlign;
+				if (th.col.isHidden())
+					td.style.display = "none";
+				else {
+					if (th.col.text_title)
+						td.appendChild(document.createTextNode(th.col.text_title));
+					else if (th.col.title instanceof Element)
+						td.innerHTML = th.col.title.outerHTML;
+					else
+						td.innerHTML = th.col.title;
+					td.style.textAlign = th.style.textAlign;
+				}
 			}
 		}
 		var tbody = document.createElement("TBODY");
@@ -1436,12 +1440,14 @@ function grid(element) {
 				var cell = ttr.childNodes[j];
 				tr.appendChild(td = document.createElement("TD"));
 				td.className = cell.className;
+				var col = t.getColumnById(cell.col_id);
+				if (col && col.isHidden())
+					td.style.display = "none";
 				if (!cell.field) {
 					td.innerHTML = cell.innerHTML;
 					if (cell.style && cell.style.textAlign)
 						td.style.textAlign = cell.style.textAlign;
 				} else if (cell.col_id) {
-					var col = t.getColumnById(cell.col_id);
 					var f = new window[col.field_type](cell.field.getCurrentData(),false,col.field_args);
 					td.appendChild(f.getHTMLElement());
 					td.style.textAlign = col.align;
@@ -1449,7 +1455,7 @@ function grid(element) {
 				}
 			}
 		}
-		printContent(container, null, null, template, template_parameters);
+		printContent(container, onprintready, null, template, template_parameters);
 	};
 	
 	t.showHideColumnsMenu = function(below_this_element, onchange) {

@@ -349,6 +349,15 @@ custom_data_grid.prototype = {
 		return list;
 	},
 	
+	hideActions: function() {
+		var col = this.grid.getColumnById("#actions");
+		if (col) col.hide(true);
+	},
+	showActions: function() {
+		var col = this.grid.getColumnById("#actions");
+		if (col) col.hide(false);
+	},
+	
 	_supported_drops: [],
 	addDropSupport: function(data_type, get_drop_effect, handler) {
 		if (this._supported_drops.length == 0) {
