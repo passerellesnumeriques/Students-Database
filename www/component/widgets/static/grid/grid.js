@@ -803,8 +803,9 @@ function grid(element) {
 				th.appendChild(cb);
 			}
 			var col = document.createElement('COL');
-			//col.width = 20;
+			col.width = 20;
 			col.style.width ='20px';
+			col.style.maxWidth ='20px';
 			if (t.header_rows[0].childNodes.length == 0) {
 				t.header_rows[0].appendChild(th);
 				t.colgroup.appendChild(col);

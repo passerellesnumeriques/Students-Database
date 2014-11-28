@@ -1423,6 +1423,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		if (!filter.force && !simple) {
 			var remove = document.createElement("BUTTON");
 			remove.className = "flat";
+			remove.style.verticalAlign = "bottom";
 			remove.title = "Remove this filter on "+field.name;
 			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
 			if (filter.force) remove.disabled = 'disabled';
@@ -1452,7 +1453,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		if (!simple) {
 			var div_name = document.createElement("DIV");
 			div_name.style.display = "inline-block";
-			div_name.style.verticalAlign = "bottom";
+			div_name.style.verticalAlign = "middle";
 			div_name.style.marginRight = "4px";
 			div_name.appendChild(document.createTextNode(field.name+(typeof filter.sub_index != 'undefined' && filter.sub_index >= 0 ? "/"+field.sub_data.names[filter.sub_index] : "")+" "));
 			div.appendChild(div_name);
@@ -1469,7 +1470,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		var f = new window[classname](filter.data, config, !filter.force);
 		div.appendChild(f.getHTMLElement());
-		f.getHTMLElement().style.verticalAlign = "bottom";
+		f.getHTMLElement().style.verticalAlign = "middle";
 		f.onchange.add_listener(function (f) {
 			filter.data = f.getData();
 			t._loadData();

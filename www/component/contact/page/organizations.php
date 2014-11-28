@@ -33,7 +33,19 @@ class page_organizations extends Page {
 		}
 		if (isset($_POST["input"])) $input = json_decode($_POST["input"], true); else $input = array();
 		?>
-		<div style='width:100%;height:100%' id='org_list'>
+		<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
+			<div style='flex:1 1 auto' id='org_list'></div>
+			<?php if ($can_remove && !isset($input["selected"]) && !isset($input["selected_not_changeable"])) { ?>
+			<div style='flex:none' class='page_footer'>
+				With selected organizations: 
+				<button class='action' onclick='markObsolete();' title="Hide the selected organizations, but they won't be removed, meaning you can still show them back, and any history about those organizations will remain">
+					<img src='<?php echo theme::$icons_16["hide"];?>'/> Mark them as obsolete (hide)
+				</button>
+				<button class='action red' onclick='removeSelected();' title="Remove completely the selected organizations, meaning any information related to this organization will be lost">
+					<img src='<?php echo theme::$icons_16["remove_white"];?>'/> Remove them
+				</button>
+			</div>
+			<?php } ?>
 		</div>
 		<script type='text/javascript'>
 		var selected = <?php echo isset($input["selected"]) ? json_encode($input["selected"]) : "null";?>;
@@ -54,7 +66,10 @@ class page_organizations extends Page {
 					'Organization.EMail',
 					'Organization.Phone'
 				],
-				[{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"}}],
+				[
+					{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"},force:true},
+					{category:'Organization',name:'Is obsolete (hidden)',data:{values:[0]},force:false}
+				],
 				250,
 				'Organization.Name',
 				true,
@@ -115,6 +130,31 @@ class page_organizations extends Page {
 				} else
 					selected.remove(org_id);
 			}
+		}
+		function markObsolete() {
+			if (!dl || !dl.grid || dl.grid.getSelectionByRowId().length == 0) {
+				alert("You didn't select any organization");
+				return;
+			}
+			var sel = dl.grid.getSelectionByRowId();
+			confirm_dialog("Are you sure you want to hide the "+(sel.length > 1 ? sel.length : "")+" selected organization"+(sel.length > 1 ? "s" : "")+" ?",function(yes) {
+				if (!yes) return;
+				var ids = [];
+				for (var i = 0; i < sel.length; ++i)
+					ids.push(dl.getTableKeyForRow("Organization", sel[i]));
+				var locker = lock_screen();
+				service.json("data_model","save_cells",{cells:[{table:'Organization',keys:ids,values:[{column:'obsolete',value:1}]}]},function(res){
+					unlock_screen(locker);
+					dl.reloadData();
+				});
+			});
+		}
+		function removeSelected() {
+			if (!dl || !dl.grid || dl.grid.getSelectionByRowId().length == 0) {
+				alert("You didn't select any organization");
+				return;
+			}
+			// TODO
 		}
 		</script>
 		<?php 

@@ -284,6 +284,7 @@ $model->addTable("Organization")
 	->addPrimaryKey("id")
 	->addString("name",100,1,false,false)
 	->addString("creator",100,1,false,false)
+	->addBoolean("obsolete",false)
 	->addBoolean("fake",true) //if true, not displayable, internal usage only
 	->setRoot()
 	->addIndex("creator")

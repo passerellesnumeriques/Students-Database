@@ -340,6 +340,7 @@ $model->addTableDataDisplay($display);
 $display = new datamodel\TableDataDisplay("Organization", $org_category);
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("name", "Name"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("creator", "Managed by", true));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("obsolete", "Is obsolete (hidden)"));
 $display->addJoinToPrimary();
 $model->addTableDataDisplay($display);
 
