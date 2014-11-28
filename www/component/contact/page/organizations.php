@@ -154,7 +154,22 @@ class page_organizations extends Page {
 				alert("You didn't select any organization");
 				return;
 			}
-			// TODO
+			var sel = dl.grid.getSelectionByRowId();
+			var ids = [];
+			for (var i = 0; i < sel.length; ++i)
+				ids.push(dl.getTableKeyForRow("Organization", sel[i]));
+			var ask_next = function(index) {
+				if (index == ids.length) {
+					dl.reloadData();
+					return;
+				}
+				window.top.datamodel.confirm_remove("Organization", ids[index], function() {
+					ask_next(index+1);
+				},function() {
+					ask_next(index+1);
+				});
+			};
+			ask_next(0);
 		}
 		</script>
 		<?php 

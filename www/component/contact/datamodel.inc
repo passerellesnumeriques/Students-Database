@@ -288,6 +288,9 @@ $model->addTable("Organization")
 	->addBoolean("fake",true) //if true, not displayable, internal usage only
 	->setRoot()
 	->addIndex("creator")
+	->setRowDescriptionProvider(function($row) {
+		return "Organization ".toHTML($row["name"]);
+	})
 	->addReadFilter(function(&$q, $table_alias){
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();
