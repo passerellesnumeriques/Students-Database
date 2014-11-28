@@ -277,7 +277,7 @@ function addRow() {
 	row_data.push({
 		col_id: "remove",
 		data_id: null,
-		data: "<span style='white-space:nowrap'><button class='flat small_icon' onclick='removeRowButton(this);' style='vertical-align:middle'><img src='"+theme.icons_16.remove+"'/></button>"+(grid.getNbRows()+1)+"-</span>"
+		data: "<span style='white-space:nowrap'><button class='flat small_icon' onclick='removeRowButton(this);' tabindex='-1' style='vertical-align:middle'><img src='"+theme.icons_16.remove+"'/></button>"+(grid.getNbRows()+1)+"-</span>"
 	});
 	for (var i = 0; i < fields.length; ++i) {
 		if (fields[i].sub_data == null) {
