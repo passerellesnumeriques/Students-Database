@@ -36,7 +36,7 @@ global $pn_app_version;
 #application_title_label {
 	position: absolute;
 	right: 0px;
-	top: 15px;
+	top: 10px;
 	transform: rotate(-30deg);
 	color: #CC6600;
 	text-shadow: #a0e0c0 0.1em 0.1em 0.1em;

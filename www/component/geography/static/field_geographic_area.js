@@ -43,8 +43,12 @@ field_geographic_area.prototype._create = function(data) {
 			window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
 				if (window.closing || !layout) return;
 				var area = window.top.geography.searchArea(country_data, data);
-				var text = window.top.geography.getGeographicAreaText(country_data, area);
-				t.nodeValue = text.text;
+				if (!area)
+					t.nodeValue = "Unknown";
+				else {
+					var text = window.top.geography.getGeographicAreaText(country_data, area);
+					t.nodeValue = text.text;
+				}
 				layout.changed(t.parentNode);
 			});
 			this._text.style.fontStyle = "normal";
