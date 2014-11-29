@@ -1210,90 +1210,126 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		require("context_menu.js");
 		window.top.theme.css("data_list.css"); // the context menu goes to window.top, we need the stylesheet
 		var categories = [];
-		for (var i = 0; i < t._available_fields.length; ++i)
-			if (!categories.contains(t._available_fields[i].category))
-				categories.push(t._available_fields[i].category);
+		for (var i = 0; i < t._available_fields.length; ++i) {
+			var cat = null;
+			for (var j = 0; j < categories.length; ++j) if (categories[j].name == t._available_fields[i].category) { cat = categories[j]; break; }
+			if (!cat) {
+				cat = {name:t._available_fields[i].category,fields:[],nb:0};
+				categories.push(cat);
+			}
+			cat.fields.push(t._available_fields[i]);
+			cat.nb++;
+			if (t._available_fields[i].sub_data) cat.nb += t._available_fields[i].sub_data.names.length;
+		}
+		// organize columns to minimize space
+		var cols = [];
+		if (categories.length <= 5) {
+			// up to 5, we do not optimize
+			for (var i = 0; i < categories.length; ++i)
+				cols.push([categories[i]]);
+		} else {
+			// more than 5: try to optimize
+			var max_size = 0;
+			for (var i = 0; i < categories.length; ++i)
+				if (categories[i].nb > max_size) max_size = categories[i].nb;
+			if (max_size < 10) max_size = 10;
+			for (var i = 0; i < categories.length; ++i) {
+				// check if we have enough space in an existing column
+				var found = false;
+				for (var j = 0; j < cols.length; ++j) {
+					var col_size = 0;
+					for (var k = 0; k < cols[j].length; ++k) col_size += cols[j][k].nb + 1;
+					if (col_size + categories[i].nb + 1 <= max_size) {
+						// found one
+						cols[j].push(categories[i]);
+						found = true;
+						break;
+					}
+				}
+				if (!found) cols.push([categories[i]]);
+			}
+		}
 		var dialog = document.createElement("DIV");
 		var table = document.createElement("TABLE"); dialog.appendChild(table);
 		table.className = "data_list_select_fields_menu";
-		var tr_head = document.createElement("TR"); table.appendChild(tr_head);
-		tr_head.className = "header";
-		var tr_content = document.createElement("TR"); table.appendChild(tr_content);
-		tr_content.className = "content";
-		for (var i = 0; i < categories.length; ++i) {
-			var td = document.createElement("TD");
-			tr_head.appendChild(td);
-			td.appendChild(document.createTextNode(categories[i]));
-			td.style.whiteSpace = "nowrap";
-			td = document.createElement("TD");
-			td.style.whiteSpace = "nowrap";
-			tr_content.appendChild(td);
-			for (var j = 0; j < t._available_fields.length; ++j) {
-				var f = t._available_fields[j];
-				if (f.category != categories[i]) continue;
-				var cb = document.createElement("INPUT"); cb.type = 'checkbox';
-				cb.data = f;
-				var found = -1;
-				for (var k = 0; k < t.show_fields.length; ++k)
-					if (t.show_fields[k].field.path.path == t._available_fields[j].path.path &&
-						t.show_fields[k].field.name == t._available_fields[j].name) { found = k; break; }
-				if (found != -1 && t.show_fields[found].sub_index == -1)
-					cb.checked = 'checked';
-				cb.onclick = function() {
-					if (this.checked) {
-						if (this._sub_cb)
-							for (var k = 0; k < this._sub_cb.length; ++k) {
-								this._sub_cb[k].checked = "";
-								this._sub_cb[k].disabled = "disabled";
-								t.hideSubField(this.data, k);
-							}
-						t.showField(this.data);
-					} else {
-						t.hideField(this.data);
-						if (this._sub_cb)
-							for (var k = 0; k < this._sub_cb.length; ++k) {
-								this._sub_cb[k].disabled = "";
-							}
-					}
-					t._updateFieldsCookie();
-				};
-				td.appendChild(cb);
-				td.appendChild(document.createTextNode(f.name));
-				td.appendChild(document.createElement("BR"));
-				if (f.sub_data) {
-					cb._sub_cb = [];
-					var sub_div = document.createElement("DIV");
-					sub_div.className = "sub_data";
-					for (k = 0; k < f.sub_data.names.length; ++k) {
-						var sub_cb = document.createElement("INPUT");
-						sub_cb.type = "checkbox";
-						if (found != -1 && t.show_fields[found].sub_index == -1)
-							sub_cb.disabled = "disabled";
-						else {
-							var sub_found = false;
-							for (var l = 0; l < t.show_fields.length; ++l)
-								if (t.show_fields[l].field.path.path == t._available_fields[j].path.path &&
-									t.show_fields[l].field.name == t._available_fields[j].name &&
-									t.show_fields[l].sub_index == k) { sub_found = true; break; }
-							if (sub_found)
-								sub_cb.checked = "checked";
+		var tr = document.createElement("TR"); table.appendChild(tr);
+		for (var i = 0; i < cols.length; ++i) {
+			var td = document.createElement("TD"); tr.appendChild(td);
+			for (var cat_i = 0; cat_i < cols[i].length; ++cat_i) {
+				var cat = cols[i][cat_i];
+				var div = document.createElement("DIV");
+				div.className = "header";
+				div.appendChild(document.createTextNode(cat.name));
+				td.appendChild(div);
+				for (var j = 0; j < cat.fields.length; ++j) {
+					var f = cat.fields[j];
+					var div = document.createElement("DIV");
+					div.className = "content";
+					td.appendChild(div);
+					var cb = document.createElement("INPUT"); cb.type = 'checkbox';
+					cb.data = f;
+					var found = -1;
+					for (var k = 0; k < t.show_fields.length; ++k)
+						if (t.show_fields[k].field.path.path == f.path.path &&
+							t.show_fields[k].field.name == f.name) { found = k; break; }
+					if (found != -1 && t.show_fields[found].sub_index == -1)
+						cb.checked = 'checked';
+					cb.onclick = function() {
+						if (this.checked) {
+							if (this._sub_cb)
+								for (var k = 0; k < this._sub_cb.length; ++k) {
+									this._sub_cb[k].checked = "";
+									this._sub_cb[k].disabled = "disabled";
+									t.hideSubField(this.data, k);
+								}
+							t.showField(this.data);
+						} else {
+							t.hideField(this.data);
+							if (this._sub_cb)
+								for (var k = 0; k < this._sub_cb.length; ++k) {
+									this._sub_cb[k].disabled = "";
+								}
 						}
-						sub_div.appendChild(sub_cb);
-						sub_div.appendChild(document.createTextNode(f.sub_data.names[k]));
-						sub_div.appendChild(document.createElement("BR"));
-						sub_cb._parent_cb = cb;
-						sub_cb._index = k;
-						cb._sub_cb.push(sub_cb);
-						sub_cb.onchange = function() {
-							if (this.checked) {
-								t.showSubField(this._parent_cb.data, this._index);
-							} else {
-								t.hideSubField(this._parent_cb.data, this._index);
+						t._updateFieldsCookie();
+					};
+					div.appendChild(cb);
+					div.appendChild(document.createTextNode(f.name));
+					if (f.sub_data) {
+						cb._sub_cb = [];
+						var sub_div = document.createElement("DIV");
+						sub_div.className = "sub_data";
+						for (k = 0; k < f.sub_data.names.length; ++k) {
+							var sub_cb = document.createElement("INPUT");
+							sub_cb.type = "checkbox";
+							if (found != -1 && t.show_fields[found].sub_index == -1)
+								sub_cb.disabled = "disabled";
+							else {
+								var sub_found = false;
+								for (var l = 0; l < t.show_fields.length; ++l)
+									if (t.show_fields[l].field.path.path == t._available_fields[j].path.path &&
+										t.show_fields[l].field.name == t._available_fields[j].name &&
+										t.show_fields[l].sub_index == k) { sub_found = true; break; }
+								if (sub_found)
+									sub_cb.checked = "checked";
 							}
-							t._updateFieldsCookie();
-						};
+							sub_div.appendChild(sub_cb);
+							sub_div.appendChild(document.createTextNode(f.sub_data.names[k]));
+							sub_div.appendChild(document.createElement("BR"));
+							sub_cb._parent_cb = cb;
+							sub_cb._index = k;
+							cb._sub_cb.push(sub_cb);
+							sub_cb.onchange = function() {
+								if (this.checked) {
+									t.showSubField(this._parent_cb.data, this._index);
+								} else {
+									t.hideSubField(this._parent_cb.data, this._index);
+								}
+								t._updateFieldsCookie();
+							};
+						}
+						div.appendChild(sub_div);
 					}
-					td.appendChild(sub_div);
+
 				}
 			}
 		}

@@ -394,7 +394,7 @@ function organization(container, org, existing_types, can_edit) {
 			};
 			google_title.appendChild(document.createElement("BR"));
 			var note = document.createElement("I");
-			note.innerHTML = "Tip: if you don't find in Google just with the name of the organization, try to add the location (i.e. xxx, Paris)";
+			note.innerHTML = "Tip: if you don't find in Google just with the name of the organization, try to add the location (i.e. xxx, Paris) or the type (i.e xxx High School)";
 			google_title.appendChild(note);
 			t._google_results_container = document.createElement("DIV");
 			container.appendChild(t._google_results_container);
@@ -416,6 +416,9 @@ function organization(container, org, existing_types, can_edit) {
 		var tr, td_design, td;
 		tbody.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_design = document.createElement("TD"));
+		td_design.style.color = "#606060";
+		td_design.style.paddingRight = "3px";
+		td_design.style.verticalAlign = "middle";
 		t._contact_points_rows.push(tr);
 		tr.people_id = point.people_id;
 		if (org.id != -1) {
@@ -438,7 +441,7 @@ function organization(container, org, existing_types, can_edit) {
 		tr.appendChild(td = document.createElement("TD"));
 		td.style.whiteSpace = 'nowrap';
 		var link = document.createElement("BUTTON");
-		link.className = "flat";
+		link.className = "flat icon";
 		link.innerHTML = "<img src='/static/people/profile_16.png'/>";
 		link.style.verticalAlign = "center";
 		link.title = "See profile";
@@ -457,7 +460,7 @@ function organization(container, org, existing_types, can_edit) {
 		if(can_edit){
 			var remove_button = document.createElement("BUTTON");
 			td.appendChild(remove_button);
-			remove_button.className = "flat";
+			remove_button.className = "flat icon";
 			remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"' style = 'vertical-align:center;'/>";
 			remove_button.people_id = point.people.id;
 			remove_button.onclick = function(){
