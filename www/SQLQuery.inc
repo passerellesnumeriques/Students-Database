@@ -2677,8 +2677,21 @@ class TablesToUpdate {
 		$this->list[$table][$sub_model][$row_key][$column] = $value;
 	}
 	
+	public function addKey($table, $sub_model, $row_key) {
+		if (!isset($this->list[$table]))
+			$this->list[$table] = array();
+		if (!isset($this->list[$table][$sub_model]))
+			$this->list[$table][$sub_model] = array();
+		if (!isset($this->list[$table][$sub_model][$row_key]))
+			$this->list[$table][$sub_model][$row_key] = array();
+	}
+	
 	public function getValue($table, $sub_model, $row_key, $column) {
 		return @$this->list[$table][$sub_model][$row_key][$column];
+	}
+	
+	public function hasKey($table, $sub_model, $row_key) {
+		return isset($this->list[$table][$sub_model][$row_key]);
 	}
 	
 	public function getKeys($table, $sub_model) {

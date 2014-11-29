@@ -203,6 +203,15 @@ namespace datamodel {
 			$this->customization[$name] = $this->load_customization($name);
 		}
 		
+		public function ensureCustomizationLoaded($sub_model) {
+			if ($this->model instanceof \SubDataModel)
+				$name = $this->getSQLNameFor($sub_model);
+			else
+				$name = $this->name;
+			if (!isset($this->customization[$name]))
+				$this->customization[$name] = $this->load_customization($name);
+		}
+		
 		/** Indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed
 		 * @param string $is_root true to mark the table as root table
 		 * @return \datamodel\Table this 

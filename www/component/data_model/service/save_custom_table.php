@@ -32,6 +32,14 @@ class service_save_custom_table extends Service {
 			return;
 		}
 		DataBaseLock::update($input["lock_id"]);
+		
+		require_once("component/data_model/DataModelCustomizationPlugin.inc");
+		/* @var $plugins DataModelCustomizationPlugin[] */
+		$plugins = array();
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi)
+				if ($pi instanceof DataModelCustomizationPlugin)
+					array_push($plugins, $pi);
 
 		$col_name_counter = 1;
 		// get the current list of columns in the table
@@ -70,6 +78,8 @@ class service_save_custom_table extends Service {
 				$col_name = $col["id"];
 				$col["is_new"] = false;
 			}
+			$custom = null;
+			$custom_include = null;
 			switch ($col["type"]) {
 				case "boolean":
 					fwrite($f, "array_push(\$columns, new \datamodel\ColumnBoolean(\$this, \"$col_name\", ".($col["spec"]["can_be_null"] ? "true" : "false")."));\n");
@@ -97,8 +107,22 @@ class service_save_custom_table extends Service {
 					$max = $col["spec"]["max"] == null ? "null" : "\"".$col["spec"]["max"]."\"";
 					fwrite($f, "array_push(\$columns, new \datamodel\ColumnDate(\$this, \"$col_name\", ".($col["spec"]["can_be_null"] ? "true" : "false").", false, $min, $max));\n");
 					break;
+				default:
+					$pi = null;
+					foreach ($plugins as $p) if ($p->getId() == $col["type"]) { $pi = $p; break; }
+					if ($pi <> null) {
+						fwrite($f, "array_push(\$columns, new \datamodel\ForeignKey(\$this, \"$col_name\", \"".$pi->getForeignTable()."\", true, false, true, true, false));\n");
+						$custom = $pi->getDataDisplay($col_name, $col["description"], $sub_model);
+						$custom_include = $pi->getDataDisplayFileToInclude();
+					}
+					break;
 			}
-			fwrite($f, "\$display->addDataDisplay(new \datamodel\SimpleDataDisplay(\"$col_name\",\"".str_replace("\"","\\\"",$col["description"])."\"),null,".($sub_model <> null ? "\"$sub_model\"" : "null").");\n");
+			if ($custom == null)
+				fwrite($f, "\$display->addDataDisplay(new \datamodel\SimpleDataDisplay(\"$col_name\",\"".str_replace("\"","\\\"",$col["description"])."\"),null,".($sub_model <> null ? "\"$sub_model\"" : "null").");\n");
+			else {
+				if ($custom_include <> null) fwrite($f, "require_once(".json_encode($custom_include).");\n");
+				fwrite($f, "\$display->addDataDisplay($custom);\n");
+			}
 		}
 		fwrite($f, "return \$columns;\n");
 		fwrite($f, "?>");

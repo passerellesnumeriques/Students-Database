@@ -28,7 +28,7 @@ class service_lock_datadisplay extends Service {
 		$sub_model = @$input["sub_model"];
 		$t = DataModel::get()->getTable($table);
 		$come_from = @$input["come_from"];
-		$display = DataModel::get()->getTableDataDisplay($table);;
+		$display = DataModel::get()->getTableDataDisplay($table);
 		if ($display == null) {
 			PNApplication::error("No TableDataDisplay on table ".$table);
 			return;

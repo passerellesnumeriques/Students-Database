@@ -77,6 +77,14 @@ class page_edit_customizable_table extends Page {
 			array_push($fixed_by_category[$cat], $data);
 		}
 		
+		require_once("component/data_model/DataModelCustomizationPlugin.inc");
+		/* @var $plugins DataModelCustomizationPlugin[] */
+		$plugins = array();
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi)
+				if ($pi instanceof DataModelCustomizationPlugin)
+					array_push($plugins, $pi);
+		
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_integer.js");
 		$this->requireJavascript("field_decimal.js");
@@ -228,6 +236,10 @@ class page_edit_customizable_table extends Page {
 				addType(select, "integer", "Number - Integer", selected);
 				addType(select, "decimal", "Number - Decimal", selected);
 				addType(select, "date", "Date", selected);
+				<?php
+				foreach ($plugins as $pi)
+					echo "addType(select, ".json_encode($pi->getId()).",".json_encode($pi->getDisplayName()).",selected);";
+				?>
 			}
 			
 			function updateType(tr, spec) {
@@ -241,6 +253,10 @@ class page_edit_customizable_table extends Page {
 				case "integer": createInteger(tr.type_container, spec); break;
 				case "decimal": createDecimal(tr.type_container, spec); break;
 				case "date": createDate(tr.type_container, spec); break;
+				<?php
+				foreach ($plugins as $pi)
+					echo "case ".json_encode($pi->getId()).": create__".$pi->getId()."(tr.type_container, spec); break;";
+				?>
 				}
 			}
 
@@ -318,6 +334,14 @@ class page_edit_customizable_table extends Page {
 					return {min:this.min.getCurrentData(),max:this.max.getCurrentData()};
 				};
 			}
+			<?php 
+			foreach ($plugins as $pi) {
+				echo "function create__".$pi->getId()."(container, spec) {\n";
+				// TODO
+				echo "container.spec.get = function() { return {}; };\n";
+				echo "}\n";
+			}
+			?>
 			
 			function save() {
 				var tr = document.getElementById('header_row');
@@ -376,6 +400,12 @@ class page_edit_customizable_table extends Page {
 				} else if ($col instanceof \datamodel\ColumnString) {
 					$type = "string";
 					$spec["max_length"] = $col->max_length;
+				} else if ($col instanceof \datamodel\ForeignKey) {
+					$pi = null;
+					foreach ($plugins as $p) if ($p->getForeignTable() == $col->foreign_table) { $pi = $p; break; }
+					if ($pi == null) continue;
+					$type = $pi->getId();
+					// TODO spec ?
 				} else if ($col instanceof \datamodel\ColumnInteger) {
 					$type = "integer";
 					$spec["min"] = $col->min;

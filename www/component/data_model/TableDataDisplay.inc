@@ -63,6 +63,8 @@ class TableDataDisplay {
 	}
 	
 	public function getDataDisplay($come_from, $sub_model) {
+		$t = $this->getTable();
+		if ($t->isCustomized()) $t->ensureCustomizationLoaded($sub_model);
 		$data = array();
 		if (isset($this->data_display[$come_from])) {
 			if (isset($this->data_display[$come_from][null]))

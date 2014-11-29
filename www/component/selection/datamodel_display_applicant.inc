@@ -7,12 +7,18 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 	}
 	
 	public function finalizeCreateData($key, $sub_model, &$table_fields, $come_from) {
+		// ensure to create ApplicantMoreInfo entry, even nothing is there yet
+		$cols = DataModel::get()->internalGetTable("ApplicantMoreInfo")->internalGetColumnsFor($sub_model);
+		if (count($cols) == 1)
+			$table_fields->addValue("ApplicantMoreInfo", $sub_model, $key, "people", $key);
+		// generate applicant ID if needed
 		if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id")) {
 			// TODO use database AUTO_INCREMENT
 			$applicant_id = SQLQuery::create()->select("Applicant")->expression("MAX(`applicant_id`)+1", "new_id")->executeSingleValue();
 			if ($applicant_id == null) $applicant_id = 1; // first one
 			$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "applicant_id", $applicant_id);
 		}
+		// set as non-excluded
 		$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "excluded", false);
 		// if an IS is specified, and this IS is linked to an exam center, automatically assign the applicant to this exam center
 		$is = $table_fields->getValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "information_session");
@@ -190,7 +196,7 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 }
 $model->addDataScreen(new ApplicantDataScreen($display));
 
-$category_more_info = new datamodel\DataDisplayCategory("Selection (Additional Info.)");
+$category_more_info = new datamodel\DataDisplayCategory("Selection (Additional Info)");
 $model->addDataCategory($category_more_info);
 $display = new datamodel\TableDataDisplay("ApplicantMoreInfo", $category_more_info);
 $display->addJoinFrom("people", array("types"), function($columns) {
