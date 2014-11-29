@@ -38,8 +38,21 @@ class service_picture_from_email extends Service {
 				$google = new PNGoogleDirectory();
 				$picture = $google->getProfilePicture($email);
 				if ($picture <> null) {
-					echo $picture;
-					return;
+					$data = $picture->getPhotoData();
+					if ($data <> null) {
+						$data = base64_decode(strtr($data, '-_,', '+/='));
+						if ($data) {
+							if ($picture->getMimeType() == "image/jpeg") {
+								echo $data;
+								return;
+							}
+							$img = imagecreatefromstring($data);
+							if ($img) {
+								imagejpeg($img);
+								return;
+							}
+						}
+					}
 				}
 			}
 		}

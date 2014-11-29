@@ -304,10 +304,12 @@ class calendar extends Component {
 			$contacts_ids = array();
 			for ($i = count($attendees)-1; $i >= 0; $i--) {
 				if (@$attendees[$i]["participation"] == null) $attendees[$i]["participation"] = "UNKNOWN";
-				if ($attendees[$i]["role"] == "ORGANIZER_ONLY")
-					$attendees[$i]["organizer"] = true;
-				else if (!isset($attendees[$i]["organizer"]))
+				if (!isset($attendees[$i]["organizer"]))
 					$attendees[$i]["organizer"] = false;
+				if (!isset($attendees[$i]["creator"]))
+					$attendees[$i]["creator"] = false;
+				if (!isset($attendees[$i]["role"]))
+					$attendees[$i]["rolw"] = "NONE";
 				$attendees[$i]["event"] = $event_id;
 				if (@$attendees[$i]["people"] > 0 && !in_array($attendees[$i]["people"], $peoples_ids)) array_push($peoples_ids, $attendees[$i]["people"]);
 				if (@$attendees[$i]["people_email"] > 0 && !in_array($attendees[$i]["people_email"], $contacts_ids)) array_push($contacts_ids, $attendees[$i]["people_email"]);

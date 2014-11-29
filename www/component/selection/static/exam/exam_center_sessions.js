@@ -749,9 +749,9 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		this.who.onadded.add_listener(function(people) {
 			var a;
 			if (typeof people == 'string') {
-				a = new CalendarEventAttendee(people,calendar_event_role_requested,calendar_event_participation_unknown,false);
+				a = new CalendarEventAttendee(people,calendar_event_role_requested,calendar_event_participation_unknown,false,false);
 			} else {
-				a = new CalendarEventAttendee(people.people.first_name+' '+people.people.last_name,calendar_event_role_requested,calendar_event_participation_unknown,false,null,people.people.id);
+				a = new CalendarEventAttendee(people.people.first_name+' '+people.people.last_name,calendar_event_role_requested,calendar_event_participation_unknown,false,false,null,people.people.id);
 			}
 			event.attendees.push(a);
 		});

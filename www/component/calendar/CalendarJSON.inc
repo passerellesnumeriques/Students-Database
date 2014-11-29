@@ -135,6 +135,7 @@ class CalendarJSON {
 			$data .= ",people:".json_encode(@$a["people"]);
 			$data .= ",people_email:".json_encode(@$a["people_email"]);
 			$data .= ",organizer:".json_encode(@$a["organizer"] == 1);
+			$data .= ",creator:".json_encode(@$a["creator"] == 1);
 			$data .= "}";
 		}
 		$data .= "]";

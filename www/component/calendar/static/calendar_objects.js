@@ -15,7 +15,7 @@ window.calendar_event_role_requested = "REQUESTED";
 window.calendar_event_role_optional = "OPTIONAL";
 /** for information only, but participant does not need to participate */
 window.calendar_event_role_for_info = "FOR_INFO";
-window.calendar_event_role_organizer_only = "ORGANIZER_ONLY";
+window.calendar_event_role_none = "NONE";
 
 /**
  * Object representing a calendar event, used between front-end and back-end
@@ -141,11 +141,12 @@ function copyCalendarEventFrequency(f) {
 	);
 }
 
-function CalendarEventAttendee(name, role, participation, organizer, email, people, people_email) {
+function CalendarEventAttendee(name, role, participation, organizer, creator, email, people, people_email) {
 	this.name = name;
 	this.role = role;
 	this.participation = participation;
 	this.organizer = organizer;
+	this.creator = creator;
 	this.email = email;
 	this.people = people;
 	this.people_email = people_email;
@@ -157,6 +158,7 @@ function copyCalendarEventAttendee(a) {
 		a.role,
 		a.participation,
 		a.organizer,
+		a.creator,
 		a.email,
 		a.people,
 		a.people_email
