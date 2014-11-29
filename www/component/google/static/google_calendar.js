@@ -143,7 +143,8 @@ function GoogleCalendar(id, name, color, show, writable) {
 					}
 					if (gev.attendees) {
 						for (var j = 0; j < gev.attendees.length; ++j) {
-							var a = new CalendarEventAttendee(gev.attendees[j].displayName, null, null, gev.attendees[j].organizer, gev.attendees[j].email);
+							if (gev.attendees[j].self) continue;
+							var a = new CalendarEventAttendee(gev.attendees[j].displayName, null, null, gev.attendees[j].organizer, false, gev.attendees[j].email);
 							switch (gev.attendees[j].responseStatus) {
 							case "needsAction": a.participation = calendar_event_participation_unknown; break;
 							case "declined": a.participation = calendar_event_participation_no; break;
@@ -152,21 +153,36 @@ function GoogleCalendar(id, name, color, show, writable) {
 							}
 							if (typeof gev.attendees[j].optional != 'undefined')
 								a.role = gev.attendees[j].optional ? calendar_event_role_optional : calendar_event_role_requested;
-							else if (gev.attendees[j].organizer)
-								a.role = calendar_event_role_organizer_only;
 							ev.attendees.push(a);
 						}
 					}
-					if (gev.organizer) {
+					if (gev.organizer && !gev.organizer.self) {
 						var already = false;
 						for (var j = 0; j < ev.attendees.length; ++j) if (ev.attendees[j].organizer) { already = true; break; }
 						if (!already) {
 							ev.attendees.push(new CalendarEventAttendee(
 								gev.organizer.displayName,
-								calendar_event_role_organizer_only,
+								calendar_event_role_none,
 								calendar_event_participation_no,
 								true,
+								false,
 								gev.organizer.email
+							));
+						}
+					}
+					if (gev.creator && !gev.creator.self) {
+						var already = false;
+						if (gev.creator.email)
+							for (var j = 0; j < ev.attendees.length; ++j)
+								if (ev.attendees[j].email == gev.creator.email) { already = true; break; }
+						if (!already) {
+							ev.attendees.push(new CalendarEventAttendee(
+								gev.creator.displayName,
+								calendar_event_role_none,
+								calendar_event_participation_no,
+								false,
+								true,
+								gev.creator.email
 							));
 						}
 					}

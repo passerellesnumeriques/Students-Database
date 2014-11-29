@@ -74,11 +74,12 @@ class PNGoogleDirectory extends PNGoogle_Admin {
 		return $users;
 	}
 	
+	/**
+	 * @param string $email
+	 * @return Google_Service_Directory_UserPhoto
+	 */
 	public function getProfilePicture($email) {
-		$photo = $this->service->users_photos->get($email);
-		if ($photo <> null)
-			return $photo->getPhotoData();
-		return null;
+		return $this->service->users_photos->get($email);
 	}
 }
 ?>

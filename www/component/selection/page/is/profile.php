@@ -87,7 +87,7 @@ class page_is_profile extends SelectionPage {
 						}
 						$first = true;
 						foreach ($event["attendees"] as $a) {
-							if ($a["role"] == "ORGANIZER_ONLY") continue;
+							if ($a["role"] == "NONE") continue;
 							if ($first) $first = false; else echo ",";
 							if ($a["people"] > 0) {
 								echo "{people:";

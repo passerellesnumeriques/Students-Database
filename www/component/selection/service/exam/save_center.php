@@ -192,9 +192,11 @@ class service_exam_save_center extends Service {
 				$event["attendees"] = array();
 				array_push($event["attendees"], array(
 					"name"=>"Selection",
-					"role"=>"ORGANIZER_ONLY",
+					"role"=>"NONE",
+					"organizer"=>true,
 					"participation"=>"YES"
 				));
+				// TODO add creator ?
 				if ($attendees <> null) {
 					$people_ids = array();
 					foreach ($attendees as $a) {

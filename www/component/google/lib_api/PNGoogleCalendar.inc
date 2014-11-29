@@ -240,11 +240,16 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 		if (@$pn["attendees"] <> null && count($pn["attendees"]) > 0) {
 			$list = array();
 			foreach ($pn["attendees"] as $a) {
-				if ($a["role"] == "ORGANIZER_ONLY") {
+				if ($a["organizer"] == 1 && $a["role"] == "NONE") {
 					$o = new Google_Service_Calendar_EventOrganizer();
 					$o->setDisplayName(@$a["name"]);
 					$o->setEmail(@$a["email"]);
 					$ev->setOrganizer($o);
+				} else if ($a["creator"] == 1 && $a["role"] == "NONE") {
+					$o = new Google_Service_Calendar_EventCreator();
+					$o->setDisplayName(@$a["name"]);
+					$o->setEmail(@$a["email"]);
+					$ev->setCreator($o);
 				} else {
 					$at = new Google_Service_Calendar_EventAttendee();
 					$at->setDisplayName(@$a["name"]);
@@ -265,6 +270,12 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 						$o->setDisplayName(@$a["name"]);
 						$o->setEmail(@$a["email"]);
 						$ev->setOrganizer($o);
+					}
+					if (@$a["creator"] == 1) {
+						$o = new Google_Service_Calendar_EventCreator();
+						$o->setDisplayName(@$a["name"]);
+						$o->setEmail(@$a["email"]);
+						$ev->setCreator($o);
 					}
 				}
 			}

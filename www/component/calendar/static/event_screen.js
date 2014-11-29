@@ -712,5 +712,45 @@ function event_screen_who(container, attendees, editable) {
 	this.populate = function(event) {
 		event.attendees = arrayCopy(this.attendees, copyCalendarEventAttendee);
 	};
-	for (var i = 0; i < attendees.length; ++i) this.createAttendee(attendees[i]);
+	// created by
+	for (var i = 0; i < attendees.length; ++i) {
+		if (attendees[i].creator) {
+			var tr, td;
+			this._table.appendChild(tr = document.createElement("TR"));
+			tr.appendChild(td = document.createElement("TD"));
+			td.colSpan = 2;
+			td.style.fontWeight = "bold";
+			td.innerHTML = "Created by";
+			this.createAttendee(attendees[i]);
+			break;
+		}
+	}
+	// organized by
+	for (var i = 0; i < attendees.length; ++i) {
+		if (attendees[i].organizer) {
+			var tr, td;
+			this._table.appendChild(tr = document.createElement("TR"));
+			tr.appendChild(td = document.createElement("TD"));
+			td.colSpan = 2;
+			td.style.fontWeight = "bold";
+			td.innerHTML = "Organized by";
+			this.createAttendee(attendees[i]);
+			break;
+		}
+	}
+	// attendees
+	var first = true;
+	for (var i = 0; i < attendees.length; ++i) {
+		if (attendees[i].role == calendar_event_role_none && (attendees[i].creator || attendees[i].organizer)) continue;
+		if (first) {
+			var tr, td;
+			this._table.appendChild(tr = document.createElement("TR"));
+			tr.appendChild(td = document.createElement("TD"));
+			td.colSpan = 2;
+			td.style.fontWeight = "bold";
+			td.innerHTML = "Attendees";
+			first = false;
+		}
+		this.createAttendee(attendees[i]);
+	}
 }

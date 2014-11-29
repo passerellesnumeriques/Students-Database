@@ -104,9 +104,11 @@ class service_is_save extends Service{
 					$event["attendees"] = array();
 					array_push($event["attendees"], array(
 						"name"=>"Selection",
-						"role"=>"ORGANIZER_ONLY",
+						"role"=>"NONE",
+						"organizer"=>true,
 						"participation"=>"YES"
 					));
+					// TODO add creator ?
 					$people_ids = array();
 					foreach ($data["who"] as $who)
 						if (ctype_digit($who))
@@ -140,9 +142,11 @@ class service_is_save extends Service{
 				$event["attendees"] = array();
 				array_push($event["attendees"], array(
 					"name"=>"Selection",
-					"role"=>"ORGANIZER_ONLY",
+					"role"=>"NONE",
+					"organizer"=>true,
 					"participation"=>"YES"
 				));
+				// TODO add creator ?
 				$people_ids = array();
 				foreach ($data["who"] as $who)
 					if (ctype_digit($who))
