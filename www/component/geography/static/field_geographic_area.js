@@ -10,8 +10,20 @@ field_geographic_area.prototype._create = function(data) {
 		this._text = document.createElement("A");
 		this._text.className = "black_link";
 		this._text.href = "#";
+		var t=this;
 		this._text.onclick = function(ev) {
-			// TODO
+			require(["popup_window.js","geographic_area_selection.js"], function() {
+				var content = document.createElement("DIV");
+				content.style.backgroundColor = "white";
+				content.style.padding = "10px";
+				var sel = new geographic_area_selection(content, window.top.default_country_id, t.getCurrentData(), 'vertical', true);
+				var popup = new popup_window("Geographic Area", "/static/geography/geography_16.png", content);
+				popup.addOkCancelButtons(function() {
+					t.setData(sel.getSelectedArea());
+					popup.close();
+				});
+				popup.show();
+			});
 			stopEventPropagation(ev);
 			return false;
 		};
@@ -19,17 +31,26 @@ field_geographic_area.prototype._create = function(data) {
 		this._text = document.createElement("SPAN");
 	}
 	this._setData = function(data) {
+		data = data ? parseInt(data) : null;
+		if (isNaN(data)) data = null;
 		this._text.removeAllChildren();
 		if (data == null) {
 			this._text.appendChild(document.createTextNode("Not specified"));
 			this._text.style.fontStyle = "italic";
 		} else {
-			// TODO
-			this._text.appendChild(document.createTextNode("TODO"));
+			var t = document.createTextNode("... loading ...");
+			this._text.appendChild(t);
+			window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
+				var area = window.top.geography.searchArea(country_data, data);
+				var text = window.top.geography.getGeographicAreaText(country_data, area);
+				t.nodeValue = text.text;
+				layout.changed(t.parentNode);
+			});
 			this._text.style.fontStyle = "normal";
 		}
 		return data;
 	};
+	this._text.style.whiteSpace = "nowrap";
 	this.element.appendChild(this._text);
 	this._setData(data);
 };

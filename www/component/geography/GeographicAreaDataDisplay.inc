@@ -60,7 +60,7 @@ class GeographicAreaDataDisplay extends \datamodel\DataDisplay {
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
-		// TODO
+		$tables_fields->addValue("ApplicantMoreInfo", $sub_model, $key, $this->col_name, $value);
 	}
 	
 }
