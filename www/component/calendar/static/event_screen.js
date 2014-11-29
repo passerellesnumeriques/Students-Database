@@ -46,44 +46,54 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		tr.appendChild(td = document.createElement("TD"));
 		td.innerHTML = "Calendar";
 		this._styleLeftTitle(td);
+		td.style.paddingTop = "3px";
 		tr.appendChild(td = document.createElement("TD"));
+		setBoxShadow(td, 0, 2, 2, -1, "#808080");
+		td.style.paddingBottom = "5px";
+		td.style.paddingTop = "3px";
 		this.calendar = new event_screen_calendar_selector(td, ev ? window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id) : default_calendar, this.editable, this.event == null);
 		
 		// What
 		this._table.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td = document.createElement("TD"));
-		td.style.borderTop = "1px solid #A0A0A0";
 		td.innerHTML = "What";
 		this._styleLeftTitle(td);
+		td.style.paddingTop = "3px";
 		tr.appendChild(td = document.createElement("TD"));
-		td.style.borderTop = "1px solid #A0A0A0";
+		setBoxShadow(td, 0, 2, 2, -1, "#808080");
+		td.style.paddingBottom = "5px";
+		td.style.paddingTop = "3px";
 		this.what = new event_screen_what(td, ev ? ev.title : null, ev ? ev.description : null, this.editable);
 		
 		// When
 		this._table.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td = document.createElement("TD"));
-		td.style.borderTop = "1px solid #A0A0A0";
 		td.innerHTML = "When";
 		this._styleLeftTitle(td);
+		td.style.paddingTop = "3px";
 		tr.appendChild(td = document.createElement("TD"));
-		td.style.borderTop = "1px solid #A0A0A0";
+		setBoxShadow(td, 0, 2, 2, -1, "#808080");
+		td.style.paddingBottom = "5px";
+		td.style.paddingTop = "3px";
 		this.when = new event_screen_when(td, ev ? ev.start : new_datetime, ev ? ev.end : new Date(new_datetime.getTime()+60*60*1000), ev ? ev.all_day : new_all_day, ev ? ev.frequency : null, this.editable);
 		
 		// Who
 		this._table.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td = document.createElement("TD"));
-		td.style.borderTop = "1px solid #A0A0A0";
 		td.innerHTML = "Who";
 		this._styleLeftTitle(td);
+		td.style.paddingTop = "3px";
 		tr.appendChild(td = document.createElement("TD"));
-		td.style.borderTop = "1px solid #A0A0A0";
+		setBoxShadow(td, 0, 2, 2, -1, "#808080");
+		td.style.paddingBottom = "5px";
+		td.style.paddingTop = "3px";
 		this.who = new event_screen_who(td, ev ? ev.attendees : [], this.editable);
 		
 		// app link
 		if (ev && ev.app_link) {
 			this._table.appendChild(tr = document.createElement("TR"));
 			tr.appendChild(td = document.createElement("TD"));
-			td.style.borderTop = "1px solid #A0A0A0";
+			td.style.paddingTop = "3px";
 			td.colSpan = 2;
 			var link = document.createElement("A");
 			link.style.fontWeight = "bold";
