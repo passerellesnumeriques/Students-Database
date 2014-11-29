@@ -33,6 +33,15 @@ global $pn_app_version;
 	font-weight:bold;
 	padding-top: 5px;
 }
+#application_title_label {
+	position: absolute;
+	right: 0px;
+	top: 15px;
+	transform: rotate(-30deg);
+	color: #CC6600;
+	text-shadow: #a0e0c0 0.1em 0.1em 0.1em;
+	font-weight: bold;
+}
 #application_left_menu {
 	padding-top: 10px;
 	white-space: nowrap;
@@ -177,6 +186,14 @@ global $pn_app_version;
 			<div id='application_title' style="flex:none">
 				<img src='/static/application/logo.png'/>
 				<div id="application_title_text">Students<br/>Management</div>
+<?php
+#DEV
+echo "<div id='application_title_label'>Dev</div>";
+#END
+#CHANNEL_BETA
+#echo "<div id='application_title_label'>Beta</div>";
+#END 
+?>
 			</div>
 			<div id="application_left_menu_scroll" style="flex:1 1 auto;overflow:hidden;padding-right:5px;margin-right:-5px;z-index:2;">
 			</div>
