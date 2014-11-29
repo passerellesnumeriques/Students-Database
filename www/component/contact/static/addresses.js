@@ -369,11 +369,13 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 				container.innerHTML = address_type;
 				address.address_type = address_type;
 				t.onchange.fire(t);
+				layout.changed(container);
 			});
 		} else {
 			container.innerHTML = address_type;
 			address.address_type = address_type;
 			t.onchange.fire(t);
+			layout.changed(container);
 		}
 	};
 	

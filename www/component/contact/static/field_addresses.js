@@ -90,7 +90,8 @@ field_addresses.prototype._create = function(data) {
 			window.top.sub_field_registry.changed(window, f);
 		});
 		this._setData = function(data) {
-			this.element.onclick = function(event) { stopEventPropagation(event); return false; };
+			if (this.editable)
+				this.element.onclick = function(event) { stopEventPropagation(event); return false; };
 			this.element.removeAllChildren();
 			if (data == null) return null;
 			for (var i = 0; i < data.addresses.length; ++i) {

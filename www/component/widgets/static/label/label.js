@@ -8,12 +8,12 @@ function label(name, color, onedit, onremove) {
 	setBorderRadius(this.element, 3,3,3,3,3,3,3,3);
 	this.element.style.backgroundColor = color;
 	this.name = document.createElement("SPAN");
-	this.name.innerHTML = name;
+	this.name.appendChild(document.createTextNode(name));
 	this.element.appendChild(this.name);
 	if (onedit) {
 		this.name.style.cursor = 'pointer';
 		this.name.title = "Edit";
-		this.name.onclick = function() { onedit(t); };
+		this.name.onclick = function() { onedit(t,function(new_name){ t.name.childNodes[0].nodeValue = new_name; layout.changed(t.name); }); };
 	}
 	if (onremove) {
 		this.remove = document.createElement("IMG");

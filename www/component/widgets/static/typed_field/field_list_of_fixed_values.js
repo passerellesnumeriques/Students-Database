@@ -31,6 +31,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 		this._elements = [];
 		this._addElement = function(key) {
 			var text = document.createElement("SPAN");
+			text.style.whiteSpace = 'nowrap';
 			text.appendChild(document.createTextNode(this._getValue(key)));
 			var remove = document.createElement("IMG");
 			remove.src = theme.icons_10.remove;
@@ -43,19 +44,18 @@ field_list_of_fixed_values.prototype._create = function(data) {
 				if (this.data_index > 0)
 					t.element.removeChild(t._elements[this.data_index].comma);
 				t.element.removeChild(t._elements[this.data_index].text);
-				t.element.removeChild(t._elements[this.data_index].remove);
 				t._elements.splice(this.data_index,1);
 				for (var i = this.data_index; i < t._elements.length; ++i)
 					t._elements[i].remove.data_index = i;
 				t._datachange();
 				stopEventPropagation(ev);
 			};
+			text.appendChild(remove);
 			var comma = null;
 			if (t._elements.length > 0) comma = document.createTextNode(", ");
 			if (comma != null)
 				this.element.insertBefore(comma, this.add_button);
 			this.element.insertBefore(text, this.add_button);
-			this.element.insertBefore(remove, this.add_button);
 			this._elements.push({comma:comma,text:text,remove:remove,key:key});
 		};
 		this.add_button = document.createElement("BUTTON");

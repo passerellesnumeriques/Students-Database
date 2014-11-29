@@ -64,14 +64,36 @@ function organization(container, org, existing_types, can_edit) {
 			for (var i = 0; i < org.types_ids.length; ++i) {
 				for (var j = 0; j < existing_types.length; ++j)
 					if (existing_types[j].id == org.types_ids[i]) {
-						types.push(existing_types[j]);
+						types.push({
+							id: existing_types[j].id,
+							name: existing_types[j].name,
+							editable: can_edit && existing_types[j].builtin != 1,
+							removable: can_edit
+						});
 						break;
 					}
 			}
-			t.types = new labels("#90D090", types, function(id) {
+			t.types = new labels("#90D090", types, function(id,onedited) {
 				// onedit
-				alert('Edit not yet implemented');
-				// TODO
+				var name;
+				for (var j = 0; j < existing_types.length; ++j)
+					if (existing_types[j].id == id) { name = existing_types[j].name; break; }
+				input_dialog(null,"Rename Organization Type","New name",name,100,function(name) {
+					name = name.trim();
+					if (name.length == 0) return "Please enter a name";
+					for (var j = 0; j < existing_types.length; ++j)
+						if (existing_types[j].id != id && existing_types[j].name.isSame(name)) return "A type already exists with this name";
+					return null;
+				},function(name) {
+					if (!name) return;
+					name = name.trim();
+					for (var j = 0; j < existing_types.length; ++j)
+						if (existing_types[j].id == id)
+							existing_types[j].name = name;
+					service.json("data_model","save_cell",{table:'OrganizationType',column:'name',row_key:id,value:name,lock:null},function(res){
+						if (res) onedited(name);
+					});
+				});
 			}, function(id, handler) {
 				// onremove
 				var ok = function() {
@@ -108,13 +130,13 @@ function organization(container, org, existing_types, can_edit) {
 								service.json("contact", "assign_organization_type", {organization:org.id,type:this.org_type.id}, function(res) {
 									if (res) {
 										org.types_ids.push(tt.org_type.id);
-										t.types.addItem(tt.org_type.id, tt.org_type.name);
+										t.types.addItem(tt.org_type.id, tt.org_type.name, tt.org_type.builtin != 1, true);
 										t.onchange.fire();
 									}
 								});
 							} else {
 								org.types_ids.push(this.org_type.id);
-								t.types.addItem(this.org_type.id, this.org_type.name);
+								t.types.addItem(this.org_type.id, this.org_type.name, this.org_type.builtin != 1, true);
 								t.onchange.fire();
 							}
 						};
@@ -123,7 +145,7 @@ function organization(container, org, existing_types, can_edit) {
 				}
 				var item = document.createElement("DIV");
 				item.className = "context_menu_item";
-				item.innerHTML = "<img src='"+theme.icons_16.add+"' style='vertical-align:bottom;padding-right:3px'/> Create a new type";
+				item.innerHTML = "<img src='"+theme.icons_10.add+"' style='vertical-align:bottom;padding-right:3px;margin-bottom:1px'/> Create a new type";
 				item.style.fontSize = "8pt";
 				item.onclick = function() {
 					input_dialog(theme.icons_16.add,"New Organization Type","Enter the name of the organization type","",100,function(name){
@@ -141,14 +163,14 @@ function organization(container, org, existing_types, can_edit) {
 									if (res2) {
 										org.types_ids.push(res.id);
 										existing_types.push({id:res.id,name:name});
-										t.types.addItem(res.id, name);
+										t.types.addItem(res.id, name, can_edit, can_edit);
 										t.onchange.fire();
 									}
 								});
 							} else {
 								org.types_ids.push(res.id);
 								existing_types.push({id:res.id,name:name});
-								t.types.addItem(res.id, name);
+								t.types.addItem(res.id, name, can_edit, can_edit);
 								t.onchange.fire();
 							}
 						});
@@ -171,8 +193,8 @@ function organization(container, org, existing_types, can_edit) {
 		t.content_container.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_contacts = document.createElement("TD"));
 		tr.appendChild(td_addresses = document.createElement("TD"));
-		tr.appendChild(td_points = document.createElement("TD"));
 		tr.appendChild(td_map = document.createElement("TD"));
+		tr.appendChild(td_points = document.createElement("TD"));
 			// contacts
 		td_contacts.style.verticalAlign = "top";
 		require("contacts.js", function() {
@@ -221,9 +243,11 @@ function organization(container, org, existing_types, can_edit) {
 			table.appendChild(tfoot);
 			tfoot.appendChild(tr = document.createElement("TR"));
 			tr.appendChild(td = document.createElement("TD"));
+			td.style.whiteSpace = "nowrap";
 			td.innerHTML = "Add Contact Point";
 			td.style.cursor = 'pointer';
 			td.style.fontStyle ='italic';
+			td.style.fontSize = "8pt";
 			td.style.color = "#808080";
 			td.colSpan = 2;
 			td.onclick = function() {

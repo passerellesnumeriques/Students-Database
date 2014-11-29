@@ -72,7 +72,7 @@ class page_organization_profile extends Page {
 		$first = true;
 		foreach ($all_types as $t) {
 			if ($first) $first = false; else $existing_types .= ",";
-			$existing_types .= "{id:".$t["id"].",name:".json_encode($t["name"])."}";
+			$existing_types .= json_encode($t);
 		}
 		$existing_types .= "]";
 		$this->addJavascript("/static/contact/organization.js");

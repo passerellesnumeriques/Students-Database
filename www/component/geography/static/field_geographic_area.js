@@ -41,6 +41,7 @@ field_geographic_area.prototype._create = function(data) {
 			var t = document.createTextNode("... loading ...");
 			this._text.appendChild(t);
 			window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
+				if (window.closing || !layout) return;
 				var area = window.top.geography.searchArea(country_data, data);
 				var text = window.top.geography.getGeographicAreaText(country_data, area);
 				t.nodeValue = text.text;

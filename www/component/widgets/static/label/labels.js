@@ -9,11 +9,11 @@ function labels(color, list, onedit, onremove, add_list_provider, onready) {
 	this.list = [];
 	var t=this;
 	
-	this.addItem = function(id, name) {
-		var item = {id:id,name:name};
-		item.label = new label(name, color, onedit ? function() {
-			onedit(id);
-		} : null, onremove ? function() {
+	this.addItem = function(id, name, editable, removable) {
+		var item = {id:id,name:name,editable:editable};
+		item.label = new label(name, color, onedit && editable ? function(l,onedited) {
+			onedit(id, onedited);
+		} : null, onremove && removable ? function() {
 			onremove(id, function() {
 				t.element.removeChild(item.label.element);
 			});
@@ -28,7 +28,7 @@ function labels(color, list, onedit, onremove, add_list_provider, onready) {
 	
 	require("label.js",function() {
 		for (var i = 0; i < list.length; ++i)
-			t.addItem(list[i].id, list[i].name);
+			t.addItem(list[i].id, list[i].name, list[i].editable, list[i].removable);
 		
 		if (add_list_provider) {
 			t.addButton = document.createElement("IMG");
