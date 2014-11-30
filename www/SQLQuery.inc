@@ -549,7 +549,12 @@ class SQLQuery {
 		if ($value === false) $value = 0;
 		else if ($value === true) $value = 1;
 		if ($value === null) $w .= " IS NOT NULL";
-		else $w .= "!='".SQLQuery::escape($value)."'";
+		else {
+			$w = "NOT(".$w." <=> ";
+			if (is_int($value)) $w .= $value;
+			else $w .= "'".SQLQuery::escape($value)."'";
+			$w .= ")";
+		}
 		array_push($this->where, $w);
 		return $this;
 	}
@@ -1341,10 +1346,7 @@ class SQLQuery {
 			foreach ($fields_values as $field=>$value) {
 				if ($first) $first = false; else $sql .= ",";
 				$sql .= "`".$field."`=";
-				if ($value === null)
-					$sql .= "NULL";
-				else
-					$sql .= "'".SQLQuery::escape($value)."'";
+				$sql .= self::getSQLValue($value);
 			}
 			$sql .= " WHERE ";
 			if ($t->getPrimaryKey() <> null) {
@@ -1577,10 +1579,7 @@ class SQLQuery {
 				foreach ($fields_values as $field=>$value) {
 					if ($first) $first = false; else $sql .= ",";
 					$sql .= "`".$field."`=";
-					if ($value === null)
-						$sql .= "NULL";
-					else
-						$sql .= "'".SQLQuery::escape($value)."'";
+					$sql .= self::getSQLValue($value);
 				}
 				$sql .= " WHERE ";
 				if ($t->getPrimaryKey() <> null) {
@@ -1737,10 +1736,7 @@ class SQLQuery {
 			foreach ($fields_values as $field=>$value) {
 				if ($first) $first = false; else $sql .= ",";
 				$sql .= "`".$field."`=";
-				if ($value === null)
-					$sql .= "NULL";
-				else
-					$sql .= "'".SQLQuery::escape($value)."'";
+				$sql .= self::getSQLValue($value);
 			}
 			$sql .= " WHERE ";
 			if ($t->getPrimaryKey() <> null) {
@@ -1782,6 +1778,12 @@ class SQLQuery {
 			if (!$in_transaction) SQLQuery::rollbackTransaction();
 			throw $e;
 		}
+	}
+	
+	public static function getSQLValue($value) {
+		if ($value === null) return "NULL";
+		if (is_int($value)) return "".$value;
+		return "'".SQLQuery::escape($value)."'";
 	}
 	
 	/**
@@ -1874,7 +1876,7 @@ class SQLQuery {
 		$first = true;
 		foreach ($fields_values as $name=>$value) {
 			if ($first) $first = false; else $sql .= ",";
-			if ($value === null) $sql .= "NULL"; else $sql .= "'".SQLQuery::escape($value)."'";
+			$sql .= self::getSQLValue($value);
 		}
 		$sql .= ")";
 		SQLQuery::db()->execute($sql);
@@ -1993,7 +1995,7 @@ class SQLQuery {
 			foreach ($columns as $name) {
 				$value = array_key_exists($name, $fields_values) ? $fields_values[$name] : "";
 				if ($first) $first = false; else $sql .= ",";
-				if ($value === null) $sql .= "NULL"; else $sql .= "'".SQLQuery::escape($value)."'";
+				$sql .= self::getSQLValue($value);
 			}
 			$sql .= ")";
 		}
