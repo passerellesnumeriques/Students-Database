@@ -121,6 +121,12 @@ function addColumnActions(col) {
 				});
 			},helper.title));
 		}
+		if (typeof window[col.field_type].prototype.createValue != 'undefined') {
+			var f = new window[col.field_type](col.attached_data.new_data,true,col.field_args);
+			col.addAction(new GridColumnAction('create_value',theme.icons_10.add,function(ev,action,col) {
+				f.createValue(null,col.title);
+			},"Create new "+col.title));
+		}
 	};
 	if (col._loaded)
 		needFieldInfo();

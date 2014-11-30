@@ -112,7 +112,7 @@ field_organization.prototype._create = function(data) {
 		var t=this;
 		listenEvent(this.select, 'focus', function() { t.onfocus.fire(); });
 		this.select.onchange = function() {
-			this._datachange();
+			t._datachange();
 		};
 		this._getEditedData = function() {
 			return this.select.value;
