@@ -139,33 +139,39 @@ field_enum.prototype._create = function(data) {
 			// calculate the minimum width of the select, to be able to see it...
 			if (!cache) {
 				cache = {onavail:[]};
-				layout.three_steps_process(function() {
-					var sel = document.createElement("SELECT");
-					sel.style.display = "inline-block";
-					sel.style.position = "absolute";
-					sel.style.top = "-10000px";
-					var max = null;
-					for (var i = 0; i < select.options.length; ++i) {
-						var s = select.options[i].text;
-						if (max == null || s.length > max.length) max = s;
-					}
-					if (max == null) max = "";
-					var o = document.createElement("OPTION");
-					o.text = max;
-					sel.add(o);
-					t.element.appendChild(sel);
-					return sel;
-				}, function(sel) {
-					return {sel:sel,w:sel.offsetWidth};
-				}, function(o) {
-					t.element.removeChild(o.sel);
-					t.element.style.width = "100%";
-					select.style.width = "100%";
-					select.style.minWidth = (o.w+27)+"px";
-					cache.w = o.w+27;
-					for (var i = 0; i < cache.onavail.length; ++i)
-						cache.onavail[i]();
-					cache.onavail = null;
+				layout.readLayout(function() {
+					var style = getComputedStyle(select);
+					layout.three_steps_process(function() {
+						var sel = document.createElement("SELECT");
+						sel.style.display = "inline-block";
+						sel.style.position = "absolute";
+						sel.style.top = "-10000px";
+						sel.style.fontFamily = style.fontFamily;
+						sel.style.fontSize = style.fontSize;
+						sel.style.fontWeight = style.fontWeight;
+						var max = null;
+						for (var i = 0; i < select.options.length; ++i) {
+							var s = select.options[i].text;
+							if (max == null || s.length > max.length) max = s;
+						}
+						if (max == null) max = "";
+						var o = document.createElement("OPTION");
+						o.text = max;
+						sel.add(o);
+						t.element.appendChild(sel);
+						return sel;
+					}, function(sel) {
+						return {sel:sel,w:sel.offsetWidth};
+					}, function(o) {
+						t.element.removeChild(o.sel);
+						t.element.style.width = "100%";
+						select.style.width = "100%";
+						select.style.minWidth = (o.w+27)+"px";
+						cache.w = o.w+27;
+						for (var i = 0; i < cache.onavail.length; ++i)
+							cache.onavail[i]();
+						cache.onavail = null;
+					});
 				});
 				return cache;
 			}
