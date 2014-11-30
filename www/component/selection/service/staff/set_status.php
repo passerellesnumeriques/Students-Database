@@ -16,6 +16,7 @@ class service_staff_set_status extends Service {
 			if (array_key_exists("exam", $s)) $fields["exam"] = $s["exam"] ? 1 : 0;
 			if (array_key_exists("interview", $s)) $fields["interview"] = $s["interview"] ? 1 : 0;
 			if (array_key_exists("si", $s)) $fields["si"] = $s["si"] ? 1 : 0;
+			if (array_key_exists("comment", $s)) $fields["comment"] = $s["comment"];
 			if (in_array($s["people"], $existing))
 				SQLQuery::create()->updateByKey("StaffStatus", $s["people"], $fields);
 			else {

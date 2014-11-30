@@ -46,6 +46,7 @@ class page_staff_status extends SelectionPage {
 					<th>Can supervise<br/>Written Exams</th>
 					<th>Can conduct<br/>Interviews</th>
 					<th>Can do Social<br/>Investigations</th>
+					<th>Comment</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -98,6 +99,16 @@ class page_staff_status extends SelectionPage {
 				else
 					echo " disabled='disabled'";
 				echo "</td>";
+				echo "<td valign=top>";
+				echo "<textarea style='height:100%;min-width:300px;'";
+				if ($can_edit)
+					echo " onchange=\"setComment(".$staff["people_id"].",this.value);\"";
+				else
+					echo " disabled='disabled'";
+				echo ">";
+				foreach ($res as $r) if ($r["people"] == $staff["people_id"]) { if ($r["comment"] <> null) echo toHTML($r["comment"]); break; }
+				echo "</textarea>";
+				echo "</td>";
 				echo "</tr>";
 			} 
 			?>
@@ -117,6 +128,7 @@ class page_staff_status extends SelectionPage {
 <script type='text/javascript'>
 pnapplication.autoDisableSaveButton(document.getElementById('save_button'));
 var changes = {};
+var comments = {};
 function setStatus(people_id,status,type) {
 	var s = people_id+"_"+type;
 	if (typeof changes[s] == 'undefined')
@@ -127,6 +139,13 @@ function setStatus(people_id,status,type) {
 	for (var n in changes) { has_change = true; break; }
 	if (has_change) pnapplication.dataUnsaved('staff_status');
 	else pnapplication.dataSaved('staff_status');
+}
+function setComment(people_id,comment) {
+	if (typeof comments[people_id] == 'undefined')
+		comments[people_id] = comment;
+	else
+		comments[people_id] = comment;
+	pnapplication.dataUnsaved('staff_comment');
 }
 function save() {
 	var staffs = [];
@@ -140,11 +159,22 @@ function save() {
 		}
 		s[c.type] = c.status;
 	}
+	for (var id in comments) {
+		var s = null;
+		for (var i = 0; i < staffs.length; ++i) if (staffs[i].people == id) { s = staffs[i]; break; }
+		if (s == null) {
+			s = {people:id};
+			staffs.push(s);
+		}
+		s['comment'] = comments[id];
+	}
 	var locker = lock_screen(null, "Saving Staff Status...");
 	service.json("selection","staff/set_status",{staffs:staffs},function(res) {
 		if (res) {
 			pnapplication.dataSaved('staff_status');
+			pnapplication.dataSaved('staff_comment');
 			changes = {};
+			comments = {};
 		}
 		unlock_screen(locker);
 	});
