@@ -42,7 +42,10 @@ class DataBaseUtilities {
 			}
 		}
 		foreach ($indexes as $index) {
-			$sql .= ", KEY `".$index[0]."` (";
+			$unique = true;
+			for ($i = 1; $i < count($index); $i++)
+				foreach ($columns as $c) if ($c->name == $index[$i]) { $unique &= $c->unique; break; }
+			$sql .= ", ".($unique ? "UNIQUE " : "")."KEY `".$index[0]."` (";
 			for ($i = 1; $i < count($index); $i++) {
 				if ($i > 1) $sql .= ",";
 				$sql .= "`".$index[$i]."`";
