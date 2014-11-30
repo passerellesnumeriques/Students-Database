@@ -35,11 +35,10 @@ class page_selection_main_page extends SelectionPage {
 					<div style="overflow:auto;flex:1 1 auto">
 						<?php if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {?>
 						<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
-							<div style='text-align:center'>
-								<a href='config/manage'><button>
-									<img src='<?php echo theme::$icons_16["config"];?>'/>
-									Configure how this selection process will work
-								</button></a>
+							<div style='padding:3px;'>
+								1- <a href='config/manage' class='black_link'> Configure how this selection process will work</a><br/>
+								2- <a href='staff/status' class='black_link'> Set staff status (who can do which step)</a><br/>
+								3- <a href='/dynamic/data_model/page/edit_customizable_table?table=ApplicantMoreInfo' class='black_link'> Customize information you will enter about each applicant</a>
 							</div>
 						</div>
 						<?php } ?>
@@ -52,7 +51,7 @@ class page_selection_main_page extends SelectionPage {
 						<div id='section_status_exam_results' title='Exam Results' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div id='status_exam_results' class='selection_status'></div>
 						</div>
-						<div id='section_status_interview' title='Interview' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
+						<div id='section_status_interview' title='Interviews' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div id='status_interview' class='selection_status'></div>
 						</div>
 					</div>
@@ -66,6 +65,17 @@ class page_selection_main_page extends SelectionPage {
 					>
 						<div id='calendar_container' style='height:300px;'></div>
 					</div>
+<?php if (PNApplication::$instance->google->isInstalled()) {
+	$google_account = PNApplication::$instance->google->getConnectedAccount();
+	if ($google_account == null || $google_account["google_login"] == null) {?>
+<div style='text-align:center'>
+	<button style='font-size:12pt;font-weight:bold' class='flat' onclick="window.top.google.connectAccount(function(){location.reload();});">
+		<img src='/static/google/google_32.png' style='vertical-align:bottom'/> Connect your PN Google account and see this calendar on your Google Calendars
+	</button>
+</div>
+<?php 
+	}
+}?>				
 					<div id='updates_section'
 						icon='/static/news/news.png'
 						title='Selection Activities'

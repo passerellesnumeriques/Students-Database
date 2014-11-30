@@ -26,7 +26,7 @@ return array(
 	"default_duration_IS" => array("Pre-selected duration of an Information Session<br/><i>Note: if you select \"All day\" a session won't have specific starting and ending time</i>","3 hours",array("1 hour","2 hours","3 hours","4 hours","6 hours","8 hours","All day"),"enum","Information Sessions",array()),
 	
 	// Exam Subjects
-	"set_correct_answer" => array("Set the correct answer of an exam subject question, and correct automatically applicants' answers",false,array(true,false),"boolean","Exam Subjects",array()),
+	"set_correct_answer" => array("Set the answer of each question, so we can enter applicants' answers<br/>in the exam results and the correction and grading is done automatically<br/>by this software (for Clickers system)",false,array(true,false),"boolean","Exam Subjects",array()),
 	"use_subject_version" => array("Use different versions of each exam subject to avoid cheating",false,array(true,false),"boolean","Exam Subjects",array()),
 	
 	// Exam Centers and Sessions
