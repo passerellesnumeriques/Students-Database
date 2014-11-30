@@ -2,6 +2,7 @@
 interface PeopleCreationStep {
 	
 	public function getId();
+	public function getPriority();
 	
 	public function isApplicable($people);
 	

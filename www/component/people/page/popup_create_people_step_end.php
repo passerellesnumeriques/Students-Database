@@ -26,6 +26,9 @@ class page_popup_create_people_step_end extends Page {
 						array_push($steps[$i]["peoples_ids"], $p["people_id"]);
 				}
 			}
+			usort($steps, function($s1, $s2) {
+				return $s1["plugin"]->getPriority()-$s2["plugin"]->getPriority();
+			});
 			for ($i = 0; $i < count($steps); $i++)
 				if (count($steps[$i]["peoples_ids"]) == 0) {
 					array_splice($steps, $i, 1);

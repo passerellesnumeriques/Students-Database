@@ -27,6 +27,8 @@ class PeopleCreationAddPicturesPlugin implements PeopleCreationStep {
 	
 	public function getId() { return "import_pictures"; }
 	
+	public function getPriority() { return 10000; } // not important at all, should be done at the end
+	
 	public function isApplicable($people) {
 		return true;
 	}

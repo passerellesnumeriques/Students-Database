@@ -8,7 +8,7 @@ class page_popup_create_people_step_creation extends Page {
 		$peoples = $input["peoples"];
 		$sub_models = @$input["sub_models"];
 		$multiple = isset($input["multiple"]);
-		echo "<script type='text/javascript'>window.popup = window.parent.get_popup_window_from_frame(window);</script>";
+		echo "<script type='text/javascript'>window.popup = window.parent.get_popup_window_from_frame(window);window.popup.disableClose();</script>";
 		if (count($peoples) == 0) {
 			echo "<div style='background-color:white'>Nobody to create.</div>";
 			echo "<script type='text/javascript'>popup.unfreeze();popup.addCancelButton();</script>";
@@ -65,6 +65,7 @@ function next(index, span, pb) {
 				<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
 			} catch (e) { log_exception(e); }
 		};
+		window.popup.disableClose();
 		return;
 	}
 	var p = peoples[index];

@@ -640,9 +640,11 @@ function popup_window(title,icon,content,hide_close_button) {
 	
 	t.disableClose = function() {
 		t.close_button.disabled = "disabled";
+		t.close_button.onclick = function() {};
 	};
 	t.enableClose = function() {
 		t.close_button.disabled = "";
+		t.close_button.onclick = function() { t.close(); };
 	};
 	
 	t.freeze = function(freeze_content) {

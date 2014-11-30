@@ -35,12 +35,14 @@ class selection extends Component {
 		require_once("ApplicantPeopleTypePlugin.inc");
 		require_once("SelectionApplicationSection.inc");
 		require_once("ApplicantImportTemplate.inc");
+		require_once("ApplicantMaxAge.inc");
 		return array(
 			new SelectionOrganizationPlugin(),
 			new SelectionNewsPlugin(),
 			new ApplicantPeopleTypePlugin(),
 			new SelectionApplicationSection(),
-			new ApplicantImportTemplate()
+			new ApplicantImportTemplate(),
+			new ApplicantMaxAge()
 		);
 	}
 	
