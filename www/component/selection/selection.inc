@@ -258,7 +258,62 @@ class selection extends Component {
 			foreach($configs as $name=>$value){
 				SQLQuery::create()->updateByKey("SelectionCampaignConfig", $name, array("value"=>$value),$db_lock);
 			}
-			
+			// apply maximum age
+			if (isset($configs["forbid_too_old_applicants"])) {
+				require_once("component/data_model/TableDefinition.inc");
+				if ($configs["forbid_too_old_applicants"] == "true") {
+					$min_bd = json_decode($configs["limit_date_of_birth"]);
+					// exclude too old
+					$q = SQLQuery::create()->bypassSecurity()->select("Applicant");
+					PNApplication::$instance->people->joinPeople($q, "Applicant", "people");
+					$q->where("`People`.`birth` < '".SQLQuery::escape($min_bd)."'");
+					$q->whereNotValue("Applicant","automatic_exclusion_reason","Too old");
+					$q->resetFields();
+					$q->field("Applicant","people","applicant_id");
+					$to_exclude = $q->executeSingleField();
+					if (count($to_exclude) > 0)
+						SQLQuery::create()->bypassSecurity()->updateByKeys("Applicant",array(array(
+							$to_exclude,
+							array(
+								"excluded"=>1,
+								"automatic_exclusion_step"=>"Application Form",
+								"automatic_exclusion_reason"=>"Too old"
+							)	
+						)));
+					// put back not too old anymore
+					$q = SQLQuery::create()->bypassSecurity()->select("Applicant");
+					PNApplication::$instance->people->joinPeople($q, "Applicant", "people");
+					$q->where("`People`.`birth` >= '".SQLQuery::escape($min_bd)."'");
+					$q->whereValue("Applicant","automatic_exclusion_reason","Too old");
+					$q->resetFields();
+					$q->field("Applicant","people","applicant_id");
+					$to_unexclude = $q->executeSingleField();
+					if (count($to_unexclude) > 0)
+						SQLQuery::create()->bypassSecurity()->updateByKeys("Applicant",array(array(
+							$to_unexclude,
+							array(
+								"excluded"=>0,
+								"automatic_exclusion_step"=>null,
+								"automatic_exclusion_reason"=>null
+							)
+						)));
+				} else {
+					// put back not too old anymore
+					$q = SQLQuery::create()->bypassSecurity()->select("Applicant");
+					$q->whereValue("Applicant","automatic_exclusion_reason","Too old");
+					$q->field("Applicant","people","applicant_id");
+					$to_unexclude = $q->executeSingleField();
+					if (count($to_unexclude) > 0)
+						SQLQuery::create()->bypassSecurity()->updateByKeys("Applicant",array(array(
+							$to_unexclude,
+							array(
+								"excluded"=>0,
+								"automatic_exclusion_step"=>null,
+								"automatic_exclusion_reason"=>null
+							)
+						)));
+				}
+			}
 		} catch(Exception $e) {
 			$to_return = $e;
 		}
