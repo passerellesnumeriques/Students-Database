@@ -39,6 +39,7 @@ theme::$icons_16 = array(
 	"no_edit" => 		"/static/theme/default/icons_16/no_edit.png",
 	"ok" => 			"/static/theme/default/icons_16/ok.png",
 	"ok_white" =>		"/static/theme/default/icons_16/ok_white.png",
+	"pen" => 			"/static/theme/default/icons_16/pen.png",
 	"print" => 			"/static/theme/default/icons_16/print.png",
 	"question" => 		"/static/theme/default/icons_16/question.png",
 	"redo" => 			"/static/theme/default/icons_16/redo.png",

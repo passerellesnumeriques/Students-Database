@@ -93,8 +93,10 @@ class page_organizations extends Page {
 									var org = win.organization.getStructure();
 									service.json("contact", "add_organization", org, function(res) {
 										if (!res) { p.unfreeze(); return; }
-										list.reloadData();
-										p.close();
+										win.organization.notes.save(res.id, function() {
+											list.reloadData();
+											p.close();
+										});
 									});
 								});
 							});

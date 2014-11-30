@@ -187,14 +187,19 @@ function organization(container, org, existing_types, can_edit) {
 		t.types_container.style.marginBottom = "5px";
 		t.types_container.style.borderBottom = "1px solid #A0A0A0";
 		
-		// content: addresses, contacts, contact points, map
+		// content: addresses, contacts, contact points, map, notes
 		container.appendChild(t.content_container = document.createElement("TABLE"));
-		var tr, td_contacts, td_addresses, td_points, td_map;
+		var tr, td_contacts, td_addresses, td_points, td_map, td_notes;
 		t.content_container.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_contacts = document.createElement("TD"));
 		tr.appendChild(td_addresses = document.createElement("TD"));
 		tr.appendChild(td_map = document.createElement("TD"));
+		td_map.rowSpan = 2;
 		tr.appendChild(td_points = document.createElement("TD"));
+		td_points.rowSpan = 2;
+		t.content_container.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td_notes = document.createElement("TD"));
+		td_notes.colSpan = 2;
 			// contacts
 		td_contacts.style.verticalAlign = "top";
 		require("contacts.js", function() {
@@ -363,6 +368,12 @@ function organization(container, org, existing_types, can_edit) {
 					t.map.fitToBounds(parseFloat(country.south), parseFloat(country.west), parseFloat(country.north), parseFloat(country.east));
 				link_map_to_addresses();
 			});
+		});
+		
+		// notes
+		require("notes_section.js",function() {
+			t.notes = new notes_section('Organization',org.id,null,null,can_edit);
+			t.notes.createInsideSection(td_notes, '400px', '250px', true, 'soft', false);
 		});
 		
 		// google

@@ -1,0 +1,73 @@
+.notes {
+	margin: 1px;
+	border-radius: 3px;
+	background-color: #D0D0E0;
+}
+.notes>.header {
+	display: flex;
+	flex-direction: row;
+}
+.notes>.header>.title {
+	font-size: 10pt;
+	font-weight: bold;
+	color: #000060;
+	padding: 1px 2px;
+	flex:1 1 auto;
+}
+.notes>.header>.author_time {
+	padding: 1px 2px 1px 5px;
+	font-size: 8pt;
+	color: #606060;
+	font-style: italic;
+	flex:none;
+}
+.notes>.header>.author_time>.author {
+}
+.notes>.header>.author_time>.author a {
+	color: black;
+}
+.notes>.header>.author_time>.time {
+}
+.notes>.content {
+    font-family: Arial;
+    font-size: 9pt;
+    padding: 1px;
+}
+.notes>.content>p {
+	margin: 0px;
+}
+.notes_edit {
+	margin: 1px;
+	border: 1px solid #6060FF;
+	border-radius: 3px;
+	background-color: #C0C0FF;
+	padding: 2px;
+}
+.notes_edit>div:first-child {
+	font-size: 12pt;
+	font-weight: bold;
+}
+.notes_edit>div:first-child>input {
+	font-size: 12pt;
+}
+.notes_edit>div:nth-child(2) {
+	font-size: 10pt;
+	font-weight: bold;
+	min-width: 350px;
+}
+.notes_editor {
+	margin: 0px;
+	padding: 0px;
+    font-family: Arial;
+    font-size: 9pt;
+    background-color: white;
+}
+.notes_editor p {
+	margin: 0px 4px 0px 4px;
+}
+.notes_editor p:first-child {
+	padding-top: 4px;
+}
+.notes_editor p:last-child {
+	padding-bottom: 4px;
+}

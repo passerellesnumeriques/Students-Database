@@ -115,121 +115,125 @@ field_addresses.prototype._create = function(data) {
 							area:area,
 							get:function() {
 								var tc=this;
-								if (!t.editable && area.division_id == null) {
-									div.style.fontStyle = "italic";
-									div.style.color = "#808080";
-									div.innerHTML = "Not set";
-									return;
-								}
-								var div_index, this_level_ar, this_level_parent;
-								if (area.division_id) {
-									// get the division level of the area set
-									div_index = 0;
-									while (div_index < t.country_data.length && t.country_data[div_index].division_id != tc.area.division_id) div_index++;
-									if (div_index >= t.country_data.length) {
-										div.style.fontStyle = "italic";
-										div.style.color = "red";
-										div.innerHTML = "Invalid division";
-										return;
-									}
-									if (div_index < t.config.sub_data_index-1) {
-										// do not allow to select
-										div.style.fontStyle = "italic";
-										div.style.color = "#808080";
-										div.innerHTML = "Select "+t.country_data[t.config.sub_data_index-1].division_name;
-										return;
-									}
-									// get the selected area
-									var ar = window.top.geography.searchArea(t.country_data, tc.area.id);
-									if (ar == null) {
-										div.style.fontStyle = "italic";
-										div.style.color = "red";
-										div.innerHTML = "Invalid area";
-										return;
-									}
-									if (div_index >= t.config.sub_data_index) {
-										// get the one of this level
-										this_level_ar = ar;
-										var i = div_index;
-										while (i > t.config.sub_data_index) {
-											this_level_ar = window.top.geography.getParentArea(t.country_data, this_level_ar);
-											if (this_level_ar == null) {
+								window.top.require("geography.js", function() {
+									window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
+										if (!t.editable && area.division_id == null) {
+											div.style.fontStyle = "italic";
+											div.style.color = "#808080";
+											div.innerHTML = "Not set";
+											return;
+										}
+										var div_index, this_level_ar, this_level_parent;
+										if (area.division_id) {
+											// get the division level of the area set
+											div_index = 0;
+											while (div_index < t.country_data.length && t.country_data[div_index].division_id != tc.area.division_id) div_index++;
+											if (div_index >= t.country_data.length) {
+												div.style.fontStyle = "italic";
+												div.style.color = "red";
+												div.innerHTML = "Invalid division";
+												return;
+											}
+											if (div_index < t.config.sub_data_index-1) {
+												// do not allow to select
+												div.style.fontStyle = "italic";
+												div.style.color = "#808080";
+												div.innerHTML = "Select "+t.country_data[t.config.sub_data_index-1].division_name;
+												return;
+											}
+											// get the selected area
+											var ar = window.top.geography.searchArea(t.country_data, tc.area.id);
+											if (ar == null) {
 												div.style.fontStyle = "italic";
 												div.style.color = "red";
 												div.innerHTML = "Invalid area";
 												return;
 											}
-											i--;
-										}
-										if (t.config.sub_data_index > 0)
-											this_level_parent = window.top.geography.getParentArea(t.country_data, this_level_ar);
-										else
-											this_level_parent = null;
-									} else {
-										this_level_ar = null;
-										this_level_parent = ar;
-									}
-								} else if (t.config.sub_data_index > 0) {
-									// do not allow to select
-									div.style.fontStyle = "italic";
-									div.style.color = "#808080";
-									div.innerHTML = "Select "+t.country_data[t.config.sub_data_index-1].division_name;
-									return;
-								} else {
-									div_index = -1;
-									ar = null;
-									this_level_ar = null;
-									this_level_parent = null;
-								}
-								
-								var select = null;
-								var selected = 0;
-								if (t.editable) {
-									select = document.createElement("SELECT");
-									var o;
-									o = document.createElement("OPTION");
-									o.text = "";
-									o.value = -1;
-									select.add(o);
-									for (var i = 0; i < t.country_data[t.config.sub_data_index].areas.length; ++i) {
-										var a = t.country_data[t.config.sub_data_index].areas[i];
-										if (t.config.sub_data_index > 0 && t.country_data[t.config.sub_data_index].areas[i].area_parent_id != this_level_parent.area_id) continue;
-										o = document.createElement("OPTION");
-										o.text = a.area_name;
-										o.value = a.area_id;
-										if (this_level_ar == a) selected = select.options.length;
-										select.add(o);
-									}
-									select.selectedIndex = selected;
-									select.onchange = function() {
-										if (this.selectedIndex > 0) {
-											area.id = this.options[this.selectedIndex].value;
-											area.division_id = t.country_data[t.config.sub_data_index].division_id;
-										} else {
-											if (t.config.sub_data_index == 0) {
-												// first level, everything is reset
-												area.id = null;
-												area.division_id = null;
+											if (div_index >= t.config.sub_data_index) {
+												// get the one of this level
+												this_level_ar = ar;
+												var i = div_index;
+												while (i > t.config.sub_data_index) {
+													this_level_ar = window.top.geography.getParentArea(t.country_data, this_level_ar);
+													if (this_level_ar == null) {
+														div.style.fontStyle = "italic";
+														div.style.color = "red";
+														div.innerHTML = "Invalid area";
+														return;
+													}
+													i--;
+												}
+												if (t.config.sub_data_index > 0)
+													this_level_parent = window.top.geography.getParentArea(t.country_data, this_level_ar);
+												else
+													this_level_parent = null;
 											} else {
-												// reset this level: parent level is selected
-												area.id = this_level_parent.area_id;
-												area.division_id = t.country_data[t.config.sub_data_index-1].division_id;
+												this_level_ar = null;
+												this_level_parent = ar;
+											}
+										} else if (t.config.sub_data_index > 0) {
+											// do not allow to select
+											div.style.fontStyle = "italic";
+											div.style.color = "#808080";
+											div.innerHTML = "Select "+t.country_data[t.config.sub_data_index-1].division_name;
+											return;
+										} else {
+											div_index = -1;
+											ar = null;
+											this_level_ar = null;
+											this_level_parent = null;
+										}
+										
+										var select = null;
+										var selected = 0;
+										if (t.editable) {
+											select = document.createElement("SELECT");
+											var o;
+											o = document.createElement("OPTION");
+											o.text = "";
+											o.value = -1;
+											select.add(o);
+											for (var i = 0; i < t.country_data[t.config.sub_data_index].areas.length; ++i) {
+												var a = t.country_data[t.config.sub_data_index].areas[i];
+												if (t.config.sub_data_index > 0 && t.country_data[t.config.sub_data_index].areas[i].area_parent_id != this_level_parent.area_id) continue;
+												o = document.createElement("OPTION");
+												o.text = a.area_name;
+												o.value = a.area_id;
+												if (this_level_ar == a) selected = select.options.length;
+												select.add(o);
+											}
+											select.selectedIndex = selected;
+											select.onchange = function() {
+												if (this.selectedIndex > 0) {
+													area.id = this.options[this.selectedIndex].value;
+													area.division_id = t.country_data[t.config.sub_data_index].division_id;
+												} else {
+													if (t.config.sub_data_index == 0) {
+														// first level, everything is reset
+														area.id = null;
+														area.division_id = null;
+													} else {
+														// reset this level: parent level is selected
+														area.id = this_level_parent.area_id;
+														area.division_id = t.country_data[t.config.sub_data_index-1].division_id;
+													}
+												}
+												t._datachange(true);
+											};
+										}
+										if (t.editable) {
+											div.appendChild(select);
+										} else {
+											if (t.config.sub_data_index > div_index) {
+												div.style.fontStyle = "italic";
+												div.style.color = "#808080";
+												div.innerHTML = "Not set";
+											} else {
+												div.appendChild(document.createTextNode(this_level_ar.area_name));
 											}
 										}
-										t._datachange(true);
-									};
-								}
-								if (t.editable) {
-									div.appendChild(select);
-								} else {
-									if (t.config.sub_data_index > div_index) {
-										div.style.fontStyle = "italic";
-										div.style.color = "#808080";
-										div.innerHTML = "Not set";
-									} else {
-										div.appendChild(document.createTextNode(this_level_ar.area_name));
-									}
-								}
+									});
+								});
 							}
 						};
 						closure.get();
