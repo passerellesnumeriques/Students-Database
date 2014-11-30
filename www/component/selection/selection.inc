@@ -160,17 +160,19 @@ class selection extends Component {
 		PNApplication::$instance->calendar->removeSharedCalendar($campaign["calendar"]);
 		// remove applicants
 		$applicants_ids = SQLQuery::create()->select("Applicant")->field("people")->executeSingleField();
-		$campaigns_ids = SQLQuery::create()->select("SelectionCampaign")->whereNotValue("SelectionCampaign", "id", $id)->field("id")->executeSingleField();
-		$reassign_applicants = array();
-		foreach ($campaigns_ids as $cid) {
-			$common_applicants_ids = SQLQuery::create()->selectSubModel("SelectionCampaign", $cid)->select("Applicant")->whereIn("Applicant","people",$applicants_ids)->field("people")->executeSingleField();
-			foreach ($common_applicants_ids as $people_id) {
-				$i = array_search($people_id, $applicants_ids);
-				array_splice($applicants_ids, $i, 1);
-				$reassign_applicants[$people_id] = $cid;
+		if (count($applicants_ids) > 0) {
+			$campaigns_ids = SQLQuery::create()->select("SelectionCampaign")->whereNotValue("SelectionCampaign", "id", $id)->field("id")->executeSingleField();
+			$reassign_applicants = array();
+			foreach ($campaigns_ids as $cid) {
+				$common_applicants_ids = SQLQuery::create()->selectSubModel("SelectionCampaign", $cid)->select("Applicant")->whereIn("Applicant","people",$applicants_ids)->field("people")->executeSingleField();
+				foreach ($common_applicants_ids as $people_id) {
+					$i = array_search($people_id, $applicants_ids);
+					array_splice($applicants_ids, $i, 1);
+					$reassign_applicants[$people_id] = $cid;
+				}
 			}
+			PNApplication::$instance->people->removePeoplesType($applicants_ids, "applicant");
 		}
-		PNApplication::$instance->people->removePeoplesType($applicants_ids, "applicant");
 		// TODO remove organizations and their contact points...
 		// TODO remove all news having the tag campaignX
 		if (PNApplication::hasErrors()) {
@@ -257,6 +259,26 @@ class selection extends Component {
 		try{
 			foreach($configs as $name=>$value){
 				SQLQuery::create()->updateByKey("SelectionCampaignConfig", $name, array("value"=>$value),$db_lock);
+			}
+			// apply auto generation of applicant ID
+			if (isset($configs["generate_applicant_id"])) {
+				$res = SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DESCRIBE `Applicant_".$this->getCampaignId()."` `applicant_id`");
+				$descr = SQLQuery::getDataBaseAccessWithoutSecurity()->nextRow($res);
+				if ($configs["generate_applicant_id"] == "true") {
+					if ($descr["Extra"] == "") {
+						require_once("component/data_model/Model.inc");
+						$t = DataModel::get()->internalGetTable("Applicant");
+						$col = $t->internalGetColumnFor("applicant_id", $this->getCampaignId());
+						SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `Applicant_".$this->getCampaignId()."` CHANGE `applicant_id` ".$col->get_sql()." AUTO_INCREMENT");
+					}
+				} else {
+					if ($descr["Extra"] == "auto_increment") {
+						require_once("component/data_model/Model.inc");
+						$t = DataModel::get()->internalGetTable("Applicant");
+						$col = $t->internalGetColumnFor("applicant_id", $this->getCampaignId());
+						SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `Applicant_".$this->getCampaignId()."` CHANGE `applicant_id` ".$col->get_sql());
+					}
+				}
 			}
 			// apply maximum age
 			if (isset($configs["forbid_too_old_applicants"])) {

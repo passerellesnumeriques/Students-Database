@@ -4,7 +4,7 @@
 
 $sm->addTable("Applicant")
 	->addForeignKey("people", "People", true, false, false, false, true)
-	->addInteger("applicant_id",32,1,null,false,true)//applicant_id must be a number
+	->addInteger("applicant_id",32,0,null,false,true)//applicant_id must be a number, minimum 0 so we can also generate using AUTO_INCREMENT
 	->addEnum("automatic_exclusion_step", array("Application Form","Written Exam","Interview","Social Investigation"))
 	->addString("automatic_exclusion_reason",255,0,true,false)//This field must be filled up by functionalities ("missing",...) to explain the automatic exclusion step
 	->addString("custom_exclusion",255,0,true,false)//This field can be filled up by user
@@ -25,6 +25,7 @@ $sm->addTable("Applicant")
 	->addInsertAccess("edit_applicants",true)
 	->addRemoveAccess("edit_applicants",true)
 	->setPrimary("people")//The primary key is the people_id
+	->addIndex("applicant_id") // it must be set as unique index
 	;
 // check applicant age, if someone change the birthdate
 $model->internalGetTable("People")
