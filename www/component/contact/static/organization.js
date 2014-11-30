@@ -193,13 +193,13 @@ function organization(container, org, existing_types, can_edit) {
 		t.content_container.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_contacts = document.createElement("TD"));
 		tr.appendChild(td_addresses = document.createElement("TD"));
+		td_addresses.rowSpan = 3;
 		tr.appendChild(td_map = document.createElement("TD"));
-		td_map.rowSpan = 2;
+		td_map.rowSpan = 3;
+		t.content_container.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_points = document.createElement("TD"));
-		td_points.rowSpan = 2;
 		t.content_container.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_notes = document.createElement("TD"));
-		td_notes.colSpan = 2;
 			// contacts
 		td_contacts.style.verticalAlign = "top";
 		require("contacts.js", function() {
@@ -373,7 +373,7 @@ function organization(container, org, existing_types, can_edit) {
 		// notes
 		require("notes_section.js",function() {
 			t.notes = new notes_section('Organization',org.id,null,null,can_edit);
-			t.notes.createInsideSection(td_notes, '400px', '250px', true, 'soft', false);
+			t.notes.createInsideSection(td_notes, '400px', '250px', false, 'soft', false);
 		});
 		
 		// google
