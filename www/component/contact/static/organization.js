@@ -224,6 +224,7 @@ function organization(container, org, existing_types, can_edit) {
 		td_points.style.verticalAlign = "top";
 		var table = document.createElement("TABLE");
 		table.style.backgroundColor = "white";
+		table.style.width = "100%";
 		td_points.appendChild(table);
 		var thead = document.createElement("THEAD");
 		table.appendChild(thead);
@@ -373,7 +374,7 @@ function organization(container, org, existing_types, can_edit) {
 		// notes
 		require("notes_section.js",function() {
 			t.notes = new notes_section('Organization',org.id,null,null,can_edit);
-			t.notes.createInsideSection(td_notes, '400px', '250px', false, 'soft', false);
+			t.notes.createInsideSection(td_notes, null, null, false, 'soft', false);
 		});
 		
 		// google
@@ -430,6 +431,7 @@ function organization(container, org, existing_types, can_edit) {
 		td_design.style.color = "#606060";
 		td_design.style.paddingRight = "3px";
 		td_design.style.verticalAlign = "middle";
+		td_design.style.textAlign = "right";
 		t._contact_points_rows.push(tr);
 		tr.people_id = point.people_id;
 		if (org.id != -1) {

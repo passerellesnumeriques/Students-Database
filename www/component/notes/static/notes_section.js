@@ -6,6 +6,7 @@ function notes_section(attached_table, attached_key, sub_model, sub_model_instan
 	this.sub_model = sub_model;
 	this.sub_model_instance;
 	this.editable = editable;
+	this.notes = [];
 }
 notes_section.prototype = {
 	createInsideSection: function(container, max_width, max_height, collapsable, css, collapsed) {
@@ -34,6 +35,7 @@ notes_section.prototype = {
 	create: function(container) {
 		theme.css("notes.css");
 		this.container = container;
+		container.style.minWidth = "360px";
 		if (this.attached_key > 0) {
 			var loading = document.createElement("IMG");
 			loading.src = theme.icons_16.loading;
@@ -46,6 +48,7 @@ notes_section.prototype = {
 					return;
 				}
 				container.removeChild(loading);
+				t.notes = res.notes;
 				for (var i = 0; i < res.notes.length; ++i)
 					t._addNote(res.notes[i]);
 			});
@@ -53,11 +56,23 @@ notes_section.prototype = {
 	},
 	writeNew: function() {
 		var note = {id:-1,title:"",text:"",author:window.top.my_people,timestamp:Math.floor(new Date().getTime()/1000)};
-		this._addEditNote(note,this.container.firstChild,true);
+		this._addEditNote(note,this.container.firstChild);
+	},
+	_editNote: function(note, div) {
+		var t=this;
+		this._addEditNote(note,div,function(d) {
+			t._addNote(note,d);
+		});
+		this.container.removeChild(div);
 	},
 	_addNote: function(note,before) {
 		var div = document.createElement("DIV");
 		div.className = "notes";
+		if (this.editable) {
+			div.title = "Double-click to edit this note";
+			var t=this;
+			div.ondblclick = function() { t._editNote(note, div); return false; };
+		}
 		var header = document.createElement("DIV");
 		header.className = "header";
 		div.appendChild(header);
@@ -89,7 +104,7 @@ notes_section.prototype = {
 		if (before) this.container.insertBefore(div, before);
 		else this.container.appendChild(div);
 	},
-	_addEditNote: function(note,before,is_new) {
+	_addEditNote: function(note,before,oncancel) {
 		var div = document.createElement("DIV");
 		div.className = "notes_edit";
 		var title_div = document.createElement("DIV");
@@ -106,9 +121,11 @@ notes_section.prototype = {
 		div.appendChild(text_div);
 		if (!before) this.container.appendChild(div);
 		else this.container.insertBefore(div, before);
+		title_input.focus();
 		var t=this;
 		require("tinymce.min.js", function() {
 			var editor = document.createElement("DIV");
+			editor.innerHTML = note.text;
 			editor.id = generateID();
 			text_div.appendChild(editor);
 			tinymce.init({
@@ -123,7 +140,6 @@ notes_section.prototype = {
 				toolbar1: "bold italic underline strikethrough | bullist numlist outdent indent | forecolor backcolor | emoticons",
 				toolbar2: "fontselect fontsizeselect | cut copy paste | undo redo",
 				toolbar_items_size: 'small',
-			    auto_focus: editor.id,
 			    fontsize_formats: "8pt 9pt 10pt 12pt 14pt 18pt 24pt",
 			    init_instance_callback : function(editor) {
 			    	layout.changed(text_div);
@@ -150,8 +166,7 @@ notes_section.prototype = {
 			button_cancel.onclick = function() {
 				var ed = tinymce.get(editor.id);
 				ed.remove();
-				if (!is_new)
-					t._addNote(note, div);
+				if (oncancel) oncancel(div);
 				t.container.removeChild(div);
 			};
 			layout.changed(text_div);
@@ -159,11 +174,33 @@ notes_section.prototype = {
 		layout.changed(this.container);
 	},
 	_saveNote: function(note, onsaved) {
-		// TODO
-		onsaved();
+		if (this.attached_key > 0) {
+			if (note.id > 0)
+				service.json("notes","save",{id:note.id,title:note.title,text:note.text,author:note.author.id,table:this.attached_table,key:this.attached_key,sub_model:this.sub_model,sub_model_instance:this.sub_model_instance}, function(res) {
+					if (res) onsaved();
+				});
+			else {
+				var t=this;
+				service.json("notes","create",{title:note.title,text:note.text,author:note.author.id,table:this.attached_table,key:this.attached_key,sub_model:this.sub_model,sub_model_instance:this.sub_model_instance}, function(res) {
+					if (res && res.id) { note.id = res.id; t.notes.push(note); onsaved(); }
+				});
+			}
+		} else {
+			if (note.id > 0) {} else this.notes.push(note);
+			onsaved();
+		}
 	},
 	save: function(attached_key) {
-		if (!this.container.parentNode) return; // we have been removed already
-		// TODO
+		if (this.attached_key > 0) return;
+		this.attached_key = attached_key;
+		var t=this;
+		var next = function(index) {
+			if (index == t.notes.length) return;
+			service.json("notes","create",{title:t.notes[index].title,text:t.notes[index].text,author:t.notes[index].author.id,table:t.attached_table,key:t.attached_key,sub_model:t.sub_model,sub_model_instance:t.sub_model_instance},function(res) {
+				if (res && res.id) t.notes[index].id = res.id;
+				next(index+1);
+			});
+		}
+		next(0);
 	}
 };
