@@ -15,7 +15,7 @@ class page_popup_create_people_step_creation extends Page {
 		}
 		$this->addJavascript("/static/data_model/datadisplay.js");
 ?>
-<div id='container' style='padding:10px'><div style='width:300px;height:100px'></div></div>
+<div id='container' style='padding:10px;background-color:white;'><div style='width:300px;height:100px'></div></div>
 <script type='text/javascript'>
 peoples = [<?php 
 $first = true;
@@ -47,21 +47,24 @@ function next(index, span, pb) {
 				li.appendChild(document.createTextNode(problems[i].fn+" "+problems[i].ln));
 				ul.appendChild(li);
 			}
-			window.popup.removeButtons();
+		}
+		window.popup.removeButtons();
+		layout.changed(container);
+		if (success.length > 0)
+			window.popup.addContinueButton(function() {
+				window.popup.removeButtons();
+				var ids = [];
+				for (var i = 0; i < success.length; ++i) ids.push(success[i].id);
+				postData("/dynamic/people/page/popup_create_people_step_end",{peoples:peoples,peoples_ids:ids<?php if(isset($input["ondone"])) echo ",ondone:".json_encode($input["ondone"]); ?>},window);
+			});
+		else
 			window.popup.addCloseButton();
-			window.popup.unfreeze();
-			window.popup.onclose = function() {
-				try {
-					<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
-				} catch (e) { log_exception(e); }
-			};
-		} else {
-			window.popup.onclose = null;
+		window.popup.unfreeze();
+		window.popup.onclose = function() {
 			try {
 				<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
 			} catch (e) { log_exception(e); }
-			window.popup.close();
-		}
+		};
 		return;
 	}
 	var p = peoples[index];

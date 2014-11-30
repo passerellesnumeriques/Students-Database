@@ -14,7 +14,8 @@ class people extends Component {
 			new PeopleDocumentsPage(),
 			new PeoplePictureStoragePlugin(),
 			new PeopleDocuments(),
-			new PeopleSearchPlugin()
+			new PeopleSearchPlugin(),
+			new PeopleCreationAddPicturesPlugin()
 		);
 	}
 	

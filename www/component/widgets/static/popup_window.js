@@ -259,6 +259,16 @@ function popup_window(title,icon,content,hide_close_button) {
 		span.appendChild(img);
 		t.addButton(span, "next", onnext);
 	};
+	t.addContinueButton = function(oncontinue) {
+		var span = document.createElement("SPAN");
+		span.appendChild(document.createTextNode("Continue"));
+		var img = document.createElement("IMG");
+		img.src = theme.icons_16.forward;
+		img.style.verticalAlign = "bottom";
+		img.style.marginLeft = "3px";
+		span.appendChild(img);
+		t.addButton(span, "continue", oncontinue);
+	};
 	/** Add 2 buttons to the window: Ok and Cancel. When Cancel is pressed, the window is closed.
 	 * @method popup_window#addOkCancelButtons
 	 * @param {function} onok handler to be called when the Ok button is pressed. 
