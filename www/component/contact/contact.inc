@@ -5,7 +5,9 @@
 class contact extends Component {
 	
 	public function getPluginImplementations() {
+		require_once("OrganizationNotes.inc");
 		$list = array(
+			new OrganizationNotes()
 		);
 		require_once("ContactPointPeopleTypePlugin.inc");
 		require_once("OrganizationPlugin.inc");

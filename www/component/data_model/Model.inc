@@ -25,6 +25,11 @@ class DataModel {
 					include $file;
 			}
 			foreach ($components as $c) {
+				$file = "component/".$c->name."/datamodel_delay.inc";
+				if (file_exists($file))
+					include $file;
+			}
+			foreach ($components as $c) {
 				$file = "component/".$c->name."/datamodel_display.inc";
 				if (file_exists($file))
 					include $file;

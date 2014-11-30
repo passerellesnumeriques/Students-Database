@@ -210,9 +210,19 @@ class Backup {
 				}
 			}
 		}
+		
+		@mkdir("data/$domain");
+		require_once("component/application/service/deploy_utils.inc");
+		
+		// recover custom tables
+		if (file_exists("data/$domain/custom_tables")) self::removeDirectory("data/$domain/custom_tables");
+		if ($directory <> null && file_exists("$directory/custom_tables.zip")) {
+			mkdir("data/$domain/custom_tables");
+			unzipFile(realpath("$directory/custom_tables.zip"), realpath("data/$domain/custom_tables"));
+		}
+		
 		// recover database
 		mkdir("data/recover/db");
-		require_once("component/application/service/deploy_utils.inc");
 		if ($directory <> null)
 			unzipFile(realpath("$directory/db.zip"), realpath("data/recover/db"));
 		require_once("component/data_model/Model.inc");
@@ -234,6 +244,7 @@ class Backup {
 		$sub_models_keys = array();
 		foreach ($tables as $table) {
 			set_time_limit(600);
+			if ($table->isCustomized()) $table->forceReloadCustomization(null);
 			DataBaseUtilities::createTable($db, $table);
 			if (file_exists("data/recover/db/".$table->getName())) {
 				set_time_limit(30*60);
@@ -263,6 +274,7 @@ class Backup {
 					if (file_exists("data/recover/db/".$table->getName()."_".$sub_model)) {
 						set_time_limit(600);
 						$db->execute("DROP TABLE IF EXISTS `".($table->getName()."_".$sub_model)."`");
+						if ($table->isCustomized()) $table->forceReloadCustomization($sub_model);
 						DataBaseUtilities::createTable($db, $table, "_".$sub_model);
 						set_time_limit(30*60);
 						DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName()."_".$sub_model);
@@ -271,13 +283,6 @@ class Backup {
 			}
 		}
 		
-		@mkdir("data/$domain");
-		// recover custom tables
-		if (file_exists("data/$domain/custom_tables")) self::removeDirectory("data/$domain/custom_tables");
-		if ($directory <> null && file_exists("$directory/custom_tables.zip")) {
-			mkdir("data/$domain/custom_tables");
-			unzipFile(realpath("$directory/custom_tables.zip"), realpath("data/$domain/custom_tables"));
-		}
 		// recover storage
 		if (file_exists("data/$domain/storage")) self::removeDirectory("data/$domain/storage");
 		mkdir("data/$domain/storage");

@@ -246,6 +246,7 @@ function updateMigrationScripts(versions_list) {
 		var li = document.createElement("LI");
 		var s = "Obsolete: migration to version "+version;
 		s += " (";
+		var components = migrations[version];
 		for (var j = 0; j < components.length; ++j)
 			s += (j > 0 ? ", " : "")+components[j];
 		s += ")";

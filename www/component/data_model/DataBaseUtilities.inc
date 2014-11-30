@@ -13,10 +13,10 @@ class DataBaseUtilities {
 	public static function createTable($db_system, &$table, $suffix = null, $output = false) {
 		$sql = "CREATE TABLE `".$table->getName().($suffix <> null ? $suffix : "")."` (";
 		
+		$sub_model = $suffix == null ? null : substr($suffix,1);
+		
 		$ref = new ReflectionClass("\datamodel\Table");
-		$p = $ref->getProperty("columns");
-		$p->setAccessible(true);
-		$columns = $p->getValue($table);
+		$columns = $table->internalGetColumnsFor($sub_model);
 		$p = $ref->getProperty("indexes");
 		$p->setAccessible(true);
 		$indexes = $p->getValue($table);
