@@ -121,6 +121,11 @@ class page_staff_status extends SelectionPage {
 			<img src='<?php echo theme::$icons_16["save"];?>'/>
 			Save
 		</button>
+		<?php
+		$campaigns = SQLQuery::create()->select("SelectionCampaign")->whereNotValue("SelectionCampaign","id",PNApplication::$instance->selection->getCampaignId())->execute();
+		if (count($campaigns) > 0)
+			echo "<button class='action' onclick='importFromOtherCampaign(this);'><img src='".theme::$icons_16["_import"]."'/> Import from previous campaign</button>"; 
+		?>
 	</div>
 	<?php } ?>
 </div>
@@ -177,6 +182,24 @@ function save() {
 			comments = {};
 		}
 		unlock_screen(locker);
+	});
+}
+function importFromOtherCampaign(button) {
+	<?php if ($can_edit && count($campaigns) > 0) {?>
+	require("context_menu.js",function() {
+		var menu = new context_menu();
+		menu.addTitleItem(null,"From which campaign ?");
+		<?php foreach ($campaigns as $c) echo "menu.addIconItem(null,".json_encode($c["name"]).",function() { importFrom(".$c["id"]."); });";?>
+		menu.showAboveElement(button);
+	});		
+	<?php }?>
+}
+function importFrom(id) {
+	var locker = lock_screen();
+	service.json("selection","staff/import_status",{from:id},function(res) {
+		unlock_screen();
+		if (!res) return;
+		location.reload();
 	});
 }
 </script>

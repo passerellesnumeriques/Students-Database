@@ -108,6 +108,7 @@ class selection extends Component {
 			if($calendar_id <> null){
 				$fields["name"] = $campaign_name;
 				$fields["calendar"] = $calendar_id;
+				$fields["frozen"] = 0;
 				$campaign_id = SQLQuery::create()->insert("SelectionCampaign",$fields);
 				
 				/* Insert the default config in the database */
