@@ -11,6 +11,8 @@ class service_menu extends Service {
 	public function execute(&$component, $input) {
 		$campaigns = SQLQuery::create()->select("SelectionCampaign")->execute();
 		$id = $component->getCampaignId();
+		$campaign = null;
+		if ($id <> null) foreach ($campaigns as $c) if ($c["id"] == $id) { $campaign = $c; break; }
 		$can_manage = PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
 ?>
 <div style="padding-left:5px;text-align:center;margin-bottom:5px;">
@@ -24,7 +26,29 @@ foreach ($campaigns as $c) {
 	echo ">".toHTML($c["name"])."</option>";
 }
 ?></select>
+<?php 
+if ($campaign <> null) {
+	echo "<img src='";
+	if ($campaign["frozen"] == 1) echo theme::$icons_16["lock_white"];
+	else echo theme::$icons_16["unlock_white"];
+	echo "' title='This selection campaign is ";
+	if ($campaign["frozen"] == 1)
+		echo "locked. Reason: ".$campaign['frozen_reason'];
+	else
+		echo "not locked";
+	echo "' style='vertical-align:bottom'/>";
+}
+?>
 <br/>
+<?php 
+if ($can_manage && $campaign <> null) {
+	if ($campaign["frozen"] == 1) {
+		echo "<button class='flat' style='margin:0px' onclick='unlockCampaign();' title='Unlock this campaign'><img src='".theme::$icons_16["unlock_white"]."'/></button>";
+	} else {
+		echo "<button class='flat' style='margin:0px' onclick='lockCampaign();' title='Lock this campaign'><img src='".theme::$icons_16["lock_white"]."'/></button>";
+	}
+}
+?>
 <?php if ($can_manage) { ?>
 	<?php if ($id <> null && $id > 0) {?>
 	<button class='flat' style='margin:0px' onclick='renameCampaign();' title='Rename this campaign'><img src='<?php echo theme::$icons_16["edit_white"];?>'/></button>
@@ -207,6 +231,12 @@ function removeCampaign() {
 			refreshCampaigns();
 		});
 	});
+}
+function lockCampaign() {
+	alert("This feature is not yet available"); // TODO
+}
+function unlockCampaign() {
+	// TODO
 }
 <?php } ?>
 </script>
