@@ -141,7 +141,7 @@ function date_select(container, date, minimum, maximum, not_null, date_picker_ic
 		t.icon = document.createElement("BUTTON");
 		t.icon.className = "flat small";
 		t.icon.style.verticalAlign = "bottom";
-		t.icon.innerHTML = "<img src='"+theme.icons_16.date_picker+"'/>";
+		t.icon.innerHTML = "<img src='"+theme.icons_16.date_picker+"' onload='layout.changed(this);'/>";
 		t.icon.onclick = function(ev) {
 			require(["date_picker.js","context_menu.js"],function(){
 				var menu = new context_menu();

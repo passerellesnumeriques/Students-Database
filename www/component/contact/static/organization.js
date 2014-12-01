@@ -193,13 +193,14 @@ function organization(container, org, existing_types, can_edit) {
 		t.content_container.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_contacts = document.createElement("TD"));
 		tr.appendChild(td_addresses = document.createElement("TD"));
-		td_addresses.rowSpan = 3;
+		td_addresses.rowSpan = 2;
 		tr.appendChild(td_map = document.createElement("TD"));
 		td_map.rowSpan = 3;
 		t.content_container.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_points = document.createElement("TD"));
 		t.content_container.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_notes = document.createElement("TD"));
+		td_notes.colSpan = 2;
 			// contacts
 		td_contacts.style.verticalAlign = "top";
 		require("contacts.js", function() {
@@ -426,6 +427,7 @@ function organization(container, org, existing_types, can_edit) {
 	 */
 	this._addContactPointRow = function(point, tbody) {
 		var tr, td_design, td;
+		layout.changed(tbody);
 		tbody.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_design = document.createElement("TD"));
 		td_design.style.color = "#606060";
@@ -445,6 +447,8 @@ function organization(container, org, existing_types, can_edit) {
 		} else {
 			require([["typed_field.js","field_text.js"]], function() {
 				var f = new field_text(point.designation, true, {min_length:1,max_length:100,can_be_null:false});
+				td_design.appendChild(f.getHTMLElement());
+				layout.changed(td_design);
 				f.onchange.add_listener(function() {
 					point.designation = f.getCurrentData();
 					t.onchange.fire();
@@ -487,6 +491,7 @@ function organization(container, org, existing_types, can_edit) {
 							if(index != null){
 								//Remove from DOM
 								tbody.removeChild(t._contact_points_rows[index]);
+								layout.changed(tbody);
 								//Remove from t._contact_points_rows
 								t._contact_points_rows.splice(index,1);
 								t.onchange.fire();
@@ -500,6 +505,7 @@ function organization(container, org, existing_types, can_edit) {
 					if(index != null){
 						//Remove from DOM
 						tbody.removeChild(t._contact_points_rows[index]);
+						layout.changed(tbody);
 						//Remove from t._contact_points_rows
 						t._contact_points_rows.splice(index,1);
 						t.onchange.fire();

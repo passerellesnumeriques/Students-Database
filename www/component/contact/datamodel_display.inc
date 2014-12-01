@@ -461,8 +461,10 @@ class ContactPointDataScreen implements datamodel\SimpleDataScreen {
 		if ($people_id == null) {
 			// new people
 			$id = $page->generateID();
+			echo "<div style='padding:2px'>";
 			echo "Designation ";
 			echo "<span id='$id'></span>";
+			echo "</div>";
 			echo "<script type='text/javascript'>";
 			echo "var field = new ".$tf[0]."(null,true,".$tf[1].");";
 			echo "document.getElementById('$id').appendChild(field.getHTMLElement());";

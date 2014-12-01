@@ -73,6 +73,7 @@ function address_text(address){
 		window.top.require("geography.js",function() {
 			window.top.geography.getCountryName(address.country_id,function(country_name){
 				div.appendChild(document.createTextNode(country_name.uniformFirstLetterCapitalized()));
+				layout.changed(div);
 			});
 			
 		});
