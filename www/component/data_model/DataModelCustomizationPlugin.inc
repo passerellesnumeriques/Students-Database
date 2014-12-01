@@ -7,7 +7,7 @@ interface DataModelCustomizationPlugin {
 	public function getForeignTable();
 	
 	public function getDataDisplayFileToInclude();
-	public function getDataDisplay($col_name, $display_name, $sub_model);
+	public function getDataDisplay($col_name, $display_name, $sub_model, $can_be_null);
 	
 }
 ?>

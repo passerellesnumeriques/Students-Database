@@ -2,26 +2,28 @@
 require_once("component/data_model/DataDisplay.inc");
 class GeographicAreaDataDisplay extends \datamodel\DataDisplay {
 	
-	public function __construct($col_name, $display_name) {
+	public function __construct($col_name, $display_name, $can_be_null) {
 		$this->col_name = $col_name;
 		$this->display_name = $display_name;
+		$this->can_be_null = $can_be_null;
 	}
 	
 	private $col_name;
 	private $display_name;
+	private $can_be_null;
 	
 	public function getDisplayName() { return $this->display_name; }
 	public function canAccess($sub_model) { return true; }
 	public function getHandledColumns() { return array($this->col_name); }
 	public function getTypedField($sub_model) {
-		return array("field_geographic_area","{}");
+		return array("field_geographic_area","{can_be_null:".json_encode($this->can_be_null)."}");
 	}
 	public function isEditable() { return true; }
 	public function getEditLocks($sub_model) {
 		return array(array("table"=>$this->getTable()->getName(), "column"=>$this->col_name, "sub_model"=>$sub_model));
 	}
 	public function isSortable() { return false; }
-	public function isMandatory($sub_model) { return false; }
+	public function isMandatory($sub_model) { return !$this->can_be_null; }
 	
 	public function buildSQL(&$q, $path) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);

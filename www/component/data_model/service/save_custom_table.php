@@ -111,8 +111,8 @@ class service_save_custom_table extends Service {
 					$pi = null;
 					foreach ($plugins as $p) if ($p->getId() == $col["type"]) { $pi = $p; break; }
 					if ($pi <> null) {
-						fwrite($f, "array_push(\$columns, new \datamodel\ForeignKey(\$this, \"$col_name\", \"".$pi->getForeignTable()."\", true, false, true, true, false));\n");
-						$custom = $pi->getDataDisplay($col_name, $col["description"], $sub_model);
+						fwrite($f, "array_push(\$columns, new \datamodel\ForeignKey(\$this, \"$col_name\", \"".$pi->getForeignTable()."\", true, false, true, ".($col["spec"]["can_be_null"] ? "true" : "false").", false));\n");
+						$custom = $pi->getDataDisplay($col_name, $col["description"], $sub_model, $col["spec"]["can_be_null"]);
 						$custom_include = $pi->getDataDisplayFileToInclude();
 					}
 					break;

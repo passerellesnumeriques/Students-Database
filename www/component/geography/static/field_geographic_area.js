@@ -4,7 +4,8 @@ function field_geographic_area(data,editable,config) {
 	typed_field.call(this, data, editable, config);
 }
 field_geographic_area.prototype = new typed_field();
-field_geographic_area.prototype.constructor = field_geographic_area;		
+field_geographic_area.prototype.constructor = field_geographic_area;
+field_geographic_area.prototype.canBeNull = function() { if (this.config && (typeof this.config.can_be_null != 'undefined')) return this.config.can_be_null; return true; };
 field_geographic_area.prototype._create = function(data) {
 	if (this.editable) {
 		this._text = document.createElement("A");
@@ -29,6 +30,18 @@ field_geographic_area.prototype._create = function(data) {
 			return false;
 		};
 		this._getEditedData = function() { return t._edited; };
+		this.validate = function() {
+			if (!this.config) this.signal_error(null);
+			else if (typeof this.config.can_be_null == 'undefined') this.signal_error(null);
+			else if (this.config.can_be_null) this.signal_error(null);
+			else if (this._edited == null) this.signal_error("Please choose a geographic area");
+			else this.signal_error(null);
+		};
+		this.signal_error = function(error) {
+			this.error = error;
+			this._text.style.color = error ? "red" : "";
+		};
+		
 	} else {
 		this._text = document.createElement("SPAN");
 	}
