@@ -151,6 +151,7 @@ typed_field.prototype = {
 	isMultiple: function() { return false; },
 	
 	helpFillMultipleItems: undefined,
+	helpFillMultipleItemsForAllSubData: undefined,
 	
 	register_datamodel_cell: function(table, column, row_key) {
 		var t=this;

@@ -133,6 +133,33 @@ function addColumnActions(col) {
 	else
 		col.onloaded.add_listener(needFieldInfo);
 }
+function addColumnContainerActions(col,field_type,field_args) {
+	require([["typed_field.js",field_type+".js"]], function() {
+		if (typeof window[field_type].prototype.helpFillMultipleItemsForAllSubData != 'undefined') {
+			var f = new window[field_type](col.attached_data.new_data,true,field_args);
+			var helper = f.helpFillMultipleItemsForAllSubData();
+			col.addAction(new GridColumnAction('set_all',theme.icons_10.pen,function(ev,action,col) {
+				require("mini_popup.js",function() {
+					var p = new mini_popup(helper.title);
+					p.content.appendChild(helper.content);
+					p.addOkButton(function() {
+						var col_index = grid.getColumnIndex(col.sub_columns[0]);
+						var nb = grid.getNbRows();
+						if (nb > 1) nb--;
+						for (var row = 0; row < nb; ++row) {
+							var fields = [];
+							for (var sub_col = 0; sub_col < col.sub_columns.length; ++sub_col)
+								fields.push(grid.getCellField(row,col_index+sub_col));
+							helper.apply(fields);
+						}
+						return true;
+					});
+					p.showBelowElement(action.element);
+				});
+			},helper.title));
+		}
+	});
+}
 
 var col, col_container, sub_cols;
 col = new GridColumn("remove", "", null, null, "field_html", false, null, null, {}, null);
@@ -203,9 +230,11 @@ foreach ($cat[1] as $field) {
 				",{datadisplay:".$data->javascriptDataDisplay($path->sub_model).",sub_data:$i});\n";
 			echo "col.field_args.sub_data_index = $i;\n";
 			echo "sub_cols.push(col);\n";
+			echo "addColumnActions(col);\n";
 		}
 		echo "col_container = new GridColumnContainer(".json_encode($data->getDisplayName()).",sub_cols,".$data->javascriptDataDisplay($path->sub_model).");\n";
 		echo "cols.push(col_container);\n";
+		echo "addColumnContainerActions(col_container,".json_encode($tf[0]).",".$tf[1].");\n";
 	}
 }
 echo "title = document.createElement('DIV');\n";

@@ -30,6 +30,8 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		this.th = null;
 		this.attached_data = null;
 		this.sub_columns = null;
+		for (var i = 0; i < this.actions.length; ++i) this.actions[i].element = null;
+		this.actions = null;
 	};
 	this._updateLevels = function() {
 		this.nb_columns = 0;
@@ -91,6 +93,36 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		for (var i = 0; i < this.sub_columns.length; ++i)
 			if (!this.sub_columns[i].canBeHidden()) return false;
 		return true;
+	};
+	this.actions = [];
+	this.addAction = function(action) {
+		this.actions.push(action);
+		var t=this;
+		var img = document.createElement("IMG");
+		img.src = action.icon;
+		img.style.verticalAlign = "middle";
+		img.style.cursor = "pointer";
+		if (action.tooltip) tooltip(img, action.tooltip);
+		img.onclick = function(ev) {
+			action.onclick(ev, action, t);
+		};
+		img.style.marginLeft = "1px";
+		img.style.marginRight = "1px";
+		setOpacity(img, 0.65);
+		listenEvent(img, 'mouseover', function() { setOpacity(img, 1); });
+		listenEvent(img, 'mouseout', function() { setOpacity(img, 0.65); });
+		action.element = img;
+		this.th.appendChild(img);
+		img.ondomremoved(function(img) { action.element = null; img = null; action = null; t = null; });
+	};
+	this.removeAction = function(action) {
+		this.actions.remove(action);
+		this.th.removeChild(action.element);
+	};
+	this.getAction = function(id) {
+		for (var i = 0; i < this.actions.length; ++i)
+			if (this.actions[i].id == id) return this.actions[i];
+		return null;
 	};
 }
 

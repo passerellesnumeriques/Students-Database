@@ -311,7 +311,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 */
 	this._showAddressTypeContextMenu = function(container,address){
 		require(['context_menu.js','contact_objects.js'],function(){
-			showAddressTypeMenu(container,type,address.address_type,function(new_type) {
+			showAddressTypeMenu(container,type,address.address_type,true,function(new_type) {
 				t._saveSubType(address,new_type,container);
 			});
 		});

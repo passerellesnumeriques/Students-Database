@@ -119,11 +119,39 @@ field_addresses.prototype._createEditableAddressType = function(data) {
 				this._addr.address_type = this.value;
 				t._datachange(true);
 			};
+			input.onclick = function() {
+				var input = this;
+				require("contact_objects.js", function() {
+					showAddressTypeMenu(input,t._data.type,input.value,false,function(new_type) { input.value = new_type; input.onchange(); });
+				});
+			};
 		}
 		this.element.style.marginBottom = "13px"; // compensate the add button on other fields
 		return data;
 	};
 	this._setData(data);
+	
+	this.getNbData = function() {
+		return t._data.addresses.length;
+	};
+	this.resetData = function() {
+		t._data.addresses = [];
+		t.setData(t._data, true);
+	};
+	this.addData = function(new_data) {
+		require("contact_objects.js", function() {
+			var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", new_data);
+			t._data.addresses.push(address);
+			t.setData(t._data, true);
+		});
+	};
+	this.getDataIndex = function(index) {
+		return t._data.addresses[index].address_type;
+	};
+	this.setDataIndex = function(index, new_data) {
+		t._data.addresses[index].address_type = new_data;
+		t.setData(t._data, true);
+	};
 };
 field_addresses.prototype._createReadOnlyAddressType = function(data) {
 	window.top.sub_field_registry.register(window, this);
@@ -415,4 +443,40 @@ field_addresses.prototype._createAddressDivision = function(data, sub_division_i
 		};
 	}
 	this._setData(data);
+};
+field_addresses.prototype.helpFillMultipleItemsForAllSubData = function() {
+	var helper = {
+		title: 'Prefilled an address for all',
+		content: document.createElement("DIV"),
+		apply: function(fields) {
+			var t=this;
+			require("contact_objects.js", function() {
+				var area = null;
+				if (t.geo.getSelectedArea() > 0)
+					area = window.top.geography.getGeographicAreaTextFromId(t.geo.country_data,t.geo.getSelectedArea());
+				var address = new PostalAddress(-1, window.top.default_country_id, area, "", "", "", "", "", t.input_type.value);
+				fields[0]._data.addresses.push(address);
+				fields[0].setData(fields[0]._data, true);
+			});
+		}
+	};
+	helper.content.appendChild(document.createTextNode("Address Type:"));
+	helper.input_type = document.createElement("INPUT");
+	helper.input_type.type = "text";
+	helper.input_type.maxLength = 100;
+	helper.input_type.size = 15;
+	helper.input_type.style.marginLeft = "5px";
+	var t=this;
+	helper.input_type.onclick = function() {
+		require("contact_objects.js", function() {
+			showAddressTypeMenu(helper.input_type,t._data.type,helper.input_type.value,false,function(new_type) { helper.input_type.value = new_type; });
+		});
+	};
+	helper.content.appendChild(helper.input_type);
+	require("geographic_area_selection.js", function() {
+		helper.geo = new geographic_area_selection(helper.content, window.top.default_country_id, null, 'vertical', true, function() {
+			layout.changed(helper.content);
+		});
+	});
+	return helper;
 };
