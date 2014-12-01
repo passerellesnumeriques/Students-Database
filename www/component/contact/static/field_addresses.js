@@ -95,35 +95,53 @@ field_addresses.prototype._createReadOnlyTogether = function(data) {
 	this._setData(data);
 };
 field_addresses.prototype._createEditableAddressType = function(data) {
-	this.element.removeAllChildren();
-	for (var i = 0; i < data.addresses.length; ++i) {
-		var addr = data.addresses[i];
-		var div = document.createElement("DIV");
-		var input = document.createElement("INPUT")
-		input.type = 'text';
-		input.maxLength = 100;
-		input.size = 10;
-		input.style.color = "#606060";
-		input.value = addr.address_type;
-		div.appendChild(input);
-		this.element.appendChild(div);
-		input._addr = addr;
-		var t=this;
-		input.onchange = function() {
-			this._addr.address_type = this.value;
-			t._datachange(true);
-		};
-	}
+	window.top.sub_field_registry.register(window, this);
+	this.onchange.add_listener(function(f){
+		window.top.sub_field_registry.changed(window, f);
+	});
+	this._setData = function(data) {
+		this.element.removeAllChildren();
+		if (data == null) return null;
+		for (var i = 0; i < data.addresses.length; ++i) {
+			var addr = data.addresses[i];
+			var div = document.createElement("DIV");
+			var input = document.createElement("INPUT")
+			input.type = 'text';
+			input.maxLength = 100;
+			input.size = 10;
+			input.style.color = "#606060";
+			input.value = addr.address_type;
+			div.appendChild(input);
+			this.element.appendChild(div);
+			input._addr = addr;
+			var t=this;
+			input.onchange = function() {
+				this._addr.address_type = this.value;
+				t._datachange(true);
+			};
+		}
+		this.element.style.marginBottom = "13px"; // compensate the add button on other fields
+		return data;
+	};
+	this._setData(data);
 };
 field_addresses.prototype._createReadOnlyAddressType = function(data) {
-	this.element.removeAllChildren();
-	for (var i = 0; i < data.addresses.length; ++i) {
-		var addr = data.addresses[i];
-		var div = document.createElement("DIV");
-		div.style.color = "#606060";
-		div.appendChild(document.createTextNode(addr.address_type));
-		this.element.appendChild(div);
-	}
+	window.top.sub_field_registry.register(window, this);
+	this.onchange.add_listener(function(f){
+		window.top.sub_field_registry.changed(window, f);
+	});
+	this._setData = function(data) {
+		this.element.removeAllChildren();
+		for (var i = 0; i < data.addresses.length; ++i) {
+			var addr = data.addresses[i];
+			var div = document.createElement("DIV");
+			div.style.color = "#606060";
+			div.appendChild(document.createTextNode(addr.address_type));
+			this.element.appendChild(div);
+		}
+		return data;
+	};
+	this._setData(data);
 };
 field_addresses.prototype._createAddressDivision = function(data, sub_division_index) {
 	var t=this;
@@ -144,6 +162,11 @@ field_addresses.prototype._createAddressDivision = function(data, sub_division_i
 			var addr = data.addresses[i];
 			var div = document.createElement("DIV"); this.element.appendChild(div);
 			div.style.whiteSpace = "nowrap";
+			if (this.editable) {
+				// by default, take enough space compared to the select
+				div.style.paddingTop = "2px";
+				div.style.paddingBottom = "2px";
+			}
 			var area = addr.geographic_area;
 			layout.changed(this.element);
 			if (area == null) {
@@ -271,6 +294,9 @@ field_addresses.prototype._createAddressDivision = function(data, sub_division_i
 									if (t.editable) {
 										tc.div.removeAllChildren();
 										tc.div.appendChild(select);
+										// remove the padding
+										tc.div.style.paddingTop = "0px";
+										tc.div.style.paddingBottom = "0px";
 									} else {
 										if (sub_division_index > div_index) {
 											tc.div.style.fontStyle = "italic";
@@ -297,7 +323,7 @@ field_addresses.prototype._createAddressDivision = function(data, sub_division_i
 			this.element.appendChild(add_button);
 			add_button.onclick = function(event) {
 				require("contact_objects.js", function() {
-					var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "Home");
+					var address = new PostalAddress(-1, window.top.default_country_id, null, null, null, null, null, null, "");
 					t._data.addresses.push(address);
 					t.setData(t._data, true);
 				});
@@ -318,7 +344,7 @@ field_addresses.prototype._createAddressDivision = function(data, sub_division_i
 		this.addData = function(new_data) {
 			var division_index = sub_division_index;
 			require("contact_objects.js", function() {
-				var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", "Home");
+				var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", "");
 				if (typeof new_data == 'string') {
 					var area = window.top.geography.searchAreaByNameInDivision(t.country_data, division_index, new_data);
 					if (!area)
