@@ -9,6 +9,10 @@ function inputAutoresizeUpdater() {
 	this._doUpdates = function() {
 		if (window.closing) return;
 		this.timeout = null;
+		if (layout.isPaused()) {
+			this.timeout = setTimeout(function() { if (window._input_autoresize_updater) window._input_autoresize_updater._doUpdates(); },1);
+			return;
+		}
 		for (var i = 0; i < this.to_update.length; ++i) {
 			var input = this.to_update[i];
 			if (!input.mirror) {

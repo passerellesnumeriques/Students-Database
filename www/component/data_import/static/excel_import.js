@@ -242,6 +242,7 @@ function excel_import(popup, container, onready) {
 	};
 	this._askImport = function(element, sheet, range) {
 		var content = document.createElement("TABLE");
+		content.style.minWidth = "300px";
 		var tr = document.createElement("TR"); content.appendChild(tr);
 		var fields = getIFrameWindow(t.frame_import).fields;
 		var td_fields = document.createElement("TD"); tr.appendChild(td_fields);
@@ -351,9 +352,14 @@ function excel_import(popup, container, onready) {
 				alert('Please select where to add/set values');
 				return;
 			}
-			p.freeze("Importing data...");
-			t._importData(sheet, range, index, t._where_selected);
-			p.close();
+			p.freeze_progress("Importing data...",100,function(span,pb) {
+				t._importData(sheet, range, index, t._where_selected, function() {
+					p.close();
+				},function(pos,total) {
+					pb.setTotal(total);
+					pb.setPosition(pos);
+				});
+			});
 		});
 		p.addCancelButton();
 		p.show();
@@ -513,8 +519,9 @@ function excel_import(popup, container, onready) {
 		return radio;
 	};
 	
-	t._importData = function(sheet, range, col_index, where, ondone) {
+	t._importData = function(sheet, range, col_index, where, ondone, onprogress) {
 		var win = getIFrameWindow(t.frame_import);
+		win.layout.pause();
 		var grid = win.grid;
 		var row = where.row;
 		if (row == -1) row = where.row_getter();
@@ -522,7 +529,7 @@ function excel_import(popup, container, onready) {
 		var ambiguous = [];
 		
 		var process_ambiguous;
-		var next_cell = function(ci, ri) {
+		var next_cell = function(ci, ri, progress_pos, progress_total) {
 			var value = sheet.getCell(ci,ri).getValue();
 			value = value.trim();
 			while (grid.getNbRows() <= row)
@@ -584,16 +591,19 @@ function excel_import(popup, container, onready) {
 				ri = range.start_row;
 				ci++;
 				if (ci > range.end_col) {
+					if (onprogress) onprogress(progress_total, progress_total);
 					process_ambiguous();
 					return;
 				}
 			}
-			setTimeout(function() {next_cell(ci,ri);},1);
+			if (onprogress) onprogress(progress_pos, progress_total);
+			setTimeout(function() {next_cell(ci,ri,progress_pos+1,progress_total);},1);
 		};
 		
 		// resolve ambiguous values by field
 		var next_ambiguous = function() {
 			if (ambiguous.length == 0) {
+				win.layout.resume();
 				if (ondone) ondone();
 				return;
 			}
@@ -684,9 +694,13 @@ function excel_import(popup, container, onready) {
 				require("popup_window.js", function() {
 					next_ambiguous();
 				});
-			else if (ondone) ondone();
+			else {
+				win.layout.resume();
+				if (ondone) ondone();
+			}
 		};
-		next_cell(range.start_col, range.start_row);
+
+		next_cell(range.start_col, range.start_row, 0, (range.end_col-range.start_col+1)*(range.end_row-range.start_row+1));
 	};
 	
 	this.init = function() {

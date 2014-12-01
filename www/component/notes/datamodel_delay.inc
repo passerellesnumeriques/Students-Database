@@ -16,6 +16,8 @@ foreach (PNApplication::$instance->components as $c)
 				->addForeignKey("attach", $table_name, true, false, true, false, false)
 				->setPrimary("note")
 				->addIndex("attach")
+				->addRemoveAccessFromForeignTable($table_name)
+				->addRemoveAccessFromForeignTable("Note")
 				;
 		}
 

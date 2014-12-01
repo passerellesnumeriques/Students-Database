@@ -308,8 +308,8 @@ namespace datamodel {
 		}
 
 		/** Add a string column */
-		public function &addString($name, $max_length=255, $min_length = 0, $can_be_null = true, $unique = false, $validation = null) {
-			$c = new ColumnString($this, $name, $max_length, $min_length, $can_be_null, $unique, $validation);
+		public function &addString($name, $max_length=255, $min_length = 0, $can_be_null = true, $unique = false, $validation = null, $specific_lang = null) {
+			$c = new ColumnString($this, $name, $max_length, $min_length, $can_be_null, $unique, $validation, $specific_lang);
 			array_push($this->columns, $c);
 			return $this;
 		}
@@ -866,12 +866,14 @@ namespace datamodel {
 		public $max_length;
 		public $min_length;
 		public $validation;
+		public $specific_lang;
 
-		public function __construct(&$table, $name, $max_length, $min_length = 0, $can_be_null = true, $unique = false, $validation = null) {
+		public function __construct(&$table, $name, $max_length, $min_length = 0, $can_be_null = true, $unique = false, $validation = null, $specific_lang = null) {
 			parent::__construct($table, $name, $can_be_null, $unique);
 			$this->max_length = $max_length;
 			$this->min_length = $min_length;
 			$this->validation = $validation;
+			$this->specific_lang = $specific_lang;
 		}
 
 		public function get_sql_type() { /* TODO choose the type depending on max_length */ return "VARCHAR(".$this->max_length.")";

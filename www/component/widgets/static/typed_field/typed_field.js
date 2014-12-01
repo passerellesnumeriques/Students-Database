@@ -20,6 +20,7 @@ function typed_field(data,editable,config){
 	if (cl != 'typed_field' && cl != 'typed_field_multiple') {
 		this.element = document.createElement("DIV");
 		this.element.style.display = "inline-block";
+		if (config && config.lang) this.element.lang = config.lang;
 		this._create(data);
 		this.validate();
 	}

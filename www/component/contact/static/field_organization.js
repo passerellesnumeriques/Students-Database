@@ -49,6 +49,7 @@ field_organization.prototype.createValue = function(value, name, oncreated) {
 						t._addPossibleValue(res.id, org.name);
 						var fields = window.top.pnapplication.getCustoms('field_organization');
 						for (var i = 0; i < fields.length; ++i) {
+							if (fields[i] == t) continue; // ourself
 							if (arrayEquivalent(t.config.creators,fields[i].config.creators) &&
 								arrayEquivalent(t.config.types,fields[i].config.types)
 								) {
@@ -151,11 +152,12 @@ field_organization.prototype._create = function(data) {
 						break;
 					}
 				if (!found) {
+					id = null;
 					this.select.selectedIndex = 0;
 					return null;
 				}
 			}
-			return data;
+			return id;
 		};
 		this.validate = function() {
 			if (this.selectedIndex == 0 && !this.config.can_be_null)
@@ -183,6 +185,7 @@ field_organization.prototype._create = function(data) {
 			this.select.style.width = "100%";
 		};
 	} else {
+		this.element.style.whiteSpace = "nowrap";
 		this._setData = function(data) {
 			var id = this._getOrgIDFromData(data);
 			this._data = id;
@@ -190,7 +193,7 @@ field_organization.prototype._create = function(data) {
 			if (name == null) name = "";
 			this.element.removeAllChildren();
 			this.element.appendChild(document.createTextNode(name));
-			return data;
+			return id;
 		};
 	}
 	this._setData(data);

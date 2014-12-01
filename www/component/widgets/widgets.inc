@@ -10,6 +10,7 @@ class widgets extends Component {
 			$cfg = "{max_length:".$col->max_length;
 			if ($col->min_length > 0) $cfg .= ",min_length:".$col->min_length;
 			$cfg .= ",can_be_null:".json_encode($col->can_be_null);
+			if ($col->specific_lang <> null) $cfg .= ",lang:".json_encode($col->specific_lang);
 			$cfg .= "}";
  			return array("field_text", $cfg);
 		}		

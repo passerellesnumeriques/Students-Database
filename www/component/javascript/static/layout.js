@@ -107,6 +107,7 @@ window.layout = {
 		this._paused = false;
 		this._layout_needed();
 	},
+	isPaused: function() { return this._paused; },
 	
 	_process_timeout: null,
 	_layouts_short_time: 0,
