@@ -425,7 +425,7 @@ class service_get_data_list extends Service {
 					$a = $data_aliases[$i];
 					$data = $display_data[$i];
 					$path = $paths[$i];
-					$value = $data->getValue($row, $a);
+					$value = $data->getData($row, $a);
 					$value = $data->exportValue($value, $path->sub_model);
 					$sheet->setCellValueByColumnAndRow($col_index, $row_index, $value);
 					$col_index++;

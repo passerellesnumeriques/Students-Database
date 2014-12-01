@@ -230,6 +230,11 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		}
 	}
 	
+	public function exportValue($value, $sub_model) {
+		// TODO
+		return null;
+	}
+	
 	public function getSubDataDisplay() { return new AddressSubDataDisplay($this); }
 
 }
