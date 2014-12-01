@@ -586,7 +586,7 @@ function organization(container, org, existing_types, can_edit) {
 												if (onlyDigits(existing[i].contact) == num) { found = true; break; }
 											if (!found) {
 												var phone = new Contact(-1, "phone", "Office", place.formatted_phone_number);
-												t._contacts_widget.phones.addContact(phone);
+												t._contacts_widget.phones.createContact(phone);
 											}
 										}
 									}
@@ -763,7 +763,7 @@ function organization(container, org, existing_types, can_edit) {
 											if (components.length > 0)
 												a.additional = components.join(", ");
 											// finally, add the address
-											// TODO first check it does not exist yet
+											// first check it does not exist yet
 											if (a.geographic_area.id > 0 || a.street_number != null || a.street != null) {
 												if (a.geographic_area.id > 0) {
 													var existings = t._addresses_widget.getAddresses();
@@ -773,26 +773,22 @@ function organization(container, org, existing_types, can_edit) {
 															if (existings[i].geographic_area.id == a.geographic_area.id)
 																same.push(existings[i]);
 															else {
-																var path = [];
+																var path = [parseInt(existings[i].geographic_area.id)];
 																var p = window.top.geography.searchArea(country_data, existings[i].geographic_area.id);
 																p = window.top.geography.getParentArea(country_data, p);
 																while (p != null) {
-																	path.push(p.area_id);
+																	path.push(parseInt(p.area_id));
 																	p = window.top.geography.getParentArea(country_data, p);
 																}
-																if (path.length > 0) {
-																	var path2 = [];
-																	p = window.top.geography.searchArea(country_data, a.geographic_area.id);
+																var path2 = [parseInt(a.geographic_area.id)];
+																p = window.top.geography.searchArea(country_data, a.geographic_area.id);
+																p = window.top.geography.getParentArea(country_data, p);
+																while (p != null) {
+																	path2.push(parseInt(p.area_id));
 																	p = window.top.geography.getParentArea(country_data, p);
-																	while (p != null) {
-																		path2.push(p.area_id);
-																		p = window.top.geography.getParentArea(country_data, p);
-																	}
-																	if (path2.length > 0) {
-																		for (var j = 0; j < path.length; ++j)
-																			if (path2.contains(path[j])) { same.push(existings[i]); break; }
-																	}
 																}
+																for (var j = 0; j < path.length; ++j)
+																	if (path2.contains(path[j])) { same.push(existings[i]); break; }
 															}
 														}
 													}

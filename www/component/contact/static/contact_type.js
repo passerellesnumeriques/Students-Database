@@ -62,7 +62,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 * Add a contact
 	 * @param {Contact} contact the contact to add
 	 */
-	this.addContact = function(contact) {
+	this._createContactRow = function(contact) {
 		var tr = document.createElement("tr");
 		tr.contact = contact;
 		var td_category = document.createElement("td");
@@ -164,7 +164,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 				contact.id = res.id;
 				contacts[l] = contact;
 				/*Update the table*/
-				t.addContact(contacts[l]);
+				t._createContactRow(contacts[l]);
 				t.onchange.fire(t);
 			});
 		} else {
@@ -173,7 +173,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 			contact.id = -1;
 			contacts[l] = contact;
 			/*Update the table*/
-			t.addContact(contacts[l]);
+			t._createContactRow(contacts[l]);
 			t.onchange.fire(t);
 		}
 	};
@@ -327,7 +327,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	
 	require('editable_cell.js',function(){
 		for (var i = 0; i < contacts.length; ++i)
-			t.addContact(contacts[i]);
+			t._createContactRow(contacts[i]);
 		if (onready) onready(t);
 	});
 }

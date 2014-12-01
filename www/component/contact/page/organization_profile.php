@@ -57,6 +57,7 @@ class page_organization_profile extends Page {
 				$new_address = array(
 					"postal_address__id" => -1, 
 					"postal_address__country_id" => $_GET["address_country_id"],
+					"postal_address__address_type" => "Office",
 					"geographic_area_text_area_id" =>$_GET["address_area_id"],
 					"geographic_area_text_country_id" => $_GET["address_country_id"],
 					"geographic_area_text_country_division_id" => $area["country_division"]

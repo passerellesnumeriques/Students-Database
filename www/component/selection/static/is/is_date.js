@@ -26,6 +26,7 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 			var d = this._event.start;
 			var s = getDayShortName(d.getDay(),true)+" "+_2digits(d.getDate())+" "+getMonthShortName(d.getMonth()+1)+" "+d.getFullYear();
 			if (default_duration != "All day") {
+				s += "<br/>";
 				s += " from ";
 				s += getTimeString(d);
 				s += " to ";
@@ -115,7 +116,7 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 		t._link = document.createElement("A");
 		t._link.href = "#";
 		t._link.className = "black_link";
-		t._link.style.margin = "1px 5px";
+		t._content.style.margin = "2px 3px 0px 3px";
 		t._link.onclick = function() { if (can_manage) t._popupDate(); return false; };
 		t._content.appendChild(t._link);
 		t._remove_button = document.createElement("BUTTON");

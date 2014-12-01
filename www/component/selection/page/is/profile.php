@@ -43,7 +43,8 @@ class page_is_profile extends SelectionPage {
 		$this->requireJavascript("is_statistics.js");
 		?>
 		<div style='width:100%;height:100%;overflow:auto;'>
-		<div style='display:inline-block;margin:10px;margin-right:5px;vertical-align:top;'>
+		<div style='display:flex;flex-direction:row;'>
+		<div style='flex:none;margin:10px;margin-right:5px;vertical-align:top;'>
 			<?php if ($this->component->getOneConfigAttributeValue("give_name_to_IS")) {
 				$this->requireJavascript("center_name.js");
 			?>
@@ -134,11 +135,12 @@ class page_is_profile extends SelectionPage {
 			); 
 			</script>
 		</div>
-		<div style='display:inline-block;margin:10px;margin-left:0px;vertical-align:top;' id='location_and_partners'>
+		<div style='flex:none;margin:10px;margin-left:0px;vertical-align:top;' id='location_and_partners'>
 		<?php
 		require_once("component/selection/page/common_centers/location_and_partners.inc");
 		locationAndPartners($this, $id, "InformationSession", $session <> null ? GeographyJSON::GeographicAreaText($session) : "null", $editable, true); 
 		?>
+		</div>
 		</div>
 		<div style='margin:0px 5px 5px 5px;' id='applicants_list_container'>
 		</div>
