@@ -37,6 +37,46 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 	this.lng = lng;
 }
 
+window.default_address_types = {
+	'people':['Home','Family','Birthplace','Work'],
+	'organization':['Office']
+};
+function showAddressTypeMenu(below_element,type,current_type,onchanged) {
+	require("context_menu.js",function() {
+		if (below_element._context) below_element._context.hide();
+		below_element._context = new context_menu();
+		for (var i = 0; i < window.default_address_types[type].length; ++i) {
+			var item = document.createElement('DIV');
+			item.appendChild(document.createTextNode(window.default_address_types[type][i]));
+			if (current_type == window.default_address_types[type][i])
+				item.style.fontWeight = 'bold';
+			item._type = window.default_address_types[type][i];
+			item.onclick = function() { onchanged(this._type); };
+			item.className = "context_menu_item";
+			below_element._context.addItem(item);
+		}
+		var item = document.createElement('DIV');
+		item.appendChild(document.createTextNode("Other:"));
+		var input = document.createElement("INPUT");
+		input.type = 'text';
+		input.maxLength = 100;
+		input.size = 15;
+		input.style.marginLeft = "5px";
+		item.appendChild(input);
+		below_element._context.onclose = function() {
+			if (input.value.checkVisible())
+				onchanged(input.value.trim());
+			below_element._context = null;
+		}
+		input.onkeypress = function(e) {
+			var ev = getCompatibleKeyEvent(e);
+			if(ev.isEnter) below_element._context.hide();
+		};
+		below_element._context.addItem(item, true);
+		below_element._context.showBelowElement(below_element);
+	});
+}
+
 function parsePostalAddress(str, handler) {
 	var names = str.split(",");
 	for (var i = 0; i < names.length; ++i) {

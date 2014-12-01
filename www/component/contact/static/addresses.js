@@ -216,7 +216,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	/** Called when the user clicks on "Add address". */
 	this.createAddress = function(){
 		require("contact_objects.js", function() {
-			var address = new PostalAddress(-1,null,null,null,null,null,null,null,"Home");
+			var address = new PostalAddress(-1,null,null,null,null,null,null,null,type == 'people' ? "Home" : "Office");
 			if (type_id != null && type_id > 0) {
 				service.json("contact","add_address",{
 					type:type,
@@ -293,11 +293,12 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 * @param {PostalAddress} address the associated address object
 	 */
 	this._createCategoryField = function (container,address){
-		this.context = null;
-		container.innerHTML = address.address_type;
-		container.style.cursor = "pointer";
-		container.onclick = function(ev){
-			t._showAddressTypeContextMenu(container,address);
+		var span = document.createElement("SPAN");
+		span.appendChild(document.createTextNode(address.address_type));
+		container.appendChild(span);
+		span.style.cursor = "pointer";
+		span.onclick = function(ev){
+			t._showAddressTypeContextMenu(span,address);
 			stopEventPropagation(ev);
 			return false;
 		};
@@ -309,54 +310,11 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 * @param {PostalAddress} address the associated address object
 	 */
 	this._showAddressTypeContextMenu = function(container,address){
-		require('context_menu.js',function(){
-			if (t.context) t.context.hide();
-			t.context = new context_menu();
-			t.context.onclose = function() {t.context = null;};
-			t._addAddressTypeToContextMenu(container, "Home", address);
-			t._addAddressTypeToContextMenu(container, "Family", address);
-			t._addAddressTypeToContextMenu(container, "Birthplace", address);
-			t._addAddressTypeToContextMenu(container, "Work", address);
-			t._addAddressTypeToContextMenu(container, "Other:", address);
-			
-			t.context.showBelowElement(container);
+		require(['context_menu.js','contact_objects.js'],function(){
+			showAddressTypeMenu(container,type,address.address_type,function(new_type) {
+				t._saveSubType(address,new_type,container);
+			});
 		});
-	};
-	
-	/**
-	 * Add an item to the category context_menu
-	 * @param {Element} container the one which contains the category field
-	 * @param {String} data the value of the item
-	 * @param {PostalAddress} address the associated address object
-	 */
-	this._addAddressTypeToContextMenu = function(container, data, address){
-		var item = document.createElement('div');
-		item.innerHTML = data;
-		
-		if(address.address_type == data) item.style.fontWeight ='bold';
-		if(data == "Other:"){
-			var input = document.createElement("INPUT");
-			input.type = 'text';
-			input.maxLength = 10;
-			input.size = 10;
-			item.appendChild(input);
-			t.context.onclose = function(){
-				if(input.value.checkVisible()){
-					t._saveSubType(address, input.value.uniformFirstLetterCapitalized(),container);
-				}
-			};
-			input.onkeypress = function(e){var ev = getCompatibleKeyEvent(e);
-									if(ev.isEnter) t.context.hide();
-								};
-		}
-		else{
-			item.onclick = function(){
-				t._saveSubType(address,data,container);
-			};
-		}
-		item.className = "context_menu_item";
-		t.context.addItem(item);
-		if(data == "Other:") item.onclick = null;
 	};
 	
 	/**
@@ -370,13 +328,15 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		if (type_id != null && type_id > 0) {
 			service.json("data_model","save_entity",{table:"PostalAddress",key:address.id, field_address_type:address_type, lock:-1},function(res){
 				if(!res) return;
-				container.innerHTML = address_type;
+				container.removeAllChildren();
+				container.appendChild(document.createTextNode(address_type));
 				address.address_type = address_type;
 				t.onchange.fire(t);
 				layout.changed(container);
 			});
 		} else {
-			container.innerHTML = address_type;
+			container.removeAllChildren();
+			container.appendChild(document.createTextNode(address_type));
 			address.address_type = address_type;
 			t.onchange.fire(t);
 			layout.changed(container);

@@ -237,7 +237,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 class AddressSubDataDisplay extends datamodel\SubDataDisplay {
 	
 	public function getDisplayNames() {
-		$names = array();
+		$names = array("Type");
 		foreach (PNApplication::$instance->geography->getLocalDivisions() as $div)
 			array_push($names, $div["name"]);
 		return $names;

@@ -38,18 +38,19 @@ field_geographic_area.prototype._create = function(data) {
 			this._text.appendChild(document.createTextNode("Not specified"));
 			this._text.style.fontStyle = "italic";
 		} else {
-			var t = document.createTextNode("... loading ...");
-			this._text.appendChild(t);
+			this._text.innerHTML = "<img src='"+theme.icons_10.loading+"'/>";
+			var t=this;
 			window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
 				if (window.closing || !layout) return;
+				t._text.removeAllChildren();
 				var area = window.top.geography.searchArea(country_data, data);
 				if (!area)
-					t.nodeValue = "Unknown";
+					t._text.innerHTML = "Unknown";
 				else {
 					var text = window.top.geography.getGeographicAreaText(country_data, area);
-					t.nodeValue = text.text;
+					t._text.appendChild(document.createTextNode(text.text));
 				}
-				layout.changed(t.parentNode);
+				layout.changed(t._text);
 			});
 			this._text.style.fontStyle = "normal";
 		}
