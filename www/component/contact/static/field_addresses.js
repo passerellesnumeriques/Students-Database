@@ -160,10 +160,12 @@ field_addresses.prototype._createReadOnlyAddressType = function(data) {
 	});
 	this._setData = function(data) {
 		this.element.removeAllChildren();
+		if (data)
 		for (var i = 0; i < data.addresses.length; ++i) {
 			var addr = data.addresses[i];
 			var div = document.createElement("DIV");
 			div.style.color = "#606060";
+			div.style.whiteSpace = 'nowrap';
 			div.appendChild(document.createTextNode(addr.address_type));
 			this.element.appendChild(div);
 		}

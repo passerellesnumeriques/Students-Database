@@ -231,8 +231,26 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 	}
 	
 	public function exportValue($value, $sub_model) {
-		// TODO
-		return null;
+		return null; // will be done in exportValueNumber
+	}
+	public function getExportTimes($value, $sub_model) {
+		return count($value->addresses);
+	}
+	public function exportValueNumber($value, $sub_model, $number) {
+		$addr = $value->addresses[$number];
+		$list = array();
+		if ($addr->building) array_push($list, "Building ".$addr->building);
+		if ($addr->unit) array_push($list, "Unit ".$addr->unit);
+		if ($addr->street_number) array_push($list, $addr->street_number);
+		if ($addr->street) array_push($list, $addr->street);
+		if ($addr->geographic_area && $addr->geographic_area->text) array_push($list, $addr->geographic_area->text); 
+		if ($addr->additional) array_push($list, $addr->additional);
+		$s = "";
+		foreach ($list as $l) {
+			if ($s <> "") $s .= ", ";
+			$s .= $l;
+		}
+		return $s;
 	}
 	
 	public function getSubDataDisplay() { return new AddressSubDataDisplay($this); }
@@ -249,6 +267,30 @@ class AddressSubDataDisplay extends datamodel\SubDataDisplay {
 	}
 	
 	public function isEditable($index) { return true; }
+	
+	public function exportValueNumber($value, $sub_model, $index, $number) { 
+		$addr = $value->addresses[$number];
+		if ($index == 0)
+			return $addr->address_type;
+		if ($addr->geographic_area && $addr->geographic_area->id) {
+			$divisions = PNApplication::$instance->geography->getCountryDivisions($addr->geographic_area->country_id);
+			for ($division_index = 0; $division_index < count($divisions); $division_index++)
+				if ($divisions[$division_index]["id"] == $addr->geographic_area->division_id)
+					break;
+			if ($division_index < count($divisions)) {
+				if ($index-1 <= $division_index) {
+					$area_id = $addr->geographic_area->id;
+					while ($division_index > $index-1) {
+						$area_id = PNApplication::$instance->geography->getAreaParent($area_id);
+						$division_index--;
+					}
+					$area = PNApplication::$instance->geography->getArea($area_id);
+					return $area["name"];
+				}
+			}
+		}
+		return "";
+	}
 	
 }
 

@@ -1642,10 +1642,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	 * @param {String} format format to export
 	 */
 	t._exportList = function(format) {
-		// TODO support sub fields
 		var fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i)
-			fields.push({path:t.show_fields[i].field.path.path,name:t.show_fields[i].field.name});
+			fields.push({path:t.show_fields[i].field.path.path,name:t.show_fields[i].field.name,sub_index:t.show_fields[i].sub_index});
 		var form = document.createElement("FORM");
 		var input;
 		form.appendChild(input = document.createElement("INPUT"));

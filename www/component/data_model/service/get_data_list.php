@@ -411,14 +411,58 @@ class service_get_data_list extends Service {
 			$sheet = new PHPExcel_Worksheet($excel, "List");
 			$excel->addSheet($sheet);
 			$excel->removeSheetByIndex(0);
+			// get multiple export fields
+			$multiple = array();
+			for ($i = 0; $i < count($fields); $i++) {
+				if (isset($multiple[$fields[$i]["path"]])) continue;
+				$max = 0;
+				foreach ($res as $row) {
+					$a = $data_aliases[$i];
+					$data = $display_data[$i];
+					$value = $data->getData($row, $a);
+					$path = $paths[$i];
+					$times = $data->getExportTimes($value, $path->sub_model);
+					if ($times > $max) $max = $times;
+				}
+				$multiple[$fields[$i]["path"]] = $max;
+			}
 			// column headers
+			$has_sub_data = false;
+			foreach ($fields as $f) if ($f["sub_index"] <> -1) { $has_sub_data = true; break; }
 			$col_index = 0;
 			for ($i = 0; $i < count($display_data); $i++) {
 				$data = $display_data[$i];
-				$sheet->setCellValueByColumnAndRow($i, 1, $data->getDisplayName());
+				$times = $multiple[$fields[$i]["path"]];
+				$count = 1;
+				if ($fields[$i]["sub_index"] <> -1)
+					while ($i+$count < count($display_data) && $fields[$i+$count]["path"] == $fields[$i]["path"]) $count++;
+				for ($num = 1; $num <= $times; $num++) {
+					// set the main title: display name
+					$sheet->setCellValueByColumnAndRow($col_index, 1, $data->getDisplayName().($times > 1 ? " ".$num : ""));
+					if ($has_sub_data) {
+						// we have sub data
+						if ($fields[$i]["sub_index"] == -1) {
+							// not on this one => merge 2 rows
+							$sheet->mergeCellsByColumnAndRow($col_index, 1, $col_index, 2);
+							$col_index++;
+						} else {
+							// merge the main title
+							$sheet->mergeCellsByColumnAndRow($col_index, 1, $col_index+$count-1, 1);
+							// set the sub-titles
+							$sub_data = $data->getSubDataDisplay();
+							$names = $sub_data->getDisplayNames();
+							for ($j = 0; $j < $count; $j++) {
+								$sub_index = $fields[$i+$j]["sub_index"];
+								$sheet->setCellValueByColumnAndRow($col_index++, 2, $names[$sub_index]);
+							}
+							
+						}
+					} else $col_index++;
+				}
+				$i += $count-1;
 			}
+			$row_index = $has_sub_data ? 3 : 2;
 			// put data in excel
-			$row_index = 2;
 			foreach ($res as $row) {
 				$col_index = 0;
 				for ($i = 0; $i < count($display_data); $i++) {
@@ -426,9 +470,24 @@ class service_get_data_list extends Service {
 					$data = $display_data[$i];
 					$path = $paths[$i];
 					$value = $data->getData($row, $a);
-					$value = $data->exportValue($value, $path->sub_model);
-					$sheet->setCellValueByColumnAndRow($col_index, $row_index, $value);
-					$col_index++;
+					$times = $multiple[$fields[$i]["path"]];
+					$count = 1;
+					if ($fields[$i]["sub_index"] <> -1)
+						while ($i+$count < count($display_data) && $fields[$i+$count]["path"] == $fields[$i]["path"]) $count++;
+					for ($num = 0; $num < $times; $num++) {
+						if ($fields[$i]["sub_index"] == -1) {
+							$val = $data->exportValueNumber($value, $path->sub_model, $num);
+							$sheet->setCellValueByColumnAndRow($col_index++, $row_index, $val);
+						} else {
+							$sub_data = $data->getSubDataDisplay();
+							for ($j = 0; $j < $count; $j++) {
+								$sub_index = $fields[$i+$j]["sub_index"];
+								$val = $sub_data->exportValueNumber($value, $path->sub_model, $sub_index, $num);
+								$sheet->setCellValueByColumnAndRow($col_index++, $row_index, $val);
+							}
+						}
+					}
+					$i += $count-1;
 				}
 				$row_index++;
 			}

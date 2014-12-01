@@ -115,6 +115,12 @@ abstract class DataDisplay {
 		if ($value == null) return "";
 		return $value;
 	}
+	public function getExportTimes($value, $sub_model) {
+		return 1;
+	}
+	public function exportValueNumber($value, $sub_model, $number) {
+		return $this->exportValue($value, $sub_model);
+	}
 
 	/** Save a new value for this data. If it can be done together with other updates/insert, the array tables_fields is filled, else the operations are done directly.
 	 * @param number|array $key row key
@@ -245,6 +251,8 @@ abstract class SubDataDisplay {
 	public abstract function getDisplayNames();
 	public abstract function isEditable($index);
 	public function isEditableForNew($index) { return $this->isEditable($index); }
+	public function exportValue($value, $sub_mode, $index) { return $value; }
+	public function exportValueNumber($value, $sub_model, $index, $number) { return $this->exportValue($value, $sub_model, $index); }
 	
 }
 
