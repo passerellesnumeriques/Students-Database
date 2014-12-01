@@ -11,6 +11,7 @@ field_geographic_area.prototype._create = function(data) {
 		this._text.className = "black_link";
 		this._text.href = "#";
 		var t=this;
+		t._edited = data;
 		this._text.onclick = function(ev) {
 			require(["popup_window.js","geographic_area_selection.js"], function() {
 				var content = document.createElement("DIV");
@@ -19,7 +20,7 @@ field_geographic_area.prototype._create = function(data) {
 				var sel = new geographic_area_selection(content, window.top.default_country_id, t.getCurrentData(), 'vertical', true);
 				var popup = new popup_window("Geographic Area", "/static/geography/geography_16.png", content);
 				popup.addOkCancelButtons(function() {
-					t.setData(sel.getSelectedArea());
+					t.setData(t._edited = sel.getSelectedArea());
 					popup.close();
 				});
 				popup.show();
@@ -27,6 +28,7 @@ field_geographic_area.prototype._create = function(data) {
 			stopEventPropagation(ev);
 			return false;
 		};
+		this._getEditedData = function() { return t._edited; };
 	} else {
 		this._text = document.createElement("SPAN");
 	}
@@ -59,4 +61,17 @@ field_geographic_area.prototype._create = function(data) {
 	this._text.style.whiteSpace = "nowrap";
 	this.element.appendChild(this._text);
 	this._setData(data);
+};
+field_geographic_area.prototype.helpFillMultipleItems = function() {
+	var helper = {
+		title: 'Set the geographic area for all',
+		content: document.createElement("DIV"),
+		apply: function(field) {
+			field.setData(this.geo.getSelectedArea());
+		}
+	};
+	require("geographic_area_selection.js", function() {
+		helper.geo = new geographic_area_selection(helper.content, window.top.default_country_id, null, 'vertical', true, function() { layout.changed(helper.content); });
+	});
+	return helper;
 };

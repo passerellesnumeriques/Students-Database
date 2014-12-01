@@ -63,6 +63,27 @@ field_organization.prototype.createValue = function(value, name, oncreated) {
 		}
 	);
 };
+field_organization.prototype.helpFillMultipleItems = function() {
+	var helper = {
+		title: 'Set the same value for all',
+		content: document.createElement("SELECT"),
+		apply: function(field) {
+			field.setData(this.content.options[this.content.selectedIndex].value);
+		}
+	};
+	var o = document.createElement("OPTION");
+	o.text = "";
+	o.value = null;
+	helper.content.add(o);
+	var values = this.getPossibleValues();
+	for (var i = 0; i < values.length; ++i) {
+		o = document.createElement("OPTION");
+		o.text = values[i];
+		o.value = values[i];
+		helper.content.add(o);
+	}
+	return helper;
+};
 field_organization.prototype._addPossibleValue = function(org_id, org_name) {
 	this.config.possible_values.push([org_id,org_name]);
 	if (this.editable) {

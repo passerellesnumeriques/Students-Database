@@ -57,7 +57,7 @@ field_enum.prototype.helpFillMultipleItems = function() {
 		title: 'Set the same value for all',
 		content: document.createElement("SELECT"),
 		apply: function(field) {
-			field.setData(this.content.options[this.content.selectedIndex].value,false,true);
+			field.setData(this.content.options[this.content.selectedIndex].value);
 		}
 	};
 	var o = document.createElement("OPTION");
