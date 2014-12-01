@@ -79,6 +79,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		tr.appendChild(td_category);
 		tr.appendChild(td_data);
 		this.tbody.appendChild(tr);
+		layout.changed(this.tbody);
 		var edit = null;
 		if (owner_id == null || owner_id < 0) {
 			// new
@@ -217,6 +218,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 				contacts.remove(contact);
 				t.onchange.fire(t);
 				setTimeout(function(){if (ontypechanged) ontypechanged();},1);
+				layout.changed(t.tbody);
 			});
 		} else {
 			for (var i = 0; i < t.tbody.childNodes.length; ++i)
@@ -225,6 +227,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 			contacts.remove(contact);
 			t.onchange.fire(t);
 			setTimeout(function(){if (ontypechanged) ontypechanged();},1);
+			layout.changed(t.tbody);
 		}
 	};
 	

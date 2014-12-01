@@ -59,6 +59,7 @@ function contacts(container, owner_type, owner_id, contacts, can_edit, can_add, 
 			container.appendChild(t.phone.table);
 			container.appendChild(t.im.table);
 			t._updateCol1();
+			layout.changed(container);
 			if (onready) onready(t);
 		}
 	};

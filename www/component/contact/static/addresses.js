@@ -83,6 +83,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		} else
 			this.tfoot.style.display = "none";
 		
+		layout.changed(container);
 		if (onready) onready(this);
 	};
 	
@@ -209,6 +210,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			td_data.appendChild(div_remove);
 		}
 		this.tbody.appendChild(tr);
+		layout.changed(this.tbody);
 	};
 	
 	/** Called when the user clicks on "Add address". */
@@ -274,6 +276,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 						t.tbody.removeChild(t.tbody.childNodes[i]);
 				t.addresses.remove(address);
 				t.onchange.fire(t);
+				layout.changed(t.tbody);
 			});
 		} else {
 			for (var i = 0; i < t.tbody.childNodes.length; ++i)
@@ -281,6 +284,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 					t.tbody.removeChild(t.tbody.childNodes[i]);
 			t.addresses.remove(address);
 			t.onchange.fire(t);
+			layout.changed(t.tbody);
 		}
 	};
 	
