@@ -69,7 +69,14 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 		$cfg .= "}";
 		return array("field_integer",$cfg);
 	}
-	
+
+	public function exportValue($value, $sub_model) {
+		if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id")) {
+			$digits = PNApplication::$instance->selection->getOneConfigAttributeValue("number_of_applicant_id_digits");
+			return str_pad("".$value, $digits, "0", STR_PAD_LEFT);
+		}
+		return $value;
+	}
 }
 
 class ApplicantExclusionReason extends datamodel\DataDisplay {

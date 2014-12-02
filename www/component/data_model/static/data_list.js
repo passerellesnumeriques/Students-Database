@@ -1712,21 +1712,17 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				document.body.appendChild(form);
 				form.submit();
 				t._download_frame = frame;
-				var interval;
-				var refreshing = false;
-				interval = setInterval(function() {
-					if (refreshing) return;
-					refreshing = true;
+				var refresh = function() {
 					service.json("application","get_temp_data",{id:temp_data_id},function(res) {
-						refreshing = false;
 						if (res.value == 'done' || res.value === null || isNaN(parseInt(res.value))) {
-							clearInterval(interval);
 							unlock_screen(locker);
 							return;
 						}
 						pb.setPosition(parseInt(res.value));
+						refresh();
 					});
-				},1000);
+				};
+				refresh();
 			});
 		});
 	};
