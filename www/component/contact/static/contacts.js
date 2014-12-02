@@ -47,6 +47,7 @@ function contacts(container, owner_type, owner_id, contacts, can_edit, can_add, 
 			if (t.email.col1) t.email.col1.style.width = w+"px";
 			if (t.phone.col1) t.phone.col1.style.width = w+"px";
 			if (t.im.col1) t.im.col1.style.width = w+"px";
+			layout.changed(container);
 		}, 1);
 	};
 	

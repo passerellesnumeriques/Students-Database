@@ -27,6 +27,8 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	t.save_button = null;
 	/** {Element} the cancel edit when in editable mode */
 	t.unedit_button = null;
+	/** {Element} the add button when in editable mode with createValue available */
+	t.create_value_button = null;
 	/** {Array} list of locks when in editable mode */
 	t.locks = null;
 	/** indicates if we are currently in editabled mode */
@@ -36,6 +38,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	t.fillContainer = function() {
 		t._fill_container = true;
 		t.field.getHTMLElement().style.width = "100%";
+		t.field.getHTMLElement().style.minHeight = "14px";
 		//t.field.getHTMLElement().style.height = "100%";
 	};
 
@@ -53,6 +56,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		}
 		if (t.save_button) { container.removeChild(t.save_button); t.save_button = null; }
 		if (t.unedit_button) { container.removeChild(t.unedit_button); t.unedit_button = null; }
+		if (t.create_value_button) { container.removeChild(t.create_value_button); t.create_value_button = null; }
 		var config_field = function() {
 			if (t.editable) {
 				t.field.getHTMLElement().title = "Click to edit";
@@ -135,6 +139,19 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.unedit_button.ondomremoved(function() {
 				if (t.save_button) t.unedit();
 			});
+			if (typeof t.field.createValue == 'function') {
+				t.create_value_button = document.createElement("BUTTON");
+				t.create_value_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+				t.create_value_button.title = "Create a new one";
+				t.create_value_button.className = "flat small_icon";
+				t.create_value_button.verticalAlign = 'middle';
+				t.create_value_button.onclick = function(ev) {
+					t.field.createValue();
+					stopEventPropagation(ev);
+					return false;
+				};
+				container.insertBefore(t.create_value_button, t.unedit_button.nextSibling);
+			}
 			layout.changed(container);
 		});
 	};
