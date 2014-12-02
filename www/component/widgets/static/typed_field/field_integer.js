@@ -38,6 +38,7 @@ field_integer.prototype._create = function(data) {
 		t.input.type = "text";
 		t.input.ondomremoved(function() {
 			t.input = null;
+			t = null;
 		});
 		t.input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
 		if (this.config && this.config.min && this.config.max) {
@@ -73,7 +74,7 @@ field_integer.prototype._create = function(data) {
 		};
 		var getValueFromInput = function() {
 			var value;
-			if (t.input.value.length == 0) value = null;
+			if (!t || !t.input || t.input.value.length == 0) value = null;
 			else {
 				var i = parseInt(t.input.value);
 				if (isNaN(i)) i = null;

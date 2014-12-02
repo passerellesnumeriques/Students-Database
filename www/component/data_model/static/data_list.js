@@ -1208,10 +1208,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		var u = new URL(location.href);
 		setCookie("data_list_fields",s,15*24*60,u.path);
 	};
-	/** Show the menu to select the columns/fields to display
-	 * @param {DOMNode} button the menu will be display below this element
-	 */
-	t._selectColumnsDialog = function(button) {
+	t._columnDialogLayout = function(button, createFieldContent, createSubFieldContent, keep_on_click) {
 		require("context_menu.js");
 		window.top.theme.css("data_list.css"); // the context menu goes to window.top, we need the stylesheet
 		var categories = [];
@@ -1271,176 +1268,154 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					var div = document.createElement("DIV");
 					div.className = "content";
 					td.appendChild(div);
-					var cb = document.createElement("INPUT"); cb.type = 'checkbox';
-					cb.data = f;
-					var found = -1;
-					for (var k = 0; k < t.show_fields.length; ++k)
-						if (t.show_fields[k].field.path.path == f.path.path &&
-							t.show_fields[k].field.name == f.name) { found = k; break; }
-					if (found != -1 && t.show_fields[found].sub_index == -1)
-						cb.checked = 'checked';
-					cb.onclick = function() {
-						if (this.checked) {
-							if (this._sub_cb)
-								for (var k = 0; k < this._sub_cb.length; ++k) {
-									this._sub_cb[k].checked = "";
-									this._sub_cb[k].disabled = "disabled";
-									t.hideSubField(this.data, k);
-								}
-							t.showField(this.data);
-						} else {
-							t.hideField(this.data);
-							if (this._sub_cb)
-								for (var k = 0; k < this._sub_cb.length; ++k) {
-									this._sub_cb[k].disabled = "";
-								}
-						}
-						t._updateFieldsCookie();
-					};
-					div.appendChild(cb);
-					div.appendChild(document.createTextNode(f.name));
+					var parent_info = createFieldContent(f, div);
 					if (f.sub_data) {
-						cb._sub_cb = [];
 						var sub_div = document.createElement("DIV");
 						sub_div.className = "sub_data";
-						for (k = 0; k < f.sub_data.names.length; ++k) {
-							var sub_cb = document.createElement("INPUT");
-							sub_cb.type = "checkbox";
-							if (found != -1 && t.show_fields[found].sub_index == -1)
-								sub_cb.disabled = "disabled";
-							else {
-								var sub_found = false;
-								for (var l = 0; l < t.show_fields.length; ++l)
-									if (t.show_fields[l].field.path.path == f.path.path &&
-										t.show_fields[l].field.name == f.name &&
-										t.show_fields[l].sub_index == k) { sub_found = true; break; }
-								if (sub_found)
-									sub_cb.checked = "checked";
-							}
-							sub_div.appendChild(sub_cb);
-							sub_div.appendChild(document.createTextNode(f.sub_data.names[k]));
-							sub_div.appendChild(document.createElement("BR"));
-							sub_cb._parent_cb = cb;
-							sub_cb._index = k;
-							cb._sub_cb.push(sub_cb);
-							sub_cb.onchange = function() {
-								if (this.checked) {
-									t.showSubField(this._parent_cb.data, this._index);
-								} else {
-									t.hideSubField(this._parent_cb.data, this._index);
-								}
-								t._updateFieldsCookie();
-							};
-						}
+						for (k = 0; k < f.sub_data.names.length; ++k)
+							createSubFieldContent(f, k, sub_div, parent_info);
 						div.appendChild(sub_div);
 					}
-
 				}
 			}
 		}
 		require("context_menu.js",function(){
 			var menu = new context_menu();
 			menu.removeOnClose = true;
-			menu.addItem(dialog, true);
+			menu.addItem(dialog, keep_on_click);
 			menu.showBelowElement(button);
 		});
 	};
-	t._contextMenuAddFilter = function(button, onselect) {
-		require("context_menu.js");
-		window.top.theme.css("data_list.css"); // the context menu goes to window.top, we need the stylesheet
-		var categories = [];
-		for (var i = 0; i < t._available_fields.length; ++i)
-			if (!categories.contains(t._available_fields[i].category))
-				categories.push(t._available_fields[i].category);
-		var fields_menu = document.createElement("DIV");
-		var table = document.createElement("TABLE"); fields_menu.appendChild(table);
-		table.className = "data_list_select_fields_menu";
-		var tr_head = document.createElement("TR"); table.appendChild(tr_head);
-		tr_head.className = "header";
-		var tr_content = document.createElement("TR"); table.appendChild(tr_content);
-		tr_content.className = "content";
-		for (var i = 0; i < categories.length; ++i) {
-			var td = document.createElement("TD");
-			tr_head.appendChild(td);
-			td.appendChild(document.createTextNode(categories[i]));
-			td.style.whiteSpace = "nowrap";
-			td = document.createElement("TD");
-			td.style.whiteSpace = "nowrap";
-			tr_content.appendChild(td);
-			for (var j = 0; j < t._available_fields.length; ++j) {
-				var f = t._available_fields[j];
-				if (f.category != categories[i]) continue;
-				// check if a filter already exists on that field
-				var filter_exists = false;
-				for (var k = 0; k < t._filters.length; ++k) {
-					if (t._filters[k].category == f.category && t._filters[k].name == f.name) { filter_exists = true; break; }
-					var o = t._filters[k].or;
-					while (o) {
-						if (o.category == f.category && o.name == f.name) { filter_exists = true; break; }
-						o = o.or;
-					}
-					if (filter_exists) break;
-				}
-				// create the menu item
-				var field_div = document.createElement("DIV"); td.appendChild(field_div);
-				field_div.appendChild(document.createTextNode(f.name));
-				field_div.className = "context_menu_item";
-				field_div.field = f;
-				if (f.filter_classname && (window[f.filter_classname].prototype.can_multiple || !filter_exists)) {
-					field_div.onclick = function() {
-						var filter = {
-							category: this.field.category,
-							name: this.field.name,
-							force: false,
-							data: null
-						};
-						onselect(this.field, filter);
-					};
+	/** Show the menu to select the columns/fields to display
+	 * @param {DOMNode} button the menu will be display below this element
+	 */
+	t._selectColumnsDialog = function(button) {
+		t._columnDialogLayout(button, function(f,div){
+			var cb = document.createElement("INPUT"); cb.type = 'checkbox';
+			cb.data = f;
+			var found = -1;
+			for (var k = 0; k < t.show_fields.length; ++k)
+				if (t.show_fields[k].field.path.path == f.path.path &&
+					t.show_fields[k].field.name == f.name) { found = k; break; }
+			if (found != -1 && t.show_fields[found].sub_index == -1)
+				cb.checked = 'checked';
+			cb.onclick = function() {
+				if (this.checked) {
+					if (this._sub_cb)
+						for (var k = 0; k < this._sub_cb.length; ++k) {
+							this._sub_cb[k].checked = "";
+							this._sub_cb[k].disabled = "disabled";
+							t.hideSubField(this.data, k);
+						}
+					t.showField(this.data);
 				} else {
-					field_div.className += " disabled";
-				}
-				if (f.sub_data) {
-					for (var k = 0; k < f.sub_data.names.length; ++k) {
-						// check if a filter already exists on that field
-						var filter_exists = false;
-						for (var l = 0; l < t._filters.length; ++l) {
-							if (t._filters[l].category == f.category && t._filters[l].name == f.name && t._filters[l].sub_index == k) { filter_exists = true; break; }
-							var o = t._filters[l].or;
-							while (o) {
-								if (o.category == f.category && o.name == f.name && o.sub_index == k) { filter_exists = true; break; }
-								o = o.or;
-							}
-							if (filter_exists) break;
+					t.hideField(this.data);
+					if (this._sub_cb)
+						for (var k = 0; k < this._sub_cb.length; ++k) {
+							this._sub_cb[k].disabled = "";
 						}
-						// create the item
-						var sub_div = document.createElement("DIV"); td.appendChild(sub_div);
-						sub_div.className = "sub_data context_menu_item";
-						sub_div.appendChild(document.createTextNode(f.sub_data.names[k]));
-						sub_div.sub_index = k;
-						sub_div.field = f;
-						if (f.sub_data.filters && f.sub_data.filters[k].classname && (window[f.sub_data.filters[k].classname].prototype.can_multiple || !filter_exists)) {
-							sub_div.onclick = function() {
-								var filter = {
-									category: this.field.category,
-									name: this.field.name,
-									sub_data: this.sub_index,
-									force: false,
-									data: null
-								};
-								onselect(this.field, filter);
-							};
-						} else {
-							sub_div.className += " disabled";
-						}
-					}
 				}
+				t._updateFieldsCookie();
+			};
+			div.appendChild(cb);
+			div.appendChild(document.createTextNode(f.name));
+			return [cb,found];
+		},function(f, sub_data_index, sub_div, parent_info) {
+			var cb = parent_info[0];
+			var found = parent_info[1];
+			var sub_cb = document.createElement("INPUT");
+			sub_cb.type = "checkbox";
+			if (found != -1 && t.show_fields[found].sub_index == -1)
+				sub_cb.disabled = "disabled";
+			else {
+				var sub_found = false;
+				for (var l = 0; l < t.show_fields.length; ++l)
+					if (t.show_fields[l].field.path.path == f.path.path &&
+						t.show_fields[l].field.name == f.name &&
+						t.show_fields[l].sub_index == sub_data_index) { sub_found = true; break; }
+				if (sub_found)
+					sub_cb.checked = "checked";
 			}
-		}
-		require("context_menu.js", function() {
-			var menu = new context_menu();
-			menu.addItem(fields_menu);
-			menu.showBelowElement(button);
-		});
+			sub_div.appendChild(sub_cb);
+			sub_div.appendChild(document.createTextNode(f.sub_data.names[sub_data_index]));
+			sub_div.appendChild(document.createElement("BR"));
+			sub_cb._parent_cb = cb;
+			sub_cb._index = sub_data_index;
+			if (!cb._sub_cb) cb._sub_cb = [];
+			cb._sub_cb.push(sub_cb);
+			sub_cb.onchange = function() {
+				if (this.checked) {
+					t.showSubField(this._parent_cb.data, this._index);
+				} else {
+					t.hideSubField(this._parent_cb.data, this._index);
+				}
+				t._updateFieldsCookie();
+			};
+		}, true);
+	};
+	t._contextMenuAddFilter = function(button, onselect) {
+		t._columnDialogLayout(button, function(f,div){
+			// check if a filter already exists on that field
+			var filter_exists = false;
+			for (var k = 0; k < t._filters.length; ++k) {
+				if (t._filters[k].category == f.category && t._filters[k].name == f.name) { filter_exists = true; break; }
+				var o = t._filters[k].or;
+				while (o) {
+					if (o.category == f.category && o.name == f.name) { filter_exists = true; break; }
+					o = o.or;
+				}
+				if (filter_exists) break;
+			}
+			// create the menu item
+			div.appendChild(document.createTextNode(f.name));
+			addClassName(div, "context_menu_item");
+			div.field = f;
+			if (f.filter_classname && (window[f.filter_classname].prototype.can_multiple || !filter_exists)) {
+				div.onclick = function() {
+					var filter = {
+						category: this.field.category,
+						name: this.field.name,
+						force: false,
+						data: null
+					};
+					onselect(this.field, filter);
+				};
+			} else {
+				addClassName(div, "disabled");
+			}
+		},function(f, sub_data_index, sub_div, parent_info) {
+			// check if a filter already exists on that field
+			var filter_exists = false;
+			for (var l = 0; l < t._filters.length; ++l) {
+				if (t._filters[l].category == f.category && t._filters[l].name == f.name && t._filters[l].sub_index == sub_data_index) { filter_exists = true; break; }
+				var o = t._filters[l].or;
+				while (o) {
+					if (o.category == f.category && o.name == f.name && o.sub_index == k) { filter_exists = true; break; }
+					o = o.or;
+				}
+				if (filter_exists) break;
+			}
+			// create the item
+			addClassName(sub_div, "context_menu_item");
+			sub_div.appendChild(document.createTextNode(f.sub_data.names[sub_data_index]));
+			sub_div.appendChild(document.createElement("BR"));
+			sub_div.sub_index = sub_data_index;
+			sub_div.field = f;
+			if (f.sub_data.filters && f.sub_data.filters[sub_data_index].classname && (window[f.sub_data.filters[sub_data_index].classname].prototype.can_multiple || !filter_exists)) {
+				sub_div.onclick = function() {
+					var filter = {
+						category: this.field.category,
+						name: this.field.name,
+						sub_data: this.sub_index,
+						force: false,
+						data: null
+					};
+					onselect(this.field, filter);
+				};
+			} else {
+				addClassName(sub_div, "disabled");
+			}
+		}, false);
 	};
 	/** Create the display for a filter, inside the given table
 	 * @param {Object} filter the filter
