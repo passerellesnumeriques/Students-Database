@@ -176,9 +176,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	/** Remove all filters
 	 * @param {Boolean} remove_forced true to remove also the filters which cannot be remove by the user 
 	 */
-	t.resetFilters = function(remove_forced) {
+	t.resetFilters = function(remove_forced, new_filters) {
+		if (!new_filters) new_filters = [];
 		if (remove_forced) {
-			t._filters = [];
+			t._filters = new_filters;
 			t.onfilterschanged.fire();
 		} else {
 			var changed = false;
@@ -188,6 +189,11 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					i--;
 					changed = true;
 				}
+			if (new_filters.length > 0) {
+				for (var i = 0; i < new_filters.length; ++i)
+					t._filters.push(new_filters[i]);
+				changed = true;
+			}
 			if (changed) t.onfilterschanged.fire();
 		}
 	};

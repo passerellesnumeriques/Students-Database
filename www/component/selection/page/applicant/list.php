@@ -110,6 +110,113 @@ class page_applicant_list extends SelectionPage {
 
 					<?php } ?>
 
+					var has_forced_filter = false;
+					for (var i = 0; i < filters.length; ++i)
+						if (filters[i].force) { has_forced_filter = true; break; }
+						else {
+							var or = filters[i].or;
+							while (or) { if (or.force) { has_forced_filter = true; break; } or = or.or; }
+							if (has_forced_filter) break;
+						}
+					if (!has_forced_filter) {
+						var predefined_filters = document.createElement("BUTTON");
+						predefined_filters.className = "flat";
+						predefined_filters.innerHTML = "<img src='/static/data_model/filter.gif'/> Pre-defined filters";
+						predefined_filters.onclick = function() {
+							var t=this;
+							require("context_menu.js",function() {
+								var menu = new context_menu();
+								menu.addIconItem(null, "All applicants (no filter)", function() {
+									list.resetFilters();
+									list.reloadData();
+								});
+								menu.addIconItem(null, "All not yet excluded", function() {
+									list.resetFilters(false, [{category:'Selection',name:'Excluded',data:{values:[0]}}]);
+									list.reloadData();
+								});
+								/* TODO 
+								menu.addSubMenuItem(null, "Excluded because of", function(sub_menu, onready) {
+									sub_menu.addIconItem(null, "Too old", function() {
+										
+									});
+									onready();
+								});
+								*/
+								menu.addSubMenuItem(null, "From Information Session", function(sub_menu, onready) {
+									sub_menu.addIconItem(null, "Not assigned to any IS", function() {
+										list.resetFilters(false, [{category:'Selection',name:'Information Session',data:{values:["NULL"]}}]);
+										list.reloadData();
+									});
+									var f = list.getField("Selection", "Information Session");
+									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
+										var val = f.filter_config.possible_values[i];
+										sub_menu.addIconItem(null, val[1], function(ev, val) {
+											list.resetFilters(false, [{category:'Selection',name:'Information Session',data:{values:[val]}}]);
+											list.reloadData();
+										}, val[0]);
+									}
+									onready();
+								});
+								menu.addSubMenuItem(null, "From Exam Center", function(sub_menu, onready) {
+									sub_menu.addIconItem(null, "Not assigned to any center", function() {
+										list.resetFilters(false, [{category:'Selection',name:'Exam Center',data:{values:["NULL"]}}]);
+										list.reloadData();
+									});
+									var f = list.getField("Selection", "Exam Center");
+									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
+										var val = f.filter_config.possible_values[i];
+										sub_menu.addIconItem(null, val[1], function(ev, val) {
+											list.resetFilters(false, [{category:'Selection',name:'Exam Center',data:{values:[val]}}]);
+											list.reloadData();
+										}, val[0]);
+									}
+									onready();
+								});
+								menu.addSubMenuItem(null, "From High School", function(sub_menu, onready) {
+									sub_menu.addIconItem(null, "No high school specified", function() {
+										list.resetFilters(false, [{category:'Selection',name:'High School',data:{values:["NULL"]}}]);
+										list.reloadData();
+									});
+									var f = list.getField("Selection", "High School");
+									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
+										var val = f.filter_config.possible_values[i];
+										sub_menu.addIconItem(null, val[1], function(ev, val) {
+											list.resetFilters(false, [{category:'Selection',name:'High School',data:{values:[val]}}]);
+											list.reloadData();
+										}, val[0]);
+									}
+									onready();
+								});
+								menu.addSubMenuItem(null, "Followed by NGO", function(sub_menu, onready) {
+									sub_menu.addIconItem(null, "Not followed by any NGO", function() {
+										list.resetFilters(false, [{category:'Selection',name:'Following NGO',data:{values:["NULL"]}}]);
+										list.reloadData();
+									});
+									var f = list.getField("Selection", "Following NGO");
+									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
+										var val = f.filter_config.possible_values[i];
+										sub_menu.addIconItem(null, val[1], function(ev, val) {
+											list.resetFilters(false, [{category:'Selection',name:'Following NGO',data:{values:[val]}}]);
+											list.reloadData();
+										}, val[0]);
+									}
+									onready();
+								});
+								menu.addIconItem(null, "Eligible for Interview (exam passers)", function() {
+									list.resetFilters(false, [{category:'Selection',name:'Eligible for Interview',data:{values:[1]}}]);
+									list.reloadData();
+								});
+								menu.addIconItem(null, "Absent during exam", function() {
+									list.resetFilters(false, [{category:'Selection',name:'Exam Attendance',data:{values:['No']}}]);
+									list.reloadData();
+								});
+								// TODO others...
+								menu.showBelowElement(t);
+							});
+						};
+						list.addHeader(predefined_filters);
+					}
+
 					list.makeRowsClickable(function(row){
 						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id), {sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}}, 95, 95); 
 					});

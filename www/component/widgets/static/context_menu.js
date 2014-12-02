@@ -47,6 +47,8 @@ function context_menu(menu) {
 			menu.childNodes[i].onclickset = true;
 		}
 	
+	t.element_clicked = new Custom_Event();
+	
 	/** Append an item to the menu
 	 * @method context_menu#addItem
 	 * @param element the html element to append
@@ -58,6 +60,7 @@ function context_menu(menu) {
 		if (element.nodeName == "A") {
 			// this is a link: onclick, close the menu and follow the link
 			element.onclick = function() {
+				t.element_clicked.fire(element);
 				t.hide();
 				return true;
 			};
@@ -65,6 +68,7 @@ function context_menu(menu) {
 			if (typeof element.onclickset == 'undefined' && element.onclick && !element.data)
 				element.data = element.onclick;
 			element.onclick = function() {
+				t.element_clicked.fire(element);
 				t.hide();
 				if (this.data) this.data();
 				return false;
@@ -134,6 +138,41 @@ function context_menu(menu) {
 		sep.style.marginBottom = "3px";
 		t.addItem(sep);
 	};
+	t.addSubMenuItem = function(icon, text, provider) {
+		var div = document.createElement("DIV");
+		div._sub_menu = true;
+		div.style.display = "flex";
+		div.style.flexDirection = "row";
+		if (icon) {
+			var img = document.createElement("IMG");
+			img.onload = function() { t.resize(); };
+			img.src = icon;
+			img.style.verticalAlign = "bottom";
+			img.style.marginRight = "5px";
+			img.style.flex = "none";
+			div.appendChild(img);
+		}
+		var span = document.createElement("SPAN");
+		span.style.flex = "1 1 auto";
+		span.appendChild(document.createTextNode(text));
+		div.appendChild(span);
+		var img = document.createElement("IMG");
+		img.src = theme.icons_10.arrow_right_black;
+		img.style.flex = "none";
+		div.appendChild(img);
+		div.onclick = function(ev) {
+			var sub_menu = new context_menu();
+			provider(sub_menu, function() {
+				sub_menu.element_clicked.add_listener(function(elem) {
+					if (elem._sub_menu) return;
+					t.hide();
+				});
+				sub_menu.showAtRightOfElement(div);
+			});
+		};
+		div.className = "context_menu_item";
+		t.addItem(div, true);
+	};
 	/** Return the items contained in this menu
 	 * @method context_menu#getItems
 	 * @returns the list of html elements contained in the menu
@@ -169,6 +208,14 @@ function context_menu(menu) {
 			menu.style.display = "";
 			t.show_from = from;
 			window.top.positionAboveElement(menu, from, min_width_is_from, function(x,y) { t._shownAt(x,y,from); });
+		});
+	};
+	t.showAtRightOfElement = function(from) {
+		window.top.require("position.js", function() {
+			menu.style.visibility = "visible";
+			menu.style.display = "";
+			t.show_from = from;
+			window.top.positionAtRightOfElement(menu, from, function(x,y) { t._shownAt(x,y,from); });
 		});
 	};
 	/** Display the menu at the given position (using absolute positioning)
