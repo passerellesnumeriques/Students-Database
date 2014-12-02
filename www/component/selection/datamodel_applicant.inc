@@ -7,6 +7,13 @@ $sm->addTable("Applicant")
 	->addInteger("applicant_id",32,0,null,false,true)//applicant_id must be a number, minimum 0 so we can also generate using AUTO_INCREMENT
 	->addEnum("automatic_exclusion_step", array("Application Form","Written Exam","Interview","Social Investigation"))
 	->addString("automatic_exclusion_reason",255,0,true,false)//This field must be filled up by functionalities ("missing",...) to explain the automatic exclusion step
+	/* Possible values are:
+	 *  - Application Form
+	 *    + Too old
+	 *  - Written Exam
+	 *    + Failed
+	 *    + Attendance
+	 */
 	->addString("custom_exclusion",255,0,true,false)//This field can be filled up by user
 	->addBoolean("excluded",false)
 	->addForeignKey("high_school", "Organization", false, false, true)

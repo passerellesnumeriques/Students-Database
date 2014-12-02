@@ -27,22 +27,29 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 		}
 	}
 	
+	private $cache = array();
 	public function getDataDisplay($come_from, $sub_model) {
 		$list = parent::getDataDisplay($come_from, $sub_model);
 		if ($sub_model <> "@link") {
-			// add the exam/extract results
-			$subjects = SQLQuery::create()->select("ExamSubject")->selectSubModel("SelectionCampaign", $sub_model)->execute();
-			foreach ($subjects as $subject) {
-				$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$subject["name"], "ApplicantExamSubject>applicant(exam_subject=".$subject["id"].").score");
-				$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
-				array_push($list, $data_display);
+			if (!isset($this->cache[$come_from]))
+				$this->cache[$come_from] = array();
+			if (!isset($this->cache[$come_from][$sub_model])) {
+				// add the exam/extract results
+				$this->cache[$come_from][$sub_model] = array();
+				$subjects = SQLQuery::create()->select("ExamSubject")->selectSubModel("SelectionCampaign", $sub_model)->execute();
+				foreach ($subjects as $subject) {
+					$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$subject["name"], "ApplicantExamSubject>applicant(exam_subject=".$subject["id"].").score");
+					$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+					array_push($this->cache[$come_from][$sub_model], $data_display);
+				}
+				$extracts = SQLQuery::create()->select("ExamSubjectExtract")->selectSubModel("SelectionCampaign", $sub_model)->execute();
+				foreach ($extracts as $extract) {
+					$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$extract["name"], "ApplicantExamExtract>applicant(exam_extract=".$extract["id"].").score");
+					$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+					array_push($this->cache[$come_from][$sub_model], $data_display);
+				}
 			}
-			$extracts = SQLQuery::create()->select("ExamSubjectExtract")->selectSubModel("SelectionCampaign", $sub_model)->execute();
-			foreach ($extracts as $extract) {
-				$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$extract["name"], "ApplicantExamExtract>applicant(exam_extract=".$extract["id"].").score");
-				$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
-				array_push($list, $data_display);
-			}
+			$list = array_merge($list, $this->cache[$come_from][$sub_model]);
 		}
 		return $list;
 	}
@@ -90,7 +97,20 @@ class ApplicantExclusionReason extends datamodel\DataDisplay {
 	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() { return false; }
 	public function isMandatory($sub_model) { return false; }
-	public function getTypedFilter($sub_model) { return null; } // TODO
+	public function getTypedFilter($sub_model) {
+		$cfg = "{";
+		$cfg .= "possible_values:[";
+			$cfg .= "'Too old'";
+			$cfg .= ",'Absent during exam'";
+			$cfg .= ",'Only partially attend the exam'";
+			$cfg .= ",'Cheat during exam'";
+			$cfg .= ",'Failed at exam'";
+			$cfg .= ",'Other: Manual Exclusion'";
+		$cfg .= "]";
+		$cfg .= ",can_be_null:false";
+		$cfg .= "}";
+		return array("filter_enum",$cfg);
+	}
 	
 	public function buildSQL(&$q, $path) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
@@ -125,7 +145,23 @@ class ApplicantExclusionReason extends datamodel\DataDisplay {
 	}
 	
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
-		return null; // TODO
+		if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
+		$table_alias = $q->getTableAlias($path->table->getName());
+		$w = "";
+		foreach ($filter["values"] as $enum_value) {
+			if ($enum_value == "") continue;
+			if (strlen($w) > 0) $w .= " OR ";
+			switch ($enum_value) {
+				case "Too old": $w .= "`$table_alias`.`automatic_exclusion_reason`='Too old'"; break;
+				case "Absent during exam": $w .= "(`$table_alias`.`automatic_exclusion_step`='Written Exam' AND `$table_alias`.`exam_attendance`='No')"; break;
+				case "Only partially attend the exam": $w .= "(`$table_alias`.`automatic_exclusion_step`='Written Exam' AND `$table_alias`.`exam_attendance`='Partially')"; break;
+				case "Cheat during exam": $w .= "(`$table_alias`.`automatic_exclusion_step`='Written Exam' AND `$table_alias`.`exam_attendance`='Cheating')"; break;
+				case "Failed at exam": $w .= "(`$table_alias`.`automatic_exclusion_step`='Written Exam' AND `$table_alias`.`automatic_exclusion_reason`='Failed')"; break;
+				case "Other: Manual Exclusion": $w .= "`$table_alias`.`custom_exclusion` IS NOT NULL"; break;
+			}
+		}
+		if ($w == "") return null;
+		return array("type"=>"where","condition"=>$w);
 	}
 	
 	public function getNewData() { return null; }

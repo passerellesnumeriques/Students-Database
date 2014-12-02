@@ -134,14 +134,17 @@ class page_applicant_list extends SelectionPage {
 									list.resetFilters(false, [{category:'Selection',name:'Excluded',data:{values:[0]}}]);
 									list.reloadData();
 								});
-								/* TODO 
 								menu.addSubMenuItem(null, "Excluded because of", function(sub_menu, onready) {
-									sub_menu.addIconItem(null, "Too old", function() {
-										
-									});
+									var f = list.getField("Selection", "Exclusion Reason");
+									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
+										var val = f.filter_config.possible_values[i];
+										sub_menu.addIconItem(null, val, function(ev, val) {
+											list.resetFilters(false, [{category:'Selection',name:'Exclusion Reason',data:{values:[val]}}]);
+											list.reloadData();
+										}, val);
+									}
 									onready();
 								});
-								*/
 								menu.addSubMenuItem(null, "From Information Session", function(sub_menu, onready) {
 									sub_menu.addIconItem(null, "Not assigned to any IS", function() {
 										list.resetFilters(false, [{category:'Selection',name:'Information Session',data:{values:["NULL"]}}]);
