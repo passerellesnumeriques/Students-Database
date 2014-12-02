@@ -414,17 +414,18 @@ class service_get_data_list extends Service {
 			// get multiple export fields
 			$multiple = array();
 			for ($i = 0; $i < count($fields); $i++) {
-				if (isset($multiple[$fields[$i]["path"]])) continue;
+				$data = $display_data[$i];
+				$data_name = $data->getCategoryName().".".$data->getDisplayName();
+				if (isset($multiple[$data_name])) continue;
 				$max = 0;
 				foreach ($res as $row) {
 					$a = $data_aliases[$i];
-					$data = $display_data[$i];
 					$value = $data->getData($row, $a);
 					$path = $paths[$i];
 					$times = $data->getExportTimes($value, $path->sub_model);
 					if ($times > $max) $max = $times;
 				}
-				$multiple[$fields[$i]["path"]] = $max;
+				$multiple[$data_name] = $max;
 			}
 			// column headers
 			$has_sub_data = false;
@@ -432,13 +433,17 @@ class service_get_data_list extends Service {
 			$col_index = 0;
 			for ($i = 0; $i < count($display_data); $i++) {
 				$data = $display_data[$i];
-				$times = $multiple[$fields[$i]["path"]];
+				$data_name = $data->getCategoryName().".".$data->getDisplayName();
+				$times = $multiple[$data_name];
 				$count = 1;
 				if ($fields[$i]["sub_index"] <> -1)
 					while ($i+$count < count($display_data) && $fields[$i+$count]["path"] == $fields[$i]["path"]) $count++;
 				for ($num = 1; $num <= $times; $num++) {
 					// set the main title: display name
 					$sheet->setCellValueByColumnAndRow($col_index, 1, $data->getDisplayName().($times > 1 ? " ".$num : ""));
+					$style = $sheet->getStyleByColumnAndRow($col_index, 1);
+					$style->getFont()->setBold(true);
+					$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 					if ($has_sub_data) {
 						// we have sub data
 						if ($fields[$i]["sub_index"] == -1) {
@@ -453,7 +458,11 @@ class service_get_data_list extends Service {
 							$names = $sub_data->getDisplayNames();
 							for ($j = 0; $j < $count; $j++) {
 								$sub_index = $fields[$i+$j]["sub_index"];
-								$sheet->setCellValueByColumnAndRow($col_index++, 2, $names[$sub_index]);
+								$sheet->setCellValueByColumnAndRow($col_index, 2, $names[$sub_index]);
+								$style = $sheet->getStyleByColumnAndRow($col_index, 2);
+								$style->getFont()->setBold(true);
+								$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+								$col_index++;
 							}
 							
 						}
@@ -470,7 +479,8 @@ class service_get_data_list extends Service {
 					$data = $display_data[$i];
 					$path = $paths[$i];
 					$value = $data->getData($row, $a);
-					$times = $multiple[$fields[$i]["path"]];
+					$data_name = $data->getCategoryName().".".$data->getDisplayName();
+					$times = $multiple[$data_name];
 					$count = 1;
 					if ($fields[$i]["sub_index"] <> -1)
 						while ($i+$count < count($display_data) && $fields[$i+$count]["path"] == $fields[$i]["path"]) $count++;

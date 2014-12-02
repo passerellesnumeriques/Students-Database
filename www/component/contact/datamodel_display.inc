@@ -128,6 +128,21 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 					PNApplication::$instance->contact->addContactToOrganization($type_id, $contact);
 		}
 	}
+	
+	public function getExportTimes($value, $sub_model) {
+		$nb = 0;
+		foreach ($value->contacts as $c) if ($c->type == $this->type) $nb++;
+		return $nb;
+	}
+	public function exportValueNumber($value, $sub_model, $number) {
+		$nb = 0;
+		foreach ($value->contacts as $c)
+			if ($c->type == $this->type) {
+				if ($nb < $number) $nb++;
+				else return $c->contact;
+			}
+		return "";
+	}
 
 }
 

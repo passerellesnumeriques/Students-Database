@@ -144,7 +144,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 			},
 			function(text){
 				require("contact_objects.js",function(){
-					if(text) t.createContact(new Contact(-1, contact_type, "Professional", text));
+					if(text) t.createContact(new Contact(-1, contact_type, "?", text));
 				});
 			}
 		);
@@ -238,6 +238,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 */
 	this._createCategoryField = function (container,contact){
 		this.context = null;
+		container.style.whiteSpace = "nowrap";
 		container.innerHTML = contact.sub_type;
 		if(can_edit){
 			container.style.cursor = "pointer";
@@ -252,52 +253,11 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 * @param {Contact} contact the associated contact
 	 */
 	this._showCategoryContextMenu = function(container,contact){
-		require('context_menu.js',function(){
-			if (t.context) t.context.hide();
-			t.context = new context_menu();
-			t.context.onclose = function() {t.context = null;};
-			t._addCategoryContextMenuItem(container, "Personal", contact);
-			t._addCategoryContextMenuItem(container, "Professional", contact);
-			t._addCategoryContextMenuItem(container, "Other", contact);
-			
-			t.context.showBelowElement(container);
+		require('contact_objects.js',function(){
+			showContactTypeMenu(container,contact.type,contact.sub_type,true,function(new_type) {
+				t._saveSubType(contact, new_type, container);
+			});
 		});
-	};
-	
-	/**
-	 * Add an item to the category context_menu
-	 * @param {Element} container the one which contains the category field
-	 * @param {String} data the value of the item
-	 * @param {Contact} contact the associated contact
-	 */
-	this._addCategoryContextMenuItem = function(container, data, contact){
-		var item = document.createElement('div');
-		item.innerHTML = data;
-		
-		if(contact.sub_type == data) item.style.fontWeight ='bold';
-		if(data == "Other"){
-			var input = document.createElement("INPUT");
-			input.type = 'text';
-			input.maxLength = 10;
-			input.size = 10;
-			item.appendChild(input);
-			t.context.onclose = function(){
-				if(input.value.checkVisible()){
-					t._saveSubType(contact, input.value.uniformFirstLetterCapitalized(),container);
-				}
-			};
-			input.onkeypress = function(e){var ev = getCompatibleKeyEvent(e);
-									if(ev.isEnter) t.context.hide();
-								};
-		}
-		else{
-			item.onclick = function(){
-				t._saveSubType(contact,data,container);
-			};
-		}
-		item.className = 'context_menu_item';
-		t.context.addItem(item);
-		if(data == "Custom") item.onclick = null;
 	};
 	
 	/**

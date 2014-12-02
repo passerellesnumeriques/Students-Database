@@ -147,6 +147,54 @@ function ContactsData(type, type_id, contacts) {
 	this.contacts = contacts;
 }
 
+window.default_contact_types = {
+	'email': ["Professional","Personal"],
+	'phone': ["Professional Mobile","Professional Landline","Personal Mobile","Personal Landline","Office"],
+	'IM': ["Skype"]
+};
+
+function showContactTypeMenu(below_element,type,current_type,show_other,onchanged) {
+	require("context_menu.js",function() {
+		if (below_element._context) below_element._context.hide();
+		below_element._context = new context_menu();
+		for (var i = 0; i < window.default_contact_types[type].length; ++i) {
+			var item = document.createElement('DIV');
+			item.appendChild(document.createTextNode(window.default_contact_types[type][i]));
+			if (current_type == window.default_contact_types[type][i])
+				item.style.fontWeight = 'bold';
+			item._type = window.default_contact_types[type][i];
+			item.onclick = function() { onchanged(this._type); };
+			item.className = "context_menu_item";
+			below_element._context.addItem(item);
+		}
+		if (show_other) {
+			var item = document.createElement('DIV');
+			item.appendChild(document.createTextNode("Other:"));
+			var input = document.createElement("INPUT");
+			input.type = 'text';
+			input.maxLength = 100;
+			input.size = 15;
+			input.style.marginLeft = "5px";
+			item.appendChild(input);
+			below_element._context.onclose = function() {
+				if (input.value.checkVisible())
+					onchanged(input.value.trim());
+				below_element._context = null;
+			};
+			input.onkeypress = function(e) {
+				var ev = getCompatibleKeyEvent(e);
+				if(ev.isEnter) below_element._context.hide();
+			};
+			below_element._context.addItem(item, true);
+		} else {
+			below_element._context.onclose = function() {
+				below_element._context = null;
+			};
+		}
+		below_element._context.showBelowElement(below_element);
+	});
+}
+
 /**
  * Object representing an organization, used by organization.js
  * @param {Number} id organization ID in database

@@ -1063,13 +1063,18 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		return (typeof t._loading_hidder != 'undefined') && t._loading_hidder != null;
 	};
 
+	t._already_reloading = false;
 	/** (Re)load the data from the server */
 	t._loadData = function(onready) {
 		t._data_loaded = true;
 		if (t.isLoading()) {
-			t.onNotLoading(function() {
-				t._loadData(onready);
-			});
+			if (!t._already_reloading) {
+				t._already_reloading = true;
+				t.onNotLoading(function() {
+					t._loadData(onready);
+					t._already_reloading = false;
+				});
+			}
 			return;
 		}
 		t.startLoading();
@@ -1306,8 +1311,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 							else {
 								var sub_found = false;
 								for (var l = 0; l < t.show_fields.length; ++l)
-									if (t.show_fields[l].field.path.path == t._available_fields[j].path.path &&
-										t.show_fields[l].field.name == t._available_fields[j].name &&
+									if (t.show_fields[l].field.path.path == f.path.path &&
+										t.show_fields[l].field.name == f.name &&
 										t.show_fields[l].sub_index == k) { sub_found = true; break; }
 								if (sub_found)
 									sub_cb.checked = "checked";
