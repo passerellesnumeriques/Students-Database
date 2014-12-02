@@ -51,6 +51,9 @@ class service_get_data_list extends Service {
 				return;
 			}
 		}
+		
+		if (isset($input["progress_id"]))
+			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 2); // we analyzed the model: 2% progress 
 
 		$model = DataModel::get();
 		
@@ -277,9 +280,16 @@ class service_get_data_list extends Service {
 				$q->limit(($page-1)*$nb, $nb);
 			}
 		}
+		
+		if (isset($input["progress_id"]))
+			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 5); // request ready: 5% progress
+		
 		$query_start_time = microtime(true);
 		// execute the query
 		$res = $q->execute();
+
+		if (isset($input["progress_id"]))
+			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 15); // request executed: 15% progress
 		
 		// handle necessary sub requests
 		$sub_models_linked = array();
@@ -353,6 +363,9 @@ class service_get_data_list extends Service {
 			}
 		}
 		$query_end_time = microtime(true);
+
+		if (isset($input["progress_id"]))
+			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 25); // requests done: 25% progress
 		
 		if (!$sort_done) {
 			// manual sort
@@ -404,7 +417,9 @@ class service_get_data_list extends Service {
 			echo "}";
 		} else {
 			/* -- export -- */
+			$nb_rows = count($res);
 			// create excel
+			set_time_limit(300);
 			error_reporting(E_ERROR | E_PARSE);
 			require_once("component/lib_php_excel/PHPExcel.php");
 			$excel = new PHPExcel();
@@ -471,8 +486,15 @@ class service_get_data_list extends Service {
 				$i += $count-1;
 			}
 			$row_index = $has_sub_data ? 3 : 2;
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 30);
 			// put data in excel
+			$row_number = 0;
 			foreach ($res as $row) {
+				if (($row_number % 25) == 0 && isset($input["progress_id"]))
+					PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 25+floor($row_number*65/$nb_rows));
+				$row_number++;
+				set_time_limit(30);
 				$col_index = 0;
 				for ($i = 0; $i < count($display_data); $i++) {
 					$a = $data_aliases[$i];
@@ -501,7 +523,10 @@ class service_get_data_list extends Service {
 				}
 				$row_index++;
 			}
+			set_time_limit(60);
 			// initialize writer according to requested format
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 90);
 			$format = $input["export"];
 			if ($format == 'excel2007') {
 				header("Content-Disposition: attachment; filename=\"list.xlsx\"");
@@ -521,6 +546,9 @@ class service_get_data_list extends Service {
 			// write to output
 			$writer->save('php://output');
 		}
+		
+		if (isset($input["progress_id"]))
+			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], "done");
 	}
 }
 

@@ -32,5 +32,21 @@ class application extends Component {
 		);
 	}
 	
+	public function createTemporaryData($value) {
+		return SQLQuery::create()->bypassSecurity()->insert("TemporaryData", array("value"=>$value,"expiration"=>time()+15*60));
+	}
+	public function updateTemporaryData($id, $value) {
+		SQLQuery::create()->bypassSecurity()->updateByKey("TemporaryData", $id, array("value"=>$value,"expiration"=>time()+15*60));
+	}
+	public function getTemporaryData($id) {
+		return SQLQuery::create()->bypassSecurity()->select("TemporaryData")->whereValue("TemporaryData","id",$id)->field("value")->executeSingleValue();
+	}
+	public function removeTemporaryData($id) {
+		SQLQuery::create()->bypassSecurity()->removeKey("TemporaryData", $id);
+	}
+	public function removeExpiredTemporaryData() {
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `TemporaryData` WHERE `expiration` < ".time());
+	}
+	
 }
 ?>

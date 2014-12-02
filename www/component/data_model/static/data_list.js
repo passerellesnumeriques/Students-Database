@@ -1647,57 +1647,88 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	 * @param {String} format format to export
 	 */
 	t._exportList = function(format) {
-		var fields = [];
-		for (var i = 0; i < t.show_fields.length; ++i)
-			fields.push({path:t.show_fields[i].field.path.path,name:t.show_fields[i].field.name,sub_index:t.show_fields[i].sub_index});
-		var form = document.createElement("FORM");
-		var input;
-		form.appendChild(input = document.createElement("INPUT"));
-		form.action = "/dynamic/data_model/service/get_data_list";
-		form.method = 'POST';
-		input.type = 'hidden';
-		input.name = 'table';
-		input.value = t._root_table;
-		if (t._sub_model) {
-			form.appendChild(input = document.createElement("INPUT"));
-			input.type = 'hidden';
-			input.name = 'sub_model';
-			input.value = t._sub_model;
+		var format_name;
+		switch (format) {
+		case 'excel2007':
+		case 'excel5': format_name = "Excel"; break;
+		case 'pdf': format_name = "PDF"; break;
+		case 'csv': format_name = "CSV"; break;
 		}
-		form.appendChild(input = document.createElement("INPUT"));
-		input.type = 'hidden';
-		input.name = 'fields';
-		input.value = service.generateInput(fields);
-		if (t._sort_column && t._sort_order != 3) {
-			form.appendChild(input = document.createElement("INPUT"));
-			input.type = 'hidden';
-			input.name = 'sort_field';
-			input.value = t._sort_column.id;
-			form.appendChild(input = document.createElement("INPUT"));
-			input.type = 'hidden';
-			input.name = 'sort_order';
-			input.value = t._sort_order == 1 ? "ASC" : "DESC";
-		}
-		form.appendChild(input = document.createElement("INPUT"));
-		input.type = 'hidden';
-		input.name = 'filters';
-		input.value = service.generateInput(t._filters);
-		form.appendChild(input = document.createElement("INPUT"));
-		input.type = 'hidden';
-		input.name = 'export';
-		input.value = format;
-		if (t._download_frame) document.body.removeChild(t._download_frame);
-		var frame = document.createElement("IFRAME");
-		frame.style.position = "absolute";
-		frame.style.top = "-10000px";
-		frame.style.visibility = "hidden";
-		frame.name = "data_list_download";
-		document.body.appendChild(frame);
-		form.target = "data_list_download";
-		document.body.appendChild(form);
-		form.submit();
-		t._download_frame = frame;
-		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
+		var locker = lock_screen();
+		set_lock_screen_content_progress(locker, 100, "Generating your "+format_name+" file...", null, function(span, pb, sub) {
+			service.json("application","create_temp_data",{value:'0'},function(res) {
+				var temp_data_id = res.id;
+				var fields = [];
+				for (var i = 0; i < t.show_fields.length; ++i)
+					fields.push({path:t.show_fields[i].field.path.path,name:t.show_fields[i].field.name,sub_index:t.show_fields[i].sub_index});
+				var form = document.createElement("FORM");
+				var input;
+				form.appendChild(input = document.createElement("INPUT"));
+				form.action = "/dynamic/data_model/service/get_data_list";
+				form.method = 'POST';
+				input.type = 'hidden';
+				input.name = 'table';
+				input.value = t._root_table;
+				if (t._sub_model) {
+					form.appendChild(input = document.createElement("INPUT"));
+					input.type = 'hidden';
+					input.name = 'sub_model';
+					input.value = t._sub_model;
+				}
+				form.appendChild(input = document.createElement("INPUT"));
+				input.type = 'hidden';
+				input.name = 'fields';
+				input.value = service.generateInput(fields);
+				if (t._sort_column && t._sort_order != 3) {
+					form.appendChild(input = document.createElement("INPUT"));
+					input.type = 'hidden';
+					input.name = 'sort_field';
+					input.value = t._sort_column.id;
+					form.appendChild(input = document.createElement("INPUT"));
+					input.type = 'hidden';
+					input.name = 'sort_order';
+					input.value = t._sort_order == 1 ? "ASC" : "DESC";
+				}
+				form.appendChild(input = document.createElement("INPUT"));
+				input.type = 'hidden';
+				input.name = 'filters';
+				input.value = service.generateInput(t._filters);
+				form.appendChild(input = document.createElement("INPUT"));
+				input.type = 'hidden';
+				input.name = 'export';
+				input.value = format;
+				form.appendChild(input = document.createElement("INPUT"));
+				input.type = 'hidden';
+				input.name = 'progress_id';
+				input.value = temp_data_id;
+				if (t._download_frame) document.body.removeChild(t._download_frame);
+				var frame = document.createElement("IFRAME");
+				frame.style.position = "absolute";
+				frame.style.top = "-10000px";
+				frame.style.visibility = "hidden";
+				frame.name = "data_list_download";
+				document.body.appendChild(frame);
+				form.target = "data_list_download";
+				document.body.appendChild(form);
+				form.submit();
+				t._download_frame = frame;
+				var interval;
+				var refreshing = false;
+				interval = setInterval(function() {
+					if (refreshing) return;
+					refreshing = true;
+					service.json("application","get_temp_data",{id:temp_data_id},function(res) {
+						refreshing = false;
+						if (res.value == 'done' || res.value === null || isNaN(parseInt(res.value))) {
+							clearInterval(interval);
+							unlock_screen(locker);
+							return;
+						}
+						pb.setPosition(parseInt(res.value));
+					});
+				},1000);
+			});
+		});
 	};
 	
 	/** List of cells that have been edited (used for the save action) */

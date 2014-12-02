@@ -4,7 +4,8 @@ class ApplicationCronPlugin implements CronPlugin {
 	
 	public function getTasks() {
 		return array(
-			new CronTask("synch_domains", "Partially download data (if needed) from other domains using remote access", 5, "component/application/cron_task_synch_domains.inc")
+			new CronTask("synch_domains", "Partially download data (if needed) from other domains using remote access", 5, "component/application/cron_task_synch_domains.inc"),
+			new CronTask("temp_data_expired", "Remove expired temporary data", 10, "component/application/cron_task_expired_temp_data.inc")
 		);
 	}
 	
