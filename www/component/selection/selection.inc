@@ -668,6 +668,17 @@ class selection extends Component {
 			$q->whereNull("Applicant", $field_null);
 		return $q->execute();
 	}
+	
+	public function getCampaignFromApplicant($people_id, $bypass_security = false) {
+		return SQLQuery::create()->bypassSecurity($bypass_security)
+#DEV
+			->noWarning()
+#END
+			->select("smlink_Applicant_People")
+			->whereValue("smlink_Applicant_People", "root", $people_id)
+			->join("smlink_Applicant_People", "SelectionCampaign", array("sm"=>"id"))
+			->executeSingleRow();
+	}
 
 }
 ?>

@@ -23,7 +23,8 @@ class ApplicantPeopleTypePlugin implements PeopleTypePlugin {
 	}
 	
 	public function getPeopleRowDescription($people) {
-		return "Applicant"; // TODO
+		$c = PNApplication::$instance->selection->getCampaignFromApplicant($people["id"], true);
+		return "Applicant during campaign ".toHTML($c["name"]);
 	}
 	
 	public function getBuiltinDefaultUserRoles($people) { return array(); }

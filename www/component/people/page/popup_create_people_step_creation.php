@@ -36,10 +36,10 @@ function next(index, span, pb) {
 		window.popup.unfreeze(); // freeze progress, original freeze remains
 		var container = document.getElementById('container');
 		if (problems.length < peoples.length) {
-			container.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> "+(success.length)+" people successfully created.<br/>";
+			container.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom' onload='layout.changed(this);'/> "+(success.length)+" people successfully created.<br/>";
 		}
 		if (problems.length > 0) {
-			container.innerHTML += "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> The creation of "+(problems.length)+" people failed:";
+			container.innerHTML += "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom' onload='layout.changed(this);'/> The creation of "+(problems.length)+" people failed:";
 			var ul = document.createElement("UL");
 			container.appendChild(ul);
 			for (var i = 0; i < problems.length; ++i) {

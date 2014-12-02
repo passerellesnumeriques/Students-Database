@@ -85,20 +85,18 @@ class page_popup_create_people_step_check extends Page {
 							$last_name = $d["value"];
 					$fn = strtolower(latinize($first_name));
 					$ln = strtolower(latinize($last_name));
-					// search same
-					$same = null;
-					foreach ($matching_peoples as $mp)
-						if ($mp["fn"] == $fn && $mp["ln"] == $ln) { $same = $mp; break; }
+					// search same and similars
+					$same = array();
 					$similars = array();
-					if ($same == null) {
-						// search similar
-						foreach ($matching_peoples as $mp) {
+					foreach ($matching_peoples as $mp) {
+						if ($mp["fn"] == $fn && $mp["ln"] == $ln) array_push($same, $mp);
+						else {
 							if (!str_similar($fn, $mp["fn"])) continue;
 							if (!str_similar($ln, $mp["ln"])) continue;
 							array_push($similars, $mp);
 						}
-					} 
-					if ($same == null && count($similars) == 0)
+					}
+					if (count($same) == 0 && count($similars) == 0)
 						array_push($ok, $people);
 					else
 						array_push($to_check, array($people,$same,$similars));
@@ -158,8 +156,8 @@ class page_popup_create_people_step_check extends Page {
 							$last_name = $d["value"];
 						$li_id = $this->generateID();
 						echo "<li id='$li_id'>".$first_name." ".$last_name.":<ul>";
-						if ($same <> null)
-							$this->similarPeople("seems to be the same as", $same, $path, $table, $li_id, $sub_models, $itc);
+						foreach ($same as $similar)
+							$this->similarPeople("seems to be the same as", $similar, $path, $table, $li_id, $sub_models, $itc);
 						foreach ($similars as $similar)
 							$this->similarPeople("may be the same as", $similar, $path, $table, $li_id, $sub_models, $itc);
 						echo "</ul>";
