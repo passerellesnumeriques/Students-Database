@@ -2,8 +2,8 @@ html, body, table, input, select {
 	font-family: Arial, Tahoma, Verdana;
 	font-size: 10pt;
 }
-:lang(kh) {
-	font-size: 18pt;
+:lang(kh), :lang(kh) input, :lang(kh) selectm :lang(kh) table {
+	font-size: 18pt !important;
 }
 html, body {
 	height: 100%;

@@ -128,12 +128,14 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.save_button.src = theme.icons_16.save;
 			t.save_button.style.verticalAlign = 'top';
 			t.save_button.style.cursor = 'pointer';
+			t.save_button.onload = function() { layout.changed(this); };
 			t.save_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.save(); stopEventPropagation(ev); return false; };
 			container.insertBefore(t.save_button, t.field.getHTMLElement().nextSibling);
 			t.unedit_button = document.createElement("IMG");
 			t.unedit_button.src = theme.icons_16.no_edit;
 			t.unedit_button.style.verticalAlign = 'top';
 			t.unedit_button.style.cursor = 'pointer';
+			t.unedit_button.onload = function() { layout.changed(this); };
 			t.unedit_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.unedit(); stopEventPropagation(ev); return false; };
 			container.insertBefore(t.unedit_button, t.save_button.nextSibling);
 			t.unedit_button.ondomremoved(function() {
@@ -145,6 +147,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 				t.create_value_button.title = "Create a new one";
 				t.create_value_button.className = "flat small_icon";
 				t.create_value_button.verticalAlign = 'middle';
+				t.create_value_button.onload = function() { layout.changed(this); };
 				t.create_value_button.onclick = function(ev) {
 					t.field.createValue();
 					stopEventPropagation(ev);
