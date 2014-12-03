@@ -3,13 +3,14 @@ if (typeof window.top.require != 'undefined') {
 }
 if (typeof theme != 'undefined') theme.css("mini_popup.css");
 
-function mini_popup(title) {
+function mini_popup(title, doNotScroll) {
 	
 	this.showBelowElement = function(element, min_width_from_element) {
-		this._div.style.display = "";
+		if (!doNotScroll) this._div.style.display = "";
 		var t=this;
 		window.top.require("position.js",function() {
 			window.top.positionBelowElement(t._div, element, min_width_from_element);
+			if (doNotScroll) t._div.style.overflow = "";
 			setOpacity(t._div, 1);
 			layout.listenElementSizeChanged(t._div,function() {
 				if (!t || !t._div) return;
@@ -19,10 +20,11 @@ function mini_popup(title) {
 		element.ondomremoved(function() { t.close(); });
 	};
 	this.showAboveElement = function(element, min_width_from_element) {
-		this._div.style.display = "";
+		if (!doNotScroll) this._div.style.display = "";
 		var t=this;
 		window.top.require("position.js",function() {
 			window.top.positionAboveElement(t._div, element, min_width_from_element);
+			if (doNotScroll) t._div.style.overflow = "";
 			setOpacity(t._div, 1);
 			layout.listenElementSizeChanged(t._div,function() {
 				if (!t || !t._div) return;
@@ -42,6 +44,7 @@ function mini_popup(title) {
 		if (!this._footer) {
 			this._footer = document.createElement("DIV");
 			this._footer.className = "mini_popup_footer";
+			if (doNotScroll) this._footer.style.flex = "none";
 			this._div.appendChild(this._footer);
 		}
 		this._footer.appendChild(element);
@@ -86,6 +89,12 @@ function mini_popup(title) {
 		this._div.style.display = "none";
 		this._div.style.position = "fixed";
 		this._div.style.top = "-10000px";
+		if (doNotScroll) {
+			this._div.style.display = "flex";
+			this._div.style.flexDirection = "column";
+			this._header.style.flex = "none";
+			this.content.style.flex = "1 1 auto";
+		}
 		window.top.document.body.appendChild(this._div);
 		var t=this;
 		this._close.onclick = function() { t.close(); };

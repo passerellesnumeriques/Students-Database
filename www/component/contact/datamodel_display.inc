@@ -325,6 +325,7 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 		if (!isset($this->possible_values[$sub_model])) {
 			$q = \SQLQuery::create()->select("Organization");
 			$q->whereIn("Organization", "creator", $this->accepted_creators);
+			$q->whereValue("Organization", "obsolete", 0);
 			if ($this->restrict_types <> null) {
 				$q->field("Organization", "id");
 				$orgs_ids = $q->executeSingleField();
@@ -346,31 +347,67 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 							->whereIn("OrganizationTypes", "type", $types_ids)
 							->groupBy("OrganizationTypes", "organization")
 							->join("OrganizationTypes", "Organization", array("organization"=>"id"))
-							->field("Organization", "id", "KEY")
-							->field("Organization", "name", "VALUE")
+							->whereValue("Organization", "obsolete", 0)
+							->field("Organization", "id", "id")
+							->field("Organization", "name", "name")
+							->orderBy("Organization","name")
 							;
 						$this->possible_values[$sub_model] = $q->execute();
 					}
 				}
 			} else {
-				$q->field("Organization", "id", "KEY");
-				$q->field("Organization", "name", "VALUE");
+				$q->field("Organization", "id", "id");
+				$q->field("Organization", "name", "name");
+				$q->orderBy("Organization","name");
 				$this->possible_values[$sub_model] = $q->execute();
+			}
+			// attach geographic areas to each organization
+			if (count($this->possible_values[$sub_model]) > 0) {
+				$orgs_ids = array();
+				foreach ($this->possible_values[$sub_model] as $o) array_push($orgs_ids, $o["id"]);
+				$q = SQLQuery::create()->select("OrganizationAddress")
+					->whereIn("OrganizationAddress", "organization", $orgs_ids)
+					->join("OrganizationAddress", "PostalAddress", array("address"=>"id"))
+					;
+				PNApplication::$instance->geography->joinGeographicArea($q, "PostalAddress", "geographic_area");
+				$q->field("OrganizationAddress", "organization", "org_id");
+				$q->field("GeographicArea", "id", "area_id");
+				$geo = $q->execute();
+				for ($i = 0; $i < count($this->possible_values[$sub_model]); $i++) {
+					$this->possible_values[$sub_model][$i]["areas"] = array();
+					foreach ($geo as $g)
+						if ($g["org_id"] == $this->possible_values[$sub_model][$i]["id"])
+							array_push($this->possible_values[$sub_model][$i]["areas"], $g["area_id"]);
+				}
 			}
 		}
 		return $this->possible_values[$sub_model];
 	}
 	public function getTypedField($sub_model) {
 		if ($sub_model <> "@link") {
-			$tf = parent::getTypedField($sub_model);
-			$tf[1] = substr($tf[1],0,strlen($tf[1])-1);
-			$tf[1] .= ",creators:".json_encode($this->accepted_creators);
-			$tf[1] .= ",types:".json_encode($this->restrict_types);
-			$tf[1] .= "}";
-			$tf[0] = "field_organization";
-			return $tf;
+			$cfg = "{";
+			$cfg .= "list:[";
+			$list = $this->get_possible_values($sub_model);
+			$first = true;
+			foreach ($list as $org) {
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= "{id:".$org["id"].",name:".json_encode($org["name"]).",areas:".json_encode($org["areas"])."}";
+			}
+			$cfg .= "]";
+			$cfg .= ",creators:".json_encode($this->accepted_creators);
+			$cfg .= ",types:".json_encode($this->restrict_types);
+			$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+			$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
+			$cfg .= ",name:".json_encode($this->display_name);
+			$cfg .= "}";
+			return array("field_organization",$cfg);
 		}
-		return parent::getTypedField($sub_model);
+		return array("field_text","{can_be_null:true}");
+	}
+	
+	public function getTypedFilter($sub_model) {
+		// TODO
+		return null;
 	}
 }
 

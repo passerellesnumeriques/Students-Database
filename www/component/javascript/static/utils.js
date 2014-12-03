@@ -657,15 +657,38 @@ function wordsMatch(s1, s2, ignore_case) {
 	var words2 = prepareMatchScore(s2);
 	var words1_in_words2 = 0;
 	var words2_in_words1 = 0;
+	var words1_in_2 = 0;
+	var words2_in_1 = 0;
+	var rem2 = ""+s2;
 	for (var i = 0; i < words1.length; ++i) {
 		for (var j = 0; j < words2.length; ++j)
 			if (words2[j] == words1[i]) { words1_in_words2++; break; }
+		var j = rem2.indexOf(words1[i]);
+		if (j >= 0) {
+			words1_in_2++;
+			rem2 = rem2.substring(0,j)+rem2.substring(j+words1[i].length);
+		}
 	}
+	var rem1 = ""+s1;
 	for (var i = 0; i < words2.length; ++i) {
 		for (var j = 0; j < words1.length; ++j)
 			if (words1[j] == words2[i]) { words2_in_words1++; break; }
+		var j = rem1.indexOf(words2[i]);
+		if (j >= 0) {
+			words2_in_1++;
+			rem1 = rem1.substring(0,j)+rem1.substring(j+words2[i].length);
+		}
 	}
-	return {nb_words_1:words1.length,nb_words_2:words2.length,nb_words1_in_words2:words1_in_words2,nb_words2_in_words1:words2_in_words1};
+	return {
+		nb_words_1:words1.length,
+		nb_words_2:words2.length,
+		nb_words1_in_words2:words1_in_words2,
+		nb_words2_in_words1:words2_in_words1,
+		nb_words1_in_2:words1_in_2,
+		nb_words2_in_1:words2_in_1,
+		_1_fully_in_2: rem1.trim().length == 0,
+		_2_fully_in_1: rem2.trim().length == 0,
+	};
 }
 
 function wordsMatchingWithLetters(s1, s2) {

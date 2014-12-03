@@ -217,28 +217,32 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	this.createAddress = function(){
 		require("contact_objects.js", function() {
 			var address = new PostalAddress(-1,null,null,null,null,null,null,null,type == 'people' ? "Home" : "Office");
-			if (type_id != null && type_id > 0) {
-				service.json("contact","add_address",{
-					type:type,
-					type_id:type_id,
-					address:address
-				},function(res){
-					if(!res) return;
-					/* Update the result object */
-					address.id = res.id;
-					var l = t.addresses.length;
-					t.addresses[l] = address;
-					/* Update the table */
-					t._createAddressRow(address, true);
-				});
-			} else {
+			t.createAndAddAddress(address);
+		});
+	};
+	
+	this.createAndAddAddress = function(address) {
+		if (type_id != null && type_id > 0) {
+			service.json("contact","add_address",{
+				type:type,
+				type_id:type_id,
+				address:address
+			},function(res){
+				if(!res) return;
 				/* Update the result object */
+				address.id = res.id;
 				var l = t.addresses.length;
 				t.addresses[l] = address;
 				/* Update the table */
 				t._createAddressRow(address, true);
-			}
-		});
+			});
+		} else {
+			/* Update the result object */
+			var l = t.addresses.length;
+			t.addresses[l] = address;
+			/* Update the table */
+			t._createAddressRow(address, true);
+		}
 	};
 	
 	/** Add the remove button to the address row

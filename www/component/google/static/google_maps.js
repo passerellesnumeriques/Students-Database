@@ -12,6 +12,7 @@ function loadGoogleMaps(callback) {
 				};
 				setTimeout(function() {
 					if (window.top.googleMapsLoaded) return;
+					window.top.remove_javascript("http://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=false&callback=initGoogleMaps&key="+window.top.google._api_key);
 					if (window.top.googleMapJS.parentNode)
 						window.top.googleMapJS.parentNode.removeChild(window.top.googleMapJS);
 					window.top.googleMapJS = null;

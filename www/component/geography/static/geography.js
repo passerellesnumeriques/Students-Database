@@ -172,7 +172,8 @@ if (window == window.top && !window.top.geography) {
 			return div.division_id;
 		},
 		getParentArea: function(country_data, area) {
-			if (area.area_parent_id <= 0) return null;
+			if (area.area_parent_id != null) area.area_parent_id = parseInt(area.area_parent_id);
+			if (!area.area_parent_id || area.area_parent_id <= 0) return null;
 			if (typeof area.parent_area != 'undefined') return area.parent_area;
 			var div_index = window.top.geography.getAreaDivisionIndex(country_data, area);
 			if (div_index <= 0) return null;

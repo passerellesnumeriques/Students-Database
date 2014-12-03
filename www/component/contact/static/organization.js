@@ -623,6 +623,10 @@ function organization(container, org, existing_types, can_edit) {
 											for (var division_index = 0; division_index < country_data.length; division_index++) {
 												// get the sub areas containing the position
 												sub_areas = window.top.geography.searchAreasByCoordinates(country_data, division_index, a.lat, a.lng, parents_ids);
+												// add sub areas having no coordinates
+												for (var i = 0; i < country_data[division_index].areas.length; ++i)
+													if (!country_data[division_index].areas[i].lat && (parents_ids == null || parents_ids.indexOf(country_data[division_index].areas[i].area_parent_id)>=0))
+														sub_areas.push(country_data[division_index].areas[i]);
 												// check if we have those sub areas in the components
 												var matching = [];
 												for (var i = components.length-1; i >= 0; --i) {
@@ -634,6 +638,19 @@ function organization(container, org, existing_types, can_edit) {
 														for (var j = 0; j < sub_areas.length; ++j)
 															if (almostMatching(components[i], sub_areas[j].area_name))
 																match.push(sub_areas[j]);
+													if (match.length == 0) {
+														var good = [];
+														var ok = [];
+														for (var j = 0; j < sub_areas.length; ++j) {
+															var m = wordsMatch(components[i], sub_areas[j].area_name, true);
+															if (m.nb_words1_in_words2 == m.nb_words_1 || m.nb_words2_in_words1 == m.nb_words_2)
+																good.push(sub_areas[j]);
+															else if (m.nb_words1_in_2 == m.nb_words_1 || m.nb_words2_in_1 == m.nb_words_2 || m._1_fully_in_2 || m._2_fully_in_1)
+																ok.push(sub_areas[j]);
+														}
+														if (good.length > 0) match = good;
+														else match = ok;
+													}
 													if (match.length > 0) {
 														// ok, found it, remove the components and reduce the scope of the areas
 														last_matching = [].concat(match);
@@ -658,6 +675,8 @@ function organization(container, org, existing_types, can_edit) {
 														for (var i = 0; i < country_data[0].areas.length; ++i) list.push(country_data[0].areas[i]);
 													else
 														for (var i = 0; i < country_data[division_index].areas.length; ++i) if (parents_ids.contains(country_data[division_index].areas[i].area_parent_id)) list.push(country_data[division_index].areas[i]);
+													if (list.length == 0)
+														break;
 													areas = list;
 													parents_ids = [];
 													for (var i = 0; i < areas.length; ++i) parents_ids.push(areas[i].area_id);
@@ -769,7 +788,7 @@ function organization(container, org, existing_types, can_edit) {
 													var existings = t._addresses_widget.getAddresses();
 													var same = [];
 													for (var i = 0; i < existings.length; ++i) {
-														if (existings[i].geographic_area.id > 0) {
+														if (existings[i].geographic_area && existings[i].geographic_area.id > 0) {
 															if (existings[i].geographic_area.id == a.geographic_area.id)
 																same.push(existings[i]);
 															else {
@@ -809,19 +828,19 @@ function organization(container, org, existing_types, can_edit) {
 															if (choice_index == 1) { the_end(); return; } // No
 															if (choice_index == 0) {
 																// Yes
-																t._addresses_widget.addAddress(a,false);
+																t._addresses_widget.createAndAddAddress(a,false);
 																the_end();
 																return;
 															}
 															// Replace
 															t._addresses_widget.removeAddress(same[0]);
-															t._addresses_widget.addAddress(a,false);
+															t._addresses_widget.createAndAddAddress(a,false);
 															the_end();
 														});
 														return;
 													}
 												}
-												t._addresses_widget.addAddress(a,false);
+												t._addresses_widget.createAndAddAddress(a,false);
 											}
 											the_end();
 										});
