@@ -207,6 +207,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 	this.content.style.display = "flex";
 	this.content.style.flexDirection = "column";
 	this.onchange = new Custom_Event();
+	this.checkboxes = [];
 	var t=this;
 	this._search = {
 		build: function() {
@@ -261,6 +262,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 					cb.style.verticalAlign = "middle";
 					cb.style.marginRight = "3px";
 					cb.checked = t.selected_ids.indexOf(list[i].id) >= 0 ? "checked" : "";
+					t.checkboxes.push(cb);
 					item.appendChild(cb);
 					cb.onchange = function() {
 						if (this.checked)
@@ -399,6 +401,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 				cb.style.verticalAlign = "middle";
 				cb.style.marginRight = "3px";
 				cb.checked = t.selected_ids.indexOf(org.id) >= 0 ? "checked" : "";
+				t.checkboxes.push(cb);
 				item.appendChild(cb);
 				cb.onchange = function(ev,nofire) {
 					if (this.checked)
@@ -487,6 +490,16 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 	this.focus = function() {
 		this._search.focus();
 	};
+	this.checkAll = function(checked) {
+		for (var i = 0; i < t.checkboxes.length; ++i)
+			t.checkboxes[i].checked = checked ? "checked" : "";
+		t.selected_ids = [];
+		if (checked) for (var i = 0; i < list.length; ++i) t.selected_ids.push(list[i].id);
+	};
+	if (multiple) t.onchange.add_listener(function() {
+		for (var i = 0; i < t.checkboxes.length; ++i)
+			t.checkboxes[i].checked = t.selected_ids.indexOf(t.checkboxes[i].parentNode._org.id) >= 0 ? "checked" : "";
+	});
 	this.content.appendChild(this._search.build());
 	var div = document.createElement("DIV");
 	div.style.flex = "1 1 auto";

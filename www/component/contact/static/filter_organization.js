@@ -12,24 +12,23 @@ function filter_organization(data, config, editable) {
 			container.innerHTML = "All";
 		else {
 			var s = "";
-			var nb = data.length;
-			if (data.indexOf("NULL") >= 0) {
-				s += "All not specified (blank)";
-				nb--;
-			}
 			if (data.indexOf("NOT_NULL") >= 0) {
-				if (s.length > 0) s += ", ";
-				s += "All specified (not blank)";
-				nb--;
-			}
-			if (nb == 1) {
-				var org = null;
-				for (var i = 0; i < data.length; ++i) if (data[i] != "NULL" && data[i] != "NOT_NULL") { org = data[i]; break; }
-				if (s.length > 0) s += ", ";
-				s += org.name;
-			} else if (nb > 0) {
-				if (s.length > 0) s += ", ";
-				s += nb+" selected";
+				s = "All specified (not blank)";
+			} else {
+				var nb = data.length;
+				if (data.indexOf("NULL") >= 0) {
+					s = "All not specified (blank)";
+					nb--;
+				}
+				if (nb == 1) {
+					var org = null;
+					for (var i = 0; i < data.length; ++i) if (data[i] != "NULL") { org = data[i]; break; }
+					if (s.length > 0) s += ", ";
+					s += getOrganizationNameFromID(org, this.config.list);
+				} else if (nb > 0) {
+					if (s.length > 0) s += ", ";
+					s += nb+" selected";
+				}
 			}
 			container.appendChild(document.createTextNode(s));
 		}
@@ -48,6 +47,15 @@ function filter_organization(data, config, editable) {
 					var p = new mini_popup("Select "+t.config.name, true);
 					p.content.style.display = "flex";
 					p.content.style.flexDirection = "column";
+					var selected = [];
+					if (t.data === null || t.data.indexOf("NOT_NULL") >= 0)
+						for (var i = 0; i < t.config.list.length; ++i) selected.push(t.config.list[i].id);
+					else
+						for (var i = 0; i < t.data.length; ++i)
+							if (t.data[i] != "NULL")
+								selected.push(t.data[i]);
+					var s = new OrganizationSelectionPopupContent(t.config.list, true, selected);
+					s.content.style.flex = "1 1 auto";
 					var cb_n, cb_nn;
 					var container = p.content;
 					if (t.config.can_be_null) {
@@ -61,20 +69,6 @@ function filter_organization(data, config, editable) {
 						div.appendChild(cb_n);
 						div.appendChild(document.createTextNode("All not specified (blank)"));
 						cb_n.checked = t.data === null || t.data.indexOf("NULL") >= 0 ? "checked" : "";
-						cb_n.onchange = function() {
-							if (this.checked) {
-								if (cb_nn.checked) t.data = null;
-								else t.data.push("NULL");
-							} else {
-								if (t.data === null) {
-									t.data = ["NOT_NULL"];
-									for (var i = 0; i < t.config.list.length; ++i) t.data.push(t.config.list[i].id);
-								} else
-									t.data.remove("NULL");
-							}
-							t._setText(t.link, t.data);
-							t.onchange.fire(t);
-						};
 						p.content.appendChild(div);
 						div = document.createElement("DIV");
 						div.style.flex = "none";
@@ -86,18 +80,7 @@ function filter_organization(data, config, editable) {
 						div.appendChild(document.createTextNode("All specified (not blank)"));
 						cb_nn.checked = t.data === null || t.data.indexOf("NOT_NULL") >= 0 ? "checked" : "";
 						cb_nn.onchange = function() {
-							if (this.checked) {
-								if (cb_n.checked) t.data = null;
-								else t.data.push("NOT_NULL");
-							} else {
-								if (t.data === null) {
-									t.data = ["NULL"];
-									for (var i = 0; i < t.config.list.length; ++i) t.data.push(t.config.list[i].id);
-								} else
-									t.data.remove("NOT_NULL");
-							}
-							t._setText(t.link, t.data);
-							t.onchange.fire(t);
+							s.checkAll(this.checked);
 						};
 						p.content.appendChild(div);
 
@@ -107,31 +90,28 @@ function filter_organization(data, config, editable) {
 						container.style.flex = "1 1 auto";
 						p.content.appendChild(container);
 					}
-					var selected = [];
-					if (t.data === null)
-						for (var i = 0; i < t.config.list.length; ++i) selected.push(t.config.list[i].id);
-					else
-						for (var i = 0; i < t.data.length; ++i)
-							if (t.data[i] != "NULL" && t.data[i] != "NOT_NULL")
-								selected.push(t.data[i]);
-					var s = new OrganizationSelectionPopupContent(t.config.list, true, selected);
-					s.content.style.flex = "1 1 auto";
 					container.appendChild(s.content);
 					s.onchange.add_listener(function() {
 						if (s.selected_ids.length == t.config.list.length) {
-							t.data = null;
+							if (cb_nn) cb_nn.checked = "checked";
 						} else {
-							if (cb_n && cb_n.checked && cb_nn.checked)
-								t.data = null;
-							else {
-								t.data = [];
-								if (cb_n && cb_n.checked) t.data.push("NULL");
-								if (cb_nn && cb_nn.checked) t.data.push("NOT_NULL");
-								for (var i = 0; i < s.selected_ids.length; ++i) t.data.push(s.selected_ids[i]);
-							}
+							if (cb_nn) cb_nn.checked = "";
 						}
+					});
+					p.addOkButton(function() {
+						t.data = [];
+						if (cb_n) {
+							if (cb_n.checked && cb_nn.checked) t.data = null;
+							else if (cb_n.checked) t.data.push("NULL");
+							else if (cb_nn.checked) t.data.push("NOT_NULL");
+						} else if (s.selected_ids.length == t.config.list.length)
+							t.data = null;
+						if (t.data !== null && (!cb_nn || !cb_nn.checked))
+							for (var i = 0; i < s.selected_ids.length; ++i)
+								t.data.push(s.selected_ids[i]);
 						t._setText(t.link, t.data);
 						t.onchange.fire(t);
+						p.close();
 					});
 					p.showBelowElement(t.link);
 					s.focus();
