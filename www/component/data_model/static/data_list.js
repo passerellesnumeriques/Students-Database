@@ -236,6 +236,28 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		return false;
 	};
+	t.removeFiltersOn = function(category, name) {
+		var changed = false;
+		for (var i = 0; i < t._filters.length; ++i) {
+			if (t._filters[i].category == category && t._filters[i].name == name) {
+				t._filters.splice(i,1);
+				i--;
+				changed = true;
+				continue;
+			}
+			var pos = t._filters[i];
+			while (pos.or) {
+				if (pos.or.category == category && pos.or.name == name) {
+					t._filters.splice(i,1);
+					i--;
+					changed = true;
+					break;
+				}
+				pos = pos.or;
+			}
+		}
+		if (changed) t.onfilterschanged.fire();
+	}
 	
 	t.getField = function(category, name) {
 		for (var i = 0; i < t._available_fields.length; ++i)

@@ -126,94 +126,123 @@ class page_applicant_list extends SelectionPage {
 							var t=this;
 							require("context_menu.js",function() {
 								var menu = new context_menu();
-								menu.addIconItem(null, "All applicants (no filter)", function() {
+								menu.addIconItem(null, "Show all applicants (remove all filters)", function() {
 									list.resetFilters();
 									list.reloadData();
 								});
-								menu.addIconItem(null, "All not yet excluded", function() {
-									list.resetFilters(false, [{category:'Selection',name:'Excluded',data:{values:[0]}}]);
+								menu.addIconItem(null, "Show only those still in the process (not excluded)", function() {
+									list.removeFiltersOn('Selection','Excluded');
+									list.removeFiltersOn('Selection','Exclusion Reason');
+									list.addFilter({category:'Selection',name:'Excluded',data:{values:[0]}});
 									list.reloadData();
 								});
-								menu.addSubMenuItem(null, "Excluded because of", function(sub_menu, onready) {
+								menu.addIconItem(null, "Show only those excluded from the process", function() {
+									list.removeFiltersOn('Selection','Excluded');
+									list.removeFiltersOn('Selection','Exclusion Reason');
+									list.addFilter({category:'Selection',name:'Excluded',data:{values:[1]}});
+									list.reloadData();
+								});
+								menu.addSubMenuItem(null, "Show only those excluded because of", function(sub_menu, onready) {
 									var f = list.getField("Selection", "Exclusion Reason");
 									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
 										var val = f.filter_config.possible_values[i];
 										sub_menu.addIconItem(null, val, function(ev, val) {
-											list.resetFilters(false, [{category:'Selection',name:'Exclusion Reason',data:{values:[val]}}]);
+											list.removeFiltersOn('Selection','Excluded');
+											list.removeFiltersOn('Selection','Exclusion Reason');
+											list.addFilter({category:'Selection',name:'Exclusion Reason',data:{values:[val]}});
 											list.reloadData();
 										}, val);
 									}
 									onready();
 								});
-								menu.addSubMenuItem(null, "From Information Session", function(sub_menu, onready) {
-									sub_menu.addIconItem(null, "Not assigned to any IS", function() {
-										list.resetFilters(false, [{category:'Selection',name:'Information Session',data:{values:["NULL"]}}]);
-										list.reloadData();
-									});
+								menu.addSubMenuItem(null, "Show only those coming from a specific Information Session", function(sub_menu, onready) {
 									var f = list.getField("Selection", "Information Session");
 									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
 										var val = f.filter_config.possible_values[i];
 										sub_menu.addIconItem(null, val[1], function(ev, val) {
-											list.resetFilters(false, [{category:'Selection',name:'Information Session',data:{values:[val]}}]);
+											list.removeFiltersOn('Selection','Information Session');
+											list.addFilter({category:'Selection',name:'Information Session',data:{values:[val]}});
 											list.reloadData();
 										}, val[0]);
 									}
 									onready();
 								});
-								menu.addSubMenuItem(null, "From Exam Center", function(sub_menu, onready) {
-									sub_menu.addIconItem(null, "Not assigned to any center", function() {
-										list.resetFilters(false, [{category:'Selection',name:'Exam Center',data:{values:["NULL"]}}]);
-										list.reloadData();
-									});
+								menu.addIconItem(null, "Show only those who are not assigned to any Information Session", function() {
+									list.removeFiltersOn('Selection','Information Session');
+									list.addFilter({category:'Selection',name:'Information Session',data:{values:["NULL"]}});
+									list.reloadData();
+								});
+								menu.addSubMenuItem(null, "Show only those from a psecific Exam Center", function(sub_menu, onready) {
 									var f = list.getField("Selection", "Exam Center");
 									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
 										var val = f.filter_config.possible_values[i];
 										sub_menu.addIconItem(null, val[1], function(ev, val) {
-											list.resetFilters(false, [{category:'Selection',name:'Exam Center',data:{values:[val]}}]);
+											list.removeFiltersOn('Selection','Exam Center');
+											list.addFilter({category:'Selection',name:'Exam Center',data:{values:[val]}});
 											list.reloadData();
 										}, val[0]);
 									}
 									onready();
 								});
-								menu.addSubMenuItem(null, "From High School", function(sub_menu, onready) {
-									sub_menu.addIconItem(null, "No high school specified", function() {
-										list.resetFilters(false, [{category:'Selection',name:'High School',data:{values:["NULL"]}}]);
-										list.reloadData();
-									});
+								menu.addIconItem(null, "Show only those who are not assigned to any Exam Center", function() {
+									list.removeFiltersOn('Selection','Exam Center');
+									list.addFilter({category:'Selection',name:'Exam Center',data:{values:["NULL"]}});
+									list.reloadData();
+								});
+								menu.addSubMenuItem(null, "Show only those from a specific High School", function(sub_menu, onready) {
 									var f = list.getField("Selection", "High School");
-									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
-										var val = f.filter_config.possible_values[i];
-										sub_menu.addIconItem(null, val[1], function(ev, val) {
-											list.resetFilters(false, [{category:'Selection',name:'High School',data:{values:[val]}}]);
+									for (var i = 0; i < f.filter_config.list.length; ++i) {
+										var val = f.filter_config.list[i];
+										sub_menu.addIconItem(null, val.name, function(ev, val) {
+											list.removeFiltersOn('Selection','High School');
+											list.addFilter({category:'Selection',name:'High School',data:[val]});
 											list.reloadData();
-										}, val[0]);
+										}, val.id);
 									}
 									onready();
 								});
-								menu.addSubMenuItem(null, "Followed by NGO", function(sub_menu, onready) {
-									sub_menu.addIconItem(null, "Not followed by any NGO", function() {
-										list.resetFilters(false, [{category:'Selection',name:'Following NGO',data:{values:["NULL"]}}]);
-										list.reloadData();
-									});
+								menu.addIconItem(null, "Show only those who are not assigned to any High School", function() {
+									list.removeFiltersOn('Selection','High School');
+									list.addFilter({category:'Selection',name:'High School',data:["NULL"]});
+									list.reloadData();
+								});
+								menu.addSubMenuItem(null, "Show only those followed by a specific NGO", function(sub_menu, onready) {
 									var f = list.getField("Selection", "Following NGO");
-									for (var i = 0; i < f.filter_config.possible_values.length; ++i) {
-										var val = f.filter_config.possible_values[i];
-										sub_menu.addIconItem(null, val[1], function(ev, val) {
-											list.resetFilters(false, [{category:'Selection',name:'Following NGO',data:{values:[val]}}]);
+									for (var i = 0; i < f.filter_config.list.length; ++i) {
+										var val = f.filter_config.list[i];
+										sub_menu.addIconItem(null, val.name, function(ev, val) {
+											list.removeFiltersOn('Selection','Following NGO');
+											list.addFilter({category:'Selection',name:'Following NGO',data:[val]});
 											list.reloadData();
-										}, val[0]);
+										}, val.id);
 									}
 									onready();
 								});
-								menu.addIconItem(null, "Eligible for Interview (exam passers)", function() {
-									list.resetFilters(false, [{category:'Selection',name:'Eligible for Interview',data:{values:[1]}}]);
+								menu.addIconItem(null, "Show only those who are not followed by any NGO", function() {
+									list.removeFiltersOn('Selection','Following NGO');
+									list.addFilter({category:'Selection',name:'Following NGO',data:["NULL"]});
 									list.reloadData();
 								});
-								menu.addIconItem(null, "Absent during exam", function() {
-									list.resetFilters(false, [{category:'Selection',name:'Exam Attendance',data:{values:['No']}}]);
+								menu.addIconItem(null, "Show only if eligible for Interview (exam passers)", function() {
+									list.removeFiltersOn('Selection','Eligible for Interview');
+									list.addFilter({category:'Selection',name:'Eligible for Interview',data:{values:[1]}});
 									list.reloadData();
 								});
-								// TODO others...
+								menu.addIconItem(null, "Show only absent during exam", function() {
+									list.removeFiltersOn('Selection','Exam Attendance');
+									list.addFilter({category:'Selection',name:'Exam Attendance',data:{values:['No']}});
+									list.reloadData();
+								});
+								menu.addIconItem(null, "Show only boys", function() {
+									list.removeFiltersOn('Personal Information','Gender');
+									list.addFilter({category:'Personal Information',name:'Gender',data:{values:['M']}});
+									list.reloadData();
+								});
+								menu.addIconItem(null, "Show only girls", function() {
+									list.removeFiltersOn('Personal Information','Gender');
+									list.addFilter({category:'Personal Information',name:'Gender',data:{values:['F']}});
+									list.reloadData();
+								});
 								menu.showBelowElement(t);
 							});
 						};
