@@ -115,6 +115,12 @@ field_organization.prototype._create = function(data) {
 		this.select = new OrganizationSelectionField(this.config.list, data, this.config.name);
 		this.element.appendChild(this.select.input);
 		var t=this;
+		this.select.closeOnBlur = function() {
+			var f = t.select.input.onfocus;
+			t.select.input.onfocus = null;
+			t.select.input.focus();
+			t.select.input.onfocus = f;
+		};
 		this.select.onchanged.add_listener(function() { t._datachange(); });
 		this._getEditedData = function() {
 			return this.select.selected_id;
@@ -173,6 +179,10 @@ function OrganizationSelectionField(list, selected_id, name) {
 		require("mini_popup.js",function() {
 			var p = new mini_popup("Select "+name, true);
 			var s = new OrganizationSelectionPopupContent(list, false, []);
+			if (t.closeOnBlur) s.closeOnBlur = function() {
+				p.close();
+				t.closeOnBlur();
+			}
 			p.content.style.display = "flex";
 			p.content.style.flexDirection = "column";
 			s.content.style.flex = "1 1 auto";
@@ -188,6 +198,12 @@ function OrganizationSelectionField(list, selected_id, name) {
 			s.focus();
 		});
 	};
+	this.input.onkeydown = function(ev) {
+		var e = getCompatibleKeyEvent(ev);
+		if (e.isTab) return true;
+		stopEventPropagation(ev);
+		return false;
+	}
 	this.setId = function(id) {
 		if (id == this.selected_id) return;
 		this.selected_id = id;
@@ -216,9 +232,21 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 			this.div.style.display = "flex";
 			this.div.style.flexDirection = "row";
 			this.div.innerHTML = "<img src='"+theme.icons_16.search+"' style='vertical-align:bottom;flex:none;'/> ";
+			this.fakeInput1 = document.createElement("INPUT");
+			this.fakeInput1.type = "text";
+			this.fakeInput1.style.width = "1px";
+			this.fakeInput1.style.height = "1px";
+			this.fakeInput1.style.dlex = "none";
+			this.fakeInput1.tabIndex = 2;
+			setOpacity(this.fakeInput1, 0);
+			this.fakeInput1.onfocus = function() {
+				if (t.closeOnBlur) t.closeOnBlur();
+			};
+			this.div.appendChild(this.fakeInput2);
 			this.input = document.createElement("INPUT");
 			this.input.type = "text";
 			this.input.style.flex = "1 1 auto";
+			this.input.tabIndex = 1;
 			this.div.appendChild(this.input);
 			this.input.onkeyup = function() {
 				setTimeout(function() {
@@ -229,6 +257,17 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 					t._byarea.filter(name);
 				},1);
 			};
+			this.fakeInput2 = document.createElement("INPUT");
+			this.fakeInput2.type = "text";
+			this.fakeInput2.style.width = "1px";
+			this.fakeInput2.style.height = "1px";
+			this.fakeInput2.style.dlex = "none";
+			this.fakeInput2.tabIndex = 2;
+			setOpacity(this.fakeInput2, 0);
+			this.fakeInput2.onfocus = function() {
+				if (t.closeOnBlur) t.closeOnBlur();
+			};
+			this.div.appendChild(this.fakeInput2);
 			return this.div;
 		},
 		focus: function() {
