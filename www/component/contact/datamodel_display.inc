@@ -406,9 +406,43 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 	}
 	
 	public function getTypedFilter($sub_model) {
-		// TODO
+		if ($sub_model <> "@link") {
+			$cfg = "{";
+			$cfg .= "list:[";
+			$list = $this->get_possible_values($sub_model);
+			$first = true;
+			foreach ($list as $org) {
+				if ($first) $first = false; else $cfg .= ",";
+				$cfg .= "{id:".$org["id"].",name:".json_encode($org["name"]).",areas:".json_encode($org["areas"])."}";
+			}
+			$cfg .= "]";
+			$cfg .= ",creators:".json_encode($this->accepted_creators);
+			$cfg .= ",types:".json_encode($this->restrict_types);
+			$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
+			$cfg .= ",can_be_null:".($foreign_key->can_be_null ? "true" : "false");
+			$cfg .= ",name:".json_encode($this->display_name);
+			$cfg .= "}";
+			return array("filter_organization",$cfg);
+		}
 		return null;
 	}
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		if ($filter == null) return null;
+		$table_alias = $q->getTableAlias($path->table->getName());
+		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $path->sub_model);
+		$w = "";
+		foreach ($filter as $value) {
+			if ($value == "") continue;
+			if (strlen($w) > 0) $w .= " OR ";
+			$w .= "`".$table_alias."`.`".$foreign_key->name."`";
+			if ($value === "NULL") $w .= " IS NULL";
+			else if ($value === "NOT_NULL") $w .= " IS NOT NULL";
+			else $w .= "='".\SQLQuery::escape($value)."'";
+		}
+		if ($w == "") return null;
+		return array("type"=>"where","condition"=>$w);
+	}
+	
 }
 
 $people_category = $model->getDataCategory("Personal Information");

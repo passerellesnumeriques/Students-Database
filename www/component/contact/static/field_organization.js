@@ -82,7 +82,7 @@ field_organization.prototype.helpFillMultipleItems = function() {
 field_organization.prototype._addPossibleValue = function(org_id, org_name, areas) {
 	this.config.list.push({id:org_id,name:org_name,areas:areas});
 };
-field_organization.prototype._getOrgIDFromData = function(data) {
+function getOrganizationIDFromData(data, list) {
 	if (typeof data == "number") return data;
 	if (data == null) return null;
 	if (data == "") return null;
@@ -90,18 +90,24 @@ field_organization.prototype._getOrgIDFromData = function(data) {
 		var id = data.parseNumber();
 		if (!isNaN(id)) return id;
 		data = data.trim().latinize().toLowerCase();
-		for (var i = 0; i < this.config.list.length; ++i)
-			if (this.config.list[i].name.isSame(data))
-				return this.config.list[i].id;
+		for (var i = 0; i < list.length; ++i)
+			if (list[i].name.isSame(data))
+				return list[i].id;
 	}
 	return null;
+}
+field_organization.prototype._getOrgIDFromData = function(data) {
+	return getOrganizationIDFromData(data, this.config.list);
 };
-field_organization.prototype._getOrgName = function(id) {
+function getOrganizationNameFromID(id, list) {
 	if (id === null) return null;
-	for (var i = 0; i < this.config.list.length; ++i)
-		if (this.config.list[i].id == id)
-			return this.config.list[i].name;
+	for (var i = 0; i < list.length; ++i)
+		if (list[i].id == id)
+			return list[i].name;
 	return null;
+}
+field_organization.prototype._getOrgName = function(id) {
+	return getOrganizationNameFromID(id, this.config.list);
 };
 field_organization.prototype._create = function(data) {
 	if (this.editable) {
@@ -254,6 +260,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 					cb.type = "checkbox";
 					cb.style.verticalAlign = "middle";
 					cb.style.marginRight = "3px";
+					cb.checked = t.selected_ids.indexOf(list[i].id) >= 0 ? "checked" : "";
 					item.appendChild(cb);
 					cb.onchange = function() {
 						if (this.checked)
@@ -314,7 +321,19 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 					var header = document.createElement("DIV");
 					header.style.backgroundColor = "#FFE0C0";
 					if (multiple) {
-						// TODO
+						var cb = document.createElement("INPUT");
+						cb.type = "checkbox";
+						cb.style.verticalAlign = "middle";
+						cb.style.marginRight = "3px";
+						header.appendChild(cb);
+						cb.onchange = function() {
+							for (var i = 0; i < missing.length; ++i)
+								if (this.checked)
+									t.selected_ids.push(missing[i].id);
+								else
+									t.selected_ids.remove(missing[i].id);
+							t.onchange.fire();
+						};
 					}
 					header.appendChild(document.createTextNode("Unknown Location"));
 					div.insertBefore(header, div.firstChild);
@@ -339,8 +358,28 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 				if (div.childNodes.length > 0) {
 					var header = document.createElement("DIV");
 					header.style.backgroundColor = "#FFE0C0";
+					header.style.whiteSpace = "nowrap";
 					if (multiple) {
-						// TODO
+						var cb = document.createElement("INPUT");
+						cb.type = "checkbox";
+						cb.style.verticalAlign = "middle";
+						cb.style.marginRight = "3px";
+						header.appendChild(cb);
+						cb.onchange = function(ev,nofire) {
+							var header = this.parentNode;
+							var item = header.nextSibling;
+							while (item) {
+								if (item._area) {
+									item.childNodes[0].childNodes[0].checked = this.checked ? "checked" : "";
+									item.childNodes[0].childNodes[0].onchange(ev,true);
+								} else if (item._org) {
+									item.childNodes[0].checked = this.checked ? "checked" : "";
+									item.childNodes[0].onchange(ev,true);
+								}
+								item = item.nextSibling;
+							}
+							if (!nofire) t.onchange.fire();
+						};
 					}
 					header.appendChild(document.createTextNode(country_data[division_index].division_name+' '));
 					t.addItemName(header, area.area_name);
@@ -352,9 +391,22 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 		createItem: function(org, container, indent) {
 			var item = document.createElement("DIV");
 			item.style.paddingLeft = indent+"px";
+			item.style.whiteSpace = "nowrap";
 			item._org = org;
 			if (multiple) {
-				// TODO
+				var cb = document.createElement("INPUT");
+				cb.type = "checkbox";
+				cb.style.verticalAlign = "middle";
+				cb.style.marginRight = "3px";
+				cb.checked = t.selected_ids.indexOf(org.id) >= 0 ? "checked" : "";
+				item.appendChild(cb);
+				cb.onchange = function(ev,nofire) {
+					if (this.checked)
+						t.selected_ids.push(this.parentNode._org.id);
+					else
+						t.selected_ids.remove(this.parentNode._org.id);
+					if (!nofire) t.onchange.fire();
+				};
 			}
 			t.addItemName(item, org.name);
 			if (!multiple) {

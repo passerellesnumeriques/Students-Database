@@ -564,8 +564,8 @@ class ChoiceDataDisplay extends DataDisplay {
 			if ($enum_value == "") continue;
 			if (strlen($w) > 0) $w .= " OR ";
 			$w .= "`".$table_alias."`.`".$foreign_key->name."`";
-			if ($enum_value == "NULL") $w .= " IS NULL";
-			else if ($enum_value == "NOT_NULL") $w .= " IS NOT NULL";
+			if ($enum_value === "NULL") $w .= " IS NULL";
+			else if ($enum_value === "NOT_NULL") $w .= " IS NOT NULL";
 			else $w .= "='".\SQLQuery::escape($enum_value)."'";
 		}
 		if ($w == "") return null;
