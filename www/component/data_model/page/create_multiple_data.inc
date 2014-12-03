@@ -107,7 +107,7 @@ function addColumnActions(col) {
 				require("mini_popup.js",function() {
 					var p = new mini_popup(helper.title);
 					p.content.appendChild(helper.content);
-					p.addOkButton(function() {
+					var apply = function() {
 						if (grid.getNbRows() == 1)
 							helper.apply(grid.getCellField(0,grid.getColumnIndex(col)))
 						else {
@@ -115,8 +115,14 @@ function addColumnActions(col) {
 							for (var i = 0; i < grid.getNbRows()-1; ++i)
 								helper.apply(grid.getCellField(i,col_index));
 						}
-						return true;
-					});
+					};
+					if (helper.validated)
+						helper.validated.add_listener(function() { apply(); p.close(); });
+					else
+						p.addOkButton(function() {
+							apply();
+							return true;
+						});
 					p.showBelowElement(action.element);
 				});
 			},helper.title));

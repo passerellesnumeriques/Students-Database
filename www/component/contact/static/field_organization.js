@@ -75,8 +75,12 @@ field_organization.prototype.helpFillMultipleItems = function() {
 		content: s.content,
 		apply: function(field) {
 			field.setData(s.selected_ids.length > 0 ? s.selected_ids[0] : null);
-		}
+		},
+		validated: new Custom_Event()
 	};
+	s.onchange.add_listener(function() {
+		helper.validated.fire();
+	});
 	return helper;
 };
 field_organization.prototype._addPossibleValue = function(org_id, org_name, areas) {
@@ -127,7 +131,7 @@ field_organization.prototype._create = function(data) {
 		};
 		this._setData = function(data) {
 			var id = this._getOrgIDFromData(data);
-			this.select.setId(null);
+			this.select.setId(id);
 			return this.select.selected_id;
 		};
 		this.validate = function() {
@@ -242,7 +246,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 			this.fakeInput1.onfocus = function() {
 				if (t.closeOnBlur) t.closeOnBlur();
 			};
-			this.div.appendChild(this.fakeInput2);
+			this.div.appendChild(this.fakeInput1);
 			this.input = document.createElement("INPUT");
 			this.input.type = "text";
 			this.input.style.flex = "1 1 auto";
