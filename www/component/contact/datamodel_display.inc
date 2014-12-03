@@ -152,7 +152,12 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return array("field_addresses","{}");
 	}
 	public function getTypedFilter($sub_model) {
-		return null; // TODO
+		$cfg = "{";
+		$cfg .= "types:";
+		$types = SQLQuery::create()->select("PostalAddress")->field("address_type")->distinct()->executeSingleField();
+		$cfg .= json_encode($types);
+		$cfg .= "}";
+		return array("filter_addresses",$cfg);
 	}
 	public function isEditable() {
 		return true;
@@ -262,6 +267,50 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 			$s .= $l;
 		}
 		return $s;
+	}
+	
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		$types = $filter["types"];
+		$w = "";
+		if (count($types) > 0) {
+			$w .= "(`FOREIGN_TABLE`.`address_type` IN (";
+			$first = true;
+			foreach ($types as $type) {
+				if ($first) $first = false; else $w .= ",";
+				$w .= "'".SQLQuery::escape($type)."'";
+			} 
+			$w .= "))";
+		}
+		$areas = $filter["area_path"];
+		if ($areas <> null && count($areas) > 0) {
+			if ($w <> "") $w .= " AND ";
+			$w .= "(";
+			$w .= "`FOREIGN_TABLE`.`geographic_area` IN (";
+			$first = true;
+			foreach ($areas as $area_id) {
+				if ($first) $first = false; else $w .= ",";
+				$w .= "'".SQLQuery::escape($area_id)."'";
+			} 
+			$w .= "))";
+		}
+		if ($w == "") return null;
+		$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
+		$foreign_table = \DataModel::get()->getTable($foreign_table);
+	
+		$parent_alias = \DataPathSQLBuilder::build($path->parent, $q);
+	
+		$sub_q = \SQLQuery::create()
+			->select(array($path->table->getName()=>"PRIMARY"))
+			->bypassSecurity()
+			->where("(`PRIMARY`.`".$this->joining_key_name."`=`$parent_alias`.`id`)")
+			->join("PRIMARY", $foreign_table->getName(), array($this->foreign_key_name=>$foreign_table->getPrimaryKey()->name), "FOREIGN_TABLE")
+			->where($w)
+			->field("PRIMARY", $this->foreign_key_name)
+			->limit(0,1)
+		;
+		$alias = $q->generateFieldAlias();
+		$q->fieldSubQuery($sub_q, $alias);
+		return array("type"=>"having","condition"=>"(`$alias` IS NOT NULL)");
 	}
 	
 	public function getSubDataDisplay() { return new AddressSubDataDisplay($this); }

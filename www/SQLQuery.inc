@@ -324,6 +324,14 @@ class SQLQuery {
 		$this->fields = array();
 		return $this;
 	}
+	public function &resetNonSubQueryFields() {
+		for ($i = 0; $i < count($this->fields); $i++) {
+			if ($this->fields[$i][0] instanceof SQLQuery) continue;
+			array_splice($this->fields, $i, 1);
+			$i--;
+		}
+		return $this;
+	}
 	/** COUNT(*) AS alias
 	 * @param string $alias alias or null
 	 * @return SQLQuery this

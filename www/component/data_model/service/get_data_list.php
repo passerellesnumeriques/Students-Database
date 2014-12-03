@@ -268,11 +268,10 @@ class service_get_data_list extends Service {
 			if (isset($input["page_size"])) {
 				// calculate the total number of entries
 				$count = new SQLQuery($q);
-				$count->resetFields();
+				$count->resetNonSubQueryFields();
 				$count->removeUnusefulJoinsForCounting();
-				//$count = $count->count("NB_DATA")->executeSingleRow();
-				//$count = $count["NB_DATA"];
-				$count = 1;
+				$count = $count->count("NB_DATA")->executeSingleRow();
+				$count = $count["NB_DATA"];
 				
 				$nb = intval($input["page_size"]);
 				if ($nb == 0) $nb = 1000;

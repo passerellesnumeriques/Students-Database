@@ -1,3 +1,5 @@
+/* #depends[/static/widgets/typed_filter/typed_filter.js] */
+
 if (typeof require != 'undefined') require("field_organization.js");
 
 function filter_organization(data, config, editable) {
