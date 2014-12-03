@@ -270,8 +270,9 @@ class service_get_data_list extends Service {
 				$count = new SQLQuery($q);
 				$count->resetFields();
 				$count->removeUnusefulJoinsForCounting();
-				$count = $count->count("NB_DATA")->executeSingleRow();
-				$count = $count["NB_DATA"];
+				//$count = $count->count("NB_DATA")->executeSingleRow();
+				//$count = $count["NB_DATA"];
+				$count = 1;
 				
 				$nb = intval($input["page_size"]);
 				if ($nb == 0) $nb = 1000;

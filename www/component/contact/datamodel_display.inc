@@ -31,39 +31,35 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return false;
 	}
 	
-	protected function applyFilters(&$q, $path, $filters, $parent_alias, $key_name) {
-		$where = array();
-		foreach ($filters as $filter_list) {
-			$w = "";
-			foreach ($filter_list as $filter) {
-				$val = trim($filter["value"]);
-				if ($val == "") continue;
-				if (strlen($w) > 0) $w .= " OR ";
-				$w .= "`FOREIGN_TABLE`.`contact`";
-				switch ($filter["type"]) {
-					case "contains": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."%'"; break;
-					case "starts": $w .= " LIKE '".\SQLQuery::escape($filter["value"])."%'"; break;
-					case "ends": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."'"; break;
-					case "exact": $w .= " = '".\SQLQuery::escape($filter["value"])."'"; break;
-				}
-			}
-			if (strlen($w) > 0) array_push($where, "(".$w.")");
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		$val = trim($filter["value"]);
+		if ($val == "") return null;
+		$w = "`FOREIGN_TABLE`.`contact`";
+		switch ($filter["type"]) {
+			case "contains": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."%'"; break;
+			case "starts": $w .= " LIKE '".\SQLQuery::escape($filter["value"])."%'"; break;
+			case "ends": $w .= " LIKE '%".\SQLQuery::escape($filter["value"])."'"; break;
+			case "exact": $w .= " = '".\SQLQuery::escape($filter["value"])."'"; break;
 		}
-		if (count($where) > 0) {
-			$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
-			$foreign_table = \DataModel::get()->getTable($foreign_table);
-			
-			$sub_q = \SQLQuery::create()
-				->select(array($path->table->getName()=>"PRIMARY"))
-				->join("PRIMARY", $foreign_table->getName(), array($this->foreign_key_name=>$foreign_table->getPrimaryKey()->name), "FOREIGN_TABLE")
-				->field("PRIMARY", $this->foreign_key_name)
-				;
-			foreach ($where as $w) $sub_q->where($w);
-			
-			$q->whereExistsInSubQuery($sub_q, $parent_alias, $key_name, "PRIMARY", $this->joining_key_name);
-		}
+		$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
+		$foreign_table = \DataModel::get()->getTable($foreign_table);
+	
+		$parent_alias = \DataPathSQLBuilder::build($path->parent, $q);
+		
+		$sub_q = \SQLQuery::create()
+			->select(array($path->table->getName()=>"PRIMARY"))
+			->bypassSecurity()
+			->where("(`PRIMARY`.`".$this->joining_key_name."`=`$parent_alias`.`id`)")
+			->join("PRIMARY", $foreign_table->getName(), array($this->foreign_key_name=>$foreign_table->getPrimaryKey()->name), "FOREIGN_TABLE")
+			->where($w)
+			->field("PRIMARY", $this->foreign_key_name)
+			->limit(0,1)
+			;
+		$alias = $q->generateFieldAlias();
+		$q->fieldSubQuery($sub_q, $alias);
+		return array("type"=>"having","condition"=>"(`$alias` IS NOT NULL)");
 	}
-
+	
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$table_name = $this->joining_key_name == "people" ? "PeopleContact" : "OrganizationContact";
 
@@ -143,7 +139,7 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 			}
 		return "";
 	}
-
+	
 }
 
 class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
