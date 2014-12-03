@@ -219,6 +219,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 					name = name.trim().latinize().toLowerCase();
 					if (name.length == 0) name = null;
 					t._byname.filter(name);
+					t._byarea.filter(name);
 				},1);
 			};
 			return this.div;
@@ -262,7 +263,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 						t.onchange.fire();
 					};
 				}
-				item.appendChild(document.createTextNode(list[i].name));
+				t.addItemName(item, list[i].name);
 				if (!multiple) {
 					item.className = "context_menu_item";
 					item.onclick = function() {
@@ -277,9 +278,10 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 		filter: function(name) {
 			for (var i = 0; i < this.content.childNodes.length; ++i) {
 				var item = this.content.childNodes[i];
-				if (!name || item._org.name.latinize().toLowerCase().indexOf(name) >= 0)
+				if (!name || item._org.name.latinize().toLowerCase().indexOf(name) >= 0) {
 					item.style.display = "";
-				else
+					t.highlightFilteredItem(item, name);
+				} else
 					item.style.display = "none";
 			}
 		}
@@ -315,7 +317,6 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 						// TODO
 					}
 					header.appendChild(document.createTextNode("Unknown Location"));
-					// TODO
 					div.insertBefore(header, div.firstChild);
 					t._byarea.content.appendChild(div);
 				}
@@ -328,6 +329,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 				var area = country_data[division_index].areas[i];
 				if (area.area_parent_id != parent_id) continue;
 				var div = document.createElement("DIV");
+				div._area = area;
 				div.style.paddingLeft = indent+"px";
 				for (var j = 0; j < list.length; ++j)
 					if (list[j].areas.contains(area.area_id))
@@ -340,7 +342,8 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 					if (multiple) {
 						// TODO
 					}
-					header.appendChild(document.createTextNode(country_data[division_index].division_name+' '+area.area_name));
+					header.appendChild(document.createTextNode(country_data[division_index].division_name+' '));
+					t.addItemName(header, area.area_name);
 					div.insertBefore(header, div.firstChild);
 					parent_div.appendChild(div);
 				}
@@ -353,7 +356,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 			if (multiple) {
 				// TODO
 			}
-			item.appendChild(document.createTextNode(org.name));
+			t.addItemName(item, org.name);
 			if (!multiple) {
 				item.className = "context_menu_item";
 				item.onclick = function() {
@@ -362,8 +365,73 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 				};
 			}
 			container.appendChild(item);
+		},
+		filter: function(name) {
+			this.filterDiv(this.content, name);
+		},
+		filterDiv: function(div, name, show_anyway) {
+			if (div._org) {
+				t.highlightFilteredItem(div, name);
+				if (show_anyway || !name) {
+					div.style.display = "";
+					return true;
+				}
+				var matching = div._org.name.latinize().toLowerCase().indexOf(name) >= 0;
+				if (matching) {
+					div.style.display = "";
+					has_something = true;
+					return true;
+				}
+				div.style.display = "none";
+				return false;
+			}
+			var has_something = false;
+			for (var i = 0; i < div.childNodes.length; ++i) {
+				var item = div.childNodes[i];
+				if (item._area) {
+					var matching = !name || item._area.area_name.latinize().toLowerCase().indexOf(name) >= 0;
+					t.highlightFilteredItem(item.childNodes[0], name);
+					var ok = true;
+					for (var j = 1; j < item.childNodes.length; ++j)
+						ok &= this.filterDiv(item.childNodes[j], name, matching || show_anyway);
+					if (matching || ok || show_anyway) {
+						item.style.display = "";
+						has_something = true;
+					} else
+						item.style.display = "none";
+					continue;
+				}
+				has_something |= this.filterDiv(item, name, show_anyway);
+			}
+			return has_something;
 		}
 	};
+	this.addItemName = function(div, name) {
+		div.span_name = document.createElement("SPAN");
+		div.span_name.appendChild(document.createTextNode(name));
+		div.span_name._name = name;
+		div.appendChild(div.span_name);
+	};
+	this.highlightFilteredItem = function(div, name) {
+		div.span_name.removeAllChildren();
+		if (!name) div.span_name.appendChild(document.createTextNode(div.span_name._name));
+		else {
+			var s = div.span_name._name;
+			while ((i = s.latinize().toLowerCase().indexOf(name)) >= 0) {
+				if (i > 0) {
+					div.span_name.appendChild(document.createTextNode(s.substring(0,i)));
+					s = s.substring(i);
+				}
+				var span = document.createElement("SPAN");
+				span.style.fontWeight = "bold";
+				span.appendChild(document.createTextNode(s.substring(0,name.length)));
+				div.span_name.appendChild(span);
+				s = s.substring(name.length);
+			}
+			if (s.length > 0)
+				div.span_name.appendChild(document.createTextNode(s));
+		}
+	}
 	this.focus = function() {
 		this._search.focus();
 	};
