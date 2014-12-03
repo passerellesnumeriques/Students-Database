@@ -45,16 +45,18 @@ function showAddressTypeMenu(below_element,type,current_type,show_other,onchange
 	require("context_menu.js",function() {
 		if (below_element._context) below_element._context.hide();
 		below_element._context = new context_menu();
-		for (var i = 0; i < window.default_address_types[type].length; ++i) {
+		var createItem = function(name) {
 			var item = document.createElement('DIV');
-			item.appendChild(document.createTextNode(window.default_address_types[type][i]));
-			if (current_type == window.default_address_types[type][i])
+			item.appendChild(document.createTextNode(name));
+			if (current_type == name)
 				item.style.fontWeight = 'bold';
-			item._type = window.default_address_types[type][i];
+			item._type = name;
 			item.onclick = function() { onchanged(this._type); };
 			item.className = "context_menu_item";
 			below_element._context.addItem(item);
 		}
+		for (var i = 0; i < window.default_address_types[type].length; ++i)
+			createItem(window.default_address_types[type][i]);
 		if (show_other) {
 			var item = document.createElement('DIV');
 			item.appendChild(document.createTextNode("Other:"));
@@ -79,6 +81,15 @@ function showAddressTypeMenu(below_element,type,current_type,show_other,onchange
 				below_element._context = null;
 			};
 		}
+		service.json("contact","get_existing_address_types",{type:type},function(list) {
+			if (!below_element._context) return;
+			if (list.lenth > 0)
+				below_element._context.addSeparator();
+			for (var i = 0; i < list.length; ++i)
+				if (window.default_address_types[type].indexOf(list[i]) < 0)
+					createItem(list[i]);
+			layout.changed(below_element._context.element);
+		});
 		below_element._context.showBelowElement(below_element);
 	});
 }
@@ -157,16 +168,18 @@ function showContactTypeMenu(below_element,type,current_type,show_other,onchange
 	require("context_menu.js",function() {
 		if (below_element._context) below_element._context.hide();
 		below_element._context = new context_menu();
-		for (var i = 0; i < window.default_contact_types[type].length; ++i) {
+		var createItem = function(name) {
 			var item = document.createElement('DIV');
-			item.appendChild(document.createTextNode(window.default_contact_types[type][i]));
-			if (current_type == window.default_contact_types[type][i])
+			item.appendChild(document.createTextNode(name));
+			if (current_type == name)
 				item.style.fontWeight = 'bold';
-			item._type = window.default_contact_types[type][i];
+			item._type = name;
 			item.onclick = function() { onchanged(this._type); };
 			item.className = "context_menu_item";
 			below_element._context.addItem(item);
-		}
+		};
+		for (var i = 0; i < window.default_contact_types[type].length; ++i)
+			createItem(window.default_contact_types[type][i]);
 		if (show_other) {
 			var item = document.createElement('DIV');
 			item.appendChild(document.createTextNode("Other:"));
@@ -192,6 +205,15 @@ function showContactTypeMenu(below_element,type,current_type,show_other,onchange
 			};
 		}
 		below_element._context.showBelowElement(below_element);
+		service.json("contact","get_existing_contact_types",{type:type},function(list) {
+			if (!below_element._context) return;
+			if (list.lenth > 0)
+				below_element._context.addSeparator();
+			for (var i = 0; i < list.length; ++i)
+				if (window.default_contact_types[type].indexOf(list[i]) < 0)
+					createItem(list[i]);
+			layout.changed(below_element._context.element);
+		});
 	});
 }
 
