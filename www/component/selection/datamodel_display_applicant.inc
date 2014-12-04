@@ -234,6 +234,54 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 		return $html;
 	}
 	
+	public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name) {
+		if (!$values->hasColumnValue("Applicant", "people")) return;
+		if ($values->getColumnValue("Applicant", "excluded") == 1) {
+?>
+<button class='action green' onclick='unexclude();'>Back after exclusion</button>
+<script type='text/javascript'>
+var from_auto = <?php echo $values->hasColumnValue("Applicant", "automatic_exclusion_step") ? json_encode($values->getColumnValue("Applicant", "automatic_exclusion_step")) : "null"; ?>;
+function unexclude() {
+	confirm_dialog(
+		from_auto
+			? "This applicant has been automatically excluded at "+from_auto+" step because of: "+<?php echo json_encode($values->getColumnValue("Applicant","automatic_exclusion_reason"));?>+".<br/>Are you sure you want to put this applicant back in the process, even he/she do not comply to rules ?"
+			: "Are you sure you want to cancel the exclusion, and put back this applicant in the process ?"
+		,function(yes) {
+			if (!yes) return;
+			service.json("data_model","save_cells",{cells:[
+			  {
+				table:'Applicant',
+				sub_model:<?php echo PNApplication::$instance->selection->getCampaignId();?>,
+				keys:[<?php echo $values->getColumnValue("Applicant", "people");?>],
+				values:[
+					{column:'excluded',value:'0'},
+					{column:'automatic_exclusion_step',value:null},
+					{column:'automatic_exclusion_reason',value:null},
+					{column:'custom_exclusion',value:null}
+				]
+			  }
+			]},function(res) {
+				if (res) location.reload();
+			});
+		}
+	);
+}
+</script>
+<?php 
+		} else {
+?>
+<button class='action red' onclick='exclude();'>Exclude</button>
+<script type='text/javascript'>
+function exclude() {
+	popup_frame(null,"Exclude Applicant","/dynamic/selection/page/applicant/exclude?ondone=_excluded",{applicants:[<?php echo $values->getColumnValue("Applicant", "people");?>]},null,null,function(f,p) {
+		f._excluded = function() { location.reload(); };
+	});
+}
+</script>
+<?php 
+		}
+	}
+	
 }
 $model->addDataScreen(new ApplicantDataScreen($display));
 

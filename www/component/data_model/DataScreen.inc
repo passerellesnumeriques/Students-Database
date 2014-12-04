@@ -12,6 +12,14 @@ namespace datamodel {
 		public function getName();
 		
 		public function generate(&$page, $paths, $values, $prefilled_values, $structure_name);
+		/**
+		 * 
+		 * @param Page $page
+		 * @param DataPath[] $paths
+		 * @param DataValues $values
+		 * @param DataValues $prefilled_values
+		 * @param string|NULL $structure_name
+		 */
 		public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name);
 		
 	}
