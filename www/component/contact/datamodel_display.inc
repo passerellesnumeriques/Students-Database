@@ -281,7 +281,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 			} 
 			$w .= "))";
 		}
-		$areas = $filter["area_path"];
+		$areas = $filter["areas"];
 		if ($areas <> null && count($areas) > 0) {
 			if ($w <> "") $w .= " AND ";
 			$w .= "(";

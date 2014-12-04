@@ -18,6 +18,9 @@ class GeographicAreaDataDisplay extends \datamodel\DataDisplay {
 	public function getTypedField($sub_model) {
 		return array("field_geographic_area","{can_be_null:".json_encode($this->can_be_null)."}");
 	}
+	public function getTypedFilter($sub_model) {
+		return array("filter_geographic_area","{}");
+	}
 	public function isEditable() { return true; }
 	public function getEditLocks($sub_model) {
 		return array(array("table"=>$this->getTable()->getName(), "column"=>$this->col_name, "sub_model"=>$sub_model));
@@ -58,7 +61,16 @@ class GeographicAreaDataDisplay extends \datamodel\DataDisplay {
 		return $result;
 	}
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
-		return null; // TODO
+		if ($filter == null || $filter == "" || count($filter) == 0) return null;
+		$table_alias = $q->getTableAlias($path->table->getName());
+		$w = "(`$table_alias`.`".$this->col_name."` IN (";
+		$first = true;
+		foreach ($filter as $area_id) {
+			if ($first) $first = false; else $w .= ",";
+			$w .= "'".SQLQuery::escape($area_id)."'";
+		}
+		$w .= "))";
+		return array("type"=>"where","condition"=>$w);
 	}
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {

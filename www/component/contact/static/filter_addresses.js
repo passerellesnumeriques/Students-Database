@@ -2,7 +2,7 @@
 
 function filter_addresses(data, config, editable) {
 	if (!data)
-		data = {types:arrayCopy(config.types),area_path:null};
+		data = {types:arrayCopy(config.types),areas:null};
 	typed_filter.call(this, data, config, editable);
 	
 	var t=this;
@@ -27,12 +27,12 @@ function filter_addresses(data, config, editable) {
 		span.appendChild(document.createTextNode(" and located in "));
 		t.element.appendChild(span);
 		var updateText = function() {
-			if (data.area_path == null)
+			if (data.areas == null)
 				t.link.innerHTML = "Anywhere";
 			else
 				window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
 					t.link.innerHTML = "";
-					t.link.appendChild(document.createTextNode(window.top.geography.getGeographicAreaTextFromId(country_data, data.area_path[data.area_path.length-1]).text));
+					t.link.appendChild(document.createTextNode(window.top.geography.getGeographicAreaTextFromId(country_data, data.areas[0]).text));
 				});
 		};
 		if (editable) {
@@ -43,23 +43,30 @@ function filter_addresses(data, config, editable) {
 			t.link.onclick = function(ev) {
 				require(["geographic_area_selection.js","mini_popup.js"], function() {
 					var p = new mini_popup("Located in which area ?");
-					var s = new geographic_area_selection(p.content, window.top.default_country_id, data.area_path ? data.area_path[data.area_path.length-1] : null, 'vertical', true, function(s) {
+					var s = new geographic_area_selection(p.content, window.top.default_country_id, data.areas ? data.areas[0] : null, 'vertical', true, function(s) {
 						p.addOkButton(function() {
 							var area_id = s.getSelectedArea();
 							if (area_id > 0) {
-								var path = [area_id];
-								window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
-									var area = window.top.geography.searchArea(country_data, area_id);
-									while (area.area_parent_id > 0) {
-										area = window.top.geography.getParentArea(country_data, area);
-										path.splice(0,0,area.area_id);
+								data.areas = [area_id];
+								var area = window.top.geography.searchArea(s.country_data, area_id);
+								var division_index = window.top.geography.getAreaDivisionIndex(s.country_data, area);
+								var areas = [area];
+								while (division_index < s.country_data.length-1) {
+									division_index++;
+									var children = [];
+									for (var i = 0; i < areas.length; ++i) {
+										var list = window.top.geography.getAreaChildren(s.country_data, division_index, areas[i].area_id);
+										for (var j = 0; j < list.length; ++j) {
+											children.push(list[j]);
+											data.areas.push(list[j].area_id);
+										}
 									}
-									data.area_path = path;
-									updateText();
-									t.onchange.fire(t);
-								});
+									areas = children;
+								}
+								updateText();
+								t.onchange.fire(t);
 							} else {
-								data.area_path = null;
+								data.areas = null;
 								updateText();
 								t.onchange.fire(t);
 							}
@@ -80,7 +87,7 @@ function filter_addresses(data, config, editable) {
 	if (editable) require(["geographic_area_selection.js","mini_popup.js"]);
 	this.isActive = function() {
 		if (data.types.length < config.types.length) return true;
-		if (data.area_path != null) return true;
+		if (data.areas != null) return true;
 		return false;
 	};
 }
