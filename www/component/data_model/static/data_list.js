@@ -789,6 +789,32 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		require("grid.js",function(){
 			t.grid = new grid(t.grid_container);
 			t.grid.columns_movable = true;
+			t.grid.on_column_moved.add_listener(function(move) {
+				// update the order of show_fields, so we can save it
+				if (move.column instanceof GridColumn) {
+					// final column
+					var field = move.column.attached_data;
+					var prev_index = t.show_fields.indexOf(field);
+					t.show_fields.remove(field);
+					t.show_fields.splice(move.index-(move.index > prev_index ? 1 : 0),0,field);
+					t._updateFieldsCookie();
+					return;
+				}
+				// column container
+				var field = move.column.attached_data;
+				var prev_index;
+				var sub = [];
+				for (prev_index = 0; prev_index < t.show_fields.length; ++prev_index) {
+					if (t.show_fields[prev_index].field != field) continue;
+					while (t.show_fields[prev_index].field == field) {
+						sub.push(t.show_fields[prev_index]);
+						t.show_fields.splice(prev_index,1);
+					}
+				}
+				for (var i = 0; i < sub.length; ++i)
+					t.show_fields.splice(move.index-(move.index > prev_index ? sub.length : 0)+i,0,sub[i]);
+				t._updateFieldsCookie();
+			});
 			t._ready();
 		});
 		// layout

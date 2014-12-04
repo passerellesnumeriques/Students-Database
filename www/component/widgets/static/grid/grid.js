@@ -544,6 +544,7 @@ function grid(element) {
 	t.selectable = false;
 	t.selectable_unique = false;
 	t.columns_movable = false;
+	t.on_column_moved = new Custom_Event();
 	t.url = get_script_path("grid.js");
 	t.onrowselectionchange = null;
 	t.oncellcreated = new Custom_Event();
@@ -963,8 +964,10 @@ function grid(element) {
 		var prev_index = t.getColumnIndexById(col_id);
 		if (prev_index >= 0) {
 			// this is a final column
+			var col = t.getColumnById(col_id);
 			t.removeColumn(prev_index, true);
 			t.addColumn(col, index-(index > prev_index ? 1 : 0));
+			t.on_column_moved.fire({column:col,index:index});
 			return;
 		}
 		// this is a container
@@ -999,6 +1002,7 @@ function grid(element) {
 		putBack(container, hierarchy);
 		// add the container at its new position
 		t.addColumnContainer(container, index-(index > prev_index ? finals.length : 0));
+		t.on_column_moved.fire({column:container,index:index});
 	};
 	
 	t.setSelectable = function(selectable, unique) {
