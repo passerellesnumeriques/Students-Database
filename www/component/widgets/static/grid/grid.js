@@ -13,6 +13,7 @@ function GridColumnAction(id,icon,onclick,tooltip) {
 }
 
 function GridColumnContainer(title, sub_columns, attached_data) {
+	this.id = generateID();
 	this.title = title;
 	this.text_title = null;
 	this.sub_columns = sub_columns;
@@ -20,9 +21,12 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 	this.th = document.createElement("TH");
 	this.th.className = "container";
 	if (title instanceof Element)
-		this.th.appendChild(title);
-	else
-		this.th.innerHTML = title;
+		this.title_part = title;
+	else {
+		this.title_part = document.createElement("SPAN");
+		this.title_part.innerHTML = title;
+	}
+	this.th.appendChild(this.title_part);
 	this.th.col = this;
 	window.to_cleanup.push(this);
 	this.cleanup = function() {
@@ -560,6 +564,8 @@ function grid(element) {
 		if (column_container.levels < t.header_rows.length)
 			column_container.th.rowSpan = t.header_rows.length-column_container.levels+1;
 		t._addColumnContainer(column_container, 0, index);
+		// handle movable columns
+		if (this.columns_movable) this._columnContainerMovable(column_container);
 	};
 	t._addHeaderLevel = function() {
 		// new level needed
@@ -573,6 +579,51 @@ function grid(element) {
 		if (this.selectable)
 			t.header_rows[0].childNodes[0].rowSpan++;
 		layout.changed(t.thead);
+	};
+	t._columnContainerMovable = function(container) {
+		container.title_part.style.cursor = "move";
+		container.title_part.draggable = true;
+		container.title_part.ondragstart = function(event) {
+			event.dataTransfer.setData('grid_column_'+t.grid_id,container.id);
+			event.dataTransfer.effectAllowed = 'move';
+			return true;
+		};
+		var over = function(event) {
+			if (!event.dataTransfer.types.contains("grid_column_"+t.grid_id)) return false;
+			var x = event.clientX-container.th.offsetLeft;
+			var w = container.th.offsetWidth;
+			if (x < w/2) {
+				// insert before
+				container.th.style.borderLeft = "2px dotted #808080";
+				container.th.style.borderRight = "";
+			} else {
+				// insert after
+				container.th.style.borderRight = "2px dotted #808080";
+				container.th.style.borderLeft = "";
+			}
+			event.dataTransfer.dropEffect = "move";
+			event.preventDefault();
+			return true;
+		};
+		var leave = function() {
+			container.th.style.borderLeft = "";
+			container.th.style.borderRight = "";
+		};
+		var drop = function(event) {
+			leave();
+			var col_id = event.dataTransfer.getData("grid_column_"+t.grid_id);
+			var x = event.clientX-container.th.offsetLeft;
+			var w = container.th.offsetWidth;
+			if (x < w/2) {
+				t.moveColumnBefore(col_id, container);
+			} else {
+				t.moveColumnAfter(col_id, container);
+			}
+		};
+		container.th.ondragenter = over;
+		container.th.ondragover = over;
+		container.th.ondragleave = leave;
+		container.th.ondrop = drop;
 	};
 	t._addColumnContainer = function(container, level, index) {
 		container.grid = this;
@@ -599,7 +650,7 @@ function grid(element) {
 			else {
 				var tr_index = 0;
 				var i;
-				for (i = index; i > 0; i--)
+				for (i = index; i >= 0; i--)
 					if (matrix[level][i] != null) tr_index++;
 				if (tr_index < t.header_rows[level].childNodes.length)
 					t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[tr_index]);
@@ -787,7 +838,20 @@ function grid(element) {
 				return i;
 		return -1;
 	};
-	t.removeColumn = function(index, keep_data) {
+	t.getColumnContainerById = function(id) {
+		for (var i = 0; i < t.columns.length; ++i)
+			if (t.columns[i].parent_column) {
+				var c = t._getColumnContainerById(t.columns[i].parent_column, id);
+				if (c) return c;
+			}
+		return null;
+	};
+	t._getColumnContainerById = function(container, id) {
+		if (container.id == id) return container;
+		if (!container.parent_column) return null;
+		return t._getColumnContainerById(container.parent_column, id);
+	};
+	t.removeColumn = function(index, keep_data, keep_sub_column) {
 		var col = t.columns[index];
 		t.columns.splice(index,1);
 		t.colgroup.removeChild(col.col);
@@ -818,7 +882,7 @@ function grid(element) {
 			var p = col.parent_column;
 			var c = col;
 			while (p) {
-				p.sub_columns.remove(c);
+				if (!keep_sub_column) p.sub_columns.remove(c);
 				c.th.parentNode.removeChild(c.th);
 				if (p.sub_columns.length > 0) {
 					// still something
@@ -883,16 +947,58 @@ function grid(element) {
 	};
 	t.moveColumnBefore = function(col_id, before_col) {
 		if (before_col.id == col_id) return;
-		t.moveColumn(t.getColumnById(col_id), t.getColumnIndex(before_col));
+		if (before_col instanceof GridColumnContainer)
+			before_col = before_col.getFinalColumns()[0];
+		t.moveColumn(col_id, t.getColumnIndex(before_col));
 	};
 	t.moveColumnAfter = function(col_id, after_col) {
 		if (after_col.id == col_id) return;
-		t.moveColumn(t.getColumnById(col_id), t.getColumnIndex(after_col)+1);
+		if (after_col instanceof GridColumnContainer) {
+			var finals = after_col.getFinalColumns();
+			after_col = finals[finals.length-1];
+		}
+		t.moveColumn(col_id, t.getColumnIndex(after_col)+1);
 	};
-	t.moveColumn = function(col, index) {
-		var prev_index = t.getColumnIndex(col);
-		t.removeColumn(prev_index, true);
-		t.addColumn(col, index-(index > prev_index ? 1 : 0));
+	t.moveColumn = function(col_id, index) {
+		var prev_index = t.getColumnIndexById(col_id);
+		if (prev_index >= 0) {
+			// this is a final column
+			t.removeColumn(prev_index, true);
+			t.addColumn(col, index-(index > prev_index ? 1 : 0));
+			return;
+		}
+		// this is a container
+		var container = t.getColumnContainerById(col_id);
+		// keep hierarchy
+		var getHierarchy = function(container) {
+			var res = [];
+			for (var i = 0; i < container.sub_columns.length; ++i)
+				if (container.sub_columns[i] instanceof GridColumnContainer)
+					res.push({container:container.sub_columns[i],hierarchy:getHierarchy(container.sub_columns[i])});
+				else
+					res.push(container.sub_columns[i]);
+			return res;
+		};
+		var hierarchy = getHierarchy(container);
+		// remove columns
+		var finals = container.getFinalColumns();
+		prev_index = t.getColumnIndex(finals[0]);
+		for (var i = 0; i < finals.length; ++i)
+			t.removeColumn(prev_index, true);
+		// put back hierarchy
+		var putBack = function(container, hier) {
+			for (var i = 0; i < hier.length; ++i)
+				if (hier[i] instanceof GridColumn)
+					container.sub_columns.push(hier[i]);
+				else {
+					putBack(hier[i].container, hier[i].hierarchy);
+					container.sub_columns.push(hier[i].container);
+				}
+			container._updateLevels();
+		};
+		putBack(container, hierarchy);
+		// add the container at its new position
+		t.addColumnContainer(container, index-(index > prev_index ? finals.length : 0));
 	};
 	
 	t.setSelectable = function(selectable, unique) {
