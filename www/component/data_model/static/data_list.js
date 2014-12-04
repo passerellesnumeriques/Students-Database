@@ -290,8 +290,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		for (var i = 0; i < t.show_fields.length; ++i) {
 			if (t.show_fields[i].field.path.path == field.path.path &&
 				t.show_fields[i].field.name == field.name) {
+				var col_id = t.getColumnIdFromField(t.show_fields[i],true)
 				t.show_fields.splice(i,1);
-				t.grid.removeColumn(i);
+				t.grid.removeColumn(t.grid.getColumnIndexById(col_id));
 				break;
 			}
 		}
