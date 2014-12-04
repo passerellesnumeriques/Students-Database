@@ -354,10 +354,64 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		var t=this;
 		this.th.removeAllChildren();
 		this.th.style.textAlign = this.align;
-		if (title instanceof Element)
-			this.th.appendChild(title);
-		else
-			this.th.innerHTML = title;
+		var title_part;
+		if (title instanceof Element) title_part = title;
+		else {
+			title_part = document.createElement("SPAN");
+			title_part.innerHTML = title;
+		}
+		this.th.appendChild(title_part);
+		if (this.grid && this.grid.columns_movable && !this.parent_column) {
+			title_part.style.cursor = "move";
+			title_part.draggable = true;
+			title_part.ondragstart = function(event) {
+				event.dataTransfer.setData('grid_column_'+t.grid.grid_id,t.id);
+				event.dataTransfer.effectAllowed = 'move';
+				return true;
+			};
+			var over = function(event) {
+				if (!event.dataTransfer.types.contains("grid_column_"+t.grid.grid_id)) return false;
+				var x = event.clientX-t.th.offsetLeft;
+				var w = t.th.offsetWidth;
+				if (x < w/2) {
+					// insert before
+					t.th.style.borderLeft = "2px dotted #808080";
+					t.th.style.borderRight = "";
+				} else {
+					// insert after
+					t.th.style.borderRight = "2px dotted #808080";
+					t.th.style.borderLeft = "";
+				}
+				event.dataTransfer.dropEffect = "move";
+				event.preventDefault();
+				return true;
+			};
+			this.th.ondragenter = over;
+			this.th.ondragover = over;
+			this.th.ondragleave = function() {
+				t.th.style.borderLeft = "";
+				t.th.style.borderRight = "";
+			};
+			this.th.ondrop = function(event) {
+				t.th.style.borderLeft = "";
+				t.th.style.borderRight = "";
+				var col_id = event.dataTransfer.getData("grid_column_"+t.grid.grid_id);
+				var x = event.clientX-t.th.offsetLeft;
+				var w = t.th.offsetWidth;
+				if (x < w/2) {
+					t.grid.moveColumnBefore(col_id, t);
+				} else {
+					t.grid.moveColumnAfter(col_id, t);
+				}
+			};
+		} else {
+			title_part.style.cursor = "";
+			title_part.draggable = false;
+			title_part.ondragstart = null;
+			this.th.ondragenter = null;
+			this.th.ondragover = null;
+			this.th.ondragleave = null;
+		}
 		this.span_actions = document.createElement("DIV");
 		this.span_actions.style.whiteSpace = 'nowrap';
 		//if (this.align == "right")
@@ -480,10 +534,12 @@ function grid(element) {
 		t.colgroup = null;
 		t = null;
 	};
+	t.grid_id = generateID();
 	t.element = element;
 	t.columns = [];
 	t.selectable = false;
 	t.selectable_unique = false;
+	t.columns_movable = false;
 	t.url = get_script_path("grid.js");
 	t.onrowselectionchange = null;
 	t.oncellcreated = new Custom_Event();
@@ -604,6 +660,8 @@ function grid(element) {
 				}
 			}
 		}
+		if (t._columns_movable)
+			col._makeMoveable();
 		col._refresh_title();
 		if (!col._loaded) {
 			t._columns_loading++;
@@ -623,12 +681,16 @@ function grid(element) {
 				else
 					tr.insertBefore(td, tr.childNodes[col_index]);
 				var data = null;
+				var original_data = undefined;
 				if (tr.row_data)
 				for (var k = 0; k < tr.row_data.length; ++k)
-					if (col.id == tr.row_data[k].col_id) { data = tr.row_data[k].data; break; }
-				t._create_cell(col, data, td, function(field){
+					if (col.id == tr.row_data[k].col_id) { data = tr.row_data[k].data; if (typeof tr.row_data[k].original_data != 'undefined') original_data = tr.row_data[k].original_data; break; }
+				if (data) td.data_id = data.data_id;
+				td.style.textAlign = col.align;
+				t._create_cell(col, data, td, function(field, original_data){
+					if (typeof original_data != 'undefined') field.originalData = original_data;
 					field.onfocus.add_listener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
-				});
+				}, original_data);
 				td.ondomremoved(function(td) { td.field = null; });
 			}
 		}
@@ -725,7 +787,7 @@ function grid(element) {
 				return i;
 		return -1;
 	};
-	t.removeColumn = function(index) {
+	t.removeColumn = function(index, keep_data) {
 		var col = t.columns[index];
 		t.columns.splice(index,1);
 		t.colgroup.removeChild(col.col);
@@ -736,7 +798,7 @@ function grid(element) {
 				row.childNodes[0].colSpan--;
 			else
 				row.removeChild(row.childNodes[td_index]);
-			if (row.row_data)
+			if (row.row_data && !keep_data)
 				for (var j = 0; j < row.row_data.length; ++j)
 					if (row.row_data[j].col_id == col.id) {
 						row.row_data.splice(j,1);
@@ -795,7 +857,8 @@ function grid(element) {
 				c = p;
 			}
 		}
-		t.apply_filters();
+		if (!keep_data)
+			t.apply_filters();
 		layout.changed(this.thead);
 		layout.changed(this.table);
 	};
@@ -808,13 +871,28 @@ function grid(element) {
 			var td = row.childNodes[index];
 			if (td.field) {
 				var data = td.field.getCurrentData();
+				var original = td.field.originalData;
 				td.removeAllChildren();
 				t._create_cell(column, data, td, function(field){
+					field.originalData = original;
 					field.onfocus.add_listener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
 				});
 				td.style.textAlign = column.align;
 			}
 		}
+	};
+	t.moveColumnBefore = function(col_id, before_col) {
+		if (before_col.id == col_id) return;
+		t.moveColumn(t.getColumnById(col_id), t.getColumnIndex(before_col));
+	};
+	t.moveColumnAfter = function(col_id, after_col) {
+		if (after_col.id == col_id) return;
+		t.moveColumn(t.getColumnById(col_id), t.getColumnIndex(after_col)+1);
+	};
+	t.moveColumn = function(col, index) {
+		var prev_index = t.getColumnIndex(col);
+		t.removeColumn(prev_index, true);
+		t.addColumn(col, index-(index > prev_index ? 1 : 0));
 	};
 	
 	t.setSelectable = function(selectable, unique) {
@@ -1630,6 +1708,13 @@ function grid(element) {
 		parent.style.display = column.hidden ? "none" : "";
 		t._cells_loading++;
 		t._create_field(column, column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
+			field.onchange.add_listener(function() {
+				var tr = parent;
+				while (tr.nodeName != 'TR') tr = tr.parentNode;
+				if (tr.row_data)
+					for (var k = 0; k < tr.row_data.length; ++k)
+						if (column.id == tr.row_data[k].col_id) { tr.row_data[k].data = field.getCurrentData(); tr.row_data[k].original_data = field.originalData; break; }
+			});
 			parent.field = field;
 			field.grid_column_id = column.id;
 			if (ondone) ondone(field, ondone_param);

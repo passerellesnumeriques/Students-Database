@@ -787,6 +787,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		container.appendChild(t.grid_container);
 		require("grid.js",function(){
 			t.grid = new grid(t.grid_container);
+			t.grid.columns_movable = true;
 			t._ready();
 		});
 		// layout
