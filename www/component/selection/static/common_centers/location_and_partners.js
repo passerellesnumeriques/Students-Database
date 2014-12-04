@@ -161,7 +161,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			section_location.addToolBottom(this._button_set_location);
 		}
 		this._map_container = document.createElement("DIV");
-		right.appendChild(this._map_container);
+		left.appendChild(this._map_container);
 		this._map_container.style.visibility = "hidden";
 		this._map_container.style.position = "absolute";
 		this._map_container.style.top = "-1000px";
