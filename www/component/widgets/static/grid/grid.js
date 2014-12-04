@@ -651,7 +651,7 @@ function grid(element) {
 			else {
 				var tr_index = 0;
 				var i;
-				for (i = index; i >= 0; i--)
+				for (i = real_index-1; i >= 0; i--)
 					if (matrix[level][i] != null) tr_index++;
 				if (tr_index < t.header_rows[level].childNodes.length)
 					t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[tr_index]);

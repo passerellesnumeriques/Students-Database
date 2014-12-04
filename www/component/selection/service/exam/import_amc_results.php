@@ -25,7 +25,9 @@ class service_exam_import_amc_results extends Service {
 			set_time_limit(300);
 			try {
 				$reader = PHPExcel_IOFactory::createReaderForFile($path);
-				if (get_class($reader) == "PHPExcel_Reader_HTML") throw new Exception();
+				if (get_class($reader) == "PHPExcel_Reader_HTML") {
+					$reader = PHPExcel_IOFactory::createReader('CSV');
+				}
 				$excel = $reader->load($path);
 				PNApplication::$instance->storage->remove_data($ids[0]);
 			} catch (Exception $e) {
@@ -46,14 +48,22 @@ class service_exam_import_amc_results extends Service {
 					do {
 						$cell = $sheet->getCellByColumnAndRow($col, $row);
 						if ($cell == null) break;
-						if ($cell->getValue() == "total") {
+						if ($cell->getValue() == "total") { // ods excel fromat
 							$cell = $sheet->getCellByColumnAndRow($col+1, $row);
 							if ($cell <> null && $cell->getValue() == "max") {
 								$cell = $sheet->getCellByColumnAndRow($col+2, $row);
 								if ($cell <> null && is_string($cell->getValue()) && substr($cell->getValue(),0,1) == "Q") {
 									$found = true;
+									$q1_col = $col+2;
 									break;
 								}
+							}
+						} else if ($cell->getValue() == "Mark") { // csv format
+							$cell = $sheet->getCellByColumnAndRow($col+1, $row);
+							if ($cell <> null && is_string($cell->getValue()) && substr($cell->getValue(),0,1) == "Q") {
+								$found = true;
+								$q1_col = $col+1;
+								break;
 							}
 						}
 						$col++;
@@ -70,7 +80,6 @@ class service_exam_import_amc_results extends Service {
 			}
 			// 2- count the number of questions, based on the title rows
 			$sheet = $marks_sheet;
-			$q1_col = $col+2;
 			$titles_row = $row;
 			$nb_questions = 0;
 			$col = $q1_col;

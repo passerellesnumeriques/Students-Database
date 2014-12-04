@@ -366,13 +366,14 @@ function SubjectGrid(subject, container, edit_mode, onready) {
 		for (var i = 0; i < subject.versions.length; ++i)
 			possible.push([subject.versions[i],String.fromCharCode("A".charCodeAt(0)+i)]);
 		var updateScores = function(field) {
-			if (edit_mode != 'answers') return;
 			var cell = t.data_grid.grid.getContainingRowAndColIds(field.getHTMLElement());
-			for (var i = 0; i < subject.parts.length; ++i) {
-				for (var j = 0; j < subject.parts[i].questions.length; ++j) {
-					var q = subject.parts[i].questions[j];
-					var ans_field = t.data_grid.grid.getCellFieldById(cell.row_id,q.id);
-					t.answerChanged(ans_field);
+			if (edit_mode == 'answers') {
+				for (var i = 0; i < subject.parts.length; ++i) {
+					for (var j = 0; j < subject.parts[i].questions.length; ++j) {
+						var q = subject.parts[i].questions[j];
+						var ans_field = t.data_grid.grid.getCellFieldById(cell.row_id,q.id);
+						t.answerChanged(ans_field);
+					}
 				}
 			}
 			if (typeof applicants_results[cell.row_id] == 'undefined')
@@ -1462,7 +1463,7 @@ function save() {
 			var subjects_missing = [];
 			for (var j = 0; j < subjects.length; ++j)
 				if (subjects[j].versions.length > 1 && (!applicants_results[applicants_to_save[i].people.id][subjects[j].id] || !applicants_results[applicants_to_save[i].people.id][subjects[j].id].version))
-					subjects_missings.push(subjects[j]);
+					subjects_missing.push(subjects[j]);
 			if (subjects_missing.length == 0) continue;
 			missing.push({applicant:applicants_to_save[i],subjects_missing:subjects_missing});
 			applicants_to_save.splice(i,1);
@@ -1473,10 +1474,10 @@ function save() {
 		for (var i = 0; i < missing.length; ++i) {
 			msg += "<li>"+missing[i].applicant.people.first_name+" "+missing[i].applicant.people.last_name+" (ID "+missing[i].applicant.applicant_id+")";
 			msg += " for subject";
-			if (missing[i].subejcts_missing.length > 1) msg += "s";
-			for (var j = 0; j < missing[i].subejcts_missing.length; ++j) {
+			if (missing[i].subjects_missing.length > 1) msg += "s";
+			for (var j = 0; j < missing[i].subjects_missing.length; ++j) {
 				if (j > 0) msg += ",";
-				msg += " "+missing[i].subejcts_missing[j].name;
+				msg += " "+missing[i].subjects_missing[j].name;
 			}
 			msg += "</li>";
 		}

@@ -246,7 +246,6 @@ class page_exam_subjects extends SelectionPage {
 				}
 			};
 			<?php if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) { ?>
-			<?php } ?>
 			require("upload.js");
 			var import_button = document.getElementById('import_answers_from_clickers');
 			import_button.onclick = function(ev) {
@@ -272,7 +271,8 @@ class page_exam_subjects extends SelectionPage {
 					});
 				}
 			};
-			<?php } ?>
+			<?php } /* correct answer */ ?>
+			<?php } /* can edit */ ?>
 		}
 
 		if (subjects.length == 0) {
