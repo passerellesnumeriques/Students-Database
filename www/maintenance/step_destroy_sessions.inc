@@ -31,7 +31,10 @@ $remaining = 0;
 while (($filename = readdir($dir)) <> null) {
 	if (is_dir($sessions_path."/".$filename)) continue;
 	$content = @file_get_contents($sessions_path."/".$filename);
-	$uid = file_get_contents("conf/instance.uid");
+	if (file_exists("conf/instance.uid"))
+		$uid = file_get_contents("conf/instance.uid");
+	else
+		$uid = null; // backward compatible
 	if (strpos($content,"\"PNApplication\"") !== false) {
 		$content = file_get_contents($sessions_path."/".$filename);
 		$data = decodeSession($content);
