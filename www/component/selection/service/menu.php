@@ -28,27 +28,26 @@ foreach ($campaigns as $c) {
 ?></select>
 <?php 
 if ($campaign <> null) {
-	echo "<img src='";
-	if ($campaign["frozen"] == 1) echo theme::$icons_16["lock_white"];
-	else echo theme::$icons_16["unlock_white"];
-	echo "' title='This selection campaign is ";
-	if ($campaign["frozen"] == 1)
-		echo "locked. Reason: ".$campaign['frozen_reason'];
-	else
-		echo "not locked";
-	echo "' style='vertical-align:bottom'/>";
-}
-?>
-<br/>
-<?php 
-if ($can_manage && $campaign <> null) {
-	if ($campaign["frozen"] == 1) {
-		echo "<button class='flat' style='margin:0px' onclick='unlockCampaign();' title='Unlock this campaign'><img src='".theme::$icons_16["unlock_white"]."'/></button>";
+	if ($can_manage) {
+		if ($campaign["frozen"] == 1) {
+			echo "<button class='flat' style='margin:0px' onclick='unlockCampaign();' title='This campaign is locked (Reason: ".$campaign['frozen_reason']."). Click to unlock it'><img src='".theme::$icons_16["lock_white"]."'/></button>";
+		} else {
+			echo "<button class='flat' style='margin:0px' onclick='lockCampaign();' title='This campaign is not locked. Click to lock it'><img src='".theme::$icons_16["unlock_white"]."'/></button>";
+		}
 	} else {
-		echo "<button class='flat' style='margin:0px' onclick='lockCampaign();' title='Lock this campaign'><img src='".theme::$icons_16["lock_white"]."'/></button>";
+		echo "<img src='";
+		if ($campaign["frozen"] == 1) echo theme::$icons_16["lock_white"];
+		else echo theme::$icons_16["unlock_white"];
+		echo "' title='This selection campaign is ";
+		if ($campaign["frozen"] == 1)
+			echo "locked. Reason: ".$campaign['frozen_reason'];
+		else
+			echo "not locked";
+		echo "' style='vertical-align:bottom'/>";
 	}
 }
 ?>
+<br/>
 <?php if ($can_manage) { ?>
 	<?php if ($id <> null && $id > 0) {?>
 	<button class='flat' style='margin:0px' onclick='renameCampaign();' title='Rename this campaign'><img src='<?php echo theme::$icons_16["edit_white"];?>'/></button>
