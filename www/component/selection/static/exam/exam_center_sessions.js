@@ -140,7 +140,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			var date = new event_date_time_duration(content, null, default_duration, null, null, false, false);
 			popup.addOkCancelButtons(function() {
 				if (date.date == null) { alert('Please select a date'); return; }
-				if (date.duration == null || date.duration == 0) { alert('Please select a duration'); return; }
+				if (date.duration == null || date.duration == 0) { alert('Please enter a duration'); return; }
 				var d = new Date(date.date.getTime());
 				d.setHours(0,date.time,0,0);
 				var doit = function() {
@@ -745,7 +745,8 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		var wc = document.createElement("DIV"); content.appendChild(wc);
 		wc.style.borderBottom = "1px solid #808080";
 		this.who = new who_container(wc, peoples, can_edit, 'exam');
-		wc.appendChild(this.who.createAddButton("Which staff will be at this exam session ?"));
+		if (can_edit)
+			wc.appendChild(this.who.createAddButton("Which staff will be at this exam session ?"));
 		this.who.onadded.add_listener(function(people) {
 			var a;
 			if (typeof people == 'string') {

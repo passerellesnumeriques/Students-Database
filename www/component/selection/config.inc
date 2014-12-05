@@ -32,5 +32,8 @@ return array(
 	// Exam Centers and Sessions
 	"give_name_to_exam_center" => array("Be able to set a custom name to the exam centers.<br/><i>Note: otherwise, the exam center name is the geographic area where it is located</i>",true,array(true,false),"boolean","Exam Centers and Sessions",array()),
 	"default_duration_exam_session" => array("Pre-selected duration of an Exam Session","4 hours",array("1 hour","2 hours","3 hours","4 hours","6 hours","8 hours"),"enum","Exam Centers and Sessions",array()),
+	
+	// Interview Centers
+	"give_name_to_interview_center" => array("Be able to set a custom name to the interview centers.<br/><i>Note: otherwise, the interview center name is the geographic area where it is located</i>",true,array(true,false),"boolean","Interview Centers",array()),
 );
 ?>

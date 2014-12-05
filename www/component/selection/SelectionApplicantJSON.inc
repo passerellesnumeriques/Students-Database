@@ -18,6 +18,10 @@ class SelectionApplicantJSON {
 		$q->field("Applicant", "exam_session", "applicant_exam_session_id");
 		$q->field("Applicant", "exam_attendance", "applicant_exam_attendance");
 		$q->field("Applicant", "exam_passer", "applicant_exam_passer");
+		$q->field("Applicant", "interview_center", "applicant_interview_center_id");
+		$q->field("Applicant", "interview_session", "applicant_interview_session_id");
+		$q->field("Applicant", "interview_attendance", "applicant_interview_attendance");
+		$q->field("Applicant", "interview_passer", "applicant_interview_passer");
 	}
 	
 	public static function ApplicantJSON($row) {
@@ -35,6 +39,10 @@ class SelectionApplicantJSON {
 		$s .= ",exam_session_id:".json_encode($row["applicant_exam_session_id"]);
 		$s .= ",exam_attendance:".json_encode($row["applicant_exam_attendance"]);
 		$s .= ",exam_passer:".json_encode($row["applicant_exam_passer"]);
+		$s .= ",interview_center_id:".json_encode($row["applicant_interview_center_id"]);
+		$s .= ",interview_session_id:".json_encode($row["applicant_interview_session_id"]);
+		$s .= ",interview_attendance:".json_encode($row["applicant_interview_attendance"]);
+		$s .= ",interview_passer:".json_encode($row["applicant_interview_passer"]);
 		$s .= "}";
 		return $s;
 	}

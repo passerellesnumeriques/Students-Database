@@ -135,7 +135,7 @@ function exam_center_is(container, all_is, linked_is, can_edit) {
 			var tr = null;
 			var rows = getTableRows(t._table);
 			for (var i = 0; i < rows.length; ++i) if (rows[i].is_id == is_id) { tr = rows[i]; break; }
-			if (tr)
+			if (tr && tr.unlink_button)
 				tr.unlink_button.disabled = '';
 
 			if (add_applicants) popup.unfreeze();

@@ -6,6 +6,16 @@ class page_interview_criteria extends SelectionPage {
 	
 	public function executeSelectionPage() {
 		$can_edit = PNApplication::$instance->selection->canEditInterviewCriteria();
+		if ($can_edit) {
+			require_once("component/data_model/DataBaseLock.inc");
+			$locked_by = "";
+			$lock_id = DataBaseLock::lockTable("InterviewCriterion_".PNApplication::$instance->selection->getCampaignId(), $locked_by);
+			if ($lock_id == null) $can_edit = false;
+			else DataBaseLock::generateScript($lock_id);
+		} else {
+			$lock_id = null;
+			$locked_by = null;
+		}
 		
 		$criteria = SQLQuery::create()->select("InterviewCriterion")->execute();
 		
@@ -33,9 +43,15 @@ class page_interview_criteria extends SelectionPage {
 		?>
 		<div style='width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column;'>
 			<div class='page_title' style='flex:none'>
+				<img src='/static/selection/interview/interview_32.png'/>
 				Interview Criteria and Rules
 			</div>
 			<div id='page_content' style="padding:10px;overflow:hidden;flex:1 1 auto">
+				<?php if ($locked_by <> null) {
+					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot edit because this is currently edited by ".toHTML($locked_by)."</div>";
+				} else if (!$can_edit && PNApplication::$instance->user_management->has_right("manage_interview_criteria")) {
+					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot edit because some results have been already entered.</div>";
+				} ?>
 				<div 
 					id='criteria_section'
 					title='Criteria'
@@ -59,6 +75,7 @@ class page_interview_criteria extends SelectionPage {
 			</div>
 		</div>
 		<script type='text/javascript'>
+		window.onuserinactive = function() { location.assign('/dynamic/selection/page/selection_main_page'); };
 		var criteria_section = sectionFromHTML('criteria_section');
 		var rules_section = sectionFromHTML('rules_section');
 

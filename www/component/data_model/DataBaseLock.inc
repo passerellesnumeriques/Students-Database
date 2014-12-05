@@ -613,6 +613,17 @@ class DataBaseLock {
 		return "This lock locks a different row";
 	}
 	
+	public static function getCurrentLocksIds() {
+		if (PNApplication::$instance->user_management->username == null) return array();
+		return SQLQuery::create()
+			->bypassSecurity()
+			->select("DataLocks")
+			->whereValue("DataLocks","locker_domain",PNApplication::$instance->user_management->domain)
+			->whereValue("DataLocks","locker_username",PNApplication::$instance->user_management->username)
+			->field("id")
+			->executeSingleField();
+	}
+	
 	/** Generate the necessary JavaScript code so the given lock if will be added to the list of locks
 	 * @param integer $id lock id
 	 */

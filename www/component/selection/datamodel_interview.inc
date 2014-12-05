@@ -57,6 +57,7 @@ $sm->addTable("InterviewCenterExamCenter")
 $sm->addTable("InterviewSession")
 	->addForeignKey("event", "CalendarEvent", true, true, false, false, true)
 	->addForeignKey("interview_center", "InterviewCenter", true, false, true)//An exam center can have several session
+	->addInteger("every_minutes",7,5,120,false,false)
 	->setPrimary("event")//The event is the primary key of a session
 	->addReadAccess("see_interview_center",true)
 	->addWriteAccess("manage_interview_center",true)

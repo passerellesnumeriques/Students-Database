@@ -620,11 +620,36 @@ class selection extends Component {
 				return false;
 			}
 		}
+		// TODO remove sessions events
 		//Perform the remove
 		SQLQuery::startTransaction();
 		try {
 			SQLQuery::create()
 				->removeKey("ExamCenter", $id);
+		} catch (Exception $e){
+			PNApplication::error($e);
+		}
+		if(PNApplication::hasErrors()){
+			SQLQuery::rollbackTransaction();
+			return false;
+		} else {
+			SQLQuery::commitTransaction();
+			return true;
+		}
+	}
+
+	public function removeInterviewCenter($id){
+		//Check the right from steps and user management
+		if (!PNApplication::$instance->user_management->has_right("manage_interview_center")) {
+			PNApplication::error("You are not allowed to remove this Interview Center");
+			return false;
+		}
+		// TODO remove sessions
+		//Perform the remove
+		SQLQuery::startTransaction();
+		try {
+			SQLQuery::create()
+			->removeKey("InterviewCenter", $id);
 		} catch (Exception $e){
 			PNApplication::error($e);
 		}

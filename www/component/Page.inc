@@ -275,6 +275,31 @@ function pageHeaderEnd($onload = "") {
 function pageFooter() {
 ?>
 <script type='text/javascript' defer>window._pageReadyStep();</script>
+<?php 
+#DEV
+require_once("component/data_model/DataBaseLock.inc");
+$locks_ids = DataBaseLock::getCurrentLocksIds();
+?>
+<script type='text/javascript'>
+var user_locks_ids = <?php echo json_encode($locks_ids);?>;
+for (var i = 0; i < user_locks_ids.length; ++i) {
+	var found = false;
+	for (var j = 0; j < window.top.databaselock._locks.length; ++j)
+		if (window.top.databaselock._locks[j].id == user_locks_ids[i]) { found = true; break; }
+	if (!found)
+		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING, "Lock id "+user_locks_ids[i]+" is in database, but not registered in javascript!<br/>Please fix this issue.", [{action:"close"}], 15000));
+}
+for (var i = 0; i < window.top.databaselock._locks.length; ++i) {
+	var found = false;
+	for (var j = 0; j < user_locks_ids.length; ++j)
+		if (user_locks_ids[j] == window.top.databaselock._locks[i].id) { found = true; break; }
+	if (!found)
+		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING, "Lock id "+window.top.databaselock._locks[i].id+" is still registered in javascript, but is not anymore in database!<br/>Please fix this issue.", [{action:"close"}], 15000));
+}
+</script>
+<?php 
+#END
+?>
 </body>
 </html>
 <?php
