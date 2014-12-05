@@ -87,6 +87,10 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 		// TODO
 	};
 	
+	this.moveApplicant = function(applicant_id, session_event_id) {
+		// TODO
+	};
+	
 	/* -------- Header Management -------- */
 	
 	this.updateHeader = function() {
@@ -336,6 +340,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.span_duration.innerHTML = duration;
 		this.span_nb_slots.innerHTML = nb_slots;
 		this.span_nb_applicants.innerHTML = nb_applicants;
+		this.span_nb_applicants.style.color = nb_applicants > nb_slots ? "red" : (nb_applicants == nb_slots ? "black" : "green");
 		layout.changed(this.header);
 		layout.changed(this.span_date);
 	};
@@ -401,7 +406,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.header.appendChild(document.createTextNode("How many parallel interviews can be done by those staffs ? "));
 		this.nb_interviews = new field_integer(0,true,{min:0,max:0,can_be_null:false});
 		this.header.appendChild(this.nb_interviews.getHTMLElement());
-		this.nb_interviews.onchange = function() { t.refresh(); };
+		this.nb_interviews.onchange.add_listener(function() { t.refresh(); });
 		this.header.appendChild(document.createElement("BR"));
 		this.header.appendChild(document.createTextNode("One interview done every "));
 		this.span_every_minutes = document.createElement("SPAN");
@@ -420,7 +425,13 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.header.appendChild(this.span_nb_applicants);
 		
 		this.applicants_list = new applicant_data_grid(content, function(obj) { return obj; },true);
+		for (var i = 0; i < interview_sessions.applicants.length; ++i)
+			if (interview_sessions.applicants[i].interview_session_id == session.event.id)
+				this.applicants_list.addApplicant(interview_sessions.applicants[i]);
 
+		this.applicants_list.addDragSupport("applicant", function(obj) { return obj.people.id; });
+		this.applicants_list.addPeopleProfileAction();
+		
 		if (can_edit) {
 			var reschedule_button = document.createElement("BUTTON");
 			reschedule_button.innerHTML = "<img src='/static/selection/date_clock_picker.png'/>";
@@ -446,7 +457,56 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 					if (yes) interview_sessions.removeSession(session);
 				});
 			};
+			
+			this.applicants_list.addDropSupport("applicant", function(people_id) {
+				// check applicant before drop
+				for (var i = 0; i < t.applicants_list.getList().length; ++i)
+					if (t.applicants_list.getList()[i].people.id == people_id) return null; // same target
+				return "move";
+			}, function(people_id) {
+				// applicant dropped
+				interview_sessions.moveApplicant(people_id, session.event.id);
+			});
+			this.applicants_list.makeSelectable();
+			var list_header = new ApplicantsListHeader(this.applicants_list);
+			// add unassign button for selected ones
+			list_header.addSelectionAction("Unassign", "action", "Unassign selected applicants from this session", function() {
+				var list = t.applicants_list.getSelection();
+				var doit = function() {
+					for (var i = 0; i < list.length; ++i)
+						interview_sessions.unassign(list[i]);
+				};
+				if (session.event.start.getTime() < new Date().getTime()) {
+					// the session is in the past !
+					confirm_dialog("The session is already done. When you will save, if any of those applicants already has results for his/her interview, the results will be removed. Are you sure you want to unassign those applicants ?", function(yes) {
+						if (yes) doit();
+					});
+				} else
+					doit();
+			});
+			// add unassign button per applicant
+			this.applicants_list.addAction(function(container, applicant) {
+				var button = document.createElement("BUTTON");
+				button.className = "flat small";
+				button.title = "Unassign this applicant";
+				button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
+				container.appendChild(button);
+				button.onclick = function() {
+					interview_sessions.unassign(applicant);
+					return false;
+				};
+			});
 		}
+		
+		var print = document.createElement("BUTTON");
+		print.className = "flat icon";
+		print.innerHTML = "<img src='"+theme.icons_16.print+"'/>";
+		print.onclick = function() {
+			t.applicants_list.hideActions();
+			t.applicants_list.grid.print("pn_document",{titles:["Interviews"],sub_titles:[getDateString(session.event.start),"Applicants List"],content_style:"display:flex;flex-direction:column;align-items:center;"},function() {
+				t.applicants_list.showActions();
+			});
+		};
 		
 		this.refresh();
 	};
