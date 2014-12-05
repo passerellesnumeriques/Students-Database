@@ -1,6 +1,27 @@
 <?php include("header.inc");?>
 <div style='flex:none;background-color:white;padding:10px'>
 <?php 
+
+function decodeSession($session_string){
+	// $session_open = session_status() == PHP_SESSION_ACTIVE; this is PHP 5.4, not compatible with 5.3
+	//if (session_id() == "") $session_open = false;
+	//else $session_open = true;
+	$session_open = false; // anyway, the session is always closed at this point
+	if (!$session_open) @session_start();
+	$current_session = session_encode();
+	foreach ($_SESSION as $key => $value){
+		unset($_SESSION[$key]);
+	}
+	session_decode($session_string);
+	$restored_session = $_SESSION;
+	foreach ($_SESSION as $key => $value){
+		unset($_SESSION[$key]);
+	}
+	session_decode($current_session);
+	if (!$session_open) session_write_close();
+	return $restored_session;
+}
+
 $sessions_path = ini_get("session.save_path");
 $i = strrpos($sessions_path, ";");
 if ($i !== false) $sessions_path = substr($sessions_path, $i+1);
@@ -10,9 +31,17 @@ $remaining = 0;
 while (($filename = readdir($dir)) <> null) {
 	if (is_dir($sessions_path."/".$filename)) continue;
 	$content = @file_get_contents($sessions_path."/".$filename);
+	if (file_exists("conf/instance.uid"))
+		$uid = file_get_contents("conf/instance.uid");
+	else
+		$uid = null; // backward compatible
 	if (strpos($content,"\"PNApplication\"") !== false) {
-		@unlink($sessions_path."/".$filename);
-		if (file_exists($sessions_path."/".$filename)) $remaining++;
+		$content = file_get_contents($sessions_path."/".$filename);
+		$data = decodeSession($content);
+		if (@$data["instance_uid"] == $uid) {
+			@unlink($sessions_path."/".$filename);
+			if (file_exists($sessions_path."/".$filename)) $remaining++;
+		}
 	}
 }
 closedir($dir);

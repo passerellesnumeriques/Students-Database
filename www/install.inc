@@ -1,4 +1,11 @@
 <?php
+if (!file_exists("conf/instance.uid")) {
+	// generate an installation UID, so we can differentiate several installations on the same server
+	$uid = "".time()."-".rand(0, 10000)."-".$_SERVER["SERVER_NAME"]."-".rand(0,10000);
+	$f = fopen("conf/instance.uid","w");
+	fwrite($f,$uid);
+	fclose($f);
+}
 function removeDirectory($path) {
 	$dir = opendir($path);
 	while (($filename = readdir($dir)) <> null) {
@@ -125,6 +132,7 @@ if (isset($_POST["req"])) {
 			// remove installer
 			if (file_exists("installer")) removeDirectory(realpath("installer"));
 			// remove all sessions
+			/*
 			$sessions_path = ini_get("session.save_path");
 			$i = strrpos($sessions_path, ";");
 			if ($i !== false) $sessions_path = substr($sessions_path, $i+1);
@@ -140,6 +148,7 @@ if (isset($_POST["req"])) {
 				}
 			}
 			closedir($dir);
+			*/
 			// generate configuration
 			$f = fopen(dirname(__FILE__)."/install_config.inc", "w");
 			fwrite($f,

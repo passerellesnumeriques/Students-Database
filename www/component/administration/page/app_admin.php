@@ -276,7 +276,7 @@ class page_app_admin extends Page {
 			$id = substr($filename,5);
 			$info = stat($sessions_path."/".$filename);
 			if ($id == session_id())
-				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>"<b>You</b>","remote"=>@$_SERVER["REMOTE_ADDR"],"user_agent"=>@$_SERVER["HTTP_USER_AGENT"]));
+				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>"<b>You</b>","remote"=>@$_SERVER["REMOTE_ADDR"],"user_agent"=>@$_SERVER["HTTP_USER_AGENT"],"instance"=>file_get_contents("conf/instance.uid")));
 			else {
 				$content = file_get_contents($sessions_path."/".$filename);
 				if (strpos($content, "\"PNApplication\"") === false) continue; // Another application
@@ -284,14 +284,16 @@ class page_app_admin extends Page {
 				$user = "?";
 				$remote = "?";
 				$user_agent = "?";
+				$instance_uid = "?";
 				if ($data <> null) {
 					$user = @$data["app"]->user_management->domain;
 					$user .= "\\";
 					$user .= @$data["app"]->user_management->username;
 					$remote = @$data["remote"];
 					$user_agent = @$data["user_agent"];
+					$instance_uid = @$data["instance_uid"];
 				}
-				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>$user,"remote"=>$remote,"user_agent"=>$user_agent));
+				array_push($sessions, array("id"=>$id,"creation"=>$info["ctime"],"modification"=>$info["mtime"],"size"=>$info["size"],"user"=>$user,"remote"=>$remote,"user_agent"=>$user_agent,"instance"=>$instance_uid));
 			}
 		}
 		closedir($dir);
@@ -299,8 +301,9 @@ class page_app_admin extends Page {
 			return $s2["modification"]-$s1["modification"];
 		});
 		echo "".count($sessions)." sessions open:<br/>";
+		$this_instance_uid = file_get_contents("conf/instance.uid");
 		echo "<table>";
-		echo "<tr><th>Session ID</th><th>Creation</th><th>Modification</th><th>Size</th><th>User</th><th>Client</th><th>Browser</th></tr>";
+		echo "<tr><th>Session ID</th><th>Creation</th><th>Modification</th><th>Size</th><th>User</th><th>Client</th><th>Browser</th><th></th></tr>";
 		require_once("Browser.inc");
 		foreach ($sessions as $session) {
 			echo "<tr>";
@@ -318,6 +321,10 @@ class page_app_admin extends Page {
 				if ($br == "Unknown") $br = $session["user_agent"];
 			}
 			echo "<td style='padding:0px 3px;font-size:9pt'>".$br."</td>";
+			echo "<td>";
+			if ($this_instance_uid <> $session["instance"])
+				echo "<i>From another installation on this server</i>";
+			echo "</td>";
 			echo "</tr>";
 		}
 		echo "</table>";

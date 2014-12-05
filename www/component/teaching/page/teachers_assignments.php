@@ -32,7 +32,7 @@ class page_teachers_assignments extends Page {
 		if ($academic_period <> null) {
 			$q = SQLQuery::create()
 				->select("TeacherDates")
-				->where("`start` <= '".$academic_period["start"]."'")
+				->where("`start` < '".$academic_period["end"]."'")
 				->where("(`end` IS NULL OR `end` > '".$academic_period["start"]."')")
 				;
 			PNApplication::$instance->people->joinPeople($q, "TeacherDates", "people");

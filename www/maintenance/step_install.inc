@@ -66,7 +66,7 @@ if (isset($_GET["copy"])) {
 				copy("$src/$s","$dst/$s");
 			}
 		}
-		if ($dst <> realpath("conf"))
+		if (realpath($dst) <> realpath("conf"))
 			foreach ($files_dst as $s) {
 				if (is_dir("$dst/$s"))
 					remove_directory("$dst/$s");
