@@ -22,6 +22,21 @@ fclose($f);
 @unlink("maintenance/ask_cancel");
 @unlink("data/cron/cron_maintenance_errors");
 
+function end() {
+	if (PNApplication::hasErrors()) {
+		$f = fopen("data/cron/cron_maintenance_errors","w");
+		fwrite($f,json_encode(PNApplication::$errors));
+		fclose($f);
+	}
+	@unlink("maintenance/password");
+	@unlink("maintenance/origin");
+	@unlink("maintenance/ask_cancel");
+	@unlink("maintenance_in_progress");
+	@unlink("maintenance_time");
+	@unlink("data/cron/maintenance_in_progress");
+	die();
+}
+
 function cron_maintenance_shutdown_catch() {
 	$msg = "Cron didn't finish correctly.";
 	$error = error_get_last();
@@ -31,6 +46,7 @@ function cron_maintenance_shutdown_catch() {
 	if ($content <> "")
 		$msg .= "<br/>Output generated at failing time:<br/>".str_replace("\n", "<br/>", toHTML($content));
 	PNApplication::errorHTML($msg);
+	end();
 }
 
 register_shutdown_function("cron_maintenance_shutdown_catch");
@@ -51,16 +67,5 @@ try {
 	PNApplication::error($e);
 }
 restore_error_handler();
-if (PNApplication::hasErrors()) {
-	$f = fopen("data/cron/cron_maintenance_errors","w");
-	fwrite($f,json_encode(PNApplication::$errors));
-	fclose($f);
-}
-	
-@unlink("maintenance/password");
-@unlink("maintenance/origin");
-@unlink("maintenance/ask_cancel");
-@unlink("maintenance_in_progress");
-@unlink("maintenance_time");
-@unlink("data/cron/maintenance_in_progress");
+end();
 ?>
