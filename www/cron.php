@@ -1,8 +1,12 @@
 <?php
 set_include_path(dirname(__FILE__));
 date_default_timezone_set("GMT");
-if (file_exists("data/cron/maintenance_in_progress"))
+if (file_exists("data/cron/maintenance_in_progress")) {
+	$f = fopen("data/cron/cron_errors","w");
+	fwrite($f,json_encode(array("Not executed because maintenance is in progress")));
+	fclose($f);
 	return;
+}
 if (!file_exists("data/cron")) @mkdir("data/cron");
 if (file_exists("data/cron/in_progress")) {
 	$time = filectime("data/cron/in_progress");
@@ -14,6 +18,9 @@ if (file_exists("data/cron/in_progress")) {
 }
 @touch("data/cron/in_progress");
 if (file_exists("data/cron/maintenance_in_progress")) {
+	$f = fopen("data/cron/cron_errors","w");
+	fwrite($f,json_encode(array("Not executed because maintenance is in progress")));
+	fclose($f);
 	@unlink("data/cron/in_progress");
 	return;
 }
@@ -24,26 +31,33 @@ global $in_cron;
 $in_cron = true;
 include("install_config.inc");
 
-function end() {
+function end_cron() {
 	if (PNApplication::hasErrors()) {
 		$f = fopen("data/cron/cron_errors","w");
 		fwrite($f,json_encode(PNApplication::$errors));
 		fclose($f);
 	}
 	@unlink("data/cron/in_progress");
+	$clean_exit = true;
 	die();
 }
 
+global $clean_exit;
+$clean_exit = false;
+
 function cron_shutdown_catch() {
-	$msg = "Cron didn't finish correctly.";
-	$error = error_get_last();
-	if ($error <> null)
-		$msg.= " Last error was in ".$error["file"]." line ".$error["line"].": ".$error["message"];
-	$content = ob_get_clean();
-	if ($content <> "")
-		$msg .= "<br/>Output generated at failing time:<br/>".str_replace("\n", "<br/>", toHTML($content));
-	PNApplication::errorHTML($msg);
-	end();
+	global $clean_exit;
+	if (!$clean_exit) {
+		$msg = "Cron didn't finish correctly.";
+		$error = error_get_last();
+		if ($error <> null)
+			$msg.= " Last error was in ".$error["file"]." line ".$error["line"].": ".$error["message"];
+		$content = ob_get_clean();
+		if ($content <> "")
+			$msg .= "<br/>Output generated at failing time:<br/>".str_replace("\n", "<br/>", toHTML($content));
+		PNApplication::errorHTML($msg);
+		end_cron();
+	}
 }
 
 register_shutdown_function("cron_shutdown_catch");
@@ -63,5 +77,6 @@ try {
 	PNApplication::error($e);
 }
 restore_error_handler();
-end();
+$clean_exit = true;
+end_cron();
 ?>
