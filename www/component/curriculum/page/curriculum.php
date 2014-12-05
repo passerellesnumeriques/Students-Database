@@ -81,6 +81,7 @@ class page_curriculum extends Page {
 					<?php 
 				}
 				DataBaseLock::generateScript($lock);
+				DataBaseLock::generateScript($lock_categories);
 				$editing = true;
 				require_once("component/data_model/page/utils.inc");
 			}
