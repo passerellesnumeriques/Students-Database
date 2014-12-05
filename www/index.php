@@ -206,6 +206,18 @@ case "dynamic":
 	} else {
 		$_SESSION["remote"] = $_SERVER["REMOTE_ADDR"];
 	}
+	if (isset($_SESSION["instance_uid"])) {
+		if ($_SESSION["instance_uid"] <> file_get_contents("conf/instance.uid")) {
+			// use a session from a different installation => reject and force open a new session
+			session_write_close();
+			setcookie(session_name(), "", time()-10000, "/dynamic/");
+			setcookie(session_name(), "", time()-10000, "/");
+			header("Location: /");
+			die("Access denied: you come from a different installation");
+		}
+	} else {
+		$_SESSION["instance_uid"] = file_get_contents("conf/instance.uid");
+	}
 	if (!isset($_SESSION["app"])) {
 		PNApplication::$instance = new PNApplication();
 		PNApplication::$instance->init();
