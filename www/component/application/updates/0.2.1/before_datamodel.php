@@ -7,4 +7,6 @@ if (!file_exists($previous_version_path."/conf/instance.uid")) {
 	fwrite($f,$uid);
 	fclose($f);
 }
+// fix step_install
+copy($new_version_path."/maintenance/step_install.inc",$previous_version_path."/maintenance/step_install.inc");
 ?>
