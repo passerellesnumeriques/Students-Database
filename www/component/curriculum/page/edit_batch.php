@@ -188,8 +188,12 @@ if ($batch <> null) {
 		foreach ($default_year as $period_number) {
 			$period = $conf["default_academic_year"][$period_number];
 			// get period name
-			if (!isset($period_name_numbers[$period["period"]]))
-				$period_name_numbers[$period["period"]] = 1;
+			if (!isset($period_name_numbers[$period["period"]])) {
+				$start_number = 1;
+				if (isset($conf["default_batch_period_numbering_start"]) && isset($conf["default_batch_period_numbering_start"][$period["period"]]))
+					$start_number = $conf["default_batch_period_numbering_start"][$period["period"]];
+				$period_name_numbers[$period["period"]] = $start_number;
+			}
 			$period_name = $period["period"]." ".$period_name_numbers[$period["period"]];
 			$period_name_numbers[$period["period"]]++;
 			echo "periods.push({id:new_period_id_counter--,name:".json_encode($period_name).",academic_period:0});";

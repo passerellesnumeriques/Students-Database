@@ -20,6 +20,9 @@ $conf = array(
 			"default_batch_years"=>array(
 				array(0,1,2,3),
 				array(0,1,2,3),
+			),
+			"default_batch_period_numbering_start"=>array(
+				"Quarter"=>0
 			)
 		),
 		"transcripts"=>array(
@@ -52,6 +55,10 @@ $conf = array(
 				array(0,1,2),   // Year 1: the 3 periods
 				array(0,1),     // Year 2: no summer
 				array(0,1)      // Year 3: no summer
+			),
+			"default_batch_period_numbering_start"=>array(
+				"Semester"=>1,
+				"Summer"=>1
 			)
 		),
 		"transcripts"=>array(
@@ -76,6 +83,9 @@ $conf = array(
 			"default_batch_years"=>array(
 				array(0,1),
 				array(0,1)
+			),
+			"default_batch_period_numbering_start"=>array(
+				"Semester"=>1
 			)
 		),
 		"transcripts"=>array(
