@@ -45,6 +45,7 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 						}
 						t.sessions.push(session);
 						t.sessions_controls.push(new InterviewSession(t, session, staffs, can_edit));
+						t.updateHeader();
 					};
 					if (d.getTime() < new Date().getTime())
 						confirm_dialog("You are creating a session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
@@ -59,7 +60,14 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 	};
 	
 	this.removeSession = function(session) {
-		// TODO
+		var index = this.sessions.indexOf(session);
+		// unassign applicants
+		while (this.sessions_controls[index].applicants_list.getList().length > 0)
+			this.unassignFrom(this.sessions_controls[index].applicants_list.getList()[0], session);
+		// remove session
+		this.tr_sessions.removeChild(this.sessions_controls[index].container);
+		this.sessions_controls.splice(index,1);
+		this.sessions.splice(index,1);
 	};
 	
 	/* -------- Applicants -------- */
@@ -72,23 +80,64 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 				if (sessions[i].event.id == applicant.interview_session_id)
 					sessions_controls[i].applicants_list.removeApplicant(applicant);
 		this.applicants.remove(applicant);
-		this._updateHeader();
+		applicant.interview_center_id = null;
+		applicant.interview_session_id = null;
+		this.updateHeader();
 	};
 	
 	this.unassign = function(applicant) {
-		// TODO
+		var session = null;
+		for (var i = 0; i < this.sessions.length; ++i)
+			if (this.sessions[i].event.id == applicant.interview_session_id) { session = this.sessions[i]; break; }
+		this.unassignFrom(applicant, session);
+	};
+	this.unassignFrom = function(applicant, session) {
+		applicant.interview_session_id = null;
+		var index = this.sessions.indexOf(session);
+		this.sessions_controls[index].applicants_list.removeApplicant(applicant);
+		this._not_assigned.not_assigned.addApplicant(applicant);
 	};
 	
 	this.assignApplicantAutomatically = function(applicant) {
-		// TODO
+		for (var i = 0; i < this.sessions.length; ++i) {
+			var nb = this.sessions_controls[i].getAvailableSlots();
+			if (nb > 0) {
+				this.assign(applicant, this.sessions[i].event.id);
+				return true;
+			}
+		}
+		return false;
 	};
 	
 	this.assign = function(applicant, session_event_id) {
-		// TODO
+		var index;
+		for (index = 0; index < this.sessions.length; ++index) if (this.sessions[index].event.id == session_event_id) break;
+		if (index >= this.sessions.length) return false;
+		if (this.sessions_controls[index].getAvailableSlots() <= 0) return false;
+		this._not_assigned.not_assigned.removeApplicant(applicant);
+		this.sessions_controls[index].applicants_list.addApplicant(applicant);
+		applicant.interview_session_id = session_event_id;
+		return true;
 	};
 	
 	this.moveApplicant = function(applicant_id, session_event_id) {
-		// TODO
+		var applicant = null;
+		for (var i = 0; i < this.applicants.length; ++i) if (this.applicants[i].people.id == applicant_id) { applicant = this.applicants[i]; break; }
+		if (!applicant) return false;
+		var target_index;
+		for (target_index = 0; target_index < this.sessions.length; ++target_index) if (this.sessions[target_index].event.id == session_event_id) break;
+		if (target_index >= this.sessions.length) return false;
+		if (this.sessions_controls[target_index].getAvailableSlots() <= 0) return false;
+		if (applicant.interview_session_id == null)
+			this._not_assigned.not_assigned.removeApplicant(applicant);
+		else for (var i = 0; i < this.sessions.length; ++i)
+			if (this.sessions[i].event.id == applicant.interview_session_id) {
+				this.sessions_controls[i].applicants_list.removeApplicant(applicant);
+				break;
+			}
+		this.sessions_controls[target_index].applicants_list.addApplicant(applicant);
+		applicant.interview_session_id = session_event_id;
+		return true;
 	};
 	
 	/* -------- Header Management -------- */
@@ -150,7 +199,11 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 				t.applicants.remove(removed_applicants[i]);
 				if (removed_applicants[i].interview_session_id == null)
 					t._not_assigned.not_assigned.removeApplicant(removed_applicants[i]);
-				// TODO else
+				else for (var j = 0; j < t.sessions.length; ++j)
+					if (t.sessions[j].event.id == removed_applicants[i].interview_session_id) {
+						t.sessions_controls[j].applicants_list.removeApplicant(removed_applicants[i]);
+						break;
+					}
 			}
 			t.updateHeader();
 		});
@@ -212,7 +265,7 @@ function NotAssignedApplicants(interview_sessions, container, can_edit) {
 	this._section_not_assigned.element.style.verticalAlign = "top";
 	container.appendChild(this._section_not_assigned.element);
 	var t=this;
-	this.not_assigned = new applicant_data_grid(not_assigned_container, function(obj) { return obj; });
+	this.not_assigned = new applicant_data_grid(not_assigned_container, function(obj) { return obj; }, true);
 	var listener = function() {
 		not_assigned_nb.innerHTML = t.not_assigned.getList().length;
 		t._section_not_assigned.header.style.background = t.not_assigned.getList().length > 0 ? "#FF8000" : "";
@@ -263,7 +316,7 @@ function NotAssignedApplicants(interview_sessions, container, can_edit) {
 				menu.addIconItem(null, "Automatically assign", function() {
 					var applicants = t.not_assigned.getSelection();
 					for (var i = 0; i < applicants.length; ++i)
-						if (!t.assignApplicantAutomatically(applicants[i])) {
+						if (!interview_sessions.assignApplicantAutomatically(applicants[i])) {
 							alert("No more available time in future sessions. Please add a new schedule or extend a session.");
 							break;
 						}
@@ -313,11 +366,57 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 	var t=this;
 	
 	this.getAvailableSlots = function() {
-		// TODO
+		var nb_staff = this.who.peoples.length;
+		var nb_applicants = this.applicants_list.list.length;
+		var duration = session.event.end.getTime()-session.event.start.getTime();
+		duration = Math.floor(duration/60000);
+		var nb_slots = Math.floor(duration/session.every_minutes);
+		var nb_done = this.nb_interviews.getCurrentData();
+		if (nb_done == null) nb_done = 0;
+		nb_slots *= nb_done;
+		return nb_slots-nb_applicants;
 	};
 	
 	this.reschedule = function() {
-		// TODO
+		var t=this;
+		require(["event_date_time_duration.js","popup_window.js","calendar_objects.js",["typed_field.js","field_integer.js"]], function() {
+			var content = document.createElement("DIV");
+			content.style.backgroundColor = "white";
+			content.style.padding = "10px";
+			var popup = new popup_window("New session", null, content);
+			new event_date_time_duration(content, session.event.start, Math.floor((session.event.end.getTime()-session.event.start.getTime())/60000), null, null, false, false,function(date) {
+				var div = document.createElement("DIV");
+				div.style.marginTop = "10px";
+				div.appendChild(document.createTextNode("Duration of an interview in minutes: "));
+				var every_minutes = new field_integer(session.every_minutes,true,{min:5,max:120,can_be_null:false});
+				div.appendChild(every_minutes.getHTMLElement());
+				content.appendChild(div);
+				popup.addOkCancelButtons(function() {
+					if (date.date == null) { alert('Please select a date'); return; }
+					if (date.duration == null || date.duration == 0) { alert('Please enter a duration'); return; }
+					if (every_minutes.getCurrentData() == null) { alert('Please enter a duration of an interview'); return; }
+					if (every_minutes.getCurrentData() < 5) { alert('Please enter a reasonable duration, this is too low'); return; }
+					if (every_minutes.getCurrentData() > 120) { alert('Please enter a reasonable duration, this is too high'); return; }
+					var d = new Date(date.date.getTime());
+					d.setHours(0,date.time,0,0);
+					var doit = function() {
+						popup.close();
+						window.pnapplication.dataUnsaved("InterviewCenterSessions");
+						session.event.start = d;
+						session.event.end = new Date(d.getTime()+date.duration*60*1000);
+						session.every_minutes = every_minutes.getCurrentData();
+						t.refresh();
+					};
+					if (d.getTime() < new Date().getTime())
+						confirm_dialog("You set the session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
+							if (yes) doit();
+						});
+					else
+						doit();
+				});
+				popup.show();
+			});
+		});
 	};
 	
 	this.refresh = function() {
@@ -352,7 +451,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		title.appendChild(document.createTextNode("Session on "));
 		this.span_date = document.createElement("SPAN");
 		title.appendChild(this.span_date);
-		title.appendChild(document.createTextNode("From "));
+		title.appendChild(document.createTextNode(" from "));
 		this.span_start_time = document.createElement("SPAN");
 		title.appendChild(this.span_start_time);
 		title.appendChild(document.createTextNode(" to "));
@@ -408,7 +507,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.header.appendChild(this.nb_interviews.getHTMLElement());
 		this.nb_interviews.onchange.add_listener(function() { t.refresh(); });
 		this.header.appendChild(document.createElement("BR"));
-		this.header.appendChild(document.createTextNode("One interview done every "));
+		this.header.appendChild(document.createTextNode("With 1 interview done every "));
 		this.span_every_minutes = document.createElement("SPAN");
 		this.header.appendChild(this.span_every_minutes);
 		this.header.appendChild(document.createTextNode(" minutes, during "));
@@ -431,6 +530,8 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 
 		this.applicants_list.addDragSupport("applicant", function(obj) { return obj.people.id; });
 		this.applicants_list.addPeopleProfileAction();
+		this.applicants_list.object_added.add_listener(function(){t.refresh();});
+		this.applicants_list.object_removed.add_listener(function(){t.refresh();});
 		
 		if (can_edit) {
 			var reschedule_button = document.createElement("BUTTON");
@@ -474,7 +575,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 				var list = t.applicants_list.getSelection();
 				var doit = function() {
 					for (var i = 0; i < list.length; ++i)
-						interview_sessions.unassign(list[i]);
+						interview_sessions.unassignFrom(list[i], session);
 				};
 				if (session.event.start.getTime() < new Date().getTime()) {
 					// the session is in the past !
@@ -492,7 +593,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 				button.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
 				container.appendChild(button);
 				button.onclick = function() {
-					interview_sessions.unassign(applicant);
+					interview_sessions.unassignFrom(applicant, session);
 					return false;
 				};
 			});
