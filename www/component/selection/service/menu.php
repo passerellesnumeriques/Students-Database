@@ -119,6 +119,10 @@ if ($campaign <> null) {
 		<img src='/static/selection/results_white.png'/>
 		Results
 	</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/applicant/list?type=interview_passers'>
+		<img src='<?php echo theme::$icons_16["like_white"];?>'/>
+		Passers
+	</a>
 <a class='application_left_menu_item'>
 	<img src='/static/selection/si/si_white.png'/>
 	Social Investigations

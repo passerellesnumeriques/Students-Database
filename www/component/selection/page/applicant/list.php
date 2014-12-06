@@ -35,6 +35,9 @@ class page_applicant_list extends SelectionPage {
 			case "exam_passers":
 				echo "filters.push({category:'Selection',name:'Eligible for Interview',force:true,data:{values:[1]}});\n";
 				break;
+			case "interview_passers":
+				echo "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
+				break;
 			}
 		}
 		?>
