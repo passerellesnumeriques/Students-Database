@@ -11,6 +11,11 @@ class page_interview_results extends SelectionPage {
 ?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;'>
 	<div class='page_title' style='flex:none;'>
+		<?php if (PNApplication::$instance->user_management->has_right("edit_interview_results")) { ?>
+		<button class='action red' style='float:right' onclick='resetAll();'>
+			Reset all results
+		</button>
+		<?php } ?>
 		<img src='<?php echo theme::make_icon("/static/selection/interview/interview_32.png", theme::$icons_16["ok"]);?>'/>
 		Interview Results
 	</div>
@@ -96,6 +101,12 @@ class page_interview_results extends SelectionPage {
 			</div>
 		</div>
 	</div>
+	<?php if (PNApplication::$instance->user_management->has_right("edit_interview_results")) { ?>
+	<div class="page_footer" style="flex:none">
+		<button id="edit_results_button" class="action" disabled="disabled" onclick="editResults();">Edit Results</button>
+		<button id="remove_results_button" class="action red" disabled="disabled" onclick="resetSession();">Reset results</button>
+	</div>
+	<?php } ?>
 </div>
 <script type='text/javascript'>
 
@@ -120,14 +131,45 @@ new data_list(
 );
 
 var selected_row = null;
+var selected_session_id = null;
 
 function selectSession(row, session_id) {
 	if (selected_row) removeClassName(selected_row, "selected");
 	selected_row = row;
+	selected_session_id = session_id;
 	addClassName(row, "selected");
 	window.dl.resetFilters(true, [{category:"Selection",name:"Interview Session",force:true,data:{values:[session_id]}}]);
 	window.dl.reloadData();
 	document.getElementById('session_applicants_list').style.display = "";
+	<?php if (PNApplication::$instance->user_management->has_right("edit_interview_results")) { ?>
+	document.getElementById('edit_results_button').disabled = "";
+	document.getElementById('remove_results_button').disabled = "";
+	<?php } ?>
+}
+
+function editResults() {
+}
+
+function resetSession() {
+	confirm_dialog("Are you sure you want to remove all interview results and attendance for this interview session ?",function(yes) {
+		if (!yes) return;
+		var locker = lock_screen(null,"Removing results of applicants...");
+		service.json("selection","interview/reset_results",{session:selected_session_id},function(res) {
+			unlock_screen(locker);
+			location.reload();
+		});
+	});
+}
+
+function resetAll() {
+	confirm_dialog("Are you sure you want to remove all interview results and attendance for all applicants ?",function(yes) {
+		if (!yes) return;
+		var locker = lock_screen(null,"Removing results of applicants...");
+		service.json("selection","interview/reset_results",{session:null},function(res) {
+			unlock_screen(locker);
+			location.reload();
+		});
+	});
 }
 
 sectionFromHTML('sessions_list');

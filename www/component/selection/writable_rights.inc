@@ -11,6 +11,7 @@ return array(
 		// interview
 		new BooleanRight("manage_interview_center","Manage interview centers",array(true=>array("see_interview_center"=>true))),
 		new BooleanRight("manage_interview_criteria","Manage Interview Criteria and Rules",array(true=>array("see_interview_criteria"=>true))),
+		new BooleanRight("edit_interview_results","Edit Interview Results",array(true=>array("see_interview_center"=>true,"see_interview_criteria"=>true))),
 		// applicants
 		new BooleanRight("edit_applicants","Create/Import/Remove/Edit applicants",array(true=>array("see_applicant_info"=>true))),
 		new BooleanRight("edit_application_form_fields","Edit the list of information we can specify for each applicant",array(true=>array("edit_applicants"=>true))),

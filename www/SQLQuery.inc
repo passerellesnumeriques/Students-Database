@@ -1788,6 +1788,21 @@ class SQLQuery {
 		}
 	}
 	
+	public function updateAllRowsOfTableWithoutSecurity($table, $fields) {
+		require_once("component/data_model/Model.inc");
+		$t = DataModel::get()->internalGetTable($table);
+		$name = $t->getSQLName($this->sub_models);
+		$sql = "UPDATE `$name` SET ";
+		$first = true;
+		foreach ($fields as $name=>$value) {
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "`$name`=";
+			$sql .= self::getSQLValue($value);
+		}
+		// TODO fire update ?
+		self::getDataBaseAccessWithoutSecurity()->execute($sql);
+	}
+	
 	public static function getSQLValue($value) {
 		if ($value === null) return "NULL";
 		if (is_int($value)) return "".$value;
