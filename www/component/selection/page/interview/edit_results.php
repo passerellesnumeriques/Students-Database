@@ -19,6 +19,17 @@ class page_interview_edit_results extends SelectionPage {
 			return;
 		}
 		DataBaseLock::generateScript($lock_id);
+		// lock event
+		$locked_by = null;
+		$event_lock_id = DataBaseLock::lockRow("CalendarEvent", $_GET["session"], $locked_by, true);
+		if ($locked_by <> null) {
+			echo "<div><div class='info_box'>";
+			echo toHTML($locked_by)." is currently editing data that avoid us to edit the interview results at the same time.";
+			echo "</div></div>";
+			DataBaseLock::unlock($lock_id);
+			return;
+		}
+		DataBaseLock::generateScript($event_lock_id);
 		
 		require_once("component/selection/SelectionApplicantJSON.inc");
 		$q = SQLQuery::create()->select("Applicant")->whereValue("Applicant","interview_session",$_GET["session"]);
@@ -39,7 +50,7 @@ class page_interview_edit_results extends SelectionPage {
 			$applicants_interviewers = array();
 			foreach ($interviewers as $i) {
 				if (!isset($applicants_interviewers[$i["applicant"]])) $applicants_interviewers[$i["applicant"]] = array();
-				array_push($applicants_interviewers[$i["applicant"]], $i["interviewer"]);
+				array_push($applicants_interviewers[$i["applicant"]], intval($i["interviewer"]));
 			}
 		} else {
 			$applicants_results = array();
@@ -153,7 +164,7 @@ function save() {
 	var data = [];
 	var col_absent = grid.grid.getColumnIndexById('attendance');
 	var col_criteria = [];
-	for (var i = 0; i < criteria.length; ++i) col_criteria.push(grid.grid.getColumnIndexById('criteria_'+criteria[i].id));
+	for (var i = 0; i < criteria.length; ++i) col_criteria.push(grid.grid.getColumnIndexById('criterion_'+criteria[i].id));
 	var col_interviewers = grid.grid.getColumnIndexById('interviewers');
 	var col_comment = grid.grid.getColumnIndexById('comment');
 	var applicants_missing_grades = [];
@@ -173,10 +184,10 @@ function save() {
 				applicants_missing_grades.push(applicants[i]);
 				break;
 			}
-			grades.push(grade);
+			grades.push({grade:grade,criterion:criteria[j].id});
 		}
 		if (grades.length < criteria.length) continue;
-		var interviewers = grid.grid.getCellField(row_index, col_interviewers);
+		var interviewers = grid.grid.getCellField(row_index, col_interviewers).getCurrentData();
 		if (interviewers.length == 0) applicants_missing_interviewers.push(applicants[i]);
 		data.push({
 			applicant: applicants[i].people.id,
@@ -190,19 +201,19 @@ function save() {
 	if (applicants_missing_grades.length > 0) {
 		error += "The following applicants are missing grades, and not marked as absent, so nothing will be saved for them:<ul>";
 		for (var i = 0; i < applicants_missing_grades.length; ++i)
-			error += "<li>"+applicants_missing_grades[i].first_name+" "+applicants_missing_grades[i].last_name+" (ID "+applicants_missing_grades.applicant_id+")</li>";
+			error += "<li>"+applicants_missing_grades[i].people.first_name+" "+applicants_missing_grades[i].people.last_name+" (ID "+applicants_missing_grades[i].applicant_id+")</li>";
 		error += "</ul>";
 	}
 	if (applicants_missing_interviewers.length > 0) {
 		error += "The following applicants don't have any interviewer ?? We can still save, but make sure this is correct:<ul>";
 		for (var i = 0; i < applicants_missing_interviewers.length; ++i)
-			error += "<li>"+applicants_missing_interviewers[i].first_name+" "+applicants_missing_interviewers[i].last_name+" (ID "+applicants_missing_interviewers.applicant_id+")</li>";
+			error += "<li>"+applicants_missing_interviewers[i].people.first_name+" "+applicants_missing_interviewers[i].people.last_name+" (ID "+applicants_missing_interviewers[i].applicant_id+")</li>";
 		error += "</ul>";
 	}
 	var doit = function() {
 		if (data.length == 0) { error_dialog("Nothing to save !"); return; }
 		var locker = lock_screen(null, "Saving results, and applying eligibility rules...");
-		service.json("selection","interview/save_results",{applicants:data},function(res) {
+		service.json("selection","interview/save_results",{session:<?php echo $_GET["session"];?>,applicants:data},function(res) {
 			if (res === null || res === false) { unlock_screen(locker); return; }
 			var e = document.getElementById('footer');
 			e.parentNode.removeChild(e);

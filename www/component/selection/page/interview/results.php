@@ -81,6 +81,8 @@ class page_interview_results extends SelectionPage {
 									if ($session["absents"] > 0)
 										echo $session["absents"]." were absent, ";
 									echo $session["passers"]."/".$session["presents"]." passed";
+									if ($session["no_attendance"] > 0)
+										echo ", <span style='color:red'>".$session["no_attendance"]." not yet set</span>";
 								}
 								echo "</td>";
 								echo "</tr>";

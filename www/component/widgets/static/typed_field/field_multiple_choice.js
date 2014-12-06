@@ -23,6 +23,7 @@ field_multiple_choice.prototype.getPossibleValues = function() {
 field_multiple_choice.prototype._create = function(data) {
 	this.checkboxes = [];
 	if (this.config.wrap == 'yes') this.element.style.whiteSpace = 'nowrap';
+	var t=this;
 	for (var i = 0; i < this.config.possible_values.length; ++i) {
 		var span = document.createElement(this.config.wrap == 'always' ? "DIV" : "SPAN");
 		span.style.whiteSpace = "nowrap";
@@ -45,6 +46,7 @@ field_multiple_choice.prototype._create = function(data) {
 		span.appendChild(document.createTextNode(text));
 		this.element.appendChild(span);
 		this.checkboxes.push(cb);
+		cb.onchange = function() { t._datachange(); };
 	}
 	
 	this._setData = function(data) {

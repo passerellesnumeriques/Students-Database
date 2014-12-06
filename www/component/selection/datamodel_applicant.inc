@@ -13,6 +13,9 @@ $sm->addTable("Applicant")
 	 *  - Written Exam
 	 *    + Failed
 	 *    + Attendance
+	 *  - Interview
+	 *    + Absent
+	 *    + Failed
 	 */
 	->addString("custom_exclusion",255,0,true,false)//This field can be filled up by user
 	->addBoolean("excluded",false)
