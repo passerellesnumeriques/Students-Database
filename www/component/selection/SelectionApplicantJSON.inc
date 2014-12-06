@@ -22,6 +22,7 @@ class SelectionApplicantJSON {
 		$q->field("Applicant", "interview_session", "applicant_interview_session_id");
 		$q->field("Applicant", "interview_attendance", "applicant_interview_attendance");
 		$q->field("Applicant", "interview_passer", "applicant_interview_passer");
+		$q->field("Applicant", "interview_comment", "applicant_interview_comment");
 	}
 	
 	public static function ApplicantJSON($row) {
@@ -43,6 +44,7 @@ class SelectionApplicantJSON {
 		$s .= ",interview_session_id:".json_encode($row["applicant_interview_session_id"]);
 		$s .= ",interview_attendance:".json_encode($row["applicant_interview_attendance"]);
 		$s .= ",interview_passer:".json_encode($row["applicant_interview_passer"]);
+		$s .= ",interview_comment:".json_encode($row["applicant_interview_comment"]);
 		$s .= "}";
 		return $s;
 	}

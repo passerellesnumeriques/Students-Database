@@ -452,6 +452,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 	
 	this._init = function() {
 		this.container = document.createElement("TD");
+		this.container.style.verticalAlign = "top";
 		interview_sessions.tr_sessions.appendChild(this.container);
 		var title = document.createElement("SPAN");
 		title.appendChild(document.createTextNode("Session on "));
@@ -472,7 +473,16 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 
 		var wc = document.createElement("DIV"); content.appendChild(wc);
 		wc.style.borderBottom = "1px solid #808080";
-		this.who = new who_container(wc, staffs, can_edit, 'interview');
+		var staff_list = [];
+		for (var i = 0; i < session.event.attendees.length; ++i)
+			if (session.event.attendees[i].people == null) {
+				for (var j = 0; j < staffs.length; ++j)
+					if (typeof staffs[j] == 'string' && staffs[j] == session.event.attendees[i].name) { staff_list.push(staffs[j]); break; }
+			} else {
+				for (var j = 0; j < staffs.length; ++j)
+					if (typeof staffs[j] != 'string' && staffs[j].people.id == session.event.attendees[i].people) { staff_list.push(staffs[j]); break; }
+			}
+		this.who = new who_container(wc, staff_list, can_edit, 'interview');
 		this.who.onadded.add_listener(function(people) {
 			var a;
 			if (typeof people == 'string') {
@@ -485,13 +495,13 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		});
 		this.who.onremoved.add_listener(function(people) {
 			if (typeof people == 'string') {
-				for (var i = 0; i < event.attendees.length; ++i)
+				for (var i = 0; i < session.event.attendees.length; ++i)
 					if (session.event.attendees[i].people == null && session.event.attendees[i].name == people) {
 						session.event.attendees.splice(i,1);
 						break;
 					}
 			} else
-				for (var i = 0; i < event.attendees.length; ++i)
+				for (var i = 0; i < session.event.attendees.length; ++i)
 					if (session.event.attendees[i].people == people.people.id) {
 						session.event.attendees.splice(i,1);
 						break;

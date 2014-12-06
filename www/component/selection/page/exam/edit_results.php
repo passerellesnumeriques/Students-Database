@@ -109,6 +109,10 @@ class page_exam_edit_results extends SelectionPage {
 		$this->requireJavascript("custom_data_grid.js");
 		$this->requireJavascript("people_data_grid.js");
 		$this->requireJavascript("applicant_data_grid.js");
+		$this->requireJavascript("typed_field.js");
+		$this->requireJavascript("field_text.js");
+		$this->requireJavascript("field_decimal.js");
+		$this->requireJavascript("field_enum.js");
 ?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column'>
 	<div class='page_title' style='flex:none'>

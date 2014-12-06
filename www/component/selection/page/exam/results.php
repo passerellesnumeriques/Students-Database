@@ -220,7 +220,9 @@ function editResults() {
 			"/dynamic/selection/page/exam/edit_results?session="+selected["session_id"]+"&room="+selected["room_id"],
 			null,
 			95, 95,
-			function(frame, pop) {}
+			function(frame, pop) {
+				pop.onclose = function() { location.reload(); };
+			}
 		);
 	}
 }

@@ -84,6 +84,11 @@ class service_exam_save_results extends Service {
 			->field("Applicant", "people")
 			->executeSingleField()
 			;
+		
+		// get exam center id
+		$center_id = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession","event",$session_id)->field("exam_center")->executeSingleValue();
+		// get interview center
+		$interview_center_id = SQLQuery::create()->select("InterviewCenterExamCenter")->whereValue("InterviewCenterExamCenter","exam_center", $center_id)->field("interview_center")->executeSingleValue();
 
 		$insert_subject = array();
 		$insert_subject_part = array();
@@ -228,6 +233,11 @@ class service_exam_save_results extends Service {
 						$update["excluded"] = false;
 						$update["automatic_exclusion_step"] = null;
 						$update["automatic_exclusion_reason"] = null;
+					}
+					// assign to interview center if already linked
+					if ($interview_center_id <> null) {
+						$update["interview_center"] = $interview_center_id;
+						$update["interview_session"] = null;
 					}
 					SQLQuery::create()->bypassSecurity()->updateByKey("Applicant", $app["people_id"], $update);
 					array_push($passers, $app["people_id"]);

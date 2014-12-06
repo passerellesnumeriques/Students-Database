@@ -148,6 +148,16 @@ function selectSession(row, session_id) {
 }
 
 function editResults() {
+	window.top.popup_frame(
+		"/static/transcripts/grades_16.png",
+		"Interview Session Results",
+		"/dynamic/selection/page/interview/edit_results?session="+selected_session_id,
+		null,
+		95, 95,
+		function(frame, pop) {
+			pop.onclose = function() { location.reload(); }
+		}
+	);
 }
 
 function resetSession() {
