@@ -800,15 +800,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	
 	public function getData($row, $resultFromBuildSQL) {
-		$fk = $this->getTable()->getColumn($this->foreign_key_name);
-		$ft = \DataModel::get()->getTable($fk->foreign_table);
-		$ftk = $ft->getPrimaryKey();
-		$list = \SQLQuery::create()
-			->select($this->getTableName())
-			->whereValue($this->getTableName(), $this->joining_key_name, $row[$resultFromBuildSQL["key"]])
-			->field($this->foreign_key_name)
-			->executeSingleField();
-		return $list;
+		return $row[$resultFromBuildSQL["data"]];
 	}
 	
 	public function getKeyFromTableKey($key) {
