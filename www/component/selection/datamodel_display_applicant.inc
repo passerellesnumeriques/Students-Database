@@ -183,6 +183,8 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("exam_attendance", "Exa
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("exam_passer", "Eligible for Interview", true, false));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("interview_center", "name", "Interview Center", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Interview Session", "interview_session", "interview_session.event.start"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_attendance", "Interview Attendance",true,false));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_passer", "Eligible for Social Investigation", true, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("excluded", "Excluded", true, false));
 $display->addDataDisplay(new ApplicantExclusionReason());
 $display->addFollow("people");

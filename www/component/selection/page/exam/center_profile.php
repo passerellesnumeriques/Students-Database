@@ -228,20 +228,30 @@ class page_exam_center_profile extends SelectionPage {
 					return;
 				}
 				center_id = res.id;
+				for (var j = 0; j < window.center_sessions.applicants.length; ++j)
+					window.center_sessions.applicants[j].exam_center_id = center_id;
 				if (res.rooms_ids)
-					for (var i = 0; i < res.rooms_ids.length; ++i)
+					for (var i = 0; i < res.rooms_ids.length; ++i) {
 						for (var j = 0; j < window.center_sessions.rooms.length; ++j)
 							if (window.center_sessions.rooms[j].id == res.rooms_ids[i].given_id) {
 								window.center_sessions.rooms[j].id = res.rooms_ids[i].new_id;
 								break;
 							}
+						for (var j = 0; j < window.center_sessions.applicants.length; ++j)
+							if (window.center_sessions.applicants[j].exam_center_room_id == res.rooms_ids[i].given_id)
+								window.center_sessions.applicants[j].exam_center_room_id = res.rooms_ids[i].new_id;
+					}
 				if (res.sessions_ids)
-					for (var i = 0; i < res.sessions_ids.length; ++i)
+					for (var i = 0; i < res.sessions_ids.length; ++i) {
 						for (var j = 0; j < window.center_sessions.sessions.length; ++j)
 							if (window.center_sessions.sessions[j].id == res.sessions_ids[i].given_id) {
 								window.center_sessions.sessions[j].id = res.sessions_ids[i].new_id;
 								break;
 							}
+						for (var j = 0; j < window.center_sessions.applicants.length; ++j)
+							if (window.center_sessions.applicants[j].exam_session_id == res.sessions_ids[i].given_id)
+								window.center_sessions.applicants[j].exam_session_id = res.sessions_ids[i].new_id;
+					}
 				window.pnapplication.cancelDataUnsaved();
 				<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
 				center_popup.unfreeze();

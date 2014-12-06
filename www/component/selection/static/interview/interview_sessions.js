@@ -38,10 +38,11 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 					d.setHours(0,date.time,0,0);
 					var doit = function() {
 						popup.close();
-						window.pnapplication.dataUnsaved("InterviewCenterSessions");
+						window.pnapplication.dataUnsaved("InterviewSessions");
 						var session = {
 							event:new CalendarEvent(t._new_event_id_counter--,'PN',calendar_id,null,d,new Date(d.getTime()+date.duration*60*1000)),
-							every_minutes: every_minutes.getCurrentData()
+							every_minutes: every_minutes.getCurrentData(),
+							parallel_interviews: 0
 						}
 						t.sessions.push(session);
 						t.sessions_controls.push(new InterviewSession(t, session, staffs, can_edit));
@@ -68,6 +69,7 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 		this.tr_sessions.removeChild(this.sessions_controls[index].container);
 		this.sessions_controls.splice(index,1);
 		this.sessions.splice(index,1);
+		window.pnapplication.dataUnsaved("InterviewSessions");
 	};
 	
 	/* -------- Applicants -------- */
@@ -83,6 +85,7 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 		applicant.interview_center_id = null;
 		applicant.interview_session_id = null;
 		this.updateHeader();
+		window.pnapplication.dataUnsaved("InterviewCenterApplicants");
 	};
 	
 	this.unassign = function(applicant) {
@@ -96,6 +99,7 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 		var index = this.sessions.indexOf(session);
 		this.sessions_controls[index].applicants_list.removeApplicant(applicant);
 		this._not_assigned.not_assigned.addApplicant(applicant);
+		window.pnapplication.dataUnsaved("InterviewCenterApplicants");
 	};
 	
 	this.assignApplicantAutomatically = function(applicant) {
@@ -117,6 +121,7 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 		this._not_assigned.not_assigned.removeApplicant(applicant);
 		this.sessions_controls[index].applicants_list.addApplicant(applicant);
 		applicant.interview_session_id = session_event_id;
+		window.pnapplication.dataUnsaved("InterviewCenterApplicants");
 		return true;
 	};
 	
@@ -137,6 +142,7 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 			}
 		this.sessions_controls[target_index].applicants_list.addApplicant(applicant);
 		applicant.interview_session_id = session_event_id;
+		window.pnapplication.dataUnsaved("InterviewCenterApplicants");
 		return true;
 	};
 	
@@ -401,7 +407,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 					d.setHours(0,date.time,0,0);
 					var doit = function() {
 						popup.close();
-						window.pnapplication.dataUnsaved("InterviewCenterSessions");
+						window.pnapplication.dataUnsaved("InterviewSessions");
 						session.event.start = d;
 						session.event.end = new Date(d.getTime()+date.duration*60*1000);
 						session.every_minutes = every_minutes.getCurrentData();
@@ -503,9 +509,9 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.header.appendChild(document.createTextNode(" staff(s) assigned."));
 		this.header.appendChild(document.createElement("BR"));
 		this.header.appendChild(document.createTextNode("How many parallel interviews can be done by those staffs ? "));
-		this.nb_interviews = new field_integer(0,true,{min:0,max:0,can_be_null:false});
+		this.nb_interviews = new field_integer(session.parallel_interviews,true,{min:staffs.length == 0 ? 0 : 1,max:staffs.length,can_be_null:false});
 		this.header.appendChild(this.nb_interviews.getHTMLElement());
-		this.nb_interviews.onchange.add_listener(function() { t.refresh(); });
+		this.nb_interviews.onchange.add_listener(function() { session.parallel_interviews = t.nb_interviews.getCurrentData(); pnapplication.dataUnsaved("InterviewSessions"); t.refresh(); });
 		this.header.appendChild(document.createElement("BR"));
 		this.header.appendChild(document.createTextNode("With 1 interview done every "));
 		this.span_every_minutes = document.createElement("SPAN");
@@ -524,10 +530,6 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.header.appendChild(this.span_nb_applicants);
 		
 		this.applicants_list = new applicant_data_grid(content, function(obj) { return obj; },true);
-		for (var i = 0; i < interview_sessions.applicants.length; ++i)
-			if (interview_sessions.applicants[i].interview_session_id == session.event.id)
-				this.applicants_list.addApplicant(interview_sessions.applicants[i]);
-
 		this.applicants_list.addDragSupport("applicant", function(obj) { return obj.people.id; });
 		this.applicants_list.addPeopleProfileAction();
 		this.applicants_list.object_added.add_listener(function(){t.refresh();});
@@ -608,6 +610,12 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 				t.applicants_list.showActions();
 			});
 		};
+		print.style.marginLeft = "10px";
+		this.header.appendChild(print);
+		
+		for (var i = 0; i < interview_sessions.applicants.length; ++i)
+			if (interview_sessions.applicants[i].interview_session_id == session.event.id)
+				this.applicants_list.addApplicant(interview_sessions.applicants[i]);
 		
 		this.refresh();
 	};

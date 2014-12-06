@@ -1,5 +1,5 @@
 <?php 
-class service_is_get_host extends Service {
+class service_exam_get_host extends Service {
 	
 	public function getRequiredRights() { return array("can_access_selection_data"); }
 	

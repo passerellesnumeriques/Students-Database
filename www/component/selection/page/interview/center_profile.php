@@ -140,6 +140,7 @@ class page_interview_center_profile extends SelectionPage {
 						echo "{";
 						echo "event:".CalendarJSON::JSON($session["event"]);
 						echo ",every_minutes:".$session["every_minutes"];
+						echo ",parallel_interviews:".$session["parallel_interviews"];
 						echo "}";
 					} 
 					?>],
@@ -201,49 +202,41 @@ class page_interview_center_profile extends SelectionPage {
 				// sessions changed
 				data.sessions = window.center_sessions.sessions;
 			}
-
-
-			// TODO
-
-			
-			if (window.pnapplication.isDataUnsaved("ExamCenterApplicants") ||
-				window.pnapplication.isDataUnsaved("ExamCenterSessions") ||
-				window.pnapplication.isDataUnsaved("ExamCenterRooms") ||
-				window.pnapplication.isDataUnsaved("ExamCenterInformationSession")) {
+			if (window.pnapplication.isDataUnsaved("InterviewCenterApplicants") ||
+				window.pnapplication.isDataUnsaved("InterviewSessions") ||
+				window.pnapplication.isDataUnsaved("InterviewCenterExamCenter")) {
 				// need to save applicants
 				var list = [];
 				for (var i = 0; i < window.center_sessions.applicants.length; ++i) {
 					var app = window.center_sessions.applicants[i];
 					var a = {
 						people_id: app.people.id,
-						exam_session_id: app.exam_session_id,
-						exam_center_room_id: app.exam_center_room_id
+						interview_session_id: app.interview_session_id
 					};
 					list.push(a);
 				}
 				data.applicants = list;
 			}
 			center_popup.freeze("Saving...");
-			service.json("selection","exam/save_center",data,function(res) {
+			service.json("selection","interview/save_center",data,function(res) {
 				if (!res) {
 					center_popup.unfreeze();
 					return;
 				}
 				center_id = res.id;
-				if (res.rooms_ids)
-					for (var i = 0; i < res.rooms_ids.length; ++i)
-						for (var j = 0; j < window.center_sessions.rooms.length; ++j)
-							if (window.center_sessions.rooms[j].id == res.rooms_ids[i].given_id) {
-								window.center_sessions.rooms[j].id = res.rooms_ids[i].new_id;
-								break;
-							}
+				for (var j = 0; j < window.center_sessions.applicants.length; ++j)
+					window.center_sessions.applicants[j].interview_center_id = center_id;
 				if (res.sessions_ids)
-					for (var i = 0; i < res.sessions_ids.length; ++i)
+					for (var i = 0; i < res.sessions_ids.length; ++i) {
 						for (var j = 0; j < window.center_sessions.sessions.length; ++j)
-							if (window.center_sessions.sessions[j].id == res.sessions_ids[i].given_id) {
-								window.center_sessions.sessions[j].id = res.sessions_ids[i].new_id;
+							if (window.center_sessions.sessions[j].event.id == res.sessions_ids[i].given_id) {
+								window.center_sessions.sessions[j].event.id = res.sessions_ids[i].new_id;
 								break;
 							}
+						for (var j = 0; j < window.center_sessions.applicants.length; ++j)
+							if (window.center_sessions.applicants[j].interview_session_id == res.sessions_ids[i].given_id)
+								window.center_sessions.applicants[j].interview_session_id = res.sessions_ids[i].new_id;
+					}
 				window.pnapplication.cancelDataUnsaved();
 				<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
 				center_popup.unfreeze();
