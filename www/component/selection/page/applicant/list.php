@@ -236,6 +236,16 @@ class page_applicant_list extends SelectionPage {
 									list.addFilter({category:'Selection',name:'Exam Attendance',data:{values:['No']}});
 									list.reloadData();
 								});
+								menu.addIconItem(null, "Show only if eligible for Social Investigation (interview passers)", function() {
+									list.removeFiltersOn('Selection','Eligible for Social Investigation');
+									list.addFilter({category:'Selection',name:'Eligible for Social Investigation',data:{values:[1]}});
+									list.reloadData();
+								});
+								menu.addIconItem(null, "Show only absent during interview", function() {
+									list.removeFiltersOn('Selection','Exam Attendance');
+									list.addFilter({category:'Selection',name:'Interview Attendance',data:{values:[0]}});
+									list.reloadData();
+								});
 								menu.addIconItem(null, "Show only boys", function() {
 									list.removeFiltersOn('Personal Information','Gender');
 									list.addFilter({category:'Personal Information',name:'Gender',data:{values:['M']}});
