@@ -126,6 +126,7 @@ if ($message <> null) {
 		<a href="#" onclick="DBTools();return false;">Database Tools</a><br/>
 		<a href="/dynamic/development/page/check_code" target="_blank">Check code</a><br/>
 		<a href="/dynamic/documentation/page/index" target="_blank">Technical Documentation</a><br/>
+		<a href="/dynamic/development/page/insert_data" target="_blank">Insert Data</a><br/>
 		<a href="/dynamic/test/page/home" target="_blank">Tests</a><br/>
 		<a href="?destroy_session=true">Destroy session</a><br/>
 		<a href="?uninstall=true">Reset installation</a><br/>
