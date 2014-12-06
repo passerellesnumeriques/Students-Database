@@ -36,15 +36,22 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 			if (!isset($this->cache[$come_from][$sub_model])) {
 				// add the exam/extract results
 				$this->cache[$come_from][$sub_model] = array();
-				$subjects = SQLQuery::create()->select("ExamSubject")->selectSubModel("SelectionCampaign", $sub_model)->execute();
+				$subjects = SQLQuery::create()->bypassSecurity()->select("ExamSubject")->selectSubModel("SelectionCampaign", $sub_model)->execute();
 				foreach ($subjects as $subject) {
 					$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$subject["name"], "ApplicantExamSubject>applicant(exam_subject=".$subject["id"].").score");
 					$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
 					array_push($this->cache[$come_from][$sub_model], $data_display);
 				}
-				$extracts = SQLQuery::create()->select("ExamSubjectExtract")->selectSubModel("SelectionCampaign", $sub_model)->execute();
+				$extracts = SQLQuery::create()->bypassSecurity()->select("ExamSubjectExtract")->selectSubModel("SelectionCampaign", $sub_model)->execute();
 				foreach ($extracts as $extract) {
 					$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$extract["name"], "ApplicantExamExtract>applicant(exam_extract=".$extract["id"].").score");
+					$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+					array_push($this->cache[$come_from][$sub_model], $data_display);
+				}
+				// add interview criteria
+				$criteria = SQLQuery::create()->bypassSecurity()->select("InterviewCriterion")->selectSubModel("SelectionCampaign", $sub_model)->execute();
+				foreach ($criteria as $c) {
+					$data_display = new \datamodel\ReadOnlyDataDisplay("Interview: ".$c["name"], "ApplicantInterviewCriterionGrade>people(criterion=".$c["id"].").grade");
 					$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
 					array_push($this->cache[$come_from][$sub_model], $data_display);
 				}
@@ -105,6 +112,8 @@ class ApplicantExclusionReason extends datamodel\DataDisplay {
 			$cfg .= ",'Only partially attend the exam'";
 			$cfg .= ",'Cheat during exam'";
 			$cfg .= ",'Failed at exam'";
+			$cfg .= ",'Absent for interview'";
+			$cfg .= ",'Failed at interview'";
 			$cfg .= ",'Other: Manual Exclusion'";
 		$cfg .= "]";
 		$cfg .= ",can_be_null:false";
@@ -157,6 +166,8 @@ class ApplicantExclusionReason extends datamodel\DataDisplay {
 				case "Only partially attend the exam": $w .= "(`$table_alias`.`automatic_exclusion_step`='Written Exam' AND `$table_alias`.`exam_attendance`='Partially')"; break;
 				case "Cheat during exam": $w .= "(`$table_alias`.`automatic_exclusion_step`='Written Exam' AND `$table_alias`.`exam_attendance`='Cheating')"; break;
 				case "Failed at exam": $w .= "(`$table_alias`.`automatic_exclusion_step`='Written Exam' AND `$table_alias`.`automatic_exclusion_reason`='Failed')"; break;
+				case "Absent for interview": $w .= "(`$table_alias`.`automatic_exclusion_step`='Interview' AND `$table_alias`.`automatic_exclusion_reason`='Absent')"; break;
+				case "Failed at interview": $w .= "(`$table_alias`.`automatic_exclusion_step`='Interview' AND `$table_alias`.`automatic_exclusion_reason`='Failed')"; break;
 				case "Other: Manual Exclusion": $w .= "`$table_alias`.`custom_exclusion` IS NOT NULL"; break;
 			}
 		}
@@ -184,6 +195,7 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("exam_passer", "Eligibl
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("interview_center", "name", "Interview Center", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Interview Session", "interview_session", "interview_session.event.start"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_attendance", "Interview Attendance",true,false));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_comment", "Comment from Interview", true, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_passer", "Eligible for Social Investigation", true, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("excluded", "Excluded", true, false));
 $display->addDataDisplay(new ApplicantExclusionReason());
@@ -194,6 +206,13 @@ $display->addJoinFrom("people", array("types"), function($columns) {
 });
 $display->addJoinToPrimary();
 $model->addTableDataDisplay($display);
+
+$display = new datamodel\TableDataDisplay("ApplicantInterviewer", $category);
+$display->addJoinFrom("applicant");
+$display->addDataDisplay(new datamodel\JoiningTableDataDisplay("Interviewers", "applicant", "interviewer", "name"));
+$model->addTableDataDisplay($display);
+$model->internalGetTable("CalendarEventAttendee")
+	->addReadAccessFromForeignTable("ApplicantInterviewer");
 
 class ApplicantDataScreen extends datamodel\GenericDataScreen {
 	

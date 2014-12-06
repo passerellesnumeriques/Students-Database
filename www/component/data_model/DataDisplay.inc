@@ -760,7 +760,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
-		$table_name = $path->table->getSQLNameFor($path->sub_model);
+		$table_name = $path->table->getName($path->sub_model);
 		$foreign_table = $path->table->getColumnFor($this->foreign_key_name, $path->sub_model)->foreign_table;
 		$foreign_table = \DataModel::get()->getTable($foreign_table);
 		$sub_models = $path->sub_model == null ? null : array($path->table->getModel()->getParentTable()=>$path->sub_model);
