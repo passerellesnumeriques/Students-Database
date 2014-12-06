@@ -118,9 +118,8 @@ field_decimal.prototype._create = function(data) {
 			});
 		};
 		this.focus = function() { t.input.focus(); };
-		this.fillWidth = function() {
+		this._fillWidth = function() {
 			_fw = true;
-			this.element.style.width = "100%";
 			if (typeof t.input.setMinimumSize != 'undefined') t.input.setMinimumSize(-1);
 		};
 		this.validate = function() {

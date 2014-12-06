@@ -80,9 +80,7 @@ field_text.prototype._create = function(data) {
 			if (input.autoresize) input.autoresize();
 			return data;
 		};
-		this._fillWidth = this.fillWidth;
-		this.fillWidth = function() {
-			this._fillWidth();
+		this._fillWidth = function() {
 			if (input.autoresize) input.setMinimumSize(-1);
 			else if (!t.config) t.config = {min_size:-1};
 			else t.config.min_size = -1;

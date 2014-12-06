@@ -211,8 +211,7 @@ field_grade.prototype._create = function(data) {
 			input.style.border = error ? "1px solid red" : "1px solid black";
 			input.title = error ? error : "";
 		};
-		this.fillWidth = function() {
-			this.element.style.width = "100%";
+		this._fillWidth = function() {
 			input.style.width = "100%";
 		};
 		this.focus = function() { input.focus(); };

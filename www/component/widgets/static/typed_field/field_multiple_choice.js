@@ -37,11 +37,27 @@ field_multiple_choice.prototype._create = function(data) {
 		} else
 			val = text = this.config.possible_values[i];
 		cb.checked = data.indexOf(val) >= 0 ? "checked" : "";
+		cb._value = val;
 		span.appendChild(cb);
 		cb.style.marginRight = "3px";
 		cb.style.marginBottom = "4px";
 		cb.style.verticalAlign = "middle";
 		span.appendChild(document.createTextNode(text));
 		this.element.appendChild(span);
+		this.checkboxes.push(cb);
 	}
+	
+	this._setData = function(data) {
+		if (data == null) data = [];
+		for (var i = 0; i < this.checkboxes.length; ++i)
+			this.checkboxes[i].checked = data.indexOf(this.checkboxes[i]._value) >= 0 ? "checked" : "";
+		return data;
+	};
+	
+	this._getEditedData = function() {
+		var data = [];
+		for (var i = 0; i < this.checkboxes.length; ++i)
+			if (this.checkboxes[i].checked) data.push(this.checkboxes[i]._value);
+		return data;
+	};
 };

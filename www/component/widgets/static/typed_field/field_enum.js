@@ -135,7 +135,7 @@ field_enum.prototype._create = function(data) {
 				err = "Please select a value";
 			this.signal_error(err);
 		};
-		this.fillWidth = function(cache) {
+		this._fillWidth = function(cache) {
 			// calculate the minimum width of the select, to be able to see it...
 			if (!cache) {
 				cache = {onavail:[]};
@@ -176,12 +176,10 @@ field_enum.prototype._create = function(data) {
 				return cache;
 			}
 			if (!cache.w) cache.onavail.push(function() {
-				t.element.style.width = "100%";
 				select.style.width = "100%";
 				select.style.minWidth = cache.w+"px";
 			});
 			else {
-				t.element.style.width = "100%";
 				select.style.width = "100%";
 				select.style.minWidth = cache.w+"px";
 			}

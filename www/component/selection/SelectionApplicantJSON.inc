@@ -42,7 +42,7 @@ class SelectionApplicantJSON {
 		$s .= ",exam_passer:".json_encode($row["applicant_exam_passer"]);
 		$s .= ",interview_center_id:".json_encode($row["applicant_interview_center_id"]);
 		$s .= ",interview_session_id:".json_encode($row["applicant_interview_session_id"]);
-		$s .= ",interview_attendance:".json_encode($row["applicant_interview_attendance"]);
+		$s .= ",interview_attendance:".($row["applicant_interview_attendance"] === null ? "null" : $row["applicant_interview_attendance"] == 1 ? "true" : "false");
 		$s .= ",interview_passer:".json_encode($row["applicant_interview_passer"]);
 		$s .= ",interview_comment:".json_encode($row["applicant_interview_comment"]);
 		$s .= "}";

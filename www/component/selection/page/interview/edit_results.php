@@ -8,6 +8,18 @@ class page_interview_edit_results extends SelectionPage {
 		require_once("component/calendar/CalendarJSON.inc");
 		$event = CalendarJSON::getEventFromDB($_GET["session"], PNApplication::$instance->selection->getCalendarId());
 		
+		// lock criteria
+		require_once("component/data_model/DataBaseLock.inc");
+		$locked_by = null;
+		$lock_id = DataBaseLock::lockTable("InterviewCriterion_".PNApplication::$instance->selection->getCampaignId(), $locked_by);
+		if ($locked_by <> null) {
+			echo "<div><div class='info_box'>";
+			echo toHTML($locked_by)." is currently editing data that avoid us to edit the interview results at the same time.";
+			echo "</div></div>";
+			return;
+		}
+		DataBaseLock::generateScript($lock_id);
+		
 		require_once("component/selection/SelectionApplicantJSON.inc");
 		$q = SQLQuery::create()->select("Applicant")->whereValue("Applicant","interview_session",$_GET["session"]);
 		SelectionApplicantJSON::ApplicantSQL($q);
@@ -53,7 +65,7 @@ class page_interview_edit_results extends SelectionPage {
 	</div>
 	<div style='flex:1 1 auto;' id='grid_container'>
 	</div>
-	<div class="page_footer" style="flex:none">
+	<div class="page_footer" style="flex:none" id='footer'>
 		<button class='action' onclick='save();'><img src='<?php echo theme::$icons_16["save"];?>'/> Save, apply rules, and see passers</button>
 	</div>
 </div>
@@ -86,6 +98,32 @@ function getApplicantInterviewers(applicant_id) {
 var grid = new applicant_data_grid('grid_container',function(obj){return obj;},true);
 grid.grid.makeScrollable();
 
+function absentChanged(f) {
+	var row_index = grid.grid.getContainingRowIndex(f.getHTMLElement());
+	var applicant_id = grid.grid.getRowIDFromIndex(row_index);
+	for (var i = 0; i < criteria.length; ++i) {
+		var field = grid.grid.getCellField(row_index, grid.grid.getColumnIndexById('criterion_'+criteria[i].id));
+		if (f.getCurrentData()) {
+			field.setEditable(false);
+			field.setData(null);
+		} else
+			field.setEditable(true);
+	}
+	var field = grid.grid.getCellField(row_index, grid.grid.getColumnIndexById('interviewers'));
+	if (f.getCurrentData()) {
+		field.setEditable(false);
+		field.setData([]);
+	} else
+		field.setEditable(true);
+}
+
+grid.addColumn(new CustomDataGridColumn(
+	new GridColumn('attendance', "Absent", null, 'center', 'field_boolean', true, absentChanged, absentChanged, {}),
+	function(applicant) { return applicant.interview_attendance === false; },
+	true,
+	null,
+	true
+));
 var cols = [];
 for (var i = 0; i < criteria.length; ++i) {
 	var col = new GridColumn('criterion_'+criteria[i].id, criteria[i].name, null, 'center', 'field_decimal', true, null, null, {integer_digits:3,decimal_digits:2,min:0,max:criteria[i].max_score,can_be_null:true});
@@ -110,6 +148,93 @@ grid.addColumn(new CustomDataGridColumn(
 
 for (var i = 0; i < applicants.length; ++i)
 	grid.addApplicant(applicants[i]);
+
+function save() {
+	var data = [];
+	var col_absent = grid.grid.getColumnIndexById('attendance');
+	var col_criteria = [];
+	for (var i = 0; i < criteria.length; ++i) col_criteria.push(grid.grid.getColumnIndexById('criteria_'+criteria[i].id));
+	var col_interviewers = grid.grid.getColumnIndexById('interviewers');
+	var col_comment = grid.grid.getColumnIndexById('comment');
+	var applicants_missing_grades = [];
+	var applicants_missing_interviewers = [];
+	for (var i = 0; i < applicants.length; ++i) {
+		var row_index = grid.grid.getRowIndexById(applicants[i].people.id);
+		var absent = grid.grid.getCellField(row_index, col_absent).getCurrentData();
+		var comment = grid.grid.getCellField(row_index, col_comment).getCurrentData();
+		if (absent) {
+			data.push({applicant:applicants[i].people.id,attendance:false,comment:comment});
+			continue;
+		}
+		var grades = [];
+		for (var j = 0; j < criteria.length; ++j) {
+			var grade = grid.grid.getCellField(row_index, col_criteria[j]).getCurrentData();
+			if (grade === null) {
+				applicants_missing_grades.push(applicants[i]);
+				break;
+			}
+			grades.push(grade);
+		}
+		if (grades.length < criteria.length) continue;
+		var interviewers = grid.grid.getCellField(row_index, col_interviewers);
+		if (interviewers.length == 0) applicants_missing_interviewers.push(applicants[i]);
+		data.push({
+			applicant: applicants[i].people.id,
+			attendance: true,
+			comment: comment,
+			grades: grades,
+			interviewers: interviewers
+		});
+	}
+	var error = "";
+	if (applicants_missing_grades.length > 0) {
+		error += "The following applicants are missing grades, and not marked as absent, so nothing will be saved for them:<ul>";
+		for (var i = 0; i < applicants_missing_grades.length; ++i)
+			error += "<li>"+applicants_missing_grades[i].first_name+" "+applicants_missing_grades[i].last_name+" (ID "+applicants_missing_grades.applicant_id+")</li>";
+		error += "</ul>";
+	}
+	if (applicants_missing_interviewers.length > 0) {
+		error += "The following applicants don't have any interviewer ?? We can still save, but make sure this is correct:<ul>";
+		for (var i = 0; i < applicants_missing_interviewers.length; ++i)
+			error += "<li>"+applicants_missing_interviewers[i].first_name+" "+applicants_missing_interviewers[i].last_name+" (ID "+applicants_missing_interviewers.applicant_id+")</li>";
+		error += "</ul>";
+	}
+	var doit = function() {
+		if (data.length == 0) { error_dialog("Nothing to save !"); return; }
+		var locker = lock_screen(null, "Saving results, and applying eligibility rules...");
+		service.json("selection","interview/save_results",{applicants:data},function(res) {
+			if (res === null || res === false) { unlock_screen(locker); return; }
+			var e = document.getElementById('footer');
+			e.parentNode.removeChild(e);
+			e = document.getElementById('grid_container');
+			e.removeAllChildren();
+			e.style.overflow = "auto";
+			e.style.backgroundColor = "white";
+			e.innerHTML = "<div class='page_section_title'>List of passers</div>";
+			var div = document.createElement("DIV");
+			e.appendChild(div);
+			div.style.padding = "10px";
+			var s = "Results successfully saved.<br/>";
+			if (res.length == 0)
+				s += "Unfortunately, no one passed. All applicants of this session have been excluded from the Selection Process.";
+			else {
+				s += "Here is the list of applicants who passed:<ul>";
+				for (var i = 0; i < res.length; ++i) {
+					s += "<li>";
+					var app = null;
+					for (var j = 0; j < applicants.length; ++j) if (applicants[j].people.id == res[i]) { app = applicants[j]; break; }
+					s += app.people.first_name+" "+app.people.last_name+" (ID "+app.applicant_id+")";
+					s += "</li>";
+				}
+				s += "</ul>All others have been exluded from the Selection Process.";
+			}
+			div.innerHTML = s;
+			unlock_screen(locker);
+		});
+	};
+	if (error.length == 0) doit();
+	else confirm_dialog(error,function(yes){ if(yes) doit(); });
+}
 </script>
 <?php 
 	}

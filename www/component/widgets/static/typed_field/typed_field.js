@@ -41,12 +41,14 @@ typed_field.prototype = {
 	 */
 	getHTMLElement: function() { return this.element; },
 	/** The field must use the full width of its container */
-	fillWidth: function() {
-		var t=this;
-		layout.modifyDOM(function() {
-			t.element.style.width = "100%";
-		});
+	fillWidth: function(cache_data) {
+		this.element.style.width = "100%";
+		this._width_filled = true;
+		return this._width_filled_cache_data = this._fillWidth(cache_data);
 	},
+	_width_filled: false,
+	_width_filled_cache_data: null,
+	_fillWidth: function(cache_data) { return cache_data; },
 	/**
 	 * @returns true if this field is editable
 	 */
@@ -59,8 +61,10 @@ typed_field.prototype = {
 		this.element.removeAllChildren();
 		// reset some functions which may not be overriden
 		this._getEditedData = function() { return this._data; };
+		this._fillWidth = function(cache_data) { return cache_data; };
 		// create
 		this._create(data);
+		if (this._width_filled) this.fillWidth(this._width_filled_cache_data);
 	},
 	_in_change_event: false,
 	_datachange: function(force) {

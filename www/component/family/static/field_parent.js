@@ -112,9 +112,7 @@ field_parent.prototype._create = function(data) {
 				if (from_input) { input.value = d != null ? d : ""; updater(d); }
 				return data;
 			};
-			this._fillWidth = this.fillWidth;
-			this.fillWidth = function() {
-				this._fillWidth();
+			this._fillWidth = function() {
 				if (input.autoresize) input.setMinimumSize(-1);
 				else _fw = true;
 			};

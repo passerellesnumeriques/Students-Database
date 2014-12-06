@@ -145,14 +145,13 @@ field_organization.prototype._create = function(data) {
 			this.select.input.style.border = error ? "1px solid red" : "";
 			this.select.input.title = error ? error : "";
 		};
-		this.fillWidth = function() {
+		this._fillWidth = function() {
 			// calculate the minimum width of the select, to be able to see it...
 			var included_in_body = false;
 			if (this.element.parentNode == null) {
 				included_in_body = true;
 				document.body.appendChild(this.element);
 			}
-			this.element.style.width = "100%";
 			this.select.input.style.width = "100%";
 		};
 	} else {
