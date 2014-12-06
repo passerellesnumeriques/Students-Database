@@ -19,6 +19,9 @@ class page_interview_centers extends SelectionPage {
 				<div id='interview_status_section' title='Status' collapsable='false' css='soft' style='display:inline-block;'>
 					<div id='interview_status' class='selection_status'></div>
 				</div>
+				<div style='margin-top:10px'>
+					<button class='action' onclick="window.top.popup_frame('/static/contact/address_16.png','Map','/dynamic/selection/page/map?type=interview',null,95,95);"><img src='/static/contact/address_16.png'/> Open Map</button>
+				</div>
 			</div>
 			
 			<div style="padding:5px;display:inline-block;flex:1 1 auto;">

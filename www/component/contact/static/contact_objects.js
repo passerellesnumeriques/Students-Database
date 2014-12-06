@@ -37,6 +37,20 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 	this.lng = lng;
 }
 
+function updatePostalAddress(addr, from) {
+	addr.id = from.id;
+	addr.country_id = from.country_id;
+	addr.geographic_area = from.geographic_area;
+	addr.street = from.street;
+	addr.street_number = from.street_number;
+	addr.building = from.building;
+	addr.unit = from.unit;
+	addr.additional = from.additional;
+	addr.address_type = from.address_type;
+	addr.lat = from.lat;
+	addr.lng = from.lng;
+}
+
 window.default_address_types = {
 	'people':['Home','Family','Birthplace','Work'],
 	'organization':['Office']

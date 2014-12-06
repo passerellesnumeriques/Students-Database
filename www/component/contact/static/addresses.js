@@ -146,7 +146,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 									p.freeze();
 									for (var i = 0; i < t.addresses.length; ++i)
 										if (t.addresses[i] == div_data.address) {
-											t.addresses[i] = edit.address;
+											updatePostalAddress(t.addresses[i], edit.address);
 											t.onchange.fire(t);
 											break;
 										}
