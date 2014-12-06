@@ -216,7 +216,7 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 		return $date;
 	}
 	
-	public static function PNEventToGoogleEvent($pn) {
+	public static function PNEventToGoogleEvent($pn, $calendar_id) {
 		$ev = new Google_Service_Calendar_Event();
 		$ev->setICalUID($pn["uid"]);
 		$ev->setSummary($pn["title"]);
@@ -253,7 +253,12 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 				} else {
 					$at = new Google_Service_Calendar_EventAttendee();
 					$at->setDisplayName(@$a["name"]);
-					$at->setEmail(@$a["email"]);
+					if (@$a["email"] <> null)
+						$at->setEmail(@$a["email"]);
+					else {
+						$at->setSelf(true);
+						$at->setEmail($calendar_id);
+					}
 					switch (@$a["participation"]) {
 						case "YES": $at->setResponseStatus("accepted"); break;
 						case "NO": $at->setResponseStatus("declined"); break;
@@ -319,18 +324,18 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 			if (intval($pn["last_modified"]) < $last_update) continue; // not modified
 			// event modified: update it in Google
 			try {
-				$this->updateEvent($google_id, $gev->getId(), self::PNEventToGoogleEvent($pn), true);
+				$this->updateEvent($google_id, $gev->getId(), self::PNEventToGoogleEvent($pn, $google_id), true);
 			} catch (Exception $e) {
-				PNApplication::error("Error updating event ".$pn["id"], $e);
+				PNApplication::error("Error updating event ".$pn["id"].".<br/>Event sent to Google:<br/>".var_export(self::PNEventToGoogleEvent($pn, $google_id),true), $e);
 				$err = true;
 			}
 		}
 		// add new events in Google
 		foreach ($pnevents as $pn) {
 			try {
-				$this->addEvent($google_id, self::PNEventToGoogleEvent($pn), true);
+				$this->addEvent($google_id, self::PNEventToGoogleEvent($pn, $google_id), true);
 			} catch (Exception $e) {
-				PNApplication::error("Error creating event ".$pn["id"]."[".$pn["uid"]."] (".$pn["title"].") from calendar ".$pn_id, $e);
+				PNApplication::error("Error creating event ".$pn["id"]."[".$pn["uid"]."] (".$pn["title"].") from calendar ".$pn_id.".<br/>Event sent to Google:<br/>".var_export(self::PNEventToGoogleEvent($pn, $google_id),true), $e);
 				$err = true;
 			}
 		}

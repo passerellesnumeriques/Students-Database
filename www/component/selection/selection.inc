@@ -209,7 +209,16 @@ class selection extends Component {
 	 * @return array of arrays("name"=>, "value"=>)
 	 * If the config attribute is set to null, will get its values in the database and set the config attribute
 	 */
-	public function getConfig(){
+	public function getConfig($sub_model = null){
+		if ($sub_model == null) $sub_model = $this->campaign_id;
+		if ($sub_model == null || $sub_model == "@link") return array();
+		if ($sub_model <> $this->campaign_id)
+			return SQLQuery::create()
+					->selectSubModel("SelectionCampaign", $sub_model)
+					->select("SelectionCampaignConfig")
+					->field("name")
+					->field("value")
+					->execute();
 		if($this->config <> null) {return $this->config;}
 		else{
 			/* Check if it is set in the database */
@@ -241,8 +250,9 @@ class selection extends Component {
 	 * @param string $name
 	 * @return boolean
 	 */
-	public function getOneConfigAttributeValue($name){
-		$conf = $this->getConfig();
+	public function getOneConfigAttributeValue($name,$sub_model = null){
+		if ($sub_model == null && $this->campaign_id > 0) $sub_model = $this->campaign_id;
+		$conf = $this->getConfig($sub_model);
 		for($i = 0; $i < count($conf); $i++){
 			if($conf[$i]["name"] == $name)
 				return $conf[$i]["value"];

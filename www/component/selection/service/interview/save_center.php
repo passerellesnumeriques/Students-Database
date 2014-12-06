@@ -170,6 +170,7 @@ class service_interview_save_center extends Service {
 						foreach ($attendees as $a) if ($a["people"] > 0) $a["email"]=$emails[$a["people"]];
 					}
 					foreach ($attendees as $a) {
+						if ($a["organizer"] || $a["name"] == "Selection") continue;
 						unset($a["organizer"]);
 						array_push($event["attendees"], $a);
 					}

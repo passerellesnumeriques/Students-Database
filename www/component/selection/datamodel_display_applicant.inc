@@ -71,8 +71,8 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 		$cfg = "{";
 		$cfg .= "can_be_null:false";
 		$cfg .= ",min:1";
-		if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id"))
-			$cfg .= ",pad:".PNApplication::$instance->selection->getOneConfigAttributeValue("number_of_applicant_id_digits");
+		if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id",$sub_model))
+			$cfg .= ",pad:".PNApplication::$instance->selection->getOneConfigAttributeValue("number_of_applicant_id_digits",$sub_model);
 		$cfg .= "}";
 		return array("field_integer",$cfg);
 	}

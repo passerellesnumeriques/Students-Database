@@ -27,6 +27,7 @@ $sm->addTable("Applicant")
 	->addForeignKey("interview_center", "InterviewCenter", false, false, true, true, false)//An applicant can be assigned to an exam center (maybe after importing applicant data
 	->addForeignKey("interview_session", "InterviewSession", false, false, true, true, false) //An applicant can be assigned to an exam session after being assigned to an exam center, or directly assigned to a session
 	->addBoolean("interview_attendance", true)
+	->addString("interview_comment",1000,0,true,false)
 	->addBoolean("interview_passer",true)
 	->addColumnWriteAccess("information_session", "manage_information_session", true)
 	->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities

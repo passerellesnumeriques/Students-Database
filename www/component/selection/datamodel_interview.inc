@@ -74,6 +74,9 @@ $sm->addTable("InterviewCriterion")
 	->addString("name",100,1,false,true)
 	->addDecimal("max_score",3,2,0,null,false,false)
 	->addReadAccess("see_interview_criteria", true)
+	->addWriteAccess("manage_interview_criteria", true)
+	->addInsertAccess("manage_interview_criteria", true)
+	->addRemoveAccess("manage_interview_criteria", true)
 	;
 
 $sm->addTable("InterviewEligibilityRule")
