@@ -159,19 +159,6 @@ class service_exam_save_center extends Service {
 				SQLQuery::create()->removeByKeys("ExamCenterRoom", $existing_rooms);
 		}
 		
-		// Before modifying the sessions, we need to know which previous session was in the past (so applicants may already have results)
-		$q = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession","exam_center",$center_id);
-		PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
-		PNApplication::$instance->calendar->whereEventInThePast($q, false);
-		$q->field("ExamSession","event");
-		$past_sessions = $q->executeSingleField();
-		if (count($past_sessions) > 0)
-			$applicants_possible_results = SQLQuery::create()->select("Applicant")->whereIn("Applicant","exam_session",$past_sessions)->field("Applicant","people")->field("Applicant","exam_session")->execute();
-		else
-			$applicants_possible_results = array();
-		
-		$applicants_remove_results = array();
-		
 		// 5 - Save sessions
 		if (isset($input["sessions"])) {
 			// get the list of existing sessions
@@ -231,17 +218,6 @@ class service_exam_save_center extends Service {
 							array_splice($existing_sessions, $i, 1);
 							break;
 						}
-					// check if the session was in the past, and is now in the future
-					if (in_array($event["id"], $past_sessions)) {
-						//  was in the past
-						$start = intval($event["start"]);
-						if ($start > time()) {
-							// now in the future => all applicants previously assigned to this session must have their results reset
-							foreach ($applicants_possible_results as $app)
-								if ($app["exam_session"] == $event["id"])
-									array_push($applicants_remove_results, $app["people"]);
-						}
-					}
 					// update the event
 					PNApplication::$instance->calendar->saveEvent($event);
 				}
@@ -261,12 +237,6 @@ class service_exam_save_center extends Service {
 				$current_applicants = array();
 			else
 				$current_applicants = SQLQuery::create()->select("Applicant")->whereValue("Applicant","exam_center", $center_id)->field("people")->executeSingleField();
-			// get the list of sessions in the past
-			$q = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession","exam_center",$center_id);
-			PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
-			PNApplication::$instance->calendar->whereEventInThePast($q, false);
-			$q->field("ExamSession","event");
-			$past_sessions = $q->executeSingleField();
 				
 			$applicants_updates = array();
 			for ($i = 0; $i < count($input["applicants"]); $i++) {
@@ -294,19 +264,6 @@ class service_exam_save_center extends Service {
 						}
 				// put the center id
 				$a["exam_center"] = $center_id;
-				// if the applicant was assigned to a past session, and it is now in a future session or without session, we must remove all results of the applicant
-				if ($a["exam_session"] == null || !in_array($a["exam_session"], $past_sessions)) {
-					// not anymore in a past session
-					if (!in_array($people_id, $applicants_remove_results)) {
-						// not yet in the list
-						$found = false;
-						foreach ($applicants_possible_results as $app) if ($app["people"] == $people_id) { $found = true; break; }
-						if ($found) {
-							// this applicant may have results
-							array_push($applicants_remove_results, $people_id);
-						}
-					}
-				}
 				// update the applicant
 				array_push($applicants_updates, array(array($people_id),$a));
 				// if the applicant was already in this exam center, remove it from the list
@@ -318,17 +275,11 @@ class service_exam_save_center extends Service {
 			}
 			if (count($applicants_updates) > 0)
 				SQLQuery::create()->updateByKeys("Applicant", $applicants_updates);
-			// each applicant which is not anymore assigned to this exam center, may have results
-			foreach ($applicants_possible_results as $app)
-				if (in_array($app["people"], $current_applicants) && !in_array($app["people"], $applicants_remove_results))
-					array_push($applicants_remove_results, $app["people"]);
 			// remove applicants not anymore on this center
 			if (count($current_applicants) > 0)
 				SQLQuery::create()->updateByKeys("Applicant", array(array($current_applicants, array("exam_center"=>null,"exam_session"=>null,"exam_center_room"=>null))));
 		}
 
-		// TODO remove results
-		
 		if (PNApplication::hasErrors()) {
 			SQLQuery::rollbackTransaction();
 			echo "false";

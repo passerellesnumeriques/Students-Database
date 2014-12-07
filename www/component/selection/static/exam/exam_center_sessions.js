@@ -266,7 +266,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	this._unassign = function(applicant, session_section, room_section, ondone, already_confirmed_for_past_session) {
 		if (!already_confirmed_for_past_session && session_section.event.start.getTime() < new Date().getTime()) {
 			var t=this;
-			confirm_dialog("The exam session is already done. If this applicant already has exam results, those results will be removed. Are you sure you want to remove this applicant from this session ?", function(yes) {
+			confirm_dialog("The exam session is already done, and this applicant may already have results. Are you sure you want to remove this applicant from this session ?", function(yes) {
 				if (yes) t._unassign(applicant, session_section, room_section, ondone, true);
 			});
 			return;
@@ -460,7 +460,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 					boxes.push(cb);
 					li.appendChild(document.createTextNode(" "+assigned_and_done[i].people.first_name+" "+assigned_and_done[i].people.last_name));
 				}
-				content.appendChild(document.createTextNode("Please select the ones you really want to remove. For those applicants, any result already imported will be removed (when you will save)."));
+				content.appendChild(document.createTextNode("Please select the ones you really want to remove."));
 				confirm_dialog(content, function(yes) {
 					if (!yes) return;
 					var list = [];

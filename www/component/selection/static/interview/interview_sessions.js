@@ -563,7 +563,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 			remove_button.onclick = function() {
 				var message;
 				if (session.event.start.getTime() < new Date().getTime())
-					message = "This session is in the past. If you remove it, all applicants assigned to it will be marked as not assigned, and if any already has interview results, those results will be removed.<br/>Are you sure you want to remove this session ?";
+					message = "This session is in the past. If you remove it, all applicants assigned to it will be marked as not assigned, but may be they already have their results.<br/>Are you sure you want to remove this session ?";
 				else
 					message = "Are you sure you want to remove this session, and unassign all applicants from it ?";
 				confirm_dialog(message, function(yes) {
@@ -591,7 +591,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 				};
 				if (session.event.start.getTime() < new Date().getTime()) {
 					// the session is in the past !
-					confirm_dialog("The session is already done. When you will save, if any of those applicants already has results for his/her interview, the results will be removed. Are you sure you want to unassign those applicants ?", function(yes) {
+					confirm_dialog("The session is already done. May be some of those applicants already have their results. Are you sure you want to unassign those applicants ?", function(yes) {
 						if (yes) doit();
 					});
 				} else
