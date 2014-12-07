@@ -87,6 +87,97 @@ var can_edit = <?php echo $edit ? "true" : "false";?>;
 sectionFromHTML('section_family');
 var fam = new family(document.getElementById('family_container'), <?php echo json_encode($family[0]);?>, <?php echo json_encode($family[1]);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
+function multiple_choice_other(container, choices, value, can_edit, onchange) {
+	var values = value ? value.split(",") : [];
+	this.element = document.createElement("DIV");
+	container.appendChild(this.element);
+	if (can_edit) {
+		var checkboxes = [];
+		var input;
+		var changed = function() {
+			var s = "";
+			for (var i = 0; i < checkboxes.length; ++i) {
+				if (!checkboxes[i].checked) continue;
+				if (s != "") s += ", ";
+				s += checkboxes[i]._value;
+			}
+			var o = input.value.trim();
+			if (o.length > 0) {
+				if (s.length > 0) s += ", ";
+				s += o;
+			}
+			onchange(s);
+		};
+		for (var i = 0; i < choices.length; i+=2) {
+			var div = document.createElement("DIV");
+			this.element.appendChild(div);
+			var cb = document.createElement("INPUT");
+			cb.type = "checkbox";
+			div.appendChild(cb);
+			cb.style.verticalAlign = "middle";
+			cb.style.marginBottom = "4px";
+			cb.style.marginRight = "3px";
+			div.appendChild(document.createTextNode(choices[i]));
+			for (var j = 0; j < values.length; ++j)
+				if (values[j].isSame(choices[i].trim())) {
+					values.splice(j,1);
+					cb.checked = "checked";
+					break;
+				}
+			cb._value = choices[i];
+			cb.onchange = changed;
+			checkboxes.push(cb);
+			if (choices[i+1]) {
+				var help = document.createElement("IMG");
+				help.style.verticalAlign = "middle";
+				help.style.marginLeft = "5px";
+				help.src = theme.icons_16.help;
+				div.appendChild(help);
+				tooltip(help, "<img src='/static/selection/si/"+choices[i+1]+"'/>");
+			}
+		}
+		var div = document.createElement("DIV");
+		this.element.appendChild(div);
+		div.appendChild(document.createTextNode("Other: "));
+		div.appendChild(input = document.createElement("INPUT"));
+		input.type = "text";
+		input.value = "";
+		for (var i = 0; i < values.length; ++i) {
+			if (input.value != "") input.value += ", ";
+			input.value += values[i];
+		}
+		input.onchange = changed;
+	} else {
+		var first = true;
+		for (var i = 0; i < choices.length; i+=2) {
+			var found = false;
+			for (var j = 0; j < values.length; ++j)
+				if (values[j].isSame(choices[i].trim())) {
+					values.splice(j,1);
+					found = true;
+					break;
+				}
+			if (!found) continue;
+			if (first) first = false;
+			else this.element.appendChild(document.createTextNode(", "));
+			this.element.appendChild(document.createTextNode(choices[i]));
+			if (choices[i+1]) {
+				var help = document.createElement("IMG");
+				help.style.verticalAlign = "middle";
+				help.style.marginLeft = "5px";
+				help.src = theme.icons_16.help;
+				this.element.appendChild(help);
+				tooltip(help, "<img src='/static/selection/si/"+choices[i+1]+"'/>");
+			}
+		}
+		for (var i = 0; i < values.length; ++i) {
+			if (first) first = false;
+			else this.element.appendChild(document.createTextNode(", "));
+			this.element.appendChild(document.createTextNode(values[i]));
+		}
+	}
+}
+
 var section_houses = sectionFromHTML('section_houses');
 function houses(section, houses, can_edit) {
 	section.content.style.padding = "3px";
@@ -107,8 +198,17 @@ function houses(section, houses, can_edit) {
 				house_status_comment: null,
 				lot_status: null,
 				lot_cost: null,
-				lot_status_comment: null
-				// TODO
+				lot_status_comment: null,
+				roof_type: null,
+				roof_condition: null,
+				roof_comment: null,
+				walls_type: null,
+				walls_condition: null,
+				walls_comment: null,
+				floor_type: null,
+				floor_condition: null,
+				floor_comment: null,
+				general_comment: null
 			};
 			t.houses.push(h);
 			t.houses_controls.push(new house(section.content, h, can_edit)); 
@@ -191,19 +291,53 @@ function house(container, house, can_edit) {
 	tr.appendChild(td = document.createElement("TH"));
 	td.innerHTML = "<img src='/static/selection/si/roof_16.png'/> Roof";
 	tr.appendChild(td = document.createElement("TD"));
-	td.innerHTML = "TODO";
+	this.roof_type = new multiple_choice_other(td, [
+		"Galvanized Iron Sheets", "galvanized_iron_sheets.jpg",
+		"Thatch", "thatch.jpg",
+		"Tarpaulin", "tarpaulin.jpg",
+		"Plastic", null,
+		"Wood", null
+	], house.roof_type, can_edit, function(type) { house.roof_type = type; });
+	if (can_edit) {
+		// TODO
+	} else {
+		// TODO
+	}
 	// walls
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
 	td.innerHTML = "<img src='/static/selection/si/wall_16.png'/> Walls";
 	tr.appendChild(td = document.createElement("TD"));
-	td.innerHTML = "TODO";
+	this.walls_type = new multiple_choice_other(td, [
+		"Concrete", null,
+		"Tarpaulin", "tarpaulin.jpg",
+		"Bamboo", null,
+		"Plastic", null,
+		"Wood", null
+	], house.walls_type, can_edit, function(type) { house.walls_type = type; });
+	if (can_edit) {
+		// TODO
+	} else {
+		// TODO
+	}
 	// floor
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
 	td.innerHTML = "<img src='/static/selection/si/floor_16.png'/> Floor";
 	tr.appendChild(td = document.createElement("TD"));
-	td.innerHTML = "TODO";
+	this.floor_type = new multiple_choice_other(td, [
+		"Concrete", null,
+		"Wood", null,
+		"Bamboo", null,
+		"Tiles", null,
+		"Sand", null,
+		"Soil", null
+	], house.floor_type, can_edit, function(type) { house.floor_type = type; });
+	if (can_edit) {
+		// TODO
+	} else {
+		// TODO
+	}
 	// general comment
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
