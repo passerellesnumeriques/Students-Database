@@ -328,6 +328,13 @@ Custom_Event.prototype = {
 	}
 };
 
+function AsynchLoadListener(nb_pending_operations, onready) {
+	this.nb_waiting = nb_pending_operations;
+	this.operationDone = function() {
+		if (--this.nb_waiting == 0) onready();
+	};
+}
+
 function log_exception(e, additional_message) {
 	var msg = e.message;
 	if (typeof e.fileName != 'undefined') {

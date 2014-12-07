@@ -1,21 +1,20 @@
 /* #depends[/static/widgets/typed_filter/typed_filter.js] */
 
 function filter_addresses(data, config, editable) {
-	if (!data)
-		data = {types:arrayCopy(config.types),areas:null};
-	typed_filter.call(this, data, config, editable);
-	
-	var t=this;
-	require("select_checkboxes.js", function() {
+	typed_filter.call(t, data, config, editable);
+	var existing_types;
+	var t = this;
+	var wait = new AsynchLoadListener(2,function() {
+		if (!data)
+			t.data = data = {types:existing_types,areas:null};
 		var span = document.createElement("SPAN");
 		span.style.verticalAlign = "middle";
 		span.appendChild(document.createTextNode("having type "))
 		t.element.appendChild(span);
 		t.select_type = new select_checkboxes(t.element);
 		t.select_type.getHTMLElement().style.verticalAlign = "middle";
-		for (var i = 0; i < config.types.length; ++i) {
-			t.select_type.add(config.types[i], document.createTextNode(config.types[i]));
-		}
+		for (var i = 0; i < existing_types.length; ++i)
+			t.select_type.add(existing_types[i], document.createTextNode(existing_types[i]));
 		t.select_type.setSelection(data.types);
 		t.select_type.onchange = function() {
 			data.types = t.select_type.getSelection();
@@ -27,12 +26,14 @@ function filter_addresses(data, config, editable) {
 		span.appendChild(document.createTextNode(" and located in "));
 		t.element.appendChild(span);
 		var updateText = function() {
-			if (data.areas == null)
+			if (data.areas == null) {
 				t.link.innerHTML = "Anywhere";
-			else
+				layout.changed(t.link);
+			} else
 				window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
 					t.link.innerHTML = "";
 					t.link.appendChild(document.createTextNode(window.top.geography.getGeographicAreaTextFromId(country_data, data.areas[0]).text));
+					layout.changed(t.link);
 				});
 		};
 		if (editable) {
@@ -83,9 +84,15 @@ function filter_addresses(data, config, editable) {
 		}
 		t.element.appendChild(t.link);
 		updateText();
+		if (editable) require(["geographic_area_selection.js","mini_popup.js"]);
 	});
-	if (editable) require(["geographic_area_selection.js","mini_popup.js"]);
+	require("select_checkboxes.js",function() { wait.operationDone(); });
+	service.json("contact", "get_existing_address_types",{type:config.type},function(list) {
+		existing_types = list;
+		wait.operationDone();
+	});
 	this.isActive = function() {
+		if (!data) return false;
 		if (data.types.length < config.types.length) return true;
 		if (data.areas != null) return true;
 		return false;

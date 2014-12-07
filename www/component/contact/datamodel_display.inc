@@ -153,9 +153,7 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 	}
 	public function getTypedFilter($sub_model) {
 		$cfg = "{";
-		$cfg .= "types:";
-		$types = SQLQuery::create()->select("PostalAddress")->field("address_type")->distinct()->executeSingleField();
-		$cfg .= json_encode($types);
+		$cfg .= "type:".json_encode($this->joining_key_name);
 		$cfg .= "}";
 		return array("filter_addresses",$cfg);
 	}
