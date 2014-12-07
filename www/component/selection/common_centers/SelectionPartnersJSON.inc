@@ -99,7 +99,7 @@ class SelectionPartnersJSON {
 		require_once("component/contact/ContactJSON.inc");
 		$s = "{";
 		$s .= "center_id:".$partner["partner_center_id"];
-		$s .= ",organization:".ContactJSON::OrganizationJSON($partner, null, $contacts, $addresses, $contact_points); // TODO
+		$s .= ",organization:".ContactJSON::OrganizationJSON($partner, null, $contacts, $addresses, $contact_points);
 		$s .= ",host:".($partner["host"] <> null && $partner["host"] == 1 ? "true" : "false");
 		$s .= ",host_address_id:".json_encode($partner["host_address"]);
 		$s .= ",selected_contact_points_id:";

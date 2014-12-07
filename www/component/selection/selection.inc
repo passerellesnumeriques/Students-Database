@@ -630,7 +630,7 @@ class selection extends Component {
 				return false;
 			}
 		}
-		// TODO remove sessions events
+		// rooms, sessions, and events are automatically removed by the datamodel
 		//Perform the remove
 		SQLQuery::startTransaction();
 		try {
@@ -654,7 +654,19 @@ class selection extends Component {
 			PNApplication::error("You are not allowed to remove this Interview Center");
 			return false;
 		}
-		// TODO remove sessions
+		// check if applicants are assigned to sessions
+		$assigned_applicant = SQLQuery::create()
+			->select("InterviewSession")
+			->whereValue("InterviewSession", "interview_center", $id)
+			->join("InterviewSession", "Applicant", array("event"=>"interview_session"))
+			->whereNotNull("Applicant", "interview_session")
+			->limit(0,1)
+			->executeSingleRow();
+		if ($assigned_applicant <> null) {
+			PNApplication::error("You cannot remove this interview center because some applicants are assigned to sessions.");
+			return false;
+		}
+		// sessions and events are automatically removed by the datamodel
 		//Perform the remove
 		SQLQuery::startTransaction();
 		try {
