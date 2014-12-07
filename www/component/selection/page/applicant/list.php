@@ -30,6 +30,7 @@ class page_applicant_list extends SelectionPage {
 		var dl;
 		var filters = <?php if (isset($input["filters"])) echo json_encode($input["filters"]); else echo "[]"; ?>;
 		<?php
+		$profile_page = null;
 		if (isset($_GET["type"])) {
 			switch ($_GET["type"]) {
 			case "exam_passers":
@@ -41,13 +42,16 @@ class page_applicant_list extends SelectionPage {
 			case "si_to_be_done":
 				echo "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
 				echo "filters.push({category:'Selection',name:'Social Investigations done',force:true,data:{type:'equals',value:0}});\n";
+				$profile_page = "Social Investigation";
 				break;
 			case "si_to_be_reviewed":
 				echo "filters.push({category:'Selection',name:'Social Investigations done',force:true,data:{type:'more',value:0}});\n";
 				echo "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['NULL']}});\n";
+				$profile_page = "Social Investigation";
 				break;
 			case "si_passers":
 				echo "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['Priority 1 (A+)', 'Priority 2 (A)', 'Priority 3 (A-)', 'Priority 4 (B+)', 'Priority 5 (B)']}});\n";
+				$profile_page = "Social Investigation";
 				break;
 			}
 		}
@@ -274,7 +278,7 @@ class page_applicant_list extends SelectionPage {
 					}
 
 					list.makeRowsClickable(function(row){
-						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id), {sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}}, 95, 95); 
+						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id)<?php if ($profile_page<>null) echo "+'&page=".urlencode($profile_page)."'";?>, {sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}}, 95, 95); 
 					});
 				}
 			);

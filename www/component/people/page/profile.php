@@ -44,6 +44,11 @@ class page_profile extends Page {
 			return $p1->getPriority()-$p2->getPriority();
 		}
 		usort($pages, "pages_sort");
+		if ($page <> null) {
+			$real_page = null;
+			foreach ($pages as $p) if ($p->getName() == $page) { $real_page = $p->getURL($people_id); }
+			$page = $real_page;
+		}
 		if ($page == null) $page = $pages[0]->getURL($people_id);
 ?>
 <div id='profile_page' page='<?php echo $page; if ($sub_models <> null) echo "&sub_models=".json_encode($sub_models);?>'>
