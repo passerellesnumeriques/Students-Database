@@ -17,21 +17,25 @@ class page_si_applicant extends Page {
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_integer.js");
 ?>
-<div class='page_title'>
-	Social Investigation Data
-	<?php if ($can_edit) {
-		if ($edit) {?>
-			<button class='action' onclick='save();'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
-			<button class='action' onclick='cancelEdit();'><img src='<?php echo theme::$icons_16["no_edit"];?>'/> Cancel modifications</button>
-		<?php } else {?>
-			<button class='action' onclick='edit();'><img src='<?php echo theme::$icons_16["edit"];?>'/> Edit data</button>
-		<?php }
-	}?>
-</div>
-<div id='section_family' title="Family" icon="/static/family/family_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
-	<div id='family_container'></div>
-</div>
-<div id='section_houses' title="Houses" icon="/static/selection/si/house_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
+	<div class='page_title shadow' style='flex:none'>
+		Social Investigation Data
+		<?php if ($can_edit) {
+			if ($edit) {?>
+				<button class='action' onclick='save();'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
+				<button class='action' onclick='cancelEdit();'><img src='<?php echo theme::$icons_16["no_edit"];?>'/> Cancel modifications</button>
+			<?php } else {?>
+				<button class='action' onclick='edit();'><img src='<?php echo theme::$icons_16["edit"];?>'/> Edit data</button>
+			<?php }
+		}?>
+	</div>
+	<div style='flex:1 1 auto;overflow:auto;'>
+		<div id='section_family' title="Family" icon="/static/family/family_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+			<div id='family_container'></div>
+		</div>
+		<div id='section_houses' title="Houses" icon="/static/selection/si/house_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+		</div>
+	</div>
 </div>
 <style type='text/css'>
 .si_house {
@@ -76,6 +80,7 @@ class page_si_applicant extends Page {
 }
 .si_house>.content td, .si_house>.content td>input, .si_house>.content td>select, .si_house>.content td>textarea {
 	vertical-align: top;
+	font-size: 9pt;
 }
 .si_house>.content tr:last-child th, .si_house>.content tr:last-child td {
 	border-bottom: none;
@@ -227,7 +232,7 @@ function house(container, house, can_edit) {
 	this.content = document.createElement("TABLE");
 	this.element.appendChild(this.content);
 	this.content.className = "content";
-	var tr, td;
+	var tr, td, div;
 	var createOption = function(select, value, text, selected) {
 		if (!text) text = value;
 		var o = document.createElement("OPTION");
@@ -254,13 +259,21 @@ function house(container, house, can_edit) {
 		td.appendChild(this.house_status_cost.getHTMLElement());
 		this.house_status_cost.onchange.add_listener(function(f) { house.house_cost = f.getCurrentData(); });
 		td.appendChild(document.createTextNode(" Comment: "));
-		this.house_status_comment = document.createElement("TEXTAREA");
-		this.house_status_comment.value = house.house_status_comment;
-		td.appendChild(this.house_status_comment);
-		this.house_status_comment.onchange = function() { house.house_status_comment = this.value; };
 	} else {
-		// TODO
+		var s = house.house_status ? house.house_status : "";
+		if (house.house_cost) {
+			if (s.length > 0) s += ", ";
+			s += "Cost: "+house.house_cost;
+		}
+		if (s.length > 0) s += ", ";
+		s += "Comment: ";
+		td.appendChild(document.createTextNode(s));
 	}
+	this.house_status_comment = document.createElement("TEXTAREA");
+	this.house_status_comment.value = house.house_status_comment;
+	this.house_status_comment.disabled = can_edit ? "" : "disabled";
+	td.appendChild(this.house_status_comment);
+	this.house_status_comment.onchange = function() { house.house_status_comment = this.value; };
 	// lot status
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
@@ -279,13 +292,21 @@ function house(container, house, can_edit) {
 		td.appendChild(this.lot_status_cost.getHTMLElement());
 		this.lot_status_cost.onchange.add_listener(function(f) { house.lot_cost = f.getCurrentData(); });
 		td.appendChild(document.createTextNode(" Comment: "));
-		this.lot_status_comment = document.createElement("TEXTAREA");
-		this.lot_status_comment.value = house.lot_status_comment;
-		td.appendChild(this.lot_status_comment);
-		this.lot_status_comment.onchange = function() { house.lot_status_comment = this.value; };
 	} else {
-		// TODO
+		var s = house.lot_status ? house.lot_status : "";
+		if (house.lot_cost) {
+			if (s.length > 0) s += ", ";
+			s += "Cost: "+house.lot_cost;
+		}
+		if (s.length > 0) s += ", ";
+		s += "Comment: ";
+		td.appendChild(document.createTextNode(s));
 	}
+	this.lot_status_comment = document.createElement("TEXTAREA");
+	this.lot_status_comment.value = house.lot_status_comment;
+	this.lot_status_comment.disabled = can_edit ? "" : "disabled";
+	td.appendChild(this.lot_status_comment);
+	this.lot_status_comment.onchange = function() { house.lot_status_comment = this.value; };
 	// roof
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
@@ -298,11 +319,34 @@ function house(container, house, can_edit) {
 		"Plastic", null,
 		"Wood", null
 	], house.roof_type, can_edit, function(type) { house.roof_type = type; });
+	this.roof_type.element.style.display = "inline-block";
+	div = document.createElement("DIV");
+	td.appendChild(div);
+	div.style.display = "inline-block";
+	div.style.verticalAlign = "top";
+	div.style.marginLeft = "5px";
+	div.appendChild(document.createTextNode("Condition: "));
 	if (can_edit) {
-		// TODO
+		var select = document.createElement("SELECT");
+		div.appendChild(select);
+		createOption(select, "");
+		createOption(select, "1 (Bad)", null, house.roof_condition == "1 (Bad)");
+		createOption(select, "2", null, house.roof_condition == "2");
+		createOption(select, "3", null, house.roof_condition == "3");
+		createOption(select, "4", null, house.roof_condition == "4");
+		createOption(select, "5 (Good)", null, house.roof_condition == "5 (Good)");
+		select.onchange = function() { house.roof_condition = this.value; };
 	} else {
-		// TODO
+		div.appendChild(document.createTextNode(house.roof_condition ? house.roof_condition : "Unknown"));
 	}
+	div.appendChild(document.createElement("BR"));
+	div.appendChild(document.createTextNode("Comment:"));
+	div.appendChild(document.createElement("BR"));
+	this.roof_comment = document.createElement("TEXTAREA");
+	div.appendChild(this.roof_comment);
+	this.roof_comment.value = house.roof_comment ? house.roof_comment : "";
+	this.roof_comment.disabled = can_edit ? "" : "disabled";
+	this.roof_comment.onchange = function() { house.roof_comment = this.value; };
 	// walls
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
@@ -315,11 +359,34 @@ function house(container, house, can_edit) {
 		"Plastic", null,
 		"Wood", null
 	], house.walls_type, can_edit, function(type) { house.walls_type = type; });
+	this.walls_type.element.style.display = "inline-block";
+	div = document.createElement("DIV");
+	td.appendChild(div);
+	div.style.display = "inline-block";
+	div.style.verticalAlign = "top";
+	div.style.marginLeft = "5px";
+	div.appendChild(document.createTextNode("Condition: "));
 	if (can_edit) {
-		// TODO
+		var select = document.createElement("SELECT");
+		div.appendChild(select);
+		createOption(select, "");
+		createOption(select, "1 (Bad)", null, house.walls_condition == "1 (Bad)");
+		createOption(select, "2", null, house.walls_condition == "2");
+		createOption(select, "3", null, house.walls_condition == "3");
+		createOption(select, "4", null, house.walls_condition == "4");
+		createOption(select, "5 (Good)", null, house.walls_condition == "5 (Good)");
+		select.onchange = function() { house.walls_condition = this.value; };
 	} else {
-		// TODO
+		div.appendChild(document.createTextNode(house.walls_condition ? house.walls_condition : "Unknown"));
 	}
+	div.appendChild(document.createElement("BR"));
+	div.appendChild(document.createTextNode("Comment:"));
+	div.appendChild(document.createElement("BR"));
+	this.walls_comment = document.createElement("TEXTAREA");
+	div.appendChild(this.walls_comment);
+	this.walls_comment.value = house.walls_comment ? house.walls_comment : "";
+	this.walls_comment.disabled = can_edit ? "" : "disabled";
+	this.walls_comment.onchange = function() { house.walls_comment = this.value; };
 	// floor
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
@@ -333,17 +400,44 @@ function house(container, house, can_edit) {
 		"Sand", null,
 		"Soil", null
 	], house.floor_type, can_edit, function(type) { house.floor_type = type; });
+	this.floor_type.element.style.display = "inline-block";
+	div = document.createElement("DIV");
+	td.appendChild(div);
+	div.style.display = "inline-block";
+	div.style.verticalAlign = "top";
+	div.style.marginLeft = "5px";
+	div.appendChild(document.createTextNode("Condition: "));
 	if (can_edit) {
-		// TODO
+		var select = document.createElement("SELECT");
+		div.appendChild(select);
+		createOption(select, "");
+		createOption(select, "1 (Bad)", null, house.floor_condition == "1 (Bad)");
+		createOption(select, "2", null, house.floor_condition == "2");
+		createOption(select, "3", null, house.floor_condition == "3");
+		createOption(select, "4", null, house.floor_condition == "4");
+		createOption(select, "5 (Good)", null, house.floor_condition == "5 (Good)");
+		select.onchange = function() { house.floor_condition = this.value; };
 	} else {
-		// TODO
+		div.appendChild(document.createTextNode(house.floor_condition ? house.floor_condition : "Unknown"));
 	}
+	div.appendChild(document.createElement("BR"));
+	div.appendChild(document.createTextNode("Comment:"));
+	div.appendChild(document.createElement("BR"));
+	this.floor_comment = document.createElement("TEXTAREA");
+	div.appendChild(this.floor_comment);
+	this.floor_comment.value = house.floor_comment ? house.floor_comment : "";
+	this.floor_comment.disabled = can_edit ? "" : "disabled";
+	this.floor_comment.onchange = function() { house.floor_comment = this.value; };
 	// general comment
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
 	td.innerHTML = "General comment";
 	tr.appendChild(td = document.createElement("TD"));
-	td.innerHTML = "TODO";
+	this.general_comment = document.createElement("TEXTAREA");
+	td.appendChild(this.general_comment);
+	this.general_comment.value = house.general_comment ? house.general_comment : "";
+	this.general_comment.disabled = can_edit ? "" : "disabled";
+	this.general_comment.onchange = function() { house.general_comment = this.value; };
 }
 new houses(section_houses, [<?php
 $first = true;
