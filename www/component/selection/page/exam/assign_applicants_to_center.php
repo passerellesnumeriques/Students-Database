@@ -12,14 +12,19 @@ class page_exam_assign_applicants_to_center extends SelectionPage {
 		PNApplication::$instance->people->joinPeople($q, "Applicant", "people");
 		$q->field("Applicant","exam_session");
 		$q->field("Applicant","applicant_id");
+		$q->field("Applicant","excluded");
 		$applicants = $q->execute();
 		
-		// check if some of them are already assigned to an exam session
+		// check if some of them are already assigned to an exam session, or excluded
 		$already = array();
-		foreach ($applicants as $a) if ($a["exam_session"] <> null) array_push($already, $a);
+		$excluded = array();
+		foreach ($applicants as $a) {
+			if ($a["exam_session"] <> null) array_push($already, $a);
+			if ($a["excluded"] == 1) array_push($excluded, $a);
+		}
 		if (count($already) > 0) {
 			if (count($already) == 1)
-			echo "<div style='padding:5px'><div class='error_box'><table><tr><td valign=top><img src='".theme::$icons_16["error"]."'/></td><td>You cannot assign to an exam center, because ";
+				echo "<div style='padding:5px'><div class='error_box'><table><tr><td valign=top><img src='".theme::$icons_16["error"]."'/></td><td>You cannot assign to an exam center, because ";
 			if (count($applicants) == 1)
 				echo "this applicant is already assigned to an exam session.<br/>";
 			else {
@@ -32,6 +37,24 @@ class page_exam_assign_applicants_to_center extends SelectionPage {
 				echo "If you want to change this applicant to a different exam center, you need first to unassign from the exam session, by going to the page of the exam center the applicant is currently assigned to.";
 			else
 				echo "If you want to change them to a different exam center, you need first to unassign them from the exam sessions, by going to the page of the exam center they are currently assigned to.";
+			echo "</td></tr></table></div></div>";
+			return;
+		}
+		if (count($excluded) > 0) {
+			if (count($excluded) == 1)
+				echo "<div style='padding:5px'><div class='error_box'><table><tr><td valign=top><img src='".theme::$icons_16["error"]."'/></td><td>You cannot assign to an exam center, because ";
+			if (count($applicants) == 1)
+				echo "this applicant is already excluded from the process.<br/>";
+			else {
+				echo "the following applicant".(count($excluded) > 1 ? "s are" : " is")." already excluded from the process:<ul>";
+				foreach ($excluded as $a)
+					echo "<li>".toHTML($a["first_name"]." ".$a["last_name"])." (ID ".$a["applicant_id"].")</li>";
+				echo "</ul>";
+			}
+			if (count($excluded) == 1)
+				echo "If you want to assign this applicant, you need first to unexclude him/her.";
+			else
+				echo "If you want to assign them, you need first to unexclude them.";
 			echo "</td></tr></table></div></div>";
 			return;
 		}

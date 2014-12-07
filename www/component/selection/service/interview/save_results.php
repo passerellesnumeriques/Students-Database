@@ -34,6 +34,7 @@ class service_interview_save_results extends Service {
 		$insert_grades = array();
 		$insert_interviewers = array();
 		$passers = array();
+		$loosers = array();
 		foreach ($input["applicants"] as $app) {
 			$app_id = $app["applicant"];
 			if (!in_array($app_id, $assigned_applicants)) {
@@ -49,6 +50,7 @@ class service_interview_save_results extends Service {
 				$app_updates[$app_id]["automatic_exclusion_reason"] = "Absent";
 				$app_updates[$app_id]["excluded"] = 1;
 				$app_updates[$app_id]["interview_passer"] = 0;
+				array_push($loosers, $app_id);
 				continue;
 			}
 			$app_updates[$app_id]["interview_attendance"] = 1;
@@ -75,6 +77,7 @@ class service_interview_save_results extends Service {
 				$app_updates[$app_id]["automatic_exclusion_reason"] = "Failed";
 				$app_updates[$app_id]["excluded"] = 1;
 				$app_updates[$app_id]["interview_passer"] = 0;
+				array_push($loosers, $app_id);
 			}
 		}
 		// if some passers where excluded previously because of failure, we need to unexclude them
@@ -106,6 +109,8 @@ class service_interview_save_results extends Service {
 		// update applicants
 		foreach ($app_updates as $app_id=>$to_update)
 			SQLQuery::create()->bypassSecurity()->updateByKey("Applicant", $app_id, $to_update);
+		
+		PNApplication::$instance->selection->signalInterviewPassersAndLoosers($passers, $loosers);
 		
 		if (!PNApplication::hasErrors()) {
 			SQLQuery::commitTransaction();

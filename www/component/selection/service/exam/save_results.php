@@ -95,6 +95,7 @@ class service_exam_save_results extends Service {
 		$insert_answer = array();
 		$insert_extracts = array();
 		$passers = array();
+		$loosers = array();
 		foreach ($results as $app) {
 			if (!in_array($app["people_id"], $applicants_ids)) {
 				PNApplication::error("Invalid request: you cannot save exam results for an applicant who is not assigned to the given session and room");
@@ -102,6 +103,7 @@ class service_exam_save_results extends Service {
 			}
 			if ($app["exam_attendance"] <> "Yes") {
 				SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array("exam_attendance"=>$app["exam_attendance"], "excluded"=>true, "automatic_exclusion_step"=>"Written Exam", "automatic_exclusion_reason"=>"Attendance", "exam_passer"=>null));
+				array_push($loosers, $app["people_id"]);
 			}
 			$parts_score = array();
 			$all_parts_score = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubjectPart")->whereValue("ApplicantExamSubjectPart","applicant",$app["people_id"])->execute();
@@ -225,6 +227,7 @@ class service_exam_save_results extends Service {
 				$pass = $this->applyRules($root_rule, $subjects_scores, $extracts_scores);
 				if (!$pass) {
 					SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array("exam_attendance"=>"Yes", "excluded"=>true, "automatic_exclusion_step"=>"Written Exam", "automatic_exclusion_reason"=>"Failed", "exam_passer"=>false));
+					array_push($loosers, $app["people_id"]);
 				} else {
 					// if applicant previously excluded because of attendance or results, put it back in the process!
 					$row = SQLQuery::create()->bypassSecurity()->select("Applicant")->whereValue("Applicant","people",$app["people_id"])->executeSingleRow();
@@ -250,6 +253,9 @@ class service_exam_save_results extends Service {
 		if (count($insert_subject_part) > 0) SQLQuery::create()->bypassSecurity()->insertMultiple("ApplicantExamSubjectPart", $insert_subject_part);
 		if (count($insert_answer) > 0) SQLQuery::create()->bypassSecurity()->insertMultiple("ApplicantExamAnswer", $insert_answer);
 		if (count($insert_extracts) > 0) SQLQuery::create()->bypassSecurity()->insertMultiple("ApplicantExamExtract", $insert_extracts);
+		
+		// signal passers and loosers if ever we need to do some actions
+		PNApplication::$instance->selection->signalExamPassersAndLoosers($passers, $loosers);
 		
 		if (!PNApplication::hasErrors()) {
 			SQLQuery::commitTransaction();

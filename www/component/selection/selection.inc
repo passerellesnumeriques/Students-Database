@@ -726,6 +726,12 @@ class selection extends Component {
 			->join("smlink_Applicant_People", "SelectionCampaign", array("sm"=>"id"))
 			->executeSingleRow();
 	}
-
+	
+	public function signalExamPassersAndLoosers($passers, $loosers) {
+		// unassign loosers from interview ?
+	}
+	public function signalInterviewPassersAndLoosers($passers, $loosers) {
+	}
+	
 }
 ?>
