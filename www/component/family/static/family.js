@@ -376,16 +376,20 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		// occupation
 		tr.appendChild(td = document.createElement("TD"));
 		if (can_edit) {
-			var td_occ = td;
+			var div = document.createElement("DIV");
+			div.style.display = "flex";
+			div.style.flexDirection = "row";
+			td.appendChild(div);
 			require([["typed_field.js","field_text.js"]],function() {
 				var f = new field_text(member.occupation, true, {min_length:1,can_be_null:true,max_length:100});
-				td_occ.appendChild(f.getHTMLElement());
+				div.appendChild(f.getHTMLElement());
+				f.getHTMLElement().style.flex = "1 1 auto";
 				f.onchange.add_listener(function() {
 					member.occupation = f.getCurrentData();
 					if (t.onchange) t.onchange();
 				});
-				td_occ.appendChild(document.createTextNode(" Type: "));
-				t._addSelect(td_occ, member, "occupation_type", [{value:null,text:"?"},{value:"Regular",text:"Regular"},{value:"Irregular",text:"Irregular"}]);
+				div.appendChild(document.createTextNode(" Type: "));
+				t._addSelect(div, member, "occupation_type", [{value:null,text:"?"},{value:"Regular",text:"Regular"},{value:"Irregular",text:"Irregular"}]);
 			});
 		} else {
 			td.appendChild(document.createTextNode((member.occupation ? member.occupation : "")+(member.occupation_type ? ","+member.occupation_type : "")));
@@ -401,6 +405,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				require([["typed_field.js","field_text.js"]],function() {
 					var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100});
 					td_educ.appendChild(f.getHTMLElement());
+					f.fillWidth();
 					f.onchange.add_listener(function() {
 						member.education_level = f.getCurrentData();
 						if (t.onchange) t.onchange();
@@ -417,6 +422,22 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		tr.appendChild(td = document.createElement("TD"));
 		this._addBooleanSelect(td, member, "living_with_family");
 		if (!can_edit) td.style.textAlign = "center";
+		// revenue
+		tr.appendChild(td = document.createElement("TD"));
+		if (can_edit) {
+			var td_revenue = td;
+			require([["typed_field.js","field_text.js"]],function() {
+				var f = new field_text(member.revenue, true, {min_length:0,can_be_null:true,max_length:500});
+				td_revenue.appendChild(f.getHTMLElement());
+				f.fillWidth();
+				f.onchange.add_listener(function() {
+					member.revenue = f.getCurrentData();
+					if (t.onchange) t.onchange();
+				});
+			});
+		} else {
+			td.appendChild(document.createTextNode(member.revenue ? member.revenue : ""));
+		}
 		// comment
 		tr.appendChild(td = document.createElement("TD"));
 		if (member.people && member.people.people_types.indexOf("/applicant/") >= 0 && member.people.people_types.indexOf("/student/") < 0) {
@@ -428,8 +449,9 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		if (can_edit) {
 			var td_comment = td;
 			require([["typed_field.js","field_text.js"]],function() {
-				var f = new field_text(member.comment, true, {min_length:0,can_be_null:true,max_length:250});
+				var f = new field_text(member.comment, true, {min_length:0,can_be_null:true,max_length:1000});
 				td_comment.appendChild(f.getHTMLElement());
+				f.fillWidth();
 				f.onchange.add_listener(function() {
 					member.comment = f.getCurrentData();
 					if (t.onchange) t.onchange();
@@ -486,6 +508,8 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Living<br/>w/family";
 		td.style.fontSize = "9pt";
+		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Revenue Info.";
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Comment";
 		tr.appendChild(td = document.createElement("TH"));
