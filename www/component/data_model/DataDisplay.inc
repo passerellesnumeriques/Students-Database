@@ -1496,6 +1496,7 @@ class CountLinksDataDisplay extends DataDisplay {
 			$q->field($table_alias, $t->getPrimaryKey()->name, $key_alias);
 		}
 		$table_count = \DataModel::get()->getTable($this->table);
+		$table_alias = $q->getTableAlias($path->table->getName(), true);
 		$sub_q = \SQLQuery::create()
 			->select($this->table)
 			->where("`".$table_count->getSQLNameFor($path->sub_model)."`.`".$this->foreign_key."` IN (`".$table_alias."`.`".$t->getPrimaryKey()->name."`)")

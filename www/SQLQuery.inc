@@ -401,13 +401,21 @@ class SQLQuery {
 	 * @param string $table table name
 	 * @return string|null alias of the table, or null if not found
 	 */
-	public function getTableAlias($table) {
+	public function getTableAlias($table, $for_sql = false) {
 		foreach ($this->tables as $t=>$a)
-			if ($t == $table)
-				return $a <> null ? $a : $t;
+			if ($t == $table) {
+				if ($a <> null) return $a;
+				if (!$for_sql) return $t;
+				$ta = DataModel::get()->internalGetTable($table);
+				return $ta->getSQLName($this->sub_models);
+			}
 		foreach ($this->joins as $j)
-			if ($j[1] == $table)
-				return $j[3] <> null ? $j[3] : $j[1];
+			if ($j[1] == $table) {
+				if ($j[3] <> null) return $j[3];
+				if (!$for_sql) return $table;
+				$ta = DataModel::get()->internalGetTable($table);
+				return $ta->getSQLName($this->sub_models);
+			}
 		return null;
 	}
 	
