@@ -197,6 +197,8 @@ $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Interview Sess
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_attendance", "Interview Attendance",true,false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_comment", "Comment from Interview", true, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_passer", "Eligible for Social Investigation", true, false));
+$display->addDataDisplay(new datamodel\CountLinksDataDisplay("Social Investigations done", "SocialInvestigation", "applicant"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("si_grade", "Social Investigation Grade"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("excluded", "Excluded", true, false));
 $display->addDataDisplay(new ApplicantExclusionReason());
 $display->addFollow("people");

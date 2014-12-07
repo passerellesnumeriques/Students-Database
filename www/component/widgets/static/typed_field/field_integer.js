@@ -87,6 +87,7 @@ field_integer.prototype._create = function(data) {
 			return value;
 		};
 		t.input.onblur = function(ev) {
+			if (!t) return;
 			var val = t._getEditedData();
 			t.input.value = val === null ? "" : val;
 			t.setData(val);

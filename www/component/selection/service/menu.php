@@ -127,6 +127,15 @@ if ($campaign <> null) {
 	<img src='/static/selection/si/si_white.png'/>
 	Social Investigations
 </a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/applicant/list?type=si_to_be_done'>
+		To be done
+	</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/applicant/list?type=si_to_be_reviewed'>
+		To be reviewed
+	</a>
+	<a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/selection/page/applicant/list?type=si_passers'>
+		Passers
+	</a>
 	
 <div class="application_left_menu_separator"></div>
 

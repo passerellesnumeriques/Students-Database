@@ -32,6 +32,7 @@ $sm->addTable("Applicant")
 	->addBoolean("interview_attendance", true)
 	->addString("interview_comment",1000,0,true,false)
 	->addBoolean("interview_passer",true)
+	->addEnum("si_grade", array("Priority 1 (A+)", "Priority 2 (A)", "Priority 3 (A-)", "Priority 4 (B+)", "Priority 5 (B)", "Failed"), true, false)
 	->addColumnWriteAccess("information_session", "manage_information_session", true)
 	->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities
 	->addInsertAccess("edit_applicants",true)

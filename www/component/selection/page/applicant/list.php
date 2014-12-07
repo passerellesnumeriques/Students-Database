@@ -38,6 +38,17 @@ class page_applicant_list extends SelectionPage {
 			case "interview_passers":
 				echo "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
 				break;
+			case "si_to_be_done":
+				echo "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
+				echo "filters.push({category:'Selection',name:'Social Investigations done',force:true,data:{type:'equals',value:0}});\n";
+				break;
+			case "si_to_be_reviewed":
+				echo "filters.push({category:'Selection',name:'Social Investigations done',force:true,data:{type:'more',value:0}});\n";
+				echo "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['NULL']}});\n";
+				break;
+			case "si_passers":
+				echo "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['Priority 1 (A+)', 'Priority 2 (A)', 'Priority 3 (A-)', 'Priority 4 (B+)', 'Priority 5 (B)']}});\n";
+				break;
 			}
 		}
 		?>
