@@ -7,8 +7,15 @@ class page_exam_eligibility_rule extends SelectionPage {
 		$id = isset($_GET["id"]) ? intval($_GET["id"]) : -1;
 		$parent = isset($_GET["parent"]) ? intval($_GET["parent"]) : null;
 		
-		// TODO lock rule
 		if ($id > 0) {
+			require_once 'component/data_model/DataBaseLock.inc';
+			$locked_by = null;
+			$lock_id = DataBaseLock::lockRow("ExamEligibilityRule_".PNApplication::$instance->selection->getCampaignId(), $id, $locked_by);
+			if ($lock_id == null) {
+				echo "<div class='error_box'><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> $locked_by is already editing this rule.</div>";
+				return;
+			}
+			DataBaseLock::generateScript($lock_id);
 			$rule = SQLQuery::create()->select("ExamEligibilityRule")->whereValue("ExamEligibilityRule","id",$id)->executeSingleRow();
 			$parent = $rule["parent"];
 			$topics = SQLQuery::create()->select("ExamEligibilityRuleTopic")->whereValue("ExamEligibilityRuleTopic","rule",$id)->execute();
