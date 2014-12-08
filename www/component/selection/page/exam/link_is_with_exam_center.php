@@ -25,22 +25,22 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 			->field("id")
 			->field("name")
 			->execute();
+		
 		$q = SQLQuery::create()
 			->select("Applicant")
 			->whereNotNull("Applicant", "exam_center")
 			->whereNotNull("Applicant", "exam_session")
-			->groupBy("Applicant", "exam_center")
+			->groupBy("Applicant", "exam_session")
 			->field("Applicant", "exam_center")
 			->field("Applicant", "information_session")
 			->countOneField("Applicant", "people", "nb_assigned")
 			// get date of session
-			->join("Applicant", "InformationSession", array("information_session"=>"id"))
+			->join("Applicant", "ExamSession", array("exam_session"=>"event"))
 			;
-		PNApplication::$instance->calendar->joinCalendarEvent($q, "InformationSession", "date");
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "ExamSession", "event");
 		$q->field("CalendarEvent", "start", "session_start");
 		$q->field("CalendarEvent", "end", "session_end");
 		$applicants_assigned = $q->execute();
-		// TODO check no results
 		?>
 		<div style='vertical-align:top'>
 			<div class='info_header'>
@@ -79,8 +79,8 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 			$nb_assigned_future = 0;
 			foreach ($applicants_assigned as $app) {
 				if ($app["information_session"] <> $is_list[$i]["is_id"]) continue;
-				if ($app["session_start"] > $now) $nb_assigned_future++;
-				else $nb_assigned_past++;
+				if ($app["session_start"] > $now) $nb_assigned_future += $app["nb_assigned"];
+				else $nb_assigned_past += $app["nb_assigned"];
 			}
 			echo "is_list[$i].nb_applicants_assigned_future = ".$nb_assigned_future.";\n";
 			echo "is_list[$i].nb_applicants_assigned_past = ".$nb_assigned_past.";\n";
@@ -205,7 +205,7 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 			for (var i = 0; i < is_list.length; ++i) 
 				if (is_list[i].id == id)
 					return is_list[i];
-			return;
+			return null;
 		}
 
 		function addCenter(center) {

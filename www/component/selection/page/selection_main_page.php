@@ -27,7 +27,7 @@ class page_selection_main_page extends SelectionPage {
 		$this->onload("loadISStatus();");
 		$this->onload("loadExamCenterStatus();");
 		$this->onload("loadExamResultsStatus();");
-		$this->onload("loadInterviewStatus();");
+		$this->onload("loadInterviewCenterStatus();");
 		?>
 		<div id = "selection_main_page_split" style = 'height:100%; width:100%'>
 				<div style="display:flex;flex-direction:column;">
@@ -51,7 +51,7 @@ class page_selection_main_page extends SelectionPage {
 						<div id='section_status_exam_results' title='Exam Results' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div id='status_exam_results' class='selection_status'></div>
 						</div>
-						<div id='section_status_interview' title='Interviews' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
+						<div id='section_status_interview' title='Interview Centers' collapsable='true' style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div id='status_interview' class='selection_status'></div>
 						</div>
 					</div>
@@ -151,7 +151,7 @@ class page_selection_main_page extends SelectionPage {
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
 				service.html("selection","exam/status_results",null,container);
 			}
-			function loadInterviewStatus() {
+			function loadInterviewCenterStatus() {
 				var container = document.getElementById('status_interview');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
 				service.html("selection","interview/status",null,container);

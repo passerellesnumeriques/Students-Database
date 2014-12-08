@@ -10,7 +10,6 @@ class service_exam_status extends Service {
 	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
-		// TODO sessions without anyone assigned
 		// number of exam centers
 		$nb_centers = SQLQuery::create()->select("ExamCenter")->count("nb_centers")->executeSingleValue();
 
@@ -56,13 +55,14 @@ class service_exam_status extends Service {
 		// overview on applicants
 		echo "<div class='page_section_title2'>Applicants</div>";
 		echo "<div style='padding:0px 5px'>";
-		$nb_applicants_no_exam_center = SQLQuery::create()->select("Applicant")->whereNull("Applicant","exam_center")->count("nb")->executeSingleValue();
-		$nb_applicants_ok = SQLQuery::create()->select("Applicant")->whereNotNull("Applicant","exam_center")->whereNotNull("Applicant", "exam_session")->count("nb")->executeSingleValue();
+		$nb_applicants_no_exam_center = SQLQuery::create()->select("Applicant")->whereNotValue("Applicant","automatic_exclusion_step","Application Form")->whereNull("Applicant","exam_center")->count("nb")->executeSingleValue();
+		$nb_applicants_ok = SQLQuery::create()->select("Applicant")->whereNotValue("Applicant","automatic_exclusion_step","Application Form")->whereNotNull("Applicant","exam_center")->whereNotNull("Applicant", "exam_session")->count("nb")->executeSingleValue();
 		
 		$applicants_no_schedule = SQLQuery::create()
 			->select("Applicant")
 			->whereNotNull("Applicant","exam_center")
 			->whereNull("Applicant", "exam_session")
+			->whereNotValue("Applicant","automatic_exclusion_step","Application Form")
 			->groupBy("Applicant", "exam_center")
 			->countOneField("Applicant", "people", "nb")
 			->join("Applicant", "ExamCenter", array("exam_center"=>"id"))
@@ -85,6 +85,7 @@ class service_exam_status extends Service {
 				postData('/dynamic/selection/page/applicant/list', {
 					title: "Applicants without Exam Center",
 					filters: [
+						{category:"Selection",name:"Excluded",force:true,data:{values:[0]}},
 						{category:"Selection",name:"Exam Center",force:true,data:{values:['NULL']}}
 					]
 				});

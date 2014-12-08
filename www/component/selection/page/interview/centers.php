@@ -10,7 +10,7 @@ class page_interview_centers extends SelectionPage {
 		$this->onload("initInterviewCentersList();");
 		$this->requireJavascript("section.js");
 		$this->onload("sectionFromHTML('interview_status_section');");
-		$this->onload("loadInterviewStatus();");
+		$this->onload("loadInterviewCenterStatus();");
 		
 		$can_create = PNApplication::$instance->user_management->has_right("manage_interview_center",true);
 		?>
@@ -81,7 +81,7 @@ class page_interview_centers extends SelectionPage {
 				});
 			}
 
-			function loadInterviewStatus() {
+			function loadInterviewCenterStatus() {
 				var container = document.getElementById('interview_status');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
 				service.html("selection","interview/status",null,container);
@@ -89,7 +89,7 @@ class page_interview_centers extends SelectionPage {
 
 			function refreshPage() {
 				dl.reloadData();
-				loadInterviewStatus();
+				loadInterviewCenterStatus();
 			}
 		</script>				
 		<?php 
