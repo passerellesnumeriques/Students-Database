@@ -75,20 +75,20 @@ class people extends Component {
 	
 	public function removePeoplesType($peoples_ids, $type) {
 		if (count($peoples_ids) == 0) return;
-		$pi = $this->getPeopleTypePlugin($new_type);
+		$pi = $this->getPeopleTypePlugin($type);
 		if ($pi == null)
 			throw new Exception("Invalid people type ".$type);
 		if (!$pi->canWrite())
 			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
 		// 1-remove peoples who only have this type
-		$remove_ids = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->whereValue("People","types","/$type/")->field("id")->execute();
+		$remove_ids = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->whereValue("People","types","/$type/")->field("id")->executeSingleField();
 		if (count($remove_ids) > 0) {
 			SQLQuery::create()->bypassSecurity()->removeKeys("People", $remove_ids);
 			$peoples_ids = array_diff($peoples_ids, $remove_ids);
 			if (count($peoples_ids) == 0) return;
 		}
 		// 2-only remove type for remaining peoples
-		$peoples = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->field("id")->field("types")->execute();
+		$peoples = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->field("id")->field("types")->executeSingleField();
 		foreach ($peoples as $p) {
 			$types = $this->parseTypes($p["types"]);
 			$pi->remove($p["id"]);

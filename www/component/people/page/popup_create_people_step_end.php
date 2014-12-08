@@ -19,8 +19,8 @@ class page_popup_create_people_step_end extends Page {
 				foreach ($c->getPluginImplementations() as $pi)
 					if ($pi instanceof PeopleCreationStep)
 						array_push($steps, array("plugin"=>$pi, "peoples_ids"=>array()));
-			$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, false, false, false, true);
-			foreach ($peoples as $p) {
+			$list = PNApplication::$instance->people->getPeoples($peoples_ids, false, false, false, true);
+			foreach ($list as $p) {
 				for ($i = 0; $i < count($steps); $i++) {
 					if ($steps[$i]["plugin"]->isApplicable($p))
 						array_push($steps[$i]["peoples_ids"], $p["people_id"]);
