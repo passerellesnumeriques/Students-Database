@@ -23,7 +23,7 @@ class page_si_applicant extends Page {
 		<?php if ($can_edit) {
 			if ($edit) {?>
 				<button class='action' onclick='save();'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
-				<button class='action' onclick='cancelEdit();'><img src='<?php echo theme::$icons_16["no_edit"];?>'/> Cancel modifications</button>
+				<button class='action' onclick='cancelEdit();'><img src='<?php echo theme::$icons_16["no_edit"];?>'/> Cancel modifications / Stop editing</button>
 			<?php } else {?>
 				<button class='action' onclick='edit();'><img src='<?php echo theme::$icons_16["edit"];?>'/> Edit data</button>
 			<?php }
@@ -149,7 +149,7 @@ function multiple_choice_other(container, choices, value, can_edit, onchange) {
 		input.value = "";
 		for (var i = 0; i < values.length; ++i) {
 			if (input.value != "") input.value += ", ";
-			input.value += values[i];
+			input.value += values[i].trim();
 		}
 		input.onchange = changed;
 	} else {
@@ -198,12 +198,13 @@ function houses(section, houses, can_edit) {
 		var t=this;
 		add_house.onclick = function() {
 			var h = {
+				id: -1,
 				house_status: null,
 				house_cost: null,
-				house_status_comment: null,
+				house_comment: null,
 				lot_status: null,
 				lot_cost: null,
-				lot_status_comment: null,
+				lot_comment: null,
 				roof_type: null,
 				roof_condition: null,
 				roof_comment: null,
@@ -219,6 +220,18 @@ function houses(section, houses, can_edit) {
 			t.houses_controls.push(new house(section.content, h, can_edit)); 
 		};
 		section.addToolRight(add_house);
+		this.save = function(ondone) {
+			var locker = lock_screen(null, "Saving Houses Information...");
+			var t=this;
+			service.json("selection","si/save_houses",{houses:this.houses,applicant:<?php echo $people_id;?>},function(res) {
+				unlock_screen(locker);
+				if (res) {
+					for (var i = 0; i < t.houses.length; ++i)
+						t.houses[i].id = res[i];
+				}
+				ondone();
+			});
+		};
 	}
 }
 function house(container, house, can_edit) {
@@ -269,11 +282,11 @@ function house(container, house, can_edit) {
 		s += "Comment: ";
 		td.appendChild(document.createTextNode(s));
 	}
-	this.house_status_comment = document.createElement("TEXTAREA");
-	this.house_status_comment.value = house.house_status_comment;
-	this.house_status_comment.disabled = can_edit ? "" : "disabled";
-	td.appendChild(this.house_status_comment);
-	this.house_status_comment.onchange = function() { house.house_status_comment = this.value; };
+	this.house_comment = document.createElement("TEXTAREA");
+	this.house_comment.value = house.house_comment;
+	this.house_comment.disabled = can_edit ? "" : "disabled";
+	td.appendChild(this.house_comment);
+	this.house_comment.onchange = function() { house.house_comment = this.value; };
 	// lot status
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
@@ -302,11 +315,11 @@ function house(container, house, can_edit) {
 		s += "Comment: ";
 		td.appendChild(document.createTextNode(s));
 	}
-	this.lot_status_comment = document.createElement("TEXTAREA");
-	this.lot_status_comment.value = house.lot_status_comment;
-	this.lot_status_comment.disabled = can_edit ? "" : "disabled";
-	td.appendChild(this.lot_status_comment);
-	this.lot_status_comment.onchange = function() { house.lot_status_comment = this.value; };
+	this.lot_comment = document.createElement("TEXTAREA");
+	this.lot_comment.value = house.lot_comment;
+	this.lot_comment.disabled = can_edit ? "" : "disabled";
+	td.appendChild(this.lot_comment);
+	this.lot_comment.onchange = function() { house.lot_comment = this.value; };
 	// roof
 	this.content.appendChild(tr = document.createElement("TR"));
 	tr.appendChild(td = document.createElement("TH"));
@@ -439,7 +452,7 @@ function house(container, house, can_edit) {
 	this.general_comment.disabled = can_edit ? "" : "disabled";
 	this.general_comment.onchange = function() { house.general_comment = this.value; };
 }
-new houses(section_houses, [<?php
+var applicant_houses = new houses(section_houses, [<?php
 $first = true;
 foreach ($houses as $house) {
 	if ($first) $first = false; else echo ",";
@@ -454,7 +467,10 @@ function cancelEdit() {
 	location.href = "?people=<?php echo $people_id;?>&edit=false";
 }
 function save() {
-	alert("TODO");
+	fam.save(function() {
+		applicant_houses.save(function() {
+		});
+	});
 }
 </script>
 <?php 

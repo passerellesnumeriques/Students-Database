@@ -16,7 +16,7 @@ $sm->addTable("SIHouse")
 	->addForeignKey("applicant","People", true, false, true)
 	->addEnum("house_status", array("Owned", "Rented", "Lended"), true, false)
 	->addInteger("house_cost", 32, 0, null, true, false)
-	->addString("house_status_comment",200,0,true,false)
+	->addString("house_comment",200,0,true,false)
 	->addEnum("lot_status", array("Owned", "Rented", "Lended"), true, false)
 	->addInteger("lot_cost", 32, 0, null, true, false)
 	->addString("lot_comment",200,0,true,false)
@@ -31,6 +31,9 @@ $sm->addTable("SIHouse")
 	->addString("floor_comment",200,0,true,false)
 	->addString("general_comment",500,0,true,false)
 	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
 	;
 	
 
