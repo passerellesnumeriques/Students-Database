@@ -40,7 +40,7 @@ class service_download_update extends Service {
 				die($e->getMessage());
 			}
 		}
-		switch ($input["step"]) {
+		switch (@$input["step"]) {
 			case "check_if_done":
 				if (!file_exists("data/updates/Students_Management_Software_".$input["version"].".zip") ||
 					!file_exists("data/updates/Students_Management_Software_".$input["version"].".zip.md5")) {
