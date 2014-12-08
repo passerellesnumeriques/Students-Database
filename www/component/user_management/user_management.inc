@@ -599,6 +599,17 @@ class user_management extends Component {
 		SQLQuery::commitTransaction();
 	}
 	
+	public function addRolesToPeople($people_id, $roles_names) {
+		$user_id = SQLQuery::create()->bypassSecurity()->select("UserPeople")->whereValue("UserPeople","people",$people_id)->field("user")->executeSingleValue();
+		if ($user_id == null) return; // not a user
+		$current_roles = SQLQuery::create()->bypassSecurity()->select("UserRole")->whereValue("UserRole", "user", $user_id)->field("UserRole","role")->executeSingleField();
+		$add_roles = $this->getRolesIdsFromNames($roles_names, true);
+		$to_add = array();
+		foreach ($add_roles as $r) if (!in_array($r, $current_roles)) array_push($to_add, array("role"=>$r,"user"=>$user_id));
+		if (count($to_add) > 0)
+			SQLQuery::create()->bypassSecurity()->insertMultiple("UserRole", $to_add);
+	}
+	
 	public function getRolesIdsFromNames($roles_names, $bypass_security = false) {
 		return SQLQuery::create()->bypassSecurity($bypass_security)
 			->select("Role")
