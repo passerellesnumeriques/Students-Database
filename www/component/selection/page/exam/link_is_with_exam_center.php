@@ -267,7 +267,14 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 
 		var popup = window.parent.get_popup_window_from_frame(window);
 		popup.addFrameSaveButton(function() {
-			// TODO
+			var locker = lock_screen(null,"Saving links...");
+			service.json("selection","exam/link",{add:added_links,remove:removed_links},function(res) {
+				unlock_screen(locker);
+				if (res) {
+					window.pnapplication.dataSaved("LinkedISWithExamCenters");
+					<?php if (isset($_GET["onsaved"])) echo "window.frameElement.".$_GET["onsaved"]."();"?>
+				}
+			});
 		});
 		popup.addCloseButton();
 		</script>
