@@ -22,10 +22,4 @@ return array(
 		new BooleanRight("manage_staff_status","Edit staff status (who can do interviews, investigations...)",array(true=>array("can_access_selection_data"=>true,"consult_staff_list"=>true))),
 	)),
 );
-
-
-//TODO update the rights for the calendar in selection.inc#createCampaign
-
-
-
 ?>

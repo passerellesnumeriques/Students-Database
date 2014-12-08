@@ -30,7 +30,7 @@ class page_exam_subject_extract extends SelectionPage {
 			->whereValue("ExamSubjectPart", "exam_subject", $subject_id)
 			->execute();
 		
-		$edit = true; // TODO check if possible (no grade yet...)
+		$edit = true;
 		if (isset($_GET["readonly"]) && $id > 0) $edit = false;
 		require_once("component/data_model/DataBaseLock.inc");
 		$locked_by = null;

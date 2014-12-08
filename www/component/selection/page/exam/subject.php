@@ -5,7 +5,6 @@ class page_exam_subject extends SelectionPage {
 
 	public function executeSelectionPage(){
 		$id = isset($_GET["id"]) ? intval($_GET["id"]) : -1;
-		$campaign_id = isset($_GET["campaign_id"]) ? intval($_GET["campaign_id"]) : null;
 		$readonly = isset($_GET["readonly"]) ? $_GET["readonly"] : false;
 		
 		$can_edit = PNApplication::$instance->selection->canEditExamSubjects();

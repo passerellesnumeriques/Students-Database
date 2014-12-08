@@ -13,8 +13,6 @@ class page_selection_main_page extends SelectionPage {
 		$this->addJavascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("new splitter_vertical('selection_main_page_split',0.35);");
 		
-		//TODO set rights to calendar table? bypass_security required above...
-		
 		$this->addJavascript("/static/widgets/section/section.js");
 		$this->addJavascript("/static/news/news.js");
 		

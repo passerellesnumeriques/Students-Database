@@ -136,7 +136,6 @@ class page_exam_subjects extends SelectionPage {
 				this.actions_container.appendChild(remove_button);
 				remove_button.className = "action red";
 				remove_button.innerHTML = "<img src='"+theme.icons_16.remove_white+"'/> Remove this subject";
-				// TODO disable remove button if already some grades, or eligibility rules associated to it
 				remove_button.onclick = function() {
 					confirm_dialog("Are you sure you want to remove this exam ?",
 						function(answer){

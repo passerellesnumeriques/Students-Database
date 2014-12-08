@@ -246,7 +246,6 @@ class page_interview_center_profile extends SelectionPage {
 		center_popup.removeButtons();
 		<?php if ($editable && $id <> null) {?>
 		center_popup.addIconTextButton(theme.icons_16.remove, "Remove this interview center", "remove", function() {
-			// TODO we should not remove it if some applicants are still assigned to it => we may need to save the center before to remove it, in order to unassign everyone
 			confirm_dialog("Are you sure you want to remove this interview center ?",function(res){
 				if(res){
 					center_popup.freeze();

@@ -545,7 +545,8 @@ class selection extends Component {
 		
 	public function canEditInterviewCriteria() {
 		if (!PNApplication::$instance->user_management->has_right("manage_interview_criteria")) return false;
-		// TODO check if results have been already entered
+		$applicant_result = SQLQuery::create()->bypassSecurity()->select("ApplicantInterviewCriterionGrade")->limit(0,1)->executeSingleRow();
+		if ($applicant_result <> null) return false; // result already set for at least one applicant
 		return true;
 	}
 		
@@ -556,10 +557,24 @@ class selection extends Component {
 	 * @return boolean true if done
 	 */
 	public function removeSubject($exam_id){
-		$parts = null;
 		//check the rights
 		$can_remove = $this->canEditExamSubjects();
 		if($can_remove){
+			// check no eligibility rule are using it
+			$rules = SQLQuery::create()->select("ExamEligibilityRuleTopic")->whereValue("ExamEligibilityRuleTopic","subject", $exam_id)->execute();
+			if (count($rules) > 0) {
+				PNApplication::error("You cannot remove this subject because it is used by an eligibility rule. Please remove the rule first.");
+				return false;
+			}
+			$parts_ids = SQLQuery::create()->select("ExamSubjectPart")->whereValue("ExamSubjectPart","exam_subject",$exam_id)->field("id")->executeSingleField();
+			$extracts_ids = SQLQuery::create()->select("ExamSubjectExtractParts")->whereIn("ExamSubjectExtractParts","part",$parts_ids)->field("extract")->distinct()->executeSingleField();
+			if (count($extracts_ids) > 0) {
+				$rules = SQLQuery::create()->select("ExamEligibilityRuleTopic")->whereValue("ExamEligibilityRuleTopic","extract", $extracts_ids)->execute();
+				if (count($rules) > 0) {
+					PNApplication::error("You cannot remove this subject because it is used by an eligibility rule (using an extract of it). Please remove the rule first.");
+					return false;
+				}
+			}
 			try{
 				//Perform the remove
 				SQLQuery::create()->bypassSecurity()->removeKey("ExamSubject",$exam_id);

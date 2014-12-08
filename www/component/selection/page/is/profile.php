@@ -5,7 +5,6 @@ class page_is_profile extends SelectionPage {
 	public function getRequiredRights() { return array("see_information_session"); }
 	
 	public function executeSelectionPage(){
-		// TODO assign people/staff to do this information session
 		$id = @$_GET["id"];
 		$onsaved = @$_GET["onsaved"];
 		if ($id <> null && $id <= 0) $id = null;
@@ -202,7 +201,6 @@ class page_is_profile extends SelectionPage {
 					}
 					if (res.date) window.is_schedule.setEventId(res.date);
 					window.pnapplication.cancelDataUnsaved(); // everything is saved
-					// TODO add remove button ?
 					is_popup.unfreeze();
 					<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
 				}
