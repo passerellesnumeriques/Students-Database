@@ -83,7 +83,7 @@ function init_users_list() {
 							window.top.status_manager.remove_status(status);
 							list.grid.endLoading();
 							if (result)
-								list.reload_data();
+								list.reloadData();
 						});
 					});
 					p.show();
@@ -126,7 +126,7 @@ function init_users_list() {
 							window.top.status_manager.remove_status(status);
 							list.grid.endLoading();
 							if (result)
-								list.reload_data();
+								list.reloadData();
 						});
 					});
 					p.show();

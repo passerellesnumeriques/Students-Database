@@ -67,7 +67,10 @@ class people extends Component {
 			throw new Exception("Invalid people type ".$new_type);
 		if (!$pi->canWrite())
 			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
-		SQLQuery::create()->updateByKey("People", $people_id, array("types"=>$people["types"]."/".$new_type."/"));
+		$people["types"] .= "/$new_type/";
+		SQLQuery::create()->updateByKey("People", $people_id, array("types"=>$people["types"]));
+		$roles = $pi->getBuiltinDefaultUserRoles($people);
+		if (count($roles) > 0) PNApplication::$instance->user_management->addRolesToPeople($people_id, $roles);
 	}
 	
 	public function removePeoplesType($peoples_ids, $type) {

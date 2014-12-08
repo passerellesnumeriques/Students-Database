@@ -17,10 +17,11 @@ class service_save_students_evaluations_grades extends Service {
 		if (!PNApplication::$instance->user_management->has_right("edit_students_grades")) {
 			$students_ids = array();
 			foreach ($input["students"] as $s) array_push($students_ids, $s["people"]);
-			if (!PNApplication::$instance->teaching->isAssignedToSubjectAndStudents(PNApplication::$instance->user_management->people_id, $input["subject_id"], $students_ids)) {
-				PNApplication::error("Access denied");
-				return;
-			}
+			if (count($students_ids) > 0)
+				if (!PNApplication::$instance->teaching->isAssignedToSubjectAndStudents(PNApplication::$instance->user_management->people_id, $input["subject_id"], $students_ids)) {
+					PNApplication::error("Access denied");
+					return;
+				}
 		}
 		set_time_limit(120);
 		SQLQuery::startTransaction();
