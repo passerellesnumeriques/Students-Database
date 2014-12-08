@@ -509,7 +509,8 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		td.innerHTML = "Living<br/>w/family";
 		td.style.fontSize = "9pt";
 		tr.appendChild(td = document.createElement("TH"));
-		td.innerHTML = "Revenue Info.";
+		td.innerHTML = "Revenue<br/>Info.";
+		td.style.fontSize = "9pt";
 		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Comment";
 		tr.appendChild(td = document.createElement("TH"));
