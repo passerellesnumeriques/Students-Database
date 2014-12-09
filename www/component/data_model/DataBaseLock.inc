@@ -4,6 +4,8 @@
  */
 class DataBaseLock {
 	
+	private static $ROW_KEY_FOR_INSERT = -1;
+	
 	private static function normalizeKey($row_key) {
 		if ($row_key === null) return null;
 		if (is_integer($row_key)) return $row_key;
@@ -23,6 +25,10 @@ class DataBaseLock {
 	 */
 	public static function lockTable($table, &$locked_by, $bypass_security = false) {
 		return DataBaseLock::lock($table, null, null, $locked_by, $bypass_security);
+	}
+
+	public static function lockTableForInsert($table, &$locked_by, $bypass_security = false) {
+		return DataBaseLock::lock($table, self::$ROW_KEY_FOR_INSERT, null, $locked_by, $bypass_security);
 	}
 	
 	/** lock a row in a table, based on its primary key
@@ -114,6 +120,9 @@ class DataBaseLock {
 				// TODO can we accept that we lock a table or column if we don't have full access ?
 				//if (!($t->canModifyAny() || $t->canRemoveAny()))
 				//	throw new Exception("Access denied: you cannot lock table '".$t->getName()."' because you have only partial access to it.");
+			} else if ($row_key == self::$ROW_KEY_FOR_INSERT) {
+				if (!$t->mayInsert())
+					throw new Exception("Access denied: you are not allowed to add new data in table '".$t->getName()."'");
 			} else if (!($t->canModifyEverything() || $t->canRemoveAny())) {
 				$ok = false;
 				if ($t->mayModify()) {
@@ -377,6 +386,8 @@ class DataBaseLock {
 						return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
 					return intval($row["id"]); // same user: ok
 				}
+				if ($row["row_key"] == self::$ROW_KEY_FOR_INSERT)
+					continue; // table locked for insert, we want to lock a column: this is ok
 				if ($row["row_key"] <> null) {
 					// a row is locked: there will be a conflict if we lock a column
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
@@ -396,21 +407,34 @@ class DataBaseLock {
 				$row_key = self::normalizeKey($row_key);
 				if ($column == null) {
 					// a row is requested
-					if ($row["column"] <> null) {
-						// there is a column locked
-						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-							$row["locker_username"] <> PNApplication::$instance->user_management->username)
-							return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-						continue; // same user
+					if ($row_key == self::$ROW_KEY_FOR_INSERT) {
+						// we request a lock for insert
+						if ($row["row_key"] == self::$ROW_KEY_FOR_INSERT || ($row["row_key"] == null && $row["column"] == null)) {
+							// table locked for insert, or fully locked
+							if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
+								$row["locker_username"] <> PNApplication::$instance->user_management->username)
+									return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
+							return intval($row["id"]); // same user
+						}
+						continue; // something else is locked, this is ok
 					}
+					if ($row["row_key"] == self::$ROW_KEY_FOR_INSERT)
+						continue; // we request a row, insert are locked: ok
 					if ($row["row_key"] <> null) {
 						if ($row["row_key"] <> json_encode($row_key))
 							// not the same row
 							continue;
 						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 							$row["locker_username"] <> PNApplication::$instance->user_management->username)
+								return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
+							return intval($row["id"]); // same user
+					}
+					if ($row["column"] <> null) {
+						// there is a column locked
+						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
+							$row["locker_username"] <> PNApplication::$instance->user_management->username)
 							return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-						return intval($row["id"]); // same user
+						continue; // same user
 					}
 					// the table is locked
 					if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
@@ -419,18 +443,25 @@ class DataBaseLock {
 					return intval($row["id"]); // same user
 				} else {
 					// a cell is requested
+					if ($row["row_key"] == self::$ROW_KEY_FOR_INSERT)
+						continue; // insert locked, but we request only a cell: ok
 					if ($row["column"] <> null) {
 						if ($row["column"] <> $column)
 							continue; // not on the same column
-						// same column is locked
+						if ($row["row_key"] == null) {
+							// same column is locked
+							if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
+								$row["locker_username"] <> PNApplication::$instance->user_management->username)
+								return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
+							return intval($row["id"]); // full column already locked by same user
+						}
+						if ($row["row_key"] <> json_encode($row_key))
+							continue; // different cell
+						// same cell is locked
 						if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 							$row["locker_username"] <> PNApplication::$instance->user_management->username)
 							return $row["locker_domain"]."\\".$row["locker_username"]; // not the current user
-						if ($row["row_key"] == null)
-							return intval($row["id"]); // full column already locked by same user
-						if ($row["row_key"] == json_encode($row_key))
-							return intval($row["id"]); // same cell locked by same user
-						continue; // different cell
+						return intval($row["id"]); // same cell locked by same user
 					} else {
 						if ($row["row_key"] <> null) {
 							// a row is locked
@@ -464,21 +495,23 @@ class DataBaseLock {
 			}
 			$sql .= ")";
 		}
+		$sql .= " AND `row_key`!='".self::$ROW_KEY_FOR_INSERT."'"; // ignore locks for insert
 		$res = $db->execute($sql);
 		while (($row = $db->nextRow($res)) <> null) {
 			if ($row["locker_domain"] == PNApplication::$instance->user_management->domain ||
 				$row["locker_username"] == PNApplication::$instance->user_management->username)
 				continue; // same user
-			if ($row["column"] <> null) {
-				// there is a column locked
-				return $row["locker_domain"]."\\".$row["locker_username"];
-			}
 			if ($row["row_key"] <> null) {
 				foreach ($row_keys as $row_key) {
 					$row_key = self::normalizeKey($row_key);
 					if ($row["row_key"] <> json_encode($row_key)) continue; // not the same row
 					return $row["locker_domain"]."\\".$row["locker_username"];
 				}
+				continue;
+			}
+			if ($row["column"] <> null) {
+				// there is a column locked
+				return $row["locker_domain"]."\\".$row["locker_username"];
 			}
 			// the table is locked
 			return $row["locker_domain"]."\\".$row["locker_username"]; // full table lockes
@@ -495,17 +528,15 @@ class DataBaseLock {
 	public static function isLockedByUser($table, $row_key, $column) {
 		$row_key = self::normalizeKey($row_key);
 		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escapeString($table)."'");
+		$res = $db->execute("SELECT * FROM DataLocks WHERE `table`='".$db->escapeString($table)."' AND `locker_domain`='".SQLQuery::escape(PNApplication::$instance->user_management->domain)."' AND `locker_username`='".SQLQuery::escape(PNApplication::$instance->user_management->username)."'");
 		while (($row = $db->nextRow($res)) <> null) {
-			if ($row["table"] <> $table) continue; // not the same table
-			if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
-				$row["locker_username"] <> PNApplication::$instance->user_management->username) continue;
 			if ($row["row_key"] == null) {
 				if ($row["column"] == null)
 					return true; // full table is locked
 				else {
+					// a column is locked
 					if ($column == $row["column"])
-						return true; // full column is locked
+						return true; // same column is locked
 				}
 			} else {
 				if (json_encode($row_key) == $row["row_key"]) {

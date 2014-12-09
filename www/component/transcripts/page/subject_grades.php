@@ -60,10 +60,18 @@ class page_subject_grades extends Page {
 						</div>
 						<ul>
 						<?php 
+						$url = "/dynamic/transcripts/page/subject_grades?";
+						$first = true;
+						foreach ($_GET as $name=>$value) {
+							if ($first) $first = false; else $url .= "&";
+							$url .= urlencode($name)."=".urlencode($value);
+						}
+						if (!$first) $url .= "&";
+						$url .= "subject=";
 						if ($period_id <> null)
 							foreach ($subjects as $s) {
 								echo "<li>";
-								echo "<a class='black_link' href='/dynamic/transcripts/page/subject_grades?subject=".$s["id"]."'>";
+								echo "<a class='black_link' href='$url".$s["id"]."'>";
 								echo toHTML($s["code"]." - ".$s["name"]);
 								echo "</a>";
 								echo "</li>";
@@ -77,7 +85,7 @@ class page_subject_grades extends Page {
 								foreach ($subjects as $s) {
 									if ($s["period"] <> $period["id"]) continue;
 									echo "<li>";
-									echo "<a class='black_link' href='/dynamic/transcripts/page/subject_grades?subject=".$s["id"]."'>";
+									echo "<a class='black_link' href='$url".$s["id"]."'>";
 									echo toHTML($s["code"]." - ".$s["name"]);
 									echo "</a>";
 									echo "</li>";
