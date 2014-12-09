@@ -53,6 +53,8 @@ class DevRequest {
 	public $url;
 	public $sql_queries = array();
 	public $start_time, $end_time = -1;
+	public $session_load_time = -1;
+	public $process_time = -1;
 	
 }
 ?>

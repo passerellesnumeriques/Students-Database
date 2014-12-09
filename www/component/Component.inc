@@ -98,8 +98,14 @@ abstract class Component {
 			return true;
 		});
 		// generate the page
+#DEV
+		$process_start = microtime(true);
+#END
 		$page->generate($this, $path);
 		restore_error_handler();
+#DEV
+		return microtime(true) - $process_start;
+#END
 	}
 
 	/** @var string[] list of services which can be accessed without being authenticated */
@@ -206,6 +212,10 @@ abstract class Component {
 			return;
 		}
 	
+#DEV
+		$process_start = microtime(true);
+#END
+		
 		// execute the service
 		if ($output_format == "application/json") {
 			$done = new ServiceDone();
@@ -230,6 +240,9 @@ abstract class Component {
 		} else {
 			$service->execute($this, $input);
 		}
+#DEV
+		return microtime(true) - $process_start;
+#END
 	}
 
 #DEV

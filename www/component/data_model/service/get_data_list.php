@@ -498,7 +498,7 @@ class service_get_data_list extends Service {
 			$row_number = 0;
 			foreach ($res as $row) {
 				if (($row_number % 25) == 0 && isset($input["progress_id"]))
-					PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 25+floor($row_number*70/$nb_rows));
+					PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 25+floor($row_number*74/$nb_rows));
 				$row_number++;
 				set_time_limit(30);
 				$col_index = 0;
@@ -532,7 +532,7 @@ class service_get_data_list extends Service {
 			set_time_limit(60);
 			// initialize writer according to requested format
 			if (isset($input["progress_id"]))
-				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 95);
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 99);
 			$format = $input["export"];
 			if ($format == 'excel2007') {
 				header("Content-Disposition: attachment; filename=\"list.xlsx\"");
