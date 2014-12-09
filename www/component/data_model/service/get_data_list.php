@@ -420,6 +420,8 @@ class service_get_data_list extends Service {
 			}
 			echo "]";
 			echo "}";
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], "done");
 		} else {
 			/* -- export -- */
 			// create excel
@@ -547,12 +549,15 @@ class service_get_data_list extends Service {
 				PHPExcel_Settings::setPdfRenderer(PHPExcel_Settings::PDF_RENDERER_MPDF, "component/lib_mpdf/MPDF");
 				$writer = new PHPExcel_Writer_PDF($excel);
 			}
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 100);
+				
 			// write to output
 			$writer->save('php://output');
+			
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], "done");
 		}
-		
-		if (isset($input["progress_id"]))
-			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], "done");
 	}
 }
 

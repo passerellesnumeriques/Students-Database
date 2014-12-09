@@ -771,18 +771,20 @@ class JoiningTableDataDisplay extends DataDisplay {
 		$foreign_table = \DataModel::get()->getTable($foreign_table);
 		$sub_models = $path->sub_model == null ? null : array($path->table->getModel()->getParentTable()=>$path->sub_model);
 		
-		$sql_aliases["data"] = $original_query->generateFieldAlias();
+		$data_alias = $sql_aliases["data"] = $original_query->generateFieldAlias();
+		$key_alias = $sql_aliases["key"];
 		
 		$keys = array();
 		$rows_keys = array();
 		for ($i = count($rows)-1; $i >= 0; $i--) {
-			$key = $rows[$i][$sql_aliases["key"]];
-			if (!in_array($key, $keys))
-				array_push($keys, $key);
+			$key = $rows[$i][$key_alias];
 			$data = array();
-			if (!isset($rows_keys[$key])) $rows_keys[$key] = array(&$data);
-			else array_push($rows_keys[$key], $data);
-			$rows[$i][$sql_aliases["data"]] = &$data;
+			if (!isset($rows_keys[$key])) {
+				array_push($keys, $key);
+				$rows_keys[$key] = array(&$data);
+			} else
+				array_push($rows_keys[$key], $data);
+			$rows[$i][$data_alias] = &$data;
 			unset($data);
 		}
 		

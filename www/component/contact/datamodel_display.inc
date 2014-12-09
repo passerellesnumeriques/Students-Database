@@ -63,43 +63,50 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$table_name = $this->joining_key_name == "people" ? "PeopleContact" : "OrganizationContact";
 
+		$data_alias = $sql_aliases["data"] = $original_query->generateFieldAlias();
+		$key_alias = $sql_aliases["key"];
+		
 		$keys = array();
-		foreach ($rows as $row)
-			if (!in_array($row[$sql_aliases["key"]], $keys))
-			array_push($keys, $row[$sql_aliases["key"]]);
-
-		if (count($keys) == 0) {
-			$res = array();
-			$q = null;
-		} else {
-			$q = \SQLQuery::create()
-				->select($table_name)
-				->join($table_name, "Contact", array("contact" => "id"), "JOIN_ALIAS")
-				->field($table_name, $this->joining_key_name, "JOIN_KEY")
-				->whereIn($table_name, $this->joining_key_name, $keys)
-				->whereValue("JOIN_ALIAS", "type", $this->type)
-				;
-			require_once("ContactJSON.inc");
-			ContactJSON::ContactSQL($q);
-			$res = $q->execute();
+		$rows_keys = array();
+		for ($i = count($rows)-1; $i >= 0; $i--) {
+			$key = $rows[$i][$key_alias];
+			if (!isset($rows_keys[$key])) {
+				array_push($keys, $key);
+				$rows_keys[$key] = array(&$rows[$i]);
+			} else
+				array_push($rows_keys[$key], $rows[$i]);
 		}
 
-		$sql_aliases["data"] = $original_query->generateFieldAlias();
-		for ($i = 0; $i < count($rows); $i++) {
-			$key = $rows[$i][$sql_aliases["key"]];
+		if (count($keys) == 0) return array();
+
+		$q = \SQLQuery::create()
+			->select($table_name)
+			->join($table_name, "Contact", array("contact" => "id"), "JOIN_ALIAS")
+			->field($table_name, $this->joining_key_name, "JOIN_KEY")
+			->whereIn($table_name, $this->joining_key_name, $keys)
+			->whereValue("JOIN_ALIAS", "type", $this->type)
+			->orderBy($table_name, $this->joining_key_name, true)
+			;
+		require_once("ContactJSON.inc");
+		ContactJSON::ContactSQL($q);
+		$res = $q->execute();
+
+		$res_index = 0;
+		$nb = count($res);
+		foreach ($keys as $key) {
 			$values = "[";
 			$first = true;
-			foreach ($res as $r) {
-				if ($r["JOIN_KEY"] == $key) {
-					if ($first) $first = false; else $values .= ",";
-					$values .= ContactJSON::Contact($r);
-				}
+			while ($res_index < $nb && $res[$res_index]["JOIN_KEY"] == $key) {
+				if ($first) $first = false; else $values .= ",";
+				$values .= ContactJSON::Contact($res[$res_index]);
+				$res_index++;
 			}
 			$values .= "]";
 			require_once("component/Service.inc");
-			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".$rows[$i][$sql_aliases["key"]].",contacts:".$values."}"));
+			$val = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".$key.",contacts:".$values."}"));
+			for ($i = count($rows_keys[$key])-1; $i >= 0; $i--)
+				$rows_keys[$key][$i][$data_alias] = $val;
 		}
-		if ($q == null) return array();
 		return array(array($q,$res));
 	}
 
@@ -172,43 +179,53 @@ class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
 		$table_name = $this->joining_key_name == "people" ? "PeopleAddress" : "OrganizationAddress";
 
+		$data_alias = $sql_aliases["data"] = $original_query->generateFieldAlias();
+		$key_alias = $sql_aliases["key"];
+		
 		$keys = array();
-		foreach ($rows as $row)
-			if (!in_array($row[$sql_aliases["key"]], $keys))
-			array_push($keys, $row[$sql_aliases["key"]]);
-
-		if (count($keys) == 0) {
-			$res = array();
-			$texts = array();
-			$q = null;
-		} else {
-			$q = \SQLQuery::create()
-				->select($table_name)
-				->join($table_name, "PostalAddress", array("address" => "id"), "JOIN_ALIAS")
-				->field($table_name, $this->joining_key_name, "JOIN_KEY")
-				->whereIn($table_name, $this->joining_key_name, $keys)
-				;
-			require_once("component/contact/ContactJSON.inc");
-			ContactJSON::PostalAddressSQL($q);
-			$res = $q->execute();
-			$texts = GeographyJSON::prepareGeographicAreasTexts($res);
+		$rows_keys = array();
+		for ($i = count($rows)-1; $i >= 0; $i--) {
+			$key = $rows[$i][$key_alias];
+			if (!isset($rows_keys[$key])) {
+				array_push($keys, $key);
+				$rows_keys[$key] = array(&$rows[$i]);
+			} else
+				array_push($rows_keys[$key], $rows[$i]);
 		}
+		sort($keys);
 
-		$sql_aliases["data"] = $original_query->generateFieldAlias();
-		for ($i = 0; $i < count($rows); $i++) {
-			$key = $rows[$i][$sql_aliases["key"]];
+		if (count($keys) == 0)
+			return array();
+		
+		$q = \SQLQuery::create()
+			->select($table_name)
+			->join($table_name, "PostalAddress", array("address" => "id"), "JOIN_ALIAS")
+			->field($table_name, $this->joining_key_name, "JOIN_KEY")
+			->whereIn($table_name, $this->joining_key_name, $keys)
+			->orderBy($table_name, $this->joining_key_name, true)
+			;
+		require_once("component/contact/ContactJSON.inc");
+		ContactJSON::PostalAddressSQL($q);
+		$res = $q->execute();
+		$texts = GeographyJSON::prepareGeographicAreasTexts($res);
+		
+		$res_index = 0;
+		$nb = count($res);
+		foreach ($keys as $key) {
 			$match = array();
 			$match_texts = array();
-			for ($j = 0; $j < count($res); ++$j) {
-				if ($res[$j]["JOIN_KEY"] <> $key) continue; 
-				array_push($match, $res[$j]);
-				array_push($match_texts, $texts[$j]);
+			while ($res_index < $nb && $res[$res_index]["JOIN_KEY"] == $key) {
+				array_push($match, $res[$res_index]);
+				array_push($match_texts, $texts[$res_index]);
+				$res_index++;
 			}
 			$values = ContactJSON::PostalAddresses($match, $match_texts);
 			require_once("component/Service.inc");
-			$rows[$i][$sql_aliases["data"]] = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".json_encode($rows[$i][$sql_aliases["key"]]).",addresses:".$values."}"));
+			$val = json_decode(json_normalize("{type:".json_encode($this->joining_key_name).",type_id:".json_encode($key).",addresses:".$values."}"));
+			$key_rows = &$rows_keys[$key];
+			for ($i = count($key_rows)-1; $i >= 0; $i--)
+				$key_rows[$i][$data_alias] = $val;
 		}
-		if ($q == null) return array();
 		return array(array($q,$res));
 	}
 	
