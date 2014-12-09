@@ -328,6 +328,7 @@ foreach ($indexes_added_sm as $parent_table=>$list) {
 			}
 		}
 	}
+	fwrite($f,"}\n");
 }
 fwrite($f,"}\n"); // foreach domain
 fwrite($f,"?>");
