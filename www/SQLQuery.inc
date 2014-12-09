@@ -1283,7 +1283,7 @@ class SQLQuery {
 				}
 			}
 	
-			// lock table
+			// lock row
 			$locked = false;
 			require_once("component/data_model/DataBaseLock.inc");
 			if ($lock_id <> null) {
@@ -1461,7 +1461,7 @@ class SQLQuery {
 				}
 			}
 		
-			// lock table
+			// lock rows
 			$locked = false;
 			require_once("component/data_model/DataBaseLock.inc");
 			if ($lock_id <> null) {
@@ -1485,11 +1485,12 @@ class SQLQuery {
 				$locker = null;
 				$keys = array();
 				foreach ($keys_fields_values as $k) foreach ($k[0] as $key) array_push($keys, $key);
-				if (count($keys) == 1)
+				if (count($keys) == 1) {
 					$lock_id = DataBaseLock::lockRow($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
-				else
-					$lock_id = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, $this->bypass_security);
-				if ($lock_id == null)
+					$locks_ids = $lock_id <> null ? array($lock_id) : null;
+				} else
+					$locks_ids = DataBaseLock::lockRows($t->getSQLName($this->sub_models), $keys, $locker, $this->bypass_security);
+				if ($locks_ids == null)
 					throw new Exception("This data is already locked by ".$locker);
 				$locked = true;
 			}
@@ -1619,7 +1620,7 @@ class SQLQuery {
 				}
 			}
 			if ($locked) {
-				$error = DataBaseLock::unlock($lock_id);
+				$error = DataBaseLock::unlockMultiple($locks_ids);
 				if ($error <> null) throw new Exception($error);
 			}
 			if (!$in_transaction) SQLQuery::commitTransaction();
@@ -1693,7 +1694,7 @@ class SQLQuery {
 				}
 			}
 		
-			// lock table
+			// lock rows
 			$locked = false;
 			require_once("component/data_model/DataBaseLock.inc");
 			if ($lock_id <> null) {
@@ -1702,16 +1703,18 @@ class SQLQuery {
 				foreach ($fields_values as $field=>$value)
 					if (!in_array($field, $columns)) array_push($columns, $field);
 				if (count($columns) == 1) $column = $columns[0];
+				$key = count($keys) == 1 ? $keys[0] : null;
 				$err = DataBaseLock::checkLock($lock_id, $t->getSQLName($this->sub_models), $key, $column);
-				if ($err <> null)
-					throw new Exception("Access denied: invalid lock (".$err.")");
-			} else {
+				if ($err <> null) $lock_id = null;
+			}
+			if ($lock_id == null) {
 				$locker = null;
-				if (count($keys) == 1)
+				if (count($keys) == 1) {
 					$lock_id = DataBaseLock::lockRow($t->getSQLName($this->sub_models), $keys[0], $locker, $this->bypass_security);
-				else
-					$lock_id = DataBaseLock::lockTable($t->getSQLName($this->sub_models), $locker, $this->bypass_security);
-				if ($lock_id == null)
+					$locks_ids = $lock_id <> null ? array($lock_id) : null;
+				} else
+					$locks_ids = DataBaseLock::lockRows($t->getSQLName($this->sub_models), $keys, $locker, $this->bypass_security);
+				if ($locks_ids == null)
 					throw new Exception("This data is already locked by ".$locker);
 				$locked = true;
 			}
@@ -1770,7 +1773,7 @@ class SQLQuery {
 					$t->fireUpdate($fields_values, $k, $sub_model_instance);
 			}
 			if ($locked) {
-				$error = DataBaseLock::unlock($lock_id);
+				$error = DataBaseLock::unlockMultiple($locks_ids);
 				if ($error <> null) throw new Exception($error);
 			}
 			if (!$in_transaction) SQLQuery::commitTransaction();
