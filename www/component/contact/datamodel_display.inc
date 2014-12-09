@@ -485,7 +485,15 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 		if ($w == "") return null;
 		return array("type"=>"where","condition"=>$w);
 	}
-	
+	public function exportValue($value, $sub_model) {
+		if ($value == null || $value == "") return "";
+		$values = $this->get_possible_values($sub_model);
+		foreach ($values as $val) {
+			if ($value == $val["id"])
+				return $val["name"];
+		}
+		return "?";
+	}
 }
 
 $people_category = $model->getDataCategory("Personal Information");

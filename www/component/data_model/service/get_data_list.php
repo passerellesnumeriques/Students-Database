@@ -286,10 +286,13 @@ class service_get_data_list extends Service {
 		
 		$query_start_time = microtime(true);
 		// execute the query
+		set_time_limit(300);
 		$res = $q->execute();
 
 		if (isset($input["progress_id"]))
 			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 15); // request executed: 15% progress
+		
+		$nb_rows = count($res);
 		
 		// handle necessary sub requests
 		$sub_models_linked = array();
@@ -307,11 +310,13 @@ class service_get_data_list extends Service {
 				array_push($sub_models_linked[$sm_table][$data_aliases[$i]["sub_model_key"]][$data_aliases[$i]["sub_model_table"]]["indexes"], $i);
 				continue;
 			}
+			if ($nb_rows > 500) set_time_limit(30+floor($nb_rows/100));
 			$data->performSubRequests($q, $res, $data_aliases[$i], $path);
 		}
 		foreach ($sub_models_linked as $sm_table=>$sm_keys) {
 			foreach ($sm_keys as $sm_key_alias=>$entry_tables) {
 				$instances = array();
+				if ($nb_rows > 500) set_time_limit(30+floor($nb_rows/100));
 				foreach ($res as $row)
 					if (isset($row[$sm_key_alias]) && !in_array($row[$sm_key_alias], $instances))
 						array_push($instances, $row[$sm_key_alias]);
@@ -417,7 +422,6 @@ class service_get_data_list extends Service {
 			echo "}";
 		} else {
 			/* -- export -- */
-			$nb_rows = count($res);
 			// create excel
 			set_time_limit(300);
 			error_reporting(E_ERROR | E_PARSE);
@@ -492,7 +496,7 @@ class service_get_data_list extends Service {
 			$row_number = 0;
 			foreach ($res as $row) {
 				if (($row_number % 25) == 0 && isset($input["progress_id"]))
-					PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 25+floor($row_number*65/$nb_rows));
+					PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 25+floor($row_number*70/$nb_rows));
 				$row_number++;
 				set_time_limit(30);
 				$col_index = 0;
@@ -526,7 +530,7 @@ class service_get_data_list extends Service {
 			set_time_limit(60);
 			// initialize writer according to requested format
 			if (isset($input["progress_id"]))
-				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 90);
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 95);
 			$format = $input["export"];
 			if ($format == 'excel2007') {
 				header("Content-Disposition: attachment; filename=\"list.xlsx\"");

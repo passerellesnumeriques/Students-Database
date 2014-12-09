@@ -675,11 +675,17 @@ class JoiningTableDataDisplay extends DataDisplay {
 	public function exportValue($value, $sub_model) {
 		if ($value == null || $value == "") return "";
 		$values = $this->get_possible_values($sub_model);
+		$list = array();
 		foreach ($values as $val) {
-			if ($value == $val["KEY"])
-				return $val["VALUE"];
+			if (in_array($val["KEY"], $value))
+				array_push($list, $val["VALUE"]);
 		}
-		return "?";
+		$s = "";
+		for ($i = 0; $i < count($list); $i++) {
+			if ($i > 0) $s .= ", ";
+			$s .= $list[$i];
+		}
+		return $s;
 	}
 	
 	public function isEditable() {
@@ -765,10 +771,19 @@ class JoiningTableDataDisplay extends DataDisplay {
 		$foreign_table = \DataModel::get()->getTable($foreign_table);
 		$sub_models = $path->sub_model == null ? null : array($path->table->getModel()->getParentTable()=>$path->sub_model);
 		
+		$sql_aliases["data"] = $original_query->generateFieldAlias();
+		
 		$keys = array();
-		foreach ($rows as $row) {
-			if (!in_array($row[$sql_aliases["key"]], $keys))
-				array_push($keys, $row[$sql_aliases["key"]]);
+		$rows_keys = array();
+		for ($i = count($rows)-1; $i >= 0; $i--) {
+			$key = $rows[$i][$sql_aliases["key"]];
+			if (!in_array($key, $keys))
+				array_push($keys, $key);
+			$data = array();
+			if (!isset($rows_keys[$key])) $rows_keys[$key] = array(&$data);
+			else array_push($rows_keys[$key], $data);
+			$rows[$i][$sql_aliases["data"]] = &$data;
+			unset($data);
 		}
 		
 		if (count($keys) == 0) {
@@ -785,15 +800,11 @@ class JoiningTableDataDisplay extends DataDisplay {
 			$res = $q->execute();
 		}
 
-		$sql_aliases["data"] = $original_query->generateFieldAlias();
-		for ($i = 0; $i < count($rows); $i++) {
-			$key = $rows[$i][$sql_aliases["key"]];
-			$values = array();
-			foreach ($res as $r) {
-				if ($r["KEY"] == $key)
-					array_push($values, $r["VALUE"]);
-			}
-			$rows[$i][$sql_aliases["data"]] = $values;
+		foreach ($res as $r) {
+			$list = @$rows_keys[$r["KEY"]];
+			if ($list <> null)
+				for ($i = count($list)-1; $i >= 0; $i--)
+					array_push($list[$i], $r["VALUE"]);
 		}
 		if ($q == null) return array();
 		return array(array($q,$res));
