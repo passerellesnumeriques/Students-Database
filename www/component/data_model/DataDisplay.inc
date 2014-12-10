@@ -40,7 +40,7 @@ abstract class DataDisplay {
 	 * @return array (classname, config) classname: string containing the name of the JavaScript class implementing typed_field, config: string containing a JSON representation of the configuration of the typed_field
 	 */
 	public abstract function getTypedField($sub_model);
-	public function getHorizontalAlign() { return null; }
+	public function getHorizontalAlign($sub_model) { return null; }
 	/** Indicates if this data can be modified by the user
 	 * @return boolean true if this data is editable
 	 */
@@ -142,7 +142,7 @@ abstract class DataDisplay {
 		$tf = $this->getTypedField($sub_model);
 		$s .= ",".json_encode($tf[0]);
 		$s .= ",".$tf[1];
-		$s .= ",".json_encode($this->getHorizontalAlign());
+		$s .= ",".json_encode($this->getHorizontalAlign($sub_model));
 		$s .= ",".($this->isEditable() ? "true" : "false");
 		$s .= ",".json_encode($this->getEditLocks($sub_model));
 		$s .= ",".json_encode($this->isSortable());
@@ -300,9 +300,9 @@ class SimpleDataDisplay extends DataDisplay {
 		$col = $this->getTable()->getColumnFor($this->column_name, $sub_model);
 		return \PNApplication::$instance->widgets->get_typed_field($col);
 	}
-	public function getHorizontalAlign() {
+	public function getHorizontalAlign($sub_model) {
 		if ($this->horiz_align === null) {
-			$col = $this->getTable()->internalGetColumn($this->column_name);
+			$col = $this->getTable()->internalGetColumnFor($this->column_name, $sub_model);
 			if ($col instanceof \datamodel\ColumnDate) return "right";
 		}
 		return $this->horiz_align;
@@ -467,7 +467,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		}
 		return array("field_text","{can_be_null:true}");
 	}
-	public function getHorizontalAlign() { return $this->horiz_align; }
+	public function getHorizontalAlign($sub_model) { return $this->horiz_align; }
 	
 	public function getTypedFilter($sub_model) {
 		if ($sub_model <> "@link") {
@@ -939,7 +939,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			return \PNApplication::$instance->widgets->get_typed_field($this->getColumn($this->data_path, $sub_model));
 		return array("field_text","{can_be_null:true}");
 	}
-	public function getHorizontalAlign(){ return $this->horiz_align; }
+	public function getHorizontalAlign($sub_model){ return $this->horiz_align; }
 	
 	public function isEditable() { return false; }
 	public function getEditLocks($sub_model) { return array(); }
@@ -1214,7 +1214,7 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	public function isMandatory($sub_model) {
 		return false; // TODO
 	}
-	public function getHorizontalAlign() { return $this->horiz_align; }
+	public function getHorizontalAlign($sub_model) { return $this->horiz_align; }
 	
 	/**
 	 * Internal method to get the possible values to display in the enum for filtering
@@ -1375,7 +1375,7 @@ class CalculationDataDisplay extends DataDisplay {
 	public function getHandledColumns() { return array(); }
 	
 	public function getTypedField($sub_model) { return array("field_text","{}"); }
-	public function getHorizontalAlign() { return $this->horiz_align; }
+	public function getHorizontalAlign($sub_model) { return $this->horiz_align; }
 	public function getTypedFilter($sub_model) {
 		return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{can_be_null:true}}");
 	}
@@ -1481,7 +1481,7 @@ class CountLinksDataDisplay extends DataDisplay {
 	public function getTypedField($sub_model) {
 		return array("field_text","{}");
 	}
-	public function getHorizontalAlign() { return $this->horiz_align; }
+	public function getHorizontalAlign($sub_model) { return $this->horiz_align; }
 	public function getTypedFilter($sub_model) {
 		return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{can_be_null:true,min:0}}");
 	}
@@ -1567,7 +1567,7 @@ class CountDataValueDataDisplay extends DataDisplay {
 			return array("field_integer","{can_be_null:false}");
 		return array("field_decimal", "{integer_digits:10,decimal_digits:2,can_be_null:false}");
 	}
-	public function getHorizontalAlign() { return $this->horiz_align; }
+	public function getHorizontalAlign($sub_model) { return $this->horiz_align; }
 	public function getTypedFilter($sub_model) {
 		if ($this->is_integer)
 			return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{can_be_null:false}}");

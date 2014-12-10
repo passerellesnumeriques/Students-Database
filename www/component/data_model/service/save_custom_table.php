@@ -107,6 +107,15 @@ class service_save_custom_table extends Service {
 					$max = $col["spec"]["max"] == null ? "null" : "\"".$col["spec"]["max"]."\"";
 					fwrite($f, "array_push(\$columns, new \datamodel\ColumnDate(\$this, \"$col_name\", ".($col["spec"]["can_be_null"] ? "true" : "false").", false, $min, $max));\n");
 					break;
+				case "enum":
+					$values = $col["spec"]["values"];
+					fwrite($f, "array_push(\$columns, new \datamodel\ColumnEnum(\$this, \"$col_name\", array(");
+					for ($i = 0; $i < count($values); $i++) {
+						if ($i > 0) fwrite($f, ",");
+						fwrite($f, "\"".str_replace('"', '\\"', str_replace("\\","\\\\", $values[$i]))."\"");
+					}
+					fwrite($f, "), ".($col["spec"]["can_be_null"] ? "true" : "false").",false));\n");
+					break;
 				default:
 					$pi = null;
 					foreach ($plugins as $p) if ($p->getId() == $col["type"]) { $pi = $p; break; }

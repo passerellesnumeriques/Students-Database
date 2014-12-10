@@ -175,6 +175,7 @@ class page_edit_customizable_table extends Page {
 				var td;
 				// description
 				td = document.createElement("TD");
+				td.style.verticalAlign = "top";
 				tr.descr = document.createElement("INPUT");
 				tr.descr.type = "text";
 				tr.descr.size = 25;
@@ -185,7 +186,9 @@ class page_edit_customizable_table extends Page {
 
 				// type
 				td = document.createElement("TD");
+				td.style.verticalAlign = "top";
 				tr.type_select = document.createElement("SELECT");
+				tr.type_select.style.verticalAlign = "top";
 				fillTypes(tr.type_select, type);
 				tr.type_container = document.createElement("DIV");
 				tr.type_container.style.display = "inline-block";
@@ -216,7 +219,6 @@ class page_edit_customizable_table extends Page {
 				};
 				td.appendChild(button);
 				tr.appendChild(td);
-				// TODO do not allow to remove if some data are already there...
 
 				var next = document.getElementById('buttons_row');
 				next.parentNode.insertBefore(tr, next);
@@ -236,6 +238,7 @@ class page_edit_customizable_table extends Page {
 				addType(select, "integer", "Number - Integer", selected);
 				addType(select, "decimal", "Number - Decimal", selected);
 				addType(select, "date", "Date", selected);
+				addType(select, "enum", "Choice", selected);
 				<?php
 				foreach ($plugins as $pi)
 					echo "addType(select, ".json_encode($pi->getId()).",".json_encode($pi->getDisplayName()).",selected);";
@@ -253,6 +256,7 @@ class page_edit_customizable_table extends Page {
 				case "integer": createInteger(tr.type_container, spec); break;
 				case "decimal": createDecimal(tr.type_container, spec); break;
 				case "date": createDate(tr.type_container, spec); break;
+				case "enum": createEnum(tr.type_container, spec); break;
 				<?php
 				foreach ($plugins as $pi)
 					echo "case ".json_encode($pi->getId()).": create__".$pi->getId()."(tr.type_container, spec); break;";
@@ -332,6 +336,49 @@ class page_edit_customizable_table extends Page {
 				container.spec.get = function() {
 					if (this.min.hasError() || this.max.hasError()) return null;
 					return {min:this.min.getCurrentData(),max:this.max.getCurrentData()};
+				};
+			}
+			function createEnum(container, spec) {
+				container.appendChild(document.createTextNode("Possible choices:"));
+				var add_button = document.createElement("BUTTON");
+				add_button.className = "flat small_icon";
+				add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+				add_button.title = "Add a new choice";
+				container.appendChild(add_button);
+				container.spec.choices = [];
+				var addChoice = function(choice) {
+					var div = document.createElement("DIV");
+					var input = document.createElement("INPUT");
+					input.type = "text";
+					input.maxLength = 30;
+					input.size = 15;
+					div.appendChild(input);
+					input.value = choice;
+					container.spec.choices.push(input);
+					var remove = document.createElement("BUTTON");
+					remove.className = "flat small_icon";
+					remove.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+					remove.onclick = function() {
+						if (container.spec.choices.length == 1) {
+							// last one
+							input.value = "";
+							return;
+						}
+						container.spec.choices.remove(input);
+						container.removeChild(div);
+					};
+					div.appendChild(remove);
+					container.insertBefore(div, add_button);
+				};
+				add_button.onclick = function() {
+					addChoice("");
+				};
+				if (spec) for (var i = 0; i < spec.values.length; ++i) addChoice(spec.values[i]);
+				else addChoice("");
+				container.spec.get = function() {
+					var s = {values:[]};
+					for (var i = 0; i < container.spec.choices.length; ++i) s.values.push(container.spec.choices[i].value);
+					return s;
 				};
 			}
 			<?php 
@@ -419,6 +466,9 @@ class page_edit_customizable_table extends Page {
 					$type = "date";
 					$spec["min"] = $col->minimum_date;
 					$spec["max"] = $col->maximum_date;
+				} else if ($col instanceof \datamodel\ColumnEnum) {
+					$type = "enum";
+					$spec["values"] = $col->values;
 				}
 				echo "addData(".json_encode($col->name).",".($columns_data[$col->name] ? "true" : "false").",".json_encode($descr).",".json_encode($type).",".json_encode($spec).");\n";
 			}

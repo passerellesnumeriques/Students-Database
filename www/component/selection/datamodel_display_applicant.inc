@@ -72,7 +72,7 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 		parent::__construct("applicant_id", "ID", !$editable, $editable);
 	}
 	
-	public function getHorizontalAlign() { return "right"; }
+	public function getHorizontalAlign($sub_model) { return "right"; }
 	
 	public function getTypedField($sub_model) {
 		$cfg = "{";
@@ -99,7 +99,7 @@ class ApplicantExclusionReason extends datamodel\DataDisplay {
 	public function canAccess($sub_model) { return PNApplication::$instance->user_management->has_right("see_applicant_info"); }
 	public function getHandledColumns() { return array("automatic_exclusion_step","automatic_exclusion_reason","custom_exclusion"); }
 	public function getTypedField($sub_model) { return array("field_text","{}"); }
-	public function getHorizontalAlign() { return "left"; }
+	public function getHorizontalAlign($sub_model) { return "left"; }
 	public function isEditable() { return false; }
 	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() { return false; }
@@ -198,7 +198,7 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_attendance",
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_comment", "Comment from Interview", true, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_passer", "Eligible for Social Investigation", true, false));
 $display->addDataDisplay(new datamodel\CountLinksDataDisplay("Social Investigations done", "SocialInvestigation", "applicant"));
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("si_grade", "Social Investigation Grade"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("si_grade", "Social Investigation Grade", true, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("excluded", "Excluded", true, false));
 $display->addDataDisplay(new ApplicantExclusionReason());
 $display->addFollow("people");

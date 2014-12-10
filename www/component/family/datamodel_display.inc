@@ -16,7 +16,7 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_integer","{min:0,can_be_null:true}"); }
 	public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
-	public function getHorizontalAlign() { return "center"; }
+	public function getHorizontalAlign($sub_model) { return "center"; }
 	public function isEditable() { return false; }
 	public function isEditableForNewData() { return true; }
 	public function getEditLocks($sub_model) { return array(); }
@@ -81,7 +81,7 @@ class ChildRank extends datamodel\DataDisplay {
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_integer","{min:1,can_be_null:true}"); }
 	public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
-	public function getHorizontalAlign() { return "center"; }
+	public function getHorizontalAlign($sub_model) { return "center"; }
 	public function isEditable() { return false; }
 	public function isEditableForNewData() { return true; }
 	public function getEditLocks($sub_model) { return array(); }
@@ -144,7 +144,7 @@ class ParentsSituation extends datamodel\DataDisplay {
 	public function getTypedFilter($sub_model) {
 		return PNApplication::$instance->widgets->get_typed_filter(DataModel::get()->internalGetTable("Family")->internalGetColumn("parents_situation"));
 	}
-	public function getHorizontalAlign() { return "center"; }
+	public function getHorizontalAlign($sub_model) { return "center"; }
 	public function isEditable() { return false; }
 	public function isEditableForNewData() { return true; }
 	public function getEditLocks($sub_model) { return array(); }

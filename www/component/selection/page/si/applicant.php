@@ -18,8 +18,14 @@ class page_si_applicant extends Page {
 		$this->requireJavascript("field_integer.js");
 ?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;'>
-	<div class='page_title shadow' style='flex:none'>
-		Social Investigation Data
+	<div style='flex:1 1 auto;overflow:auto;'>
+		<div id='section_family' title="Family" icon="/static/family/family_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+			<div id='family_container'></div>
+		</div>
+		<div id='section_houses' title="Houses" icon="/static/selection/si/house_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+		</div>
+	</div>
+	<div class='page_footer' style='flex:none'>
 		<?php if ($can_edit) {
 			if ($edit) {?>
 				<button class='action' onclick='save();'><img src='<?php echo theme::$icons_16["save"];?>'/> Save</button>
@@ -28,13 +34,6 @@ class page_si_applicant extends Page {
 				<button class='action' onclick='edit();'><img src='<?php echo theme::$icons_16["edit"];?>'/> Edit data</button>
 			<?php }
 		}?>
-	</div>
-	<div style='flex:1 1 auto;overflow:auto;'>
-		<div id='section_family' title="Family" icon="/static/family/family_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
-			<div id='family_container'></div>
-		</div>
-		<div id='section_houses' title="Houses" icon="/static/selection/si/house_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
-		</div>
 	</div>
 </div>
 <style type='text/css'>
@@ -168,8 +167,8 @@ function multiple_choice_other(container, choices, value, can_edit, onchange) {
 			this.element.appendChild(document.createTextNode(choices[i]));
 			if (choices[i+1]) {
 				var help = document.createElement("IMG");
-				help.style.verticalAlign = "middle";
-				help.style.marginLeft = "5px";
+				help.style.verticalAlign = "bottom";
+				help.style.marginLeft = "2px";
 				help.src = theme.icons_16.help;
 				this.element.appendChild(help);
 				tooltip(help, "<img src='/static/selection/si/"+choices[i+1]+"'/>");
