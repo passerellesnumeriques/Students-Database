@@ -34,6 +34,13 @@ class DataModel {
 				if (file_exists($file))
 					include $file;
 			}
+#DEV
+			foreach ($model->internalGetTables(true) as $table) {
+				if ($table->getPrimaryKey() <> null) continue;
+				$key = $table->getKey();
+				if ($key == null || count($key) == 0) PNApplication::error("Invalid datamodel: table ".$table->getName()." does not have a key");
+			}
+#END
 		}
 		return DataModel::$model;
 	}

@@ -2145,17 +2145,22 @@ class SQLQuery {
 				}
 				if ($w == "") continue;
 				$dm_table = DataModel::get()->getTableFromSQLName($table_name, $this->bypass_security);
-				$key_cols = $dm_table->getKey();
+				$pk = $dm_table->getPrimaryKey();
+				if ($pk <> null) $pk = $pk->name;
+				else $key_cols = $dm_table->getKey();
 				$sql = "SELECT * FROM `$table_name` WHERE $w";
 				$res = SQLQuery::db()->execute($sql);
 				$rows = array();
 				$keys_to_lock = array();
 				while (($row = SQLQuery::db()->nextRow($res)) <> null) {
 					array_push($rows, $row);
-					$key_to_lock = array();
-					foreach ($key_cols as $col_name)
-						$key_to_lock[$col_name] = $row[$col_name];
-					array_push($keys_to_lock, $key_to_lock);
+					if ($pk <> null) array_push($keys_to_lock, $row[$pk]);
+					else {
+						$key_to_lock = array();
+						foreach ($key_cols as $col_name)
+							$key_to_lock[$col_name] = $row[$col_name];
+						array_push($keys_to_lock, $key_to_lock);
+					}
 				}
 				if (count($keys_to_lock) > 0) {
 					$locked_by = null;
