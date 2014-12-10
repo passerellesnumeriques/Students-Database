@@ -22,6 +22,7 @@ function farm(container, info, productions, applicant_id, can_edit) {
 					land_size: null,
 					land_status: null,
 					land_cost: null,
+					land_comment: null,
 					income: null,
 					income_freq: null,
 					comment: null
@@ -58,6 +59,13 @@ function farm(container, info, productions, applicant_id, can_edit) {
 			land_cost.onchange.add_listener(function() { t.info.land_cost = land_cost.getCurrentData(); });
 		} else if (this.info.land_cost > 0)
 			div.appendChild(document.createTextNode(" Cost: "+this.info.land_cost));
+		if (can_edit) {
+			div.appendChild(document.createTextNode(" Comment: "));
+			var land_comment = new field_text(this.info.land_comment, true, {can_be_null:true,max_length:200});
+			div.appendChild(land_comment.getHTMLElement());
+			land_comment.onchange.add_listener(function() { t.info.land_comment = land_comment.getCurrentData(); });
+		} else if (this.info.land_comment)
+			div.appendChild(document.createTextNode(" Comment: "+this.info.land_comment));
 		
 		var table = document.createElement("TABLE");
 		container.appendChild(table);

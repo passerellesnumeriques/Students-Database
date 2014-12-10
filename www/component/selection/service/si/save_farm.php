@@ -14,7 +14,7 @@ class service_si_save_farm extends Service {
 		$farm = @$input["farm"];
 		$productions = @$input["productions"];
 		
-		$has_farm = $farm <> null && ($farm["land_size"] > 0 || $farm["land_status"] <> null || $farm["land_cost"] > 0 || $farm["income"] > 0 || $farm["income_freq"] <> null || $farm["comment"] <> null || count($productions) > 0);
+		$has_farm = $farm <> null && ($farm["land_size"] > 0 || $farm["land_status"] <> null || $farm["land_cost"] > 0 || $farm["land_comment"] <> null || $farm["income"] > 0 || $farm["income_freq"] <> null || $farm["comment"] <> null || count($productions) > 0);
 		
 		$existing_farm = SQLQuery::create()->select("SIFarm")->whereValue("SIFarm","applicant",$applicant_id)->executeSingleRow();
 		if ($existing_farm == null) {
