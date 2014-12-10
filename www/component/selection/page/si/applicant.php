@@ -138,7 +138,7 @@ function pictures_section(section, pictures, max_width, max_height, can_edit, co
 		var hidder = document.createElement("DIV");
 		hidder.style.backgroundColor = "black";
 		hidder.style.flex = "1 1 auto";
-		setOpacity(hidder, 0.8);
+		setOpacity(hidder, 0.9);
 		container.appendChild(hidder);
 		var footer = document.createElement("DIV");
 		footer.style.height = "40px";
@@ -194,7 +194,7 @@ function pictures_section(section, pictures, max_width, max_height, can_edit, co
 		var t=this;
 		var imgs = [];
 		var selected = index;
-		var showPicture = function(img) {
+		var showPicture = function(img, not_fade) {
 			var w = img.naturalWidth;
 			var h = img.naturalHeight;
 			var max_width = window.top.getWindowWidth();
@@ -208,7 +208,7 @@ function pictures_section(section, pictures, max_width, max_height, can_edit, co
 			img.style.height = h+"px";
 			img.style.left = "0px";
 			img.style.top = Math.floor((max_height-h)/2)+"px";
-			animation.fadeIn(img, 200);
+			if (!not_fade) animation.fadeIn(img, 200);
 			animation.create(picture_container, picture_container.offsetWidth, w, 100, function(w) { picture_container.style.width = w+"px"; });
 		};
 		var hidePicture = function(img) {
@@ -253,11 +253,16 @@ function pictures_section(section, pictures, max_width, max_height, can_edit, co
 		window.top.document.body.appendChild(container2);
 		animation.fadeIn(container, 300);
 		animation.fadeIn(container2, 300);
+		var listener = function() {
+			if (imgs[selected]._loaded) showPicture(imgs[selected],true);
+		};
+		window.top.listenEvent(window.top,'resize',listener);
 		var close = function() {
 			container.onclick = null;
 			container2.onclick = null;
 			animation.fadeOut(container, 200, function() { window.top.document.body.removeChild(container); });
 			animation.fadeOut(container2, 200, function() { window.top.document.body.removeChild(container2); });
+			window.top.unlistenEvent(window.top,'resize',listener);
 		};
 		container.onclick = close;
 		container2.onclick = close;
