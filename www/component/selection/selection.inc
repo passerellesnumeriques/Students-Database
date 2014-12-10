@@ -37,6 +37,7 @@ class selection extends Component {
 		require_once("ApplicantImportTemplate.inc");
 		require_once("ApplicantMaxAge.inc");
 		require_once("SocialInvestigationProfilePage.inc");
+		require_once("SocialInvestigationPicturesPlugin.inc");
 		return array(
 			new SelectionOrganizationPlugin(),
 			new SelectionNewsPlugin(),
@@ -44,7 +45,8 @@ class selection extends Component {
 			new SelectionApplicationSection(),
 			new ApplicantImportTemplate(),
 			new ApplicantMaxAge(),
-			new SocialInvestigationProfilePage()
+			new SocialInvestigationProfilePage(),
+			new SocialInvestigationPicturesPlugin()
 		);
 	}
 	

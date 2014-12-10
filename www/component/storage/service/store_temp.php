@@ -14,7 +14,7 @@ class service_store_temp extends Service {
 		$sizes = array();
 		$component->receive_upload($ids, $names, $types, $sizes, 10*60);
 		if (count($ids) > 0)
-			echo "{id:".$ids[0]."}";
+			echo "{id:".$ids[0].",revision:1}";
 	}
 	
 }

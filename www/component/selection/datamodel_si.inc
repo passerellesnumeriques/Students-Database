@@ -80,4 +80,14 @@ $sm->addTable("SIFishing")
 	->addInsertAccess("edit_social_investigation", true)
 	->addRemoveAccess("edit_social_investigation", true)
 	;
+
+$sm->addTable("SIPicture")
+	->addForeignKey("picture", "Storage", true, false, false, false, true)
+	->addForeignKey("applicant", "People", true, false, true, false, false)
+	->setPrimary("picture")
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
+	;
 ?>

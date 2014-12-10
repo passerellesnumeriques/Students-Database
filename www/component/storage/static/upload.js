@@ -177,7 +177,7 @@ function upload(target, multiple, async) {
 			popup.enableClose();
 			if (callback_with_popup)
 				callback_with_popup(popup);
-			else
+			else if (errors.length == 0 && warnings.length == 0)
 				popup.close();
 			if (prev_ondone) prev_ondone(outputs, errors, warnings);
 		};

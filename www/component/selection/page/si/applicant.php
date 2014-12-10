@@ -14,6 +14,9 @@ class page_si_applicant extends Page {
 		$farm = SQLQuery::create()->select("SIFarm")->whereValue("SIFarm", "applicant", $people_id)->executeSingleRow();
 		$farm_prod = SQLQuery::create()->select("SIFarmProduction")->whereValue("SIFarmProduction","applicant",$people_id)->execute();
 		$fishing = SQLQuery::create()->select("SIFishing")->whereValue("SIFishing","applicant",$people_id)->executeSingleRow();
+		$q = SQLQuery::create()->select("SIPicture")->whereValue("SIPicture","applicant",$people_id);
+		PNApplication::$instance->storage->joinRevision($q, "SIPicture", "picture", "revision");
+		$pictures = $q->field("SIPicture","picture","id")->execute();
 		
 		$this->requireJavascript("section.js");
 		$this->requireJavascript("family.js");
@@ -80,7 +83,73 @@ var section_family = sectionFromHTML('section_family');
 var fam = new family(section_family.content, <?php echo json_encode($family[0]);?>, <?php echo json_encode($family[1]);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
 sectionFromHTML('section_visits');
-sectionFromHTML('section_pictures');
+
+var section_pictures = sectionFromHTML('section_pictures');
+function pictures_section(section, pictures, max_width, max_height, can_edit, component, add_picture_service, add_picture_data) {
+	this.pictures = pictures;
+	this.createPicture = function(picture) {
+		var div = document.createElement("DIV");
+		div.style.display = "inline-block";
+		div.style.position = "relative";
+		div.style.width = max_width+"px";
+		div.style.height = max_height+"px";
+		div.style.border = "1px solid black";
+		setBorderRadius(div,3,3,3,3,3,3,3,3);
+		div.style.margin = "1px 2px";
+		var img = document.createElement("IMG");
+		img.style.width = max_width+"px";
+		img.style.height = max_height+"px";
+		img.style.position = "absolute";
+		img.onload = function() {
+			var w = img.naturalWidth;
+			var h = img.naturalHeight;
+			var ratio = 1;
+			if (w > max_width) ratio = max_width/w;
+			if (h > max_height && max_height/h < ratio) ratio = max_height/h;
+			w = Math.floor(w*ratio);
+			h = Math.floor(h*ratio);
+			img.style.width = w+"px";
+			img.style.height = h+"px";
+			img.style.left = Math.floor((max_width-w)/2)+"px";
+			img.style.top = Math.floor((max_height-h)/2)+"px";
+		};
+		img.src = "/dynamic/storage/service/get?id="+picture.id+"&revision="+picture.revision;
+		div.appendChild(img);
+		section.content.appendChild(div);
+	};
+	for (var i = 0; i < pictures.length; ++i) this.createPicture(pictures[i]);
+	if (can_edit) {
+		var add_button = document.createElement("BUTTON");
+		add_button.innerHTML = "<img src='/static/storage/import_image_16.png'/> Upload pictures";
+		add_button.className = "action";
+		section.addToolBottom(add_button);
+		var t=this;
+		add_button.onclick = function(ev) {
+			var upl = createUploadTempFile(true, 10);
+			upl.addUploadPopup('/static/storage/import_image_16.png',"Uploading pictures");
+			upl.ondonefile = function(file, output, errors, warnings) {
+				if (output && output.id) {
+					var data = objectCopy(add_picture_data, 10);
+					data.id = output.id;
+					data.revision = output.revision;
+					service.json(component, add_picture_service, data, function(res) {
+						if (res) {
+							t.pictures.push(output);
+							t.createPicture(output);
+						}
+					}); 
+				}
+			};
+			upl.openDialog(ev, "image/*");
+		};
+		add_button.disabled = "disabled";
+		require("upload.js", function() {
+			add_button.disabled = "";
+		});
+	}
+}
+new pictures_section(section_pictures, <?php echo json_encode($pictures);?>, 150, 150, can_edit, "selection", "si/add_picture", {applicant:<?php echo $people_id;?>});
+
 sectionFromHTML('section_residence');
 sectionFromHTML('section_incomes');
 sectionFromHTML('section_expenses');
