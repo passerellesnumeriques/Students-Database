@@ -381,7 +381,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			div.style.flexDirection = "row";
 			td.appendChild(div);
 			require([["typed_field.js","field_text.js"]],function() {
-				var f = new field_text(member.occupation, true, {min_length:1,can_be_null:true,max_length:100});
+				var f = new field_text(member.occupation, true, {min_length:1,can_be_null:true,max_length:100,min_size:5});
 				div.appendChild(f.getHTMLElement());
 				f.getHTMLElement().style.flex = "1 1 auto";
 				f.onchange.add_listener(function() {
@@ -403,9 +403,8 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			if (can_edit) {
 				var td_educ = td;
 				require([["typed_field.js","field_text.js"]],function() {
-					var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100});
+					var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100,min_size:10});
 					td_educ.appendChild(f.getHTMLElement());
-					f.fillWidth();
 					f.onchange.add_listener(function() {
 						member.education_level = f.getCurrentData();
 						if (t.onchange) t.onchange();
@@ -427,9 +426,8 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		if (can_edit) {
 			var td_revenue = td;
 			require([["typed_field.js","field_text.js"]],function() {
-				var f = new field_text(member.revenue, true, {min_length:0,can_be_null:true,max_length:500});
+				var f = new field_text(member.revenue, true, {min_length:0,can_be_null:true,max_length:500,min_size:5});
 				td_revenue.appendChild(f.getHTMLElement());
-				f.fillWidth();
 				f.onchange.add_listener(function() {
 					member.revenue = f.getCurrentData();
 					if (t.onchange) t.onchange();
@@ -449,9 +447,8 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		if (can_edit) {
 			var td_comment = td;
 			require([["typed_field.js","field_text.js"]],function() {
-				var f = new field_text(member.comment, true, {min_length:0,can_be_null:true,max_length:1000});
+				var f = new field_text(member.comment, true, {min_length:0,can_be_null:true,max_length:1000,min_size:10});
 				td_comment.appendChild(f.getHTMLElement());
-				f.fillWidth();
 				f.onchange.add_listener(function() {
 					member.comment = f.getCurrentData();
 					if (t.onchange) t.onchange();
