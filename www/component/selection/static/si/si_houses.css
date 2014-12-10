@@ -1,0 +1,47 @@
+.si_house {
+	border: 1px solid #8080A0;
+	border-radius: 5px;
+	margin: 3px;
+}
+.si_house>.header {
+	font-size: 12pt;
+	background-color: #D0D0E8;
+	border-bottom: 1px solid #808080;
+	padding: 2px; 5px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+.si_house>.content {
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+.si_house>.content th {
+	background-color: #C0C0C0;
+	border-right: 1px solid #808080;
+	border-bottom: 1px solid #808080;
+	font-weight: bold;
+	text-align: right;
+	vertical-align: top;
+	padding: 2px 1px;
+}
+.si_house>.content th>img {
+	vertical-align: bottom;
+}
+.si_house>.content td {
+	background-color: white;
+	text-align: left;
+	border-bottom: 1px solid #808080;
+	padding: 2px 1px;
+}
+.si_house>.content td, .si_house>.content td>input, .si_house>.content td>select, .si_house>.content td>textarea {
+	vertical-align: top;
+	font-size: 9pt;
+}
+.si_house>.content tr:last-child th, .si_house>.content tr:last-child td {
+	border-bottom: none;
+}

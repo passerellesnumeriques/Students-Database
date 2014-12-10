@@ -36,5 +36,33 @@ $sm->addTable("SIHouse")
 	->addRemoveAccess("edit_social_investigation", true)
 	;
 	
+$sm->addTable("SIFarm")
+	->addForeignKey("applicant", "People", true, false, false, false, true)
+	->setPrimary("applicant")
+	->addDecimal("land_size",10,2,0,null,true,false)
+	->addEnum("land_status", array("Owned", "Rented", "Lended"), true, false)
+	->addInteger("land_cost", 32, 0, null, true, false)
+	->addDecimal("income",10,2,0,null,true,false)
+	->addString("income_freq",25,0,true,false)
+	->addString("comment",500,0,true,false)
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
+	;
 
+$sm->addTable("SIFarmProduction")
+	->addPrimaryKey("id")
+	->addForeignKey("applicant", "People", true, false, true, false, false)
+	->addEnum("type",array("Animal","Plant"),false,false)
+	->addString("name",50,1,false,false)
+	->addInteger("nb",32,1,null,false,false)
+	->addDecimal("income",10,2,0,null,true,false)
+	->addString("income_freq",25,0,true,false)
+	->addString("comment",200,0,true,false)
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
+	;
 ?>
