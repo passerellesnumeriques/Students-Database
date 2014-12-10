@@ -39,7 +39,6 @@
 	padding: 2px 1px;
 }
 .si_house>.content td, .si_house>.content td>input, .si_house>.content td>select, .si_house>.content td>textarea {
-	vertical-align: top;
 	font-size: 9pt;
 }
 .si_house>.content tr:last-child th, .si_house>.content tr:last-child td {

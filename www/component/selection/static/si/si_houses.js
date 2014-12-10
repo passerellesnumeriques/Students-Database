@@ -1,9 +1,10 @@
 function houses(section, houses, applicant_id, can_edit) {
+	var t=this;
 	section.content.style.padding = "3px";
 	this.houses = houses;
 	this.houses_controls = [];
 	for (var i = 0; i < houses.length; ++i)
-		this.houses_controls.push(new house(section.content, houses[i], can_edit));
+		this.houses_controls.push(new house(section.content, houses[i], can_edit, function(house) { t.removeHouse(house); }));
 	if (can_edit) {
 		var add_house = document.createElement("BUTTON");
 		add_house.className = "flat icon";
@@ -31,9 +32,15 @@ function houses(section, houses, applicant_id, can_edit) {
 				general_comment: null
 			};
 			t.houses.push(h);
-			t.houses_controls.push(new house(section.content, h, can_edit)); 
+			t.houses_controls.push(new house(section.content, h, can_edit, function(house) { t.removeHouse(house); })); 
 		};
 		section.addToolRight(add_house);
+		this.removeHouse = function(house_control) {
+			this.houses.remove(house_control.house_info);
+			this.houses_controls.remove(house_control);
+			section.content.removeChild(house_control.element);
+			layout.changed(section.content);
+		};
 		this.save = function(ondone) {
 			var locker = lock_screen(null, "Saving Houses Information...");
 			var t=this;
@@ -48,7 +55,8 @@ function houses(section, houses, applicant_id, can_edit) {
 		};
 	}
 }
-function house(container, house, can_edit) {
+function house(container, house, can_edit, onremove) {
+	this.house_info = house;
 	this.element = document.createElement("DIV");
 	container.appendChild(this.element);
 	this.element.className = "si_house";
@@ -56,6 +64,19 @@ function house(container, house, can_edit) {
 	this.element.appendChild(this.header);
 	this.header.className = "header";
 	this.header.innerHTML = "<div style='flex:1 1 auto'>House Description</div><img src='/static/selection/si/house_32.png' style='flex:none;margin-left:10px;'/>";
+	if (can_edit) {
+		var remove = document.createElement("BUTTON");
+		remove.className = "flat small_icon";
+		remove.style.selfAlign = "flex-start";
+		remove.style.marginLeft = "2px";
+		remove.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+		remove.title = "Remove this house";
+		var t=this;
+		remove.onclick = function() {
+			onremove(t);
+		};
+		this.header.appendChild(remove);
+	}
 	this.content = document.createElement("TABLE");
 	this.element.appendChild(this.content);
 	this.content.className = "content";
@@ -86,10 +107,9 @@ function house(container, house, can_edit) {
 		td.appendChild(this.house_status_cost.getHTMLElement());
 		this.house_status_cost.onchange.add_listener(function(f) { house.house_cost = f.getCurrentData(); });
 		td.appendChild(document.createTextNode(" Comment: "));
-		this.house_comment = document.createElement("TEXTAREA");
-		this.house_comment.value = house.house_comment;
-		td.appendChild(this.house_comment);
-		this.house_comment.onchange = function() { house.house_comment = this.value; };
+		this.house_comment = new field_text(house.house_comment, true, {can_be_null:true,max_length:200});
+		td.appendChild(this.house_comment.getHTMLElement());
+		this.house_comment.onchange.add_listener(function(f) { house.house_comment = f.getCurrentData(); });
 	} else {
 		var s = house.house_status ? house.house_status : "";
 		if (house.house_cost) {
@@ -121,10 +141,9 @@ function house(container, house, can_edit) {
 		td.appendChild(this.lot_status_cost.getHTMLElement());
 		this.lot_status_cost.onchange.add_listener(function(f) { house.lot_cost = f.getCurrentData(); });
 		td.appendChild(document.createTextNode(" Comment: "));
-		this.lot_comment = document.createElement("TEXTAREA");
-		this.lot_comment.value = house.lot_comment;
-		td.appendChild(this.lot_comment);
-		this.lot_comment.onchange = function() { house.lot_comment = this.value; };
+		this.lot_comment = new field_text(house.lot_comment, true, {can_be_null:true,max_length:200});
+		td.appendChild(this.lot_comment.getHTMLElement());
+		this.lot_comment.onchange.add_listener(function(f) { house.lot_comment = f.getCurrentData(); });
 	} else {
 		var s = house.lot_status ? house.lot_status : "";
 		if (house.lot_cost) {
@@ -170,10 +189,9 @@ function house(container, house, can_edit) {
 		div.appendChild(document.createElement("BR"));
 		div.appendChild(document.createTextNode("Comment:"));
 		div.appendChild(document.createElement("BR"));
-		this.roof_comment = document.createElement("TEXTAREA");
-		div.appendChild(this.roof_comment);
-		this.roof_comment.value = house.roof_comment ? house.roof_comment : "";
-		this.roof_comment.onchange = function() { house.roof_comment = this.value; };
+		this.roof_comment = new field_text(house.roof_comment, true, {can_be_null:true,max_length:200});
+		div.appendChild(this.roof_comment.getHTMLElement());
+		this.roof_comment.onchange.add_listener(function(f) { house.roof_comment = f.getCurrentData(); });
 	} else {
 		div.appendChild(document.createTextNode(house.roof_condition ? house.roof_condition : "Unknown"));
 		if (house.roof_comment) div.appendChild(document.createTextNode(", Comment: "+house.roof_comment));
@@ -210,10 +228,9 @@ function house(container, house, can_edit) {
 		div.appendChild(document.createElement("BR"));
 		div.appendChild(document.createTextNode("Comment:"));
 		div.appendChild(document.createElement("BR"));
-		this.walls_comment = document.createElement("TEXTAREA");
-		div.appendChild(this.walls_comment);
-		this.walls_comment.value = house.walls_comment ? house.walls_comment : "";
-		this.walls_comment.onchange = function() { house.walls_comment = this.value; };
+		this.walls_comment = new field_text(house.walls_comment, true, {can_be_null:true,max_length:200});
+		div.appendChild(this.walls_comment.getHTMLElement());
+		this.walls_comment.onchange.add_listener(function(f) { house.walls_comment = f.getCurrentData(); });
 	} else {
 		div.appendChild(document.createTextNode(house.walls_condition ? house.walls_condition : "Unknown"));
 		if (house.walls_comment) div.appendChild(document.createTextNode(", Comment: "+house.walls_comment));
@@ -251,10 +268,9 @@ function house(container, house, can_edit) {
 		div.appendChild(document.createElement("BR"));
 		div.appendChild(document.createTextNode("Comment:"));
 		div.appendChild(document.createElement("BR"));
-		this.floor_comment = document.createElement("TEXTAREA");
-		div.appendChild(this.floor_comment);
-		this.floor_comment.value = house.floor_comment ? house.floor_comment : "";
-		this.floor_comment.onchange = function() { house.floor_comment = this.value; };
+		this.floor_comment = new field_text(house.floor_comment, true, {can_be_null:true,max_length:200});
+		div.appendChild(this.floor_comment.getHTMLElement());
+		this.floor_comment.onchange.add_listener(function(f) { house.floor_comment = f.getCurrentData(); });
 	} else {
 		div.appendChild(document.createTextNode(house.floor_condition ? house.floor_condition : "Unknown"));
 		if (house.floor_comment) div.appendChild(document.createTextNode(", Comment: "+house.floor_comment));
