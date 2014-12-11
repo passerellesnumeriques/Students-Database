@@ -161,9 +161,12 @@ function downloading(backend_url, download_url, size, file, mirrors_provider_inf
 			var stop = progress_handler(end+1,size);
 			if (end >= size-1) { end_handler(null); return; }
 			if (content.substring(0,6) == "cache:") {
-				end = parseInt(content.substring(6));
-				stop = progress_handler(end+1,size);
-				if (end >= size-1) { end_handler(null); return; }
+				var size_already_downloaded = parseInt(content.substring(6));
+				if (!isNaN(size_already_downloaded)) {
+					end = size_already_downloaded-1;
+					stop = progress_handler(end+1,size);
+					if (end >= size-1) { end_handler(null); return; }
+				}
 			} else {
 				var end_time = new Date().getTime();
 				if (end_time-start_time < 2000) speed *= 10;

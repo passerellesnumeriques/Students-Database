@@ -138,7 +138,9 @@ function unzipFile($zip_path, $target_dir, $remove_after_unzip = false) {
 	if (class_exists("ZipArchive")) {
 		$zip = new ZipArchive();
 		$zip->open($zip_path);
-		$zip->extractTo($target_dir);
+		$ok = @$zip->extractTo($target_dir);
+		if (!$ok)
+			throw new Exception("Error unzipping file ".$zip_path);
 		$zip->close();
 	} else {
 		$output = array();
