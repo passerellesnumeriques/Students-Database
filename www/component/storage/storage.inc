@@ -278,7 +278,7 @@ class storage extends Component {
 	function remove_data($id) {
 		$path = $this->get_data_path($id);
 		unlink($path);
-		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `Storage` WHERE `id`=".$id);
+		SQLQuery::create()->bypassSecurity()->removeKey("Storage", $id);
 	}
 	
 	function joinRevision(&$q, $join_from, $join_key, $revision_alias = null) {
