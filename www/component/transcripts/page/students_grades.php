@@ -118,7 +118,7 @@ class page_students_grades extends Page {
 			<img src='<?php echo theme::$icons_16["settings"];?>' style='vertical-align:bottom'/>
 			Display settings:
 		</div>
-		<div style='flex:1 1 auto;'>
+		<div style='flex:1 1 100%;'>
 			<span style='margin-left:10px'></span>
 			Grading system <select onchange="changeGradingSystem(this.options[this.selectedIndex].text,this.value);">
 			<?php
@@ -138,7 +138,7 @@ class page_students_grades extends Page {
 			<button class='flat' id='columns_chooser_button'><img src='/static/data_model/table_column.png'/> Choose columns</button>
 		</div>
 	</div>
-	<div style='flex:1 1 auto;overflow:auto' id='grades_container'>
+	<div style='flex:1 1 100%;overflow:auto' id='grades_container'>
 	</div>
 	<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) { ?>
 	<div class='page_footer' style='flex:none;'>

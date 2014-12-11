@@ -145,6 +145,7 @@ Element.prototype.ondomremoved = function(listener) {
 };
 Element.prototype._removeChild = Element.prototype.removeChild;
 Element.prototype.removeChild = function(e) {
+	if (!_domRemoved) return;
 	_domRemoved(e);
 	try { return this._removeChild(e); }
 	catch (err) {

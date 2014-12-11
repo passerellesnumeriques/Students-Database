@@ -475,7 +475,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			var col_picture = new GridColumn('data_list_picture', "Picture", null, "left", "field_html", false, null, null, {}, null);
 			var thumb_container = document.createElement("DIV");
 			thumb_container.style.overflow = "auto";
-			thumb_container.style.flex = "1 1 auto";
+			thumb_container.style.flex = "1 1 100%";
 			thumb_container.style.display = "none";
 			t.thumb_container = thumb_container;
 

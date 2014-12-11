@@ -47,7 +47,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		//this.header.style.backgroundColor = "#D8D8D8";
 		this.header.className = "header";
 		this.view_container = document.createElement("DIV");
-		this.view_container.style.flex = "1 1 auto";
+		this.view_container.style.flex = "1 1 100%";
 		this.view_container.style.backgroundColor = "white";
 		if (view_name != "upcoming")
 			container.appendChild(this.header);

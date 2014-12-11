@@ -124,13 +124,13 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	
 	/** Initialize the Location section with the address and the host partner */
 	this._initLocation = function() {
-		section_location.content.style.display = "flex";
-		section_location.content.style.flexDirection = "row";
+		//section_location.content.style.display = "flex";
+		//section_location.content.style.flexDirection = "row";
 		
 		var left = document.createElement("DIV");
-		var right = document.createElement("DIV");
+		//var right = document.createElement("DIV");
 		section_location.content.appendChild(left);
-		section_location.content.appendChild(right);
+		//section_location.content.appendChild(right);
 		
 		// if this is a new center, mark it as not saved
 		if (center_id == -1)

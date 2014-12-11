@@ -22,7 +22,7 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	this.scroll_up.style.position = "absolute";
 	this.scroll_up.style.top = "0px";
 	container.appendChild(this.scroll_up);
-	this.element.style.flex = "1 1 auto";
+	this.element.style.flex = "1 1 100%";
 	this.element.style.zIndex = 0;
 	container.appendChild(this.element);
 	this.scroll_down = document.createElement("DIV");

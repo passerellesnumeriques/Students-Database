@@ -256,7 +256,8 @@ function initPNApplication() {
 				if (window.pnapplication._frame_unload_listener)
 					unlistenEvent(window.frameElement, 'unload', window.pnapplication._frame_unload_listener);
 				this.onclose.fire();
-				window.top.pnapplication.unregisterWindow(window);
+				if (window.top.pnapplication)
+					window.top.pnapplication.unregisterWindow(window);
 			},
 			/** Internal list of {time,function} to call when the user is inactive */
 			_inactivity_listeners: [],
@@ -364,6 +365,7 @@ function initPNApplication() {
 			window.pnapplication.closeWindow();
 		}
 	});
+	var keep_browser = window.browser;
 	listenEvent(window, 'beforeunload', function(ev) {
 		if (window.pnapplication && window.pnapplication._data_unsaved && window.pnapplication._data_unsaved.length > 0) {
 			ev.returnValue = "The page contains unsaved data";
@@ -373,7 +375,8 @@ function initPNApplication() {
 			window._windowCloseRaised = true;
 			window.pnapplication.closeWindow();
 		}
-		return null;
+		if (keep_browser.IE == 0)
+			return null;
 	});
 };
 initPNApplication();

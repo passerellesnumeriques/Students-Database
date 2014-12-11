@@ -57,6 +57,7 @@ global $pn_app_version;
 	border-radius: 8px;
 	z-index: 1;
 	border: 1px solid #ffffff;
+	width: 100%;
 }
 #application_footer {
 	text-align: center;
@@ -181,7 +182,7 @@ global $pn_app_version;
 }
 </style>
 <div id="application_container" style="width:100%;height:100%;display:flex;flex-direction:column">
-	<div style="flex:1 1 auto;display:flex;flex-direction:row;">
+	<div style="flex:1 1 100%;display:flex;flex-direction:row;">
 		<div style="flex:none;display:flex;flex-direction:column;">
 			<div id='application_title' style="flex:none">
 				<img src='/static/application/logo.png'/>
@@ -195,12 +196,12 @@ echo "<div id='application_title_label'>Dev</div>";
 #END 
 ?>
 			</div>
-			<div id="application_left_menu_scroll" style="flex:1 1 auto;overflow:hidden;padding-right:5px;margin-right:-5px;z-index:2;">
+			<div id="application_left_menu_scroll" style="flex:1 1 100%;overflow:hidden;padding-right:5px;margin-right:-5px;z-index:2;">
 			</div>
 		</div>
-		<div style="flex:1 1 auto;display:flex;flex-direction:column;">
+		<div style="flex:1 1 100%;display:flex;flex-direction:column;">
 			<div id="application_header" style="flex:none;display:flex;flex-direction:row;">
-				<div id="application_menu_scroll" style="flex:1 1 auto;">
+				<div id="application_menu_scroll" style="flex:1 1 100%;">
 					<?php
 					$sections = array();
 					foreach (PNApplication::$instance->components as $cname=>$comp)
@@ -237,7 +238,7 @@ echo "<div id='application_title_label'>Dev</div>";
 					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat" id='logout'><img src='/static/application/logout_white.png'/></button></a>
 				</div>
 			</div>
-			<iframe id="application_frame" name="application_frame" style="flex:1 1 auto;"></iframe>
+			<iframe id="application_frame" name="application_frame" style="flex:1 1 100%;"></iframe>
 		</div>
 	</div>
 	<div id="application_footer" style="flex:none;height:16px;">
