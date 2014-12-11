@@ -12,15 +12,32 @@ class service_download extends Service {
 		if (isset($_GET["download"])) {
 			// deploy utils functionalities
 			require_once("component/application/service/deploy_utils.inc");
+			if (isset($_POST["getmirrors"])) {
+				try {
+					$list = getMirrorsList(json_decode($_POST["provider_info"],true));
+					if ($list == null) {
+						header("HTTP/1.0 200 Error");
+						die("Unable to get mirrors list");
+					}
+					echo json_encode($list);
+					die();
+				} catch (Exception $e) {
+					header("HTTP/1.0 200 Error");
+					die($e->getMessage());
+				}
+			}
 			$url = $_POST["url"];
 			if (isset($_POST["getsize"])) {
 				try {
-					$size = getURLFileSize($url, "application/octet-stream");
-					if ($size <= 0) {
+					$mirror_id = @$_POST["mirror_id"];
+					$mirrors_provider = @$_POST["mirrors_provider"];
+					$res = getURLFileSize($url, "application/octet-stream", $mirror_id, $mirrors_provider);
+					$info = json_decode($res, true);
+					if ($info == null || $info["size"] <= 0) {
 						header("HTTP/1.0 200 Error");
-						die("Unable to find the file on SourceForge");
+						die("Unable to find the file on SourceForge".$size);
 					}
-					die("".$size);
+					die($res);
 				} catch (Exception $e) {
 					header("HTTP/1.0 200 Error");
 					die($e->getMessage());
