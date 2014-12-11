@@ -13,6 +13,18 @@ function download(backend_url, file_url, target_file, progress_container, end_ha
 			var mirror_text = document.createElement("SPAN");
 			mirror_text.innerHTML = " using mirror: "+mirror_name;
 			progress_container.appendChild(mirror_text);
+		} else {
+			var i = final_url.indexOf('//');
+			if (i > 0) {
+				var s = final_url.substr(i+2);
+				var j = s.indexOf('/');
+				if (j > 0) {
+					s = s.subtring(0,j);
+					var mirror_text = document.createElement("SPAN");
+					mirror_text.innerHTML = " using <i>"+s+"</i>";
+					progress_container.appendChild(mirror_text);			
+				}
+			}
 		}
 		var new_mirror_id = null;
 		var new_mirror_name = null;
