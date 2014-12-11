@@ -9,6 +9,11 @@ class page_si_applicant extends Page {
 		$can_edit = PNApplication::$instance->user_management->has_right("edit_social_investigation");
 		$edit = $can_edit && @$_GET["edit"] == "true"; 
 
+		$visits = SQLQuery::create()->select("SocialInvestigation")->whereValue("SocialInvestigation","applicant",$people_id)->field("event")->executeSingleField();
+		if (count($visits) > 0) {
+			require_once 'component/calendar/CalendarJSON.inc';
+			$visits = CalendarJSON::getEventsFromDB($visits, $this->component->getCalendarId());
+		}
 		$family = PNApplication::$instance->family->getFamily($people_id, "Child");
 		$houses = SQLQuery::create()->select("SIHouse")->whereValue("SIHouse","applicant",$people_id)->execute();
 		$farm = SQLQuery::create()->select("SIFarm")->whereValue("SIFarm", "applicant", $people_id)->executeSingleRow();
@@ -58,6 +63,8 @@ class page_si_applicant extends Page {
 		$this->requireJavascript("si_other_expenses.js");
 		$this->requireJavascript("multiple_choice_other.js");
 		$this->requireJavascript("pictures_section.js");
+		$this->requireJavascript("who.js");
+		$this->requireJavascript("calendar_objects.js");
 		$this->addStylesheet("/static/selection/si/si_houses.css");
 ?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;'>
@@ -129,8 +136,102 @@ var can_edit = <?php echo $edit ? "true" : "false";?>;
 var section_family = sectionFromHTML('section_family');
 var fam = new family(section_family.content, <?php echo json_encode($family[0]);?>, <?php echo json_encode($family[1]);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
-sectionFromHTML('section_visits');
-// TODO date, who
+var section_visits = sectionFromHTML('section_visits');
+function si_visits(section, events, calendar_id, applicant_id, can_edit) {
+	section.content.style.padding = "5px";
+	this.events = events;
+	var t=this;
+	this.createEvent = function(event) {
+		if (this.events.length == 1) section.content.innerHTML = ""; // first one, remove the 'None'
+		var container = document.createElement("DIV");
+		section.content.appendChild(container);
+		var div = document.createElement("DIV");
+		container.appendChild(div);
+		div.innerHTML = "<b>When ?</b> ";
+		var date = document.createElement(can_edit ? "A" : "SPAN");
+		div.appendChild(date);
+		if (can_edit) {
+			var updateText = function() {
+				if (!event.start) date.innerHTML = "Not set";
+				else {
+					var d = new Date();
+					d.setFullYear(event.start.getUTCFullYear());
+					d.setMonth(event.start.getUTCMonth());
+					d.setDate(event.start.getUTCDate());
+					date.innerHTML = getDateString(d);
+				}
+			};
+			updateText();
+			date.href = '#';
+			date.className = "black_link";
+			date.onclick = function() {
+				require(["date_picker.js","context_menu.js"],function() {
+					var menu = new context_menu();
+					new date_picker(event.start,null,null,function(picker){
+						picker.onchange = function(picker, date) {
+							event.start = new Date();
+							event.start.setHours(0,0,0,0);
+							event.start.setUTCFullYear(date.getFullYear());
+							event.start.setUTCMonth(date.getMonth());
+							event.start.setUTCDate(date.getDate());
+							updateText();
+						};
+						picker.getElement().style.border = 'none';
+						menu.addItem(picker.getElement());
+						picker.getElement().onclick = null;
+						menu.element.className = menu.element.className+" popup_date_picker";
+						menu.showBelowElement(date);
+					});
+				});
+				return false;
+			};
+			var remove = document.createElement("BUTTON");
+			remove.className = "flat small_icon";
+			remove.style.marginLeft = "5px";
+			remove.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+			remove.title = "Remove this visit";
+			div.appendChild(remove);
+			remove.onclick = function() {
+				t.events.removeUnique(event);
+				section.content.removeChild(container);
+			};
+		} else {
+			var d = new Date();
+			d.setFullYear(event.start.getUTCFullYear());
+			d.setMonth(event.start.getUTCMonth());
+			d.setDate(event.start.getUTCDate());
+			date.appendChild(document.createTextNode(getDateString(d)));
+		}
+		div = document.createElement("DIV");
+		div.innerHTML = "<b>Who ?</b>";
+		container.appendChild(div);
+		var peoples = [];
+		// TODO
+		var who = new who_container(container,peoples,can_edit,'si');
+		container.appendChild(who.createAddButton("Which Social Investigators ?"));
+	};
+	if (events.length == 0) section.content.innerHTML = "<i>None</i>";
+	for (var i = 0; i < events.length; ++i) this.createEvent(events[i]);
+	if (can_edit) {
+		var add_button = document.createElement("BUTTON");
+		add_button.className = "flat icon";
+		add_button.innerHTML = "<img src='"+theme.build_icon("/static/calendar/calendar_16.png",theme.icons_10.add)+"'/>";
+		add_button.title = "Schedule a new visit";
+		section.addToolRight(add_button);
+		var id_counter = -1;
+		add_button.onclick = function() {
+			var ev = new CalendarEvent(id_counter--, 'PN', calendar_id, null, null, null, true);
+			t.events.push(ev);
+			t.createEvent(ev);
+		};
+		this.save = function(ondone) {
+			var locker = lock_screen(null, "Saving Visits Schedules...");
+			// TODO
+			unlock_screen(locker);
+		};
+	}
+}
+var visits = new si_visits(section_visits, <?php if (count($visits) == 0) echo "[]"; else echo CalendarJSON::JSONList($visits);?>, <?php echo $this->component->getCalendarId();?>, <?php echo $people_id;?>, can_edit);
 
 var section_pictures = sectionFromHTML('section_pictures');
 new pictures_section(section_pictures, <?php echo json_encode($pictures);?>, 200, 200, can_edit, "selection", "si/add_picture", {applicant:<?php echo $people_id;?>});
@@ -180,27 +281,29 @@ function cancelEdit() {
 }
 window.onuserinactive = cancelEdit;
 function save() {
-	fam.save(function() {
-		applicant_houses.save(function() {
-			applicant_farm.save(function() {
-				applicant_fishing.save(function() {
-					applicant_belongings.save(function() {
-						other_incomes.save(function() {
-							help_incomes.save(function() {
-								health.save(function() {
-									expenses.save(function() {
-										var comment = document.getElementById('global_comment').value;
-										var locker = lock_screen(null, "Saving Global Comment...");
-										if (has_global_comment) {
-											service.json("data_model","save_cell",{table:'SIGlobalComment',column:'comment',value:comment,row_key:<?php echo $people_id;?>,sub_model:<?php echo $this->component->getCampaignId();?>,lock:null},function(res) {
-												unlock_screen(locker);
-											});
-										} else {
-											service.json("data_model","add_row",{table:'SIGlobalComment',columns:{applicant:<?php echo $people_id;?>,comment:comment},sub_model:<?php echo $this->component->getCampaignId();?>},function(res) {
-												if (res) has_global_comment = true;
-												unlock_screen(locker);
-											});
-										}
+	visits.save(function() {
+		fam.save(function() {
+			applicant_houses.save(function() {
+				applicant_farm.save(function() {
+					applicant_fishing.save(function() {
+						applicant_belongings.save(function() {
+							other_incomes.save(function() {
+								help_incomes.save(function() {
+									health.save(function() {
+										expenses.save(function() {
+											var comment = document.getElementById('global_comment').value;
+											var locker = lock_screen(null, "Saving Global Comment...");
+											if (has_global_comment) {
+												service.json("data_model","save_cell",{table:'SIGlobalComment',column:'comment',value:comment,row_key:<?php echo $people_id;?>,sub_model:<?php echo $this->component->getCampaignId();?>,lock:null},function(res) {
+													unlock_screen(locker);
+												});
+											} else {
+												service.json("data_model","add_row",{table:'SIGlobalComment',columns:{applicant:<?php echo $people_id;?>,comment:comment},sub_model:<?php echo $this->component->getCampaignId();?>},function(res) {
+													if (res) has_global_comment = true;
+													unlock_screen(locker);
+												});
+											}
+										});
 									});
 								});
 							});
