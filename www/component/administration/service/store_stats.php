@@ -12,6 +12,16 @@ class service_store_stats extends Service {
 			$user = PNApplication::$instance->user_management->domain."/".PNApplication::$instance->user_management->username;
 		else
 			$user = "";
+		if (file_exists("data/cron/tasks_time")) {
+			$info = stat("data/cron/tasks_time");
+			$cron_time = @$info["mtime"];
+		} else 
+			$cron_time = 0;
+		if (file_exists("data/cron/maintenance_tasks_time")) {
+			$info = stat("data/cron/maintenance_tasks_time");
+			$cron_maintenance_time = @$info["mtime"];
+		} else 
+			$cron_maintenance_time = 0;
 		$c = curl_init("http://stats.lecousin.net/store");
 		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_HEADER, FALSE);
@@ -27,7 +37,11 @@ class service_store_stats extends Service {
 #END
 			"domain"=>PNApplication::$instance->local_domain,
 			"user"=>$user,
-			"host"=>$_SERVER["HTTP_HOST"]
+			"host"=>$_SERVER["HTTP_HOST"],
+			"uid"=>@file_get_contents("conf/instance.uid"),
+			"google_installed"=>PNApplication::$instance->google->isInstalled() ? 1 : 0,
+			"cron"=>$cron_time,
+			"cron_maintenance"=>$cron_maintenance_time
 		));
 		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
 		curl_setopt($c, CURLOPT_TIMEOUT, 25);
