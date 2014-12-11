@@ -6,7 +6,7 @@ function download(backend_url, file_url, target_file, progress_container, end_ha
 		var final_url = file_url;
 		if (res.final_url) final_url = res.final_url;
 		var progress_text = document.createElement("SPAN");
-		progress_container.removeAllChildren();
+		progress_container.innerHTML = "";
 		progress_container.appendChild(progress_text);
 		progress_text.innerHTML = "0% ("+(res.size/(1024*1024)).toFixed(2)+"M)";
 		if (mirror_id) {
