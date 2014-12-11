@@ -152,4 +152,14 @@ $sm->addTable("SIExpense")
 	->addRemoveAccess("edit_social_investigation", true)
 	;
 
+$sm->addTable("SIGlobalComment")
+	->addForeignKey("applicant", "People", true, false, false, false, true)
+	->setPrimary("applicant")
+	->addString("comment",5000,0,false,false)
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
+	;
+
 ?>

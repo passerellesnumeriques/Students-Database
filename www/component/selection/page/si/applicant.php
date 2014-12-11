@@ -22,6 +22,7 @@ class page_si_applicant extends Page {
 		$helps = SQLQuery::create()->select("SIHelpIncome")->whereValue("SIHelpIncome","applicant",$people_id)->execute();
 		$health = SQLQuery::create()->select("SIHealth")->whereValue("SIHealth","applicant",$people_id)->execute();
 		$expenses = SQLQuery::create()->select("SIExpense")->whereValue("SIExpense","applicant",$people_id)->execute();
+		$global_comment = SQLQuery::create()->select("SIGlobalComment")->whereValue("SIGlobalComment","applicant",$people_id)->field("comment")->executeSingleValue();
 		
 		$locked_by = null;
 		if ($edit) {
@@ -105,6 +106,11 @@ if ($locked_by <> null) {
 				</div>
 			</div>
 		</div>
+		<div id='section_global_comment' title="Global Comment" collapsable="true" style='margin:5px;vertical-align:top'>
+			<div style='padding:5px;padding-right:10px'>
+				<textarea id='global_comment' style='width:100%;' rows=10 <?php if (!$edit) echo "disabled='disabled'";?>><?php if ($global_comment <> null) echo toHTML($global_comment);?></textarea>
+			</div>
+		</div>
 	</div>
 	<div class='page_footer' style='flex:none'>
 		<?php if ($can_edit) {
@@ -163,6 +169,9 @@ var health = new si_health(section_health, <?php echo json_encode($health);?>, <
 var section_other_expenses = sectionFromHTML('section_other_expenses');
 var expenses = new si_other_expenses(section_other_expenses, <?php echo json_encode($expenses);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
+var section_global_comment = sectionFromHTML('section_global_comment');
+var has_global_comment = <?php echo $global_comment <> null ? "true" : "false";?>;
+
 function edit() {
 	location.href = "?people=<?php echo $people_id;?>&edit=true";
 }
@@ -180,6 +189,18 @@ function save() {
 							help_incomes.save(function() {
 								health.save(function() {
 									expenses.save(function() {
+										var comment = document.getElementById('global_comment').value;
+										var locker = lock_screen(null, "Saving Global Comment...");
+										if (has_global_comment) {
+											service.json("data_model","save_cell",{table:'SIGlobalComment',column:'comment',value:comment,row_key:<?php echo $people_id;?>,sub_model:<?php echo $this->component->getCampaignId();?>,lock:null},function(res) {
+												unlock_screen(locker);
+											});
+										} else {
+											service.json("data_model","add_row",{table:'SIGlobalComment',columns:{applicant:<?php echo $people_id;?>,comment:comment},sub_model:<?php echo $this->component->getCampaignId();?>},function(res) {
+												if (res) has_global_comment = true;
+												unlock_screen(locker);
+											});
+										}
 									});
 								});
 							});

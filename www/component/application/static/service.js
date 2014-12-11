@@ -184,7 +184,7 @@ window.service = {
 			}
 			s += "}";
 		} else if (typeof input == 'string')
-			s += "\""+input.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")+"\"";
+			s += "\""+input.replace(/\\/g, "\\\\").replace(/"/g, "\\\"").replace(/\n/g, "\\n").replace(/\r/g, "\\r")+"\"";
 		else if (typeof input != 'function')
 			s += input;
 		if (typeof input == 'object') {
