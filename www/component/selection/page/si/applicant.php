@@ -20,6 +20,8 @@ class page_si_applicant extends Page {
 		$belongings = SQLQuery::create()->select("SIBelonging")->whereValue("SIBelonging","applicant",$people_id)->execute();
 		$other_incomes = SQLQuery::create()->select("SIIncome")->whereValue("SIIncome","applicant",$people_id)->execute();
 		$helps = SQLQuery::create()->select("SIHelpIncome")->whereValue("SIHelpIncome","applicant",$people_id)->execute();
+		$health = SQLQuery::create()->select("SIHealth")->whereValue("SIHealth","applicant",$people_id)->execute();
+		$expenses = SQLQuery::create()->select("SIExpense")->whereValue("SIExpense","applicant",$people_id)->execute();
 		
 		$locked_by = null;
 		if ($edit) {
@@ -51,6 +53,8 @@ class page_si_applicant extends Page {
 		$this->requireJavascript("si_belongings.js");
 		$this->requireJavascript("si_other_incomes.js");
 		$this->requireJavascript("si_help_incomes.js");
+		$this->requireJavascript("si_health.js");
+		$this->requireJavascript("si_other_expenses.js");
 		$this->requireJavascript("multiple_choice_other.js");
 		$this->requireJavascript("pictures_section.js");
 		$this->addStylesheet("/static/selection/si/si_houses.css");
@@ -95,6 +99,10 @@ if ($locked_by <> null) {
 		</div>
 		<div id='section_expenses' title="Health / Expenses" collapsable="true" style='margin:5px;display:inline-block;vertical-align:top'>
 			<div>
+				<div id='section_health' title="Health" icon="/static/health/health.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+				</div>
+				<div id='section_other_expenses' title="Other expenses" icon="/static/selection/si/money.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -142,11 +150,18 @@ var applicant_fishing = new fishing(section_fishing.content, <?php echo json_enc
 
 var section_other_incomes = sectionFromHTML('section_other_incomes');
 var other_incomes = new si_other_incomes(section_other_incomes, <?php echo json_encode($other_incomes);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
+
 var section_help = sectionFromHTML('section_help');
 var help_incomes = new si_help_incomes(section_help, <?php echo json_encode($helps);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
 var section_goods = sectionFromHTML('section_goods');
 var applicant_belongings = new belongings(section_goods, <?php echo json_encode($belongings);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
+
+var section_health = sectionFromHTML('section_health');
+var health = new si_health(section_health, <?php echo json_encode($health);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
+
+var section_other_expenses = sectionFromHTML('section_other_expenses');
+var expenses = new si_other_expenses(section_other_expenses, <?php echo json_encode($expenses);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
 function edit() {
 	location.href = "?people=<?php echo $people_id;?>&edit=true";
@@ -163,6 +178,10 @@ function save() {
 					applicant_belongings.save(function() {
 						other_incomes.save(function() {
 							help_incomes.save(function() {
+								health.save(function() {
+									expenses.save(function() {
+									});
+								});
 							});
 						});
 					});

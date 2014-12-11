@@ -126,5 +126,30 @@ $sm->addTable("SIHelpIncome")
 	->addInsertAccess("edit_social_investigation", true)
 	->addRemoveAccess("edit_social_investigation", true)
 	;
-	
+
+$sm->addTable("SIHealth")
+	->addPrimaryKey("id")
+	->addForeignKey("applicant", "People", true, false, true, false, false)
+	->addString("who", 200, 1, false, false)
+	->addString("what", 200, 0, true, false)
+	->addString("cost", 200, 0, true, false)
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
+	;
+
+$sm->addTable("SIExpense")
+	->addPrimaryKey("id")
+	->addForeignKey("applicant", "People", true, false, true, false, false)
+	->addString("description", 200, 1, false, false)
+	->addDecimal("expense",10,2,0,null,true,false)
+	->addString("expense_freq",25,0,true,false)
+	->addString("comment", 200, 0, true, false)
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
+	;
+
 ?>
