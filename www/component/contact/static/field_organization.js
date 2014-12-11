@@ -84,6 +84,8 @@ field_organization.prototype.helpFillMultipleItems = function() {
 	return helper;
 };
 field_organization.prototype._addPossibleValue = function(org_id, org_name, areas) {
+	for (var i = 0; i < this.config.list.length; ++i)
+		if (this.config.list[i].id == org_id) return; // we already have it ?
 	this.config.list.push({id:org_id,name:org_name,areas:areas});
 };
 function getOrganizationIDFromData(data, list) {
@@ -116,9 +118,13 @@ field_organization.prototype._getOrgName = function(id) {
 field_organization.prototype._create = function(data) {
 	if (this.editable) {
 		data = this._getOrgIDFromData(data);
-		this.select = new OrganizationSelectionField(this.config.list, data, this.config.name);
-		this.element.appendChild(this.select.input);
 		var t=this;
+		this.select = new OrganizationSelectionField(this.config.list, data, this.config.name, function(new_name) {
+			t.createValue(new_name, t.config.name, function(final_name) {
+				t.select.setId(t._getOrgIDFromData(final_name));
+			});
+		});
+		this.element.appendChild(this.select.input);
 		this.select.closeOnBlur = function() {
 			var f = t.select.input.onfocus;
 			t.select.input.onfocus = null;
@@ -146,13 +152,7 @@ field_organization.prototype._create = function(data) {
 			this.select.input.title = error ? error : "";
 		};
 		this._fillWidth = function() {
-			// calculate the minimum width of the select, to be able to see it...
-			var included_in_body = false;
-			if (this.element.parentNode == null) {
-				included_in_body = true;
-				document.body.appendChild(this.element);
-			}
-			this.select.input.style.width = "100%";
+			this.select.fillWidth();
 		};
 	} else {
 		this.element.style.whiteSpace = "nowrap";
@@ -168,20 +168,34 @@ field_organization.prototype._create = function(data) {
 	}
 	this._setData(data);
 };
-function OrganizationSelectionField(list, selected_id, name) {
+function OrganizationSelectionField(list, selected_id, name, create) {
 	require("mini_popup.js");
 	this.onchanged = new Custom_Event();
 	this.input = document.createElement("INPUT");
 	this.input.type = "text";
+	this.input.onkeydown = function(ev) {
+		var e = getCompatibleKeyEvent(ev);
+		if (e.isTab) return true;
+		stopEventPropagation(ev);
+		return false;
+	}
+	var t=this;
 	this.selected_id = selected_id;
 	if (selected_id)
 		for (var i = 0; i < list.length; ++i)
 			if (list[i].id == selected_id) { this.input.value = list[i].name; break; }
-	var t=this;
 	this.input.onfocus = function() {
 		require("mini_popup.js",function() {
 			var p = new mini_popup("Select "+name, true);
-			var s = new OrganizationSelectionPopupContent(list, false, []);
+			var s = new OrganizationSelectionPopupContent(list, false, [], create ? function(new_name) {
+				confirm_dialog("Do you want to create a new "+name+" <b>"+new_name+"</b> ?", function(yes) {
+					if (!yes) return;
+					p.close();
+					create(new_name);
+				});
+			} : null, function() {
+				p.close();
+			});
 			if (t.closeOnBlur) s.closeOnBlur = function() {
 				p.close();
 				t.closeOnBlur();
@@ -192,7 +206,7 @@ function OrganizationSelectionField(list, selected_id, name) {
 			p.content.appendChild(s.content);
 			s.onchange.add_listener(function() {
 				for (var i = 0; i < list.length; ++i)
-					if (list[i].id == s.selected_ids[0]) { t.input.value = list[i].name; break; }
+					if (list[i].id == s.selected_ids[0]) { t.input.value = list[i].name; if (t.input.autoresize) t.input.autoresize(); break; }
 				t.selected_id = s.selected_ids[0];
 				t.onchanged.fire(t);
 				p.close();
@@ -201,12 +215,14 @@ function OrganizationSelectionField(list, selected_id, name) {
 			s.focus();
 		});
 	};
-	this.input.onkeydown = function(ev) {
-		var e = getCompatibleKeyEvent(ev);
-		if (e.isTab) return true;
-		stopEventPropagation(ev);
-		return false;
-	}
+	var _fw = false;
+	require("input_utils.js", function() { inputAutoresize(t.input, _fw ? -1 : 10); });
+	this.fillWidth = function() {
+		_fw = true;
+		this.input.style.minWidth = "100%";
+		if (typeof this.input.setMinimumSize == 'function')
+			this.input.setMinimumSize(-1);
+	};
 	this.setId = function(id) {
 		if (id == this.selected_id) return;
 		this.selected_id = id;
@@ -216,7 +232,7 @@ function OrganizationSelectionField(list, selected_id, name) {
 		this.selected_id = null;
 	};
 }
-function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
+function OrganizationSelectionPopupContent(list, multiple, selected_ids, create, cancel) {
 	if (!multiple) {
 		window.top.theme.css("context_menu.css");
 		theme.css("context_menu.css");
@@ -251,7 +267,40 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 			this.input.style.flex = "1 1 auto";
 			this.input.tabIndex = 1;
 			this.div.appendChild(this.input);
-			this.input.onkeyup = function() {
+			this.input.onkeyup = function(ev) {
+				if (!multiple) {
+					// can select using keyboard
+					var e = getCompatibleKeyEvent(ev);
+					if (e.isArrowDown) {
+						t._byname.keyboardSelectionDown();
+						return;
+					}
+					if (e.isArrowUp) {
+						t._byname.keyboardSelectionUp();
+						return;
+					}
+					if (e.isEnter) {
+						stopEventPropagation(ev);
+						var sel = t._byname.getKeyboardSelection();
+						if (sel) {
+							t.selected_ids = [sel.id];
+							t.onchange.fire();
+							return false;
+						}
+						if (this.value.trim().length > 0 && create) {
+							create(this.value.trim());
+							return false;
+						}
+						return false;
+					}
+					if (e.isEscape) {
+						if (cancel) {
+							stopEventPropagation(ev);
+							cancel();
+							return false;
+						}
+					}
+				}
 				setTimeout(function() {
 					var name = t._search.input.value;
 					name = name.trim().latinize().toLowerCase();
@@ -335,6 +384,49 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids) {
 				} else
 					item.style.display = "none";
 			}
+			if (this._keyboard_selected) {
+				var item = null;
+				for (var i = 0; i < this.content.childNodes.length; ++i)
+					if (this.content.childNodes[i]._org == this._keyboard_selected) { item = this.content.childNodes[i]; break; }
+				removeClassName(item, "selected");
+				this._keyboard_selected = null;
+			}
+		},
+		_keyboard_selected: null,
+		keyboardSelectionDown: function() {
+			if (this._keyboard_selected == null) {
+				if (this.content.childNodes.length == 0) return;
+				var item = this.content.childNodes[0];
+				while (item && item.style.display == "none") item = item.nextSibling;
+				if (!item) return;
+				this._keyboard_selected = item._org;
+				addClassName(item, "selected");
+				return;
+			}
+			var item = null;
+			for (var i = 0; i < this.content.childNodes.length; ++i)
+				if (this.content.childNodes[i]._org == this._keyboard_selected) { item = this.content.childNodes[i]; break; }
+			var next = item.nextSibling;
+			while (next && next.style.display == "none") next = next.nextSibling;
+			if (!next) return;
+			removeClassName(item, "selected");
+			this._keyboard_selected = next._org;
+			addClassName(next, "selected");
+		},
+		keyboardSelectionUp: function() {
+			if (this._keyboard_selected == null) return;
+			var item = null;
+			for (var i = 0; i < this.content.childNodes.length; ++i)
+				if (this.content.childNodes[i]._org == this._keyboard_selected) { item = this.content.childNodes[i]; break; }
+			var prev = item.previousSibling;
+			while (prev && prev.style.display == "none") prev = prev.previousSibling;
+			if (!prev) return;
+			removeClassName(item, "selected");
+			this._keyboard_selected = prev._org;
+			addClassName(prev, "selected");
+		},
+		getKeyboardSelection: function() {
+			return this._keyboard_selected;
 		}
 	};
 	this._byarea = {
