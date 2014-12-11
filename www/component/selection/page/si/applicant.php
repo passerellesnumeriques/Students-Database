@@ -17,6 +17,7 @@ class page_si_applicant extends Page {
 		$q = SQLQuery::create()->select("SIPicture")->whereValue("SIPicture","applicant",$people_id);
 		PNApplication::$instance->storage->joinRevision($q, "SIPicture", "picture", "revision");
 		$pictures = $q->field("SIPicture","picture","id")->execute();
+		$belongings = SQLQuery::create()->select("SIBelonging")->whereValue("SIBelonging","applicant",$people_id)->execute();
 		
 		$locked_by = null;
 		if ($edit) {
@@ -45,6 +46,7 @@ class page_si_applicant extends Page {
 		$this->requireJavascript("si_houses.js");
 		$this->requireJavascript("si_farm.js");
 		$this->requireJavascript("si_fishing.js");
+		$this->requireJavascript("si_belongings.js");
 		$this->requireJavascript("multiple_choice_other.js");
 		$this->requireJavascript("pictures_section.js");
 		$this->addStylesheet("/static/selection/si/si_houses.css");
@@ -71,7 +73,7 @@ if ($locked_by <> null) {
 			<div>
 				<div id='section_houses' title="Houses" icon="/static/selection/si/house_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
 				</div>
-				<div id='section_goods' title="Goods/Belongings" icon="/static/selection/si/tv_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+				<div id='section_goods' title="Goods / Belongings / Furnitures" icon="/static/selection/si/tv_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
 				</div>
 			</div>
 		</div>
@@ -130,6 +132,7 @@ var section_fishing = sectionFromHTML('section_fishing');
 var applicant_fishing = new fishing(section_fishing.content, <?php echo json_encode($fishing);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
 var section_goods = sectionFromHTML('section_goods');
+var applicant_belongings = new belongings(section_goods, <?php echo json_encode($belongings);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
 function edit() {
 	location.href = "?people=<?php echo $people_id;?>&edit=true";
@@ -143,6 +146,8 @@ function save() {
 		applicant_houses.save(function() {
 			applicant_farm.save(function() {
 				applicant_fishing.save(function() {
+					applicant_belongings.save(function() {
+					});
 				});
 			});
 		});

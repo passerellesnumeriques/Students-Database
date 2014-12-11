@@ -90,4 +90,14 @@ $sm->addTable("SIPicture")
 	->addInsertAccess("edit_social_investigation", true)
 	->addRemoveAccess("edit_social_investigation", true)
 	;
+
+$sm->addTable("SIBelonging")
+	->addPrimaryKey("id")
+	->addForeignKey("applicant", "People", true, false, true, false, false)
+	->addString("description", 500, 1, false, false)
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
+	;
 ?>
