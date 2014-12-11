@@ -19,7 +19,7 @@ function download(backend_url, file_url, target_file, progress_container, end_ha
 				var s = final_url.substr(i+2);
 				var j = s.indexOf('/');
 				if (j > 0) {
-					s = s.subtring(0,j);
+					s = s.substring(0,j);
 					var mirror_text = document.createElement("SPAN");
 					mirror_text.innerHTML = " using <i>"+s+"</i>";
 					progress_container.appendChild(mirror_text);			
