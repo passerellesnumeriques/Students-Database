@@ -100,4 +100,31 @@ $sm->addTable("SIBelonging")
 	->addInsertAccess("edit_social_investigation", true)
 	->addRemoveAccess("edit_social_investigation", true)
 	;
+
+$sm->addTable("SIIncome")
+	->addPrimaryKey("id")
+	->addForeignKey("applicant", "People", true, false, true, false, false)
+	->addString("description", 200, 1, false, false)
+	->addDecimal("income",10,2,0,null,true,false)
+	->addString("income_freq",25,0,true,false)
+	->addString("comment", 200, 0, true, false)
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
+	;
+	
+$sm->addTable("SIHelpIncome")
+	->addPrimaryKey("id")
+	->addForeignKey("applicant", "People", true, false, true, false, false)
+	->addString("who", 200, 1, false, false)
+	->addDecimal("income",10,2,0,null,true,false)
+	->addString("income_freq",25,0,true,false)
+	->addString("comment", 200, 0, true, false)
+	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
+	;
+	
 ?>

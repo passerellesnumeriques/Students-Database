@@ -18,6 +18,8 @@ class page_si_applicant extends Page {
 		PNApplication::$instance->storage->joinRevision($q, "SIPicture", "picture", "revision");
 		$pictures = $q->field("SIPicture","picture","id")->execute();
 		$belongings = SQLQuery::create()->select("SIBelonging")->whereValue("SIBelonging","applicant",$people_id)->execute();
+		$other_incomes = SQLQuery::create()->select("SIIncome")->whereValue("SIIncome","applicant",$people_id)->execute();
+		$helps = SQLQuery::create()->select("SIHelpIncome")->whereValue("SIHelpIncome","applicant",$people_id)->execute();
 		
 		$locked_by = null;
 		if ($edit) {
@@ -47,6 +49,8 @@ class page_si_applicant extends Page {
 		$this->requireJavascript("si_farm.js");
 		$this->requireJavascript("si_fishing.js");
 		$this->requireJavascript("si_belongings.js");
+		$this->requireJavascript("si_other_incomes.js");
+		$this->requireJavascript("si_help_incomes.js");
 		$this->requireJavascript("multiple_choice_other.js");
 		$this->requireJavascript("pictures_section.js");
 		$this->addStylesheet("/static/selection/si/si_houses.css");
@@ -137,9 +141,9 @@ var section_fishing = sectionFromHTML('section_fishing');
 var applicant_fishing = new fishing(section_fishing.content, <?php echo json_encode($fishing);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
 var section_other_incomes = sectionFromHTML('section_other_incomes');
-// TODO descr, amount, frequency, comment
+var other_incomes = new si_other_incomes(section_other_incomes, <?php echo json_encode($other_incomes);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 var section_help = sectionFromHTML('section_help');
-// TODO who, amount, frequency, comment
+var help_incomes = new si_help_incomes(section_help, <?php echo json_encode($helps);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
 var section_goods = sectionFromHTML('section_goods');
 var applicant_belongings = new belongings(section_goods, <?php echo json_encode($belongings);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
@@ -157,6 +161,10 @@ function save() {
 			applicant_farm.save(function() {
 				applicant_fishing.save(function() {
 					applicant_belongings.save(function() {
+						other_incomes.save(function() {
+							help_incomes.save(function() {
+							});
+						});
 					});
 				});
 			});
