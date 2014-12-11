@@ -61,15 +61,15 @@ if ($locked_by <> null) {
 		<div id='section_family' title="Family" icon="/static/family/family_white_16.png" collapsable="true" style='margin:5px;display:inline-block;vertical-align:top'>
 			<div id='family_container'></div>
 		</div>
-		<div id='section_visits' title="Visits" collapsable="true" style='margin:5px;display:inline-block;'>
+		<div id='section_visits' title="Visits" collapsable="true" style='margin:5px;display:inline-block;vertical-align:top'>
 			<div>
 			</div>
 		</div>
-		<div id='section_pictures' title="Pictures" collapsable="true" style='margin:5px;display:inline-block;'>
+		<div id='section_pictures' title="Pictures" collapsable="true" style='margin:5px;display:inline-block;vertical-align:top'>
 			<div>
 			</div>
 		</div>
-		<div id='section_residence' title="Residence Status" collapsable="true" style='margin:5px;display:inline-block;'>
+		<div id='section_residence' title="Residence Status" collapsable="true" style='margin:5px;display:inline-block;vertical-align:top'>
 			<div>
 				<div id='section_houses' title="Houses" icon="/static/selection/si/house_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
 				</div>
@@ -77,15 +77,19 @@ if ($locked_by <> null) {
 				</div>
 			</div>
 		</div>
-		<div id='section_incomes' title="Economic Activites / Incomes" collapsable="true" style='margin:5px;display:inline-block;'>
+		<div id='section_incomes' title="Economic Activites / Incomes" collapsable="true" style='margin:5px;display:inline-block;vertical-align:top'>
 			<div>
 				<div id='section_farm' title="Farm" icon="/static/selection/si/farm_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
 				</div>
 				<div id='section_fishing' title="Fishing" icon="/static/selection/si/fish_16.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
 				</div>
+				<div id='section_other_incomes' title="Other incomes" icon="/static/selection/si/money.png" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+				</div>
+				<div id='section_help' title="Helping NGO / Sponsorships..." icon="/static/selection/si/helping.gif" collapsable="true" css='soft' style='margin:5px;display:inline-block;vertical-align:top'>
+				</div>
 			</div>
 		</div>
-		<div id='section_expenses' title="Health / Expenses" collapsable="true" style='margin:5px;display:inline-block;'>
+		<div id='section_expenses' title="Health / Expenses" collapsable="true" style='margin:5px;display:inline-block;vertical-align:top'>
 			<div>
 			</div>
 		</div>
@@ -108,6 +112,7 @@ var section_family = sectionFromHTML('section_family');
 var fam = new family(section_family.content, <?php echo json_encode($family[0]);?>, <?php echo json_encode($family[1]);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
 sectionFromHTML('section_visits');
+// TODO date, who
 
 var section_pictures = sectionFromHTML('section_pictures');
 new pictures_section(section_pictures, <?php echo json_encode($pictures);?>, 200, 200, can_edit, "selection", "si/add_picture", {applicant:<?php echo $people_id;?>});
@@ -130,6 +135,11 @@ var applicant_farm = new farm(section_farm.content, <?php echo json_encode($farm
 
 var section_fishing = sectionFromHTML('section_fishing');
 var applicant_fishing = new fishing(section_fishing.content, <?php echo json_encode($fishing);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
+
+var section_other_incomes = sectionFromHTML('section_other_incomes');
+// TODO descr, amount, frequency, comment
+var section_help = sectionFromHTML('section_help');
+// TODO who, amount, frequency, comment
 
 var section_goods = sectionFromHTML('section_goods');
 var applicant_belongings = new belongings(section_goods, <?php echo json_encode($belongings);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
