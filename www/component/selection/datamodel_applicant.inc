@@ -36,7 +36,7 @@ $sm->addTable("Applicant")
 	->addBoolean("interview_passer",true)
 	->addEnum("si_grade", array("Priority 1 (A+)", "Priority 2 (A)", "Priority 3 (A-)", "Priority 4 (B+)", "Priority 5 (B)", "Failed"), true, false)
 	->addEnum("final_decision", array("Selected","Waiting List","Rejected"), true, false)
-	->addEnum("applicant_decision", array("Will come", "Will not come"), true, false)
+	->addEnum("applicant_decision", array("Will come", "Declined"), true, false)
 	->addString("applicant_not_coming_reason",250,0,true,false)
 	->addColumnWriteAccess("information_session", "manage_information_session", true)
 	->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities

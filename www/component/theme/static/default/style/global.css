@@ -247,6 +247,15 @@ button.action.red:hover {
 button.action.red:disabled {
     background: #C0C0C0;
 }
+button.action.grey {
+    background: linear-gradient(to bottom, #e0e0e0, #606060);
+}
+button.action.grey:hover {
+	background: linear-gradient(to bottom, #f0f0f0, #808080);
+}
+button.action.grey:disabled {
+    background: #C0C0C0;
+}
 
 
 button.small {

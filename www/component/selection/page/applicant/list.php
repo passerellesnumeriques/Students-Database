@@ -21,6 +21,7 @@ class page_applicant_list extends SelectionPage {
 		$can_assign_to_exam = true;
 		$can_assign_to_interview = true;
 		$can_exclude = true;
+		$is_final = false;
 		$filters = "";
 		$forced_fields = array();
 		if (isset($_GET["type"])) {
@@ -58,6 +59,7 @@ class page_applicant_list extends SelectionPage {
 					array_push($forced_fields, array("Selection","Final Decision of PN"));
 					array_push($forced_fields, array("Selection","Final Decision of Applicant"));
 					array_push($forced_fields, array("Selection","Reason of Applicant to decline"));
+					$is_final = true;
 					break;
 			}
 		}
@@ -76,9 +78,20 @@ class page_applicant_list extends SelectionPage {
 				<?php if ($can_assign_to_interview) {?> 
 				<button class='action' id='button_assign_interview_center' disabled='disabled' onclick='assignInterviewCenter(this);'>Assign to Interview Center</button>
 				<?php }?>
-				<?php if ($can_exclude) {?> 
+				<?php if ($can_exclude) { ?> 
 				<button class='action red' id='button_exclude' disabled='disabled' onclick="excludeStudents();">Exclude from the process</button>
 				<?php }?>
+				<?php if ($is_final) { ?>
+				PN Decision:
+				<button class='action green' id='button_pn_selected' disabled='disabled' onclick='PNSelected();'>Selected!</button>
+				<button class='action' id='button_pn_waiting_list' disabled='disabled' onclick='PNWaitingList();'>Waiting List</button>
+				<button class='action red' id='button_pn_no' disabled='disabled' onclick='PNNo();'>No</button>
+				<button class='action grey' id='button_pn_remove' disabled='disabled' onclick='PNRemove();'>Remove Decision</button>
+				Applicant decision:
+				<button class='action green' id='button_app_yes' disabled='disabled' onclick='ApplicantYes();'>Yes</button>
+				<button class='action red' id='button_app_no' disabled='disabled' onclick='ApplicantNo();'>No</button>
+				<button class='action grey' id='button_app_remove' disabled='disabled' onclick='ApplicantRemove();'>Remove Decision</button>
+				<?php } ?>
 			</div>
 			<?php } ?>
 		</div>
@@ -152,10 +165,11 @@ class page_applicant_list extends SelectionPage {
 						});
 					};
 					list.addHeader(import_applicants);
+					<?php } ?>
 
+					<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) { ?>
 					list.grid.setSelectable(true);
 					list.grid.onselect = selectionChanged;
-
 					<?php } ?>
 
 					var has_forced_filter = false;
@@ -390,46 +404,130 @@ class page_applicant_list extends SelectionPage {
 		};
 		function selectionChanged(indexes, rows_ids) {
 			document.getElementById('nb_selected').innerHTML = indexes.length+" applicant"+(indexes.length>1?"s":"")+" selected";
+			<?php if ($can_assign_to_is) { ?>
 			document.getElementById('button_assign_is').disabled = indexes.length > 0 ? "" : "disabled";
+			<?php } ?>
+			<?php if ($can_assign_to_exam) { ?>
 			document.getElementById('button_assign_exam_center').disabled = indexes.length > 0 ? "" : "disabled";
+			<?php } ?>
+			<?php if ($can_assign_to_interview) { ?>
+			document.getElementById('button_assign_interview_center').disabled = indexes.length > 0 ? "" : "disabled";
+			<?php } ?>
+			<?php if ($can_exclude) { ?>
 			document.getElementById('button_exclude').disabled = indexes.length > 0 ? "" : "disabled";
+			<?php } ?>
+			<?php if ($is_final) { ?>
+			document.getElementById('button_pn_selected').disabled = indexes.length > 0 ? "" : "disabled";
+			document.getElementById('button_pn_waiting_list').disabled = indexes.length > 0 ? "" : "disabled";
+			document.getElementById('button_pn_no').disabled = indexes.length > 0 ? "" : "disabled";
+			document.getElementById('button_pn_remove').disabled = indexes.length > 0 ? "" : "disabled";
+			document.getElementById('button_app_yes').disabled = indexes.length > 0 ? "" : "disabled";
+			document.getElementById('button_app_no').disabled = indexes.length > 0 ? "" : "disabled";
+			document.getElementById('button_app_remove').disabled = indexes.length > 0 ? "" : "disabled";
+			<?php } ?>
+		}
+		function getSelectedApplicantsIds() {
+			var applicants_rows = dl.grid.getSelectionByRowId();
+			var applicants_ids = [];
+			for (var i = 0; i < applicants_rows.length; ++i)
+				applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
+			return applicants_ids;
 		}
 		function assignIS(button) {
 			require("assign_is.js", function() {
-				var applicants_rows = dl.grid.getSelectionByRowId();
-				var applicants_ids = [];
-				for (var i = 0; i < applicants_rows.length; ++i)
-					applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
-				assign_is(button, applicants_ids, function() {
+				assign_is(button, getSelectedApplicantsIds(), function() {
 					reload_list();
 				});
 			});
 		}
 		function assignExamCenter(button) {
-			var applicants_rows = dl.grid.getSelectionByRowId();
-			var applicants_ids = [];
-			for (var i = 0; i < applicants_rows.length; ++i)
-				applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
-			popup_frame("/static/selection/exam/exam_center_16.png", "Assign applicants to an exam center", "/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refreshList", {applicants:applicants_ids}, null, null, function(frame,popup) {
+			popup_frame("/static/selection/exam/exam_center_16.png", "Assign applicants to an exam center", "/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
 				frame.refreshList = reload_list;
 			});
 		}
 		function assignInterviewCenter(button) {
-			var applicants_rows = dl.grid.getSelectionByRowId();
-			var applicants_ids = [];
-			for (var i = 0; i < applicants_rows.length; ++i)
-				applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
-			popup_frame("/static/selection/interview/interview_16.png", "Assign applicants to an interview center", "/dynamic/selection/page/interview/assign_applicants_to_center?ondone=refreshList", {applicants:applicants_ids}, null, null, function(frame,popup) {
+			popup_frame("/static/selection/interview/interview_16.png", "Assign applicants to an interview center", "/dynamic/selection/page/interview/assign_applicants_to_center?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
 				frame.refreshList = reload_list;
 			});
 		}
 		function excludeStudents() {
-			var applicants_rows = dl.grid.getSelectionByRowId();
-			var applicants_ids = [];
-			for (var i = 0; i < applicants_rows.length; ++i)
-				applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
-			popup_frame(null, "Exclude applicants from the selection process", "/dynamic/selection/page/applicant/exclude?ondone=refreshList", {applicants:applicants_ids}, null, null, function(frame,popup) {
+			popup_frame(null, "Exclude applicants from the selection process", "/dynamic/selection/page/applicant/exclude?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
 				frame.refreshList = reload_list;
+			});
+		}
+		function PNSelected() {
+			var locker = lock_screen();
+			service.json("data_model","save_cells",{cells:[{
+				table: 'Applicant',
+				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
+				keys: getSelectedApplicantsIds(),
+				values: [{column:'final_decision',value:'Selected'}]
+			}]},function(res) {
+				reload_list();
+				unlock_screen(locker);
+			});
+		}
+		function PNWaitingList() {
+			var locker = lock_screen();
+			service.json("data_model","save_cells",{cells:[{
+				table: 'Applicant',
+				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
+				keys: getSelectedApplicantsIds(),
+				values: [{column:'final_decision',value:'Waiting List'}]
+			}]},function(res) {
+				reload_list();
+				unlock_screen(locker);
+			});
+		}
+		function PNNo() {
+			var locker = lock_screen();
+			service.json("data_model","save_cells",{cells:[{
+				table: 'Applicant',
+				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
+				keys: getSelectedApplicantsIds(),
+				values: [{column:'final_decision',value:'Rejected'}]
+			}]},function(res) {
+				reload_list();
+				unlock_screen(locker);
+			});
+		}
+		function PNRemove() {
+			var locker = lock_screen();
+			service.json("data_model","save_cells",{cells:[{
+				table: 'Applicant',
+				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
+				keys: getSelectedApplicantsIds(),
+				values: [{column:'final_decision',value:null}]
+			}]},function(res) {
+				reload_list();
+				unlock_screen(locker);
+			});
+		}
+		function ApplicantYes() {
+			var locker = lock_screen();
+			service.json("data_model","save_cells",{cells:[{
+				table: 'Applicant',
+				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
+				keys: getSelectedApplicantsIds(),
+				values: [{column:'applicant_decision',value:'Will come'}]
+			}]},function(res) {
+				reload_list();
+				unlock_screen(locker);
+			});
+		}
+		function ApplicantNo() {
+			// TODO
+		}
+		function ApplicantRemove() {
+			var locker = lock_screen();
+			service.json("data_model","save_cells",{cells:[{
+				table: 'Applicant',
+				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
+				keys: getSelectedApplicantsIds(),
+				values: [{column:'applicant_decision',value:null},{column:'applicant_not_coming_reason',value:null}]
+			}]},function(res) {
+				reload_list();
+				unlock_screen(locker);
 			});
 		}
 		</script>
