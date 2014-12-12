@@ -1224,6 +1224,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			for ($i = count($rows_map[$key])-1; $i >= 0; $i--)
 				$rows_map[$key][$i][$data_alias] = $list;
 		}
+		return array(array($q,$res));
 	}
 	
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {

@@ -314,6 +314,9 @@ class page_applicant_list extends SelectionPage {
 							list.reloadData();
 							break;
 						case "to_be_reviewed":
+							//var f = list.getField("Selection","Social Investigation Grade");
+							//if (!list.isShown(f))
+							//	list.showField(f,null,true);
 							list.resetFilters();
 							list.addFilter({category:'Selection',name:'Social Investigation Grade',data:{values:["NULL"]}});
 							list.addFilter({category:'Selection',name:'Social Investigation Visits',data:{type:'not_null'}});

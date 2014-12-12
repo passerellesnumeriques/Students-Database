@@ -265,10 +265,16 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				return t._available_fields[i];
 		return null;
 	};
-	t.showField = function(field, onready) {
-		t.showFields([field],onready);
+	t.isShown = function(field) {
+		for (var i = 0; i < t.show_fields.length; ++i)
+			if (t.show_fields[i].field == field)
+				return true;
+		return false;
 	};
-	t.showFields = function(fields, onready) {
+	t.showField = function(field, onready,no_reload) {
+		t.showFields([field],onready,no_reload);
+	};
+	t.showFields = function(fields, onready,no_reload) {
 		var changed = false;
 		for (var i = 0; i < fields.length; ++i) {
 			var found = false;
@@ -280,7 +286,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.grid.addColumn(col, t._col_actions != null ? t.grid.getColumnIndex(t._col_actions) : t.grid.getNbColumns());
 			changed = true;
 		}
-		if (!changed) {
+		if (!changed || no_reload) {
 			if (onready) onready();
 			return;
 		}

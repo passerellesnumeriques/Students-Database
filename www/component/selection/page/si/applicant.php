@@ -22,6 +22,8 @@ class page_si_applicant extends Page {
 
 		SQLQuery::setSubModel("SelectionCampaign", $campaign_id);
 		
+		$applicant = SQLQuery::create()->select("Applicant")->whereValue("Applicant","people",$people_id)->executeSingleRow();
+		
 		$visits = SQLQuery::create()->select("SocialInvestigation")->whereValue("SocialInvestigation","applicant",$people_id)->field("event")->executeSingleField();
 		if (count($visits) > 0) {
 			require_once 'component/calendar/CalendarJSON.inc';
@@ -159,9 +161,42 @@ if ($locked_by <> null) {
 				<button class='action' onclick='edit();'><img src='<?php echo theme::$icons_16["edit"];?>'/> Edit data</button>
 			<?php }
 		}?>
+		<?php if (!$edit) {?>
+			<span style='margin-left:15px'>Selection Comittee Decision:</span> <select<?php if (!$can_edit) echo " disabled='disabled'"; else echo " onchange='decisionChanged(this.value);'"?>>
+				<option value=''<?php if ($applicant["si_grade"] == null) echo " selected='selected'"?>></option>
+				<option value='Priority 1 (A+)'<?php if ($applicant["si_grade"] == "Priority 1 (A+)") echo " selected='selected'"?>>Priority 1 (A+)</option>
+				<option value='Priority 2 (A)'<?php if ($applicant["si_grade"] == "Priority 2 (A)") echo " selected='selected'"?>>Priority 2 (A)</option>
+				<option value='Priority 3 (A-)'<?php if ($applicant["si_grade"] == "Priority 3 (A-)") echo " selected='selected'"?>>Priority 3 (A-)</option>
+				<option value='Priority 4 (B+)'<?php if ($applicant["si_grade"] == "Priority 4 (B+)") echo " selected='selected'"?>>Priority 4 (B+)</option>
+				<option value='Priority 5 (B)'<?php if ($applicant["si_grade"] == "Priority 5 (B)") echo " selected='selected'"?>>Priority 5 (B)</option>
+				<option value='Failed'<?php if ($applicant["si_grade"] == "Failed") echo " selected='selected'"?>>Failed</option>
+			</select>
+			<?php if ($can_edit) { ?>
+				<button id='button_save_decision' class='action' disabled='disabled' onclick='saveDecision();'><img src='<?php echo theme::$icons_16["save"];?>'/>Save Decision</button>
+			<?php } ?>
+		<?php } ?>
 	</div>
 </div>
 <script type='text/javascript'>
+var original_decision = <?php echo json_encode($applicant["si_grade"]);?>;
+var new_decision = null;
+function decisionChanged(new_value) {
+	if (new_value == '') new_value = null;
+	var button = document.getElementById('button_save_decision');
+	button.disabled = new_value == original_decision ? "disabled" : "";
+	new_decision = new_value;
+}
+function saveDecision() {
+	var locker = lock_screen(null, "Saving comittee decision...");
+	service.json("selection","si/save_grade",{applicant:<?php echo $people_id;?>,grade:new_decision},function(res) {
+		unlock_screen(locker);
+		if (res) {
+			original_decision = new_decision;
+			decisionChanged(new_decision);
+		}
+	});
+}
+		
 var can_edit = <?php echo $edit ? "true" : "false";?>;
 	
 var section_family = sectionFromHTML('section_family');
