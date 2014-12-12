@@ -271,16 +271,22 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				return true;
 		return false;
 	};
-	t.showField = function(field, onready,no_reload) {
-		t.showFields([field],onready,no_reload);
+	t.showField = function(field, forced, onready,no_reload) {
+		t.showFields([field],forced,onready,no_reload);
 	};
-	t.showFields = function(fields, onready,no_reload) {
+	t.showFields = function(fields, forced, onready, no_reload) {
 		var changed = false;
 		for (var i = 0; i < fields.length; ++i) {
 			var found = false;
-			for (var j = 0; j < t.show_fields.length; ++j) if (t.show_fields[j].field == fields[i]) { found = true; break; };
+			for (var j = 0; j < t.show_fields.length; ++j)
+				if (t.show_fields[j].field == fields[i]) {
+					if (forced && !t.show_fields[j].forced)
+						t.show_fields[j].forced = true;
+					found = true;
+					break;
+				};
 			if (found) continue;
-			var f = {field:fields[i],sub_index:-1};
+			var f = {field:fields[i],sub_index:-1,forced:forced};
 			t.show_fields.push(f);
 			var col = t._createColumn(f);
 			t.grid.addColumn(col, t._col_actions != null ? t.grid.getColumnIndex(t._col_actions) : t.grid.getNbColumns());
@@ -1285,6 +1291,39 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			cat.nb++;
 			if (t._available_fields[i].sub_data) cat.nb += t._available_fields[i].sub_data.names.length;
 		}
+		// organize big categories to be in several columns
+		for (var i = 0; i < categories.length; ++i) {
+			if (categories[i].nb > 15) {
+				// more than 15 fields: make it on several columns
+				categories[i].cols = [];
+				var max = 0;
+				for (var j = 0; j < categories[i].fields.length; ++j) {
+					var f = categories[i].fields[j];
+					var nb = 1;
+					if (f.sub_data) nb += f.sub_data.names.length;
+					// search a column with enough space
+					if (nb >= 15) {
+						categories[i].cols.push({nb:nb,fields:[f]});
+						if (nb > max) max = nb;
+					} else {
+						var found = false;
+						for (var k = 0; k < categories[i].cols.length; ++k)
+							if (categories[i].cols[k].nb + nb <= 15) {
+								found = true;
+								categories[i].cols[k].nb += nb;
+								categories[i].cols[k].fields.push(f);
+								if (categories[i].cols[k].nb > max) max = categories[i].cols[k].nb;
+								break;
+							}
+						if (!found) {
+							categories[i].cols.push({nb:nb,fields:[f]});
+							if (nb > max) max = nb;
+						}
+					}
+				}
+				categories[i].nb = max;
+			}
+		}
 		// organize columns to minimize space
 		var cols = [];
 		if (categories.length <= 5) {
@@ -1296,7 +1335,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			var max_size = 0;
 			for (var i = 0; i < categories.length; ++i)
 				if (categories[i].nb > max_size) max_size = categories[i].nb;
-			if (max_size < 10) max_size = 10;
+			if (max_size < 15) max_size = 15;
 			for (var i = 0; i < categories.length; ++i) {
 				// check if we have enough space in an existing column
 				var found = false;
@@ -1325,18 +1364,44 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				div.className = "header";
 				div.appendChild(document.createTextNode(cat.name));
 				td.appendChild(div);
-				for (var j = 0; j < cat.fields.length; ++j) {
-					var f = cat.fields[j];
-					var div = document.createElement("DIV");
-					div.className = "content";
-					td.appendChild(div);
-					var parent_info = createFieldContent(f, div);
-					if (f.sub_data) {
-						var sub_div = document.createElement("DIV");
-						sub_div.className = "sub_data";
-						for (k = 0; k < f.sub_data.names.length; ++k)
-							createSubFieldContent(f, k, sub_div, parent_info);
-						div.appendChild(sub_div);
+				if (cat.cols) {
+					var sub_table = document.createElement("TABLE");
+					sub_table.className = "sub_table";
+					td.appendChild(sub_table);
+					var sub_tr = document.createElement("TR");
+					sub_table.appendChild(sub_tr);
+					for (var col_i = 0; col_i < cat.cols.length; ++col_i) {
+						var sub_td = document.createElement("TD");
+						sub_tr.appendChild(sub_td);
+						for (var j = 0; j < cat.cols[col_i].fields.length; ++j) {
+							var f = cat.cols[col_i].fields[j];
+							var div = document.createElement("DIV");
+							div.className = "content";
+							sub_td.appendChild(div);
+							var parent_info = createFieldContent(f, div);
+							if (f.sub_data) {
+								var sub_div = document.createElement("DIV");
+								sub_div.className = "sub_data";
+								for (k = 0; k < f.sub_data.names.length; ++k)
+									createSubFieldContent(f, k, sub_div, parent_info);
+								div.appendChild(sub_div);
+							}
+						}
+					}
+				} else {
+					for (var j = 0; j < cat.fields.length; ++j) {
+						var f = cat.fields[j];
+						var div = document.createElement("DIV");
+						div.className = "content";
+						td.appendChild(div);
+						var parent_info = createFieldContent(f, div);
+						if (f.sub_data) {
+							var sub_div = document.createElement("DIV");
+							sub_div.className = "sub_data";
+							for (k = 0; k < f.sub_data.names.length; ++k)
+								createSubFieldContent(f, k, sub_div, parent_info);
+							div.appendChild(sub_div);
+						}
 					}
 				}
 			}
@@ -1361,6 +1426,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					t.show_fields[k].field.name == f.name) { found = k; break; }
 			if (found != -1 && t.show_fields[found].sub_index == -1)
 				cb.checked = 'checked';
+			if (found != -1 && t.show_fields[found].forced)
+				cb.disabled = 'disabled';
 			cb.onclick = function() {
 				if (this.checked) {
 					if (this._sub_cb)

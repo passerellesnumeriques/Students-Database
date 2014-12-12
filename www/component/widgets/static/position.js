@@ -41,10 +41,22 @@ function positionBelowElement(to_position, from_element, min_width_is_from,ondon
 			x = window.top.getWindowWidth()-w-5;
 		else
 			x = window.top.getWindowWidth()-w;
+		if (x < 0) {
+			// not enough space
+			x = 0;
+			to_position.style.width = window.top.getWindowWidth()+"px";
+			to_position.style.overflowX = "auto";
+		}
 	}
 	to_position.style.top = y+"px";
 	to_position.style.left = x+"px";
 	if (ondone) ondone(x,y);
+	var listener = function() {
+		window.top.unlistenEvent(window.top,'resize',listener);
+		positionBelowElement(to_position, from_element, min_width_is_from,ondone);
+	};
+	window.top.listenEvent(window.top,'resize',listener);
+	to_position.ondomremoved(function() { window.top.unlistenEvent(window.top,'resize',listener); });
 }
 function positionAboveElement(to_position, from_element, min_width_is_from, ondone) {
 	to_position.style.position = "fixed";
@@ -89,10 +101,22 @@ function positionAboveElement(to_position, from_element, min_width_is_from, ondo
 			x = window.top.getWindowWidth()-w-5;
 		else
 			x = window.top.getWindowWidth()-w;
+		if (x < 0) {
+			// not enough space
+			x = 0;
+			to_position.style.width = window.top.getWindowWidth()+"px";
+			to_position.style.overflowX = "auto";
+		}
 	}
 	to_position.style.top = y+"px";
 	to_position.style.left = x+"px";
 	if (ondone) ondone(x,y);
+	var listener = function() {
+		window.top.unlistenEvent(window.top,'resize',listener);
+		positionAboveElement(to_position, from_element, min_width_is_from, ondone);
+	};
+	window.top.listenEvent(window.top,'resize',listener);
+	to_position.ondomremoved(function() { window.top.unlistenEvent(window.top,'resize',listener); });
 }
 function positionAtRightOfElement(to_position, from_element, ondone) {
 	to_position.style.position = "fixed";

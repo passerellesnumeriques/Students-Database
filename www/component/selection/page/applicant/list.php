@@ -20,7 +20,9 @@ class page_applicant_list extends SelectionPage {
 		$can_assign_to_is = true;
 		$can_assign_to_exam = true;
 		$can_assign_to_interview = true;
+		$can_exclude = true;
 		$filters = "";
+		$forced_fields = array();
 		if (isset($_GET["type"])) {
 			switch ($_GET["type"]) {
 				case "exam_passers":
@@ -48,11 +50,14 @@ class page_applicant_list extends SelectionPage {
 					$can_assign_to_is = false;
 					$can_assign_to_exam = false;
 					$can_assign_to_interview = false;
+					$can_exclude = false;
 					$can_create = false;
 					$filters = "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
 					$filters .= "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['NOT_NULL']}});\n";
 					$filters .= "filters.push({category:'Selection',name:'Excluded',force:true,data:{values:[0]}});\n";
-					// TODO
+					array_push($forced_fields, array("Selection","Final Decision of PN"));
+					array_push($forced_fields, array("Selection","Final Decision of Applicant"));
+					array_push($forced_fields, array("Selection","Reason of Applicant to decline"));
 					break;
 			}
 		}
@@ -71,7 +76,9 @@ class page_applicant_list extends SelectionPage {
 				<?php if ($can_assign_to_interview) {?> 
 				<button class='action' id='button_assign_interview_center' disabled='disabled' onclick='assignInterviewCenter(this);'>Assign to Interview Center</button>
 				<?php }?>
+				<?php if ($can_exclude) {?> 
 				<button class='action red' id='button_exclude' disabled='disabled' onclick="excludeStudents();">Exclude from the process</button>
+				<?php }?>
 			</div>
 			<?php } ?>
 		</div>
@@ -352,13 +359,13 @@ class page_applicant_list extends SelectionPage {
 						case "passers":
 							var f = list.getField("Selection","Final Decision of PN");
 							if (!list.isShown(f))
-								list.showField(f,null,true);
+								list.showField(f,false,null,true);
 							f = list.getField("Selection","Final Decision of Applicant");
 							if (!list.isShown(f))
-								list.showField(f,null,true);
+								list.showField(f,false,null,true);
 							f = list.getField("Selection","Reason of Applicant to decline");
 							if (!list.isShown(f))
-								list.showField(f,null,true);
+								list.showField(f,false,null,true);
 							list.resetFilters();
 							list.addFilter({category:'Selection',name:'Social Investigation Grade',data:{values:["Priority 1 (A+)", "Priority 2 (A)", "Priority 3 (A-)", "Priority 4 (B+)", "Priority 5 (B)"]}});
 							list.reloadData();
@@ -370,6 +377,11 @@ class page_applicant_list extends SelectionPage {
 					list.makeRowsClickable(function(row){
 						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id)<?php if ($profile_page<>null) echo "+'&page=".urlencode($profile_page)."'";?>, {sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}}, 95, 95); 
 					});
+
+					<?php 
+					foreach ($forced_fields as $ff)
+						echo "list.showField(list.getField(".json_encode($ff[0]).",".json_encode($ff[1])."),true,null,true);";
+					?>
 				}
 			);
 		}
