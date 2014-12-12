@@ -140,6 +140,39 @@ window.animation = {
 			}
 		});
 	},
+	appear: function(element, duration, end_handler) {
+		return animation.create(element, 0, 100, duration, function(value, element) {
+			if (value == 100) {
+				setOpacity(element, 1);
+				element.style.transform = "";
+				if (end_handler)
+					try { end_handler(element); }
+					catch (e) { window.top.log_exception(e); }
+				end_handler = null;
+				return;
+			}
+			// opacity
+			setOpacity(element,value/100);
+			// scale
+			element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";
+		});
+	},
+	disappear: function(element, duration, end_handler) {
+		return animation.create(element, 100, 0, duration, function(value, element) {
+			if (value == 0) {
+				setOpacity(element, 0);
+				if (end_handler)
+					try { end_handler(element); }
+					catch (e) { window.top.log_exception(e); }
+				end_handler = null;
+				return;
+			}
+			// opacity
+			setOpacity(element,value/100);
+			// scale
+			element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";
+		});
+	},
 	/** Implemetation of an animation to modify the color of the element
 	 * @param element
 	 * @param {Array} from [r,g,b]

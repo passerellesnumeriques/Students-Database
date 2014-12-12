@@ -1112,6 +1112,8 @@ class ReadOnlyDataDisplay extends DataDisplay {
 						$multiple_start_table = $current_table_alias;
 						$multiple_start_column = $col->name;
 						$multiple_sub_query->select(array($ft->getName()=>$current_table_alias));
+						if ($condition <> null)
+							$multiple_sub_query->where($condition);
 					} else {
 						$fta = $q->generateTableAlias();
 						$multiple_sub_query->join($current_table_alias, $ft->getName(), array($current_table->getPrimaryKey()->name => $col->name), $fta, $condition);
@@ -1196,6 +1198,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	}
 	
 	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
+		if (!isset($sql_aliases["sub_query"])) return null;
 		$data_alias = $original_query->generateFieldAlias();
 		$sql_aliases["data"] = $data_alias;
 		$q = $sql_aliases["sub_query"];

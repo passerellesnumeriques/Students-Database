@@ -4,7 +4,7 @@
 
 $sm->addTable("InformationSession")
 	->addPrimaryKey("id")
-	->addForeignKey("date","CalendarEvent",false,true,true,true)
+	->addForeignKey("date","CalendarEvent",false,true,false,true)
 	->addForeignKey("geographic_area", "GeographicArea", false, false, true)
 	->addInteger("number_boys_expected",10)
 	->addInteger("number_girls_expected",10)

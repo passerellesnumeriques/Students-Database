@@ -1323,7 +1323,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					var c2 = categories[i].cols[j-1];
 					while (c1.nb <= c2.nb-2) {
 						var found = false;
-						for (var k = 0; k < c2.fields.length; ++k) {
+						for (var k = c2.fields.length-1; k >= 0; --k) {
 							var f = c2.fields[k];
 							var nb = 1;
 							if (f.sub_data) nb += f.sub_data.names.length;

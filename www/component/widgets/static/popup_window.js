@@ -379,7 +379,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		
 		if (typeof win.animation != 'undefined') {
 			if (t.anim) win.animation.stop(t.anim);
-			t.anim = win.animation.fadeIn(t.popup, 200);
+			t.anim = win.animation.appear(t.popup, 200);
 		}
 		pnapplication.onclose.add_listener(t._onwindow_closed_listener);
 	};
@@ -439,7 +439,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		
 		if (typeof win.animation != 'undefined') {
 			if (t.anim) win.animation.stop(t.anim);
-			t.anim = win.animation.fadeIn(t.popup, 200);
+			t.anim = win.animation.appear(t.popup, 200);
 		}
 		pnapplication.onclose.add_listener(t._onwindow_closed_listener);
 	};
@@ -787,7 +787,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		var win = getWindowFromElement(popup);
 		if (typeof win.animation != 'undefined') {
 			if (t.anim) win.animation.stop(t.anim);
-			win.animation.fadeOut(popup, 200, do_close);
+			win.animation.disappear(popup, 200, do_close);
 		} else
 			do_close();
 	};
