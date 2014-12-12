@@ -309,7 +309,7 @@ class calendar extends Component {
 				if (!isset($attendees[$i]["creator"]))
 					$attendees[$i]["creator"] = false;
 				if (!isset($attendees[$i]["role"]))
-					$attendees[$i]["rolw"] = "NONE";
+					$attendees[$i]["role"] = "NONE";
 				$attendees[$i]["event"] = $event_id;
 				if (@$attendees[$i]["people"] > 0 && !in_array($attendees[$i]["people"], $peoples_ids)) array_push($peoples_ids, $attendees[$i]["people"]);
 				if (@$attendees[$i]["people_email"] > 0 && !in_array($attendees[$i]["people_email"], $contacts_ids)) array_push($contacts_ids, $attendees[$i]["people_email"]);

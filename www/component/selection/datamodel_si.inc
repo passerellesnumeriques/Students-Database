@@ -7,6 +7,9 @@ $sm->addTable("SocialInvestigation")
 	->setPrimary("event")
 	->addForeignKey("applicant", "People", true, false, true)
 	->addReadAccess("can_access_selection_data",true)
+	->addWriteAccess("edit_social_investigation", true)
+	->addInsertAccess("edit_social_investigation", true)
+	->addRemoveAccess("edit_social_investigation", true)
 	;
 $model->internalGetTable("CalendarEvent")
 	->addReadAccessFromForeignTable("SocialInvestigation");

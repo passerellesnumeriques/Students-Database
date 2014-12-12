@@ -6,13 +6,44 @@ class page_si_applicant extends Page {
 	public function execute() {
 		$people_id = $_GET["people"];
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_social_investigation");
-		$edit = $can_edit && @$_GET["edit"] == "true"; 
+		$campaign = PNApplication::$instance->selection->getCampaignFromApplicant($people_id);
+		if ($campaign == null || $campaign["sm"] == null) {
+			PNApplication::error("Invalid people id: not an applicant");
+			return;
+		}
+		$campaign_id = $campaign["id"];
+		$calendar_id = $campaign["calendar"];
+		
+		if ($campaign_id == PNApplication::$instance->selection->getCampaignId()) {
+			$can_edit = PNApplication::$instance->user_management->has_right("edit_social_investigation");
+			$edit = $can_edit && @$_GET["edit"] == "true";
+		} else
+			$can_edit = false; 
 
+		SQLQuery::setSubModel("SelectionCampaign", $campaign_id);
+		
 		$visits = SQLQuery::create()->select("SocialInvestigation")->whereValue("SocialInvestigation","applicant",$people_id)->field("event")->executeSingleField();
 		if (count($visits) > 0) {
 			require_once 'component/calendar/CalendarJSON.inc';
 			$visits = CalendarJSON::getEventsFromDB($visits, $this->component->getCalendarId());
+			$peoples_ids = array();
+			foreach ($visits as $event)
+				foreach ($event["attendees"] as $a)
+					if ($a["people"] <> null && !in_array($a["people"], $peoples_ids))
+						array_push($peoples_ids, $a["people"]);
+			$investigators = PNApplication::$instance->people->getPeoples($peoples_ids, true, false, true, true);
+			$can_do = SQLQuery::create()->select("StaffStatus")->whereIn("StaffStatus","people",$peoples_ids)->field("people")->field("si")->execute();
+			$peoples = "[";
+			$first = true;
+			foreach ($investigators as $i) {
+				$can_do_si = false;
+				foreach ($can_do as $cd) if ($cd["people"] == $i["people_id"]) { $can_do_si = $cd["si"]; break; }
+				if ($first) $first = false; else $peoples .= ",";
+				$peoples .= "{can_do:".json_encode($can_do_si).",people:".PeopleJSON::People($i)."}";
+			}
+			$peoples .= "]";
+		} else {
+			$peoples = "[]";
 		}
 		$family = PNApplication::$instance->family->getFamily($people_id, "Child");
 		$houses = SQLQuery::create()->select("SIHouse")->whereValue("SIHouse","applicant",$people_id)->execute();
@@ -137,9 +168,10 @@ var section_family = sectionFromHTML('section_family');
 var fam = new family(section_family.content, <?php echo json_encode($family[0]);?>, <?php echo json_encode($family[1]);?>, <?php echo $people_id;?>, <?php echo $edit ? "true" : "false";?>);
 
 var section_visits = sectionFromHTML('section_visits');
-function si_visits(section, events, calendar_id, applicant_id, can_edit) {
+function si_visits(section, events, calendar_id, applicant_id, known_peoples, can_edit) {
 	section.content.style.padding = "5px";
 	this.events = events;
+	this.whos = [];
 	var t=this;
 	this.createEvent = function(event) {
 		if (this.events.length == 1) section.content.innerHTML = ""; // first one, remove the 'None'
@@ -192,7 +224,9 @@ function si_visits(section, events, calendar_id, applicant_id, can_edit) {
 			remove.title = "Remove this visit";
 			div.appendChild(remove);
 			remove.onclick = function() {
-				t.events.removeUnique(event);
+				var i = t.events.indexOd(event);
+				t.events.splice(i,1);
+				t.whos.splice(i,1);
 				section.content.removeChild(container);
 			};
 		} else {
@@ -206,9 +240,20 @@ function si_visits(section, events, calendar_id, applicant_id, can_edit) {
 		div.innerHTML = "<b>Who ?</b>";
 		container.appendChild(div);
 		var peoples = [];
-		// TODO
+		for (var i = 0; i < event.attendees.length; ++i) {
+			if (event.attendees[i].organizer) continue;
+			if (event.attendees[i].people) {
+				for (var j = 0; j < known_peoples.length; ++j)
+					if (known_peoples[j].people.id == event.attendees[i].people) {
+						peoples.push(known_peoples[j]);
+						break;
+					}
+			} else
+				peoples.push(event.attendees[i].name);
+		}
 		var who = new who_container(container,peoples,can_edit,'si');
 		container.appendChild(who.createAddButton("Which Social Investigators ?"));
+		this.whos.push(who);
 	};
 	if (events.length == 0) section.content.innerHTML = "<i>None</i>";
 	for (var i = 0; i < events.length; ++i) this.createEvent(events[i]);
@@ -226,12 +271,29 @@ function si_visits(section, events, calendar_id, applicant_id, can_edit) {
 		};
 		this.save = function(ondone) {
 			var locker = lock_screen(null, "Saving Visits Schedules...");
-			// TODO
-			unlock_screen(locker);
+			for (var i = 0; i < this.events.length; ++i) {
+				this.events[i].attendees = [];
+				for (var j = 0; j < this.whos[i].peoples.length; ++j) {
+					if (typeof this.whos[i].peoples[j] == 'string') {
+						this.events[i].attendees.push(new CalendarEventAttendee(this.whos[i].peoples[j]));
+					} else {
+						this.events[i].attendees.push(new CalendarEventAttendee(null, null, null, null, null, null, this.whos[i].peoples[j].people.id));
+					}
+				}
+			}
+			service.json("selection","si/save_visits",{applicant:applicant_id,visits:this.events},function(res) {
+				pnapplication.dataSaved('who');
+				if (res && res.length > 0)
+					for (var i = 0; i < res.length; ++i)
+						for (var j = 0; j < t.events.length; ++j)
+							if (t.events[j].id == res[i].given_id) { t.events[j].id = res[i].new_id; break; }
+				unlock_screen(locker);
+				ondone();
+			});
 		};
 	}
 }
-var visits = new si_visits(section_visits, <?php if (count($visits) == 0) echo "[]"; else echo CalendarJSON::JSONList($visits);?>, <?php echo $this->component->getCalendarId();?>, <?php echo $people_id;?>, can_edit);
+var visits = new si_visits(section_visits, <?php if (count($visits) == 0) echo "[]"; else echo CalendarJSON::JSONList($visits);?>, <?php echo $calendar_id;?>, <?php echo $people_id;?>, <?php echo $peoples;?>, can_edit);
 
 var section_pictures = sectionFromHTML('section_pictures');
 new pictures_section(section_pictures, <?php echo json_encode($pictures);?>, 200, 200, can_edit, "selection", "si/add_picture", {applicant:<?php echo $people_id;?>});
