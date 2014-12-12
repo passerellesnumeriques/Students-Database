@@ -314,9 +314,6 @@ class page_applicant_list extends SelectionPage {
 							list.reloadData();
 							break;
 						case "to_be_reviewed":
-							//var f = list.getField("Selection","Social Investigation Grade");
-							//if (!list.isShown(f))
-							//	list.showField(f,null,true);
 							list.resetFilters();
 							list.addFilter({category:'Selection',name:'Social Investigation Grade',data:{values:["NULL"]}});
 							list.addFilter({category:'Selection',name:'Social Investigation Visits',data:{type:'not_null'}});
@@ -324,6 +321,15 @@ class page_applicant_list extends SelectionPage {
 							list.reloadData();
 							break;
 						case "passers":
+							var f = list.getField("Selection","Final Decision of PN");
+							if (!list.isShown(f))
+								list.showField(f,null,true);
+							f = list.getField("Selection","Final Decision of Applicant");
+							if (!list.isShown(f))
+								list.showField(f,null,true);
+							f = list.getField("Selection","Reason of Applicant to decline");
+							if (!list.isShown(f))
+								list.showField(f,null,true);
 							list.resetFilters();
 							list.addFilter({category:'Selection',name:'Social Investigation Grade',data:{values:["Priority 1 (A+)", "Priority 2 (A)", "Priority 3 (A-)", "Priority 4 (B+)", "Priority 5 (B)"]}});
 							list.reloadData();

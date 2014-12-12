@@ -199,6 +199,9 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_comment", "C
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_passer", "Eligible for Social Investigation", true, false));
 $display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Social Investigation Visits", "SocialInvestigation>applicant.event.start","right",null,array("field_date","{show_utc:true}")));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("si_grade", "Social Investigation Grade", true, false));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("final_decision","Final Decision of PN", false, false, "center"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("applicant_decision","Final Decision of Applicant", false, false, "center"));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("applicant_not_coming_reason","Reason of Applicant to decline", false, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("excluded", "Excluded", true, false));
 $display->addDataDisplay(new ApplicantExclusionReason());
 $display->addFollow("people");

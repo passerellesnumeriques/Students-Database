@@ -87,12 +87,14 @@ table.data_list_select_fields_menu .header {
 	border-top: 1px solid black;
 	font-size: 10pt;
 	padding: 1px 2px;
+	white-space: nowrap;
 }
 table.data_list_select_fields_menu .content {
 	background-color: white;
 	text-align: left;
 	font-size: 8pt;
 	padding: 1px 2px;
+	white-space: nowrap;
 }
 table.data_list_select_fields_menu td input {
 	height: 12px;
