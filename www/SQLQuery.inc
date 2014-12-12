@@ -397,6 +397,12 @@ class SQLQuery {
 		}
 		return null;
 	}
+	public function getFieldFromAlias($field_alias) {
+		foreach ($this->fields as $f)
+			if ($f[2] == $field_alias)
+				return array($f[0],$f[1]);
+		return null;
+	}
 	/** Retrieve the alias used for the given table
 	 * @param string $table table name
 	 * @return string|null alias of the table, or null if not found

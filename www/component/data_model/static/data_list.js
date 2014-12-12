@@ -1482,6 +1482,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		container.appendChild(div);
 		div.className = "data_list_filter";
 		div.style.verticalAlign = "bottom";
+		div.style.whiteSpace = "nowrap";
 		
 		// find the corresponding field
 		var field = null;

@@ -968,7 +968,6 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	private $possible_values = array();
 	private function get_possible_values($sub_model) {
 		if (!isset($this->possible_values[$sub_model])) {
-			// TODO we should start from the beginning to know what are the possible values
 			// get the foreign key used for the enum
 			$col = $this->getColumn($this->filter_path, $sub_model);
 			$foreign_key = $col[0];
@@ -1033,10 +1032,10 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		if ($sub_model <> "@link") {
 			if ($this->filter_path == null) {
 				$col = $this->getColumn($this->data_path, $sub_model);
-				if ($col[1]) {
-					// TODO multiple
-				}
-				return \PNApplication::$instance->widgets->get_typed_filter($col[0]);
+				$tf = \PNApplication::$instance->widgets->get_typed_filter($col[0]);
+				if ($col[1])
+					return array("filter_list","{element_type:".json_encode($tf[0]).",element_cfg:".$tf[1]."}");
+				return $tf;
 			}
 			$col = $this->getColumn($this->filter_path, $sub_model);
 			// TODO multiple
@@ -1078,6 +1077,8 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		$multiple_start_alias = null;
 		$multiple_start_table = null;
 		$multiple_start_column = null;
+		$multiple_last_table = null;
+		$multiple_last_key = null;
 		foreach ($steps as $step) {
 			// check condition
 			$i = strpos($step, "(");
@@ -1104,8 +1105,10 @@ class ReadOnlyDataDisplay extends DataDisplay {
 						$multiple_start_alias = $q->generateFieldAlias();
 						$q->field($current_table_alias, $current_table->getPrimaryKey()->name, $multiple_start_alias);
 						$multiple_sub_query = \SQLQuery::create();
+						$multiple_last_table = $current_table_alias;
+						$multiple_last_key = $current_table->getPrimaryKey()->name;
 						$current_table = $ft;
-						$current_table_alias = $multiple_sub_query->generateTableAlias(); 
+						$current_table_alias = $q->generateTableAlias();
 						$multiple_start_table = $current_table_alias;
 						$multiple_start_column = $col->name;
 						$multiple_sub_query->select(array($ft->getName()=>$current_table_alias));
@@ -1116,7 +1119,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 						$current_table_alias = $fta;
 					}
 				} else if ($multiple_sub_query <> null) {
-					$fta = $multiple_sub_query->generateTableAlias();
+					$fta = $q->generateTableAlias();
 					$multiple_sub_query->join($current_table_alias, $ft->getName(), array($current_table->getPrimaryKey()->name => $col->name), $fta, $condition);
 					$current_table = $ft;
 					$current_table_alias = $fta;
@@ -1133,7 +1136,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 				$ft = \DataModel::get()->getTable($col->foreign_table);
 				$last_key = $ft->getPrimaryKey();
 				if ($multiple_sub_query <> null) {
-					$fta = $multiple_sub_query->generateTableAlias();
+					$fta = $q->generateTableAlias();
 					$multiple_sub_query->join($current_table_alias, $col->foreign_table, array($step=>$ft->getPrimaryKey()->name), $fta, $condition);
 					$current_table = $ft;
 					$current_table_alias = $fta;
@@ -1166,7 +1169,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	
 			return array("key"=>$key_alias,"data"=>$data_alias,"last_table"=>$current_table_alias,"final_column"=>$col);
 		} else {
-			$key_alias = $multiple_sub_query->generateFieldAlias();
+			$key_alias = $q->generateFieldAlias();
 			if ($current_table->getPrimaryKey() <> null) {
 				$multiple_sub_query->field($current_table_alias, $current_table->getPrimaryKey()->name, $key_alias);
 			} else {
@@ -1179,9 +1182,16 @@ class ReadOnlyDataDisplay extends DataDisplay {
 				$expr = "CONCAT(".$expr.")";
 				$multiple_sub_query->expression($expr, $key_alias);
 			}
-			$data_alias = $multiple_sub_query->generateFieldAlias();
+			$data_alias = $q->generateFieldAlias();
 			$multiple_sub_query->field($current_table_alias, $col->name, $data_alias);
-			return array("key"=>null,"data"=>null,"key_alias"=>$key_alias,"data_alias"=>$data_alias,"sub_query"=>$multiple_sub_query,"sub_query_start_alias"=>$multiple_start_alias,"sub_query_start_table"=>$multiple_start_table,"sub_query_start_column"=>$multiple_start_column);
+			return array("key"=>null,"data"=>null,"key_alias"=>$key_alias,"data_alias"=>$data_alias,
+				"sub_query"=>$multiple_sub_query,
+				"sub_query_start_alias"=>$multiple_start_alias,
+				"sub_query_start_table"=>$multiple_start_table,
+				"sub_query_start_column"=>$multiple_start_column,
+				"last_original_query_table"=>$multiple_last_table,
+				"last_original_query_key"=>$multiple_last_key
+			);
 		}
 	}
 	
@@ -1200,6 +1210,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			} else
 				array_push($rows_map[$key], $rows[$i]);
 		}
+		if (count($list) == 0) return;
 		$q->whereIn($sql_aliases["sub_query_start_table"], $sql_aliases["sub_query_start_column"], $list);
 		$q->field($sql_aliases["sub_query_start_table"], $sql_aliases["sub_query_start_column"], "SUB_QUERY_START");
 		$res = $q->execute();
@@ -1216,8 +1227,48 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	}
 	
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
-		if ($this->filter_path == null)
+		if ($this->filter_path == null) {
+			$col = $this->getColumn($this->data_path, $path->sub_model);
+			if ($col[1]) {
+				// multiple, we need to make a sub request
+				$sub_q = new \SQLQuery($data_aliases["sub_query"]);
+				$sub_q->where("`".$data_aliases["sub_query_start_table"]."`.`".$data_aliases["sub_query_start_column"]."`=`".$data_aliases["last_original_query_table"]."`.`".$data_aliases["last_original_query_key"]."`");
+				$field_alias = $data_aliases["data_alias"];
+				$field = $sub_q->getFieldFromAlias($field_alias);
+				$sub_q->resetFields();
+				$sub_q->field($field[0],$field[1]);
+				$sub_alias = $q->generateFieldAlias();
+				// add condition
+				switch ($filter["type"]) {
+					case "null": // no value exists
+						$sub_q->groupBy($data_aliases["sub_query_start_table"], $data_aliases["sub_query_start_column"]);
+						$q->fieldSubQuery($sub_q, $sub_alias);
+						return array("type"=>"having","condition"=>"$sub_alias IS NULL");
+					case "not_null": // at least one value exists
+						$sub_q->groupBy($data_aliases["sub_query_start_table"], $data_aliases["sub_query_start_column"]);
+						$q->fieldSubQuery($sub_q, $sub_alias);
+						return array("type"=>"having","condition"=>"$sub_alias IS NOT NULL");
+					case ">0": // at least one has a specific value
+						$table_alias = $sub_q->getTableAlias($col[0]->table->getName());
+						$cd = $this->getColumnFilterCondition($table_alias, $col[0], $filter["element_data"], $sub_q);
+						if ($cd == null) return null;
+						$sub_q->where($cd["condition"]);
+						$sub_q->groupBy($data_aliases["sub_query_start_table"], $data_aliases["sub_query_start_column"]);
+						$q->fieldSubQuery($sub_q, $sub_alias);
+						return array("type"=>"having","condition"=>"$sub_alias IS NOT NULL");
+					case "none": // none compy
+						$table_alias = $sub_q->getTableAlias($col[0]->table->getName());
+						$cd = $this->getColumnFilterCondition($table_alias, $col[0], $filter["element_data"], $sub_q);
+						if ($cd == null) return null;
+						$sub_q->where($cd["condition"]);
+						$sub_q->groupBy($data_aliases["sub_query_start_table"], $data_aliases["sub_query_start_column"]);
+						$q->fieldSubQuery($sub_q, $sub_alias);
+						return array("type"=>"having","condition"=>"$sub_alias IS NULL");
+				}
+				return null;
+			}
 			return $this->getColumnFilterCondition($data_aliases["last_table"], $data_aliases["final_column"], $filter, $q);
+		}
 		// enum filter
 		if (!isset($filter["values"]) || !is_array($filter["values"])) return null;
 		
