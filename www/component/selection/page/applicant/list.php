@@ -14,14 +14,63 @@ class page_applicant_list extends SelectionPage {
 		$this->onload("init_list();");
 		$container_id = $this->generateID();
 		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : array();
+		
+		$profile_page = null;
+		$can_create = true;
+		$can_assign_to_is = true;
+		$can_assign_to_exam = true;
+		$can_assign_to_interview = true;
+		$filters = "";
+		if (isset($_GET["type"])) {
+			switch ($_GET["type"]) {
+				case "exam_passers":
+					$can_create = false;
+					$can_assign_to_is = false;
+					$can_assign_to_exam = false;
+					$filters = "filters.push({category:'Selection',name:'Eligible for Interview',force:true,data:{values:[1]}});\n";
+					break;
+				case "interview_passers":
+					$can_assign_to_is = false;
+					$can_assign_to_exam = false;
+					$can_assign_to_interview = false;
+					$can_create = false;
+					$filters = "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
+					break;
+				case "si":
+					$can_assign_to_is = false;
+					$can_assign_to_exam = false;
+					$can_assign_to_interview = false;
+					$can_create = false;
+					$filters = "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
+					$profile_page = "Social Investigation";
+					break;
+				case "final":
+					$can_assign_to_is = false;
+					$can_assign_to_exam = false;
+					$can_assign_to_interview = false;
+					$can_create = false;
+					$filters = "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
+					$filters .= "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['NOT_NULL']}});\n";
+					$filters .= "filters.push({category:'Selection',name:'Excluded',force:true,data:{values:[0]}});\n";
+					// TODO
+					break;
+			}
+		}
 		?>
 		<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
 			<div id='list_container' style="flex:1 1 auto"></div>
 			<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) {?>
 			<div class='page_footer' style="flex:none;">
-				<span id='nb_selected'>0 applicant selected</span>: 
+				<span id='nb_selected'>0 applicant selected</span>:
+				<?php if ($can_assign_to_is) {?> 
 				<button class='action' id='button_assign_is' disabled='disabled' onclick='assignIS(this);'>Assign to Information Session</button>
+				<?php }?>
+				<?php if ($can_assign_to_exam) {?> 
 				<button class='action' id='button_assign_exam_center' disabled='disabled' onclick='assignExamCenter(this);'>Assign to Exam Center</button>
+				<?php }?>
+				<?php if ($can_assign_to_interview) {?> 
+				<button class='action' id='button_assign_interview_center' disabled='disabled' onclick='assignInterviewCenter(this);'>Assign to Interview Center</button>
+				<?php }?>
 				<button class='action red' id='button_exclude' disabled='disabled' onclick="excludeStudents();">Exclude from the process</button>
 			</div>
 			<?php } ?>
@@ -29,27 +78,7 @@ class page_applicant_list extends SelectionPage {
 		<script type='text/javascript'>
 		var dl;
 		var filters = <?php if (isset($input["filters"])) echo json_encode($input["filters"]); else echo "[]"; ?>;
-		<?php
-		$profile_page = null;
-		$can_create = true;
-		if (isset($_GET["type"])) {
-			switch ($_GET["type"]) {
-			case "exam_passers":
-				$can_create = false;
-				echo "filters.push({category:'Selection',name:'Eligible for Interview',force:true,data:{values:[1]}});\n";
-				break;
-			case "interview_passers":
-				$can_create = false;
-				echo "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
-				break;
-			case "si":
-				$can_create = false;
-				echo "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
-				$profile_page = "Social Investigation";
-				break;
-			}
-		}
-		?>
+		<?php echo $filters; ?>
 		function init_list() {
 			dl = new data_list(
 				'list_container',
@@ -370,6 +399,15 @@ class page_applicant_list extends SelectionPage {
 			for (var i = 0; i < applicants_rows.length; ++i)
 				applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
 			popup_frame("/static/selection/exam/exam_center_16.png", "Assign applicants to an exam center", "/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refreshList", {applicants:applicants_ids}, null, null, function(frame,popup) {
+				frame.refreshList = reload_list;
+			});
+		}
+		function assignInterviewCenter(button) {
+			var applicants_rows = dl.grid.getSelectionByRowId();
+			var applicants_ids = [];
+			for (var i = 0; i < applicants_rows.length; ++i)
+				applicants_ids.push(dl.getTableKeyForRow("Applicant", applicants_rows[i]));
+			popup_frame("/static/selection/interview/interview_16.png", "Assign applicants to an interview center", "/dynamic/selection/page/interview/assign_applicants_to_center?ondone=refreshList", {applicants:applicants_ids}, null, null, function(frame,popup) {
 				frame.refreshList = reload_list;
 			});
 		}

@@ -127,7 +127,11 @@ if ($campaign <> null) {
 	<img src='/static/selection/si/si_white.png'/>
 	Social Investigations
 </a>
-	
+<a class='application_left_menu_item' href='/dynamic/selection/page/applicant/list?type=final'>
+	<img src='<?php echo theme::$icons_16["like_white"];?>'/>
+	Final List
+</a>
+
 <div class="application_left_menu_separator"></div>
 
 <a class='application_left_menu_item' href='/dynamic/selection/page/staff/status'>
@@ -146,7 +150,7 @@ if ($campaign <> null) {
 </a>
 <a class='application_left_menu_item' href='/dynamic/contact/page/organizations?creator=Selection'>
 	<img src='/static/selection/organizations_white.png'/>
-	Partners List
+	Organizations
 </a>
 <script type='text/javascript'>
 var campaign_names = [<?php 
