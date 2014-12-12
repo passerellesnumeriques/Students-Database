@@ -82,15 +82,19 @@ class page_applicant_list extends SelectionPage {
 				<button class='action red' id='button_exclude' disabled='disabled' onclick="excludeStudents();">Exclude from the process</button>
 				<?php }?>
 				<?php if ($is_final) { ?>
-				PN Decision:
+				<span style='white-space: nowrap'>
+				<b><i>PN Decision:</i></b>
 				<button class='action green' id='button_pn_selected' disabled='disabled' onclick='PNSelected();'>Selected!</button>
 				<button class='action' id='button_pn_waiting_list' disabled='disabled' onclick='PNWaitingList();'>Waiting List</button>
 				<button class='action red' id='button_pn_no' disabled='disabled' onclick='PNNo();'>No</button>
 				<button class='action grey' id='button_pn_remove' disabled='disabled' onclick='PNRemove();'>Remove Decision</button>
-				Applicant decision:
+				</span>
+				<span style='white-space: nowrap'>
+				<b><i>Applicant decision:</i></b>
 				<button class='action green' id='button_app_yes' disabled='disabled' onclick='ApplicantYes();'>Yes</button>
 				<button class='action red' id='button_app_no' disabled='disabled' onclick='ApplicantNo();'>No</button>
 				<button class='action grey' id='button_app_remove' disabled='disabled' onclick='ApplicantRemove();'>Remove Decision</button>
+				</span>
 				<?php } ?>
 			</div>
 			<?php } ?>
@@ -516,7 +520,9 @@ class page_applicant_list extends SelectionPage {
 			});
 		}
 		function ApplicantNo() {
-			// TODO
+			popup_frame(null, "Applicants declined", "/dynamic/selection/page/applicant/declined?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
+				frame.refreshList = reload_list;
+			});
 		}
 		function ApplicantRemove() {
 			var locker = lock_screen();
