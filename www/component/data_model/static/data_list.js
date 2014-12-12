@@ -1293,8 +1293,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		// organize big categories to be in several columns
 		for (var i = 0; i < categories.length; ++i) {
-			if (categories[i].nb > 15) {
-				// more than 15 fields: make it on several columns
+			if (categories[i].nb > 20) {
+				// more than 20 fields: make it on several columns
 				categories[i].cols = [];
 				var max = 0;
 				for (var j = 0; j < categories[i].fields.length; ++j) {
@@ -1302,25 +1302,46 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					var nb = 1;
 					if (f.sub_data) nb += f.sub_data.names.length;
 					// search a column with enough space
-					if (nb >= 15) {
+					if (nb >= 20)
 						categories[i].cols.push({nb:nb,fields:[f]});
-						if (nb > max) max = nb;
-					} else {
+					else {
 						var found = false;
 						for (var k = 0; k < categories[i].cols.length; ++k)
-							if (categories[i].cols[k].nb + nb <= 15) {
+							if (categories[i].cols[k].nb + nb <= 20) {
 								found = true;
 								categories[i].cols[k].nb += nb;
 								categories[i].cols[k].fields.push(f);
-								if (categories[i].cols[k].nb > max) max = categories[i].cols[k].nb;
 								break;
 							}
-						if (!found) {
+						if (!found)
 							categories[i].cols.push({nb:nb,fields:[f]});
-							if (nb > max) max = nb;
-						}
 					}
 				}
+				// try to balance as much as possible
+				for (var j = categories[i].cols.length-1; j > 0; --j) {
+					var c1 = categories[i].cols[j];
+					var c2 = categories[i].cols[j-1];
+					while (c1.nb <= c2.nb-2) {
+						var found = false;
+						for (var k = 0; k < c2.fields.length; ++k) {
+							var f = c2.fields[k];
+							var nb = 1;
+							if (f.sub_data) nb += f.sub_data.names.length;
+							if (c2.nb-nb >= c1.nb+nb) {
+								found = true;
+								c2.fields.remove(f);
+								c1.fields.splice(0,0,f);
+								c2.nb -= nb;
+								c1.nb += nb;
+							}
+						}
+						if (!found) break;
+					}
+				}
+				// get the bigger column size
+				var max = 0;
+				for (var j = 0; j < categories[i].cols.length; ++j)
+					if (categories[i].cols[j].nb > max) max = categories[i].cols[j].nb;
 				categories[i].nb = max;
 			}
 		}
