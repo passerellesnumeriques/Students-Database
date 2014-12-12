@@ -853,8 +853,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	protected $data_path;
 	protected $horiz_align;
 	protected $filter_path;
-	protected $override_typed_field;
-	
+	protected $override_typed_field;	
 	
 	/**
 	 * @param string $display_name name of this data

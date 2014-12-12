@@ -31,26 +31,20 @@ class page_applicant_list extends SelectionPage {
 		var filters = <?php if (isset($input["filters"])) echo json_encode($input["filters"]); else echo "[]"; ?>;
 		<?php
 		$profile_page = null;
+		$can_create = true;
 		if (isset($_GET["type"])) {
 			switch ($_GET["type"]) {
 			case "exam_passers":
+				$can_create = false;
 				echo "filters.push({category:'Selection',name:'Eligible for Interview',force:true,data:{values:[1]}});\n";
 				break;
 			case "interview_passers":
+				$can_create = false;
 				echo "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
 				break;
-			case "si_to_be_done":
+			case "si":
+				$can_create = false;
 				echo "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
-				echo "filters.push({category:'Selection',name:'Social Investigations done',force:true,data:{type:'equals',value:0}});\n";
-				$profile_page = "Social Investigation";
-				break;
-			case "si_to_be_reviewed":
-				echo "filters.push({category:'Selection',name:'Social Investigations done',force:true,data:{type:'more',value:0}});\n";
-				echo "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['NULL']}});\n";
-				$profile_page = "Social Investigation";
-				break;
-			case "si_passers":
-				echo "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['Priority 1 (A+)', 'Priority 2 (A)', 'Priority 3 (A-)', 'Priority 4 (B+)', 'Priority 5 (B)']}});\n";
 				$profile_page = "Social Investigation";
 				break;
 			}
@@ -96,7 +90,7 @@ class page_applicant_list extends SelectionPage {
 					};
 					list.addTitle("/static/selection/applicant/applicants_16.png", <?php if (isset($input["title"])) echo json_encode($input["title"]); else echo "'Applicants'";?>);
 
-					<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) {?>
+					<?php if (PNApplication::$instance->user_management->has_right("edit_applicants") && $can_create) {?>
 					var create_applicant = document.createElement("BUTTON");
 					create_applicant.className = "flat";
 					create_applicant.innerHTML = "<img src='"+theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add)+"' style='vertical-align:bottom'/> Create Applicant";
@@ -276,6 +270,64 @@ class page_applicant_list extends SelectionPage {
 						};
 						list.addHeader(predefined_filters);
 					}
+
+					<?php if (@$_GET["type"] == "si") {?>
+					var div = document.createElement("DIV");
+					div.style.marginLeft = "5px";
+					div.innerHTML = "Show only applicants ";
+					var select = document.createElement("SELECT");
+					var o;
+					o = document.createElement("OPTION");
+					o.value = 'all';
+					o.text = "eligible for social investigation";
+					select.add(o);
+					o = document.createElement("OPTION");
+					o.value = 'to_be_visited';
+					o.text = "who have to be visited";
+					select.add(o);
+					o = document.createElement("OPTION");
+					o.value = 'to_be_reviewed';
+					o.text = "who have been visited, to be reviewed";
+					select.add(o);
+					o = document.createElement("OPTION");
+					o.value = 'passers';
+					o.text = "who passed the social investigation";
+					select.add(o);
+					div.appendChild(select);
+					list.addHeader(div);
+					select.onchange = function() {
+						switch (this.value) {
+						case "all":
+							list.resetFilters();
+							list.reloadData();
+							break;
+						case "to_be_visited":
+							list.resetFilters();
+							list.addFilter({
+								category:'Selection',name:'Social Investigation Visits',
+								data:{type:'null'},
+								or: {
+									category:'Selection',name:'Social Investigation Visits',
+									data:{type:'>0',element_data:{type:'more_equals',value:parseSQLDate(dateToSQL(new Date()),true).getTime()/1000}}
+								}
+							});
+							list.reloadData();
+							break;
+						case "to_be_reviewed":
+							list.resetFilters();
+							list.addFilter({category:'Selection',name:'Social Investigation Grade',data:{values:["NULL"]}});
+							list.addFilter({category:'Selection',name:'Social Investigation Visits',data:{type:'not_null'}});
+							list.addFilter({category:'Selection',name:'Social Investigation Visits',data:{type:'none',element_data:{type:'more_equals',value:parseSQLDate(dateToSQL(new Date()),true).getTime()/1000}}});
+							list.reloadData();
+							break;
+						case "passers":
+							list.resetFilters();
+							list.addFilter({category:'Selection',name:'Social Investigation Grade',data:{values:["Priority 1 (A+)", "Priority 2 (A)", "Priority 3 (A-)", "Priority 4 (B+)", "Priority 5 (B)"]}});
+							list.reloadData();
+							break;
+						}
+					};
+					<?php } ?>
 
 					list.makeRowsClickable(function(row){
 						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id)<?php if ($profile_page<>null) echo "+'&page=".urlencode($profile_page)."'";?>, {sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}}, 95, 95); 

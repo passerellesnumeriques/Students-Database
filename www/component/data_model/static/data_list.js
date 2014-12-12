@@ -184,7 +184,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		} else {
 			var changed = false;
 			for (var i = 0; i < t._filters.length; ++i)
-				if (!t._filters[i].forced) {
+				if (!t._filters[i].force) {
 					t._filters.splice(i,1);
 					i--;
 					changed = true;
