@@ -515,13 +515,15 @@ class service_get_data_list extends Service {
 					for ($num = 0; $num < $times; $num++) {
 						if ($fields[$i]["sub_index"] == -1) {
 							$val = $data->exportValueNumber($value, $path->sub_model, $num);
-							$sheet->setCellValueByColumnAndRow($col_index++, $row_index, $val);
+							$sheet->setCellValueByColumnAndRow($col_index, $row_index, $val);
+							$col_index++;
 						} else {
 							$sub_data = $data->getSubDataDisplay();
 							for ($j = 0; $j < $count; $j++) {
 								$sub_index = $fields[$i+$j]["sub_index"];
 								$val = $sub_data->exportValueNumber($value, $path->sub_model, $sub_index, $num);
-								$sheet->setCellValueByColumnAndRow($col_index++, $row_index, $val);
+								$sheet->setCellValueByColumnAndRow($col_index, $row_index, $val);
+								$col_index++;
 							}
 						}
 					}

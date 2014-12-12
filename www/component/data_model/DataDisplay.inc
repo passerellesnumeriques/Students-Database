@@ -253,6 +253,7 @@ abstract class SubDataDisplay {
 	public function isEditableForNew($index) { return $this->isEditable($index); }
 	public function exportValue($value, $sub_mode, $index) { return $value; }
 	public function exportValueNumber($value, $sub_model, $index, $number) { return $this->exportValue($value, $sub_model, $index); }
+	public function getExportNumberFormat() { return null; }
 	
 }
 
@@ -1292,6 +1293,22 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	
 	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {
 		// read only
+	}
+
+	public function exportValue($value, $sub_model) {
+		$col = $this->getColumn($this->data_path, $sub_model);
+		return $col->getDisplayValue($value);
+	}
+	public function getExportTimes($value, $sub_model) {
+		$col = $this->getColumn($this->data_path, $sub_model);
+		if ($col[1])
+			return count($value);
+		return 1;
+	}
+	public function exportValueNumber($value, $sub_model, $number) {
+		$col = $this->getColumn($this->data_path, $sub_model);
+		if ($col[1]) return $col[0]->getDisplayValue($value[$number]);
+		return $this->exportValue($value, $sub_model);
 	}
 	
 }
