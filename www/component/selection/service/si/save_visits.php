@@ -14,7 +14,9 @@ class service_si_save_visits extends Service {
 		$calendar_id = $component->getCalendarId();
 		$applicant = PNApplication::$instance->people->getPeople($applicant_id, true);
 		$applicant_sel_id = SQLQuery::create()->select("Applicant")->whereValue("Applicant","people",$applicant_id)->field("applicant_id")->executeSingleValue();
-		$existing = SQLQuery::create()->select("SocialInvestigation")->whereValue("SocialInvestigation","applicant",$applicant_id)->field("event")->executeSingleField();
+		$q = SQLQuery::create()->select("SocialInvestigation")->whereValue("SocialInvestigation","applicant",$applicant_id);
+		PNApplication::$instance->calendar->joinCalendarEvent($q, "SocialInvestigation", "event");
+		$existing = $q->execute();
 		$new_ids = array();
 		foreach ($events as $event) {
 			if ($event["start"] == null) continue;
@@ -46,7 +48,7 @@ class service_si_save_visits extends Service {
 			if ($event["id"] > 0) {
 				$exist = null;
 				for ($i = 0; $i < count($existing); $i++)
-					if ($existing[$i] == $event["id"]) {
+					if ($existing[$i]["id"] == $event["id"]) {
 						$exist = $existing[$i];
 						array_splice($existing, $i, 1);
 						break;

@@ -378,13 +378,18 @@ function error_dialog(message) {
  * @param {String} s the SQL date to convert
  * @returns {Date} the date, or null if it cannot be converted
  */
-function parseSQLDate(s) {
+function parseSQLDate(s, utc) {
 	if (s == null || s.length == 0) return null;
 	var d = new Date();
-	d.setHours(0,0,0,0);
+	if (utc) d.setUTCHours(0,0,0,0);
+	else d.setHours(0,0,0,0);
 	var a = s.split("-");
 	if (a.length != 3) return null;
-	d.setFullYear(parseInt(a[0]), parseInt(a[1])-1, parseInt(a[2]));
+	if (utc) {
+		d.setUTCFullYear(parseInt(a[0]));
+		d.setUTCMonth(parseInt(a[1])-1);
+		d.setUTCDate(parseInt(a[2]));
+	} else d.setFullYear(parseInt(a[0]), parseInt(a[1])-1, parseInt(a[2]));
 	return d;
 };
 /** Convert the given number into a string, containing at least 2 digits (0 added if less than 10)
@@ -400,8 +405,9 @@ function _2digits(n) {
  * @param {Date} d the date to convert
  * @returns {String} the SQL date, or null if the given date is null
  */
-function dateToSQL(d) {
+function dateToSQL(d, utc) {
 	if (d == null) return null;
+	if (utc) return d.getUTCFullYear()+"-"+_2digits(d.getUTCMonth()+1)+"-"+_2digits(d.getUTCDate());
 	return d.getFullYear()+"-"+_2digits(d.getMonth()+1)+"-"+_2digits(d.getDate());
 };
 /** Convert the given number into 2 digits hexadecimal number

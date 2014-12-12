@@ -202,7 +202,7 @@ function si_visits(section, events, calendar_id, applicant_id, known_peoples, ca
 					new date_picker(event.start,null,null,function(picker){
 						picker.onchange = function(picker, date) {
 							event.start = new Date();
-							event.start.setHours(0,0,0,0);
+							event.start.setUTCHours(0,0,0,0);
 							event.start.setUTCFullYear(date.getFullYear());
 							event.start.setUTCMonth(date.getMonth());
 							event.start.setUTCDate(date.getDate());

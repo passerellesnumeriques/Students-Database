@@ -5,6 +5,15 @@
  */
 function field_date(data,editable,config) {
 	if (data != null && data.length == 0) data = null;
+	if (typeof data == 'number') data = dateToSQL(new Date(data*1000),config.show_utc);
+	else if (typeof data == 'string') {
+		var d = parseSQLDate(data,config.show_utc);
+		if (d == null) {
+			var ts = parseInt(data);
+			if (isNaN(ts)) data = null;
+			else data = dateToSQL(new Date(ts*1000),config.show_utc);
+		}
+	}
 	typed_field.call(this, data, editable, config);
 	
 	var t=this;
@@ -101,13 +110,13 @@ field_date.prototype._create = function(data) {
 		this._getEditedData = function() {
 			if (!t.select) return t._set_date;
 			var date = t.select.getDate();
-			if (date) date = dateToSQL(date);
+			if (date) date = dateToSQL(date, t.config.show_utc);
 			return date;
 		};
 		require("date_select.js", function() {
 			var min = t.config && t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1);
 			var max = t.config && t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31);
-			t.select = new date_select(t.element, parseSQLDate(t._data), min, max, false, true);
+			t.select = new date_select(t.element, parseSQLDate(t._data, t.config.show_utc), min, max, false, true);
 			t.select.select_day.style.verticalAlign = "top";
 			t.select.select_month.style.verticalAlign = "top";
 			t.select.select_year.style.verticalAlign = "top";
@@ -122,10 +131,10 @@ field_date.prototype._create = function(data) {
 
 		this._timeoutSetData = null;
 		this._setData = function(data) {
-			var d = parseSQLDate(data);
-			data = dateToSQL(d);
+			var d = parseSQLDate(data, t.config.show_utc);
+			data = dateToSQL(d, t.config.show_utc);
 			if (t.select)
-				t.select.selectDate(parseSQLDate(data));
+				t.select.selectDate(parseSQLDate(data, t.config.show_utc));
 			else {
 				if (t._timeoutSetData) clearTimeout(t._timeoutSetData);
 				t._set_date = data;
@@ -138,13 +147,13 @@ field_date.prototype._create = function(data) {
 				if (!t.config) return;
 				if (t.config.minimum) {
 					t.config.minimum = undefined;
-					if (t.select) t.select.setLimits(new Date(1900,0,1), t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31));
+					if (t.select) t.select.setLimits(new Date(1900,0,1), t.config.maximum ? parseSQLDate(t.config.maximum, t.config.show_utc) : new Date(new Date().getFullYear()+100,11,31));
 				}
 			} else {
 				if (!t.config)
 					t.config = {};
 				t.config.minimum = min;
-				if (t.select) t.select.setLimits(parseSQLDate(min), t.config.maximum ? parseSQLDate(t.config.maximum) : new Date(new Date().getFullYear()+100,11,31));
+				if (t.select) t.select.setLimits(parseSQLDate(min, t.config.show_utc), t.config.maximum ? parseSQLDate(t.config.maximum, t.config.show_utc) : new Date(new Date().getFullYear()+100,11,31));
 			}
 		};
 		this.setMaximum = function(max) {
@@ -152,13 +161,13 @@ field_date.prototype._create = function(data) {
 				if (!t.config) return;
 				if (t.config.maximum) {
 					t.config.maximum = undefined;
-					if (t.select) t.select.setLimits(t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1), new Date(new Date().getFullYear()+100,11,31));
+					if (t.select) t.select.setLimits(t.config.minimum ? parseSQLDate(t.config.minimum, t.config.show_utc) : new Date(1900,0,1), new Date(new Date().getFullYear()+100,11,31));
 				}
 			} else {
 				if (!t.config)
 					t.config = {};
 				t.config.maximum = max;
-				if (t.select) t.select.setLimits(t.config.minimum ? parseSQLDate(t.config.minimum) : new Date(1900,0,1), parseSQLDate(max));
+				if (t.select) t.select.setLimits(t.config.minimum ? parseSQLDate(t.config.minimum, t.config.show_utc) : new Date(1900,0,1), parseSQLDate(max, t.config.show_utc));
 			}
 		};
 	} else {
@@ -169,8 +178,8 @@ field_date.prototype._create = function(data) {
 				this.element.style.fontStyle = 'italic';
 				this.element.innerHTML = "no date";
 			} else {
-				data = dateToSQL(parseSQLDate(data));
-				var d = parseSQLDate(data);
+				data = dateToSQL(parseSQLDate(data, this.config.show_utc), this.config.show_utc);
+				var d = parseSQLDate(data, this.config.show_utc);
 				var s = getDayShortName(d.getDay(),true)+" "+_2digits(d.getDate())+" "+getMonthShortName(d.getMonth()+1)+" "+d.getFullYear();
 				if (this.element.innerHTML == s) return data;
 				this.element.style.fontStyle = 'normal';
