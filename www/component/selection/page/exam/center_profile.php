@@ -78,6 +78,7 @@ class page_exam_center_profile extends SelectionPage {
 		$q = SQLQuery::create()->select("InformationSession");
 		SelectionInformationSessionJSON::InformationSessionSQL($q);
 		$all_is = $q->execute();
+		$already_linked_is = SQLQuery::create()->select("ExamCenterInformationSession")->whereNotValue("ExamCenterInformationSession","exam_center",$id)->field("information_session")->executeSingleField();
 		
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
@@ -117,6 +118,7 @@ class page_exam_center_profile extends SelectionPage {
 					window.linked_is = new exam_center_is(
 						'IS_container',
 						<?php echo SelectionInformationSessionJSON::InformationSessionsJSON($all_is);?>,
+						<?php echo json_encode($already_linked_is);?>,
 						<?php echo json_encode($linked_is_id);?>,
 						<?php echo $editable ? "true" : "false";?>
 					);

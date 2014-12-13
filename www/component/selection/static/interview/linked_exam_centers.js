@@ -1,7 +1,11 @@
-function linked_exam_centers(container, all_centers, linked_ids, can_edit) {
+function linked_exam_centers(container, all_centers, already_linked_ids, linked_ids, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	
-	this.linked_ids = linked_ids;
+	this.linked_ids = [];
+	for (var i = 0; i < linked_ids.length; ++i) this.linked_ids.push(parseInt(linked_ids[i]));
+	this.already_linked_ids = [];
+	for (var i = 0; i < already_linked_ids.length; ++i) this.already_linked_ids.push(parseInt(already_linked_ids[i]));
+	for (var i = 0; i < all_centers.length; ++i) all_centers[i].id = parseInt(all_centers[i].id);
 	this.onapplicantsadded = new Custom_Event();
 	this.onapplicantsremoved = new Custom_Event();
 	
@@ -23,9 +27,13 @@ function linked_exam_centers(container, all_centers, linked_ids, can_edit) {
 					var menu = new context_menu();
 					for (var i = 0; i < all_centers.length; ++i) {
 						if (t.linked_ids.contains(all_centers[i].id)) continue;
-						menu.addIconItem(null, all_centers[i].name, function(ev,center_id) {
-							t.linkExamCenter(center_id);
-						}, all_centers[i].id);
+						if (t.already_linked_ids.contains(all_centers[i].id)) {
+							var item = menu.addIconItem(null, all_centers[i].name+" (already linked to another center)");
+							addClassName(item, "disabled");
+						} else
+							menu.addIconItem(null, all_centers[i].name, function(ev,center_id) {
+								t.linkExamCenter(center_id);
+							}, all_centers[i].id);
 					}
 					if (menu.getItems().length == 0) {
 						menu.addIconItem(theme.icons_16.info, "No more Exam Center available");

@@ -79,6 +79,7 @@ class page_interview_center_profile extends SelectionPage {
 		}
 		$q = SQLQuery::create()->select("ExamCenter");
 		$all_exam_centers = $q->execute();
+		$already_linked_centers = SQLQuery::create()->select("InterviewCenterExamCenter")->whereNotValue("InterviewCenterExamCenter","interview_center",$id)->field("exam_center")->executeSingleField();
 		
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
@@ -115,6 +116,7 @@ class page_interview_center_profile extends SelectionPage {
 					window.linked_exam_centers = new linked_exam_centers(
 						'links_container',
 						<?php echo json_encode($all_exam_centers);?>,
+						<?php echo json_encode($already_linked_centers);?>,
 						<?php echo json_encode($linked_exam_center_id);?>,
 						<?php echo $editable ? "true" : "false";?>
 					);
