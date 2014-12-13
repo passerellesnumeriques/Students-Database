@@ -40,7 +40,7 @@ class cron extends Component {
 	public function executeCronTask($task) {
 		if (file_exists("data/cron/".$task->task_id)) {
 			$last = filemtime("data/cron/".$task->task_id);
-			if ((time()-$last+10)/60 < $task->every_minutes) continue;
+			if ((time()-$last+10)/60 < $task->every_minutes) return;
 		}
 		@unlink("data/cron/".$task->task_id.".errors");
 		$task_start = microtime(true);
