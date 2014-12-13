@@ -1197,10 +1197,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				t._page_num_div.innerHTML = result.data.length;
 			layout.changed(t.header);
 			//window.console.log("request time: "+result.time+"s.");
-			t.data = result.data;
-			if (t.data.length == 0) {
+			if (result.data.length == 0) {
 				t.grid.setData([]);
 				t.grid.addTitleRow("No result found", {textAlign:"center",padding:"2px 5px",fontStyle:"italic"});
+				t.data = [];
 			} else {
 				var data = [];
 				var cols = [];
@@ -1210,12 +1210,12 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 							cols.push(t.grid.columns[j]);
 							break;
 						}
-				for (var i = 0; i < t.data.length; ++i) {
+				for (var i = 0; i < result.data.length; ++i) {
 					var row = {row_id:i,row_data:[]};
 					for (var j = 0; j < t.show_fields.length; ++j)
 						row.row_data.push({col_id:cols[j].id,data_id:null,css:"disabled"});
 					for (var j = 0; j < fields.length; ++j) {
-						var value = t.data[i].values[j];
+						var value = result.data[i].values[j];
 						for (var k = 0; k < t.show_fields.length; ++k) {
 							if (t.show_fields[k].field.path.path == fields[j].path && t.show_fields[k].field.name == fields[j].name) {
 								row.row_data[k].col_id = cols[k].id;
@@ -1234,8 +1234,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					data.push(row);
 					if (t._col_actions)
 						row.row_data.push({col_id:'actions',data_id:null,data:""});
+					t.grid.setData(data);
+					t.data = result.data;
 				}
-				t.grid.setData(data);
 				if (t._col_actions)
 					t._populateActions();
 				// register events

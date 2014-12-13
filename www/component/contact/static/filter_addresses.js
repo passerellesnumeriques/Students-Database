@@ -1,7 +1,7 @@
 /* #depends[/static/widgets/typed_filter/typed_filter.js] */
 
 function filter_addresses(data, config, editable) {
-	typed_filter.call(t, data, config, editable);
+	typed_filter.call(this, data, config, editable);
 	var existing_types;
 	var t = this;
 	var wait = new AsynchLoadListener(2,function() {
@@ -93,7 +93,7 @@ function filter_addresses(data, config, editable) {
 	});
 	this.isActive = function() {
 		if (!data) return false;
-		if (data.types.length < config.types.length) return true;
+		if (typeof existing_types != 'undefined' && data.types.length < existing_types.length) return true;
 		if (data.areas != null) return true;
 		return false;
 	};
