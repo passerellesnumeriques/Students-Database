@@ -96,5 +96,29 @@ class cron extends Component {
 		fclose($f);
 	}
 	
+	function getLastCronExecution() {
+		if (!file_exists("data/cron/tasks_time")) return 0;
+		$info = stat("data/cron/tasks_time");
+		return $info["mtime"];
+	}
+	function lastCronHasErrors() {
+		return file_exists("data/cron/cron_errors");
+	}
+	function cronTaskHasErrors($task_id) {
+		return file_exists("data/cron/$task_id.errors");
+	}
+
+	function getLastCronMaintenanceExecution() {
+		if (!file_exists("data/cron/maintenance_tasks_time")) return 0;
+		$info = stat("data/cron/maintenance_tasks_time");
+		return $info["mtime"];
+	}
+	function lastCronMaintenanceHasErrors() {
+		return file_exists("data/cron/cron_maintenance_errors");
+	}
+	function cronMaintenanceTaskHasErrors($task_id) {
+		return file_exists("data/cron/$task_id.errors");
+	}
+	
 }
 ?>

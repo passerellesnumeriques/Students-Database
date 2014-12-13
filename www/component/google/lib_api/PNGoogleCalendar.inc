@@ -296,6 +296,7 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 			return false;
 		}
 		$pnevents = PNApplication::$instance->calendar->getAllCalendarEventsWithoutSecurity($pn_id);
+		PNApplication::error(var_export($gevents, true));
 		$err = false;
 		foreach ($gevents as $gev) {
 			/* @var $gev Google_Service_Calendar_Event */

@@ -63,6 +63,7 @@ usort($pages, function($p1,$p2) {
 });
 
 foreach ($pages as $page) {
+	echo "<div style='display:inline-block;max-width:140px;vertical-align:top;'>";
 	echo "<a class='section_box'";
 	echo " href='".$page->getPage()."'";
 	echo ">";
@@ -70,6 +71,9 @@ foreach ($pages as $page) {
 	echo "<div>".toHTML($page->getTitle())."</div>";
 	echo "<div>".toHTML($page->getInfoText())."</div>";
 	echo "</a>";
+	$w = $page->getWarnings();
+	if ($w <> null) echo $w;
+	echo "</div>";
 }
 ?>
 	</div>
