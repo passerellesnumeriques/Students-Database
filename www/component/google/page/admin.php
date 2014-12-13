@@ -160,6 +160,7 @@ theme::css($this, "section.css");
 				}
 				?>
 			</table>
+			Search an event by UID: <input type='text' id='search_event_uid'/> <button class='action' onclick="searchEvent(document.getElementById('search_event_uid').value);">Search</button>
 		</div>
 	</div>
 	
@@ -180,6 +181,11 @@ sectionFromHTML('section_conf');
 <?php if ($this->component->isInstalled()) { ?>
 sectionFromHTML('section_calendars');
 sectionFromHTML('section_users');
+function searchEvent(uid) {
+	service.json("google","search_event_uid",{uid:uid},function(res) {
+		info_dialog(res);
+	});
+}
 <?php } ?>
 </script>
 <?php 				

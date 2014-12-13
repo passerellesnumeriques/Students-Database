@@ -83,9 +83,9 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 		$this->service->acl->delete($calendar_id, $rule_id);
 	}
 	
-	public function getAllEvents($calendar_id) {
+	public function getAllEvents($calendar_id, $include_deleted = false) {
 		$events = array();
-		$list = $this->service->events->listEvents($calendar_id, array("maxResults"=>2500,"alwaysIncludeEmail"=>true));
+		$list = $this->service->events->listEvents($calendar_id, array("maxResults"=>2500,"alwaysIncludeEmail"=>true,"showDeleted"=>$include_deleted));
 		while(true) {
 			foreach ($list->getItems() as $event)
 				array_push($events, $event);
@@ -221,6 +221,7 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 		$ev->setICalUID($pn["uid"]);
 		$ev->setSummary($pn["title"]);
 		$ev->setDescription($pn["description"]);
+		$ev->setStatus("confirmed");
 		if ($pn["all_day"] == 1) {
 			$ev->setStart(self::timestampToDate(intval($pn["start"])));
 			$days = intval($pn["end"])-intval($pn["start"]);
@@ -291,7 +292,7 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 	
 	public function synchCalendar($pn_id, $google_id, $last_update) {
 		try {
-			$gevents = $this->getAllEvents($google_id);
+			$gevents = $this->getAllEvents($google_id, true);
 		} catch (Google_Service_Exception $e) {
 			if ($e->getCode() == 404) return true; // not found = calendar removed, let's wait the calendars synch task
 			PNApplication::error("Unable to retrieve Google calendar events", $e);
@@ -314,15 +315,17 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 				}
 			if ($pn == null) {
 				// event has been removed: remove it from Google
-				try {
-					$this->removeEvent($google_id, $gev->getId(), true);
-				} catch (Exception $e) {
-					PNApplication::error("Error removing Google Event ".$gev->getId(), $e);
-					$err = true;
+				if ($gev->status <> "cancelled") {
+					try {
+						$this->removeEvent($google_id, $gev->getId(), true);
+					} catch (Exception $e) {
+						PNApplication::error("Error removing Google Event ".$gev->getId(), $e);
+						$err = true;
+					}
 				}
 				continue;
 			}
-			if (intval($pn["last_modified"]) < $last_update) continue; // not modified
+			if ($gev->status <> "cancelled" && intval($pn["last_modified"]) < $last_update) continue; // not modified
 			// event modified: update it in Google
 			try {
 				$this->updateEvent($google_id, $gev->getId(), self::PNEventToGoogleEvent($pn, $google_id), true);
