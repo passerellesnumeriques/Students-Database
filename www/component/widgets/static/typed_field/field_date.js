@@ -5,6 +5,7 @@
  */
 function field_date(data,editable,config) {
 	if (data != null && data.length == 0) data = null;
+	if (!config) config = {show_utc:false};
 	if (typeof data == 'number') data = dateToSQL(new Date(data*1000),config.show_utc);
 	else if (typeof data == 'string') {
 		var d = parseSQLDate(data,config.show_utc);
