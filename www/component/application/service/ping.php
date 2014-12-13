@@ -11,6 +11,12 @@ class service_ping extends Service {
 			if (PNApplication::$instance->user_management->domain <> null)
 				PNApplication::$instance->authentication->getAuthenticationSystem(PNApplication::$instance->user_management->domain)->extendTokenExpiration(PNApplication::$instance->user_management->auth_token);
 		}
+		if (rand(0,10) == 0) {
+			if (PNApplication::$instance->cron->getLastCronExecution() < time()-30*60) {
+				// execute cron tasks if needed, as it seems not yet configured, or having problems
+				PNApplication::$instance->cron->executeMostNeededCronTask();
+			}
+		}
 		echo "{ok:true";
 		if (file_exists("maintenance_time")) {
 			$maintenance = intval(file_get_contents("maintenance_time"));
