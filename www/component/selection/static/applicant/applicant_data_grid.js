@@ -10,6 +10,12 @@ function applicant_data_grid(container, applicant_getter, show_id) {
 	col.addSorting();
 	this.addColumn(new CustomDataGridColumn(col, function(obj) { return applicant_getter(obj).applicant_id; }, show_id), 0);
 	if (show_id) col.sort(true);
+	col = new GridColumn("applicant.high_school", "High School", null, "left", "field_text", false, null, null, {can_be_null:true});
+	col.addSorting();
+	this.addColumn(new CustomDataGridColumn(col, function(obj) { return applicant_getter(obj).high_school_name; }));
+	col = new GridColumn("applicant.ngo", "Following NGO", null, "left", "field_text", false, null, null, {can_be_null:true});
+	col.addSorting();
+	this.addColumn(new CustomDataGridColumn(col, function(obj) { return applicant_getter(obj).ngo_name; }));
 }
 applicant_data_grid.prototype = new people_data_grid;
 applicant_data_grid.prototype.constructor = applicant_data_grid;

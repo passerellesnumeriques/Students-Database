@@ -23,6 +23,8 @@ class SelectionApplicantJSON {
 		$q->field("Applicant", "interview_attendance", "applicant_interview_attendance");
 		$q->field("Applicant", "interview_passer", "applicant_interview_passer");
 		$q->field("Applicant", "interview_comment", "applicant_interview_comment");
+		PNApplication::$instance->contact->joinOrganization($q, "Applicant", "high_school", "hs");
+		PNApplication::$instance->contact->joinOrganization($q, "Applicant", "ngo", "ngo");
 	}
 	
 	public static function ApplicantJSON($row) {
@@ -45,6 +47,10 @@ class SelectionApplicantJSON {
 		$s .= ",interview_attendance:".($row["applicant_interview_attendance"] === null ? "null" : $row["applicant_interview_attendance"] == 1 ? "true" : "false");
 		$s .= ",interview_passer:".json_encode($row["applicant_interview_passer"]);
 		$s .= ",interview_comment:".json_encode($row["applicant_interview_comment"]);
+		$s .= ",high_school_id:".json_encode($row["hs_id"]);
+		$s .= ",high_school_name:".json_encode($row["hs_name"]);
+		$s .= ",ngo_id:".json_encode($row["ngo_id"]);
+		$s .= ",ngo_name:".json_encode($row["ngo_name"]);
 		$s .= "}";
 		return $s;
 	}

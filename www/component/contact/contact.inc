@@ -272,10 +272,10 @@ class contact extends Component {
 			->executeSingleValue();
 	}
 	
-	public function joinOrganization(&$q, $from_table, $from_key) {
-		$q->join($from_table, "Organization", array($from_key=>"id"));
+	public function joinOrganization(&$q, $from_table, $from_key, $alias = null) {
+		$q->join($from_table, "Organization", array($from_key=>"id"), $alias);
 		require_once("component/contact/ContactJSON.inc");
-		ContactJSON::OrganizationSQL($q);
+		ContactJSON::OrganizationSQL($q, $alias);
 	}
 	
 	public function getOrganizationsContacts($orgs_ids) {

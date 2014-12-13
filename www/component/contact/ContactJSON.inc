@@ -202,11 +202,17 @@ class ContactJSON {
 		return $s;
 	}
 	
-	public static function OrganizationSQL(&$q) {
-		$alias = $q->getTableAlias("Organization");
-		$q->field($alias, "id", "organization_id");
-		$q->field($alias, "name", "organization_name");
-		$q->field($alias, "creator", "organization_creator");
+	public static function OrganizationSQL(&$q, $alias = null) {
+		if ($alias == null) {
+			$alias = $q->getTableAlias("Organization");
+			$q->field($alias, "id", "organization_id");
+			$q->field($alias, "name", "organization_name");
+			$q->field($alias, "creator", "organization_creator");
+		} else {
+			$q->field($alias, "id", $alias."_id");
+			$q->field($alias, "name", $alias."_name");
+			$q->field($alias, "creator", $alias."_creator");
+		}
 	}
 	
 	public static function OrganizationJSON($org, $types_ids, $contacts, $addresses, $contact_points) {
