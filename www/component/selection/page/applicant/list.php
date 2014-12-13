@@ -59,6 +59,9 @@ class page_applicant_list extends SelectionPage {
 					array_push($forced_fields, array("Selection","Final Decision of PN"));
 					array_push($forced_fields, array("Selection","Final Decision of Applicant"));
 					array_push($forced_fields, array("Selection","Reason of Applicant to decline"));
+					$batch_id = SQLQuery::create()->select("SelectionCampaign")->whereValue("SelectionCampaign","id",$this->component->getCampaignId())->field("batch")->executeSingleValue();
+					if ($batch_id <> null)
+						$batch = PNApplication::$instance->curriculum->getBatch($batch_id);
 					$is_final = true;
 					break;
 			}
@@ -170,6 +173,52 @@ class page_applicant_list extends SelectionPage {
 					};
 					list.addHeader(import_applicants);
 					<?php } ?>
+
+					<?php if ($is_final && PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {
+						if ($batch_id <> null) {?>
+						var update_batch = document.createElement("BUTTON");
+						update_batch.className = "flat";
+						update_batch.style.fontWeight = "bold";
+						update_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Update Batch <?php echo toHTML($batch["name"]); ?> with final list";
+						update_batch.onclick = function() {
+							popup_frame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch=<?php echo $batch_id;?>", null, null, null, function(frame,popup) {
+								frame.confirmed = function() {
+									var locker = lock_screen(null, "Updating batch of students...");
+									service.json("selection","update_batch",{batch:<?php echo $batch_id;?>},function(res) {
+										unlock_screen(locker);
+									});
+								};
+							});
+						};
+						list.addHeader(update_batch);
+						var unlink_batch = document.createElement("BUTTON");
+						unlink_batch.className = "flat";
+						unlink_batch.style.fontWeight = "bold";
+						unlink_batch.innerHTML = "<img src='"+theme.icons_16.unlink+"'/> Unlink this selection with Batch <?php echo toHTML($batch["name"]); ?>";
+						unlink_batch.onclick = function() {
+							confirm_dialog("Are you sure you want to unlink this selection process with this Batch ?<br/>All the applicants who were already included in the batch will be removed from the batch.",function(yes) {
+								if (!yes) return;
+								service.json("selection","unlink_batch",{},function(res) {
+									if (res) location.reload();
+								});
+							});
+						};
+						list.addHeader(unlink_batch);
+						<?php } else { ?>
+						var create_batch = document.createElement("BUTTON");
+						create_batch.className = "flat";
+						create_batch.style.fontWeight = "bold";
+						create_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Create a Batch of students with final list";
+						create_batch.onclick = function() {
+							popup_frame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Create Batch from Selection", "/dynamic/selection/page/create_batch?ondone=reloadPage", null, null, null, function(frame,popup) {
+								frame.reloadPage = function() {
+									location.reload();
+								};
+							});
+						};
+						list.addHeader(create_batch);
+						<?php }
+					} ?>
 
 					<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) { ?>
 					list.grid.setSelectable(true);

@@ -56,7 +56,7 @@ class people extends Component {
 		return $list;
 	}
 	
-	public function addPeopleType($people_id, $new_type) {
+	public function addPeopleType($people_id, $new_type, $bypass_security = false) {
 		$people = $this->getPeople($people_id);
 		if ($people == null)
 			throw new Exception("Invalid people or no access to this people");
@@ -65,7 +65,7 @@ class people extends Component {
 		$pi = $this->getPeopleTypePlugin($new_type);
 		if ($pi == null)
 			throw new Exception("Invalid people type ".$new_type);
-		if (!$pi->canWrite())
+		if (!$bypass_security && !$pi->canWrite())
 			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
 		$people["types"] .= "/$new_type/";
 		SQLQuery::create()->updateByKey("People", $people_id, array("types"=>$people["types"]));
@@ -73,12 +73,12 @@ class people extends Component {
 		if (count($roles) > 0) PNApplication::$instance->user_management->addRolesToPeople($people_id, $roles);
 	}
 	
-	public function removePeoplesType($peoples_ids, $type) {
+	public function removePeoplesType($peoples_ids, $type, $bypass_security = false) {
 		if (count($peoples_ids) == 0) return;
 		$pi = $this->getPeopleTypePlugin($type);
 		if ($pi == null)
 			throw new Exception("Invalid people type ".$type);
-		if (!$pi->canWrite())
+		if (!$bypass_security && !$pi->canWrite())
 			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
 		// 1-remove peoples who only have this type
 		$remove_ids = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->whereValue("People","types","/$type/")->field("id")->executeSingleField();
@@ -88,7 +88,7 @@ class people extends Component {
 			if (count($peoples_ids) == 0) return;
 		}
 		// 2-only remove type for remaining peoples
-		$peoples = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->field("id")->field("types")->executeSingleField();
+		$peoples = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->field("id")->field("types")->execute();
 		foreach ($peoples as $p) {
 			$types = $this->parseTypes($p["types"]);
 			$pi->remove($p["id"]);

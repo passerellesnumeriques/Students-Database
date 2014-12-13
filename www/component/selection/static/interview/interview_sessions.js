@@ -519,7 +519,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.header.appendChild(document.createTextNode(" staff(s) assigned."));
 		this.header.appendChild(document.createElement("BR"));
 		this.header.appendChild(document.createTextNode("How many parallel interviews can be done by those staffs ? "));
-		this.nb_interviews = new field_integer(session.parallel_interviews,true,{min:staffs.length == 0 ? 0 : 1,max:staffs.length,can_be_null:false});
+		this.nb_interviews = new field_integer(session.parallel_interviews,can_edit,{min:staffs.length == 0 ? 0 : 1,max:staffs.length,can_be_null:false});
 		this.header.appendChild(this.nb_interviews.getHTMLElement());
 		this.nb_interviews.onchange.add_listener(function() { session.parallel_interviews = t.nb_interviews.getCurrentData(); pnapplication.dataUnsaved("InterviewSessions"); t.refresh(); });
 		this.header.appendChild(document.createElement("BR"));

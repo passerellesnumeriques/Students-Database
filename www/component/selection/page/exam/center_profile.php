@@ -59,7 +59,7 @@ class page_exam_center_profile extends SelectionPage {
 					if ($a["people"] > 0 && !in_array($a["people"], $peoples_ids))
 						array_push($peoples_ids, $a["people"]);
 			if (count($peoples_ids) > 0) {
-				$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true, false, false, true);
+				$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true, false, true, true);
 				$can_do = SQLQuery::create()->select("StaffStatus")->whereIn("StaffStatus","people",$peoples_ids)->field("people")->field("exam")->execute();
 			} else {
 				$peoples = array();

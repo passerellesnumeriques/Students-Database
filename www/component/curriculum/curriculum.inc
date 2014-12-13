@@ -172,18 +172,27 @@ class curriculum extends Component {
 	/** Retrieve batches having an end_date greater than today
 	 * @return array list of rows from StudentBatch table
 	 */
-	public function getCurrentBatches() {
-		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+	public function getCurrentBatches($exclude_future = false, $bypass_security = false) {
+		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
 		$q->where("end_date >= CURRENT_DATE()");
+		if ($exclude_future) $q->where("start_date <= CURRENT_DATE()");
 		return $q->execute();
 	}
 	/** Retrieve batches having an end_date less than today
 	 * @return array list of rows from StudentBatch table
 	 */
-	public function getAlumniBatches() {
-		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+	public function getAlumniBatches($bypass_security = false) {
+		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
 		$q->where("end_date < CURRENT_DATE()");
 		return $q->execute();
+	}
+	public function getFutureBatches($bypass_security = false) {
+		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+		$q->where("start_date >= CURRENT_DATE()");
+		return $q->execute();
+	}
+	public function getAllBatches($bypass_security = false) {
+		return SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentBatch")->orderBy("StudentBatch", "start_date", true)->execute();
 	}
 	
 	/**

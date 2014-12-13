@@ -138,5 +138,13 @@ class students extends Component {
 		}
 		return $q->execute();
 	}
+	
+	public function removeStudents($peoples_ids, $bypass_security = false) {
+		PNApplication::$instance->people->removePeoplesType($peoples_ids, "student", $bypass_security);
+	}
+	public function makeAsStudent($people_id, $batch_id, $bypass_security = false) {
+		PNApplication::$instance->people->addPeopleType($people_id, "student", $bypass_security);
+		SQLQuery::create()->bypassSecurity($bypass_security)->insert("Student", array("people"=>$people_id,"batch"=>$batch_id));
+	}
 }
 ?>

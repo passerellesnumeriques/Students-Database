@@ -2,7 +2,7 @@
 /* @var $model DataModel */
 
 $model->addTable("Student")
-	->addForeignKey("people", "People", true, true, false, false, true)
+	->addForeignKey("people", "People", true, false, false, false, true)
 	->addForeignKey("batch", "StudentBatch", true, false, true, false)
 	->addString("exclusion_reason", 5000, 0, true, false)
 	->addDate("exclusion_date", true, false)

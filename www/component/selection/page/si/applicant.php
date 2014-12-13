@@ -287,7 +287,7 @@ function si_visits(section, events, calendar_id, applicant_id, known_peoples, ca
 				peoples.push(event.attendees[i].name);
 		}
 		var who = new who_container(container,peoples,can_edit,'si');
-		container.appendChild(who.createAddButton("Which Social Investigators ?"));
+		if (can_edit) container.appendChild(who.createAddButton("Which Social Investigators ?"));
 		this.whos.push(who);
 	};
 	if (events.length == 0) section.content.innerHTML = "<i>None</i>";

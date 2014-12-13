@@ -7,6 +7,7 @@ $model->addTable("SelectionCampaign")
 	->addBoolean("frozen",false)
 	->addEnum("frozen_reason", array("Campaign Finished","Selection Team Travelling"), true, false)
 	->addForeignKey("calendar","Calendar",false,false,false,false)//Not automatically removed, must use the calendar functionalities
+	->addForeignKey("batch", "StudentBatch", false, false, false, true)
 	->addReadAccess("can_access_selection_data",true)
 	->addWriteAccess("manage_selection_campaign",true)
 	->addInsertAccess("manage_selection_campaign",true)

@@ -75,7 +75,7 @@ class page_organizations extends Page {
 				true,
 				function (list) {
 					list.grid.makeScrollable();
-					if (can_remove || selected != null || selected_no_changeable != null) {
+					if (can_remove || selected != null || selected_not_changeable != null) {
 						list.grid.setSelectable(true);
 						list.ondataloaded.add_listener(organizations_loaded);
 						list.grid.onrowselectionchange = organizations_selection_changed;
