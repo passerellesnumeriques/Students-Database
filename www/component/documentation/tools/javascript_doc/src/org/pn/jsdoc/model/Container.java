@@ -121,7 +121,12 @@ public abstract class Container extends FinalElement {
 				if (target instanceof Name) {
 					add(((Name)target).getIdentifier(), new ValueToEvaluate(file, assign.getRight(), (AstNode)node, expr, target));
 				} else if (target instanceof PropertyGet) {
-					assignments_to_evaluate.add(new ValueToEvaluate(file, assign, (AstNode)node, expr, target));
+					AstNode target_target = ((PropertyGet)target).getTarget();
+					if (target_target instanceof Name && ((Name)target_target).getIdentifier().equals("window")) {
+						Name prop = ((PropertyGet)target).getProperty();
+						getGlobal().add(prop.getIdentifier(), new ValueToEvaluate(file, assign.getRight(), (AstNode)node, expr, target));
+					} else
+						assignments_to_evaluate.add(new ValueToEvaluate(file, assign, (AstNode)node, expr, target));
 				} else {
 					error("Target of assignment not supported: "+target.getClass()+": "+expr.toSource(), file, node);
 				}

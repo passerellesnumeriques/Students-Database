@@ -45,7 +45,7 @@ class service_check_php extends Service {
 		$comment = trim($comment);
 		if (strlen($comment) == 0 && $type == "")
 			array_push($output, "Class <b>".$cl->getName()."</b>: No comment describing the purpose of the class");
-		if ($type == "service") {
+		if ($type == "service" && substr($cl->getName(),0,8) == "service_") {
 			$classname = $cl->getName();
 			$service = new $classname();
 			@ob_start();

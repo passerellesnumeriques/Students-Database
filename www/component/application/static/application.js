@@ -507,7 +507,9 @@ function LoadingFrame(frame_element) {
 		//console.log("Frame "+frame_element.name+" loaded in "+(new Date().getTime()-this._start)+"ms.");
 	};
 	
-	/** Check what is the current status, and remove the loading if needed */
+	/** Check what is the current status, and remove the loading if needed
+	 * @param {Boolean} renew if true, an update will be automatically done in few milliseconds 
+	 */
 	this._update = function(renew) {
 		if (!t || !frame_element) return;
 		if (!frame_element.parentNode ||

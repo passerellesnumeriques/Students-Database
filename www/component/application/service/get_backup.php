@@ -3,9 +3,21 @@ class service_get_backup extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Retrieve the list of available backups, or a file from the requested backup"; }
+	public function inputDocumentation() {
+		echo "if <code>request</code> is given, the following values are possible:<ul>";
+		echo "<li><b>get_list</b>: the service will return the list of available backups</li>";
+		echo "</ul>";
+		echo "if no request, it means a file from a backup is requested, and the following input are mandatory:<ul>";
+		echo "<li><code>version</code>: version of the backup</li>";
+		echo "<li><code>time</code>: the timestamp of the backup</li>";
+		echo "<li><code>file</code>: the filename from the backup to retrieve. The list of possible filenames are specified in the class Backup</li>";
+		echo "</ul>";
+	}
+	public function outputDocumentation() {
+		echo "If the list is requested, this service returns an array of {version,time} corresponding to the available backups<br/>";
+		echo "Else, the raw content of the requested file is given";
+	}
 	public function getOutputFormat($input) {
 		switch ($input["request"]) {
 			case "get_list":
@@ -24,7 +36,7 @@ class service_get_backup extends Service {
 			return;
 		}
 		if (sha1($input["password"]) <> file_get_contents("conf/".PNApplication::$instance->local_domain.".password")) {
-			// TODO add additional security here to avoid attacks
+			sleep(3);
 			header("HTTP/1.0 403 Access Denied (invalid password)");
 			return;
 		}
@@ -37,6 +49,7 @@ class service_get_backup extends Service {
 		}
 	}
 
+	/** Execute the <code>get_list</code> request */
 	private function getList() {
 		$backups = array();
 		if (file_exists("data/backups")) {
@@ -61,6 +74,9 @@ class service_get_backup extends Service {
 		echo json_encode($backups);
 	}
 	
+	/** Send the content of the requested file
+	 * @param array the input 
+	 */
 	private function getBackup($input) {
 		$version = $input["version"];
 		$time = $input["time"];

@@ -1,4 +1,7 @@
 <?php 
+/**
+ * Interface to implement in order to add a new section to the application (menu at the top of the main page)
+ */
 interface ApplicationSectionPlugin {
 	
 	/** The Identifier of the section */
@@ -24,6 +27,9 @@ interface ApplicationSectionPlugin {
 	
 }
 
+/**
+ * Define the Home section
+ */
 class HomeApplicationSection implements ApplicationSectionPlugin {
 	
 	public function getId() { return "home"; }

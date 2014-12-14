@@ -1,12 +1,20 @@
-<?php 
+<?php
+/**
+ * Class to manipulate the backups (create, recover, list..)
+ */ 
 class Backup {
 
+	/** string[] list of files which can exist in a backup */
 	public static $possible_files = array(
 		"db",
 		"storage",
 		"custom_tables"
 	);
 	
+	/**
+	 * Remove the olds backups
+	 * @param number $max_nb maximum number of backups to keep
+	 */
 	public static function removeOlds($max_nb = 30) {
 		$list = self::listBackups();
 		if (count($list) <= $max_nb) return;
@@ -21,6 +29,10 @@ class Backup {
 		}
 	}
 	
+	/**
+	 * Get the list of existing backups
+	 * @return array list of backups, each being represented by an array with 2 keys: version and time
+	 */
 	public static function listBackups() {
 		$list = array();
 		if (!file_exists("data/backups")) return $list;
@@ -28,12 +40,16 @@ class Backup {
 		while (($filename = readdir($dir)) <> null) {
 			if ($filename == "." || $filename == "..") continue;
 			if (!is_dir("data/backups/$filename")) continue;
-			self::_listBackups($filename, $list);
+			self::listBackups_($filename, $list);
 		}
 		closedir($dir);
 		return $list;
 	}
-	private static function _listBackups($version, &$list) {
+	/** Retrieve list of backups for a given version
+	 * @param string $version version
+	 * @param array $list list to populate
+	 */
+	private static function listBackups_($version, &$list) {
 		$dir = opendir("data/backups/$version");
 		while (($filename = readdir($dir)) <> null) {
 			if ($filename == "." || $filename == "..") continue;
@@ -43,6 +59,9 @@ class Backup {
 		closedir($dir);
 	}
 	
+	/** Create a new backup of the database
+	 * @return string the timestamp given to the backup
+	 */
 	public static function createBackup() {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
@@ -77,10 +96,11 @@ class Backup {
 		return $time;
 	}
 	
-	/**
-	 * @param \datamodel\Table $table_spec
-	 * @param string $table_name
-	 * @param string $path
+	/** Create a SQL file containing INSERT statements for each existing row in the given table
+	 * @param \datamodel\Table $table_spec the table to backup
+	 * @param string $table_name SQL name of the table
+	 * @param number|null $sub_model the sub model instance
+	 * @param string $path directory where to save the content of the table
 	 */
 	private static function backupTable($table_spec, $table_name, $sub_model, $path) {
 		set_time_limit(600);
@@ -130,6 +150,13 @@ class Backup {
 		}
 	}
 	
+	/** Add the content of a directory into a ZIP file
+	 * @param string $dir_path the directory to zip
+	 * @param string $zip_path the path inside the zip file
+	 * @param ZipArchive $zip the zip file
+	 * @throws Exception in case the directory does not exist
+	 * @return boolean true if the directory was empty, thus nothing has been zipped
+	 */
 	private static function zipDir($dir_path, $zip_path, &$zip) {
 		$dir = opendir($dir_path);
 		if (!$dir) throw new Exception("Cannot zip directory ".$dir_path.": directory not found.");
@@ -147,6 +174,13 @@ class Backup {
 		return $empty;
 	}
 	
+	/**
+	 * Create a ZIP file from the content of a directory
+	 * @param string $dir_path the directory to zip
+	 * @param string $zip_path the path of the ZIP file to create
+	 * @param bool $handle_empty if true, and there is no file in the directory, we will create an entry in the zip file 'empty' (this is because by default, zip to not contain empty directories, thus the ZIP file may be completely empty, and thus not created)
+	 * @throws Exception if an error occurs
+	 */
 	public static function zipDirectory($dir_path, $zip_path, $handle_empty = false) {
 		if (class_exists("ZipArchive")) {
 			$zip = new ZipArchive();
@@ -163,6 +197,10 @@ class Backup {
 		}
 	}
 	
+	/**
+	 * Remove a directory with its content
+	 * @param string $path the directory to remove
+	 */
 	public static function removeDirectory($path) {
 		$dir = opendir($path);
 		while (($filename = readdir($dir)) <> null) {
@@ -178,7 +216,12 @@ class Backup {
 			rmdir($path);
 	}
 	
-	
+	/**
+	 * Recover the database from the given backup
+	 * @param number $time the timestamp identifying the backup
+	 * @param string $version the version of the backup
+	 * @throws Exception in case of error
+	 */
 	public static function recoverBackup($time, $version = null) {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
@@ -198,6 +241,11 @@ class Backup {
 				self::synchronizeDatabase(null, $domain);
 	}
 	
+	/**
+	 * Synchronize a database with the current DataModel, and optionnaly import a backup
+	 * @param string|null $directory the directory containing the backup to import, or null
+	 * @param string $domain domain identifying which database to synchronize
+	 */
 	public static function synchronizeDatabase($directory, $domain) {
 		if (file_exists("data/recover")) self::removeDirectory("data/recover");
 		if (!@mkdir("data/recover")) {
@@ -292,6 +340,13 @@ class Backup {
 		if (file_exists("data/$domain/storage/empty")) rmdir("data/$domain/storage/empty");
 	}
 	
+	/**
+	 * Import a backup, using a specific DataModel version
+	 * @param number $time the timestamp identifying the backup
+	 * @param string $version the version of the backup
+	 * @param string $dm_version the version of the DataModel
+	 * @return boolean true on success
+	 */
 	public static function importBackup($time, $version, $dm_version) {
 		// first, we need the datamodel, so we can create sub model tables
 		if (!file_exists("data/datamodels")) mkdir("data/datamodels");

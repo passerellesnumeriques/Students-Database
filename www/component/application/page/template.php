@@ -11,12 +11,24 @@ class page_template extends Page {
 		echo $this->compute($content, $input);
 	}
 	
+	/**
+	 * Compute template statements
+	 * @param string $s page content to compute
+	 * @param array $input parameters
+	 * @return string the computed page
+	 */
 	private function compute($s, $input) {
 		$s = $this->computeForEach($s, $input);
 		$s = $this->computeValue($s, $input);
 		return $s;
 	}
 	
+	/**
+	 * Compute FOREACH statements
+	 * @param string $s page to compute
+	 * @param array $input parameters
+	 * @return string computed page
+	 */
 	private function computeForEach($s, $input) {
 		while (($i = strpos($s, "#FOREACH:")) !== false) {
 			$j = strpos($s, ":", $i+9);
@@ -42,6 +54,12 @@ class page_template extends Page {
 		return $s;
 	}
 
+	/**
+	 * Compute VALUE statements
+	 * @param string $s the page to compute
+	 * @param array $input parameters
+	 * @return string the computed page
+	 */
 	private function computeValue($s, $input) {
 		while (($i = strpos($s, "#VALUE:")) !== false) {
 			$j = strpos($s, "#", $i+7);

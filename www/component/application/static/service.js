@@ -10,6 +10,8 @@ window.service = {
 	 * @param {Function} handler callback that will receive the result, or null if an error occured
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
+	 * @param {Function} onerror called in case of error
+	 * @param {Boolean} no_status_on_error if true, the errors won't be automatically displayed to the user
 	 */
 	json: function(component, service_name, input, handler, foreground, progress_handler, onerror, no_status_on_error) {
 		window.top._last_service_call = new Date().getTime();
@@ -43,6 +45,7 @@ window.service = {
 			progress_handler
 		);
 	},
+	/** timestamp of the last time we encounter a connection issue, or 0 */ 
 	_last_connection_error: 0,
 	
 	/**
@@ -152,6 +155,7 @@ window.service = {
 	/**
 	 * Generate a JSON string from the given object.
 	 * @param {Object} input the javascript object to convert into a JSON string
+	 * @param {Array} done should not be given, this is used only for recursive calls
 	 * @returns {String} the JSON representation of the given object
 	 */
 	generateInput: function(input,done) {
@@ -237,6 +241,11 @@ function postFrame(url, data, frame) {
 	document.body.removeChild(form);
 }
 
+/** Post data, with the aim to download a file.
+ * This will show a message to the user, and remove the frame automatically after 1 minute, to let the time to generate the file to download.
+ * @param {String} url the URL where to post the data
+ * @param {Object} data data to post
+ */
 function postToDownload(url, data) {
 	var frame = document.createElement("IFRAME");
 	frame.style.position = "absolute";

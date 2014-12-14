@@ -39,7 +39,27 @@ function build_tree(parent_item, files, path) {
 	}
 }
 var todo = [];
-var items_to_add = [];
+var problems_counter = 0;
+var having_problems = [];
+function errorsItemsProvider(item, ondone) {
+	item.children = [];
+	for (var i = 0; i < item._errors.length; ++i)
+		item.addItem(new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+item._errors[i]));
+	ondone();
+}
+function add_error(item, msg, location) {
+	if (location) msg += " ("+location.file+":"+location.line+")";
+	problems_counter++;
+	if (item._errors) item._errors.push(msg);
+	else {
+		item._errors = [msg];
+		item.collapse();
+		item.children = undefined;
+		item.children_on_demand = errorsItemsProvider;
+		having_problems.push(item);
+	}
+}
+
 function build_tree_php(parent_item, path, file) {
 	var item = new TreeItem("<img src='/static/development/php.gif' style='vertical-align:bottom'/> "+file.name, true);
 	item.file = file;
@@ -48,20 +68,14 @@ function build_tree_php(parent_item, path, file) {
 		service: "check_php",
 		data: {path:path+file.name,type:file.sub_type},
 		handler: function(res) {
-			for (var i = 0; i < res.length; ++i) {
-				var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res[i]);
-				items_to_add.push({parent:item,item:e});
-			}
+			for (var i = 0; i < res.length; ++i) add_error(item, res[i]);
 		}
 	});
 	todo.push({
 		service: "check_todo",
 		data: {path:path+file.name},
 		handler: function(res) {
-			for (var i = 0; i < res.length; ++i) {
-				var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res[i]);
-				items_to_add.push({parent:item,item:e});
-			}
+			for (var i = 0; i < res.length; ++i) add_error(item, res[i]);
 		}
 	});
 }
@@ -83,10 +97,7 @@ function build_tree_js(parent_item, path, file) {
 		service: "check_todo",
 		data: {path:path+file.name},
 		handler: function(res) {
-			for (var i = 0; i < res.length; ++i) {
-				var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+res[i]);
-				items_to_add.push({parent:item,item:e});
-			}
+			for (var i = 0; i < res.length; ++i) add_error(item, res[i]);
 		}
 	});
 }
@@ -206,11 +217,6 @@ function get_class(ns, name) {
 		return get_class(cl, after);
 	return null;
 }
-function add_error(item, msg, location) {
-	if (location) msg += " ("+location.file+":"+location.line+")";
-	var e = new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+msg);
-	items_to_add.push({parent:item,item:e});
-}
 function is_small_letter(letter) {
 	if (letter.toUpperCase() != letter && letter.toLowerCase() == letter)
 		return true;
@@ -286,17 +292,23 @@ build_tree(tr, files, "");
 function check_end() {
 	if (todo.length == 0 && in_progress == 0 && checking_js == 0) {
 		unlock_screen(locker);
-		var item = new TreeItem(""+items_to_add.length+" problem(s)");
+		var item = new TreeItem(""+problems_counter+" problem(s)");
 		tr.insertItem(item, 0);
-		for (var i = 0; i < items_to_add.length; ++i) {
-			items_to_add[i].parent.addItem(items_to_add[i].item);
-			has_error(items_to_add[i].parent);
+		for (var i = 0; i < having_problems.length; ++i) {
+			has_error(having_problems[i]);
 		}
 	}
 }
 function has_error(p) {
 	if (p instanceof tree) return;
-	p.expand();
+	if (p._errors) {
+		var span = document.createElement("SPAN");
+		span.style.color = "red";
+		span.innerHTML = p._errors.length+" problem(s)";
+		span.style.marginLeft = "5px";
+		p.cells[0].element.appendChild(span);
+	} else
+		p.expand();
 	if (p.parent) has_error(p.parent);
 }
 
@@ -304,7 +316,7 @@ var in_progress = 0;
 var total_todo = 0;
 function next_todo() {
 	var pc = Math.floor((total_todo-todo.length-in_progress)*100/total_todo);
-	set_lock_screen_content(locker, "Checking code... ("+pc+"%, "+items_to_add.length+" problem(s) found)");
+	set_lock_screen_content(locker, "Checking code... ("+pc+"%, "+problems_counter+" problem(s) found)");
 	if (todo.length == 0) {
 		check_end();
 		return;

@@ -26,6 +26,10 @@ class service_get_static_resources extends Service {
 		echo "{scripts:".json_encode($scripts).",images:".json_encode($images)."}";
 	}
 #DEV	
+	/**
+	 * Retrieve the list of components, ordered by dependency
+	 * @return string[] list of components' name
+	 */
 	private function getOrderedComponents() {
 		$components = $this->getComponents();
 		$components = $this->orderComponents($components);

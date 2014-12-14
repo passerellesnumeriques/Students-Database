@@ -1,5 +1,8 @@
 <?php 
 require_once("component/cron/CronTask.inc");
+/**
+ * Plugin to declare tasks to be executed by cron
+ */
 class ApplicationCronPlugin implements CronPlugin {
 	
 	public function getTasks() {
