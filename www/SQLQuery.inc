@@ -2216,7 +2216,7 @@ class SQLQuery {
 				}
 				if (count($keys_to_lock) > 0) {
 					$locked_by = null;
-					$locks_ids = DataBaseLock::lockRows($table_name, $keys_to_lock, $locked_by, $this->bypass_security || ($dm_table->canRemoveFromForeignTable($update[3])));
+					$locks_ids = DataBaseLock::lockRows($update[0], $keys_to_lock, $locked_by, $this->bypass_security || ($dm_table->canRemoveFromForeignTable($update[3])));
 					if ($locks_ids == null) {
 						DataBaseLock::unlockMultiple($locks);
 						throw new Exception("Table '".$table->getName()."' already locked by ".$locked_by);
