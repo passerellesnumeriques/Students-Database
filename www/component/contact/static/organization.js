@@ -616,6 +616,7 @@ function organization(container, org, existing_types, can_edit) {
 											}
 											// go division by division
 											var areas = [country];
+											var areas_division_index = -1;
 											var parents_ids = null;
 											var components_found = [];
 											var last_matching = null;
@@ -625,7 +626,7 @@ function organization(container, org, existing_types, can_edit) {
 												sub_areas = window.top.geography.searchAreasByCoordinates(country_data, division_index, a.lat, a.lng, parents_ids);
 												// add sub areas having no coordinates
 												for (var i = 0; i < country_data[division_index].areas.length; ++i)
-													if (!country_data[division_index].areas[i].lat && (parents_ids == null || parents_ids.indexOf(country_data[division_index].areas[i].area_parent_id)>=0))
+													if (!country_data[division_index].areas[i].north && (parents_ids == null || parents_ids.indexOf(country_data[division_index].areas[i].area_parent_id)>=0))
 														sub_areas.push(country_data[division_index].areas[i]);
 												// check if we have those sub areas in the components
 												var matching = [];
@@ -651,14 +652,30 @@ function organization(container, org, existing_types, can_edit) {
 														if (good.length > 0) match = good;
 														else match = ok;
 													}
+													var remaining = "";
+													if (match.length == 0) {
+														// try a more permissive matching: by words, allowing to remove one letter from each word
+														for (var j = 0; j < sub_areas.length; ++j) {
+															var m = wordsAlmostMatch(components[i], sub_areas[j].area_name);
+															if (m.nb_words1_in_2 == m.nb_words_1 || m.nb_words2_in_1 == m.nb_words_2) {
+																match.push(sub_areas[j]);
+																remaining = m.remaining1;
+															}
+														}
+													}
 													if (match.length > 0) {
 														// ok, found it, remove the components and reduce the scope of the areas
 														last_matching = [].concat(match);
 														last_matching_division = division_index;
-														while (components.length > i) {
-															components_found.push(components[components.length-1]);
-															components.splice(components.length-1,1);
-														}
+														remaining = remaining.trim();
+														if (i == 0 && remaining.length > 0) {
+															// last component
+															components[0] = remaining;
+														} else
+															while (components.length > i) {
+																components_found.push(components[components.length-1]);
+																components.splice(components.length-1,1);
+															}
 														matching = match;
 														break;
 													}
@@ -666,6 +683,7 @@ function organization(container, org, existing_types, can_edit) {
 												if (matching.length > 0) {
 													// scope reduces to matching components
 													areas = matching;
+													areas_division_index = division_index;
 													parents_ids = [];
 													for (var i = 0; i < areas.length; ++i) parents_ids.push(areas[i].area_id);
 												} else {
@@ -678,6 +696,7 @@ function organization(container, org, existing_types, can_edit) {
 													if (list.length == 0)
 														break;
 													areas = list;
+													areas_division_index = division_index;
 													parents_ids = [];
 													for (var i = 0; i < areas.length; ++i) parents_ids.push(areas[i].area_id);
 												}
@@ -692,7 +711,7 @@ function organization(container, org, existing_types, can_edit) {
 												a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
 											} else {
 												// try to finalize only with the components' names
-												var division_index = country_data.length-2;
+												var division_index = areas_division_index;
 												while (areas.length > 1) {
 													for (var i = components.length-1; i >= 0; --i) {
 														var match = [];
@@ -717,7 +736,7 @@ function organization(container, org, existing_types, can_edit) {
 														a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
 														break;
 													}
-													if (division_index < 0) break;
+													if (division_index <= 0) break;
 													var parents = [];
 													for (var i = 0; i < areas.length; ++i) {
 														var p = window.top.geography.getParentArea(country_data, areas[i]);
@@ -726,6 +745,7 @@ function organization(container, org, existing_types, can_edit) {
 														if (!found) parents.push(p);
 													}
 													areas = parents;
+													division_index--;
 													if (areas.length == 1) {
 														a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
 														break;

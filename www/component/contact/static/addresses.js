@@ -168,7 +168,8 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 											field_unit: edit.address.unit,
 											field_additional: edit.address.additional,
 											field_lat: edit.address.lat,
-											field_lng: edit.address.lng
+											field_lng: edit.address.lng,
+											unlock:true
 										},function(res) {
 											if (!res) { p.unfreeze(); return; }
 											window.databaselock.removeLock(lock_id);

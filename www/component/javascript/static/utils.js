@@ -723,6 +723,46 @@ function wordsMatch(s1, s2, ignore_case) {
 		_2_fully_in_1: rem2.trim().length == 0,
 	};
 }
+function wordsAlmostMatch(s1, s2) {
+	s1 = s1.latinize().toLowerCase();
+	s2 = s2.latinize().toLowerCase();
+	var words1 = prepareMatchScore(s1);
+	var words2 = prepareMatchScore(s2);
+	var words1_in_words2 = 0;
+	var words2_in_words1 = 0;
+	var rem2 = ""+s2;
+	for (var i = 0; i < words1.length; ++i) {
+		for (var j = 0; j < words2.length; ++j) {
+			if (almostMatching(words1[i], words2[j])) {
+				var k = rem2.indexOf(words2[j]);
+				if (k >= 0) {
+					words1_in_words2++;
+					rem2 = rem2.substring(0,k)+rem2.substring(k+words2[j].length);
+				}
+			}
+		}
+	}
+	var rem1 = ""+s1;
+	for (var i = 0; i < words2.length; ++i) {
+		for (var j = 0; j < words1.length; ++j) {
+			if (almostMatching(words2[i], words1[j])) {
+				var k = rem1.indexOf(words1[j]);
+				if (k >= 0) {
+					words2_in_words1++;
+					rem1 = rem1.substring(0,k)+rem1.substring(k+words1[j].length);
+				}
+			}
+		}
+	}
+	return {
+		nb_words_1:words1.length,
+		nb_words_2:words2.length,
+		nb_words1_in_2:words1_in_words2,
+		nb_words2_in_1:words2_in_words1,
+		remaining1: rem1,
+		remaining2: rem2
+	};
+}
 
 function wordsMatchingWithLetters(s1, s2) {
 	s1 = s1.latinize().toLowerCase();
