@@ -50,10 +50,13 @@ class page_interview_results extends SelectionPage {
 						$sessions = $q->execute();
 						$centers_ids = array();
 						foreach ($sessions as $session) if (!in_array($session["center_id"], $centers_ids)) array_push($centers_ids, $session["center_id"]);
-						$centers = SQLQuery::create()
-							->select("InterviewCenter")
-							->whereIn("InterviewCenter","id",$centers_ids)
-							->execute();
+						if (count($centers_ids) == 0)
+							$centers = array();
+						else
+							$centers = SQLQuery::create()
+								->select("InterviewCenter")
+								->whereIn("InterviewCenter","id",$centers_ids)
+								->execute();
 						while (count($sessions) > 0) {
 							$center_id = $sessions[0]["center_id"];
 							foreach ($centers as $c) if ($c["id"] == $center_id) { $center = $c; break; }
