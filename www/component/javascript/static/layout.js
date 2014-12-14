@@ -75,6 +75,7 @@ window.layout = {
 			w.layout.changed(element);
 			return;
 		}
+		if (!element.id) element.id = generateID();
 		layout._changes.push(element);
 		layout._layout_needed();
 	},
@@ -141,8 +142,9 @@ window.layout = {
 		var changes = layout._changes;
 		layout._changes = [];
 		if (window.frameElement && window.frameElement.style && (window.frameElement.style.visibility == 'hidden' || window.frameElement.style.display == "none")) return;
+		var list = {};
 		for (var i = 0; i < changes.length; ++i) {
-			if (layout._changes.contains(changes[i])) continue; // duplicate
+			if (typeof list[changes[i].id] != 'undefined') continue; // duplicate
 			if (changes.length < 1000) {
 				var p = changes[i];
 				var hidden = false;
@@ -153,8 +155,10 @@ window.layout = {
 				if (hidden) continue;
 			}
 			layout._changes.push(changes[i]);
+			list[changes[i].id] = true;
 		}
 		changes = null;
+		list = null;
 		
 		// first, process the elements inside changed, starting from the leaves of the tree
 		if (layout._element_inside_listeners.length > 0)
@@ -191,20 +195,36 @@ window.layout = {
 	},
 	_getLeavesElements: function(elements) {
 		var leaves = [];
+		var leaves_ids = {};
 		var parents = [];
+		var parents_ids = {};
 		for (var i = 0; i < elements.length; ++i) {
 			leaves.push(elements[i]);
+			leaves_ids[elements[i].id] = true;
 			var p = elements[i].parentNode;
-			if (!p || parents.contains(p)) continue;
+			if (!p) continue;
+			if (!p.id) p.id = generateID();
+			else if (typeof parents_ids[p.id] != 'undefined') parents_ids[p.id] = true;
 			parents.push(p);
+			parents_ids[p.id] = true;
 		}
+		parents_ids = null;
 		while (parents.length > 0) {
 			var new_parents = [];
+			var new_parents_ids = {};
 			for (var i = 0; i < parents.length; ++i) {
-				var j = leaves.indexOf(parents[i]);
-				if (j != -1) leaves.splice(j,1);
+				if (parents[i].id) {
+					if (typeof leaves_ids[parents[i].id] != 'undefined') {
+						leaves.removeUnique(parents[i]);
+						delete leaves_ids[parents[i].id];
+					}
+				}
 				var p = parents[i].parentNode;
-				if (p && !new_parents.contains(p)) new_parents.push(p); 
+				if (!p) continue;
+				if (!p.id) p.id = generateID();
+				else if (typeof new_parents[p.id] != 'undefined') continue;
+				new_parents.push(p);
+				new_parents_ids[p.id] = true;
 			}
 			parents = new_parents;
 		}
@@ -212,13 +232,18 @@ window.layout = {
 	},
 	_processInsideChanged: function(elements) {
 		var parents = [];
+		var parents_ids = {};
 		for (var i = 0; i < elements.length; ++i) {
 			if (elements[i]._layout_info && elements[i]._layout_info.from_inside)
 				for (var j = 0; j < elements[i]._layout_info.from_inside.length; ++j)
 					elements[i]._layout_info.from_inside[j]();
 			if (elements[i].nodeName == "BODY") continue;
 			var p = elements[i].parentNode;
-			if (p && !parents.contains(p)) parents.push(p);
+			if (!p) continue;
+			if (!p.id) p.id = generateID();
+			else if (typeof parents_ids[p.id] != 'undefined') continue;
+			parents.push(p);
+			parents_ids[p.id] = true;
 		}
 		if (parents.length == 0) return;
 		layout._processInsideChanged(parents);

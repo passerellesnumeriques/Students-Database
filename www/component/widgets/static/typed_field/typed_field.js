@@ -171,7 +171,7 @@ typed_field.prototype = {
 		});
 	},
 	unregister_datamodel_cell: function() {
-		window.top.datamodel.unregisterCellWidget(this.element);
+		window.top.datamodel.unregisterCellWidget(window, this.element);
 	},
 	register_datamodel_datadisplay: function(data_display, data_key) {
 		var t=this;
@@ -186,7 +186,7 @@ typed_field.prototype = {
 		});
 	},
 	unregister_datamodel_datadisplay: function() {
-		window.top.datamodel.unregisterDataWidget(this.element);
+		window.top.datamodel.unregisterDataWidget(window, this.element);
 	},
 	setDataDisplay: function(data_display, data_key) {
 		this.register_datamodel_datadisplay(data_display, data_key);

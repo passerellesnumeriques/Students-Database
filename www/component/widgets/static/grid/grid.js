@@ -1060,15 +1060,20 @@ function grid(element) {
 	};
 	t.unselectAll = function() {
 		if (!t.selectable) return;
+		var changed = false;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
 			if (cb.disabled) continue; //do not unselect if the checkbox is disabled
-			cb.checked = '';
-			if (cb.onchange) cb.onchange();
+			if (cb.checked) {
+				changed = true;
+				cb.checked = '';
+				if (cb.onchange) cb.onchange();
+			}
 		}
-		t._selection_changed();
+		if (changed)
+			t._selection_changed();
 	};
 	t._selection_changed = function() {
 		if (t.onselect) {
