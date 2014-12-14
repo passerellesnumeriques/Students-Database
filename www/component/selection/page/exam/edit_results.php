@@ -1443,19 +1443,23 @@ function save() {
 			e.removeAllChildren();
 			e.style.backgroundColor = "white";
 			e.style.padding = "10px";
+			e.style.overflow = "auto";
 			var s = "Results successfully saved.<br/>";
-			if (res.length == 0)
+			if (res.passers.length == 0)
 				s += "Unfortunately, no one passed. All applicants of this room/session have been excluded from the Selection Process.";
 			else {
 				s += "Here is the list of applicants who passed:<ul>";
-				for (var i = 0; i < res.length; ++i) {
+				for (var i = 0; i < res.passers.length; ++i) {
 					s += "<li>";
 					var app = null;
-					for (var j = 0; j < applicants.length; ++j) if (applicants[j].people.id == res[i]) { app = applicants[j]; break; }
+					for (var j = 0; j < applicants.length; ++j) if (applicants[j].people.id == res.passers[i]) { app = applicants[j]; break; }
 					s += app.people.first_name+" "+app.people.last_name+" (ID "+app.applicant_id+")";
 					s += "</li>";
 				}
 				s += "</ul>All others have been exluded from the Selection Process.";
+				if (res.interview_center_id) {
+					s += "<br/><br/>All passers who were not yet assigned to an interview center have been automatically assigned to the center <b>"+res.interview_center_name+"</b> <button class='action' onclick=\"window.top.popup_frame('/static/selection/exam/exam_center_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?id="+res.interview_center_id+"');\">Open this interview center</button>";
+				}
 			}
 			e.innerHTML = s;
 			unlock_screen(locker);

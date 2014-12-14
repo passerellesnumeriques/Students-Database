@@ -604,7 +604,14 @@ class selection extends Component {
 				->field("people")
 				->executeSingleField();
 			if (count($to_exclude) > 0)
-				SQLQuery::create()->bypassSecurity()->updateAllKeys("Applicant", $to_exclude, array("excluded"=>1,"automatic_exclusion_step"=>"Written Exam","automatic_exclusion_reason"=>"Failed","exam_passer"=>0));
+				SQLQuery::create()->bypassSecurity()->updateAllKeys("Applicant", $to_exclude, array(
+					"excluded"=>1,
+					"automatic_exclusion_step"=>"Written Exam",
+					"automatic_exclusion_reason"=>"Failed",
+					"exam_passer"=>0,
+					"interview_center"=>null,
+					"interview_session"=>null
+				));
 		}
 		// put back passers who were excluded before
 		if (count($passers) > 0) {
@@ -618,6 +625,23 @@ class selection extends Component {
 				->executeSingleField();
 			if (count($to_include) > 0)
 				SQLQuery::create()->bypassSecurity()->updateAllKeys("Applicant", $to_include, array("excluded"=>0,"automatic_exclusion_step"=>null,"automatic_exclusion_reason"=>null,"exam_passer"=>1));
+			// automatically assign to interview centers, if applicable
+			$exam_centers = SQLQuery::create()->bypassSecurity()->select("Applicant")->whereIn("Applicant","people",$passers)->whereNotNull("Applicant","people","exam_center")->field("exam_center")->distinct()->executeSingleField();
+			if (count($exam_centers) > 0) {
+				$links = SQLQuery::create()->bypassSecurity()->select("InterviewCenterExamCenter")->whereIn("InterviewCenterExamCenter","exam_center",$exam_centers)->execute();
+				foreach ($links as $link) {
+					$to_assign = SQLQuery::create()->bypassSecurity()
+						->select("Applicant")
+						->whereValue("Applicant","exam_center",$link["exam_center"])
+						->whereNull("Applicant","interview_center")
+						->whereIn("Applicant","people",$passers)
+						->field("people")
+						->executeSingleField()
+						;
+					if (count($to_assign) > 0)
+						SQLQuery::create()->bypassSecurity()->updateAllKeys("Applicant", $to_assign, array("interview_center"=>$link["interview_center"]));
+				}
+			}
 		}
 		// signal
 		$this->signalExamPassersAndLoosers($passers, $loosers);

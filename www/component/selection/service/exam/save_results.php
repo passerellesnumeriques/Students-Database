@@ -5,7 +5,7 @@ class service_exam_save_results extends Service {
 	
 	public function documentation() { echo "Save exam results and apply eligibility rules"; }
 	public function inputDocumentation() {}
-	public function outputDocumentation() { echo "The list of passers"; }
+	public function outputDocumentation() { echo "{passers,interview_center_id,interview_center_name} with passers being the people id of the passers"; }
 	
 	public function execute(&$component, $input) {
 		$results = $input["applicants"];
@@ -89,6 +89,10 @@ class service_exam_save_results extends Service {
 		$center_id = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession","event",$session_id)->field("exam_center")->executeSingleValue();
 		// get interview center
 		$interview_center_id = SQLQuery::create()->select("InterviewCenterExamCenter")->whereValue("InterviewCenterExamCenter","exam_center", $center_id)->field("interview_center")->executeSingleValue();
+		if ($interview_center_id <> null)
+			$interview_center_name = SQLQuery::create()->bypassSecurity()->select("InterviewCenter")->whereValue("InterviewCenter","id",$interview_center_id)->field("name")->executeSingleValue();
+		else
+			$interview_center_name = null;
 
 		$insert_subject = array();
 		$insert_subject_part = array();
@@ -102,7 +106,15 @@ class service_exam_save_results extends Service {
 				return;
 			}
 			if ($app["exam_attendance"] <> "Yes") {
-				SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array("exam_attendance"=>$app["exam_attendance"], "excluded"=>true, "automatic_exclusion_step"=>"Written Exam", "automatic_exclusion_reason"=>"Attendance", "exam_passer"=>null));
+				SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array(
+					"exam_attendance"=>$app["exam_attendance"], 
+					"excluded"=>true, 
+					"automatic_exclusion_step"=>"Written Exam", 
+					"automatic_exclusion_reason"=>"Attendance", 
+					"exam_passer"=>null,
+					"interview_center"=>null,
+					"interview_session"=>null
+				));
 				array_push($loosers, $app["people_id"]);
 			}
 			$parts_score = array();
@@ -226,7 +238,15 @@ class service_exam_save_results extends Service {
 			if ($app["exam_attendance"] == "Yes") {
 				$pass = $this->applyRules($root_rule, $subjects_scores, $extracts_scores);
 				if (!$pass) {
-					SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array("exam_attendance"=>"Yes", "excluded"=>true, "automatic_exclusion_step"=>"Written Exam", "automatic_exclusion_reason"=>"Failed", "exam_passer"=>false));
+					SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array(
+						"exam_attendance"=>"Yes", 
+						"excluded"=>true, 
+						"automatic_exclusion_step"=>"Written Exam", 
+						"automatic_exclusion_reason"=>"Failed", 
+						"exam_passer"=>false,
+						"interview_center"=>null,
+						"interview_session"=>null
+					));
 					array_push($loosers, $app["people_id"]);
 				} else {
 					// if applicant previously excluded because of attendance or results, put it back in the process!
@@ -238,7 +258,7 @@ class service_exam_save_results extends Service {
 						$update["automatic_exclusion_reason"] = null;
 					}
 					// assign to interview center if already linked
-					if ($interview_center_id <> null) {
+					if ($interview_center_id <> null && $row["interview_center"] == null) {
 						$update["interview_center"] = $interview_center_id;
 						$update["interview_session"] = null;
 					}
@@ -259,7 +279,7 @@ class service_exam_save_results extends Service {
 		
 		if (!PNApplication::hasErrors()) {
 			SQLQuery::commitTransaction();
-			echo json_encode($passers);
+			echo "{passers:".json_encode($passers).",interview_center_id:".json_encode($interview_center_id).",interview_center_name:".json_encode($interview_center_name)."}";
 		} else
 			SQLQuery::rollbackTransaction();
 	}
