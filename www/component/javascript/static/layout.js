@@ -63,8 +63,8 @@ window.layout = {
 	changed: function(element) {
 		if (this._changes === null) return;
 		if (element == null) {
-			try { throw new Error("null element given to layout.changed"); }
-			catch (e) { log_exception(e); return; }
+			window.top.console.error("null element given to layout.changed");
+			return;
 		}
 		if (typeof getWindowFromElement == 'undefined') {
 			setTimeout(function(){layout.changed(element);},25);
