@@ -538,19 +538,127 @@ class selection extends Component {
 	
 	public function canEditExamSubjects() {
 		if (!PNApplication::$instance->user_management->has_right("manage_exam_subject")) return false;
-		$applicant_result = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubject")->limit(0,1)->executeSingleRow();
-		if ($applicant_result <> null) return false; // result already set for at least one applicant
-		$applicant_result = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubjectPart")->limit(0,1)->executeSingleRow();
-		if ($applicant_result <> null) return false; // result already set for at least one applicant
+		if ($this->hasExamResults()) return false;
 		return true;
+	}
+	public function hasExamResults() {
+		$applicant_result = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubject")->limit(0,1)->executeSingleRow();
+		if ($applicant_result <> null) return true; // result already set for at least one applicant
+		$applicant_result = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubjectPart")->limit(0,1)->executeSingleRow();
+		if ($applicant_result <> null) return true; // result already set for at least one applicant
+		return false;
 	}
 		
 	public function canEditInterviewCriteria() {
 		if (!PNApplication::$instance->user_management->has_right("manage_interview_criteria")) return false;
-		$applicant_result = SQLQuery::create()->bypassSecurity()->select("ApplicantInterviewCriterionGrade")->limit(0,1)->executeSingleRow();
-		if ($applicant_result <> null) return false; // result already set for at least one applicant
+		if ($this->hasInterviewResults()) return false;
 		return true;
 	}
+	
+	public function hasInterviewResults() {
+		$applicant_result = SQLQuery::create()->bypassSecurity()->select("ApplicantInterviewCriterionGrade")->limit(0,1)->executeSingleRow();
+		if ($applicant_result <> null) return true; // result already set for at least one applicant
+		return false;
+	}
+	
+	public function applyExamEligibilityRules() {
+		// get applicants grades
+		$applicants_subjects_grade = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubject")->execute();
+		if (count($applicants_subjects_grade) == 0) return; // no grade !
+		$applicants_extracts_grade = SQLQuery::create()->bypassSecurity()->select("ApplicantExamExtract")->execute();
+		set_time_limit(300);
+		$applicants = array();
+		foreach ($applicants_subjects_grade as $g) {
+			if (!isset($applicants[$g["applicant"]])) $applicants[$g["applicant"]] = array("subjects"=>array($g["exam_subject"]=>$g["score"]),"extracts"=>array());
+			else $applicants[$g["applicant"]]["subjects"][$g["exam_subject"]] = $g["score"];
+		}
+		foreach ($applicants_extracts_grade as $g)
+			$applicants[$g["applicant"]]["extracts"][$g["exam_extract"]] = $g["score"];
+		
+		// get rules
+		$rules = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->execute();
+		$rules_topics = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->execute();
+		for ($i = 0; $i < count($rules); $i++) {
+			$rules[$i]["topics"] = array();
+			foreach ($rules_topics as $t) if ($t["rule"] == $rules[$i]["id"]) array_push($rules[$i]["topics"], $t);
+		}
+		$root_rule = array("id"=>null,"next_rules"=>array());
+		$this->buildExamRulesTree($rules, $root_rule);
+		
+		// apply rules for each applicant
+		$passers = array();
+		$loosers = array();
+		foreach ($applicants as $id=>$grades) {
+			set_time_limit(30);
+			$passer = $this->applyExamRulesToApplicant($root_rule, $grades);
+			if ($passer) array_push($passers, $id);
+			else array_push($loosers, $id);
+		}
+		
+		// exclude loosers
+		if (count($loosers) > 0) {
+			$to_exclude = SQLQuery::create()->bypassSecurity()
+				->select("Applicant")
+				->whereNotValue("Applicant","excluded",1) // not yet excluded
+				->whereIn("Applicant", "people", $loosers)
+				->field("people")
+				->executeSingleField();
+			if (count($to_exclude) > 0)
+				SQLQuery::create()->bypassSecurity()->updateAllKeys("Applicant", $to_exclude, array("excluded"=>1,"automatic_exclusion_step"=>"Written Exam","automatic_exclusion_reason"=>"Failed","exam_passer"=>0));
+		}
+		// put back passers who were excluded before
+		if (count($passers) > 0) {
+			$to_include = SQLQuery::create()->bypassSecurity()
+				->select("Applicant")
+				->whereValue("Applicant", "excluded", 1)
+				->whereValue("Applicant", "automatic_exclusion_step", "Written Exam")
+				->whereValue("Applicant", "automatic_exclusion_reason", "Failed")
+				->whereIn("Applicant", "people", $passers)
+				->field("people")
+				->executeSingleField();
+			if (count($to_include) > 0)
+				SQLQuery::create()->bypassSecurity()->updateAllKeys("Applicant", $to_include, array("excluded"=>0,"automatic_exclusion_step"=>null,"automatic_exclusion_reason"=>null,"exam_passer"=>1));
+		}
+		// signal
+		$this->signalExamPassersAndLoosers($passers, $loosers);
+	}
+	private function buildExamRulesTree(&$rules, &$rule) {
+		for ($i = 0; $i < count($rules); $i++) {
+			$r = $rules[$i];
+			if ($r["parent"] <> $rule["id"]) continue;
+			$r["next_rules"] = array();
+			array_push($rule["next_rules"], $r);
+			array_splice($rules, $i, 1);
+			$i--;
+		}
+		for ($i = 0; $i < count($rule["next_rules"]); $i++)
+			$this->buildExamRulesTree($rules, $rule["next_rules"][$i]);
+	}
+	private function applyExamRulesToApplicant($rule, $grades) {
+		if (isset($rule["topics"])) {
+			$total = 0;
+			foreach ($rule["topics"] as $t) {
+				if ($t["subject"] <> null)
+					$score = @$grades["subjects"][$t["subject"]];
+				else
+					$score = @$grades["extracts"][$t["extract"]];
+				if ($score === null) $score = 0;
+				$coef = @$t["coefficient"];
+				if ($coef === null) $coef = 1; else $coef = floatval($coef);
+				$total += $score * $coef;
+			}
+			$to_reach = floatval($rule["expected"]);
+			if ($total < $to_reach) return false;
+		}
+		// we passed the rule, we need to pass one of the next ones
+		if (count($rule["next_rules"]) == 0)
+			return true; // we reach the end !
+		foreach ($rule["next_rules"] as $r)
+			if ($this->applyExamRulesToApplicant($r, $grades))
+				return true;
+			return false;
+	}
+	
 		
 	/**
 	 * Remove an exam subject from database and all the related data

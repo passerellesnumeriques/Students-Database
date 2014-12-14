@@ -51,6 +51,11 @@ class service_exam_save_rule extends Service {
 			));
 		}
 		SQLQuery::create()->insertMultiple("ExamEligibilityRuleTopic", $to_insert);
+		
+		if (PNApplication::$instance->selection->hasExamResults()) {
+			PNApplication::$instance->selection->applyExamEligibilityRules();
+		}
+		
 		if (PNApplication::hasErrors())
 			return;
 		SQLQuery::commitTransaction();

@@ -61,9 +61,17 @@ class page_exam_eligibility_rules extends SelectionPage {
 			</div>
 			<?php 
 			if ($can_edit) {
-				if (!PNApplication::$instance->selection->canEditExamSubjects()) {
-					$can_edit = false;
-					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot modify rules because some results are already entered for some applicants.</div>";
+				if (PNApplication::$instance->selection->hasExamResults()) {
+					if (@$_GET["force_edit"] <> "true") {
+						$can_edit = false;
+						if (PNApplication::$instance->selection->hasInterviewResults()) {
+							echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot modify rules because some results are already entered for some applicants, and some applicants even have their interview results.</div>";
+						} else {
+							echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot modify rules because some results are already entered for some applicants. <button class='action red' id='button_force_edit' onclick='forceEdit();'>Force editing rules</button></div>";
+						}
+					} else {
+						echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> You are currently editing rules, while you already entered results for some applicants. Every change on the rules will force to re-apply those rules on every applicant having its results, meaning some who are currently passing may be excluded due to failure, and some who are currently excluded may come back on the process if they are passing with the new rules.</div>";
+					}
 				}
 			} 
 			?>
@@ -125,6 +133,12 @@ class page_exam_eligibility_rules extends SelectionPage {
 		var subjects_section = sectionFromHTML('subjects_section');
 		var rules_section = sectionFromHTML('rules_section');
 
+		var button_force_edit = document.getElementById('button_force_edit');
+		if (button_force_edit) tooltip(button_force_edit, "If you edit the eligibility rules, they will be re-applied, meaning some applicants who are currently marked as passers may be excluded, and some applicants currently excluded may become passers");
+		function forceEdit() {
+			location.href = '?force_edit=true';
+		}
+		
 		<?php echo $script;?>
 
 		var root_rules = <?php echo json_encode($root_rules);?>;
@@ -191,7 +205,8 @@ class page_exam_eligibility_rules extends SelectionPage {
 				next.title = "Add a new rule";
 				next.style.position = "absolute";
 				next.style.right = "0px";
-				next.style.top = "19px";
+				next.style.top = "50%";
+				next.style.marginTop = "-5px";
 				setOpacity(next, 0.6);
 				next.style.cursor = "pointer";
 				next.onmouseover = function() { setOpacity(this,1); };
