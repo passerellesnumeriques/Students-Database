@@ -73,9 +73,9 @@ $model->addTable("Contact")
 		}
 		$final = array();
 		$table_people = Datamodel::get()->getTable("PeopleContact");
-		array_push($final, $table_people->filterWriteAccess($people_rows)); 
+		$final = array_merge($final, $table_people->filterWriteAccess($people_rows)); 
 		$table_org = Datamodel::get()->getTable("OrganizationContact");
-		array_push($final, $table_org->filterWriteAccess($org_rows));
+		$final = array_merge($final, $table_org->filterWriteAccess($org_rows));
 		return $final; 
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks){
@@ -212,9 +212,9 @@ $model->addTable("PostalAddress")
 		}
 		$final = array();
 		$table_people = Datamodel::get()->getTable("PeopleAddress");
-		array_push($final, $table_people->filterWriteAccess($people_rows)); 
+		$final = array_merge($final, $table_people->filterWriteAccess($people_rows)); 
 		$table_org = Datamodel::get()->getTable("OrganizationAddress");
-		array_push($final, $table_org->filterWriteAccess($org_rows));
+		$final = array_merge($final, $table_org->filterWriteAccess($org_rows));
 		return $final; 
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks){
