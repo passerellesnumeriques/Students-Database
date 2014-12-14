@@ -1249,7 +1249,11 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			t.ondataloaded.fire(t);
 			t.endLoading();
 			if (onready) onready();
+			layout.resume();
 		});
+		// empty the grid while sending request, so the javascript work begins
+		layout.pause();
+		t.grid.setData([]);
 	};
 	t._populateActions = function() {
 		if (t._col_actions == null) return;

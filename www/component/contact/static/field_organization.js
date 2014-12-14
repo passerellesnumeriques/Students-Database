@@ -227,9 +227,10 @@ function OrganizationSelectionField(list, selected_id, name, create) {
 		if (id == this.selected_id) return;
 		this.selected_id = id;
 		for (var i = 0; i < list.length; ++i)
-			if (list[i].id == id) { this.input.value = list[i].name; return; }
+			if (list[i].id == id) { this.input.value = list[i].name; if (this.input.autoresize) this.input.autoresize(); return; }
 		this.input.value = "";
 		this.selected_id = null;
+		if (this.input.autoresize) t.input.autoresize();
 	};
 }
 function OrganizationSelectionPopupContent(list, multiple, selected_ids, create, cancel) {

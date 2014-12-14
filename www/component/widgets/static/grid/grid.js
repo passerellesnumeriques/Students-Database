@@ -1694,6 +1694,7 @@ function grid(element) {
 	t._buildColumnsChooser = function(menu, col, indent, onchange) {
 		if (col.title == "") return;
 		var div = document.createElement("DIV");
+		div.style.fontSize = "9pt";
 		div.style.marginLeft = indent+'px';
 		var cb = document.createElement("INPUT");
 		cb.type = 'checkbox';

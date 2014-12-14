@@ -381,16 +381,17 @@ window.layout = {
 		this._process_steps_timeout = setTimeout(function() {
 			if (window.closing || !layout) return;
 			layout._process_steps_timeout = null;
-			//var dom_changed = false;
 			while (layout._dom_modifications.length > 0) {
-				//dom_changed = true;
-				layout._dom_modifications[0]();
-				layout._dom_modifications.splice(0,1);
+				var list = layout._dom_modifications;
+				layout._dom_modifications = [];
+				for (var i = 0; i < list.length; ++i)
+					list[i]();
 			}
-			//if (dom_changed) { layout._process_steps(); return; }
 			while (layout._layout_reading.length > 0) {
-				layout._layout_reading[0]();
-				layout._layout_reading.splice(0,1);
+				var list = layout._layout_reading;
+				layout._layout_reading = [];
+				for (var i = 0; i < list.length; ++i)
+					list[i]();
 			}
 			if (layout._dom_modifications.length > 0 || layout._layout_reading.length > 0)
 				layout._process_steps();

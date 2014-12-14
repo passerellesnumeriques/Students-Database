@@ -147,12 +147,7 @@ Element.prototype._removeChild = Element.prototype.removeChild;
 Element.prototype.removeChild = function(e) {
 	if (!_domRemoved) return;
 	_domRemoved(e);
-	try { return this._removeChild(e); }
-	catch (err) {
-		if (log_exception)
-			log_exception(err, "Remove child failed");
-		return null;
-	}
+	return this._removeChild(e);
 };
 Element.prototype.removeAllChildren = function() {
 	while (this.childNodes.length > 0) this.removeChild(this.childNodes[0]);
@@ -286,14 +281,36 @@ URL.prototype = {
 	}	
 };
 
+function Custom_Event_Cleaner() {
+	this.events = {};
+	this.cleanup = function() {
+		clearInterval(window._cecleaner_interval);
+		window._cecleaner_interval = null;
+		var list = this.events;
+		this.events = {};
+		for (var id in list)
+			list[id].cleanup();
+		this.cleant = [];
+	};
+	this.cleant = [];
+	this.removeCleant = function() {
+		var list = this.cleant.splice(0,250);
+		for (var i = 0; i < list.length; ++i)
+			delete this.events[list[i]];
+	};
+}
+window._cecleaner = new Custom_Event_Cleaner();
+window._cecleaner_interval = setInterval(function(){window._cecleaner.removeCleant();}, 5000);
+if (!window.to_cleanup) window.to_cleanup = [];
+window.to_cleanup.push(window._cecleaner);
+var _cecounter = 1;
+
 /** Event
  * @constructor
  */
 function Custom_Event() {
-	if (!window.to_cleanup) window.to_cleanup = [];
-	window.to_cleanup.push(this);
-	
 	this.listeners = [];
+	this.id = _cecounter++;
 }
 Custom_Event.prototype = {
 	/**
@@ -302,12 +319,13 @@ Custom_Event.prototype = {
 	 */
 	add_listener: function(listener) {
 		if (this.listeners === null) return;
-		//if (this.listeners.contains(listener)) return;
+		if (this.listeners.length == 0) window._cecleaner.events[this.id] = this;
 		this.listeners.push(listener); 
 	},
 	remove_listener: function(listener) {
 		if (this.listeners === null) return;
 		this.listeners.removeUnique(listener);
+		if (this.listeners.length == 0) delete window._cecleaner.events[this.id];
 	},
 	/**
 	 * Trigger the event: call all listeners with the given data as parameter
@@ -323,9 +341,10 @@ Custom_Event.prototype = {
 	},
 	
 	cleanup: function() {
+		if (this.listeners === null) return;
+		if (this.listeners.length > 0 && window._cecleaner)
+			window._cecleaner.cleant.push(this.id);
 		this.listeners = null;
-		if (window && window.to_cleanup && !window.closing)
-			window.to_cleanup.removeUnique(this);
 	}
 };
 
