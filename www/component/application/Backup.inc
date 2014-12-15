@@ -40,7 +40,7 @@ class Backup {
 		while (($filename = readdir($dir)) <> null) {
 			if ($filename == "." || $filename == "..") continue;
 			if (!is_dir("data/backups/$filename")) continue;
-			self::listBackups_($filename, $list);
+			self::listBackupsRecurs($filename, $list);
 		}
 		closedir($dir);
 		return $list;
@@ -49,7 +49,7 @@ class Backup {
 	 * @param string $version version
 	 * @param array $list list to populate
 	 */
-	private static function listBackups_($version, &$list) {
+	private static function listBackupsRecurs($version, &$list) {
 		$dir = opendir("data/backups/$version");
 		while (($filename = readdir($dir)) <> null) {
 			if ($filename == "." || $filename == "..") continue;
@@ -353,7 +353,9 @@ class Backup {
 		if (!file_exists("data/datamodels/datamodel_".$dm_version.".json")) {
 			if (!file_exists("data/datamodels/Students_Management_Software_".$dm_version."_datamodel.zip")) {
 				// we need to download it
-				// TODO
+				require_once("component/application/service/deploy_utils.inc");
+				require_once("update_urls.inc");
+				download(getUpdateURL("Students_Management_Software_".$dm_version."_datamodel.zip"), "data/datamodels/Students_Management_Software_".$dm_version."_datamodel.zip");
 			}
 			// extract the datamodel
 			set_time_limit(60);

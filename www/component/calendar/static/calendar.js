@@ -161,6 +161,7 @@ CalendarsProvider.prototype = {
 	on_calendar_removed: new Custom_Event(),
 	/** {Number} minimum time (in milliseconds) before calendars from this provider can be automatically refreshed */
 	minimum_time_to_autorefresh_calendar: 5*60*1000,
+	/** {Number} minimum time (in milliseconds) before the list of calendars from this provider can be automatically refreshed */
 	minimum_time_to_autorefresh_calendars_list: 15*60*1000,
 	_last_refresh_calendars_list: 0,
 	/** Reload the list of calendars from this provider */
@@ -281,6 +282,9 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				handler_for_each_provider(this._providers[i]);
 			this._handlers.push(handler_for_each_provider);
 		},
+		/** Return the current existing calendar providers
+		 * @returns {Array} array of CalendarsProvider
+		 */
 		getCurrentProviders: function() {
 			return arrayCopy(this._providers);
 		},
@@ -293,6 +297,9 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				if (this._providers[i].id == id) return this._providers[i];
 			return null;
 		},
+		/** Refresh list of calendars on every provider.
+		 * @param {Boolean} force if false, the list won't be refreshed if the minimum time given by the provider is not reached since the last refresh.
+		 */
 		_refreshCalendarsList: function(force) {
 			var now = new Date().getTime();
 			for (var i = 0; i < this._providers.length; ++i) {
@@ -300,7 +307,9 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				this._providers[i].refreshCalendars();
 			}
 		},
-		/** Internal function to refresh the list of calendars on all providers */
+		/** Internal function to refresh the list of calendars on all providers
+		 * @param {Boolean} force if false, the calendars won't be refreshed if the minimum time given by the provider is not reached since the last refresh.
+		 */
 		_refreshCalendars: function(force) {
 			var now = new Date().getTime();
 			for (var i = 0; i < this._providers.length; ++i) {
@@ -311,9 +320,9 @@ if (window == window.top && !window.top.CalendarsProviders) {
 			}
 		}
 	};
-	var listen_login_logout = function() {
+	var listenLoginLogout = function() {
 		if (!window.top.pnapplication) {
-			setTimeout(listen_login_logout, 20);
+			setTimeout(listenLoginLogout, 20);
 		}
 		window.top.pnapplication.onlogout.add_listener(function() {
 			for (var i = 0; i < window.top.CalendarsProviders._providers.length; ++i) {
@@ -330,7 +339,7 @@ if (window == window.top && !window.top.CalendarsProviders) {
 			window.top.CalendarsProviders._refreshCalendars(true);
 		});
 	};
-	listen_login_logout();
+	listenLoginLogout();
 	setInterval(function() { if (window.top.CalendarsProviders) window.top.CalendarsProviders._refreshCalendarsList(); }, 150*1000);
 	setInterval(function() { if (window.top.CalendarsProviders) window.top.CalendarsProviders._refreshCalendars(); }, 45*1000);
 }
@@ -370,6 +379,7 @@ function Calendar(provider, name, color, show, icon) {
 	this.on_removed = new Custom_Event();
 	/** list of events in the calendar */
 	this.events = [];
+	/** Last time the calendar has been refreshed */
 	this._last_refresh = 0;
 	/** called to refresh the calendar. It must be overrided by the implementation of the calendar.
 	 * @param {Function} ondone to be called when the refresh is done
@@ -398,19 +408,22 @@ function Calendar(provider, name, color, show, icon) {
 	};
 	/** {Function} function called to save an event. If it is not defined, it means the calendar is read only. This function takes the event to save as parameter. */
 	this.saveEvent = null; // must be overriden if the calendar supports modifications
+	/** {Function} function called to remove an event. If this is not defined, it means the calendar is read only. This function takes the event to remove as parameter. */
 	this.removeEvent = null; // must be overriden if the calendar supports remove
-	/** Save the visibility of the calendar (if supported by the provider)
-	 * @param {Boolean} show visibility: true to be visible, false to be hidden
+	/** {Function} Save the visibility of the calendar (if supported by the provider)
+	 * the format is function(show) {...}; with show a boolean: true to be visible, false to be hidden
 	 */
-	this.saveShow = null; // function(show) {}; to be defined if supported
-	/** Save the color of the calendar (if supported by the provider)
-	 * @param {String} color the color to save
+	this.saveShow = null; // to be defined if supported
+	/** {Function} Save the color of the calendar (if supported by the provider).
+	 * The format is function(color) {...};
 	 */
-	this.saveColor = null; // function(color) {}; to be defined if supported
+	this.saveColor = null; // to be defined if supported
 	/** {Function} function to rename the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.rename = null; // must be overriden if this is supported
+	/** {Function} function to remove the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.remove = null; // must be overriden if this is supported
 	
+	/** Cleanup */
 	this.cleanup = function() {
 		for (var i = 0; i < this.events.length; ++i)
 			for (var n in this.events[i])
@@ -425,6 +438,7 @@ function Calendar(provider, name, color, show, icon) {
  * UI Control for a calendar: controls its color, visibility, name...
  * @param {Element} container where to put it
  * @param {Calendar} cal the calendar to control
+ * @param {CalendarManager} manager the calandar manager to use for the actions on the calendar
  */
 function CalendarControl(container, cal, manager) {
 	var t=this;

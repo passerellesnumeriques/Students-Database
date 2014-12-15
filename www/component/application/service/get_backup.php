@@ -75,7 +75,7 @@ class service_get_backup extends Service {
 	}
 	
 	/** Send the content of the requested file
-	 * @param array the input 
+	 * @param array $input the input
 	 */
 	private function getBackup($input) {
 		$version = $input["version"];

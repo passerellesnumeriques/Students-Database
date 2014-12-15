@@ -214,7 +214,6 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		}		
 		if (w < position_width + zoom_width) {
 			// we cannot show all
-			// TODO ? menu ? / only one ?...
 		} else {
 			this.position_div.style.position = "static";
 			this.position_div.style.visibility = "visible";

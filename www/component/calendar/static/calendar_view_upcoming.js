@@ -43,7 +43,10 @@ function calendar_view_upcoming(view, container) {
 			date.setTime(date.getTime()+24*60*60*1000);
 		}
 	};
-	
+	/** Get the text to display to describe the given date (yesterday, tomorrow...)
+	 * @param {Date} date the date to display
+	 * @returns {String} the text
+	 */
 	this._getDateText = function(date) {
 		var today = new Date();
 		today.setHours(0,0,0,0);
