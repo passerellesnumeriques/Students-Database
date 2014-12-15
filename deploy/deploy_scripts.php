@@ -23,9 +23,13 @@ function scripts_directory($directory_path) {
 	closedir($dir);
 }
 scripts_directory(realpath($_POST["path"]."/www"));
+scripts_directory(realpath($_POST["path"]."/www_selection_travel"));
 
 // mark the version with the channel
 $f = fopen(realpath($_POST["path"])."/www/conf/channel", "w");
+fwrite($f, $_POST["channel"]);
+fclose($f);
+$f = fopen(realpath($_POST["path"])."/www_selection_travel/conf/channel", "w");
 fwrite($f, $_POST["channel"]);
 fclose($f);
 

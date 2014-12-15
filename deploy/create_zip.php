@@ -51,6 +51,21 @@ fwrite($f, $md5);
 fclose($f);
 
 set_time_limit(240);
+$filename2 = "Students_Management_Software_".$_POST["version"]."_Selection_Travel.zip";
+$zip = new ZipArchive();
+if ($zip->open(realpath($_POST["path"])."/to_deploy/".$filename2, ZipArchive::CREATE)!==TRUE) {
+	die("cannot open $filename2");
+}
+zip_directory(realpath($_POST["path"]."/www_selection_travel"), "");
+$zip->close();
+
+// create the md5
+$md5 = md5_file(realpath($_POST["path"])."/to_deploy/".$filename2, false);
+$f = fopen(realpath($_POST["path"])."/to_deploy/".$filename2.".md5","w");
+fwrite($f, $md5);
+fclose($f);
+
+set_time_limit(240);
 $filename_migration = "Students_Management_Software_".$_POST["latest"]."_to_".$_POST["version"].".zip";
 global $zip;
 $zip = new ZipArchive();
@@ -122,6 +137,8 @@ Once tested, we recommend you to double check the migration scripts.<br/>
 Then, you can finally upload the files located from directory <code><i><?php echo realpath($_POST["path"]."/to_deploy");?></i></code> to <a href='https://sourceforge.net/projects/studentsdatabase/files/updates/<?php echo $_POST["channel"];?>/' target='_blank'>SourceForge</a>:<ul> 
 	<li><code><i><?php echo $filename;?></i></code></li>
 	<li><code><i><?php echo $filename.".md5";?></i></code></li>
+	<li><code><i><?php echo $filename2;?></i></code></li>
+	<li><code><i><?php echo $filename2.".md5";?></i></code></li>
 	<li><code><i><?php echo $filename_migration;?></i></code></li>
 	<li><code><i><?php echo $filename_migration.".md5";?></i></code></li>
 	<li><code><i><?php echo $filename_datamodel;?></i></code></li>

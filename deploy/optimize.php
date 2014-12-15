@@ -1,5 +1,5 @@
 <?php
-function optimize_php($path) {
+function optimize_php($path, $generate_mode) {
 	$s = file_get_contents($path);
 	while (($i = strpos($s,"/*")) !== false) {
 		$j = strpos($s, "*/", $i+2);
@@ -38,7 +38,7 @@ function optimize_php($path) {
 			continue;
 		}
 		if ($mode == "DEV") continue;
-		if ($mode == "PROD" || ($mode == "CHANNEL_STABLE" && $_POST["channel"] == "stable") || ($mode == "CHANNEL_BETA" && $_POST["channel"] == "beta") || ($mode == "SELECTION_TRAVEL" && @$_POST["generate_version"] == "selection_travel")) {
+		if ($mode == "PROD" || ($mode == "CHANNEL_STABLE" && $_POST["channel"] == "stable") || ($mode == "CHANNEL_BETA" && $_POST["channel"] == "beta") || ($mode == "SELECTION_TRAVEL" && $generate_mode == "selection_travel")) {
 			if (substr($line,0,1) <> "#") die("Lines inside #".$mode." must start with a # in ".$path.": ".$line);
 			$line = substr($line,1); // remove the leading #
 			// replace strings
@@ -98,7 +98,7 @@ function optimize_sql($path) {
 	fwrite($f, $s);
 	fclose($f);
 }
-function optimize_directory($path) {
+function optimize_directory($path, $generate_mode) {
 	$dir = opendir($path);
 	if (!$dir) die("Unable to access to directory ".$path);
 	while (($file = readdir($dir)) <> null) {
@@ -106,13 +106,13 @@ function optimize_directory($path) {
 		set_time_limit(300);
 		if (is_dir($path."/".$file)) {
 			if (substr($file,0,4) == "lib_") continue;
-			optimize_directory($path."/".$file);
+			optimize_directory($path."/".$file, $generate_mode);
 		} else {
 			$i = strrpos($file, ".");
 			if ($i === false) continue;
 			$ext = substr($file, $i+1);
 			switch ($ext) {
-				case "inc": case "php": optimize_php($path."/".$file); break;
+				case "inc": case "php": optimize_php($path."/".$file, $generate_mode); break;
 				case "js": optimize_js($path."/".$file); break;
 				case "sql": optimize_sql($path."/".$file); break;
 			}
@@ -120,8 +120,12 @@ function optimize_directory($path) {
 	}
 	closedir($dir);
 }
-optimize_directory(realpath($_POST["path"]."/www"));
+optimize_directory(realpath($_POST["path"]."/www"), "normal");
 $f = fopen(realpath($_POST["path"])."/www/version","w");
+fwrite($f,$_POST["version"]);
+fclose($f);
+optimize_directory(realpath($_POST["path"]."/www_selection_travel"), "selection_travel");
+$f = fopen(realpath($_POST["path"])."/www_selection_travel/version","w");
 fwrite($f,$_POST["version"]);
 fclose($f);
 ?>

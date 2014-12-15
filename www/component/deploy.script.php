@@ -8,7 +8,9 @@ while (($filename = readdir($dir)) <> null) {
 }
 closedir($dir);
 
-function processRelativePath($component_name, $content, $directive) {
+if (!function_exists("processRelativePath")) {
+	
+function processRelativePath($dirname, $component_name, $content, $directive) {
 	$i = 0;
 	while (($i = strpos($content, $directive, $i)) !== false) {
 		$j = strpos($content, "\"", $i);
@@ -17,7 +19,7 @@ function processRelativePath($component_name, $content, $directive) {
 		if ($k === false) break;
 		$p = substr($content, $j+1, $k-$j-1);
 		$i += strlen($directive);
-		if (substr($p, 0, 10) <> "component/" && file_exists(dirname(__FILE__)."/$component_name/$p")) {
+		if (substr($p, 0, 10) <> "component/" && file_exists("$dirname/$component_name/$p")) {
 			$content = substr($content,0,$j+1)."component/$component_name/$p".substr($content,$k);
 		}
 	}
@@ -123,13 +125,13 @@ function processComponentServices($path) {
 	closedir($dir);
 }
 
-function processComponent($name, &$done, &$components_order, &$components_content) {
+function processComponent($dirname, $name, &$done, &$components_order, &$components_content) {
 	if (in_array($name, $done)) return;
 	array_push($done, $name);
 
 	$deps = array();
-	if (file_exists(dirname(__FILE__)."/$name/dependencies")) {
-		$f = fopen(dirname(__FILE__)."/$name/dependencies","r");
+	if (file_exists("$dirname/$name/dependencies")) {
+		$f = fopen("$dirname/$name/dependencies","r");
 		while (($line = fgets($f,4096)) !== FALSE) {
 			$line = trim($line);
 			if (strlen($line) == 0) continue;
@@ -138,25 +140,25 @@ function processComponent($name, &$done, &$components_order, &$components_conten
 			array_push($deps, $line);
 		}
 		fclose($f);
-		unlink(dirname(__FILE__)."/$name/dependencies");
+		unlink("$dirname/$name/dependencies");
 	}
 	
-	$content = file_get_contents(dirname(__FILE__)."/$name/$name.inc");
-	unlink(dirname(__FILE__)."/$name/$name.inc");
+	$content = file_get_contents("$dirname/$name/$name.inc");
+	unlink("$dirname/$name/$name.inc");
 	
 	$readable_rights = "return array();";
-	if (file_exists(dirname(__FILE__)."/$name/readable_rights.inc")) {
-		$readable_rights = file_get_contents(dirname(__FILE__)."/$name/readable_rights.inc");
-		unlink(dirname(__FILE__)."/$name/readable_rights.inc");
+	if (file_exists("$dirname/$name/readable_rights.inc")) {
+		$readable_rights = file_get_contents("$dirname/$name/readable_rights.inc");
+		unlink("$dirname/$name/readable_rights.inc");
 		$i = strpos($readable_rights, "<?php");
 		$readable_rights = substr($readable_rights,$i+5);
 		$i = strrpos($readable_rights, "?>");
 		$readable_rights = substr($readable_rights,0,$i);
 	}
 	$writable_rights = "return array();";
-	if (file_exists(dirname(__FILE__)."/$name/writable_rights.inc")) {
-		$writable_rights = file_get_contents(dirname(__FILE__)."/$name/writable_rights.inc");
-		unlink(dirname(__FILE__)."/$name/writable_rights.inc");
+	if (file_exists("$dirname/$name/writable_rights.inc")) {
+		$writable_rights = file_get_contents("$dirname/$name/writable_rights.inc");
+		unlink("$dirname/$name/writable_rights.inc");
 		$i = strpos($writable_rights, "<?php");
 		$writable_rights = substr($writable_rights,$i+5);
 		$i = strrpos($writable_rights, "?>");
@@ -187,26 +189,27 @@ function processComponent($name, &$done, &$components_order, &$components_conten
 	} else
 		$content = "?>".$content."<?php ";
 	
-	$content = processRelativePath($name, $content, "require_once");
-	$content = processRelativePath($name, $content, "require");
-	$content = processRelativePath($name, $content, "include_once");
-	$content = processRelativePath($name, $content, "include");
-	$content = processRelativePath($name, $content, "file_get_contents");
-	$content = processRelativePath($name, $content, "readfile");
+	$content = processRelativePath($dirname, $name, $content, "require_once");
+	$content = processRelativePath($dirname, $name, $content, "require");
+	$content = processRelativePath($dirname, $name, $content, "include_once");
+	$content = processRelativePath($dirname, $name, $content, "include");
+	$content = processRelativePath($dirname, $name, $content, "file_get_contents");
+	$content = processRelativePath($dirname, $name, $content, "readfile");
 	
 	$components_content .= $content;
 	
 	// process files of component
-	if (file_exists(dirname(__FILE__)."/$name/service"))
-		processComponentServices(dirname(__FILE__)."/$name/service");
+	if (file_exists("$dirname/$name/service"))
+		processComponentServices("$dirname/$name/service");
 	
-	foreach ($deps as $dep) processComponent($dep, $done, $components_order, $components_content);
+	foreach ($deps as $dep) processComponent($dirname, $dep, $done, $components_order, $components_content);
 	array_push($components_order, $name);
+}
 }
 $done = array();
 $components_order = array();
 $components_content = "";
-foreach ($components_names as $name) processComponent($name, $done, $components_order, $components_content);
+foreach ($components_names as $name) processComponent(dirname(__FILE__), $name, $done, $components_order, $components_content);
 
 $s = file_get_contents(dirname(__FILE__)."/PNApplication.inc");
 $i = strrpos($s, "?>");

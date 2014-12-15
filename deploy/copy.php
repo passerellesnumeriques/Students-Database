@@ -50,6 +50,7 @@ function copy_directory($src, $dst) {
 	closedir($dir);
 }
 copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]."/www"));
+copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]."/www_selection_travel"));
 
 if ($has_errors) die();
 ?>
