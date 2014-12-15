@@ -245,7 +245,7 @@ foreach ($cat[1] as $field) {
 }
 echo "title = document.createElement('DIV');\n";
 echo "title.style.display = 'inline-block';\n";
-echo "title.innerHTML = \"<img src='".$cat[0]->getIcon()."' style='vertical-align:bottom'/> ".toHTML($cat[0]->getName())."\";\n";
+echo "title.innerHTML = \"".($cat[0]->getIcon() <> null ? "<img src='".$cat[0]->getIcon()."' style='vertical-align:bottom'/> " : "").toHTML($cat[0]->getName())."\";\n";
 echo "col_container = new GridColumnContainer(title,cols,null);\n";
 echo "col_container.text_title = ".json_encode($cat[0]->getName()).";\n";
 echo "grid.addColumnContainer(col_container);\n";
