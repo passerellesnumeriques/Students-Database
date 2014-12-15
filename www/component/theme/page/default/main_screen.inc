@@ -280,9 +280,19 @@ tooltip(user_picture, "Your profile");
 
 //tooltip(document.getElementById('notifications'), "See notifications");
 tooltip(document.getElementById('calendars'), "Your calendars");
-tooltip(document.getElementById('domain_connection'), "Connect to other centers' database");
 tooltip(document.getElementById('activate_help'), "Display again help messages on the current page");
+<?php
+#SELECTION_TRAVEL
+#if (false) {
+#END
+?>
+tooltip(document.getElementById('domain_connection'), "Connect to other centers' database");
 tooltip(document.getElementById('logout'), "Logout and exit application");
+<?php
+#SELECTION_TRAVEL
+#}
+#END
+?>
 
 function initPage() {
 	var hs = new horizontal_scrolling('application_menu_scroll','#009DE1','white');
