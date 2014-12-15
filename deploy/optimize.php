@@ -28,13 +28,17 @@ function optimize_php($path) {
 			if ($mode <> null) die("Found tag #CHANNEL_BETA while still in #".$mode." in ".$path);
 			$mode = "CHANNEL_BETA";
 			continue;
+		} else if ($line == "#SELECTION_TRAVEL") {
+			if ($mode <> null) die("Found tag #SELECTION_TRAVEL while still in #".$mode." in ".$path);
+			$mode = "SELECTION_TRAVEL";
+			continue;
 		} else if ($line == "#END") {
 			if ($mode == null) die("Found tag #END without opening #DEV or #PROD in ".$path);
 			$mode = null;
 			continue;
 		}
 		if ($mode == "DEV") continue;
-		if ($mode == "PROD" || ($mode == "CHANNEL_STABLE" && $_POST["channel"] == "stable") || ($mode == "CHANNEL_BETA" && $_POST["channel"] == "beta")) {
+		if ($mode == "PROD" || ($mode == "CHANNEL_STABLE" && $_POST["channel"] == "stable") || ($mode == "CHANNEL_BETA" && $_POST["channel"] == "beta") || ($mode == "SELECTION_TRAVEL" && @$_POST["generate_version"] == "selection_travel")) {
 			if (substr($line,0,1) <> "#") die("Lines inside #".$mode." must start with a # in ".$path.": ".$line);
 			$line = substr($line,1); // remove the leading #
 			// replace strings

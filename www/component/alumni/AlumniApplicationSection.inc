@@ -14,7 +14,12 @@ class AlumniApplicationSection implements ApplicationSectionPlugin {
 	public function getComponentsForURL() { return array("alumni"); }
 	public function getMenuURL() { return "/dynamic/alumni/service/menu"; }
 	public function getDefaultPageURL() { return "/dynamic/alumni/page/home"; }
-	public function canAccess() { return PNApplication::$instance->user_management->has_right("consult_alumni_info"); }
+	public function canAccess() {
+#SELECTION_TRAVEL
+#return false;
+#END
+		return PNApplication::$instance->user_management->has_right("consult_alumni_info");
+	}
 	
 }
 ?>

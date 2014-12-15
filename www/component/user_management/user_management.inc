@@ -44,6 +44,12 @@ class user_management extends Component {
 	 * @return string|null null on success or an error message
 	 */
 	public function login($domain, $username, $password) {
+#SELECTION_TRAVEL
+#if ($this->username <> null) return;
+#$domain = PNApplication::$instance->local_domain;
+#$username = file_get_contents("conf/selection_travel_username");
+#if (false) {
+#END
 		if ($this->username <> null) return "You are already authenticated as ".$username;
 		// check first if this is an internal user
 		$internal_user = null;
@@ -61,6 +67,9 @@ class user_management extends Component {
 			$this->auth_token = $auth->authenticate($username, $password, $error);
 			if ($this->auth_token === null) return $error;
 		}
+#SELECTION_TRAVEL
+#}
+#END
 		$user = SQLQuery::create()->bypassSecurity()->select("Users")->where("domain",$domain)->where("username",$username)->executeSingleRow();
 		if ($user == null) {
 			// the user does not exist yet in the database, but exists on the authentication system
@@ -122,6 +131,9 @@ class user_management extends Component {
 	 * Logout user: destroy the session.
 	 */
 	public function logout() {
+#SELECTION_TRAVEL
+#return;
+#END
 		$this->logged_out->fire();
 		setcookie(session_name(), "", time()-10000, "/dynamic/");
 		setcookie(session_name(), "", time()-10000, "/");

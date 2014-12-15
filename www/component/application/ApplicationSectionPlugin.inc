@@ -47,7 +47,12 @@ class HomeApplicationSection implements ApplicationSectionPlugin {
 	}
 	public function getMenuURL() { return "/dynamic/application/service/home_menu"; }
 	public function getDefaultPageURL() { return "/dynamic/application/page/overview"; }
-	public function canAccess() { return true; }
+	public function canAccess() {
+#SELECTION_TRAVEL
+#return false;
+#END
+		return true;
+	}
 	
 }
 ?>

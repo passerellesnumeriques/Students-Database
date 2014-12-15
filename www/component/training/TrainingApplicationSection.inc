@@ -20,6 +20,9 @@ class TrainingApplicationSection implements ApplicationSectionPlugin {
 		return "/dynamic/students_groups/page/tree_frame?section=training#/dynamic/students/page/list";
 	}
 	public function canAccess() {
+#SELECTION_TRAVEL
+#return false;
+#END
 		if (PNApplication::$instance->user_management->has_right("consult_students_list")) return true;
 		if (in_array("student",PNApplication::$instance->user_management->people_types)) return true;
 		if (in_array("teacher",PNApplication::$instance->user_management->people_types)) return true;

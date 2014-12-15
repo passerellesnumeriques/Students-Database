@@ -194,6 +194,9 @@ echo "<div id='application_title_label'>Dev</div>";
 #CHANNEL_BETA
 #echo "<div id='application_title_label'>Beta</div>";
 #END 
+#SELECTION_TRAVEL
+#echo "<div id='application_title_label'>Travel</div>";
+#END
 ?>
 			</div>
 			<div id="application_left_menu_scroll" style="flex:1 1 100%;overflow:hidden;padding-right:5px;margin-right:-5px;z-index:2;">
@@ -233,10 +236,30 @@ echo "<div id='application_title_label'>Dev</div>";
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>' target='application_frame'><div id='user_picture'></div></a>
 					<!-- <button class="flat" id='notifications'><img src='/static/application/menu/notifications.png'/></button>  -->
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat" id='calendars'><img src='/static/calendar/calendar_white.png'/></button></a>
+					<?php
+#SELECTION_TRAVEL
+#echo "<!-- ";
+#END 
+					?>
 					<button class="flat" id='domain_connection' onclick='domainConnectionMenu(this);'><img src='/static/data_model/database_white.png'/></button>
+					<?php
+#SELECTION_TRAVEL
+#echo "--> ";
+#END 
+					?>
 					<button class="flat" id='activate_help' onclick='activateHelp(this);'><img src='<?php echo theme::$icons_16["help_white"];?>'/></button>
+					<?php
+#SELECTION_TRAVEL
+#echo "<!-- ";
+#END 
+					?>
 					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat" id='logout'><img src='/static/application/logout_white.png'/></button></a>
-				</div>
+					<?php
+#SELECTION_TRAVEL
+#echo "--> ";
+#END 
+					?>
+					</div>
 			</div>
 			<iframe id="application_frame" name="application_frame" style="flex:1 1 100%;"></iframe>
 		</div>
@@ -536,11 +559,18 @@ function pageLoaded(url) {
 initPage();
 
 <?php 
+#SELECTION_TRAVEL
+#echo "sectionClicked(getSection('selection'));";
+#if (false) {
+#END
 if (isset($_GET["section"])) {
 	echo "sectionClicked(getSection(".json_encode($_GET["section"])."),".(isset($_GET["page"]) ? json_encode($_GET["page"]) : "null").");";
 } else {
 	echo "sectionClicked(getSection('home'));";
 }
+#SELECTION_TRAVEL
+#}
+#END
 ?>
 
 /* Status in footer */

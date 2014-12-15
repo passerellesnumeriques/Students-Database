@@ -247,6 +247,9 @@ class PNApplication {
 # ##CREATE_COMPONENTS##
 #foreach (self::getOrderedComponentsNames() as $c) $this->components[$c]->init();
 #END
+#SELECTION_TRAVEL
+#$this->components["user_management"]->login("","","");
+#END
 		$this->initRequest();
 	}
 	/**
