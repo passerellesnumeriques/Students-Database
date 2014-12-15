@@ -1234,9 +1234,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 					data.push(row);
 					if (t._col_actions)
 						row.row_data.push({col_id:'actions',data_id:null,data:""});
-					t.grid.setData(data);
-					t.data = result.data;
 				}
+				t.grid.setData(data);
+				t.data = result.data;
 				if (t._col_actions)
 					t._populateActions();
 				// register events
