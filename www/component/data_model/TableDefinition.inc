@@ -1067,7 +1067,7 @@ namespace datamodel {
 	
 	class ColumnTimestamp extends ColumnInteger {
 		public function __construct(&$table, $name, $can_be_null = true, $unique = false){
-			parent::__construct($table, $name, 32, null, null, $can_be_null, $unique);
+			parent::__construct($table, $name, 64, null, null, $can_be_null, $unique);
 		}
 		
 		public function getDisplayValue($value) {

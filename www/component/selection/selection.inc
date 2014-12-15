@@ -1,13 +1,14 @@
 <?php
 class selection extends Component {
+	/** @var number currently selected campaign */
 	private $campaign_id = null;
+	/** @var string|null if not null, the campaign is frozen */
+	private $frozen_reason = null;
 	
-	/* A calendar is linked to the selection campaign */
+	/** @var number A calendar is linked to the selection campaign */
 	private $calendar_id = null;
 	
-	/**
-	 * When set, config is an array [["name"=>"value"],[...]]
-	 */
+	/** @var array When set, config is an array [["name"=>"value"],[...]] */
 	private $config = null;
 	
 	/**
@@ -79,8 +80,13 @@ class selection extends Component {
 		$this->config = null;
 		setcookie("selection_campaign",$id == null ? "-1" : $id,time()+365*24*60*60,"/dynamic/selection/");
 		SQLQuery::setSubModel("SelectionCampaign", $this->campaign_id);
-		/* Set the calendar id attribute */
-		$this->calendar_id = SQLQuery::create()->select("SelectionCampaign")->field("calendar")->where("id",$id)->executeSingleValue();
+		/* Get the calendar id and frozen reason */
+		$campaign = SQLQuery::create()->select("SelectionCampaign")->where("id",$id)->executeSingleRow();
+		$this->calendar_id = $campaign["calendar"];
+		if ($campaign["frozen"] == 1)
+			$this->frozen_reason = $campaign["frozen_reason"];
+		else
+			$this->frozen_reason = null;
 		// load the config
 		$this->getConfig();
 	}
@@ -206,6 +212,27 @@ class selection extends Component {
 			return;
 		}
 		SQLQuery::create()->updateByKey("SelectionCampaign",$id,array("name"=>$name));
+	}
+	
+	public function freezeCampaign($reason) {
+		if ($reason == "travel") $reason = "Selection Team Travelling";
+		else if ($reason == "done") $reason = "Campaign Finished";
+		// lock every table in the sub-model
+		$locks = array();
+		require_once 'component/data_model/Model.inc';
+		require_once 'component/data_model/DataBaseLock.inc';
+		foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables() as $table) {
+			$locked_by = null;
+			$id = DataBaseLock::lockTableForEver($table->getSQLNameFor($this->getCampaignId()), $reason, $locked_by);
+			if ($id == null) {
+				foreach ($locks as $lock) DataBaseLock::unlock($lock);
+				PNApplication::error("We cannot lock the campaign because $locked_by is currently editing data.");
+				return false;
+			}
+			array_push($locks, $id);
+		}
+		SQLQuery::create()->bypassSecurity()->updateByKey("SelectionCampaign", $this->getCampaignId(), array("frozen"=>1,"frozen_reason"=>$reason));
+		return true;
 	}
 	
 	/**

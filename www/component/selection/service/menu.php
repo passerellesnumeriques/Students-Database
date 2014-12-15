@@ -240,10 +240,10 @@ function removeCampaign() {
 	});
 }
 function lockCampaign() {
-	alert("This feature is not yet available"); // TODO
+	popup_frame(theme.icons_16.lock, "Lock Selection Campaign", "/dynamic/selection/page/lock");
 }
 function unlockCampaign() {
-	// TODO
+	popup_frame(theme.icons_16.unlock, "Unlock Selection Campaign", "/dynamic/selection/page/unlock");
 }
 <?php } ?>
 </script>

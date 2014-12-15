@@ -58,6 +58,7 @@ theme::$icons_16 = array(
 	"tree_expand" =>	"/static/theme/default/icons_16/tree_expand.png",
 	"undo" => 			"/static/theme/default/icons_16/undo.png",
 	"unlink" => 		"/static/theme/default/icons_16/unlink.png",
+	"unlock" => 		"/static/theme/default/icons_16/unlock.png",
 	"unlock_white" => 	"/static/theme/default/icons_16/unlock_white.png",
 	"up" => 			"/static/theme/default/icons_16/up.png",
 	"visible" => 		"/static/theme/default/icons_16/visible.png",
