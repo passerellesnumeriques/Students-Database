@@ -448,9 +448,48 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			this.content.style.paddingRight = "20px";
 			this.div.appendChild(this.content);
 			window.top.geography.getCountryData(window.top.default_country_id, function(country_data) {
-				t._byarea.fillAreas(country_data, 0, null, t._byarea.content, 0);
+				
+				var roots_div = [];
+				var areas_div = {};
 				var missing = [];
-				for (var i = 0; i < list.length; ++i) if (list[i].areas.length == 0) missing.push(list[i]);
+				for (var i = 0; i < list.length; ++i) {
+					if (list[i].areas.length == 0) {
+						missing.push(list[i]);
+						continue;
+					}
+					var area_id = list[i].areas[list[i].areas.length-1];
+					if (typeof areas_div[area_id] == 'undefined') {
+						var area = window.top.geography.searchArea(country_data, area_id);
+						var division = window.top.geography.getAreaDivisionIndex(country_data, area);
+						areas_div[area_id] = t._byarea.createAreaDiv(country_data[division].division_name, area);
+						areas_div[area_id]._division = division;
+						if (division > 0) areas_div[area_id].style.marginLeft = "15px";
+						if (area.area_parent_id > 0) {
+							var child_div = areas_div[area_id];
+							while (area.area_parent_id > 0) {
+								area = window.top.geography.getParentArea(country_data, area);
+								division--;
+								if (typeof areas_div[area.area_id] == 'undefined') {
+									var div = t._byarea.createAreaDiv(country_data[division].division_name, area);
+									areas_div[area.area_id] = div;
+									div._division = division;
+									if (division > 0) div.style.marginLeft = "15px";
+									if (child_div)
+										div.appendChild(child_div);
+									if (area.area_parent_id > 0) { child_div = div; } else roots_div.push(areas_div[area.area_id]);
+								} else {
+									if (child_div)
+										areas_div[area.area_id].appendChild(child_div);
+									child_div = null;
+								}
+							}
+						} else
+							roots_div.push(areas_div[area_id]);
+					}
+					t._byarea.createItem(list[i], areas_div[area_id], 15);
+				}
+				for (var i = 0; i < roots_div.length; ++i)
+					t._byarea.content.appendChild(roots_div[i]);
 				if (missing.length > 0) {
 					var div = document.createElement("DIV");
 					for (var j = 0; j < missing.length; ++j)
@@ -480,50 +519,38 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			});
 			return this.div;
 		},
-		fillAreas: function(country_data, division_index, parent_id, parent_div, indent) {
-			for (var i = 0; i < country_data[division_index].areas.length; ++i) {
-				var area = country_data[division_index].areas[i];
-				if (area.area_parent_id != parent_id) continue;
-				var div = document.createElement("DIV");
-				div._area = area;
-				div.style.paddingLeft = indent+"px";
-				for (var j = 0; j < list.length; ++j)
-					if (list[j].areas.contains(area.area_id))
-						this.createItem(list[j], div, indent+15);
-				if (division_index < country_data.length-1)
-					this.fillAreas(country_data, division_index+1, area.area_id, div, indent+15);
-				if (div.childNodes.length > 0) {
-					var header = document.createElement("DIV");
-					header.style.backgroundColor = "#FFE0C0";
-					header.style.whiteSpace = "nowrap";
-					if (multiple) {
-						var cb = document.createElement("INPUT");
-						cb.type = "checkbox";
-						cb.style.verticalAlign = "middle";
-						cb.style.marginRight = "3px";
-						header.appendChild(cb);
-						cb.onchange = function(ev,nofire) {
-							var header = this.parentNode;
-							var item = header.nextSibling;
-							while (item) {
-								if (item._area) {
-									item.childNodes[0].childNodes[0].checked = this.checked ? "checked" : "";
-									item.childNodes[0].childNodes[0].onchange(ev,true);
-								} else if (item._org) {
-									item.childNodes[0].checked = this.checked ? "checked" : "";
-									item.childNodes[0].onchange(ev,true);
-								}
-								item = item.nextSibling;
-							}
-							if (!nofire) t.onchange.fire();
-						};
+		createAreaDiv: function(division_name, area) {
+			var div = document.createElement("DIV");
+			div._area = area;
+			var header = document.createElement("DIV");
+			header.style.backgroundColor = "#FFE0C0";
+			header.style.whiteSpace = "nowrap";
+			if (multiple) {
+				var cb = document.createElement("INPUT");
+				cb.type = "checkbox";
+				cb.style.verticalAlign = "middle";
+				cb.style.marginRight = "3px";
+				header.appendChild(cb);
+				cb.onchange = function(ev,nofire) {
+					var header = this.parentNode;
+					var item = header.nextSibling;
+					while (item) {
+						if (item._area) {
+							item.childNodes[0].childNodes[0].checked = this.checked ? "checked" : "";
+							item.childNodes[0].childNodes[0].onchange(ev,true);
+						} else if (item._org) {
+							item.childNodes[0].checked = this.checked ? "checked" : "";
+							item.childNodes[0].onchange(ev,true);
+						}
+						item = item.nextSibling;
 					}
-					header.appendChild(document.createTextNode(country_data[division_index].division_name+' '));
-					t.addItemName(header, area.area_name);
-					div.insertBefore(header, div.firstChild);
-					parent_div.appendChild(div);
-				}
+					if (!nofire) t.onchange.fire();
+				};
 			}
+			header.appendChild(document.createTextNode(division_name+' '));
+			t.addItemName(header, area.area_name);
+			div.appendChild(header);
+			return div;
 		},
 		createItem: function(org, container, indent) {
 			var item = document.createElement("DIV");
@@ -555,6 +582,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 				};
 			}
 			container.appendChild(item);
+			return item;
 		},
 		filter: function(name) {
 			this.filterDiv(this.content, name);

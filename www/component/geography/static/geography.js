@@ -70,6 +70,7 @@ if (window == window.top && !window.top.geography) {
 				}, function(xhr) {
 					var result = eval("("+xhr.responseText+")");
 					t._countries_data.push({id:country_id,data:result});
+					t._processIdMapping(result);
 					for (var i = 0; i < t._countries_data_listeners.length; ++i) {
 						if (t._countries_data_listeners[i].id == country_id) {
 							for (var j = 0; j < t._countries_data_listeners[i].listeners.length; ++j)
@@ -109,6 +110,26 @@ if (window == window.top && !window.top.geography) {
 			});
 		},
 		
+		_processIdMapping: function(country_data, division_index, area_index, mapping) {
+			if (country_data.length == 0) return;
+			if (!division_index) division_index = 0;
+			if (!area_index) area_index = 0;
+			if (!mapping) mapping = {};
+			var done = 0;
+			for (var di = division_index; di < country_data.length; ++di)
+				for (var ai = di == division_index ? area_index : 0; ai < country_data[di].areas.length; ++ai) {
+					mapping[country_data[di].areas[ai].area_id] = country_data[di].areas[ai];
+					if (++done >= 250) {
+						var t=this;
+						setTimeout(function() {
+							t._processIdMapping(country_data, di, ai, mapping);
+						},100);
+						return;
+					}
+				}
+			country_data[0]._mapping = mapping;
+		},
+		
 		/* Functions to get additional info, and which store this info
 		 * Additional info are:
 		 *  - parent_area: the parent object
@@ -119,6 +140,8 @@ if (window == window.top && !window.top.geography) {
 		/** Optimize same search */
 		_last_search_area: [],
 		searchArea: function(country_data, area_id) {
+			if (country_data.length > 0 && typeof country_data[0]._mapping != 'undefined')
+				return country_data[0]._mapping[area_id];
 			for (var i = 0; i < this._last_search_area.length; ++i)
 				if (this._last_search_area[i].country_data == country_data && this._last_search_area[i].area_id == area_id)
 					return this._last_search_area[i].result;
@@ -175,6 +198,7 @@ if (window == window.top && !window.top.geography) {
 			if (area.area_parent_id != null) area.area_parent_id = parseInt(area.area_parent_id);
 			if (!area.area_parent_id || area.area_parent_id <= 0) return null;
 			if (typeof area.parent_area != 'undefined') return area.parent_area;
+			if (typeof country_data[0]._mapping != 'undefined') return country_data[0]._mapping[area.area_parent_id];
 			var div_index = window.top.geography.getAreaDivisionIndex(country_data, area);
 			if (div_index <= 0) return null;
 			for (var i = 0; i < country_data[div_index-1].areas.length; ++i)
