@@ -3,10 +3,10 @@ require_once("DataBaseSystem.inc");
 /** Implementation of DataBaseSystem, using MySQL */
 class DataBaseSystem_MySQL extends DataBaseSystem {
 
-	public function connect($server, $username, $password, $db_name = null) {
+	public function connect($server, $username, $password, $db_name = null, $port = null) {
 		//$this->conn = mysql_pconnect($server, $username, $password);
 		//if ($this->conn === false)
-			$this->conn = mysqli_connect($server, $username, $password);
+			$this->conn = mysqli_connect($server, $username, $password, "", $port == null ? 3306 : $port);
 		if ($this->conn === false)
 			return DataBaseSystem::ERR_CANNOT_CONNECT_TO_SERVER;
 		if ($db_name <> null)

@@ -11,8 +11,9 @@ abstract class DataBaseSystem {
 	 * @param string $username username
 	 * @param string $password password
 	 * @param string|null $db_name database to select, or null 
+	 * @param number|null $port port number
 	 */
-	public abstract function connect($server, $username, $password, $db_name = null);
+	public abstract function connect($server, $username, $password, $db_name = null, $port = null);
 
 	/** Executes a SQL request.
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)

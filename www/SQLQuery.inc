@@ -16,7 +16,7 @@ class SQLQuery {
 		require_once("DataBaseSystem_".$db_config["type"].".inc");
 		$db_system_class = "DataBaseSystem_".$db_config["type"];
 		SQLQuery::$db_system = new $db_system_class;
-		$res = SQLQuery::$db_system->connect($db_config["server"], $db_config["user"], $db_config["password"]);
+		$res = SQLQuery::$db_system->connect($db_config["server"], $db_config["user"], $db_config["password"], null, @$db_config["port"]);
 		if ($res <> DataBaseSystem::ERR_OK) {
 			switch ($res) {
 				case DataBaseSystem::ERR_CANNOT_CONNECT_TO_SERVER: PNApplication::error("Unable to connect to the database server"); break;
