@@ -394,6 +394,7 @@ class calendar extends Component {
 	 * @param SQLQuery $q the query to join
 	 * @param string $from_table origin table name
 	 * @param string $from_key foreign key name in the origin table
+	 * @param boolean $with_frequency if true, will join also with table CalendarEventFrequency
 	 */
 	public function joinCalendarEvent(&$q, $from_table, $from_key, $with_frequency = false) {
 		$q->join($from_table, "CalendarEvent", array($from_key=>"id"));

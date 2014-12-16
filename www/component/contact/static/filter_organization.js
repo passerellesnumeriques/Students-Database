@@ -2,12 +2,22 @@
 
 if (typeof require != 'undefined') require("field_organization.js");
 
+/**
+ * Display a filter for organizations: select one or more organizations
+ * @param {Object} data list of ids/NULL/NOT_NULL
+ * @param {Object} config not used
+ * @param {Boolean} editable indicates if this filter can be modified by the user
+ */
 function filter_organization(data, config, editable) {
 	typed_filter.call(this, data, config, editable);
 
 	this.isActive = function() {
 		return this.data !== null;
 	};
+	/** Set the text of the link according to the current selection
+	 * @param {Element} container where to set the text
+	 * @param {Array} data the list
+	 */
 	this._setText = function(container, data) {
 		container.removeAllChildren();
 		if (data === null || data.length == 0)

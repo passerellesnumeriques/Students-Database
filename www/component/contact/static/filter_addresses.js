@@ -1,5 +1,11 @@
 /* #depends[/static/widgets/typed_filter/typed_filter.js] */
 
+/**
+ * Display a filter for addresses: by type and/or by geographic area
+ * @param {Object} data data of the filter: <code>types</code>: the list of types to be matched, <code>areas</code>: list of areas to be matched
+ * @param {Object} config <code>type</code>: people or organization
+ * @param {Boolean} editable indicates if this filter can be modified by the user
+ */
 function filter_addresses(data, config, editable) {
 	typed_filter.call(this, data, config, editable);
 	var existing_types;

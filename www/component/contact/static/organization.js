@@ -21,8 +21,11 @@ function organization(container, org, existing_types, can_edit) {
 		return org;
 	};
 	
+	/** Fired when something changed */
 	this.onchange = new Custom_Event();
+	/** Fired when addresses changed */
 	this.onaddresschange = new Custom_Event();
+	/** Fired when contact points changed */
 	this.oncontactpointchange = new Custom_Event();
 	
 	/** Create the display */
@@ -517,6 +520,10 @@ function organization(container, org, existing_types, can_edit) {
 		}
 	};
 	
+	/** Find the index of the row containing the given people in the contact points
+	 * @param {Number} people_id id of the people to search
+	 * @returns {Number} the index, or null if not found
+	 */
 	t._findRowIndexInContactPointsRows = function(people_id){
 		for(var i = 0; i < t._contact_points_rows.length; i++){
 			if(t._contact_points_rows[i].people_id == people_id)
@@ -525,6 +532,9 @@ function organization(container, org, existing_types, can_edit) {
 		return null;
 	};
 	
+	/** Launch the search of information about this organization on Google Places
+	 * @param {Function} ondone called when the search is done
+	 */
 	t.searchGoogle = function(ondone) {
 		if (org.name.length < 3) return;
 		t._google_results_container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";

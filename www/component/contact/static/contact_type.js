@@ -12,6 +12,7 @@ if (typeof require != 'undefined') {
  * @param {Boolean} can_edit indicates if the user can edit an existing contact
  * @param {Boolean} can_add indicates if the user can add a new contact to the list, attached to the owner
  * @param {Boolean} can_remove indicates if the user can remove an existing contact
+ * @param {Boolean} small if true we will use icons of 10x10 instead of 16x16, to take less space
  * @param {Function} ontypechanged called when the sub_type of a contact is changed
  * @param {Function} onready called when the UI control is ready
  */

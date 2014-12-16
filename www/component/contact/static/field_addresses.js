@@ -32,6 +32,9 @@ field_addresses.prototype._create = function(data) {
 			this._createAddressDivision(data, this.config.sub_data_index-1);
 	}
 };
+/** create, for an editable field, where we have the full address (not a sub-field)
+ * @param {Object} data the data
+ */
 field_addresses.prototype._createEditableTogether = function(data) {
 	var t=this;
 	require("addresses.js",function() {
@@ -62,6 +65,9 @@ field_addresses.prototype._createEditableTogether = function(data) {
 			t.control.removeAddress(t.control.getAddresses()[i]);
 	};
 };
+/** create, for an non-editable field, where we have the full address (not a sub-field)
+ * @param {Object} data the data
+ */
 field_addresses.prototype._createReadOnlyTogether = function(data) {
 	this.table = document.createElement("TABLE"); this.element.appendChild(this.table);
 	this.table.style.borderSpacing = "0px";
@@ -94,6 +100,9 @@ field_addresses.prototype._createReadOnlyTogether = function(data) {
 	};
 	this._setData(data);
 };
+/** create an editable sub-field 'address type'
+ * @param {Object} data the data
+ */
 field_addresses.prototype._createEditableAddressType = function(data) {
 	window.top.sub_field_registry.register(window, this);
 	this.onchange.add_listener(function(f){
@@ -153,6 +162,9 @@ field_addresses.prototype._createEditableAddressType = function(data) {
 		t.setData(t._data, true);
 	};
 };
+/** create a read-only sub-field 'address type'
+ * @param {Object} data the data
+ */
 field_addresses.prototype._createReadOnlyAddressType = function(data) {
 	window.top.sub_field_registry.register(window, this);
 	this.onchange.add_listener(function(f){
@@ -173,6 +185,10 @@ field_addresses.prototype._createReadOnlyAddressType = function(data) {
 	};
 	this._setData(data);
 };
+/** create sub-field for a country division
+ * @param {Object} data the data
+ * @param {Number} sub_division_index the country division index
+ */
 field_addresses.prototype._createAddressDivision = function(data, sub_division_index) {
 	var t=this;
 	t.country_data = null;

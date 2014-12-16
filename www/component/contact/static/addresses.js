@@ -222,6 +222,10 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		});
 	};
 	
+	/**
+	 * Create the address in database (if type_id > 0), and display it
+	 * @param {PostalAddress} address the address to add
+	 */
 	this.createAndAddAddress = function(address) {
 		if (type_id != null && type_id > 0) {
 			service.json("contact","add_address",{

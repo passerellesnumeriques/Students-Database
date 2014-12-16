@@ -83,11 +83,21 @@ field_organization.prototype.helpFillMultipleItems = function() {
 	});
 	return helper;
 };
+/** Called when a new organization has been created
+ * @param {Number} org_id id of the new organization
+ * @param {String} org_name name of the new organization
+ * @param {Array} areas areas' id containing the new organization
+ */
 field_organization.prototype._addPossibleValue = function(org_id, org_name, areas) {
 	for (var i = 0; i < this.config.list.length; ++i)
 		if (this.config.list[i].id == org_id) return; // we already have it ?
 	this.config.list.push({id:org_id,name:org_name,areas:areas});
 };
+/** Retrieve the ID of the organization using a data coming from input or service which can be the name, the id...
+ * @param {String|Number|null} data the data
+ * @param {Array} list the list of known organizations
+ * @returns {Number} the ID, or null if we cannot find it
+ */
 function getOrganizationIDFromData(data, list) {
 	if (typeof data == "number") return data;
 	if (data == null) return null;
@@ -102,9 +112,18 @@ function getOrganizationIDFromData(data, list) {
 	}
 	return null;
 }
+/** Get the ID of the organization corresponding to the given data
+ * @param {String|Number|null} data the data
+ * @returns {Number} the ID, or null if we cannot find it
+ */
 field_organization.prototype._getOrgIDFromData = function(data) {
 	return getOrganizationIDFromData(data, this.config.list);
 };
+/** Get the name of an organization by its ID
+ * @param {Number} id the organization id
+ * @param {Array} list the list where to search
+ * @returns {String} the name, or null if not found
+ */
 function getOrganizationNameFromID(id, list) {
 	if (id === null) return null;
 	for (var i = 0; i < list.length; ++i)
@@ -112,6 +131,10 @@ function getOrganizationNameFromID(id, list) {
 			return list[i].name;
 	return null;
 }
+/** Get the name using the id
+ * @param {Number} id organization ID
+ * @returns {String} the name, or null if not found
+ */
 field_organization.prototype._getOrgName = function(id) {
 	return getOrganizationNameFromID(id, this.config.list);
 };
@@ -168,9 +191,18 @@ field_organization.prototype._create = function(data) {
 	}
 	this._setData(data);
 };
+/**
+ * Create a field for an organization, using the given list. It will be an INPUT, which displays a mini-popup when getting the focus.
+ * @param {Array} list list of known organizations
+ * @param {Number} selected_id the ID of the currently selected organization, or null
+ * @param {String} name the type of organization, like 'High School', 'NGO'...
+ * @param {Function} create if given, if the user enter a non-existing name, we will propose to create a new organization with this name. In this case, this function is called to handle the creation.
+ */
 function OrganizationSelectionField(list, selected_id, name, create) {
 	require("mini_popup.js");
+	/** Event fired when the selected organization changed */
 	this.onchanged = new Custom_Event();
+	/** The input */
 	this.input = document.createElement("INPUT");
 	this.input.type = "text";
 	this.input.onkeydown = function(ev) {
@@ -217,12 +249,16 @@ function OrganizationSelectionField(list, selected_id, name, create) {
 	};
 	var _fw = false;
 	require("input_utils.js", function() { inputAutoresize(t.input, _fw ? -1 : 10); });
+	/** Fill the width of its container */
 	this.fillWidth = function() {
 		_fw = true;
 		this.input.style.minWidth = "100%";
 		if (typeof this.input.setMinimumSize == 'function')
 			this.input.setMinimumSize(-1);
 	};
+	/** Set the selected organization
+	 * @param {Number} id the id of the new selected organization
+	 */
 	this.setId = function(id) {
 		if (id == this.selected_id) return;
 		this.selected_id = id;
@@ -233,19 +269,31 @@ function OrganizationSelectionField(list, selected_id, name, create) {
 		if (this.input.autoresize) t.input.autoresize();
 	};
 }
+/** Create and handle the content of the popup to select one or several organizations, among a list of known organizations.
+ * @param {Array} list the list of known organizations
+ * @param {Boolean} multiple if true, checkboxes will be displayed for the user to select which organizations, if false only one can be selected, and it will behave like a context_menu: when the user click on an organization, it becomes selected.
+ * @param {Array} selected_ids the list of currently selected organizations
+ * @param {Function} create if given, the user will have the opportunity to create a new organization, and this function will be called to handle the creation
+ * @param {Function} cancel if given, will be called in case the user press the Escape key to cancel the selection and close the popup
+ */
 function OrganizationSelectionPopupContent(list, multiple, selected_ids, create, cancel) {
 	if (!multiple) {
 		window.top.theme.css("context_menu.css");
 		theme.css("context_menu.css");
 	}
 	this.selected_ids = selected_ids ? selected_ids : [];
+	/** Content of the popup */
 	this.content = document.createElement("DIV");
 	this.content.style.display = "flex";
 	this.content.style.flexDirection = "column";
+	/** Event fired when selection changed */
 	this.onchange = new Custom_Event();
+	/** List of checkboxes, in case multiple is true */
 	this.checkboxes = [];
 	var t=this;
+	/** Section with the input for the search */
 	this._search = {
+		/** Build the section */
 		build: function() {
 			this.div = document.createElement("DIV");
 			this.div.style.flex = "none";
@@ -323,11 +371,14 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			this.div.appendChild(this.fakeInput2);
 			return this.div;
 		},
+		/** Give the focus to the input */
 		focus: function() {
 			this.input.focus();
 		}
 	};
+	/** Section to display the matching organizations by name */
 	this._byname = {
+		/** Build the section */
 		build: function() {
 			this.div = document.createElement("DIV");
 			this.div.style.display = "flex";
@@ -376,6 +427,9 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			}
 			return this.div;
 		},
+		/** Filter items with given name
+		 * @param {String} name the name to be matched
+		 */
 		filter: function(name) {
 			for (var i = 0; i < this.content.childNodes.length; ++i) {
 				var item = this.content.childNodes[i];
@@ -393,7 +447,9 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 				this._keyboard_selected = null;
 			}
 		},
+		/** Selected organization when the user is using keyboard arrows */
 		_keyboard_selected: null,
+		/** The user pressed the down arrow key */
 		keyboardSelectionDown: function() {
 			if (this._keyboard_selected == null) {
 				if (this.content.childNodes.length == 0) return;
@@ -414,6 +470,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			this._keyboard_selected = next._org;
 			addClassName(next, "selected");
 		},
+		/** The user pressed the up arrow key */
 		keyboardSelectionUp: function() {
 			if (this._keyboard_selected == null) return;
 			var item = null;
@@ -426,11 +483,16 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			this._keyboard_selected = prev._org;
 			addClassName(prev, "selected");
 		},
+		/** Returns the currently selected organization if the user is using keyboard arrow keys
+		 * @returns {Number} the id
+		 */
 		getKeyboardSelection: function() {
 			return this._keyboard_selected;
 		}
 	};
+	/** Section to display matching organizations by geographic area */
 	this._byarea = {
+		/** Build the section */
 		build: function() {
 			this.div = document.createElement("DIV");
 			this.div.style.display = "flex";
@@ -519,6 +581,11 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			});
 			return this.div;
 		},
+		/** Create a DIV for the given area
+		 * @param {String} division_name name of the division the area belongs to
+		 * @param {GeographicArea} area the area
+		 * @returns {Element} the DIV
+		 */
 		createAreaDiv: function(division_name, area) {
 			var div = document.createElement("DIV");
 			div._area = area;
@@ -552,6 +619,12 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			div.appendChild(header);
 			return div;
 		},
+		/** Create a DIV for the given organization
+		 * @param {Organization} org the organization
+		 * @param {Element} container where to put the div
+		 * @param {Number} indent pixels to indent the div
+		 * @returns {Element} the DIV
+		 */
 		createItem: function(org, container, indent) {
 			var item = document.createElement("DIV");
 			item.style.paddingLeft = indent+"px";
@@ -584,9 +657,18 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			container.appendChild(item);
 			return item;
 		},
+		/** Filter organizations to match the given name
+		 * @param {String} name name to be matched
+		 */
 		filter: function(name) {
 			this.filterDiv(this.content, name);
 		},
+		/** Filter the DIV
+		 * @param {Element} div the div to be filtered, or in which to look for sub divs
+		 * @param {String} name the name to be matched
+		 * @param {Boolean} show_anyway if true and the organization is not matching, it won't be hidden (if this is the name of the containing geographic area which is matching)
+		 * @returns {Boolean} true if something matched inside, or false if everything is hidden
+		 */
 		filterDiv: function(div, name, show_anyway) {
 			if (div._org) {
 				t.highlightFilteredItem(div, name);
@@ -624,12 +706,20 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 			return has_something;
 		}
 	};
+	/** Add a SPAN with the name
+	 * @param {Element} div where to put the name
+	 * @param {String} name the name
+	 */
 	this.addItemName = function(div, name) {
 		div.span_name = document.createElement("SPAN");
 		div.span_name.appendChild(document.createTextNode(name));
 		div.span_name._name = name;
 		div.appendChild(div.span_name);
 	};
+	/** Highlight item if matching, by making the matching part in bold
+	 * @param {Element} div the div containing the name to be matched
+	 * @param {String} name the name to be matched
+	 */
 	this.highlightFilteredItem = function(div, name) {
 		div.span_name.removeAllChildren();
 		if (!name) div.span_name.appendChild(document.createTextNode(div.span_name._name));
@@ -650,9 +740,13 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 				div.span_name.appendChild(document.createTextNode(s));
 		}
 	}
+	/** Give the focus */
 	this.focus = function() {
 		this._search.focus();
 	};
+	/** Tick/Untick all checkboxes
+	 * @param {Boolean} checked to tick or untick
+	 */
 	this.checkAll = function(checked) {
 		for (var i = 0; i < t.checkboxes.length; ++i)
 			t.checkboxes[i].checked = checked ? "checked" : "";

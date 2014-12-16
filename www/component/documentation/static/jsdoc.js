@@ -16,18 +16,20 @@ function JSDoc_Class(extended, content, location, doc) {
 	this.doc = doc;
 }
 
-function JSDoc_Function(doc, parameters, return_type, return_doc, location) {
+function JSDoc_Function(doc, parameters, return_type, return_doc, location, no_name_check) {
 	this.doc = doc;
 	this.parameters = parameters;
 	this.return_type = return_type;
 	this.return_doc = return_doc;
 	this.location = location;
+	this.no_name_check = no_name_check;
 }
 
-function JSDoc_Value(type, doc, location) {
+function JSDoc_Value(type, doc, location, no_name_check) {
 	this.type = type;
 	this.doc = doc;
 	this.location = location;
+	this.no_name_check = no_name_check;
 }
 
 function filter_jsdoc(jsdoc, file) {

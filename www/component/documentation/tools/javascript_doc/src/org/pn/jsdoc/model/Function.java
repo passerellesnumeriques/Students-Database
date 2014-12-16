@@ -17,6 +17,7 @@ public class Function extends FinalElement {
 	public String return_type = "void";
 	public String return_description = "";
 	public Node[] docs_nodes;
+	public boolean no_name_check = false;
 	
 	public static class Parameter {
 		public String name;
@@ -83,6 +84,8 @@ public class Function extends FinalElement {
 				return_description = s;
 			} else if (tag.name.equals("constructor")) {
 				// ignore
+			} else if (tag.name.equals("no_name_check")) {
+				no_name_check = true;
 			} else
 				error("Unknown JSDoc tag "+tag.name+" for function");
 		}
@@ -147,6 +150,7 @@ public class Function extends FinalElement {
 		s.append("],\"").append(return_type).append("\",\"").append(return_description.replace("\\", "\\\\").replace("\"", "\\\"")).append("\"");
 		// TODO if no comment for return
 		s.append(",").append(location.generate());
+		s.append(",").append(no_name_check ? "true" : "false");
 		s.append(")");
 		return s.toString();
 	}

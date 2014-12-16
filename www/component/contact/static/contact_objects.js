@@ -37,6 +37,11 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 	this.lng = lng;
 }
 
+/**
+ * Copy information from a PostalAddress to another
+ * @param {PostalAddress} addr the address to fill
+ * @param {PostalAddress} from the address from which to fill
+ */
 function updatePostalAddress(addr, from) {
 	addr.id = from.id;
 	addr.country_id = from.country_id;
@@ -51,10 +56,21 @@ function updatePostalAddress(addr, from) {
 	addr.lng = from.lng;
 }
 
+/** Default address types to propose */
 window.default_address_types = {
+	/** For people */
 	'people':['Home','Family','Birthplace','Work'],
+	/** For organization */
 	'organization':['Office']
 };
+/**
+ * Show a context menu for the user to choose an address type
+ * @param {Element} below_element where to display the context menu
+ * @param {String} type either 'people' or 'organization'
+ * @param {String} current_type the current address type to indicate in bold, or null
+ * @param {Boolean} show_other if true, we will propose to the user to enter a new type
+ * @param {Function} onchanged called with new new type as parameter, when the user select a type on the menu
+ */
 function showAddressTypeMenu(below_element,type,current_type,show_other,onchanged) {
 	require("context_menu.js",function() {
 		if (below_element._context) below_element._context.hide();
@@ -108,6 +124,11 @@ function showAddressTypeMenu(below_element,type,current_type,show_other,onchange
 	});
 }
 
+/**
+ * Try to determine the different part of a PostalAddress from a simple string
+ * @param {String} str the string to parse
+ * @param {Function} handler called with the PostalAddress as parameter, or null if we cannot determine anything
+ */
 function parsePostalAddress(str, handler) {
 	var names = str.split(",");
 	for (var i = 0; i < names.length; ++i) {
@@ -172,12 +193,26 @@ function ContactsData(type, type_id, contacts) {
 	this.contacts = contacts;
 }
 
+/** Default contact types to propose to the user */
 window.default_contact_types = {
+	/** For email */
 	'email': ["Professional","Personal"],
+	/** For phone */
 	'phone': ["Professional Mobile","Professional Landline","Personal Mobile","Personal Landline","Office"],
+	/** For Instant Messaging
+	 * @no_name_check
+	 */
 	'IM': ["Skype"]
 };
 
+/**
+ * Show a context menu for the user to choose a contact type
+ * @param {Element} below_element where to display the context menu
+ * @param {String} type either 'email', 'phone' or 'IM'
+ * @param {String} current_type the current contact type to indicate in bold, or null
+ * @param {Boolean} show_other if true, we will propose to the user to enter a new type
+ * @param {Function} onchanged called with new new type as parameter, when the user select a type on the menu
+ */
 function showContactTypeMenu(below_element,type,current_type,show_other,onchanged) {
 	require("context_menu.js",function() {
 		if (below_element._context) below_element._context.hide();

@@ -4,16 +4,54 @@ class page_check_code extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
+if (!isset($_GET["content"])) {
+	theme::css($this, "header_bar.css");
+?>
+<div style='width:100%;height:100%;display:flex;flex-direction:column'>
+<div class='header_bar_style' style='flex:none'>
+	Code Checking
+	<input id='skip_js' type='checkbox'/>Skip JS
+	<input id='skip_php' type='checkbox'/>Skip PHP
+	<select id='select_what'>
+		<option value='all'>Everything</option>
+		<?php 
+		foreach (PNApplication::$instance->components as $cname=>$c) {
+			if ($cname == "test") continue;
+			if ($cname == "development") continue;
+			if ($cname == "documentation") continue;
+			echo "<option value='$cname'>Only component $cname</option>";
+		}
+		?>
+	</select>
+	<button class='action' onclick='launch();'>Check</button>
+</div>
+<iframe id='check_code_frame' style='flex:1 1 auto;border:0px;margin:0px;padding:0px;'></iframe>
+</div>
+<script type='text/javascript'>
+function launch() {
+	var url = "/dynamic/development/page/check_code?content=true";
+	if (document.getElementById('skip_js').checked) url += "&skip_js=true";
+	if (document.getElementById('skip_php').checked) url += "&skip_php=true";
+	var what = document.getElementById('select_what').value;
+	if (what != 'all') url += "&component="+what;
+	var iframe = document.getElementById('check_code_frame');
+	iframe.src = url;
+}
+</script>
+<?php 
+	return;
+}
 		$this->requireJavascript("tree.js");
 		$this->addJavascript("/static/documentation/jsdoc.js");
 ?>
-<div id='page_header'>
-	Code Checking
-	<button class='flat' onclick='location.reload();'><img src='<?php echo theme::$icons_16["refresh"];?>'/></button>
-</div>
 <div id='tree_container'></div>
 <script type='text/javascript'>
-var files = <?php $this->build_tree_dir(dirname($_SERVER["SCRIPT_FILENAME"]));?>;
+var files = <?php
+$root = dirname($_SERVER["SCRIPT_FILENAME"])."/";
+$sub_path = "";
+if (isset($_GET["component"])) $sub_path = "component/".$_GET["component"]."/";
+$this->build_tree_dir($root.$sub_path);
+?>;
 var tr = new tree('tree_container');
 function build_tree(parent_item, files, path) {
 	for (var i = 0; i < files.length; ++i) {
@@ -50,13 +88,17 @@ function errorsItemsProvider(item, ondone) {
 function add_error(item, msg, location) {
 	if (location) msg += " ("+location.file+":"+location.line+")";
 	problems_counter++;
-	if (item._errors) item._errors.push(msg);
-	else {
-		item._errors = [msg];
-		item.collapse();
-		item.children = undefined;
-		item.children_on_demand = errorsItemsProvider;
-		having_problems.push(item);
+	if (item.collapse) {
+		if (item._errors) item._errors.push(msg);
+		else {
+			item._errors = [msg];
+			item.collapse();
+			item.children = undefined;
+			item.children_on_demand = errorsItemsProvider;
+			having_problems.push(item);
+		}
+	} else {
+		item.addItem(new TreeItem("<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> "+msg));
 	}
 }
 
@@ -143,10 +185,12 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 			check_js_ns(ns_path+name+".", elem, item, filename, path);
 		} else if (elem instanceof JSDoc_Function) {
 			if (elem.location.file != location) continue;
-			if (name.charAt(0) == '_')
-				check_name_small_then_capital(name.substring(1), "Private Function "+ns_path+name, item);
-			else
-				check_name_small_then_capital(name, "Public Function "+ns_path+name, item);
+			if (!elem.no_name_check) {
+				if (name.charAt(0) == '_')
+					check_name_small_then_capital(name.substring(1), "Private Function "+ns_path+name, item);
+				else
+					check_name_small_then_capital(name, "Public Function "+ns_path+name, item);
+			}
 			// check doc
 			if (elem.doc.length == 0) add_error(item, "Function "+ns_path+name+": no comment", elem.location);
 			if (elem.return_type && !elem.return_doc && elem.return_type != "void") add_error(item, "Function "+ns_path+name+": no comment for return value ("+elem.return_type+")", elem.location);
@@ -159,10 +203,12 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 			}
 		} else if (elem instanceof JSDoc_Value) {
 			if (elem.location.file != location) continue;
-			if (name.charAt(0) == '_')
-				check_name_small_underscore(name.substring(1), "Private Variable "+ns_path+name, item);
-			else
-				check_name_small_underscore(name, "Public Variable "+ns_path+name, item);
+			if (!elem.no_name_check) {
+				if (name.charAt(0) == '_')
+					check_name_small_underscore(name.substring(1), "Private Variable "+ns_path+name, item);
+				else
+					check_name_small_underscore(name, "Public Variable "+ns_path+name, item);
+			}
 			// check doc
 			if (elem.doc.length == 0) add_error(item, "Variable "+ns_path+name+": no comment", elem.location);
 			if (!elem.type) add_error(item, "Variable "+ns_path+name+": no type", elem.location);
@@ -287,7 +333,7 @@ function clean_files(files) {
 	}
 }
 clean_files(files);
-build_tree(tr, files, "");
+build_tree(tr, files, "<?php echo $sub_path;?>");
 
 function check_end() {
 	if (todo.length == 0 && in_progress == 0 && checking_js == 0) {
@@ -464,6 +510,8 @@ setTimeout(function() {
 				$i = strrpos($filename, ".");
 				if ($i === FALSE) continue;
 				$ext = strtolower(substr($filename,$i+1));
+				if (isset($_GET["skip_js"]) && $ext == "js") continue;
+				if (isset($_GET["skip_php"]) && ($ext == "php" || $ext == "inc")) continue;
 				if ($ext == "php") {}
 				else if ($ext == "inc") { if ($type <> "") continue; }
 				else if ($ext == "js") {}

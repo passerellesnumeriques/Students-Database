@@ -32,6 +32,7 @@ class CalendarJSON {
 	 * @param number $id the event id
 	 * @param number $calendar_id calendar of the event
 	 * @return string the JSON structure
+	 * @no_name_check
 	 */
 	public static function Event($id, $calendar_id) {
 		return self::JSON(self::getEventFromDB($id, $calendar_id));
@@ -65,6 +66,7 @@ class CalendarJSON {
 	 * @param number[] $ids events id
 	 * @param number $calendar_id calendar
 	 * @return string the JSON
+	 * @no_name_check
 	 */
 	public static function Events($ids, $calendar_id) {
 		$rows = self::getEventsFromDB($ids, $calendar_id);
@@ -111,6 +113,7 @@ class CalendarJSON {
 	 * Generate the JSON for a list of events
 	 * @param array $rows the events
 	 * @return string the JSON
+	 * @no_name_check
 	 */
 	public static function JSONList($rows) {
 		$data = "[";
@@ -127,6 +130,7 @@ class CalendarJSON {
 	 * Generate the JSON structure of a CalendarEvent
 	 * @param array $row the event
 	 * @return string the JSON
+	 * @no_name_check
 	 */
 	public static function JSON($row) {
 		$data = "{";

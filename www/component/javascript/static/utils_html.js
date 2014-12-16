@@ -36,6 +36,7 @@ function lock_screen(onclick, content) {
 	if (typeof animation != 'undefined')
 		div.anim = animation.fadeIn(div,200,function() {div.anim=null;},10,100);
 	div.listener = function() {
+		if (!getWindowWidth) return;
 		div.style.width = getWindowWidth()+"px";
 		div.style.height = getWindowHeight()+"px";
 	};

@@ -103,7 +103,6 @@ class page_organizations extends Page {
 						};
 						list.addHeader(new_org);
 					}
-					// TODO remove button
 					list.makeRowsClickable(function(row){
 						var orga_id = list.getTableKeyForRow('Organization',row.row_id);
 						window.top.popup_frame("/static/contact/organization.png", "Organization Profile", "/dynamic/contact/page/organization_profile?organization="+orga_id,null,null,null,function(frame,p) {

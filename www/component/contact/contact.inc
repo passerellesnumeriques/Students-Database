@@ -96,6 +96,12 @@ class contact extends Component {
 		return $address_id;
 	}
 	
+	/**
+	 * Join to the table PostalAddress
+	 * @param SQLQuery $q the query to include the join
+	 * @param string $from_table the table from which to join
+	 * @param string $from_key the name of the foreign key for the join
+	 */
 	public function joinPostalAddress(&$q, $from_table, $from_key) {
 		$q->join($from_table, "PostalAddress", array($from_key=>"id"));
 	}
@@ -156,6 +162,7 @@ class contact extends Component {
 	 * Create a new organization type
 	 * @param string $creator indicates to which part of the application it belongs to
 	 * @param string $name the organization type's name
+	 * @param boolean $builtin if true, this type won't be editable neither removable
 	 * @return boolean|number the new type id, or false if it failed
 	 */
 	public function createOrganizationType($creator, $name, $builtin = false) {
@@ -214,7 +221,7 @@ class contact extends Component {
 
 	/**
 	 * Get an organization name from its ID
-	 * @param number $id
+	 * @param integer $id id
 	 */
 	public function getOrganizationName($id){
 		return SQLQuery::create()
@@ -226,8 +233,8 @@ class contact extends Component {
 	
 	/**
 	 * Remove a contact point for a given organization
-	 * @param number $organization
-	 * @param number $people
+	 * @param integer $organization id
+	 * @param integer $people id
 	 * @return boolean true if well performed
 	 */
 	public function removeContactPoint($organization, $people){
@@ -272,12 +279,24 @@ class contact extends Component {
 			->executeSingleValue();
 	}
 	
+	/**
+	 * Join to the table Organization
+	 * @param SQLQuery $q the query to include the join
+	 * @param string $from_table the table from which to join
+	 * @param string $from_key the name of the foreign key for the join
+	 * @param string $alias alias to use or null. If specified, it will be the Organization table alias, and all the fields of the organization will be precedeed by this alias and a underscore 
+	 */
 	public function joinOrganization(&$q, $from_table, $from_key, $alias = null) {
 		$q->join($from_table, "Organization", array($from_key=>"id"), $alias);
 		require_once("component/contact/ContactJSON.inc");
 		ContactJSON::OrganizationSQL($q, $alias);
 	}
-	
+
+	/**
+	 * Retrieve the contacts of the given organizations
+	 * @param integer[] $orgs_ids organizations' ids
+	 * @return array the rows from table OrganizationContact joined with table Contact, with field 'contact_organization_id' plus the ones of the ContactJSON
+	 */
 	public function getOrganizationsContacts($orgs_ids) {
 		$q = SQLQuery::create()
 			->select("OrganizationContact")
@@ -290,6 +309,11 @@ class contact extends Component {
 		return $q->execute();
 	}
 
+	/**
+	 * Retrieve the addresses of the given organizations
+	 * @param integer[] $orgs_ids organizations' ids
+	 * @return array the rows from table OrganizationAddress joined with table PostalAddress, with field 'address_organization_id' plus the ones of the ContactJSON for postal addresses
+	 */
 	public function getOrganizationsAddresses($orgs_ids) {
 		$q = SQLQuery::create()
 			->select("OrganizationAddress")
@@ -302,6 +326,11 @@ class contact extends Component {
 		return $q->execute();
 	}
 	
+	/**
+	 * Retrieve the contact points for the given organizations
+	 * @param integer[] $orgs_ids organizations' ids
+	 * @return array the rows from table ContactPoint, with fields from ContactJSON::OrganizationContactPointSQL
+	 */
 	public function getOrganizationsContactPoints($orgs_ids) {
 		$q = SQLQuery::create()
 			->select("ContactPoint")
@@ -312,6 +341,11 @@ class contact extends Component {
 		return $q->execute();
 	}
 	
+	/**
+	 * Retrieve the addresses of the given peoples
+	 * @param integer[] $peoples_ids the peoples
+	 * @return array the rows from table PeopleAddress joined with table PostalAddress, with field 'address_people_id' plus the ones of the ContactJSON for postal addresses
+	 */
 	public function getPeoplesAddresses($peoples_ids) {
 		$q = SQLQuery::create()
 			->select("PeopleAddress")
@@ -324,6 +358,12 @@ class contact extends Component {
 		return $q->execute();
 	}
 	
+	/**
+	 * Retrieve the contacts of the given peoples
+	 * @param integer[] $peoples_ids the peoples
+	 * @param array $contacts_types if given, filter by contact type (email, phone or IM)
+	 * @return array the rows from table PeopleContact joined with table Contact with all fields of the Contact table plus 'people' giving the people id
+	 */
 	public function getPeoplesContacts($peoples_ids, $contacts_types = null) {
 		$q = SQLQuery::create()->select("PeopleContact")
 			->whereIn("PeopleContact", "people", $peoples_ids)
@@ -335,10 +375,21 @@ class contact extends Component {
 		return $q->execute();
 	}
 	
+	/** Retrieve emails
+	 * @param integer[] $contacts_ids ids
+	 * @param boolean $bypass_security indicates if we should bypass the security checks
+	 * @return array rows from table Contact
+	 */
 	public function getEMails($contacts_ids, $bypass_security = false) {
 		return SQLQuery::create()->bypassSecurity($bypass_security)->select("Contact")->whereIn("Contact","id",$contacts_ids)->whereValue("Contact","type","email")->execute();
 	}
 	
+	/**
+	 * Retrieve the preferred email to use for the given people: first the PN address, else the first available one
+	 * @param integer[] $peoples_ids the peoples
+	 * @param boolean $bypass_security security check or not
+	 * @return array associative array with people id as key, and the preferred email or null as value
+	 */
 	public function getPeoplesPreferredEMail($peoples_ids, $bypass_security = false) {
 		$emails = SQLQuery::create()->bypassSecurity($bypass_security)
 			->select("PeopleContact")

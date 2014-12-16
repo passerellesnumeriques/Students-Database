@@ -7,6 +7,7 @@ public class ObjectClass extends FinalElement {
 
 	public String type = null;
 	public String description = "";
+	public boolean no_name_check = false;
 	
 	public ObjectClass(String file, String type, AstNode node, Node... docs) {
 		super(new Location(file, node));
@@ -26,7 +27,10 @@ public class ObjectClass extends FinalElement {
 		JSDoc doc = new JSDoc(node, docs);
 		this.description = doc.description;
 		for (JSDoc.Tag tag : doc.tags) {
-			error("Not supported tag for ObjectClass: "+tag.name);
+			if (tag.name.equals("no_name_check"))
+				this.no_name_check = true;
+			else
+				error("Not supported tag for ObjectClass: "+tag.name);
 		}
 	}
 	
@@ -49,7 +53,7 @@ public class ObjectClass extends FinalElement {
 	
 	@Override
 	public String generate(String indent) {
-		return "new JSDoc_Value(\""+this.type+"\",\""+this.description.replace("\\", "\\\\").replace("\"", "\\\"")+"\","+location.generate()+")";
+		return "new JSDoc_Value(\""+this.type+"\",\""+this.description.replace("\\", "\\\\").replace("\"", "\\\"")+"\","+location.generate()+","+(no_name_check ? "true" : "false")+")";
 		// TODO if no comment
 	}
 	
