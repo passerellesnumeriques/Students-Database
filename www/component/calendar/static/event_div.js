@@ -1,3 +1,9 @@
+/**
+ * Create a DIV to represent an event on a calendar view
+ * @param {CalendarEvent} ev the event
+ * @param {Calendar} calendar the calendar the event belongs to, or null (if null, we will get it from the window.top.CalendarsProviders)
+ * @returns {Element} the created DIV
+ */
 function createEventDiv(ev, calendar) {
 	if (!calendar) calendar = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
 	if (!calendar) return null;
@@ -6,6 +12,12 @@ function createEventDiv(ev, calendar) {
 	return createTimedEventDiv(ev, calendar);
 }
 
+/**
+ * Create a DIV element for an event, which can be used commonly by any kind of event
+ * @param {CalendarEvent} ev the event
+ * @param {Calendar} cal calendar the event belongs to
+ * @returns {Element} the created DIV
+ */
 function _createAbstractEventDiv(ev, cal) {
 	var div = document.createElement("DIV");
 	div.style.backgroundColor = "#"+cal.color;
@@ -31,6 +43,12 @@ function _createAbstractEventDiv(ev, cal) {
 	return div;
 }
 
+/**
+ * Create a DIV element for a timed event (not all day)
+ * @param {CalendarEvent} ev the event
+ * @param {Calendar} cal calendar the event belongs to
+ * @returns {Element} the created DIV
+ */
 function createTimedEventDiv(ev, cal) {
 	var div = _createAbstractEventDiv(ev, cal);
 	var head = document.createElement("DIV");
@@ -57,6 +75,12 @@ function createTimedEventDiv(ev, cal) {
 	return div;
 }
 
+/**
+ * Create a DIV element for a all day event (no specific time)
+ * @param {CalendarEvent} ev the event
+ * @param {Calendar} cal calendar the event belongs to
+ * @returns {Element} the created DIV
+ */
 function createAllDayEventDiv(ev, cal) {
 	var div = _createAbstractEventDiv(ev, cal);
 	

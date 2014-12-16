@@ -188,7 +188,9 @@ function calendar_view_month(view, container) {
 		}
 	};
 	
-	/** Create the DIV element to display an event */
+	/** Create the DIV element to display an event
+	 * @param {CalendarEvent} ev the event
+	 */
 	this._createEventDiv = function(ev) {
 		var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
 		if (!cal) return null; // calendar has been removed

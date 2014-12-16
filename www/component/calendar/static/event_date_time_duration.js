@@ -11,6 +11,7 @@ if (typeof require != 'undefined') {
  * @param {Date} maximum_date maximum date the user can select, or null
  * @param {Boolean} can_be_null if false, the user must select a date, time and duration
  * @param {Boolean} horizontal if true, all fields are displayed horizontally, else the date is on one line, time and duration on a second line
+ * @param {Function} onready called when everything is initialized, with this object as parameter
  */
 function event_date_time_duration(container, start, duration, minimum_date, maximum_date, can_be_null, horizontal, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);

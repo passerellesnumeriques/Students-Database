@@ -163,6 +163,7 @@ CalendarsProvider.prototype = {
 	minimum_time_to_autorefresh_calendar: 5*60*1000,
 	/** {Number} minimum time (in milliseconds) before the list of calendars from this provider can be automatically refreshed */
 	minimum_time_to_autorefresh_calendars_list: 15*60*1000,
+	/** Last time the list of calendars has been refreshed */
 	_last_refresh_calendars_list: 0,
 	/** Reload the list of calendars from this provider */
 	refreshCalendars: function() {
@@ -320,6 +321,7 @@ if (window == window.top && !window.top.CalendarsProviders) {
 			}
 		}
 	};
+	/** Refresh calendars on login with new user, remove calendars on logout */
 	var listenLoginLogout = function() {
 		if (!window.top.pnapplication) {
 			setTimeout(listenLoginLogout, 20);

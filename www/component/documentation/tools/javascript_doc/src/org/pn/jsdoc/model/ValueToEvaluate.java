@@ -98,6 +98,12 @@ public class ValueToEvaluate extends Element implements Evaluable {
 			}
 			case Token.TRUE: val = new ObjectClass(this.location.file, "Boolean", value, docs); break;
 			case Token.FALSE: val = new ObjectClass(this.location.file, "Boolean", value, docs); break;
+			case Token.THIS:
+				if (ctx.container instanceof Class)
+					val = new ObjectClass(this.location.file, ((Class)ctx.container).name, value, docs);
+				else
+					error("Unexpected 'this' keyword value in this context ("+ctx.container.getClass().getSimpleName()+")", this.location.file, value);
+				break;
 			default: error("Keyword not supported for value: "+value.toSource(), this.location.file, value);
 			}
 		} else if (value instanceof UnaryExpression) {
