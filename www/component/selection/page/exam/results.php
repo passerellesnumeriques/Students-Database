@@ -54,6 +54,7 @@ class page_exam_results extends SelectionPage {
 						->join("ExamSession","Applicant",array("event"=>"exam_session"))
 						->field("ExamSession","event","session_id")
 						->join("Applicant","ExamCenterRoom",array("exam_center_room"=>"id"))
+						->whereNotNull("ExamCenterRoom", "id")
 						->expression("SUM(case when `Applicant_$campaign_id`.`exam_attendance` IS NOT NULL then 1 else 0 end)", "nb_attendance_set")
 						->expression("SUM(case when `Applicant_$campaign_id`.`exam_attendance` = 'Yes' then 1 else 0 end)", "nb_attendees")
 						->expression("SUM(case when `Applicant_$campaign_id`.`exam_passer` IS NOT NULL AND `Applicant_$campaign_id`.`exam_attendance` = 'Yes' then 1 else 0 end)", "nb_results_entered")
