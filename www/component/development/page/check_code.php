@@ -291,8 +291,9 @@ build_tree(tr, files, "");
 
 function check_end() {
 	if (todo.length == 0 && in_progress == 0 && checking_js == 0) {
+		var time = new Date().getTime() - window._start_check_code;
 		unlock_screen(locker);
-		var item = new TreeItem(""+problems_counter+" problem(s)");
+		var item = new TreeItem(""+problems_counter+" problem(s) in "+Math.floor(time/1000)+"s.");
 		tr.insertItem(item, 0);
 		for (var i = 0; i < having_problems.length; ++i) {
 			has_error(having_problems[i]);
@@ -358,6 +359,7 @@ function findItemPath(parent, location) {
 
 var locker;
 setTimeout(function() {
+	window._start_check_code = new Date().getTime();
 	total_todo = todo.length;
 	locker = lock_screen(null, "Checking code...");
 	// load javascript
@@ -399,9 +401,17 @@ setTimeout(function() {
 		}
 		var doc = new fct();
 		window.jsdoc = doc.jsdoc;
-		for (var i = 0; i < js_todo.length; ++i)
-			js_todo[i]();
-		checking_js--;
+		var next_js_todos = function(start) {
+			var i;
+			for (i = start; i < start+50 && i < js_todo.length; ++i)
+				js_todo[i]();
+			if (i == js_todo.length)
+				checking_js--;
+			else setTimeout(function() {
+				next_js_todos(i);
+			}, 50);
+		};
+		next_js_todos(0);
 	});
 	checking_js++;
 	service.json("development","check_datamodel",{},function(problems) {
@@ -417,15 +427,8 @@ setTimeout(function() {
 	// call services
 	next_todo();
 	next_todo();
-	setTimeout(function() { next_todo(); }, 50);
-	setTimeout(function() { next_todo(); }, 100);
-	setTimeout(function() { next_todo(); }, 200);
-	setTimeout(function() { next_todo(); }, 300);
-	setTimeout(function() { next_todo(); }, 400);
-	setTimeout(function() { next_todo(); }, 500);
-	setTimeout(function() { next_todo(); }, 700);
-	setTimeout(function() { next_todo(); }, 900);
-	setTimeout(function() { next_todo(); }, 1200);
+	for (var i = 0; i < 13; ++i)
+		setTimeout(function() { next_todo(); }, i*50);
 }, 1000);
 </script>
 <?php 

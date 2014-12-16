@@ -4,6 +4,12 @@
  */ 
 class CalendarJSON {
 	
+	/**
+	 * Retrieve an event from the database, including attendees and frequency, ready to generate the JSON
+	 * @param number $id event id
+	 * @param number $calendar_id calendar id
+	 * @return array|boolean the row of the CalendarEvent, with the join to the frequency, and <code>attendees</code> attribute being the array of rows for the attendees
+	 */
 	public static function getEventFromDB($id, $calendar_id) {
 		//Check the right
 		if (!PNApplication::$instance->calendar->canReadCalendar($calendar_id)) {
@@ -20,11 +26,23 @@ class CalendarJSON {
 		$row["attendees"] = SQLQuery::create()->bypassSecurity()->select("CalendarEventAttendee")->whereValue("CalendarEventAttendee","event",$id)->execute();
 		return $row;
 	}
-	
+
+	/**
+	 * Generate the JSON structure for the given event ID
+	 * @param number $id the event id
+	 * @param number $calendar_id calendar of the event
+	 * @return string the JSON structure
+	 */
 	public static function Event($id, $calendar_id) {
 		return self::JSON(self::getEventFromDB($id, $calendar_id));
 	}
 
+	/** 
+	 * Get a list of events from database, ready to be generated in JSON
+	 * @param number[] $ids events ids
+	 * @param number $calendar_id calendar id of the events
+	 * @return array the rows, each one being in the same format as getEventFromDB
+	 */
 	public static function getEventsFromDB($ids, $calendar_id) {
 		if (count($ids) == 0) return array();
 		//Check the right
@@ -42,11 +60,22 @@ class CalendarJSON {
 		self::addAttendees($rows, $ids);
 		return $rows;
 	}
+	/**
+	 * Generate the JSON array for the given events
+	 * @param number[] $ids events id
+	 * @param number $calendar_id calendar
+	 * @return string the JSON
+	 */
 	public static function Events($ids, $calendar_id) {
 		$rows = self::getEventsFromDB($ids, $calendar_id);
 		return self::JSONList($rows);
 	}
 	
+	/**
+	 * For the given events, add the <code>attendees</code> attribute containing the attendees of every event
+	 * @param array $events the events to be populated with their attendees
+	 * @param number[]|null $events_ids the ids of the event, if already available. If null it will be taken from the events array.
+	 */
 	public static function addAttendees(&$events, $events_ids = null) {
 		if ($events_ids == null) {
 			$events_ids = array();
@@ -78,6 +107,11 @@ class CalendarJSON {
 		}
 	}
 	
+	/**
+	 * Generate the JSON for a list of events
+	 * @param array $rows the events
+	 * @return string the JSON
+	 */
 	public static function JSONList($rows) {
 		$data = "[";
 		$first = true;
@@ -89,6 +123,11 @@ class CalendarJSON {
 		return $data;
 	}
 	
+	/**
+	 * Generate the JSON structure of a CalendarEvent
+	 * @param array $row the event
+	 * @return string the JSON
+	 */
 	public static function JSON($row) {
 		$data = "{";
 		$data .= "id:".$row["id"];
