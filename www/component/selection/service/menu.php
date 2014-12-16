@@ -186,7 +186,7 @@ function createCampaign() {
 		function(text){
 			if(!text) return;
 			var div_locker = window.top.lock_screen(null,"Creation of the new selection campaign...");
-			service.json("selection","create_campaign",{name:text.trim().uniformFirstLetterCapitalized()},function(res){
+			service.json("selection","create_campaign",{name:text.trim()},function(res){
 				unlock_screen(div_locker);
 				if(!res) return;
 				refreshCampaigns();
@@ -220,7 +220,7 @@ function renameCampaign() {
 			if (!text) return;
 			if (text.trim().toLowerCase() == current_campaign_name.trim().toLowerCase()) return;
 			var div_locker = lock_screen();
-			service.json("selection","set_campaign_name",{id:<?php echo $id;?>, name:text.trim().uniformFirstLetterCapitalized()},function(res){
+			service.json("selection","set_campaign_name",{id:<?php echo $id;?>, name:text.trim()},function(res){
 				unlock_screen(div_locker);
 				if(!res) return;
 				refreshCampaigns();
