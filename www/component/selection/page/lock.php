@@ -21,8 +21,7 @@ function lock() {
 	else alert("Please select a reason");
 }
 function lockTravel() {
-	// TODO
-	alert("Travel functionality is not yet available");
+	location.href = "lock_travel";
 }
 function lockDone() {
 	var popup = window.parent.get_popup_window_from_frame(window);

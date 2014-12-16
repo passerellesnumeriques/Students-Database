@@ -77,7 +77,7 @@ window.ajax = {
 		xhr.onerror = function(ev) {
 			has_error = true;
 			if (is_done && !aborted) {
-				//error_handler("Connection error");
+				error_handler("Connection error");
 			}
 		};
 		if (content_type != null)
