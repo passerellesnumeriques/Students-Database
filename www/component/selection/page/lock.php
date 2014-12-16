@@ -1,7 +1,7 @@
 <?php 
 require_once("SelectionPage.inc");
 class page_lock extends SelectionPage {
-	public function getRequiredRights() { return array(); }
+	public function getRequiredRights() { return array("manage_selection_campaign"); }
 	public function executeSelectionPage(){
 ?>
 <div style='background-color:white;padding:10px'>

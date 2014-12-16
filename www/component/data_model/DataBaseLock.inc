@@ -34,6 +34,9 @@ class DataBaseLock {
 	public static function lockTableForEver($table, $reason, &$locked_by) {
 		return DataBaseLock::lock($table, null, null, $locked_by, true, $reason);
 	}
+	public static function unlockTableForEver($table, $reason) {
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `DataLocks` WHERE `table`='".SQLQuery::escape($table)."' AND `row_key` IS NULL AND `column` IS NULL AND `locker_domain`='' AND `locker_username`='".SQLQuery::escape($reason)."'");
+	}
 	
 	/** lock a row in a table, based on its primary key
 	 * @param string $table the table in which to lock a row

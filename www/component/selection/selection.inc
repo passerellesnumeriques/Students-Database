@@ -67,6 +67,19 @@ class selection extends Component {
 		return $this->calendar_id;
 	}
 	
+	/** Indicates if the campaign is frozen
+	 * @return boolean true if it is frozen
+	 */
+	public function isFrozen() {
+		return $this->frozen_reason <> null;
+	}
+	/** Indicates the reason for the campaign to be frozen
+	 * @return string|NULL the reason, or null if it is not frozen
+	 */
+	public function getFrozenReason() {
+		return $this->frozen_reason;
+	}
+	
 	/**
 	 * @method setCampaignId
 	 * @param $id
@@ -232,6 +245,18 @@ class selection extends Component {
 			array_push($locks, $id);
 		}
 		SQLQuery::create()->bypassSecurity()->updateByKey("SelectionCampaign", $this->getCampaignId(), array("frozen"=>1,"frozen_reason"=>$reason));
+		$this->frozen_reason = $reason;
+		return true;
+	}
+	
+	public function unfreezeCampaign() {
+		// unlock all tables
+		require_once 'component/data_model/Model.inc';
+		require_once 'component/data_model/DataBaseLock.inc';
+		foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables() as $table)
+			DataBaseLock::unlockTableForEver($table->getSQLNameFor($this->getCampaignId()), $this->frozen_reason);
+		SQLQuery::create()->bypassSecurity()->updateByKey("SelectionCampaign", $this->getCampaignId(), array("frozen"=>0,"frozen_reason"=>null));
+		$this->frozen_reason = null;
 		return true;
 	}
 	
