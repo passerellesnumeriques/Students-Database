@@ -27,6 +27,10 @@ b {
 	font-weight: bold;
 }
 
+* {
+	min-height: 0px;
+}
+
 table.all_borders {
 	border: 1px solid black;
 	border-collapse: collapse;
