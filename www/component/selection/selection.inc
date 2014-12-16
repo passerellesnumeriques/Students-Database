@@ -17,6 +17,7 @@ class selection extends Component {
 	 * If the campaign_id is set, the matching submodels is selected in the database
 	 */
 	public function initRequest() {
+		Component::allowServiceWithoutLogin("selection", "download_backup_from_travel_install");
 		if ($this->campaign_id == null) {
 			if (isset($_COOKIE["selection_campaign"])) {
 				try {

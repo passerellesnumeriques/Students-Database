@@ -67,9 +67,9 @@ function synchronizeDatabases() {
 	content.innerHTML =	"Locking campaign...";
 	layout.changed(content);
 	service.json("selection","lock_campaign",{reason:'travel'},function(res) {
-		if (!res) { return; }
+		if (!res || !res.token) { return; }
 		content.innerHTML = "Synchronizing your computer with the Database...";
-		ajax.post("http://127.0.0.1:8888/server_comm/download_database",{server:location.host,domain:<?php echo json_encode(PNApplication::$instance->local_domain);?>,username:<?php echo PNApplication::$instance->user_management->username;?>,session:<?php echo json_encode(session_id());?>},function(error) {
+		ajax.post("http://127.0.0.1:8888/server_comm/download_database",{server:location.host,domain:<?php echo json_encode(PNApplication::$instance->local_domain);?>,username:<?php echo PNApplication::$instance->user_management->username;?>,session:<?php echo json_encode(session_id());?>,token:res.token},function(error) {
 			content.innerHTML = "An error occured during the synchronization: "+error;
 			layout.changed(content);
 		},function(xhr) {
