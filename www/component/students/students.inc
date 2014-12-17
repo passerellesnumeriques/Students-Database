@@ -113,6 +113,14 @@ class students extends Component {
 		$q->field("Student","university_id","university_id");
 	}
 	
+	public function getStudentBatchId($people_id) {
+		return SQLQuery::create()
+			->select("Student")
+			->whereValue("Student","people",$people_id)
+			->field("Student","batch")
+			->executeSingleValue();
+	}
+	
 	public function removeExcluded(&$q, $sql_date) {
 		$table_alias = $q->getTableAlias("Student");
 		if ($table_alias == null) {

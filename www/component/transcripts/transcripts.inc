@@ -336,28 +336,19 @@ class transcripts extends Component {
 							$eg = $sg;
 							break;
 						}
-					if ($eg == null || $eg["grade"] === null) {
-						// no grade, we cannot compute
-						$type_grade = null;
-						break;
-					} else {
-						$type_grade += $eg["grade"] * $eval["weight"];
-						$type_weights += $eval["weight"];
-					}
+					if ($eg == null || $eg["grade"] === null) continue; // no grade yet
+					$type_grade += $eg["grade"] * $eval["weight"];
+					$type_weights += $eval["weight"];
 				}
 				if ($type_weights == 0) $type_grade = null;
-				if ($type_grade === null) {
-					$final_grade = null;
-				} else {
+				else {
 					$type_grade = $type_grade / $type_weights;
-					if ($final_grade !== null) {
-						$final_grade += $type_grade * $type["weight"];
-						$final_weights += $type["weight"];
-					}
+					$final_grade += $type_grade * $type["weight"];
+					$final_weights += $type["weight"];
+					// set the type grade
+					array_push($types_to_remove, array("people"=>$student_id,"type"=>$type["id"]));
+					array_push($types_to_insert, array("people"=>$student_id,"type"=>$type["id"],"grade"=>$type_grade));
 				}
-				// set the type grade
-				array_push($types_to_remove, array("people"=>$student_id,"type"=>$type["id"]));
-				array_push($types_to_insert, array("people"=>$student_id,"type"=>$type["id"],"grade"=>$type_grade));
 			}
 			if ($final_weights == 0) $final_grade = null;
 			if ($final_grade !== null)
@@ -402,6 +393,14 @@ class transcripts extends Component {
 				SQLQuery::create()->bypassSecurity()->insertMultiple("StudentSubjectGrade", $to_insert);
 			}
 		}
+	}
+	
+	public function getStudentGrades($people_id, $subjects_ids) {
+		return SQLQuery::create()
+			->select("StudentSubjectGrade")
+			->whereValue("StudentSubjectGrade", "people", $people_id)
+			->whereIn("StudentSubjectGrade", "subject", $subjects_ids)
+			->execute();
 	}
 	
 }

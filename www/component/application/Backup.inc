@@ -220,9 +220,10 @@ class Backup {
 	 * Recover the database from the given backup
 	 * @param number $time the timestamp identifying the backup
 	 * @param string $version the version of the backup
+	 * @param string $backups_path the directory containing the backups
 	 * @throws Exception in case of error
 	 */
-	public static function recoverBackup($time, $version = null) {
+	public static function recoverBackup($time, $version = null, $backups_path = "data/backups") {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
 		if (PNApplication::$instance == null) {
@@ -233,8 +234,8 @@ class Backup {
 		}
 		global $pn_app_version;
 		if ($version == null) $version = $pn_app_version;
-		if (!is_dir("data/backups/$version/$time")) throw new Exception("Backup does not exist");
-		self::synchronizeDatabase("data/backups/$version/$time", $local_domain);
+		if (!is_dir("$backups_path/$version/$time")) throw new Exception("Backup does not exist");
+		self::synchronizeDatabase("$backups_path/$version/$time", $local_domain);
 		$domains = include("conf/domains");
 		foreach ($domains as $domain=>$descr)
 			if ($domain <> $local_domain)
