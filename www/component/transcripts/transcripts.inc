@@ -395,5 +395,13 @@ class transcripts extends Component {
 		}
 	}
 	
+	public function getStudentGrades($people_id, $subjects_ids) {
+		return SQLQuery::create()
+			->select("StudentSubjectGrade")
+			->whereValue("StudentSubjectGrade", "people", $people_id)
+			->whereIn("StudentSubjectGrade", "subject", $subjects_ids)
+			->execute();
+	}
+	
 }
 ?>
