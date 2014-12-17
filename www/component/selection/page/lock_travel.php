@@ -69,10 +69,23 @@ function synchronizeDatabases() {
 	service.json("selection","lock_campaign",{reason:'travel'},function(res) {
 		if (!res || !res.token) { return; }
 		content.innerHTML = "Synchronizing your computer with the Database...";
-		ajax.post("http://127.0.0.1:8888/server_comm/download_database",{server:location.host,domain:<?php echo json_encode(PNApplication::$instance->local_domain);?>,username:<?php echo PNApplication::$instance->user_management->username;?>,session:<?php echo json_encode(session_id());?>,token:res.token},function(error) {
+		ajax.post("http://127.0.0.1:8888/server_comm/download_database",{
+			server:location.host,
+			domain:<?php echo json_encode(PNApplication::$instance->local_domain);?>,
+			username:<?php echo PNApplication::$instance->user_management->username;?>,
+			session:<?php echo json_encode(session_id());?>,
+			token:res.token,
+			campaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>
+		},function(error) {
 			content.innerHTML = "An error occured during the synchronization: "+error;
 			layout.changed(content);
 		},function(xhr) {
+			if (xhr.responseText != "OK") {
+				content.innerHTML = "An error occured during the synchronization of your computer:<br/>"+xhr.responseText;
+				service.json("selection","unlock_campaign",{},function(res) {
+				});
+				return;
+			}
 			content.innerHTML = "The campaign has been locked, and your computer is ready to travel.<br/>"+
 				"You can now use the address <a href='http://localhost:8888/' target='_blank'>http://localhost:8888/</a> to access it on your computer.<br/>";
 			popup.removeButtons();

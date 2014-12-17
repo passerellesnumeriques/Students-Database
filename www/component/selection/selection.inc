@@ -113,6 +113,10 @@ class selection extends Component {
 	 * @return integer | boolean $campaign_id the id of the campaign created, false if an error occured
 	 */
 	public function createCampaign($campaign_name){
+#SELECTION_TRAVEL
+#PNApplication::error("You cannot create a new campaign because you are on a travelling version.");
+#return;
+#END
 		$prev_id = $this->campaign_id;
 		$campaign_id = null;
 		$fields = array();
@@ -188,6 +192,10 @@ class selection extends Component {
 	 * Remove the campaign matching with the given ID, and all the linked data. Set the campaign_id attribute to null
 	 */
 	public function removeCampaign($id){
+#SELECTION_TRAVEL
+#PNApplication::error("You cannot remove a campaign because you are on a travelling version.");
+#return;
+#END
 		//check the rights
 		if(!PNApplication::$instance->user_management->has_right("manage_selection_campaign",true)){
 			PNApplication::error("You are not allowed to manage the selection campaigns");
@@ -240,6 +248,10 @@ class selection extends Component {
 	 * Set the name of the given campaign (id) to the given value (name) in the database
 	 */
 	public function renameCampaign($id, $name){
+#SELECTION_TRAVEL
+#PNApplication::error("You cannot rename a campaign because you are on a travelling version.");
+#return;
+#END
 		//check the rights
 		if(!PNApplication::$instance->user_management->has_right("manage_selection_campaign",true)){
 			PNApplication::error("You are not allowed to manage the selection campaigns");
@@ -249,6 +261,10 @@ class selection extends Component {
 	}
 	
 	public function freezeCampaign($reason) {
+#SELECTION_TRAVEL
+#PNApplication::error("You cannot lock a campaign because you are on a travelling version.");
+#return;
+#END
 		if ($reason == "travel") $reason = "Selection Team Travelling";
 		else if ($reason == "done") $reason = "Campaign Finished";
 		// lock every table in the sub-model
@@ -271,6 +287,10 @@ class selection extends Component {
 	}
 	
 	public function unfreezeCampaign() {
+#SELECTION_TRAVEL
+#PNApplication::error("You cannot unlock a campaign because you are on a travelling version.");
+#return;
+#END
 		// unlock all tables
 		require_once 'component/data_model/Model.inc';
 		require_once 'component/data_model/DataBaseLock.inc';

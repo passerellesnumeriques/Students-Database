@@ -3,6 +3,7 @@ $server = $_POST["server"];
 $domain = $_POST["domain"];
 $username = $_POST["username"];
 $session = $_POST["session"];
+$campaign_id = $_POST["campaign"];
 $token = $_POST["token"];
 $sms_path = realpath(dirname(__FILE__)."/../sms");
 $app_version = file_get_contents($sms_path."/version");
@@ -89,10 +90,28 @@ $zip = new ZipArchive();
 $zip->open(dirname(__FILE__)."/data/data.zip");
 $zip->extractTo(dirname(__FILE__)."/data/unzip");
 $zip->close();
+// copy configuration files sent by the server
+$dir = opendir(dirname(__FILE__)."/data/unzip/conf");
+while (($file = readdir($dir)) <> null) {
+	if (is_dir(dirname(__FILE__)."/data/unzip/conf/$file")) continue;
+	copy(dirname(__FILE__)."/data/unzip/conf/$file", $sms_path."/conf/$file");
+}
 // import backup in both database: init and domain
 set_include_path($sms_path);
+chdir($sms_path);
 require_once 'component/application/Backup.inc';
 require_once 'DataBaseSystem_MySQL.inc';
+require_once 'component/PNApplication.inc';
+if (PNApplication::$instance == null) {
+	PNApplication::$instance = new PNApplication();
+	PNApplication::$instance->local_domain = $domain;
+	PNApplication::$instance->current_domain = $domain;
+	PNApplication::$instance->init();
+}
+require_once("SQLQuery.inc");
+require_once("component/data_model/Model.inc");
+require_once("component/data_model/DataBaseLock.inc");
+
 $db_system = new DataBaseSystem_MySQL();
 $db_system->connect("localhost", "root", "", null, 8889);
 Backup::importBackupFrom(dirname(__FILE__)."/data/unzip", dirname(__FILE__)."/data/unzip/datamodel.json", $db_system, "selectiontravel_init", $sms_path."/data");
@@ -100,10 +119,17 @@ Backup::importBackupFrom(dirname(__FILE__)."/data/unzip", dirname(__FILE__)."/da
 // remove other users
 $db_system->execute("DELETE FROM `selectiontravel_init`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
-// copy configuration files sent by the server
-$dir = opendir(dirname(__FILE__)."/data/unzip/conf");
-while (($file = readdir($dir)) <> null) {
-	if (is_dir(dirname(__FILE__)."/data/unzip/conf/$file")) continue;
-	copy(dirname(__FILE__)."/data/unzip/conf/$file", $sms_path."/conf/$file");
+// remove any locks
+$db_system->execute("DELETE FROM `selectiontravel_$domain`.`DataLocks` WHERE 1");
+// lock other campaigns
+$campaigns = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->whereNotValue("SelectionCampaign","id",$campaign_id)->execute();
+if (count($campaigns) > 0) {
+	$locked_by = null;
+	$sm = DataModel::get()->getSubModel("SelectionCampaign");
+	foreach ($sm->internalGetTables() as $table)
+		foreach ($campaigns as $c)
+			DataBaseLock::lockTableForEver($table->getSQLNameFor($c["id"]), "You are on a travelling version, but not for this campaign", $locked_by);
 }
+if (PNApplication::hasErrors()) PNApplication::printErrors();
+else echo "OK";
 ?>
