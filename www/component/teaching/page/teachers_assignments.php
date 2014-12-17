@@ -737,7 +737,10 @@ class page_teachers_assignments extends Page {
 							td.appendChild(document.createTextNode(" + "));
 						}
 						var teacher = getTeacher(grouping.teachers[i].people_id);
-						td.appendChild(document.createTextNode(teacher.last_name+" "+teacher.first_name));
+						var span_teacher_name = document.createElement("SPAN");
+						span_teacher_name.appendChild(document.createTextNode(teacher.last_name+" "+teacher.first_name));
+						span_teacher_name.style.whiteSpace = 'nowrap';
+						td.appendChild(span_teacher_name);
 						if (grouping.teachers[i].hours != null) {
 							var teacher_hours_total = grouping.teachers[i].hours;
 							if (grouping.teachers[i].hours_type == "Per week") teacher_hours_total *= nb_weeks;
