@@ -93,6 +93,7 @@ class selection extends Component {
 	 * @return integer | boolean $campaign_id the id of the campaign created, false if an error occured
 	 */
 	public function createCampaign($campaign_name){
+		$prev_id = $this->campaign_id;
 		$campaign_id = null;
 		$fields = array();
 		$all_configs = include("config.inc");
@@ -105,6 +106,13 @@ class selection extends Component {
 		 * Cannot do a transaction because we are inserting tables (submodel) 
 		 */
 		try{
+			require_once 'component/data_model/DataBaseLock.inc';
+			$locked_by = null;
+			$lock_id = DataBaseLock::lockTable("SelectionCampaign", $locked_by);
+			if ($lock_id == null) {
+				PNApplication::error("We cannot create a new campaign right now because $locked_by is actually locking the selection campaigns. Please try again.");
+				return;
+			}
 			/* Create a calendar for this campaign */
 			$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("manage_information_session"=>true));
 			
@@ -117,14 +125,22 @@ class selection extends Component {
 				
 				/* Insert the default config in the database */
 				$default_config_rows = array();
-				foreach($all_configs as $name => $data)
+				$config = array();
+				foreach($all_configs as $name => $data) {
 					array_push($default_config_rows,array(
 						"name" => $name,
 						"value" => json_encode($data[1]),
 					));
+					$config[$name] = json_encode($data[1]);
+				}
 				SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->insertMultiple("SelectionCampaignConfig",$default_config_rows);
 				
 				$this->setCampaignId($campaign_id);
+
+				// save the config, to apply logic on every configuration
+				$this->saveConfig($config, $lock_id);
+				DataBaseLock::unlock($lock_id);
+				$lock_id = null;
 			}
 		} catch (Exception $e) {
 			PNApplication::error($e);
@@ -137,6 +153,10 @@ class selection extends Component {
 				SQLQuery::create()->bypassSecurity()->removeKey("Calendar",$calendar_id);
 			if($campaign_id <> null)
 				SQLQuery::create()->bypassSecurity()->removeKey("SelectionCampaign",$campaign_id);
+			if ($lock_id <> null)
+				DataBaseLock::unlock($lock_id);
+			if ($prev_id <> $this->campaign_id)
+				$this->setCampaignId($prev_id);
 			return false;
 		}
 		return $campaign_id;
