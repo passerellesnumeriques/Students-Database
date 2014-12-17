@@ -385,6 +385,14 @@ class page_teachers_assignments extends Page {
 			return span;
 		};
 
+		function hoursString(hours) {
+			var h = Math.floor(hours);
+			var s = h+"h";
+			var min = Math.floor((hours-h)*60);
+			if (min > 0) s += _2digits(min);
+			return s;
+		}
+
 		var periods = [];
 		function getTeacherAssignments(people_id) {
 			var list = [];
@@ -422,7 +430,7 @@ class page_teachers_assignments extends Page {
 				if (!total)
 					td.innerHTML = "<i>Not specified</i>";
 				else
-					td.appendChild(document.createTextNode((total/nb_weeks).toFixed(2)+"h/week x "+nb_weeks+" = "+total+"h"));
+					td.appendChild(document.createTextNode(hoursString(total/nb_weeks)+"/week x "+nb_weeks+" = "+total+"h"));
 				this.subjects.push(new SubjectGroupings(tr, subjects[i].grouping, subjects[i].subject));
 			}
 		}
@@ -1072,7 +1080,7 @@ class page_teachers_assignments extends Page {
 						else total += ta.hours;
 					}
 				}
-				td_hours.innerHTML = "<span style='font-size:8pt'><span style='font-weight:bold'>"+(total/nb_weeks).toFixed(2)+"h</span>/week x "+nb_weeks+" = <span style='font-weight:bold'>"+total+"h</span></span>";
+				td_hours.innerHTML = "<span style='font-size:8pt'><span style='font-weight:bold'>"+hoursString(total/nb_weeks)+"</span>/week x "+nb_weeks+" = <span style='font-weight:bold'>"+total+"h</span></span>";
 				layout.changed(td_hours);
 			};
 			this.update();
