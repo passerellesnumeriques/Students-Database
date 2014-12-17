@@ -7,10 +7,32 @@ $token = $_POST["token"];
 $sms_path = realpath(dirname(__FILE__)."/../sms");
 $app_version = file_get_contents($sms_path."/version");
 
+/**
+ * Remove a directory with its content
+ * @param string $path the directory to remove
+ */
+function removeDirectory($path) {
+	$dir = opendir($path);
+	while (($filename = readdir($dir)) <> null) {
+		if ($filename == ".") continue;
+		if ($filename == "..") continue;
+		if (is_dir($path."/".$filename))
+			self::removeDirectory($path."/".$filename);
+		else
+			unlink($path."/".$filename);
+	}
+	closedir($dir);
+	if (!@rmdir($path))
+		rmdir($path);
+}
+
 // first, reset our database
 $db = mysqli_connect("localhost","root","","",8889);
 mysqli_query($db, "DROP DATABASE `selectiontravel_$domain`");
 mysqli_query($db, "CREATE DATABASE `selectiontravel_$domain` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
+mysqli_query($db, "DROP DATABASE `selectiontravel_init`");
+mysqli_query($db, "CREATE DATABASE `selectiontravel_init` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
+mysqli_close($db);
 
 // write the config
 $f = fopen($sms_path."/install_config.inc","w");
@@ -43,7 +65,7 @@ curl_setopt($c, CURLOPT_TIMEOUT, 1000);
 set_time_limit(1100);
 $info = curl_exec($c);
 $info = json_decode($info, true);
-// TODO remove directory
+removeDirectory(dirname(__FILE__)."/data");
 @mkdir(dirname(__FILE__)."/data");
 $f = fopen(dirname(__FILE__)."/data/data.zip","w");
 for ($from = 0; $from < intval($info["size"]); ) {
@@ -61,13 +83,27 @@ for ($from = 0; $from < intval($info["size"]); ) {
 	fwrite($f, $data);
 }
 fclose($f);
-// TODO
-
-// download Google config
-// TODO
-
-// recover from backup
-// TODO
-
-mysqli_close($db);
+// extract the downloaded file
+mkdir(dirname(__FILE__)."/data/unzip");
+$zip = new ZipArchive();
+$zip->open(dirname(__FILE__)."/data/data.zip");
+$zip->extractTo(dirname(__FILE__)."/data/unzip");
+$zip->close();
+// import backup in both database: init and domain
+set_include_path($sms_path);
+require_once 'component/application/Backup.inc';
+require_once 'DataBaseSystem_MySQL.inc';
+$db_system = new DataBaseSystem_MySQL();
+$db_system->connect("localhost", "root", "", null, 8889);
+Backup::importBackupFrom(dirname(__FILE__)."/data/unzip", dirname(__FILE__)."/data/unzip/datamodel.json", $db_system, "selectiontravel_init", $sms_path."/data");
+Backup::importBackupFrom(dirname(__FILE__)."/data/unzip", dirname(__FILE__)."/data/unzip/datamodel.json", $db_system, "selectiontravel_$domain", $sms_path."/data");
+// remove other users
+$db_system->execute("DELETE FROM `selectiontravel_init`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
+$db_system->execute("DELETE FROM `selectiontravel_$domain`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
+// copy configuration files sent by the server
+$dir = opendir(dirname(__FILE__)."/data/unzip/conf");
+while (($file = readdir($dir)) <> null) {
+	if (is_dir(dirname(__FILE__)."/data/unzip/conf/$file")) continue;
+	copy(dirname(__FILE__)."/data/unzip/conf/$file", $sms_path."/conf/$file");
+}
 ?>

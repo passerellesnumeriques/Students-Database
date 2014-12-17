@@ -63,6 +63,21 @@ class Backup {
 	 * @return string the timestamp given to the backup
 	 */
 	public static function createBackup() {
+		global $pn_app_version;
+		@mkdir("data/backups");
+		@mkdir("data/backups/$pn_app_version");
+		$time = "".time();
+		$path = "data/backups/$pn_app_version/$time";
+		mkdir($path);
+		self::createBackupIn($path);
+		return $time;
+	}
+
+	/** Create a new backup of the database
+	 * @param string $path directory where to save the backup
+	 * @return string the timestamp given to the backup
+	 */
+	public static function createBackupIn($path) {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
 		if (PNApplication::$instance == null) {
@@ -71,12 +86,6 @@ class Backup {
 			PNApplication::$instance->current_domain = $local_domain;
 			PNApplication::$instance->init();
 		}
-		global $pn_app_version;
-		@mkdir("data/backups");
-		@mkdir("data/backups/$pn_app_version");
-		$time = "".time();
-		$path = "data/backups/$pn_app_version/$time";
-		mkdir($path);
 		mkdir($path."/db");
 		require_once("component/data_model/Model.inc");
 		require_once("SQLQuery.inc");
@@ -93,7 +102,6 @@ class Backup {
 		if (file_exists("data/$local_domain/custom_tables"))
 			self::zipDirectory(realpath("data/$local_domain/custom_tables"), realpath($path)."/custom_tables.zip", true);
 		touch($path."/ready");
-		return $time;
 	}
 	
 	/** Create a SQL file containing INSERT statements for each existing row in the given table
@@ -103,6 +111,18 @@ class Backup {
 	 * @param string $path directory where to save the content of the table
 	 */
 	private static function backupTable($table_spec, $table_name, $sub_model, $path) {
+		$f = fopen($path."/$table_name","w");
+		self::exportTable($table_spec, $table_name, $sub_model, $f);
+		fclose($f);
+		if (filesize($path."/$table_name") == 0) unlink($path."/$table_name");
+	}
+	/** Write to a file INSERT statements for each existing row in the given table
+	 * @param \datamodel\Table $table_spec the table to backup
+	 * @param string $table_name SQL name of the table
+	 * @param number|null $sub_model the sub model instance
+	 * @param resource $f the file to write to
+	 */
+	public static function exportTable($table_spec, $table_name, $sub_model, $f) {
 		set_time_limit(600);
 		$cols = $table_spec->internalGetColumnsFor($sub_model);
 		$cols_names = "";
@@ -117,7 +137,6 @@ class Backup {
 		$res = $db->execute($sql);
 		$row = $db->nextRow($res);
 		if ($row <> null) {
-			$f = fopen($path."/$table_name","w");
 			$insert_sql = "INSERT INTO `".$table_name."` ($cols_names) VALUES\n";
 			fwrite($f, $insert_sql);
 			$row_count = 0;
@@ -146,7 +165,6 @@ class Backup {
 				}
 			} while ($row <> null);
 			fwrite($f, ";");
-			fclose($f);
 		}
 	}
 	
@@ -348,7 +366,7 @@ class Backup {
 	 * @param string $dm_version the version of the DataModel
 	 * @return boolean true on success
 	 */
-	public static function importBackup($time, $version, $dm_version) {
+	public static function importBackup($time, $version, $dm_version, $domain) {
 		// first, we need the datamodel, so we can create sub model tables
 		if (!file_exists("data/datamodels")) mkdir("data/datamodels");
 		if (!file_exists("data/datamodels/datamodel_".$dm_version.".json")) {
@@ -373,16 +391,6 @@ class Backup {
 				return false;
 			}
 		}
-		// get the datamodel specification
-		$json = file_get_contents("data/datamodels/datamodel_$dm_version.json");
-		if ($json == null) return false;
-		$json = json_decode($json, true);
-		if ($json == null) {
-			PNApplication::error("Invalid DataModel JSON specification");
-			return false;
-		}
-		$spec = $json["result"];
-		$model = $spec["model"];
 		// connect to Database
 		set_time_limit(30);
 		global $db_config;
@@ -399,18 +407,31 @@ class Backup {
 			}
 			return false;
 		}
-		$db_system->execute("USE ".$db_config["prefix"].$domain);
+		return importBackupFrom(realpath("data/backups/$version/$time"), "data/datamodels/datamodel_$dm_version.json", $db_system, $db_config["prefix"].$domain, realpath("data"));
+	}
+	public static function importBackupFrom($backup_path, $datamodel_json_path, $db_system, $db_name, $target) {
+		// get the datamodel specification
+		$json = file_get_contents($datamodel_json_path);
+		if ($json == null) return false;
+		$json = json_decode($json, true);
+		if ($json == null) {
+			PNApplication::error("Invalid DataModel JSON specification");
+			return false;
+		}
+		$spec = $json["result"];
+		$model = $spec["model"];
+		$db_system->execute("USE ".$db_name);
 		// extract Database backup
 		set_time_limit(60);
 		if (file_exists("data/recover")) self::removeDirectory("data/recover");
-		mkdir("data/recover");
-		mkdir("data/recover/db");
+		mkdir("$target/recover");
+		mkdir("$target/recover/db");
 		require_once("component/application/service/deploy_utils.inc");
-		unzipFile(realpath("data/backups/$version/$time/db.zip"), realpath("data/recover/db"));
+		unzipFile("$backup_path/db.zip", realpath("$target/recover/db"));
 		// import tables on root model
 		foreach ($model["tables"] as $table) {
-			if (file_exists("data/recover/db/".$table["name"])) {
-				DataBaseUtilities::importSQL($db_system, "data/recover/db/".$table["name"]);
+			if (file_exists("$target/recover/db/".$table["name"])) {
+				DataBaseUtilities::importSQL($db_system, "$target/recover/db/".$table["name"]);
 			}
 		}
 		// import sub models
@@ -432,26 +453,26 @@ class Backup {
 				while (($row = $db_system->nextRowArray($res)) <> null) {
 					$sm_instance = $row[0];
 					foreach ($sm["tables"] as $table) {
-						if (file_exists("data/recover/db/".$table["name"]."_".$sm_instance)) {
-							DataBaseUtilities::importSQL($db_system, "data/recover/db/".$table["name"]."_".$sm_instance);
+						if (file_exists("$target/recover/db/".$table["name"]."_".$sm_instance)) {
+							DataBaseUtilities::importSQL($db_system, "$target/recover/db/".$table["name"]."_".$sm_instance);
 						}
 					}
 				}
 		}
 		
-		@mkdir("data/$domain");
+		@mkdir("$target/$domain");
 		// recover custom tables
-		if (file_exists("data/$domain/custom_tables")) self::removeDirectory("data/$domain/custom_tables");
-		if (file_exists("$directory/custom_tables.zip")) {
-			mkdir("data/$domain/custom_tables");
-			unzipFile(realpath("data/backups/$version/$time/custom_tables.zip"), realpath("data/$domain/custom_tables"));
+		if (file_exists("$target/$domain/custom_tables")) self::removeDirectory("$target/$domain/custom_tables");
+		if (file_exists("$backup_path/custom_tables.zip")) {
+			mkdir("$target/$domain/custom_tables");
+			unzipFile("$backup_path/custom_tables.zip", realpath("$target/$domain/custom_tables"));
 		}
 		// recover storage
-		if (file_exists("data/$domain/storage")) self::removeDirectory("data/$domain/storage");
-		mkdir("data/$domain/storage");
+		if (file_exists("$target/$domain/storage")) self::removeDirectory("$target/$domain/storage");
+		mkdir("$target/$domain/storage");
 		set_time_limit(60*60);
-		unzipFile(realpath("data/backups/$version/$time/storage.zip"), realpath("data/$domain/storage"));
-		if (file_exists("data/$domain/storage/empty")) rmdir("data/$domain/storage/empty");
+		unzipFile("$backup_path/storage.zip", realpath("$target/$domain/storage"));
+		if (file_exists("$target/$domain/storage/empty")) rmdir("$target/$domain/storage/empty");
 		return true;
 	}
 	

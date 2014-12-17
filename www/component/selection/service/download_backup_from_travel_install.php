@@ -30,14 +30,51 @@ class service_download_backup_from_travel_install extends Service {
 		PNApplication::$instance->application->updateTemporaryData($id, $value);
 		
 		if ($_GET["type"] == "get_info") {
-			// TODO generate the backup, with only needed stuff
-			// TODO store it using storage
-			// TODO send file size and id
+			// generate the backup
+			require_once 'component/application/Backup.inc';
+			$path = realpath("data")."/tmp_backup_for_selection_travel";
+			if (file_exists($path)) Backup::removeDirectory($path);
+			Backup::createBackupIn($path);
+			// generate the datamodel
+			require_once 'component/data_model/Model.inc';
+			require_once 'component/data_model/DataModelJSON.inc';
+			$f = fopen($path."/datamodel.json","w");
+			fwrite($f, DataModelJSON::model(DataModel::get()));
+			fclose($f);
+			// include Google config
+			mkdir($path."/conf");
+			if (file_exists("conf/google.inc")) {
+				$conf = include("conf/google.inc");
+				if (isset($conf["service_key"])) copy("conf/".$conf["service_key"], $path."/conf/".$conf["service_key"]);
+				$conf["service_key_admin"] = null;
+				$f = fopen($path."/conf/google.inc");
+				fwrite($f, "<?php return ".var_export($conf,true).";?>");
+				fclose($f);
+			}
+			// create a file using storage
+			$store_id = PNApplication::$instance->storage->store_data("temp", "", null, time()+60*60);
+			$file = PNApplication::$instance->storage->get_data_path($store_id);
+			// create the final zip file
+			unlink($file);
+			Backup::zipDirectory($path, $file);
+			// remove temp files
+			Backup::removeDirectory($path);
+			// send size and id
+			echo "{size:".filesize($file).",id:".$store_id."}";
 		} else if ($_GET["type"] == "download") {
-			$file_id = $_POST["id"];
+			$store_id = $_POST["id"];
 			$from = $_POST["from"];
 			$to = $_POST["to"];
-			// TODO send part of the file according to given range
+			$file = PNApplication::$instance->storage->get_data_path($store_id);
+			$f = fopen($file,"r");
+			fseek($f, $from, SEEK_SET);
+			while ($from <= $to) {
+				$part = fread($f, $to-$from+1);
+				if ($part === false) break;
+				echo $part;
+				$from += strlen($part);
+			}
+			fclose($f);
 		}
 	}
 	
