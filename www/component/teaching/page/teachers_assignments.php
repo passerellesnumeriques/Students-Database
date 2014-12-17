@@ -216,8 +216,8 @@ class page_teachers_assignments extends Page {
 		}
 		?>
 		</div>
-		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white;overflow:auto;' icon='/static/teaching/teacher_16.png' title='Available Teachers' collapsable='false'>
-		<div id='teachers_list' style='background-color:white'>
+		<div id='teachers_section' style='display:inline-block;flex:1 0 auto;min-width:0px;background-color:white;overflow-y:auto;overflow-x:hidden;' icon='/static/teaching/teacher_16.png' title='Available Teachers' collapsable='false'>
+		<div id='teachers_list' style='background-color:white;margin-right:15px;'>
 		<?php $teachers_table_id = $this->generateID();?>
 		<table class='teachers_table'><tbody id='<?php echo $teachers_table_id;?>'>
 		<tr><th>Teacher</th><th>Hours</th></tr>
@@ -417,6 +417,7 @@ class page_teachers_assignments extends Page {
 			for (var i = 0; i < subjects.length; ++i) {
 				table.appendChild(tr = document.createElement("TR"));
 				tr.appendChild(td = document.createElement("TD"));
+				td.style.whiteSpace = 'nowrap';
 				td.appendChild(document.createTextNode(subjects[i].subject.code));
 				tr.appendChild(td = document.createElement("TD"));
 				td.appendChild(document.createTextNode(subjects[i].subject.name));
@@ -1069,7 +1070,7 @@ class page_teachers_assignments extends Page {
 				window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+this.teacher.id,null,95,95);
 			};
 			var td_hours = document.createElement("TD"); tr.appendChild(td_hours);
-			//td_hours.style.whiteSpace = "nowrap";
+			td_hours.style.whiteSpace = "nowrap";
 			this.update = function() {
 				var total = 0;
 				var list = getTeacherAssignments(teacher.id);
