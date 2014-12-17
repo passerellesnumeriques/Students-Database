@@ -1,71 +1,19 @@
 <?php 
 if (!file_exists("data/domains_synch")) mkdir("data/domains_synch");
 
+require_once("component/application/RemoteAccess.inc");
+
 function getDomainVersion($domain) {
 	$remote_access = include("conf/$domain.remote");
-	$c = curl_init($remote_access["url"]."dynamic/application/service/get_backup");
-	if (file_exists("conf/proxy")) include("conf/proxy");
-	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-	curl_setopt($c, CURLOPT_HEADER, TRUE);
-	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-	curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_list"));
-	curl_setopt($c, CURLOPT_HTTPHEADER, array("User-Agent: Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain));
-	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-	curl_setopt($c, CURLOPT_TIMEOUT, 30);
-	$result = curl_exec($c);
-	if ($result === false) {
-		PNApplication::error("Connection to domain $domain: ".curl_error($c));
-		curl_close($c);
-		return null;
-	}
-	curl_close($c);
-	
-	$i = strpos($result, "pn_version_changed:");
-	if ($i === false) {
-		PNApplication::error("We can connect to the URL of domain $domain, but this is not Students Management Software");
-		return null;
-	}
-	$result = substr($result,$i+19);
-	$i = strpos($result,"\n");
-	$version = trim(substr($result,0,$i));
-	return $version;
+	return RemoteAccess::getDomainVersion($domain, $remote_access["url"]);
 }
 
 function getLatestBackup($domain, $version, $app_version) {
 	$remote_access = include("conf/$domain.remote");
-	$c = curl_init($remote_access["url"]."dynamic/application/service/get_backup");
-	if (file_exists("conf/proxy")) include("conf/proxy");
-	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-	curl_setopt($c, CURLOPT_HEADER, FALSE);
-	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-	curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_list","password"=>$remote_access["password"]));
-	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-	curl_setopt($c, CURLOPT_TIMEOUT, 30);
-	curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version","User-Agent: Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain));
-	$result = curl_exec($c);
-	if ($result === false) {
-		PNApplication::error("Connection to domain $domain: ".curl_error($c));
-		curl_close($c);
-		return null;
-	}
-	curl_close($c);
-
-	$backups = json_decode($result, true);
-	if ($backups == null) {
-		PNApplication::error("Invalid response of domain $domain");
-		return null;
-	}
-	if ($backups["result"] == null) {
-		PNApplication::error("Access denied for domain $domain");
-		return null;
-	}
-	if (!is_array($backups["result"])) {
-		PNApplication::error("Invalid response of domain $domain");
-		return null;
-	}
+	$backups = RemoteAccess::getBackupList($domain, $app_version, $remote_access["url"], $remote_access["password"]);
 	$latest = null;
 	global $pn_app_version;
-	foreach ($backups["result"] as $backup) {
+	foreach ($backups as $backup) {
 		if ($backup["version"] <> $pn_app_version) continue;
 		$time = intval($backup["time"]);
 		if ($latest == null || $latest < $time) $latest = $time;
@@ -75,41 +23,7 @@ function getLatestBackup($domain, $version, $app_version) {
 
 function getBackupFileSize($domain, $version, $time, $file, $app_version) {
 	$remote_access = include("conf/$domain.remote");
-	$c = curl_init($remote_access["url"]."dynamic/application/service/get_backup?get_size=true");
-	if (file_exists("conf/proxy")) include("conf/proxy");
-	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-	curl_setopt($c, CURLOPT_HEADER, TRUE);
-	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-	curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_backup","password"=>$remote_access["password"],"version"=>$version,"time"=>$time,"file"=>$file));
-	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-	curl_setopt($c, CURLOPT_TIMEOUT, 30);
-	curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version","User-Agent: Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain));
-	$result = curl_exec($c);
-	if ($result === false) {
-		PNApplication::error("Connection to domain $domain: ".curl_error($c));
-		curl_close($c);
-		return null;
-	}
-	curl_close($c);
-	if (strpos($result, "HTTP/1.0 404") !== false)
-		return -1;
-	$i = strpos($result, "File-Size:");
-	if ($i === false) {
-		PNApplication::error("Invalid response of domain $domain");
-		return null;
-	}
-	$result = substr($result, $i+10);
-	$i = strpos($result, "\n");
-	if ($i === false) {
-		PNApplication::error("Invalid response of domain $domain");
-		return null;
-	}
-	$result = trim(substr($result,0,$i));
-	if (!is_numeric($result)) {
-		PNApplication::error("Invalid response of domain $domain");
-		return null;
-	}
-	return intval($result);
+	return RemoteAccess::getBackupFileSize($domain, $app_version, $remote_access["url"], $remote_access["password"], $version, $time, $file);
 }
 
 function getBackupFiles($domain, $version, $time, $app_version) {
@@ -125,26 +39,7 @@ function getBackupFiles($domain, $version, $time, $app_version) {
 
 function downloadBackup($domain, $version, $time, $file, $from, $to, $target, $app_version, $max_time) {
 	$remote_access = include("conf/$domain.remote");
-	$c = curl_init($remote_access["url"]."dynamic/application/service/get_backup");
-	if (file_exists("conf/proxy")) include("conf/proxy");
-	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-	curl_setopt($c, CURLOPT_HEADER, FALSE);
-	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-	curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_backup","password"=>$remote_access["password"],"version"=>$version,"time"=>$time,"file"=>$file));
-	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-	curl_setopt($c, CURLOPT_TIMEOUT, $max_time);
-	curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version","Range: bytes=".$from."-".$to,"User-Agent: Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain));
-	$result = curl_exec($c);
-	if ($result === false) {
-		PNApplication::error("Download $file from domain $domain: ".curl_error($c));
-		curl_close($c);
-		return 0;
-	}
-	curl_close($c);
-	$f = fopen($target, "a");
-	fwrite($f, $result);
-	fclose($f);
-	return strlen($result);
+	return RemoteAccess::downloadBackupFileRange($domain, $app_version, $remote_access["url"], $remote_access["password"], $version, $time, $file, $from, $to, $target, $max_time);
 }
 
 $start = time();

@@ -94,6 +94,46 @@ class page_db_tools extends Page {
 			Reset database and import data from backup:<ul id='backups_versions_list'>
 			</ul>
 			<div id='backups_loading_datamodels'><img src='<?php echo theme::$icons_16["loading"];?>'/> Searching previous datamodels...</div>
+			Backups from installed software:<ul>
+				<?php
+				foreach (PNApplication::$instance->getDomains() as $domain=>$conf) {
+					echo "<li>$domain:";
+					$domain_backups = array();
+					if (file_exists("data/imported_backups/$domain")) {
+						$domain_dir = opendir("data/imported_backups/$domain");
+						while (($version = readdir($domain_dir)) <> null) {
+							if (substr($version,0,1) == ".") continue;
+							if (!is_dir("data/imported_backups/$domain/$version")) continue;
+							$version_dir = opendir("data/imported_backups/$domain/$version");
+							while (($ts = readdir($version_dir)) <> null) {
+								if (substr($ts,0,1) == ".") continue;
+								if (!is_dir("data/imported_backups/$domain/$version/$ts")) continue;
+								if (!ctype_digit($ts)) continue;
+								if (!file_exists("data/imported_backups/$domain/$version/$ts/download_complete")) continue;
+								if (!isset($domain_backups[$version])) $domain_backups[$version] = array();
+								array_push($domain_backups[$version], $ts);
+							}
+							closedir($version_dir);
+						}
+						closedir($domain_dir);
+					}
+					if (count($domain_backups) == 0)
+						echo "No backup imported yet.<br/>";
+					else {
+						echo "<ul>";
+						foreach ($domain_backups as $version=>$list) {
+							echo "<li>Version $version:<ul>";
+							foreach ($list as $ts)
+								echo "<li><a href='#' onclick=\"recoverBackup('$version','$ts','current','$domain');return false;\">".date("Y-m-d h:i", $ts)."</a></li>";
+							echo "</ul></li>";
+						}
+						echo "</ul>";
+					}
+					echo "<a href='#' onclick=\"importBackupFromDomain('$domain');return false;\">Import a backup</a>";
+					echo "</li>";
+				} 
+				?>
+			</ul>
 		</div>
 		<div class='footer'>
 			<button class='action' onclick='createBackup();'>Create New Backup</button>
@@ -205,10 +245,12 @@ function createBackup() {
 	});
 }
 
-function recoverBackup(version, time, model_version) {
+function recoverBackup(version, time, model_version, imported_from_domain) {
 	resetDB(model_version,function() {
 		var locker = lock_screen(null, "Importing backup...");
-		service.json("development","recover",{version:version,time:time,datamodel_version:model_version},function(res) {
+		var data = {version:version,time:time,datamodel_version:model_version};
+		if (imported_from_domain) data.imported_from = imported_from_domain;
+		service.json("development","recover",data,function(res) {
 			unlock_screen(locker);
 		});
 	});
@@ -313,6 +355,10 @@ require("deploy_utils.js",function() {
 		downloadNext(0);
 	});
 });
+
+function importBackupFromDomain(domain) {
+	location.href = "/dynamic/development/page/import_backup?domain="+domain;
+}
 </script>
 <?php 
 	}
