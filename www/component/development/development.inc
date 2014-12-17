@@ -11,6 +11,7 @@ class development extends Component {
 		//Component::allowPageWithoutLogin("development", "tools");
 		Component::allowPageWithoutLogin("development", "reset_db");
 		Component::allowPageWithoutLogin("development", "db_tools");
+		Component::allowPageWithoutLogin("development", "import_backup");
 		Component::allowPageWithoutLogin("development", "clean_storage");
 		Component::allowPageWithoutLogin("development", "export_storage");
 		//Component::allowPageWithoutLogin("development", "export_data");

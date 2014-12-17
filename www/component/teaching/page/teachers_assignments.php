@@ -216,8 +216,8 @@ class page_teachers_assignments extends Page {
 		}
 		?>
 		</div>
-		<div id='teachers_section' style='display:inline-block;flex:1 1 auto;background-color:white;overflow:auto;' icon='/static/teaching/teacher_16.png' title='Available Teachers' collapsable='false'>
-		<div id='teachers_list' style='background-color:white'>
+		<div id='teachers_section' style='display:inline-block;flex:1 0 auto;min-width:0px;background-color:white;overflow-y:auto;overflow-x:hidden;' icon='/static/teaching/teacher_16.png' title='Available Teachers' collapsable='false'>
+		<div id='teachers_list' style='background-color:white;margin-right:15px;'>
 		<?php $teachers_table_id = $this->generateID();?>
 		<table class='teachers_table'><tbody id='<?php echo $teachers_table_id;?>'>
 		<tr><th>Teacher</th><th>Hours</th></tr>
@@ -385,6 +385,14 @@ class page_teachers_assignments extends Page {
 			return span;
 		};
 
+		function hoursString(hours) {
+			var h = Math.floor(hours);
+			var s = h+"h";
+			var min = Math.floor((hours-h)*60);
+			if (min > 0) s += _2digits(min);
+			return s;
+		}
+
 		var periods = [];
 		function getTeacherAssignments(people_id) {
 			var list = [];
@@ -409,6 +417,7 @@ class page_teachers_assignments extends Page {
 			for (var i = 0; i < subjects.length; ++i) {
 				table.appendChild(tr = document.createElement("TR"));
 				tr.appendChild(td = document.createElement("TD"));
+				td.style.whiteSpace = 'nowrap';
 				td.appendChild(document.createTextNode(subjects[i].subject.code));
 				tr.appendChild(td = document.createElement("TD"));
 				td.appendChild(document.createTextNode(subjects[i].subject.name));
@@ -422,7 +431,7 @@ class page_teachers_assignments extends Page {
 				if (!total)
 					td.innerHTML = "<i>Not specified</i>";
 				else
-					td.appendChild(document.createTextNode((total/nb_weeks).toFixed(2)+"h/week x "+nb_weeks+" = "+total+"h"));
+					td.appendChild(document.createTextNode(hoursString(total/nb_weeks)+"/week x "+nb_weeks+" = "+total+"h"));
 				this.subjects.push(new SubjectGroupings(tr, subjects[i].grouping, subjects[i].subject));
 			}
 		}
@@ -720,21 +729,25 @@ class page_teachers_assignments extends Page {
 					assign.ondomremoved(function(e){e.t=null;});
 					<?php } ?>
 				} else {
-					var remaining_period = subject.hours;
-					if (subject.hours_type == "Per week") remaining_period *= nb_weeks;
+					var total_subject_hours = subject.hours;
+					if (subject.hours_type == "Per week") total_subject_hours *= nb_weeks;
+					var remaining_period = total_subject_hours;
 					for (var i = 0; i < grouping.teachers.length; ++i) {
 						if (i > 0) {
 							td.appendChild(document.createElement("BR"));
 							td.appendChild(document.createTextNode(" + "));
 						}
 						var teacher = getTeacher(grouping.teachers[i].people_id);
-						td.appendChild(document.createTextNode(teacher.last_name+" "+teacher.first_name));
+						var span_teacher_name = document.createElement("SPAN");
+						span_teacher_name.appendChild(document.createTextNode(teacher.last_name+" "+teacher.first_name));
+						span_teacher_name.style.whiteSpace = 'nowrap';
+						td.appendChild(span_teacher_name);
 						if (grouping.teachers[i].hours != null) {
-							td.appendChild(document.createTextNode("("+grouping.teachers[i].hours+"h"+(grouping.teachers[i].hours_type == "Per week" ? "/week" : "")+")"));
-							if (grouping.teachers[i].hours_type == "Per week")
-								remaining_period -= grouping.teachers[i].hours*nb_weeks;
-							else
-								remaining_period -= grouping.teachers[i].hours;
+							var teacher_hours_total = grouping.teachers[i].hours;
+							if (grouping.teachers[i].hours_type == "Per week") teacher_hours_total *= nb_weeks;
+							if (teacher_hours_total < total_subject_hours)
+								td.appendChild(document.createTextNode("("+grouping.teachers[i].hours+"h"+(grouping.teachers[i].hours_type == "Per week" ? "/week" : "")+")"));
+							remaining_period -= teacher_hours_total;
 						} else
 							remaining_period = 0;
 						<?php if ($can_edit) { ?>
@@ -1057,7 +1070,7 @@ class page_teachers_assignments extends Page {
 				window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+this.teacher.id,null,95,95);
 			};
 			var td_hours = document.createElement("TD"); tr.appendChild(td_hours);
-			//td_hours.style.whiteSpace = "nowrap";
+			td_hours.style.whiteSpace = "nowrap";
 			this.update = function() {
 				var total = 0;
 				var list = getTeacherAssignments(teacher.id);
@@ -1071,7 +1084,7 @@ class page_teachers_assignments extends Page {
 						else total += ta.hours;
 					}
 				}
-				td_hours.innerHTML = "<span style='font-size:8pt'><span style='font-weight:bold'>"+(total/nb_weeks).toFixed(2)+"h</span>/week x "+nb_weeks+" = <span style='font-weight:bold'>"+total+"h</span></span>";
+				td_hours.innerHTML = "<span style='font-size:8pt'><span style='font-weight:bold'>"+hoursString(total/nb_weeks)+"</span>/week x "+nb_weeks+" = <span style='font-weight:bold'>"+total+"h</span></span>";
 				layout.changed(td_hours);
 			};
 			this.update();
