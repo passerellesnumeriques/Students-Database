@@ -318,14 +318,14 @@ class SubDataModel extends DataModel {
 		return null;
 	}
 	
-	public function createTables($key) {
+	public function createTables($key, $db_system = null) {
 		if (SQLQuery::isTransactionStarted()) {
 			PNApplication::error("You cannot insert in a table which is the key for a SubDataModel, if you are in a transaction: ".$this->getParentTable());
 			return;
 		}
 		require_once("DataBaseUtilities.inc");
 		foreach ($this->tables as $t)
-			DataBaseUtilities::createTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
+			DataBaseUtilities::createTable($db_system == null ? SQLQuery::getDataBaseAccessWithoutSecurity() : $db_system, $t, "_".$key);
 		if ($this->instances <> null)
 			array_push($this->instances, $key);
 	}

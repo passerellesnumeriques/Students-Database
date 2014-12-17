@@ -248,7 +248,9 @@ class PNApplication {
 #foreach (self::getOrderedComponentsNames() as $c) $this->components[$c]->init();
 #END
 #SELECTION_TRAVEL
-#$this->components["user_management"]->login("","","");
+#global $installing_selection_travel;
+#$installing_selection_travel = @$installing_selection_travel;
+#if (!$installing_selection_travel) $this->components["user_management"]->login("","","");
 #END
 		$this->initRequest();
 	}

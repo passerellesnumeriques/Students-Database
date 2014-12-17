@@ -77,7 +77,7 @@ class Backup {
 	 * @param string $path directory where to save the backup
 	 * @return string the timestamp given to the backup
 	 */
-	public static function createBackupIn($path) {
+	public static function createBackupIn($path, $filters_sub_models = null, $filter_storage = false) {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
 		if (PNApplication::$instance == null) {
@@ -86,19 +86,47 @@ class Backup {
 			PNApplication::$instance->current_domain = $local_domain;
 			PNApplication::$instance->init();
 		}
+		$storage_ids = array();
 		mkdir($path."/db");
 		require_once("component/data_model/Model.inc");
 		require_once("SQLQuery.inc");
-		foreach (DataModel::get()->internalGetTables(false) as $table)
-			self::backupTable($table, $table->getName(), null, $path."/db");
-		foreach (DataModel::get()->getSubModels() as $sm)
-			foreach ($sm->getExistingInstances() as $sub_model)
-				foreach ($sm->internalGetTables() as $table)
-					self::backupTable($table, $table->getSQLNameFor($sub_model), $sub_model, $path."/db");
+		foreach (DataModel::get()->internalGetTables(false) as $table) {
+			if ($filters_sub_models <> null && isset($filters_sub_models[$table->getName()])) $filter = $filters_sub_models[$table->getName()];
+			else $filter = null;
+			$ids = self::backupTable($table, $table->getName(), null, $path."/db", $filter);
+			if ($filter_storage !== false) $storage_ids = array_merge($storage_ids, $ids);
+		}
+		foreach (DataModel::get()->getSubModels() as $sm) {
+			if ($filters_sub_models <> null && array_key_exists($sm->getParentTable(), $filters_sub_models)) $filter = $filters_sub_models[$sm->getParentTable()];
+			else $filter = null;
+			foreach ($sm->getExistingInstances() as $sub_model) {
+				if ($filter <> null && !in_array($sub_model, $filter)) continue;
+				foreach ($sm->internalGetTables() as $table) {
+					$ids = self::backupTable($table, $table->getSQLNameFor($sub_model), $sub_model, $path."/db");
+					if ($filter_storage !== false) $storage_ids = array_merge($storage_ids, $ids);
+				}
+			}
+		}
 		self::zipDirectory(realpath($path)."/db", realpath($path)."/db.zip");
 		self::removeDirectory($path."/db");
 		set_time_limit(60*60);
-		self::zipDirectory(realpath("data/$local_domain/storage"), realpath($path)."/storage.zip", true);
+		if ($filter_storage === false)
+			self::zipDirectory(realpath("data/$local_domain/storage"), realpath($path)."/storage.zip", true);
+		else {
+			if ($filter_storage !== true) {
+				if (count($storage_ids) > 0)
+					$storage_ids = SQLQuery::create()->bypassSecurity()->select("Storage")->whereIn("Storage","id",$storage_ids)->whereIn("Storage","type",$filter_storage)->field("id")->executeSingleField();
+			}
+			mkdir($path."/storage");
+			set_time_limit(30+count($storage_ids)*2);
+			foreach ($storage_ids as $id) {
+				$p = storage::get_data_path_in_storage($id);
+				$i = strrpos($p, "/");
+				mkdir($path."/storage/".substr($p,0,$i), null, true);
+				copy(storage::storage_path()."/".$p, $path."/storage/".$p);
+			}
+			self::zipDirectory(realpath($path."/storage"), realpath($path)."/storage.zip", true);
+		}
 		if (file_exists("data/$local_domain/custom_tables"))
 			self::zipDirectory(realpath("data/$local_domain/custom_tables"), realpath($path)."/custom_tables.zip", true);
 		touch($path."/ready");
@@ -109,27 +137,35 @@ class Backup {
 	 * @param string $table_name SQL name of the table
 	 * @param number|null $sub_model the sub model instance
 	 * @param string $path directory where to save the content of the table
+	 * @return array list of storage id found
 	 */
-	private static function backupTable($table_spec, $table_name, $sub_model, $path) {
+	private static function backupTable($table_spec, $table_name, $sub_model, $path, $filter_ids = null) {
 		$f = fopen($path."/$table_name","w");
-		self::exportTable($table_spec, $table_name, $sub_model, $f);
+		$list = self::exportTable($table_spec, $table_name, $sub_model, $f, $filter_ids);
 		fclose($f);
 		if (filesize($path."/$table_name") == 0) unlink($path."/$table_name");
+		return $list;
 	}
 	/** Write to a file INSERT statements for each existing row in the given table
 	 * @param \datamodel\Table $table_spec the table to backup
 	 * @param string $table_name SQL name of the table
 	 * @param number|null $sub_model the sub model instance
 	 * @param resource $f the file to write to
+	 * @return array list of storage id found
 	 */
-	public static function exportTable($table_spec, $table_name, $sub_model, $f) {
+	public static function exportTable($table_spec, $table_name, $sub_model, $f, $filter_ids = null) {
+		$storage_ids = array();
 		set_time_limit(600);
 		$cols = $table_spec->internalGetColumnsFor($sub_model);
+		$cols_storage = array();
 		$cols_names = "";
 		$first = true;
 		foreach ($cols as $col) {
 			if ($first) $first = false; else $cols_names .= ",";
 			$cols_names .= "`".$col->name."`";
+			if ($col instanceof datamodel\ForeignKey)
+				if ($col->foreign_table == "Storage")
+					array_push($cols_storage, $col->name);
 		}
 		global $db_config;
 		$sql = "SELECT $cols_names FROM `".$db_config["prefix"].PNApplication::$instance->local_domain."`.`$table_name`";
@@ -138,34 +174,44 @@ class Backup {
 		$row = $db->nextRow($res);
 		if ($row <> null) {
 			$insert_sql = "INSERT INTO `".$table_name."` ($cols_names) VALUES\n";
-			fwrite($f, $insert_sql);
+			$first_row = true;
 			$row_count = 0;
 			do {
-				$line = "";
-				if ($row_count > 0) $line .= ",";
-				$line .= "(";
-				$first_col = true;
-				foreach ($cols as $col) {
-					if ($first_col) $first_col = false; else $line .= ",";
-					$val = $row[$col->name];
-					if ($val === null) $line .= "NULL";
-					else {
-						if ($col instanceof datamodel\ColumnBoolean)
-							$line .= "b";
-						$line .= "'".$db->escapeString($val)."'";
+				if ($filter_ids == null || in_array($row[$table_spec->getPrimaryKey()->name], $filter_ids)) {
+					if ($first_row) {
+						$first_row = false;
+						fwrite($f, $insert_sql);
 					}
+					$line = "";
+					if ($row_count > 0) $line .= ",";
+					$line .= "(";
+					$first_col = true;
+					foreach ($cols as $col) {
+						if ($first_col) $first_col = false; else $line .= ",";
+						$val = $row[$col->name];
+						if ($val === null) $line .= "NULL";
+						else {
+							if ($col instanceof datamodel\ColumnBoolean)
+								$line .= "b";
+							$line .= "'".$db->escapeString($val)."'";
+						}
+					}
+					$line .= ")\n";
+					fwrite($f, $line);
+					foreach ($cols_storage as $col_name)
+						if ($row[$col_name] <> null) array_push($storage_ids, $row[$col_name]);
+					$row_count++;
 				}
-				$line .= ")\n";
-				fwrite($f, $line);
 				$row = $db->nextRow($res);
-				$row_count++;
 				if ($row <> null && $row_count >= 1000) {
 					fwrite($f, ";\n".$insert_sql);
 					$row_count = 0;
 				}
 			} while ($row <> null);
-			fwrite($f, ";");
+			if (!$first_row)
+				fwrite($f, ";");
 		}
+		return $storage_ids;
 	}
 	
 	/** Add the content of a directory into a ZIP file
@@ -253,11 +299,13 @@ class Backup {
 		global $pn_app_version;
 		if ($version == null) $version = $pn_app_version;
 		if (!is_dir("$backups_path/$version/$time")) throw new Exception("Backup does not exist");
-		self::synchronizeDatabase("$backups_path/$version/$time", $local_domain);
+		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+		global $db_config;
+		self::synchronizeDatabase("$backups_path/$version/$time", $local_domain, $db, $db_config["prefix"].$local_domain);
 		$domains = include("conf/domains");
 		foreach ($domains as $domain=>$descr)
 			if ($domain <> $local_domain)
-				self::synchronizeDatabase(null, $domain);
+				self::synchronizeDatabase(null, $domain, $db, $db_config["prefix"].$domain);
 	}
 	
 	/**
@@ -265,7 +313,7 @@ class Backup {
 	 * @param string|null $directory the directory containing the backup to import, or null
 	 * @param string $domain domain identifying which database to synchronize
 	 */
-	public static function synchronizeDatabase($directory, $domain) {
+	public static function synchronizeDatabase($directory, $domain, &$db, $db_name) {
 		if (file_exists("data/recover")) self::removeDirectory("data/recover");
 		if (!@mkdir("data/recover")) {
 			sleep(1);
@@ -295,12 +343,10 @@ class Backup {
 		require_once("component/data_model/Model.inc");
 		require_once("SQLQuery.inc");
 		$model = DataModel::get();
-		$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 		require_once("component/data_model/DataBaseUtilities.inc");
-		global $db_config;
-		$res = $db->execute("CREATE DATABASE IF NOT EXISTS ".$db_config["prefix"].$domain." DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
-		$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = '".$db_config["prefix"].$domain."'");
-		$db->execute("USE ".$db_config["prefix"].$domain);
+		$res = $db->execute("CREATE DATABASE IF NOT EXISTS `$db_name` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci",false);
+		$res = $db->execute("SELECT concat('DROP TABLE IF EXISTS ', table_name, ';') FROM information_schema.tables WHERE table_schema = '$db_name'");
+		$db->execute("USE ".$db_name);
 		set_time_limit(600);
 		while (($sql = $db->nextRowArray($res)) <> null)
 			$db->execute($sql[0]);
@@ -317,14 +363,12 @@ class Backup {
 				set_time_limit(30*60);
 				DataBaseUtilities::importSQL($db, "data/recover/db/".$table->getName());
 				foreach ($table->_key_submodels as $sm) {
-					$keys = SQLQuery::create()
-					->bypassSecurity()
-					#DEV
-					->noWarning()
-					#END
-					->select($table->getName())->field($table->getPrimaryKey()->name)->executeSingleField();
+					$res = $db->execute("SELECT `".$table->getPrimaryKey()->name."` FROM `".$table->getName()."`");
+					$keys = array();
+					while (($row = $db->nextRowArray($res)) <> null)
+						array_push($keys, $row[0]);
 					$sub_models_keys[$table->getName()] = $keys;
-					foreach ($keys as $key) $sm->createTables($key);
+					foreach ($keys as $key) $sm->createTables($key, $db);
 				}
 			}
 		}
@@ -407,9 +451,9 @@ class Backup {
 			}
 			return false;
 		}
-		return importBackupFrom(realpath("data/backups/$version/$time"), "data/datamodels/datamodel_$dm_version.json", $db_system, $db_config["prefix"].$domain, realpath("data"));
+		return importBackupFrom(realpath("data/backups/$version/$time"), "data/datamodels/datamodel_$dm_version.json", $db_system, $db_config["prefix"].$domain, $domain, realpath("data"));
 	}
-	public static function importBackupFrom($backup_path, $datamodel_json_path, $db_system, $db_name, $target) {
+	public static function importBackupFrom($backup_path, $datamodel_json_path, $db_system, $db_name, $domain, $target) {
 		// get the datamodel specification
 		$json = file_get_contents($datamodel_json_path);
 		if ($json == null) return false;
@@ -423,12 +467,13 @@ class Backup {
 		$db_system->execute("USE ".$db_name);
 		// extract Database backup
 		set_time_limit(60);
-		if (file_exists("data/recover")) self::removeDirectory("data/recover");
+		if (file_exists("$target/recover")) self::removeDirectory("$target/recover");
 		mkdir("$target/recover");
 		mkdir("$target/recover/db");
 		require_once("component/application/service/deploy_utils.inc");
 		unzipFile("$backup_path/db.zip", realpath("$target/recover/db"));
 		// import tables on root model
+		require_once 'component/data_model/DataBaseUtilities.inc';
 		foreach ($model["tables"] as $table) {
 			if (file_exists("$target/recover/db/".$table["name"])) {
 				DataBaseUtilities::importSQL($db_system, "$target/recover/db/".$table["name"]);

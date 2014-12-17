@@ -46,7 +46,7 @@ class DataModelJSON {
 			$first_sm = true;
 			foreach ($model->getSubModels() as $sm) {
 				if ($first_sm) $first_sm = false; else $s .= ",";
-				$this->model($sm);
+				self::model($sm);
 			}
 			$s .= "]";
 		}

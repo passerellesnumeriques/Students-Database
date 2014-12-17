@@ -68,11 +68,44 @@ function synchronizeDatabases() {
 	layout.changed(content);
 	service.json("selection","lock_campaign",{reason:'travel'},function(res) {
 		if (!res || !res.token) { return; }
-		content.innerHTML = "Synchronizing your computer with the Database...";
+		theme.css("progress_bar.css");
+		content.innerHTML = "Synchronizing your computer with the Database.<br/>This may take several minutes...<br/><br/><div id='progress_text'></div><div id='progress_bar' style='display:none'></div>";
+		layout.changed(content);
+		var pb = null;
+		require("progress_bar.js",function() {
+			pb = new progress_bar(250,20);
+			var cont = document.getElementById('progress_bar');
+			if (cont) cont.appendChild(pb.element);
+		});
+		var progress = function() {
+			ajax.post("http://127.0.0.1:8888/server_comm/download_progress",{},function(error){},function(xhr){
+				var text = document.getElementById('progress_text');
+				if (!text) return;
+				var pb_cont = document.getElementById('progress_bar');
+				var s = xhr.responseText;
+				if (s.substring(0,1) == "%") {
+					s = s.substring(1);
+					var i = s.indexOf('%');
+					var s2 = s.substr(0,i);
+					s = s.substr(i+1);
+					if (pb) {
+						i = s2.indexOf(',');
+						pb.setPosition(parseInt(s2.substr(0,i)));
+						pb.setTotal(parseInt(s2.substr(i+1)));
+						pb_cont.style.display = "";
+					}
+				} else
+					pb_cont.style.display = "none";
+				text.innerHTML = s;
+				layout.changed(content);
+				setTimeout(progress,1000);
+			});
+		};
+		setTimeout(progress, 1000);
 		ajax.post("http://127.0.0.1:8888/server_comm/download_database",{
 			server:location.host,
 			domain:<?php echo json_encode(PNApplication::$instance->local_domain);?>,
-			username:<?php echo PNApplication::$instance->user_management->username;?>,
+			username:<?php echo json_encode(PNApplication::$instance->user_management->username);?>,
 			session:<?php echo json_encode(session_id());?>,
 			token:res.token,
 			campaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>
@@ -82,12 +115,14 @@ function synchronizeDatabases() {
 		},function(xhr) {
 			if (xhr.responseText != "OK") {
 				content.innerHTML = "An error occured during the synchronization of your computer:<br/>"+xhr.responseText;
+				layout.changed(content);
 				service.json("selection","unlock_campaign",{},function(res) {
 				});
 				return;
 			}
 			content.innerHTML = "The campaign has been locked, and your computer is ready to travel.<br/>"+
 				"You can now use the address <a href='http://localhost:8888/' target='_blank'>http://localhost:8888/</a> to access it on your computer.<br/>";
+			layout.changed(content);
 			popup.removeButtons();
 			popup.addCloseButton(function() {
 				var win = window.top.frames["pn_application_frame"];

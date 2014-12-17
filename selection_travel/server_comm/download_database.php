@@ -1,4 +1,5 @@
 <?php
+@unlink("download_progress");
 $server = $_POST["server"];
 $domain = $_POST["domain"];
 $username = $_POST["username"];
@@ -7,6 +8,13 @@ $campaign_id = $_POST["campaign"];
 $token = $_POST["token"];
 $sms_path = realpath(dirname(__FILE__)."/../sms");
 $app_version = file_get_contents($sms_path."/version");
+
+function progress($text, $pos = null, $total = null) {
+	$f = fopen("download_progress","w");
+	fwrite($f, ($pos !== null ? "%$pos,$total%" : "").$text);
+	fclose($f);
+}
+progress("Setup software...");
 
 /**
  * Remove a directory with its content
@@ -18,7 +26,7 @@ function removeDirectory($path) {
 		if ($filename == ".") continue;
 		if ($filename == "..") continue;
 		if (is_dir($path."/".$filename))
-			self::removeDirectory($path."/".$filename);
+			removeDirectory($path."/".$filename);
 		else
 			unlink($path."/".$filename);
 	}
@@ -28,13 +36,21 @@ function removeDirectory($path) {
 }
 
 // first, reset our database
+progress("Initializing the database on your computer...");
 $db = mysqli_connect("localhost","root","","",8889);
+if ($db === false) die("Error: unable to connect to the database");
 mysqli_query($db, "DROP DATABASE `selectiontravel_$domain`");
 mysqli_query($db, "CREATE DATABASE `selectiontravel_$domain` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
 mysqli_query($db, "DROP DATABASE `selectiontravel_init`");
 mysqli_query($db, "CREATE DATABASE `selectiontravel_init` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
 mysqli_close($db);
 
+// remove previous data
+if (file_exists($sms_path."/data")) removeDirectory($sms_path."/data");
+mkdir($sms_path."/data");
+mkdir($sms_path."/data/$domain");
+
+progress("Setup software...");
 // write the config
 $f = fopen($sms_path."/install_config.inc","w");
 fwrite($f, "<?php global \$local_domain, \$db_config; \$local_domain = '$domain'; \$db_config = array(\"type\"=>\"MySQL\",\"server\"=>\"localhost\",\"port\"=>8889,\"user\"=>\"root\",\"password\"=>\"\",\"prefix\"=>\"selectiontravel_\");?>");
@@ -44,7 +60,7 @@ $conf = include($sms_path."/conf/domains");
 $domains = array_keys($conf);
 foreach ($domains as $d) if ($d <> $domain) unset($conf[$d]);
 $f = fopen($sms_path."/conf/domains","w");
-fwrite($d,"<?php return ".var_export($conf,true).";?>");
+fwrite($f,"<?php return ".var_export($conf,true).";?>");
 fclose($f);
 // generate an instance uid
 $f = fopen($sms_path."/conf/instance.uid","w");
@@ -56,7 +72,8 @@ fwrite($f, $username);
 fclose($f);
 
 // download a backup
-$c = curl_init("http://$server/dynamic/selection/service/download_backup_from_travel_install?type=get_info");
+progress("The server is preparing a copy of the database");
+$c = curl_init("http://$server/dynamic/selection/service/download_backup_from_travel_install?type=get_info&campaign=".$campaign_id);
 curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($c, CURLOPT_POSTFIELDS, array("username"=>$username,"session"=>$session,"token"=>$token));
@@ -64,13 +81,21 @@ curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version","User
 curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
 curl_setopt($c, CURLOPT_TIMEOUT, 1000);
 set_time_limit(1100);
-$info = curl_exec($c);
-$info = json_decode($info, true);
+$result = curl_exec($c);
+if ($result === false) die("Error: unable to connect to the Students Management Software Server: ".curl_error($c));
+$info = json_decode($result, true);
+if ($info == null) die("Error: unexpected data received from the server: ".$result);
+if (isset($info["errors"]) && count($info["errors"]) > 0) die("Error: server returned some errors: ".$result);
+if (!isset($info["result"])) die("Error: no result received from the server: ".$result);
+$info = $info["result"];
+if (!isset($info["size"]) || !isset($info["id"])) die("Error: missing data received from the server: ".$result);
 removeDirectory(dirname(__FILE__)."/data");
 @mkdir(dirname(__FILE__)."/data");
+progress("Downloading a copy of the database",0,$info["size"]);
+$step = 5*1024*1024;
 $f = fopen(dirname(__FILE__)."/data/data.zip","w");
 for ($from = 0; $from < intval($info["size"]); ) {
-	$to = $from + 5*1024*1024;
+	$to = $from + $step;
 	if ($to > intval($info["size"])-1) $to = intval($info["size"])-1;
 	$c = curl_init("http://$server/dynamic/selection/service/download_backup_from_travel_install?type=download&from=$from&to=$to&id=".$info["id"]);
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
@@ -78,13 +103,20 @@ for ($from = 0; $from < intval($info["size"]); ) {
 	curl_setopt($c, CURLOPT_POSTFIELDS, array("username"=>$username,"session"=>$session,"token"=>$token));
 	curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version","User-Agent: Students Management Software - Travel Version Synchronization"));
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-	curl_setopt($c, CURLOPT_TIMEOUT, 1000);
-	set_time_limit(1100);
+	curl_setopt($c, CURLOPT_TIMEOUT, 120);
+	set_time_limit(150);
 	$data = curl_exec($c);
+	if ($data === false) die("Error downloading database: ".curl_error($c));
+	curl_close($c);
 	fwrite($f, $data);
+	$downloaded = strlen($data);
+	if ($downloaded == 0) break;
+	$from += $downloaded;
+	progress("Downloading a copy of the database",floor($from/$step),floor(intval($info["size"])/$step));
 }
 fclose($f);
 // extract the downloaded file
+progress("Extracting the copy of the database...");
 mkdir(dirname(__FILE__)."/data/unzip");
 $zip = new ZipArchive();
 $zip->open(dirname(__FILE__)."/data/data.zip");
@@ -97,39 +129,35 @@ while (($file = readdir($dir)) <> null) {
 	copy(dirname(__FILE__)."/data/unzip/conf/$file", $sms_path."/conf/$file");
 }
 // import backup in both database: init and domain
+progress("Importing the copy of the database into your computer...");
 set_include_path($sms_path);
 chdir($sms_path);
-require_once 'component/application/Backup.inc';
+include('install_config.inc');
 require_once 'DataBaseSystem_MySQL.inc';
+require_once("SQLQuery.inc");
 require_once 'component/PNApplication.inc';
+global $installing_selection_travel;
+$installing_selection_travel = true;
 if (PNApplication::$instance == null) {
 	PNApplication::$instance = new PNApplication();
 	PNApplication::$instance->local_domain = $domain;
 	PNApplication::$instance->current_domain = $domain;
 	PNApplication::$instance->init();
 }
-require_once("SQLQuery.inc");
 require_once("component/data_model/Model.inc");
 require_once("component/data_model/DataBaseLock.inc");
+require_once 'component/application/Backup.inc';
 
 $db_system = new DataBaseSystem_MySQL();
 $db_system->connect("localhost", "root", "", null, 8889);
-Backup::importBackupFrom(dirname(__FILE__)."/data/unzip", dirname(__FILE__)."/data/unzip/datamodel.json", $db_system, "selectiontravel_init", $sms_path."/data");
-Backup::importBackupFrom(dirname(__FILE__)."/data/unzip", dirname(__FILE__)."/data/unzip/datamodel.json", $db_system, "selectiontravel_$domain", $sms_path."/data");
+Backup::synchronizeDatabase(dirname(__FILE__)."/data/unzip", $domain, $db_system, "selectiontravel_init");
+Backup::synchronizeDatabase(dirname(__FILE__)."/data/unzip", $domain, $db_system, "selectiontravel_$domain");
 // remove other users
 $db_system->execute("DELETE FROM `selectiontravel_init`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
 // remove any locks
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`DataLocks` WHERE 1");
-// lock other campaigns
-$campaigns = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->whereNotValue("SelectionCampaign","id",$campaign_id)->execute();
-if (count($campaigns) > 0) {
-	$locked_by = null;
-	$sm = DataModel::get()->getSubModel("SelectionCampaign");
-	foreach ($sm->internalGetTables() as $table)
-		foreach ($campaigns as $c)
-			DataBaseLock::lockTableForEver($table->getSQLNameFor($c["id"]), "You are on a travelling version, but not for this campaign", $locked_by);
-}
 if (PNApplication::hasErrors()) PNApplication::printErrors();
 else echo "OK";
+@unlink("download_progress");
 ?>

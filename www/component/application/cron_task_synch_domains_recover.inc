@@ -13,7 +13,9 @@ foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
 	}
 	// we can proceed
 	require_once("component/application/Backup.inc");
-	Backup::synchronizeDatabase("data/domains_synch/$domain", $domain);
+	$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+	global $db_config;
+	Backup::synchronizeDatabase("data/domains_synch/$domain", $domain, $db, $db_config["prefix"].$domain);
 	if (!PNApplication::hasErrors()) {
 		copy("data/domains_synch/$domain/latest_download", "data/domains_synch/$domain/latest_recover");
 		touch("data/domains_synch/$domain/latest_recover");

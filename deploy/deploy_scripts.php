@@ -22,7 +22,10 @@ function scripts_directory($directory_path) {
 	}
 	closedir($dir);
 }
+global $deploy_version;
+$deploy_version = "normal";
 scripts_directory(realpath($_POST["path"]."/www"));
+$deploy_version = "selection_travel";
 scripts_directory(realpath($_POST["path"]."/www_selection_travel"));
 
 // mark the version with the channel

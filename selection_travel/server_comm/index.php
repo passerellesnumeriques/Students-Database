@@ -8,5 +8,9 @@ case "check_install":
 case "download_database":
 	include('download_database.php');
 	die();
+case "download_progress":
+	if (!file_exists("download_progress")) die();
+	readfile("download_progress");
+	die();
 }
 ?>

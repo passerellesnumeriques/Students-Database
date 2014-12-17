@@ -72,7 +72,7 @@ class storage extends Component {
 		@rmdir($path);
 	}
 	
-	private static function storage_path() {
+	public static function storage_path() {
 		return realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".PNApplication::$instance->current_domain."/storage");
 	}
 	
@@ -237,13 +237,16 @@ class storage extends Component {
 		return $id;
 	}
 	
-	function get_data_path($id) {
+	public static function get_data_path_in_storage($id) {
 		$dir1 = $id%100;
 		$dir2 = ($id/100)%100;
 		$dir3 = ($id/10000)%100;
 		$filename = intval($id/1000000);
-		$path = storage::storage_path()."/".$dir1."/".$dir2."/".$dir3."/".$filename;
-		return $path;
+		return $dir1."/".$dir2."/".$dir3."/".$filename;
+	}
+	
+	function get_data_path($id) {
+		return self::storage_path()."/".self::get_data_path_in_storage($id);
 	}
 	
 	function new_revision($id) {

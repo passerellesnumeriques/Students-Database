@@ -4,7 +4,7 @@ class page_unlock extends SelectionPage {
 	public function getRequiredRights() { return array("manage_selection_campaign"); }
 	public function executeSelectionPage(){
 		$reason = $this->component->getFrozenReason();
-		if ($reason == "Campaign Finished") {
+		if ($reason == "Campaign Finished" || true) { // TODO
 ?>
 <div style='background-color:white;padding:10px'>
 	The campaign is currently locked because it is already finshed.<br/>
