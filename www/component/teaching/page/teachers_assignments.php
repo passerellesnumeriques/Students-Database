@@ -720,8 +720,9 @@ class page_teachers_assignments extends Page {
 					assign.ondomremoved(function(e){e.t=null;});
 					<?php } ?>
 				} else {
-					var remaining_period = subject.hours;
-					if (subject.hours_type == "Per week") remaining_period *= nb_weeks;
+					var total_subject_hours = subject.hours;
+					if (subject.hours_type == "Per week") total_subject_hours *= nb_weeks;
+					var remaining_period = total_subject_hours;
 					for (var i = 0; i < grouping.teachers.length; ++i) {
 						if (i > 0) {
 							td.appendChild(document.createElement("BR"));
@@ -730,11 +731,11 @@ class page_teachers_assignments extends Page {
 						var teacher = getTeacher(grouping.teachers[i].people_id);
 						td.appendChild(document.createTextNode(teacher.last_name+" "+teacher.first_name));
 						if (grouping.teachers[i].hours != null) {
-							td.appendChild(document.createTextNode("("+grouping.teachers[i].hours+"h"+(grouping.teachers[i].hours_type == "Per week" ? "/week" : "")+")"));
-							if (grouping.teachers[i].hours_type == "Per week")
-								remaining_period -= grouping.teachers[i].hours*nb_weeks;
-							else
-								remaining_period -= grouping.teachers[i].hours;
+							var teacher_hours_total = grouping.teachers[i].hours;
+							if (grouping.teachers[i].hours_type == "Per week") teacher_hours_total *= nb_weeks;
+							if (teacher_hours_total < total_subject_hours)
+								td.appendChild(document.createTextNode("("+grouping.teachers[i].hours+"h"+(grouping.teachers[i].hours_type == "Per week" ? "/week" : "")+")"));
+							remaining_period -= teacher_hours_total;
 						} else
 							remaining_period = 0;
 						<?php if ($can_edit) { ?>
