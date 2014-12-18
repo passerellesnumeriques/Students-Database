@@ -127,6 +127,16 @@ class page_applicant_list extends SelectionPage {
 				'Personal Information.Last Name',
 				true,
 				function (list) {
+					 // make the info available to be able to change the color
+					list.alwaysGetField('Selection','Excluded');
+					list.setRowBackgroundProvider(function(sent_fields, received_values) {
+						var index;
+						for (index = 0; index < sent_fields.length; ++index)
+							if (sent_fields[index].name == "Excluded" && sent_fields[index].category == "Selection") break;
+						if (received_values[index].v == 1)
+							return "#FFD0D0"; // excluded in red
+						return null;
+					});
 					list.grid.makeScrollable();
 					var get_creation_data = function() {
 						var data = {

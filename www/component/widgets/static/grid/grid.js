@@ -1329,11 +1329,12 @@ function grid(element) {
 		while (t.table.childNodes.length > 0) t.table.removeChild(t.table.childNodes[0]);
 		// create rows
 		for (var i = 0; i < data.length; ++i) {
-			t.addRow(data[i].row_id, data[i].row_data);
+			t.addRow(data[i].row_id, data[i].row_data, data[i].background);
 		}
 	};
-	t.addRow = function(row_id, row_data) {
+	t.addRow = function(row_id, row_data, background) {
 		var tr = document.createElement("TR");
+		if (background) tr.style.background = background;
 		var click_listener = function() { t.onrowfocus.fire(tr); };
 		listenEvent(tr, 'click', click_listener);
 		tr.row_id = row_id;
