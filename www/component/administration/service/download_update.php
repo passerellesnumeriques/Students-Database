@@ -35,7 +35,7 @@ class service_download_update extends Service {
 					$info = json_decode($res, true);
 					if ($info == null || $info["size"] <= 0) {
 						header("HTTP/1.0 200 Error");
-						die("Unable to find the file on SourceForge".$size);
+						die("Unable to find the file on SourceForge");
 					}
 					die($res);
 				} catch (Exception $e) {
