@@ -386,19 +386,23 @@ class SubModelLinkListener {
 	private $sub_model_foreign_key;
 	private $unique;
 	
-	public function onInsert($fields_values, $id, $sub_model_instance) {
-		// TODO in case unique, we update the previous one, or we make an error ?
-		SQLQuery::create()->bypassSecurity()->insert($this->link_table->getName(), array(
-			"root"=>$fields_values[$this->sub_model_foreign_key->name],
-			"sm"=>$sub_model_instance
+	public function onInsert($inserted) {
+		$to_insert = array();
+		foreach ($inserted as $row) array_push($to_insert, array(
+			"root"=>$row["fields_values"][$this->sub_model_foreign_key->name],
+			"sm"=>$row["sub_model_instance"]
 		));
+		SQLQuery::create()->bypassSecurity()->insertMultiple($this->link_table->getName(), $to_insert);
 	}
 	
-	public function onRemove($row, $sub_model_instance) {
-		SQLQuery::create()->bypassSecurity()->removeKey($this->link_table->getName(), array(
-			"root"=>$row[$this->sub_model_foreign_key->name],
-			"sm"=>$sub_model_instance
-		));
+	public function onRemove($table, $rows, $sub_model_instance) {
+		$keys = array();
+		if ($this->unique) {
+			foreach ($rows as $row) array_push($keys, $row[$this->sub_model_foreign_key->name]);
+		} else {
+			foreach ($rows as $row) array_push($keys, array("root"=>$row[$this->sub_model_foreign_key->name],"sm"=>$sub_model_instance));
+		}
+		SQLQuery::create()->bypassSecurity()->removeKeys($this->link_table->getName(), $keys);
 	}
 	
 }

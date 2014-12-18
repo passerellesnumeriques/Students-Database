@@ -18,18 +18,27 @@ $model->addTable("Student")
 	->addWriteAccess("manage_batches", true)
 	->addInsertAccess("manage_batches", true)
 	->addRemoveAccess("manage_batches", true)
-	->onInsert(function($fields_values, $id, $sub_model_instance){
-		$batch = PNApplication::$instance->curriculum->getBatch($fields_values["batch"]);
-		$news = PNApplication::$instance->news->getRecentPost("students", "students", "Creation of % student% in batch ".toHTML($batch["name"]));
-		if ($news == null)
-			PNApplication::$instance->news->post("students", "students", array("batch".$batch["id"]), "activity", "Creation of 1 student in batch ".toHTML($batch["name"]));
-		else {
-			$s = substr($news["html"],12);
-			$i = strpos($s," ");
-			$nb = intval(substr($s,0,$i));
-			$nb++;
-			PNApplication::$instance->news->updatePost($news["id"], "Creation of $nb students in batch ".toHTML($batch["name"]));
-		} 
+	->onInsert(function($inserted){
+		$batches = array();
+		foreach ($inserted as $row) {
+			if (!isset($batches[$row["fields_values"]["batch"]]))
+				$batches[$row["fields_values"]["batch"]] = 1;
+			else
+				$batches[$row["fields_values"]["batch"]]++;
+		}
+		foreach ($batches as $batch_id=>$nb_new_students) {
+			$batch = PNApplication::$instance->curriculum->getBatch($batch_id);
+			$news = PNApplication::$instance->news->getRecentPost("students", "students", "Creation of % student% in batch ".toHTML($batch["name"]));
+			if ($news == null)
+				PNApplication::$instance->news->post("students", "students", array("batch".$batch_id), "activity", "Creation of $nb_new_students student".($nb_new_students > 1 ? "s" : "")." in batch ".toHTML($batch["name"]));
+			else {
+				$s = substr($news["html"],12);
+				$i = strpos($s," ");
+				$nb = intval(substr($s,0,$i));
+				$nb += $nb_new_students;
+				PNApplication::$instance->news->updatePost($news["id"], "Creation of $nb students in batch ".toHTML($batch["name"]));
+			}
+		}
 	})
 	;
 

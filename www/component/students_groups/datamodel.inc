@@ -36,29 +36,32 @@ $model->addTable("StudentsGroup")
 		$period = DataModel::get()->internalGetTable("BatchPeriod")->getRowDescription($period);
 		return toHTML($type)." ".toHTML($row["name"])." in ".$period;
 	})
-	->onInsert(function($fields,$id,$sub_model_instance) {
-		try {
-			$period = PNApplication::$instance->curriculum->getBatchPeriod($fields["period"]);
+	->onInsert(function($inserted) {
+		foreach ($inserted as $row)
+			try {
+				$period = PNApplication::$instance->curriculum->getBatchPeriod($row["fields_values"]["period"]);
+				$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+				$group_type = PNApplication::$instance->students_groups->getGroupTypeName($row["fields_values"]["type"]);
+				$message = $group_type." <i>".toHTML($row["fields_values"]["name"])."</i> created for period ".toHTML($period["name"])." of batch ".toHTML($batch["name"]);
+				if (isset($row["fields_values"]["specialization"]) && $row["fields_values"]["specialization"] <> null) {
+					$spe = PNApplication::$instance->curriculum->getSpecializationName($row["fields_values"]["specialization"]);
+					$message .= " with specialization ".toHTML($spe);
+				}
+				PNApplication::$instance->news->post("students", "students", array("batch".$batch["id"],"period".$row["fields_values"]["period"]), "activity", $message);
+			} catch (Exception $e) { PNApplication::error($e); }
+	})
+	->onRemove(function($table, $rows, $sm){
+		foreach ($rows as $row) {
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($row["period"]);
 			$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
-			$group_type = PNApplication::$instance->students_groups->getGroupTypeName($fields["type"]);
-			$message = $group_type." <i>".toHTML($fields["name"])."</i> created for period ".toHTML($period["name"])." of batch ".toHTML($batch["name"]);
-			if (isset($fields["specialization"]) && $fields["specialization"] <> null) {
-				$spe = PNApplication::$instance->curriculum->getSpecializationName($fields["specialization"]);
+			$group_type = PNApplication::$instance->students_groups->getGroupTypeName($row["type"]);
+			$message = $group_type." <i>".toHTML($row["name"])."</i> removed for period ".toHTML($period["name"])." of batch ".toHTML($batch["name"]);
+			if (isset($row["specialization"]) && $row["specialization"] <> null) {
+				$spe = PNApplication::$instance->curriculum->getSpecializationName($row["specialization"]);
 				$message .= " with specialization ".toHTML($spe);
 			}
-			PNApplication::$instance->news->post("students", "students", array("batch".$batch["id"],"period".$fields["period"]), "activity", $message);
-		} catch (Exception $e) { PNApplication::error($e); }
-	})
-	->onRemove(function($row,$sm){
-		$period = PNApplication::$instance->curriculum->getBatchPeriod($row["period"]);
-		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
-		$group_type = PNApplication::$instance->students_groups->getGroupTypeName($row["type"]);
-		$message = $group_type." <i>".toHTML($row["name"])."</i> removed for period ".toHTML($period["name"])." of batch ".toHTML($batch["name"]);
-		if (isset($row["specialization"]) && $row["specialization"] <> null) {
-			$spe = PNApplication::$instance->curriculum->getSpecializationName($row["specialization"]);
-			$message .= " with specialization ".toHTML($spe);
+			PNApplication::$instance->news->post("students", "students", array("batch".$period["batch"],"period".$row["period"]), "activity", $message);
 		}
-		PNApplication::$instance->news->post("students", "students", array("batch".$period["batch"],"period".$row["period"]), "activity", $message);
 	})
 	->setRowDescriptionProvider(function($row) {
 		$period = PNApplication::$instance->curriculum->getBatchPeriod($row["period"]);
@@ -68,20 +71,25 @@ $model->addTable("StudentsGroup")
 	})
 	;
 $model->internalGetTable("BatchPeriodSpecialization")
-	->onBeforeRemove(function($row,$sm) {
-		$groups = SQLQuery::create()->bypassSecurity()
-			->select("StudentsGroup")
-			->whereValue("StudentsGroup","period",$row["period"])
-			->whereValue("StudentsGroup","specialization",$row["specialization"])
-			->execute();
-		if (count($groups) == 0) return null; // ok
-		$s = "The following students groups are attached to it: ";
-		$first = true;
-		foreach ($groups as $g) {
-			if ($first) $first = false; else $s .= ", ";
-			$s .= toHTML($g["name"]);
+	->onBeforeRemove(function($table,$rows,$sm) {
+		foreach ($rows as $row) {
+			$groups = SQLQuery::create()->bypassSecurity()
+				->select("StudentsGroup")
+				->whereValue("StudentsGroup","period",$row["period"])
+				->whereValue("StudentsGroup","specialization",$row["specialization"])
+				->execute();
+			if (count($groups) == 0) continue; // ok
+			$spe_name = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization","id",$row["specialization"])->field("name")->executeSingleValue();
+			$period_name = SQLQuery::create()->bypassSecurity()->select("BatchPeriod")->whereValue("BatchPeriod","id",$row["period"])->field("name")->executeSingleValue();
+			$s = "Specialization $spe_name cannot be removed from $period_name because the following students groups are attached to it: ";
+			$first = true;
+			foreach ($groups as $g) {
+				if ($first) $first = false; else $s .= ", ";
+				$s .= toHTML($g["name"]);
+			}
+			return $s;
 		}
-		return $s;
+		return null;
 	});
 
 $model->addTable("StudentGroup")
@@ -111,34 +119,44 @@ $model->addTable("StudentGroup")
 			->limit(0,1)->executeSingleRow();
 		return "Assignment of student <i>".toHTML($student["first_name"]." ".$student["last_name"])."</i> to ".toHTML($group["type"])." <i>".toHTML($group["name"])."</i> in <i>".toHTML($group["period_name"])."</i>";
 	})
-	->onInsert(function($fields_values, $id, $sub_model_instance){
-		$group = PNApplication::$instance->students_groups->getGroup($fields_values["group"]);
-		$group_type = PNApplication::$instance->students_groups->getGroupType($group["type"]);
-		$period = PNApplication::$instance->curriculum->getBatchPeriod($group["period"]);
-		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
-		$news = PNApplication::$instance->news->getRecentPost("students", "students", "% student% of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		if ($news == null)
-			PNApplication::$instance->news->post("students", "students", array("batch".$batch["id"],"period".$period["id"],"group".$group["id"]), "activity", "1 student of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		else {
-			$i = strpos($news["html"]," ");
-			$nb = intval(substr($news["html"],0,$i));
-			$nb++;
-			PNApplication::$instance->news->updatePost($news["id"], "$nb students of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
+	->onInsert(function($inserted){
+		$groups = array();
+		foreach ($inserted as $row)
+			if (!isset($groups[$row["fields_values"]["group"]]))
+				$groups[$row["fields_values"]["group"]] = 1;
+			else
+				$groups[$row["fields_values"]["group"]]++;
+		foreach ($groups as $group_id=>$nb_assigned) {
+			$group = PNApplication::$instance->students_groups->getGroup($group_id);
+			$group_type = PNApplication::$instance->students_groups->getGroupType($group["type"]);
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($group["period"]);
+			$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+			$news = PNApplication::$instance->news->getRecentPost("students", "students", "% student% of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
+			if ($news == null)
+				PNApplication::$instance->news->post("students", "students", array("batch".$batch["id"],"period".$period["id"],"group".$group["id"]), "activity", "$nb_assigned student".($nb_assigned > 1 ? "s" : "")." of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
+			else {
+				$i = strpos($news["html"]," ");
+				$nb = intval(substr($news["html"],0,$i));
+				$nb += $nb_assigned;
+				PNApplication::$instance->news->updatePost($news["id"], "$nb students of batch ".toHTML($batch["name"])." assigned to ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
+			}
 		}
 	})
-	->onRemove(function($row, $sub_model_instance){
-		$group = PNApplication::$instance->students_groups->getGroup($row["group"]);
-		$group_type = PNApplication::$instance->students_groups->getGroupType($group["type"]);
-		$period = PNApplication::$instance->curriculum->getBatchPeriod($group["period"]);
-		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
-		$news = PNApplication::$instance->news->getRecentPost("students", "students", "% student% of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		if ($news == null)
-			PNApplication::$instance->news->post("students", "students", array("batch".$batch["id"],"period".$period["id"],"group".$group["id"]), "activity", "1 student of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
-		else {
-			$i = strpos($news["html"]," ");
-			$nb = intval(substr($news["html"],0,$i));
-			$nb++;
-			PNApplication::$instance->news->updatePost($news["id"], "$nb students of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
+	->onRemove(function($table, $rows, $sub_model_instance){
+		foreach ($rows as $row) {
+			$group = PNApplication::$instance->students_groups->getGroup($row["group"]);
+			$group_type = PNApplication::$instance->students_groups->getGroupType($group["type"]);
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($group["period"]);
+			$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+			$news = PNApplication::$instance->news->getRecentPost("students", "students", "% student% of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
+			if ($news == null)
+				PNApplication::$instance->news->post("students", "students", array("batch".$batch["id"],"period".$period["id"],"group".$group["id"]), "activity", "1 student of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
+			else {
+				$i = strpos($news["html"]," ");
+				$nb = intval(substr($news["html"],0,$i));
+				$nb++;
+				PNApplication::$instance->news->updatePost($news["id"], "$nb students of batch ".toHTML($batch["name"])." unassigned from ".toHTML($group_type["name"])." ".toHTML($group["name"])." for period ".toHTML($period["name"]));
+			}
 		}
 	})
 	;

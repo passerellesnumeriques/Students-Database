@@ -1269,7 +1269,7 @@ class SQLQuery {
 				$sub_model_instance = null;
 				if ($t->getModel() instanceof SubDataModel)
 					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
-				$t->fireBeforeUpdate($fields_values, $key, $sub_model_instance);
+				$t->fireBeforeUpdate(array(array(array($key),$fields_values)), $sub_model_instance);
 			}
 			
 			// check we are allowed to modify this row
@@ -1394,7 +1394,7 @@ class SQLQuery {
 				$sub_model_instance = null;
 				if ($t->getModel() instanceof SubDataModel)
 					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
-				$t->fireUpdate($fields_values, $key, $sub_model_instance);
+				$t->fireUpdate(array(array(array($key),$fields_values)), $sub_model_instance);
 			}
 			if (!$in_transaction) SQLQuery::commitTransaction();
 		} catch (Exception $e) {
@@ -1422,9 +1422,7 @@ class SQLQuery {
 				$sub_model_instance = null;
 				if ($t->getModel() instanceof SubDataModel)
 					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
-				for ($i = 0; $i < count($keys_fields_values); $i++)
-					for ($j = 0; $j < count($keys_fields_values[$i][0]); $j++)
-						$t->fireBeforeUpdate($keys_fields_values[$i][1], $keys_fields_values[$i][$j], $sub_model_instance);
+				$t->fireBeforeUpdate($keys_fields_values, $sub_model_instance);
 			}
 				
 			// check we are allowed to modify this row
@@ -1637,8 +1635,7 @@ class SQLQuery {
 					$sub_model_instance = null;
 					if ($t->getModel() instanceof SubDataModel)
 						$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
-					foreach ($keys as $k)
-						$t->fireUpdate($fields_values, $k, $sub_model_instance);
+					$t->fireUpdate(array(array($keys,$fields_values)), $sub_model_instance);
 				}
 			}
 			if ($locked) {
@@ -1674,8 +1671,7 @@ class SQLQuery {
 				$sub_model_instance = null;
 				if ($t->getModel() instanceof SubDataModel)
 					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
-				foreach ($keys as $key)
-					$t->fireBeforeUpdate($fields_values, $key, $sub_model_instance);
+				$t->fireBeforeUpdate(array(array($keys,$fields_values)), $sub_model_instance);
 			}
 				
 			// check we are allowed to modify this row
@@ -1791,8 +1787,7 @@ class SQLQuery {
 				$sub_model_instance = null;
 				if ($t->getModel() instanceof SubDataModel)
 					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
-				foreach ($keys as $k)
-					$t->fireUpdate($fields_values, $k, $sub_model_instance);
+				$t->fireUpdate(array(array($keys, $fields_values)), $sub_model_instance);
 			}
 			if ($locked) {
 				$error = DataBaseLock::unlockMultiple($locks_ids);
@@ -1928,7 +1923,7 @@ class SQLQuery {
 		if($lock_id == null)
 			DataBaseLock::unlock($lock);
 		// events
-		$t->fireInsert($fields_values, $id, $t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null);
+		$t->fireInsert(array("fields_values"=>$fields_values, "id"=>$id, "sub_model_instance"=>($t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null)));
 		return $id;
 	}
 	
@@ -2059,9 +2054,11 @@ class SQLQuery {
 		if($lock_id == null)
 			DataBaseLock::unlock($lock);
 		// events
+		$inserted = array();
 		$i = 0;
 		foreach ($rows as &$fields_values)
-			$t->fireInsert($fields_values, $id <> 0 ? $ids[$i++] : null, $t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null);
+			array_push($inserted, array("fields_values"=>$fields_values,"id"=>($id <> 0 ? $ids[$i++] : null),"sub_model_instance"=>($t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null)));
+		$t->fireInsert($inserted);
 		return $ids;
 	}
 	
@@ -2264,14 +2261,16 @@ class SQLQuery {
 						if ($dm_table->hasRemoveListeners()) {
 							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
 							$res = SQLQuery::db()->execute("SELECT * FROM `".$table_name."` WHERE ".$where);
-							while (($row = SQLQuery::db()->nextRow($res)) <> null) {
-								$error = $dm_table->fireBeforeRemove($row, $sub_model_instance);
-								if ($error <> null) throw new \ExceptionHTML("Cannot remove ".$dm_table->getRowDescription($row).": ".$error);
-								$dm_table->fireRemove($row, $sub_model);
-							}
+							$rows = array();
+							while (($row = SQLQuery::db()->nextRow($res)) <> null)
+								array_push($rows, $row);
+							$error = $dm_table->fireBeforeRemove($dm_table, $rows, $sub_model);
+							if ($error <> null) throw new \ExceptionHTML($error);
 						}
 						$sql = "DELETE FROM `".$table_name."` WHERE ".$where;
 						SQLQuery::db()->execute($sql);
+						if ($dm_table->hasRemoveListeners())
+							$dm_table->fireRemove($dm_table, $rows, $sub_model);
 					}
 				} else {
 					$w = "";
@@ -2290,13 +2289,17 @@ class SQLQuery {
 						$dm_table = DataModel::get()->getTableFromSQLName($table_name, $this->bypass_security);
 						if ($dm_table->hasRemoveListeners()) {
 							$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
-							foreach ($to_remove_in_table["rows"] as $row)
-								$dm_table->fireRemove($row, $sub_model);
+							$error = $dm_table->fireBeforeRemove($dm_table, $to_remove_in_table["rows"], $sub_model);
+							if ($error <> null) throw new \ExceptionHTML($error);
 						}
 						SQLQuery::db()->execute("DELETE FROM `".$table_name."` WHERE ".$w);
+						if ($dm_table->hasRemoveListeners()) {
+							$dm_table->fireRemove($dm_table, $to_remove_in_table["rows"], $sub_model);
+						}
 					}
 				}
 			}
+			$updated = array();
 			foreach ($to_update as $update) {
 				$sql = "UPDATE `".$update[0]."` SET `".$update[1]."`=NULL WHERE `".$update[1]."` IN (";
 				$first = true;
@@ -2306,15 +2309,14 @@ class SQLQuery {
 				}
 				$sql .= ")";
 				SQLQuery::db()->execute($sql);
-				$dm_table = DataModel::get()->getTableFromSQLName($update[0], $this->bypass_security);
-				if ($dm_table->hasUpdateListeners()) {
-					$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
-					foreach ($update[4] as $key) {
-						$dm_table->fireUpdate($update[1], $key, $sub_model);
-					}
-				}
+				array_push($updated, array($update[4], $update[1]));
 			}
-
+			$dm_table = DataModel::get()->getTableFromSQLName($update[0], $this->bypass_security);
+			if ($dm_table->hasUpdateListeners()) {
+				$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
+				$dm_table->fireUpdate($updated, $sub_model);
+			}
+				
 			// end transaction before removing tables of sub-model
 			if (!$in_transaction) SQLQuery::commitTransaction();
 				

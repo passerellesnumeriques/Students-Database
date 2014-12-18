@@ -96,8 +96,10 @@ $model->addTable("UserPeople")
 	->allowReadAccess()
 	->addInsertAccess("manage_users", true)
 	->addRemoveAccess("manage_users", true)
-	->onInsert(function($fields_values, $id, $sub_model_instance) {
-		PNApplication::$instance->user_management->assignDefaultRoles($fields_values["user"], $fields_values["people"]);
+	->onInsert(function($inserted) {
+		// TODO improve
+		foreach ($inserted as $row)
+			PNApplication::$instance->user_management->assignDefaultRoles($row["fields_values"]["user"], $row["fields_values"]["people"]);
 	})
 	;
 ?>
