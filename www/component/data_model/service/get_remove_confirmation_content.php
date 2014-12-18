@@ -30,22 +30,30 @@ class service_get_remove_confirmation_content extends Service {
 					array_splice($to_remove[$table->getSQLNameFor($sub_model_instance)]["keys"], $i, 1);
 					break;
 				}
+			require_once 'component/data_model/DataBaseLock.inc';
+			DataBaseLock::unlockMultiple($locks);
 			$str_remove = "";
 			foreach ($to_remove as $table_sql_name=>$info) {
 				$t = DataModel::get()->getTableFromSQLName($table_sql_name);
 				if (isset($info["keys"])) {
 					$keys = $info["keys"];
 					$rows = SQLQuery::getRows($t, $keys);
-					foreach ($rows as $row)
-						$str_remove .= "<li>".$t->getRowDescription($row)."</li>";
+					foreach ($rows as $row) {
+						$descr = $t->getRowDescription($row);
+						if ($descr <> "")
+							$str_remove .= "<li>".$descr."</li>";
+					}
 				} else {
 					$wheres = $info["where"];
 					foreach ($wheres as $where) {
 						$q = SQLQuery::create()->select($t->getName())->selectSubModelForTable($t, DataModel::get()->getSubModelInstanceFromSQLName($table_sql_name));
 						foreach ($where as $cname=>$cval) $q->whereValue($t->getName(), $cname, $cval);
 						$rows = $q->execute();
-						foreach ($rows as $row)
-							$str_remove .= "<li>".$t->getRowDescription($row)."</li>";
+						foreach ($rows as $row) {
+							$descr = $t->getRowDescription($row);
+							if ($descr <> "")
+								$str_remove .= "<li>".$descr."</li>";
+						}
 					}
 				}
 			}
@@ -61,11 +69,14 @@ class service_get_remove_confirmation_content extends Service {
 			
 				$ft = DataModel::get()->getTable($t->getColumn($col_name, $sm)->foreign_table);
 				foreach ($rows_to_update as $row) {
-					$str_update .= "<li>";
-					$str_update .= $t->getRowDescription($row);
-					$str_update .= "<br/>will be unlinked from ";
-					$str_update .= $ft->getRowDescriptionByKey($row[$col_name]);
-					$str_update .= "</li>";
+					$descr = $t->getRowDescription($row);
+					if ($descr <> null) {
+						$str_update .= "<li>";
+						$str_update .= $descr;
+						$str_update .= "<br/>will be unlinked from ";
+						$str_update .= $ft->getRowDescriptionByKey($row[$col_name]);
+						$str_update .= "</li>";
+					}
 				}
 			}
 				

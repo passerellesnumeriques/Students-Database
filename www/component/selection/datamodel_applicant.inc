@@ -44,6 +44,10 @@ $sm->addTable("Applicant")
 	->addRemoveAccess("edit_applicants",true)
 	->setPrimary("people")//The primary key is the people_id
 	->addIndex("applicant_id") // it must be set as unique index
+	->setRowDescriptionProvider(function($row) {
+		$people = SQLQuery::create()->bypassSecurity()->select("People")->whereValue("People","id",$row["people"])->executeSingleRow();
+		return DataModel::get()->internalGetTable("People")->getRowDescription($people);
+	})
 	;
 // check applicant age, if someone change the birthdate
 $model->internalGetTable("People")

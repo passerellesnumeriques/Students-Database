@@ -526,6 +526,9 @@ $model->addTable("OrganizationTypes")
 			array_push($final, $row);
 		return $final;
 	})
+	->setRowDescriptionProvider(function($row) {
+		return "";
+	})
 	;
 
 $model->addTable("OrganizationContact")

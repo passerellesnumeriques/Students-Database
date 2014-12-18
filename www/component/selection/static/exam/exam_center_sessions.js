@@ -40,7 +40,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			return;
 		}
 		tr.appendChild(th = document.createElement("TH"));
-		th.appendChild(document.createTextNode("Room Name"));
+		th.appendChild(document.createTextNode("Room<br/>Name"));
 		tr.appendChild(th = document.createElement("TH"));
 		th.appendChild(document.createTextNode("Capacity"));
 		for (var i = 0; i < this.rooms.length; ++i)
@@ -57,6 +57,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		field_name.register_datamodel_cell("ExamCenterRoom", "name", room.id);
 		field_name.onchange.add_listener(function (f) {
 			room.name = f.getCurrentData();
+			window.pnapplication.dataUnsaved("ExamCenterRooms");
 		});
 		// room capacity
 		tr.appendChild(td = document.createElement("TD"));
