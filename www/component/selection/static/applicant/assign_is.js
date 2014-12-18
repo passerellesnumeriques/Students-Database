@@ -5,6 +5,14 @@ function assign_is(button, applicants_ids, onchanged) {
 		require("context_menu.js",function() {
 			unlock_screen(lock);
 			var menu = new context_menu();
+			menu.addIconItem(null, "Do not assign to any Information Session", function() {
+				var lock = lock_screen(null, "Unassigning applicant"+(applicants_ids.length > 1 ? "s":"")+" from Information Session...");
+				service.json("selection", "applicant/assign_is", {applicants:applicants_ids,information_session:null}, function(res) {
+					if (!res) { unlock_screen(lock); return; }
+					unlock_screen(lock);
+					if (onchanged) onchanged();
+				});
+			});
 			for (var i = 0; i < list.length; ++i) {
 				menu.addIconItem(null, list[i].name, function(ev,id) {
 					var lock = lock_screen(null, "Assigning applicant"+(applicants_ids.length > 1 ? "s":"")+" to Information Session...");

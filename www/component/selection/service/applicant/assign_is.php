@@ -23,6 +23,18 @@ class service_applicant_assign_is extends Service {
 		
 		SQLQuery::startTransaction();
 		
+		if ($is_id == null) {
+			SQLQuery::create()->updateByKeys("Applicant", array(array(
+				$applicants_ids,
+				array("information_session"=>null)
+			)));
+			if (!PNApplication::hasErrors()) {
+				SQLQuery::commitTransaction();
+				echo "true";
+			}
+			return;
+		}	
+		
 		// retrieve info about the applicants
 		$q = SQLQuery::create()
 			->select("Applicant")

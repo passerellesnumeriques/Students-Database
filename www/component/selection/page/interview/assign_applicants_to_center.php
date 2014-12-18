@@ -10,6 +10,7 @@ class page_interview_assign_applicants_to_center extends SelectionPage {
 		
 		$q = SQLQuery::create()->select("Applicant")->whereIn("Applicant","people",$applicants_ids);
 		PNApplication::$instance->people->joinPeople($q, "Applicant", "people");
+		$q->field("Applicant","exam_passer");
 		$q->field("Applicant","interview_session");
 		$q->field("Applicant","applicant_id");
 		$q->field("Applicant","excluded");
@@ -18,9 +19,11 @@ class page_interview_assign_applicants_to_center extends SelectionPage {
 		// check if some of them are already assigned to an interview session, or excluded
 		$already = array();
 		$excluded = array();
+		$not_passers = array();
 		foreach ($applicants as $a) {
 			if ($a["interview_session"] <> null) array_push($already, $a);
 			if ($a["excluded"] == 1) array_push($excluded, $a);
+			if ($a["exam_passer"] <> 1) array_push($not_passers, $a);
 		}
 		if (count($already) > 0) {
 			if (count($already) == 1)
@@ -58,6 +61,20 @@ class page_interview_assign_applicants_to_center extends SelectionPage {
 			echo "</td></tr></table></div></div>";
 			return;
 		}
+		if (count($not_passers) > 0) {
+			if (count($not_passers) == 1)
+				echo "<div style='padding:5px'><div class='error_box'><table><tr><td valign=top><img src='".theme::$icons_16["error"]."'/></td><td>You cannot assign to an interview center, because ";
+			if (count($applicants) == 1)
+				echo "this applicant is not eligible for an interview.<br/>";
+			else {
+				echo "the following applicant".(count($not_passers) > 1 ? "s are" : " is")." not eligible for an interview:<ul>";
+				foreach ($not_passers as $a)
+					echo "<li>".toHTML($a["first_name"]." ".$a["last_name"])." (ID ".$a["applicant_id"].")</li>";
+				echo "</ul>";
+			}
+			echo "</td></tr></table></div></div>";
+			return;
+		}
 		
 		// get list of interview centers
 		$centers = SQLQuery::create()->select("InterviewCenter")->execute();
@@ -67,8 +84,10 @@ class page_interview_assign_applicants_to_center extends SelectionPage {
 		<?php
 		foreach ($centers as $c) echo "<option value='".$c["id"]."'>".toHTML($c["name"])."</option>"; 
 		?>
-	</select><br/>
+	</select>
 	<button class='action' onclick='assignApplicants();'>Assign applicant<?php if (count($applicants) > 1) echo "s"?></button>
+	<br/>
+	<button class='action' onclick='unassignApplicants();'>Unassign applicant<?php if (count($applicants) > 1) echo "s"?></button>
 </div>
 <script type='text/javascript'>
 function assignApplicants() {
@@ -78,6 +97,15 @@ function assignApplicants() {
 	popup.freeze("Assigning applicant<?php if (count($applicants) > 1) echo "s"?>...");
 	var ids = <?php echo json_encode($applicants_ids);?>;
 	service.json("data_model","save_cells",{cells:[{table:'Applicant',sub_model:<?php echo $this->component->getCampaignId();?>,keys:ids,values:[{column:'interview_center',value:center_id}]}]},function(res) {
+		<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();"?>
+		popup.close();
+	});
+}
+function unassignApplicants() {
+	var popup = window.parent.get_popup_window_from_frame(window);
+	popup.freeze("Unassigning applicant<?php if (count($applicants) > 1) echo "s"?>...");
+	var ids = <?php echo json_encode($applicants_ids);?>;
+	service.json("data_model","save_cells",{cells:[{table:'Applicant',sub_model:<?php echo $this->component->getCampaignId();?>,keys:ids,values:[{column:'interview_center',value:null}]}]},function(res) {
 		<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();"?>
 		popup.close();
 	});
