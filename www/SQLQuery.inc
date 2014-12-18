@@ -2299,7 +2299,6 @@ class SQLQuery {
 					}
 				}
 			}
-			$updated = array();
 			foreach ($to_update as $update) {
 				$sql = "UPDATE `".$update[0]."` SET `".$update[1]."`=NULL WHERE `".$update[1]."` IN (";
 				$first = true;
@@ -2309,12 +2308,11 @@ class SQLQuery {
 				}
 				$sql .= ")";
 				SQLQuery::db()->execute($sql);
-				array_push($updated, array($update[4], $update[1]));
-			}
-			$dm_table = DataModel::get()->getTableFromSQLName($update[0], $this->bypass_security);
-			if ($dm_table->hasUpdateListeners()) {
-				$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
-				$dm_table->fireUpdate($updated, $sub_model);
+				$dm_table = DataModel::get()->getTableFromSQLName($update[0], $this->bypass_security);
+				if ($dm_table->hasUpdateListeners()) {
+					$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
+					$dm_table->fireUpdate(array($update[4],$update[1]), $sub_model);
+				}
 			}
 				
 			// end transaction before removing tables of sub-model
