@@ -6,6 +6,7 @@ $username = $_POST["username"];
 $session = $_POST["session"];
 $campaign_id = $_POST["campaign"];
 $token = $_POST["token"];
+$synch_uid = $_POST["synch_uid"];
 $sms_path = realpath(dirname(__FILE__)."/../sms");
 $app_version = file_get_contents($sms_path."/version");
 
@@ -34,6 +35,12 @@ function removeDirectory($path) {
 	if (!@rmdir($path))
 		rmdir($path);
 }
+
+// save the synch uid
+@unlink(dirname(__FILE__)."/synch.uid");
+$f = fopen(dirname(__FILE__)."/synch.uid", "w");
+fwrite($f, $synch_uid);
+fclose($f);
 
 // first, reset our database
 progress("Initializing the database on your computer...");

@@ -47,8 +47,10 @@ global $id_counter, $inserted, $removed, $f, $total_tables, $storage_added, $sto
 $id_counter = 1;
 $inserted = array();
 $removed = array();
-$total_tables = 0;
 $f = fopen(dirname(__FILE__)."/data/database.sql_diff","w");
+$total_tables = 0;
+$storage_added = array();
+$storage_updated = array();
 /**
  * @param datamodel\Table $table
  * @param string[] $done
@@ -242,22 +244,49 @@ foreach ($sm_tables as $table)
 
 fclose($f);
 
-// prepare storage files to be sent
-$done = 0;
-$total = count($storage_added)+count($storage_updated);
-progress("Preparing modified files (pictures, documents...)",$done,$total);
-mkdir(dirname(__FILE__)."/data/new_storage");
-foreach ($storage_added as $id) {
-	$path = PNApplication::$instance->storage->get_data_path($id);
-	copy($path, dirname(__FILE__)."/data/new_storage/".$inserted["Storage"][$id]);
-	progress("Preparing modified files (pictures, documents...)",$done++,$total);
-}
-mkdir(dirname(__FILE__)."/data/updated_storage");
-foreach ($storage_updated as $id) {
-	$path = PNApplication::$instance->storage->get_data_path($id);
-	copy($path, dirname(__FILE__)."/data/updated_storage/".$id);
-	progress("Preparing modified files (pictures, documents...)",$done++,$total);
+// send to server
+
+global $campaign_id, $app_version, $synch_uid, $username, $synch_key, $server;
+$synch_uid = file_get_contents(dirname(__FILE__)."/synch.uid");
+$username = file_get_contents($sms_path."/conf/selection_travel_username");
+$synch_key = $_POST["synch_key"];
+$server = $_POST["server"];
+$app_version = file_get_contents($sms_path."/version");
+
+// TODO if version changed !!!!!!!!!!!!!!!!!
+
+function sendFile($path, $type, $info) {
+	global $campaign_id, $app_version, $synch_uid, $username, $synch_key, $server;
+	$c = curl_init("http://$server/dynamic/selection/service/synch_from_travel?type=$type&campaign=".$campaign_id.($info <> null ? $info : ""));
+	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+	curl_setopt($c, CURLOPT_INFILESIZE, filesize($path));
+	curl_setopt($c, CURLOPT_POSTFIELDS, array("username"=>$username,"uid"=>$synch_uid,"key"=>$synch_key,"filedata"=>"@".realpath($path),"filesize"=>filesize($path)));
+	curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version","User-Agent: Students Management Software - Travel Version Synchronization"));
+	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
+	curl_setopt($c, CURLOPT_TIMEOUT, 1000);
+	set_time_limit(1100);
+	$result = curl_exec($c);
+	// TODO
+	curl_close($c);
 }
 
-// TODO send to server
+progress("Sending database modifications to the server");
+sendFile(dirname(__FILE__)."/data/database.sql_diff", "database_diff", null);
+
+$done = 0;
+$total = count($storage_added)+count($storage_updated);
+progress("Sending new files (pictures, documents...) to the server", $done, $total);
+foreach ($storage_added as $id) {
+	$path = PNApplication::$instance->storage->get_data_path($id);
+	sendFile($path, "new_storage", "&file_id=".$inserted["Storage"][$id]);
+	progress("Sending new files (pictures, documents...) to the server", ++$done, $total);
+}
+foreach ($storage_updated as $id) {
+	$path = PNApplication::$instance->storage->get_data_path($id);
+	sendFile($path, "updated_storage", "&file_id=".$id);
+	progress("Sending new files (pictures, documents...) to the server", ++$done, $total);
+}
+
+// TODO send signal to the server we are done
 ?>

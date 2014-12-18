@@ -102,38 +102,41 @@ class page_selection_main_page extends SelectionPage {
 				content.appendChild(pb.element);
 				pb.element.style.display = "none";
 				pb.element.style.marginTop = "2px";
-				text.innerHTML = "Connecting to your computer";
+				text.innerHTML = "Initializing transfer...";
 				var popup = new popup_window("Synch",null,content);
 				popup.show();
-				ajax.post("http://127.0.0.1:8888/server_comm/database_diff",{},function(error) {
-					alert(error);
-				},function(xhr) {
-					content.innerHTML = xhr.responseText.replace(/\n/g,"<br/>");
-					layout.changed(content);
-				});
-				var progress = function() {
-					ajax.post("http://127.0.0.1:8888/server_comm/database_diff_progress",{},function(error){},function(xhr){
-						if (!text.parentNode) return;
-						var s = xhr.responseText;
-						if (s.substring(0,1) == "%") {
-							s = s.substring(1);
-							var i = s.indexOf('%');
-							var s2 = s.substr(0,i);
-							s = s.substr(i+1);
-							if (pb) {
-								i = s2.indexOf(',');
-								pb.setTotal(parseInt(s2.substr(i+1)));
-								pb.setPosition(parseInt(s2.substr(0,i)));
-								pb.element.style.display = "";
-							}
-						} else
-							pb.element.style.display = "none";
-						text.innerHTML = s;
+				service.json("selection","travel_synch_init",{},function(res) {
+					if (!res) { popup.close(); return; }
+					ajax.post("http://127.0.0.1:8888/server_comm/database_diff",{synch_key:res.synch_key,server:location.host},function(error) {
+						alert(error);
+					},function(xhr) {
+						content.innerHTML = xhr.responseText.replace(/\n/g,"<br/>");
 						layout.changed(content);
-						setTimeout(progress,1000);
 					});
-				};
-				setTimeout(progress, 500);
+					var progress = function() {
+						ajax.post("http://127.0.0.1:8888/server_comm/database_diff_progress",{},function(error){},function(xhr){
+							if (!text.parentNode) return;
+							var s = xhr.responseText;
+							if (s.substring(0,1) == "%") {
+								s = s.substring(1);
+								var i = s.indexOf('%');
+								var s2 = s.substr(0,i);
+								s = s.substr(i+1);
+								if (pb) {
+									i = s2.indexOf(',');
+									pb.setTotal(parseInt(s2.substr(i+1)));
+									pb.setPosition(parseInt(s2.substr(0,i)));
+									pb.element.style.display = "";
+								}
+							} else
+								pb.element.style.display = "none";
+							text.innerHTML = s;
+							layout.changed(content);
+							setTimeout(progress,1000);
+						});
+					};
+					setTimeout(progress, 500);
+				});
 			});
 		}
 			var calendar_id = null;

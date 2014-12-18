@@ -47,10 +47,11 @@ $sm->addTable("StaffStatus")
 	;
 
 $sm->addTable("TravelVersion")
-	->addString("uid", 50, 30, false, true)
-	->setKey("uid")
-	->addForeignKey("user", "Users", true, false, false)
-	->addString("synch_key", 50, 30, false, false)
+	->addString("uid", 32, 32, false, true)
+	->addForeignKey("user", "Users", true, false, false, false, true)
+	->setKey("user")
+	->addString("synch_key", 32, 32, false, false)
+	->addTimestamp("synch_key_expiration")
 	->addForeignKey("database_diff", "Storage", false, false, false)
 	;
 $sm->addTable("TravelVersionSynchStorage")

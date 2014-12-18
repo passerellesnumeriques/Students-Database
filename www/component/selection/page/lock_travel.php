@@ -67,7 +67,7 @@ function synchronizeDatabases() {
 	content.innerHTML =	"Locking campaign...";
 	layout.changed(content);
 	service.json("selection","lock_campaign",{reason:'travel'},function(res) {
-		if (!res || !res.token) { return; }
+		if (!res || !res.token || !res.uid) { return; }
 		theme.css("progress_bar.css");
 		content.innerHTML = "Synchronizing your computer with the Database.<br/>This may take several minutes...<br/><br/><div id='progress_text'></div><div id='progress_bar' style='display:none'></div>";
 		layout.changed(content);
@@ -108,7 +108,8 @@ function synchronizeDatabases() {
 			username:<?php echo json_encode(PNApplication::$instance->user_management->username);?>,
 			session:<?php echo json_encode(session_id());?>,
 			token:res.token,
-			campaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>
+			campaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>,
+			synch_uid:res.uid
 		},function(error) {
 			content.innerHTML = "An error occured during the synchronization: "+error;
 			layout.changed(content);

@@ -298,6 +298,8 @@ class selection extends Component {
 		foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables() as $table)
 			DataBaseLock::unlockTableForEver($table->getSQLNameFor($this->getCampaignId()), $this->frozen_reason);
 		SQLQuery::create()->bypassSecurity()->updateByKey("SelectionCampaign", $this->getCampaignId(), array("frozen"=>0,"frozen_reason"=>null));
+		$rows = SQLQuery::create()->bypassSecurity()->select("TravelVersion")->execute();
+		if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("TravelVersion", $rows);
 		$this->frozen_reason = null;
 		return true;
 	}
