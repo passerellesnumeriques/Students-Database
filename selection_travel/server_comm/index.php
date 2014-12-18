@@ -12,5 +12,8 @@ case "download_progress":
 	if (!file_exists("download_progress")) die();
 	readfile("download_progress");
 	die();
+case "database_diff":
+	include('database_diff.php');
+	die();
 }
 ?>

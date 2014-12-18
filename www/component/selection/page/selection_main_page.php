@@ -33,6 +33,7 @@ class page_selection_main_page extends SelectionPage {
 				<div style="display:flex;flex-direction:column;">
 					<div id='steps_header' style='flex:none;' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
 					<div style="overflow:auto;flex:1 1 auto">
+						<a href='#' onclick='test();return false;'>Test</a><br/>
 						<?php if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {?>
 						<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div style='padding:3px;'>
@@ -91,6 +92,13 @@ class page_selection_main_page extends SelectionPage {
 		</div>
 		<!--  <a href = "/dynamic/selection/page/test_functionalities">Tests</a>  -->
 		<script type = 'text/javascript'>
+		function test() {
+			ajax.post("http://127.0.0.1:8888/server_comm/database_diff",{},function(error) {
+				alert(error);
+			},function(xhr) {
+				info_dialog(xhr.responseText.replace(/\n/g,"<br/>"));
+			});
+		}
 			var calendar_id = null;
 			<?php
 			if(isset($calendar_id)) echo "calendar_id = ".json_encode($calendar_id).";";
