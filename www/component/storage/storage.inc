@@ -39,7 +39,7 @@ class storage extends Component {
 	}
 	
 	public static function reset_storage($domain) {
-		$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/".$domain;
+		$path = realpath(dirname(__FILE__)."/../../data")."/".$domain;
 		if (file_exists($path))
 			self::remove_directory($path);
 		if (!@mkdir($path)) {
@@ -73,7 +73,7 @@ class storage extends Component {
 	}
 	
 	public static function storage_path() {
-		return realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".PNApplication::$instance->current_domain."/storage");
+		return realpath(dirname(__FILE__)."/../../data/".PNApplication::$instance->current_domain."/storage");
 	}
 	
 	public function remove_expired() {
@@ -84,7 +84,7 @@ class storage extends Component {
 	}
 	
 	public function cleanup_storage() {
-		$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"]))."/data/".PNApplication::$instance->local_domain."/storage";
+		$path = realpath(dirname(__FILE__)."/../../data")."/".PNApplication::$instance->local_domain."/storage";
 		if (!file_exists($path)) return;
 		$this->cleanup_directory($path, 0, 1, false);
 	}

@@ -242,6 +242,22 @@ foreach ($sm_tables as $table)
 
 fclose($f);
 
-// TODO attach storage
-readfile(dirname(__FILE__)."/data/database.sql_diff");
+// prepare storage files to be sent
+$done = 0;
+$total = count($storage_added)+count($storage_updated);
+progress("Preparing modified files (pictures, documents...)",$done,$total);
+mkdir(dirname(__FILE__)."/data/new_storage");
+foreach ($storage_added as $id) {
+	$path = PNApplication::$instance->storage->get_data_path($id);
+	copy($path, dirname(__FILE__)."/data/new_storage/".$inserted["Storage"][$id]);
+	progress("Preparing modified files (pictures, documents...)",$done++,$total);
+}
+mkdir(dirname(__FILE__)."/data/updated_storage");
+foreach ($storage_updated as $id) {
+	$path = PNApplication::$instance->storage->get_data_path($id);
+	copy($path, dirname(__FILE__)."/data/updated_storage/".$id);
+	progress("Preparing modified files (pictures, documents...)",$done++,$total);
+}
+
+// TODO send to server
 ?>

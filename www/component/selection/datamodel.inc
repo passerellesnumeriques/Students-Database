@@ -46,6 +46,20 @@ $sm->addTable("StaffStatus")
 	->addRemoveAccess("manage_selection_campaign",true)
 	;
 
+$sm->addTable("TravelVersion")
+	->addString("uid", 50, 30, false, true)
+	->setKey("uid")
+	->addForeignKey("user", "Users", true, false, false)
+	->addString("synch_key", 50, 30, false, false)
+	->addForeignKey("database_diff", "Storage", false, false, false)
+	;
+$sm->addTable("TravelVersionSynchStorage")
+	->addForeignKey("storage", "Storage", false, false, false, false, true)
+	->setKey("storage")
+	->addBoolean("new", false)
+	->addInteger("id",32,1,null,false,false)
+	;
+
 include "datamodel_is.inc";
 include "datamodel_exam.inc";
 include "datamodel_interview.inc";

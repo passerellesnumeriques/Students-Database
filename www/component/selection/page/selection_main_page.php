@@ -101,6 +101,7 @@ class page_selection_main_page extends SelectionPage {
 				content.appendChild(text);
 				content.appendChild(pb.element);
 				pb.element.style.display = "none";
+				pb.element.style.marginTop = "2px";
 				text.innerHTML = "Connecting to your computer";
 				var popup = new popup_window("Synch",null,content);
 				popup.show();
