@@ -13,6 +13,7 @@ field_boolean.prototype._create = function(data) {
 	var t=this;
 	t.input = document.createElement("INPUT");
 	t.input.type = "checkbox";
+	t.input.style.margin = "1px";
 	t.input.onclick = function(ev) { stopEventPropagation(ev, true); };
 	if (data) t.input.checked = "checked";
 	if (!this.editable) t.input.disabled = "disabled";

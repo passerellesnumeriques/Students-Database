@@ -44,34 +44,74 @@ $sm->addTable("Applicant")
 	->addRemoveAccess("edit_applicants",true)
 	->setPrimary("people")//The primary key is the people_id
 	->addIndex("applicant_id") // it must be set as unique index
+	->setRowDescriptionProvider(function($row) {
+		$people = SQLQuery::create()->bypassSecurity()->select("People")->whereValue("People","id",$row["people"])->executeSingleRow();
+		return DataModel::get()->internalGetTable("People")->getRowDescription($people);
+	})
 	;
 // check applicant age, if someone change the birthdate
 $model->internalGetTable("People")
-	->onUpdate(function($fields_values, $key, $sub_model) {
-		if (!isset($fields_values["birth"]) || $fields_values["birth"] == null) return;
-		// check if this people is an applicant
-		$sm = SQLQuery::create()->bypassSecurity()->select("smlink_Applicant_People")->whereValue("smlink_Applicant_People","root",$key)->field("sm")->executeSingleValue();
-		if ($sm == null) return; // not an applicant
-		// get selection campaign configuration
-		$config = SQLQuery::create()->bypassSecurity()->selectSubModel("SelectionCampaign", $sm)->select("SelectionCampaignConfig")->whereIn("SelectionCampaignConfig","name",array("forbid_too_old_applicants","limit_date_of_birth"))->execute();
-		$forbid = false;
-		foreach ($config as $c) if ($c["name"] == "forbid_too_old_applicants") { $forbid = json_decode($c["value"]); break; }
-		if (!$forbid) return; // no limit for this campaign
-		$min_bd = null;
-		foreach ($config as $c) if ($c["name"] == "limit_date_of_birth") { $min_bd = json_decode($c["value"]); break; }
-		if ($min_bd == null || $min_bd == "") return; // not set ? should never happen...
-		require_once("component/data_model/TableDefinition.inc");
-		$min_bd = datamodel\ColumnDate::toTimestamp($min_bd);
-		$bd = datamodel\ColumnDate::toTimestamp($fields_values["birth"]);
-		if ($bd < $min_bd) {
-			// too old, make sure this applicant is excluded
-			SQLQuery::create()->bypassSecurity()->selectSubModel("SelectionCampaign", $sm)->updateByKey("Applicant", $key, array("excluded"=>1,"automatic_exclusion_step"=>"Application Form","automatic_exclusion_reason"=>"Too old"));
-		} else {
-			// not too old, put it back if this applicant was excluded because of age
-			$app = SQLQuery::create()->bypassSecurity()->selectSubModel("SelectionCampaign", $sm)->select("Applicant")->whereValue("Applicant","people",$key)->field("excluded")->field("automatic_exclusion_step")->field("automatic_exclusion_reason")->executeSingleRow();
-			if ($app <> null && $app["excluded"] == 1 && $app["automatic_exclusion_step"] == "Application Form" && $app["automatic_exclusion_reason"] == "Too old") {
-				// put back in the process!
-				SQLQuery::create()->bypassSecurity()->selectSubModel("SelectionCampaign", $sm)->updateByKey("Applicant", $key, array("excluded"=>0,"automatic_exclusion_step"=>null,"automatic_exclusion_reason"=>null));
+	->onUpdate(function($keys_fields_values, $sub_model) {
+		$applicants_by_campaign = array();
+		foreach ($keys_fields_values as $updated) {
+			$keys = $updated[0];
+			$fields_values = $updated[1];
+			if (!isset($fields_values["birth"]) || $fields_values["birth"] == null) return;
+			// check peoples who are applicants
+			$applicants_links = SQLQuery::create()->bypassSecurity()->select("smlink_Applicant_People")->whereIn("smlink_Applicant_People","root",$keys)->execute();
+			foreach ($applicants_links as $link) {
+				if (!isset($applicants_by_campaign[$link["sm"]])) $applicants_by_campaign[$link["sm"]] = array();
+				array_push($applicants_by_campaign[$link["sm"]], array(array($link["root"]), $fields_values));
+			}
+		}
+		if (count($applicants_by_campaign) == 0) return; // no applicant
+		foreach ($applicants_by_campaign as $campaign_id=>$applicants) {
+			// get selection campaign configuration
+			$config = SQLQuery::create()->bypassSecurity()->selectSubModel("SelectionCampaign", $campaign_id)->select("SelectionCampaignConfig")->whereIn("SelectionCampaignConfig","name",array("forbid_too_old_applicants","limit_date_of_birth"))->execute();
+			$forbid = false;
+			foreach ($config as $c) if ($c["name"] == "forbid_too_old_applicants") { $forbid = json_decode($c["value"]); break; }
+			if (!$forbid) continue; // no limit for this campaign
+			$min_bd = null;
+			foreach ($config as $c) if ($c["name"] == "limit_date_of_birth") { $min_bd = json_decode($c["value"]); break; }
+			if ($min_bd == null || $min_bd == "") continue; // not set ? should never happen...
+			require_once("component/data_model/TableDefinition.inc");
+			$min_bd = datamodel\ColumnDate::toTimestamp($min_bd);
+			// check applicants
+			foreach ($applicants as $update_list) {
+				$applicants_ids = $update_list[0];
+				$fields_values = $update_list[1];
+				$bd = datamodel\ColumnDate::toTimestamp($fields_values["birth"]);
+				if ($bd < $min_bd) {
+					// too old, make sure those applicants are excluded
+					SQLQuery::create()->bypassSecurity()
+						->selectSubModel("SelectionCampaign", $campaign_id)
+						->updateByKeys("Applicant", array(
+							array(
+								$applicants_ids, 
+								array("excluded"=>1,"automatic_exclusion_step"=>"Application Form","automatic_exclusion_reason"=>"Too old")
+							)
+						));
+				} else {
+					// not too old, put them back if those applicants were excluded because of age
+					$back_list = SQLQuery::create()->bypassSecurity()
+						->selectSubModel("SelectionCampaign", $campaign_id)
+						->select("Applicant")
+						->whereIn("Applicant","people",$applicants_ids)
+						->whereValue("Applicant", "excluded", 1)
+						->whereValue("Applicant", "automatic_exclusion_step", "Application Form")
+						->whereValue("Applicant", "automatic_exclusion_reason", "Too old")
+						->field("people")
+						->executeSingleField();
+					if (count($back_list) > 0)
+						SQLQuery::create()->bypassSecurity()
+							->selectSubModel("SelectionCampaign", $campaign_id)
+							->updateByKeys("Applicant", array(
+								array(
+									$back_list,
+									array("excluded"=>0,"automatic_exclusion_step"=>null,"automatic_exclusion_reason"=>null)
+								)	
+							));
+				}
 			}
 		}
 	});

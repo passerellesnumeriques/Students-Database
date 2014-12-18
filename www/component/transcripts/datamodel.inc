@@ -184,12 +184,13 @@ $model->addTable("PublishedTranscript")
 	->addWriteAccess("edit_transcripts_design", true)
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
-	->onInsert(function($fields,$id,$sub_model_instance) {
-		try {
-			$period = PNApplication::$instance->curriculum->getBatchPeriod($fields["period"]);
-			$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
-			PNApplication::$instance->news->post("students", "transcripts", array("batch".$batch["id"],"period".$period["id"]), "activity", "Transcript published for Batch ".toHTML($batch["name"]).", period ".toHTML($period["name"]));
-		} catch (Exception $e) { PNApplication::error($e); }
+	->onInsert(function($inserted) {
+		foreach ($inserted as $row)
+			try {
+				$period = PNApplication::$instance->curriculum->getBatchPeriod($row["fields_values"]["period"]);
+				$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+				PNApplication::$instance->news->post("students", "transcripts", array("batch".$batch["id"],"period".$period["id"]), "activity", "Transcript published for Batch ".toHTML($batch["name"]).", period ".toHTML($period["name"]));
+			} catch (Exception $e) { PNApplication::error($e); }
 	})
 	;
 
@@ -290,10 +291,17 @@ $model->addTable("PublishedTranscriptStudentEvaluationGrade")
 	;
 	
 $model->internalGetTable("BatchPeriodSpecialization")
-	->onRemove(function($row,$sm) {
-		$published = SQLQuery::create()->bypassSecurity()->select("PublishedTranscript")->whereValue("PublishedTranscript","period",$row["period"])->whereValue("PublishedTranscript","specialization",$row["specialization"])->execute();
-		SQLQuery::create()->bypassSecurity()->removeRows("PublishedTranscript", $published);
-		$config = SQLQuery::create()->bypassSecurity()->select("TranscriptConfig")->whereValue("TranscriptConfig","period",$row["period"])->whereValue("TranscriptConfig","specialization",$row["specialization"])->execute();
-		SQLQuery::create()->bypassSecurity()->removeRows("TranscriptConfig", $config);
+	->onRemove(function($table, $rows, $sm) {
+		$where = "";
+		foreach ($rows as $row) {
+			if ($where <> "") $where .= " OR ";
+			$where .= "(`period`=".$row["period"]." AND `specialization`=".$row["specialization"].")";
+		}
+		$published = SQLQuery::create()->bypassSecurity()->select("PublishedTranscript")->where($where)->execute();
+		if (count($published) > 0)
+			SQLQuery::create()->bypassSecurity()->removeRows("PublishedTranscript", $published);
+		$config = SQLQuery::create()->bypassSecurity()->select("TranscriptConfig")->where($where)->execute();
+		if (count($config) > 0)
+			SQLQuery::create()->bypassSecurity()->removeRows("TranscriptConfig", $config);
 	});
 ?>

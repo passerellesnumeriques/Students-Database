@@ -231,7 +231,7 @@ function renameCampaign() {
 function removeCampaign() {
 	confirm_dialog("Are you sure you want to remove this campaign?<br/><i><b>All the related data will be removed</i></b>",function(res){
 		if(!res) return;
-		var div_locker = lock_screen();
+		var div_locker = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing Selection Campaign and every applicant of it...");
 		service.json("selection","remove_campaign",{id:<?php echo $id;?>},function(res){
 			unlock_screen(div_locker);
 			if(!res) return;

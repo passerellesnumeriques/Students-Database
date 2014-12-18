@@ -46,6 +46,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.container = null;
 		t.grid = null;
 		t.show_fields = null;
+		t.always_fields = null;
 		t.save_button = null;
 		t._available_fields = null;
 		t._sort_column = null;
@@ -63,6 +64,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	/** {grid} the data list use the grid widget to display data, we can access it directly here */
 	t.grid = null;
 	t.show_fields = [];
+	t.always_fields = [];
 	/** Event when data has been loaded/refreshed */
 	t.ondataloaded = new Custom_Event();
 	
@@ -367,6 +369,12 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 		}
 	};
+	t.alwaysGetField = function(category, name) {
+		var f = t.getField(category,name);
+		if (!f) return;
+		if (t.always_fields.indexOf(f) >= 0) return;
+		t.always_fields.push(f);
+	};
 	t.getColumnIdFromField = function(f, skip_check_visible) {
 		var id = f.field.category+'.'+f.field.name+'.'+f.sub_index;
 		if (skip_check_visible) return id;
@@ -610,6 +618,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		// no corresponding column: TODO support it ?
 	};
 	
+	t.setRowBackgroundProvider = function(provider) {
+		t._row_background_provider = provider;
+	};
+	
 	/* Private properties */
 	t._root_table = root_table;
 	t._sub_model = sub_model;
@@ -632,8 +644,14 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	t._action_providers = [];
 	/** {GridColumn} last column for actions, or null if there is no such a column */
 	t._col_actions = null;
+	t._row_background_provider = null;
 
 	/* Private methods */
+	
+	t._getRowBackground = function(sent_fields, received_values) {
+		if (!t._row_background_provider) return null;
+		return t._row_background_provider(sent_fields, received_values);
+	},
 	
 	/** Initialize the data list display */
 	t._initList = function() {
@@ -1147,12 +1165,25 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		t.startLoading();
 		var fields = [];
+		var sent_fields = [];
 		for (var i = 0; i < t.show_fields.length; ++i) {
 			var found = false;
 			for (var j = 0; j < fields.length; ++j)
 				if (fields[j].path == t.show_fields[i].field.path.path && fields[j].name == t.show_fields[i].field.name) { found = true; break; }
-			if (!found)
+			if (!found) {
 				fields.push({path:t.show_fields[i].field.path.path,name:t.show_fields[i].field.name});
+				sent_fields.push(t.show_fields[i].field);
+			}
+		}
+		for (var i = 0; i < t.always_fields.length; ++i) {
+			var f = t.always_fields[i];
+			var found = false;
+			for (var j = 0; j < t.show_fields.length; ++j)
+				if (t.show_fields[j].field == f) { found = true; break; };
+			if (!found) {
+				fields.push({path:f.path.path,name:f.name});
+				sent_fields.push(f);
+			}
 		}
 		var params = {table:t._root_table,sub_model:t._sub_model,fields:fields,actions:true};
 		if (t._page_size > 0) {
@@ -1212,6 +1243,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						}
 				for (var i = 0; i < result.data.length; ++i) {
 					var row = {row_id:i,row_data:[]};
+					var bg = t._getRowBackground(sent_fields, result.data[i].values);
+					if (bg) row.background = bg;
 					for (var j = 0; j < t.show_fields.length; ++j)
 						row.row_data.push({col_id:cols[j].id,data_id:null,css:"disabled"});
 					for (var j = 0; j < fields.length; ++j) {

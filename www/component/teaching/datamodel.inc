@@ -35,32 +35,40 @@ $model->addTable("TeacherDates")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
-	->onInsert(function($fields_values,$id,$sm){
-		$people_id = $fields_values["people"];
-		$people = PNApplication::$instance->people->getPeople($people_id, true);
-		$dates = SQLQuery::create()->bypassSecurity()->select("TeacherDates")->whereValue("TeacherDates","people",$people_id)->execute();
-		if (count($dates) == 1) {
-			PNApplication::$instance->news->post("students","curriculum",null,"activity","New teacher: <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>");
-		} else {
-			PNApplication::$instance->news->post("students","curriculum",null,"activity","New dates for teacher <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>: from ".$fields_values["start"].($fields_values["end"] <> null ? " to ".$fields_values["end"] : ""));
+	->onInsert(function($inserted){
+		foreach ($inserted as $row) {
+			$people_id = $row["fields_values"]["people"];
+			$people = PNApplication::$instance->people->getPeople($people_id, true);
+			$dates = SQLQuery::create()->bypassSecurity()->select("TeacherDates")->whereValue("TeacherDates","people",$people_id)->execute();
+			if (count($dates) == 1) {
+				PNApplication::$instance->news->post("students","curriculum",null,"activity","New teacher: <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>");
+			} else {
+				PNApplication::$instance->news->post("students","curriculum",null,"activity","New dates for teacher <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>: from ".$row["fields_values"]["start"].($row["fields_values"]["end"] <> null ? " to ".$row["fields_values"]["end"] : ""));
+			}
 		}
 	})
-	->onBeforeUpdate(function($fields_values,$id,$sm){
-		$prev = SQLQuery::create()->bypassSecurity()->select("TeacherDates")->whereValue("TeacherDates","id",$id)->executeSingleRow();
-		$people = PNApplication::$instance->people->getPeople($prev["people"], true);
-		$message = "Update teaching dates of <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>: ";
-		$first = true;
-		if (isset($fields_values["start"]) && $fields_values["start"] <> $prev["start"]) {
-			$first = false;
-			$message .= "started on ".$fields_values["start"]." instead of ".$prev["start"];
+	->onBeforeUpdate(function(&$keys_fields_values,$sm){
+		foreach ($keys_fields_values as $updated) {
+			$keys = $updated[0];
+			$fields_values = $updated[1];
+			foreach ($keys as $id) {
+				$prev = SQLQuery::create()->bypassSecurity()->select("TeacherDates")->whereValue("TeacherDates","id",$id)->executeSingleRow();
+				$people = PNApplication::$instance->people->getPeople($prev["people"], true);
+				$message = "Update teaching dates of <i>".toHTML($people["first_name"]." ".$people["last_name"])."</i>: ";
+				$first = true;
+				if (isset($fields_values["start"]) && $fields_values["start"] <> $prev["start"]) {
+					$first = false;
+					$message .= "started on ".$fields_values["start"]." instead of ".$prev["start"];
+				}
+				if (isset($fields_values["end"]) && $fields_values["end"] <> $prev["end"]) {
+					if ($first) $first = false; else $message .= ", ";
+					if ($prev["end"] == null) $message .= "ended on ".$fields_values["end"];
+					else if ($fields_values["end"] == null) $message .= "still teaching today (previously ended on ".$prev["end"].")";
+					else $message .= "ended on ".$fields_values["end"]." instead of ".$prev["end"];
+				}
+				PNApplication::$instance->news->post("students","curriculum",null,"activity",$message);
+			}
 		}
-		if (isset($fields_values["end"]) && $fields_values["end"] <> $prev["end"]) {
-			if ($first) $first = false; else $message .= ", ";
-			if ($prev["end"] == null) $message .= "ended on ".$fields_values["end"];
-			else if ($fields_values["end"] == null) $message .= "still teaching today (previously ended on ".$prev["end"].")";
-			else $message .= "ended on ".$fields_values["end"]." instead of ".$prev["end"];
-		}
-		PNApplication::$instance->news->post("students","curriculum",null,"activity",$message);
 	})
 	;
 

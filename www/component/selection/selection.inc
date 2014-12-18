@@ -213,6 +213,7 @@ class selection extends Component {
 		PNApplication::$instance->calendar->removeSharedCalendar($campaign["calendar"]);
 		// remove applicants
 		$applicants_ids = SQLQuery::create()->select("Applicant")->field("people")->executeSingleField();
+		set_time_limit(30+floor(count($applicants_ids)/1000));
 		if (count($applicants_ids) > 0) {
 			$campaigns_ids = SQLQuery::create()->select("SelectionCampaign")->whereNotValue("SelectionCampaign", "id", $id)->field("id")->executeSingleField();
 			$reassign_applicants = array();

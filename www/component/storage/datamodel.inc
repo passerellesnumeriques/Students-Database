@@ -7,10 +7,12 @@ $model->addTable("Storage")
 	->addInteger("revision", 32, 1, null, false, false)
 	->addString("type", 100, 1, false, false)
 	->allowReadAccess()
-	->onRemove(function($row,$sub_model) {
+	->onRemove(function($table, $rows, $sub_model) {
 		// make sure the file will not remain
-		$path = PNApplication::$instance->storage->get_data_path($row["id"]);
-		@unlink($path);
+		foreach ($rows as $row) {
+			$path = PNApplication::$instance->storage->get_data_path($row["id"]);
+			@unlink($path);
+		}
 	})
 	;
 ?>

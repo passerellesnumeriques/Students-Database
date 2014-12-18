@@ -336,21 +336,21 @@ namespace datamodel {
 		}
 		
 		/**
-		 * @param function $fct takes 3 parameters: fields_values, id, sub_model_instance
+		 * @param function $fct take as parameter and array, with each element being an associative array with 3 keys: fields_values, id, sub_model_instance
 		 * @return \datamodel\Table
 		 */
 		public function onInsert($fct) {
 			$this->oninsert->listenFunction($fct);
 			return $this;
 		}
-		public function fireInsert($fields_values, $id, $sub_model_instance) {
-			$this->oninsert->fire(array($fields_values,$id,$sub_model_instance));
+		public function fireInsert($inserted) {
+			$this->oninsert->fire(array($inserted));
 		}
 		public function hasInsertListeners() {
 			return $this->oninsert->hasListeners();
 		}
 		/**
-		 * @param function $fct takes 2 parameters: row, sub_model_instance, and must return null if the remove is allowed, or a string containing the error message
+		 * @param function $fct takes 3 parameters: table (of type Table), rows, sub_model_instance, and must return null if the remove is allowed, or a string containing the error message in HTML format
 		 * @return \datamodel\Table
 		 */
 		public function onBeforeRemove($fct) {
@@ -358,50 +358,50 @@ namespace datamodel {
 			return $this;
 		}
 		/**
-		 * @param function $fct takes 2 parameters: row, sub_model_instance
+		 * @param function $fct takes 3 parameters: table, rows, sub_model_instance
 		 * @return \datamodel\Table
 		 */
 		public function onRemove($fct) {
 			$this->onremove->listenFunction($fct);
 			return $this;
 		}
-		public function fireBeforeRemove($row, $sub_model_instance) {
+		public function fireBeforeRemove($table, $rows, $sub_model_instance) {
 			foreach ($this->onbeforeremove as $fct) {
-				$error = $fct($row, $sub_model_instance);
+				$error = $fct($table, $rows, $sub_model_instance);
 				if ($error <> null) return $error;
 			}
 			return null;
 		}
-		public function fireRemove($row, $sub_model_instance) {
-			$this->onremove->fire(array($row,$sub_model_instance));
+		public function fireRemove($table, $rows, $sub_model_instance) {
+			$this->onremove->fire(array($table, $rows, $sub_model_instance));
 		}
 		public function hasRemoveListeners() {
 			return $this->onremove->hasListeners() || count($this->onbeforeremove) > 0;
 		}
 		/**
-		 * @param function $fct takes 3 parameters: fields_values, key, sub_model_instance
+		 * @param function $fct takes 2 parameters: keys_fields_values, sub_model_instance
 		 * @return \datamodel\Table
 		 */
 		public function onUpdate($fct) {
 			$this->onupdate->listenFunction($fct);
 			return $this;
 		}
-		public function fireUpdate($fields_values, $key, $sub_model_instance) {
-			$this->onupdate->fire(array($fields_values,$key,$sub_model_instance));
+		public function fireUpdate($keys_fields_values, $sub_model_instance) {
+			$this->onupdate->fire(array($keys_fields_values,$sub_model_instance));
 		}
 		public function hasUpdateListeners() {
 			return $this->onupdate->hasListeners();
 		}
 		/**
-		 * @param function $fct takes 3 parameters: fields_values, key, sub_model_instance
+		 * @param function $fct takes 2 parameters: keys_fields_values, sub_model_instance
 		 * @return \datamodel\Table
 		 */
 		public function onBeforeUpdate($fct) {
 			$this->onbeforeupdate->listenFunction($fct);
 			return $this;
 		}
-		public function fireBeforeUpdate(&$fields_values, $key, $sub_model_instance) {
-			$this->onbeforeupdate->fire(array(&$fields_values,$key,$sub_model_instance));
+		public function fireBeforeUpdate(&$keys_fields_values, $sub_model_instance) {
+			$this->onbeforeupdate->fire(array(&$keys_fields_values,$sub_model_instance));
 		}
 		public function hasBeforeUpdateListeners() {
 			return $this->onbeforeupdate->hasListeners();

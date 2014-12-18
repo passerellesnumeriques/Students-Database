@@ -67,8 +67,10 @@ class page_exam_assign_applicants_to_center extends SelectionPage {
 		<?php
 		foreach ($centers as $c) echo "<option value='".$c["id"]."'>".toHTML($c["name"])."</option>"; 
 		?>
-	</select><br/>
+	</select>
 	<button class='action' onclick='assignApplicants();'>Assign applicant<?php if (count($applicants) > 1) echo "s"?></button>
+	<br/>
+	<button class='action' onclick='unassignApplicants();'>Unassign applicant<?php if (count($applicants) > 1) echo "s"?></button>
 </div>
 <script type='text/javascript'>
 function assignApplicants() {
@@ -78,6 +80,15 @@ function assignApplicants() {
 	popup.freeze("Assigning applicant<?php if (count($applicants) > 1) echo "s"?>...");
 	var ids = <?php echo json_encode($applicants_ids);?>;
 	service.json("data_model","save_cells",{cells:[{table:'Applicant',sub_model:<?php echo $this->component->getCampaignId();?>,keys:ids,values:[{column:'exam_center',value:center_id}]}]},function(res) {
+		<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();"?>
+		popup.close();
+	});
+}
+function unassignApplicants() {
+	var popup = window.parent.get_popup_window_from_frame(window);
+	popup.freeze("Unassigning applicant<?php if (count($applicants) > 1) echo "s"?>...");
+	var ids = <?php echo json_encode($applicants_ids);?>;
+	service.json("data_model","save_cells",{cells:[{table:'Applicant',sub_model:<?php echo $this->component->getCampaignId();?>,keys:ids,values:[{column:'exam_center',value:null}]}]},function(res) {
 		<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();"?>
 		popup.close();
 	});

@@ -44,7 +44,7 @@ abstract class SelectionPage extends Page{
 									</div>
 									<ul style='margin-top:5px'>
 										<?php foreach($campaigns as $c) {
-											echo "<li><a class='black_link' href='#' onclick=\"getIFrameWindow(findFrame('pn_application_frame')).changeCampaign(".$c["id"].");return false;\">".$c["name"]."</a></li>";
+											echo "<li><a class='black_link' href='#' onclick=\"getIFrameWindow(findFrame('pn_application_frame')).changeCampaign(".$c["id"].");return false;\">".toHTML($c["name"])."</a></li>";
 										}?>
 									</ul>
 								</div>

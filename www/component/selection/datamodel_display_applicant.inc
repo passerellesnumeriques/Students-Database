@@ -212,13 +212,6 @@ $display->addJoinFrom("people", array("types"), function($columns) {
 $display->addJoinToPrimary();
 $model->addTableDataDisplay($display);
 
-$display = new datamodel\TableDataDisplay("ApplicantInterviewer", $category);
-$display->addJoinFrom("applicant");
-$display->addDataDisplay(new datamodel\JoiningTableDataDisplay("Interviewers", "applicant", "interviewer", "name"));
-$model->addTableDataDisplay($display);
-$model->internalGetTable("CalendarEventAttendee")
-	->addReadAccessFromForeignTable("ApplicantInterviewer");
-
 class ApplicantDataScreen extends datamodel\GenericDataScreen {
 	
 	protected function endDataRow($data, $value, $sub_index, $is_new, $can_edit) {
@@ -238,6 +231,13 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 					$html .= "</td>";
 				}
 				break;
+			case "Interview Center":
+				if (PNApplication::$instance->user_management->has_right("edit_applicants") && !$is_new) {
+					$html .= "<td>";
+					$html .= "<button class='flat small' title='Change Interview Center' onclick='changeInterviewCenter(this);return false;'><img src='".theme::make_icon("/static/selection/exam/exam_center_16.png", theme::$icons_10["_import"])."'/></button>";
+					$html .= "</td>";
+				}
+				break;
 		}
 		return $html;
 	}
@@ -254,6 +254,9 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 			$html .= "}";
 			$html .= "function changeExamCenter() {";
 				$html .= "popup_frame('/static/selection/exam/exam_center_16.png', 'Assign applicant to an exam center', '/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refresh', {applicants:[".$applicant_id."]}, null, null, function(frame,popup) { frame.refresh=function() {location.reload();}; });";
+			$html .= "}";
+			$html .= "function changeInterviewCenter() {";
+				$html .= "popup_frame('/static/selection/exam/exam_center_16.png', 'Assign applicant to an interview center', '/dynamic/selection/page/interview/assign_applicants_to_center?ondone=refresh', {applicants:[".$applicant_id."]}, null, null, function(frame,popup) { frame.refresh=function() {location.reload();}; });";
 			$html .= "}";
 			$html .= "</script>";
 		}
@@ -310,6 +313,13 @@ function exclude() {
 	
 }
 $model->addDataScreen(new ApplicantDataScreen($display));
+
+$display = new datamodel\TableDataDisplay("ApplicantInterviewer", $category);
+$display->addJoinFrom("applicant");
+$display->addDataDisplay(new datamodel\JoiningTableDataDisplay("Interviewers", "applicant", "interviewer", "name"));
+$model->addTableDataDisplay($display);
+$model->internalGetTable("CalendarEventAttendee")
+	->addReadAccessFromForeignTable("ApplicantInterviewer");
 
 $category_more_info = new datamodel\DataDisplayCategory("Selection (Additional Info)");
 $model->addDataCategory($category_more_info);

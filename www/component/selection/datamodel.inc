@@ -12,10 +12,11 @@ $model->addTable("SelectionCampaign")
 	->addWriteAccess("manage_selection_campaign",true)
 	->addInsertAccess("manage_selection_campaign",true)
 	->addRemoveAccess("manage_selection_campaign",true)
- 	->onInsert(function($fields,$id,$sub_model_instance) {
-		try {
-			PNApplication::$instance->news->post("selection", null, array("campaign".$id), "activity", "Creation of campaign <i>".$fields["name"]."</i>");
-		} catch (Exception $e) { PNApplication::error($e); }
+ 	->onInsert(function($inserted) {
+ 		foreach ($inserted as $row)
+			try {
+				PNApplication::$instance->news->post("selection", null, array("campaign".$row["id"]), "activity", "Creation of campaign <i>".$row["fields_values"]["name"]."</i>");
+			} catch (Exception $e) { PNApplication::error($e); }
  	})
 	;
 		
