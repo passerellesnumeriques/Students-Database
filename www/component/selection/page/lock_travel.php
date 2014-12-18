@@ -90,8 +90,8 @@ function synchronizeDatabases() {
 					s = s.substr(i+1);
 					if (pb) {
 						i = s2.indexOf(',');
-						pb.setPosition(parseInt(s2.substr(0,i)));
 						pb.setTotal(parseInt(s2.substr(i+1)));
+						pb.setPosition(parseInt(s2.substr(0,i)));
 						pb_cont.style.display = "";
 					}
 				} else
