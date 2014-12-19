@@ -1,5 +1,5 @@
 <?php 
-class service_travel_synch_init extends Service {
+class service_travel_init_synch extends Service {
 	
 	public function getRequiredRights() { return array("manage_selection_campaign"); }
 	

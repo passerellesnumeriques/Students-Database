@@ -29,7 +29,9 @@ function closePopup() {
 </script>
 <?php 						
 		} else if ($reason == "Selection Team Travelling") {
-			$user_id = SQLQuery::create()->bypassSecurity()->select("TravelVersion")->field("user")->executeSingleValue();
+			$travel = SQLQuery::create()->bypassSecurity()->select("TravelVersion")->executeSingleRow();
+			$user_id = $travel["user"];
+			$synch_uid = $travel["uid"];
 ?>
 <div style='background-color:white;padding:10px'>
 <?php 
@@ -47,9 +49,10 @@ if ($user_id <> PNApplication::$instance->user_management->user_id) {
 	echo "meaning all the modifications $he did on $his computer will be lost.<br/><br/>";
 	echo "<button class='action red' onclick='unlock();'>Unlock anyway</button>";
 } else {
-	echo "Welcome back $name !<br/>";
-	echo "You probably want to unlock this campaign because you are back, so we need to get the version of the database<br/>";
-	echo "from your computer and put it on the server.<br/>";
+	echo "<b>Welcome back $name !</b><br/>";
+	echo "<br/>";
+	echo "You probably want to unlock this campaign because you are back, so we need to get the modifications you made<br/>";
+	echo "on the database, from your computer to the server.<br/>";
 	echo "<br/>";
 	echo "<div id='progress'>Connecting to your computer</div>";
 } 
@@ -67,7 +70,107 @@ function unlock() {
 	});
 }
 function connectToComputer() {
+	var content = document.getElementById('progress');
+	content.innerHTML = "Connecting to your computer";
+	layout.changed(content);
+	ajax.post("http://127.0.0.1:8888/server_comm/check_install",{},function(error) {
+		content.innerHTML = 
+			"We cannot find the Travelling version of this software on your computer.<br/>"+
+			"<br/>"+
+			"If you are not using the computer with which you travelled, you must do this operation<br/>"+
+			"using the computer containing the software you used during your travel.<br/>"+
+			"<br/>"+
+			"If you are currently on that computer, probably the software is not launched.<br/>"+
+			"In this case, execute the file <b>start.bat</b> located in the directory C:\\SelectionToolTravel to start the software.<br/>"+
+			"Then <button class='action' onclick='connectToComputer();'>Try Again</button><br/>"+
+			"<br/>"+
+			"If you lost your computer, or you don't want to synchronize, you can unlock the campaign<br/>"+
+			"without synchronization. In this case, all modifications that you made on your computer<br/>"+
+			"will be lost!<br/>"+
+			"<button class='action red' onclick='unlock();'>Unlock campaign without synchronization</button>";
+		layout.changed(content);
+	},function(xhr) {
+		var version = xhr.responseText;
+		ajax.post("http://127.0.0.1:8888/server_comm/check_synch",{},function(error) {
+			content.innerHTML = "An error occured while connecting to your computer<br/>"+
+				"<button class='action' onclick='connectToComputer();'>Try Again</button><br/>";
+			layout.changed(content);
+		},function(xhr) {
+			var synch_uid = xhr.responseText;
+			if (synch_uid != <?php echo json_encode($synch_uid);?>) {
+				content.innerHTML =
+					"The software on this computer is not the one used when you locked the campaign.<br/>"+
+					"You must use the same computer.";
+				layout.changed(content);
+				return;
+			}
+			var server_version = <?php global $pn_app_version; echo json_encode($pn_app_version);?>;
+			if (version != server_version) {
+				content.innerHTML = 
+					"The server has been updated to version "+server_version+" during your travel and your computer is using version "+version+"<br/>"+
+					"We need to update your computer to version "+server_version+" before we can synchronize the database<br/>"+
+					"<br/>"+
+					"<button class='action' onclick='upgrade();'>Upgrade my computer</button>";
+				layout.changed(content);
+			} else {
+				content.innerHTML =	
+					"<button class='action' onclick='synch();'>Synchronize database with my computer</button><br/>"+
+					"<br/>"+
+					"<button class='action red' onclick='unlock();'>Unlock campaign without synchronization</button><br/>"+
+					"<span style='font-weight:bold;color:red'>(all the modifications you made on your computer will be lost)</span>";
+				layout.changed(content);
+			}
+		});
+	});
+}
+function upgrade() {
 	// TODO
+}
+function synch() {
+	var content = document.getElementById('progress');
+	content.innerHTML = "";
+	require("progress_bar.js",function() {
+		var text = document.createElement("DIV");
+		var pb = new progress_bar(250,20);
+		content.appendChild(text);
+		content.appendChild(pb.element);
+		pb.element.style.display = "none";
+		pb.element.style.marginTop = "2px";
+		text.innerHTML = "Initializing transfer...";
+		layout.changed(content);
+		service.json("selection","travel/init_synch",{},function(res) {
+			if (!res) { popup.close(); return; }
+			ajax.post("http://127.0.0.1:8888/server_comm/database_diff",{synch_key:res.synch_key,server:location.host},function(error) {
+				alert(error);
+			},function(xhr) {
+				content.innerHTML = xhr.responseText.replace(/\n/g,"<br/>");
+				layout.changed(content);
+			});
+			var progress = function() {
+				ajax.post("http://127.0.0.1:8888/server_comm/database_diff_progress",{},function(error){},function(xhr){
+					if (!text.parentNode) return;
+					var s = xhr.responseText;
+					if (s.substring(0,1) == "%") {
+						s = s.substring(1);
+						var i = s.indexOf('%');
+						var s2 = s.substr(0,i);
+						s = s.substr(i+1);
+						if (pb) {
+							i = s2.indexOf(',');
+							pb.setTotal(parseInt(s2.substr(i+1)));
+							pb.setPosition(parseInt(s2.substr(0,i)));
+							pb.element.style.display = "";
+						}
+					} else
+						pb.element.style.display = "none";
+					text.innerHTML = s;
+					layout.changed(content);
+					setTimeout(progress,1000);
+				});
+			};
+			setTimeout(progress, 500);
+		});
+	});
 }
 <?php if ($user_id == PNApplication::$instance->user_management->user_id) echo "connectToComputer();"; ?>
 </script>

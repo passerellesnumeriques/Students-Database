@@ -5,6 +5,9 @@ switch ($path) {
 case "check_install":
 	echo @file_get_contents(realpath(dirname(__FILE__))."/../sms/version");
 	die();
+case "check_synch":
+	echo @file_get_contents(realpath(dirname(__FILE__))."/synch.uid");
+	die();
 case "update_sms":
 	include("update_sms.php");
 	die();

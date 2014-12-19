@@ -33,7 +33,6 @@ class page_selection_main_page extends SelectionPage {
 				<div style="display:flex;flex-direction:column;">
 					<div id='steps_header' style='flex:none;' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
 					<div style="overflow:auto;flex:1 1 auto">
-						<a href='#' onclick='test();return false;'>Test</a><br/>
 						<?php if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {?>
 						<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div style='padding:3px;'>
@@ -92,53 +91,6 @@ class page_selection_main_page extends SelectionPage {
 		</div>
 		<!--  <a href = "/dynamic/selection/page/test_functionalities">Tests</a>  -->
 		<script type = 'text/javascript'>
-		function test() {
-			require(["popup_window.js","progress_bar.js"],function() {
-				var content = document.createElement("DIV");
-				content.style.padding = "10px";
-				var text = document.createElement("DIV");
-				var pb = new progress_bar(250,20);
-				content.appendChild(text);
-				content.appendChild(pb.element);
-				pb.element.style.display = "none";
-				pb.element.style.marginTop = "2px";
-				text.innerHTML = "Initializing transfer...";
-				var popup = new popup_window("Synch",null,content);
-				popup.show();
-				service.json("selection","travel_synch_init",{},function(res) {
-					if (!res) { popup.close(); return; }
-					ajax.post("http://127.0.0.1:8888/server_comm/database_diff",{synch_key:res.synch_key,server:location.host},function(error) {
-						alert(error);
-					},function(xhr) {
-						content.innerHTML = xhr.responseText.replace(/\n/g,"<br/>");
-						layout.changed(content);
-					});
-					var progress = function() {
-						ajax.post("http://127.0.0.1:8888/server_comm/database_diff_progress",{},function(error){},function(xhr){
-							if (!text.parentNode) return;
-							var s = xhr.responseText;
-							if (s.substring(0,1) == "%") {
-								s = s.substring(1);
-								var i = s.indexOf('%');
-								var s2 = s.substr(0,i);
-								s = s.substr(i+1);
-								if (pb) {
-									i = s2.indexOf(',');
-									pb.setTotal(parseInt(s2.substr(i+1)));
-									pb.setPosition(parseInt(s2.substr(0,i)));
-									pb.element.style.display = "";
-								}
-							} else
-								pb.element.style.display = "none";
-							text.innerHTML = s;
-							layout.changed(content);
-							setTimeout(progress,1000);
-						});
-					};
-					setTimeout(progress, 500);
-				});
-			});
-		}
 			var calendar_id = null;
 			<?php
 			if(isset($calendar_id)) echo "calendar_id = ".json_encode($calendar_id).";";

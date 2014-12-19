@@ -253,11 +253,9 @@ $synch_key = $_POST["synch_key"];
 $server = $_POST["server"];
 $app_version = file_get_contents($sms_path."/version");
 
-// TODO if version changed !!!!!!!!!!!!!!!!!
-
 function sendFile($path, $type, $info) {
 	global $campaign_id, $app_version, $synch_uid, $username, $synch_key, $server;
-	$c = curl_init("http://$server/dynamic/selection/service/synch_from_travel?type=$type&campaign=".$campaign_id.($info <> null ? $info : ""));
+	$c = curl_init("http://$server/dynamic/selection/service/travel/synch_file?type=$type&campaign=".$campaign_id.($info <> null ? $info : ""));
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_INFILESIZE, filesize($path));
@@ -288,6 +286,19 @@ foreach ($storage_updated as $id) {
 	progress("Sending new files (pictures, documents...) to the server", ++$done, $total);
 }
 
-// TODO send signal to the server we are done
+// send signal to the server we are done
+progress("Modifications sent to the server. The server is updating its database.");
+$c = curl_init("http://$server/dynamic/selection/service/travel/synch_file?type=done&campaign=".$campaign_id);
+curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
+curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($c, CURLOPT_POSTFIELDS, array("username"=>$username,"uid"=>$synch_uid,"key"=>$synch_key));
+curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version","User-Agent: Students Management Software - Travel Version Synchronization"));
+curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
+curl_setopt($c, CURLOPT_TIMEOUT, 1000);
+set_time_limit(1100);
+$result = curl_exec($c);
+// TODO
+curl_close($c);
+
 // TODO deactivate
 ?>
