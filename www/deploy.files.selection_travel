@@ -1,0 +1,1 @@
+exclude:cron.php,cron_maintenance.php,maintenance

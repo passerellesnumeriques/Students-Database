@@ -319,5 +319,11 @@ curl_close($c);
 // deactivate the software
 @unlink($sms_path."/index.php");
 copy($sms_path."/index_deactivated.php", $sms_path."/index.php");
+// remove information
+@unlink(dirname(__FILE__)."/synch.uid");
+@unlink($sms_path."/conf/selection_travel_username");
+@unlink($sms_path."/install_config.inc");
+@unlink($sms_path."/conf/instance.uid");
+
 echo "OK";
 ?>
