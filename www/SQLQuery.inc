@@ -2311,7 +2311,7 @@ class SQLQuery {
 				$dm_table = DataModel::get()->getTableFromSQLName($update[0], $this->bypass_security);
 				if ($dm_table->hasUpdateListeners()) {
 					$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
-					$dm_table->fireUpdate(array($update[4],$update[1]), $sub_model);
+					$dm_table->fireUpdate(array(array($update[4],array($update[1]=>null))), $sub_model);
 				}
 			}
 				
