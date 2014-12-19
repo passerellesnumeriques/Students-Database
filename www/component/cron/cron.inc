@@ -6,7 +6,7 @@
 class cron extends Component {
 
 	/** Get the list of tasks
-	 * @return CronTask[]
+	 * @return CronTask[] list of tasks
 	 */
 	public function getTasks() {
 		require_once("component/cron/CronTask.inc");
@@ -18,7 +18,7 @@ class cron extends Component {
 		return $tasks;
 	}
 	/** Get the list of maintenance tasks
-	 * @return CronMaintenanceTask[]
+	 * @return CronMaintenanceTask[] list of tasks
 	 */
 	public function getMaintenanceTasks() {
 		require_once("component/cron/CronTask.inc");
@@ -49,7 +49,7 @@ class cron extends Component {
 	}
 	
 	/** Execute the given task
-	 * @param CronTask $task
+	 * @param CronTask $task the task to execute
 	 */
 	public function executeCronTask($task) {
 		if (!file_exists("data/cron")) @mkdir("data/cron");

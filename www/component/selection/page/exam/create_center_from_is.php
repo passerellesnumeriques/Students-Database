@@ -149,6 +149,13 @@ class page_exam_create_center_from_is extends SelectionPage {
 		<?php 
 	}
 	
+	/**
+	 * Get a list of areas: the given area, plus its parent areas
+	 * @param integer $area_id GeographicArea id
+	 * @param array $divisions list of CountryDivision
+	 * @param array $areas list of GeographicArea
+	 * @return array list of areas
+	 */
 	private function getAreas($area_id, $divisions, $areas) {
 		$list = array();
 		for ($i = 0; $i < count($divisions); $i++) $list[$i] = null;

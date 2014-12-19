@@ -1,6 +1,9 @@
 <?php 
 require_once("component/documents/DocumentsPlugin.inc");
-class CurriculumAttachedDocumentsPlugin implements AttachedDocumentsPlugin {
+/**
+ * Add the possibility to attach documents to the curriculum of a batch 
+ */
+ class CurriculumAttachedDocumentsPlugin implements AttachedDocumentsPlugin {
 	
 	public function getTable() { return "StudentBatch"; }
 	public function getType() { return "curriculum"; }

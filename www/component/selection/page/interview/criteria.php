@@ -379,6 +379,12 @@ class page_interview_criteria extends SelectionPage {
 		<?php 
 	}
 	
+	/**
+	 * Build the graph/tree of eligibility rules
+	 * @param array $rules lsit of existing rules
+	 * @param integer $parent_id id of the rule from which we want the children
+	 * @return array children rules
+	 */
 	private function buildRulesTree(&$rules, $parent_id) {
 		$children = array();
 		foreach ($rules as $rule) {

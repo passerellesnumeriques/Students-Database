@@ -1,6 +1,13 @@
 <?php 
 class SelectionPartnersJSON {
-	
+
+	/**
+	 * Return the JSON structure of the partners for the given center
+	 * @param string $center_type 'InformationSession', 'ExamCenter' or 'InterviewCenter'
+	 * @param integer $id center id
+	 * @return string the JSON
+	 * @no_name_check
+	 */
 	public static function PartnersFromCenterID($center_type, $id) {
 		switch ($center_type) {
 			case "InformationSession": $join_key = "information_session"; break;
@@ -42,6 +49,13 @@ class SelectionPartnersJSON {
 		return self::PartnersJSON($partners, $contacts, $addresses, $contact_points, $selected_contact_points);
 	}
 
+	/**
+	 * Get the PartnerJSON of the hosting partner of the given center
+	 * @param string $center_type 'InformationSession', 'ExamCenter' or 'InterviewCenter'
+	 * @param integer $id center id
+	 * @return string the JSON
+	 * @no_name_check
+	 */
 	public static function HostingPartnerFromCenterID($center_type, $id) {
 		switch ($center_type) {
 			case "InformationSession": $join_key = "information_session"; break;
@@ -76,6 +90,15 @@ class SelectionPartnersJSON {
 		return self::PartnerJSON($host, $contacts, $addresses, $contact_points, $selected_contact_points);
 	}
 	
+	/**
+	 * Build the JSON array of the partners, with all the given information
+	 * @param array $partners list of organizations
+	 * @param array $contacts list of contacts for all organizations
+	 * @param array $addresses list of postal addresses for all organizations
+	 * @param array $contact_points list of contact points for all organizations
+	 * @param array $selected_contact_points list of selected contact points
+	 * @return string the JSON
+	 */
 	public static function PartnersJSON($partners, $contacts, $addresses, $contact_points, $selected_contact_points) {
 		$s = "[";
 		$first  =true;
@@ -95,6 +118,15 @@ class SelectionPartnersJSON {
 		return $s;
 	}
 	
+	/**
+	 * Build the JSON structure for the given partner
+	 * @param array $partner the Organization
+	 * @param array $contacts Contact rows
+	 * @param array $addresses PostalAddress rows
+	 * @param array $contact_points OrganizationContactPoint rows
+	 * @param integer[] $selected_contact_points id of the selected contact points 
+	 * @return string the JSON
+	 */
 	public static function PartnerJSON($partner, $contacts, $addresses, $contact_points, $selected_contact_points) {
 		require_once("component/contact/ContactJSON.inc");
 		$s = "{";

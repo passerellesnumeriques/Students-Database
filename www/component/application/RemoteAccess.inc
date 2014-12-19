@@ -1,6 +1,15 @@
-<?php 
+<?php
+/**
+ * Functions to access to a remote installation of the software
+ */ 
 class RemoteAccess {
 	
+	/**
+	 * Retrieve the version of the software for the given installation
+	 * @param string $domain the domain (only used for error messages)
+	 * @param string $url the URL of the software
+	 * @return NULL|string the version of the remove Students Management Software
+	 */
 	public static function getDomainVersion($domain, $url) {
 		$c = curl_init($url."dynamic/application/service/get_backup");
 		if (file_exists("conf/proxy")) include("conf/proxy");
@@ -30,6 +39,14 @@ class RemoteAccess {
 		return $version;
 	}
 	
+	/**
+	 * Retrieve the list of available backups
+	 * @param string $domain the domain
+	 * @param string $domain_version the version currently used, previously retrieved using getDomainVersion
+	 * @param string $url the URL of the software
+	 * @param string $password the remote access password
+	 * @return NULL|array the list of backups, each being an associative array with 2 keys: version, time
+	 */
 	public static function getBackupList($domain, $domain_version, $url, $password) {
 		$c = curl_init($url."dynamic/application/service/get_backup");
 		if (file_exists("conf/proxy")) include("conf/proxy");
@@ -64,6 +81,17 @@ class RemoteAccess {
 		return $backups["result"];
 	}
 
+	/**
+	 * Get the size of a file contained in a backup
+	 * @param string $domain the domain
+	 * @param string $domain_version the version of the software currently used by the domain
+	 * @param string $url the URL of the domain
+	 * @param string $password the remote access password
+	 * @param string $backup_version the version of the backup to retrieve
+	 * @param integer $backup_time the timestamp of the backup to retrieve
+	 * @param string $backup_file the name of the file of the backup
+	 * @return NULL|integer the size of the file
+	 */
 	public static function getBackupFileSize($domain, $domain_version, $url, $password, $backup_version, $backup_time, $backup_file) {
 		$c = curl_init($url."dynamic/application/service/get_backup?get_size=true");
 		if (file_exists("conf/proxy")) include("conf/proxy");
@@ -102,6 +130,21 @@ class RemoteAccess {
 		return intval($result);
 	}
 	
+	/**
+	 * Download a portion of a file contained in a backup
+	 * @param string $domain the domain
+	 * @param string $domain_version the version used by the domain
+	 * @param string $url the URL of the domain
+	 * @param string $password the remote access password
+	 * @param string $backup_version the version of the backup
+	 * @param integer $backup_time the timestamp of the backup
+	 * @param string $backup_file the file in the backup
+	 * @param integer $from the position in the file from which to download
+	 * @param integer $to the end position of the file to download
+	 * @param string $target the path of the file in which to save the downloaded portion
+	 * @param integer $max_time the maximum number of seconds to wait for this portion to be downloaded before to timeout
+	 * @return integer the number of bytes downloaded and written in the file
+	 */
 	public static function downloadBackupFileRange($domain, $domain_version, $url, $password, $backup_version, $backup_time, $backup_file, $from, $to, $target, $max_time) {
 		$c = curl_init($url."dynamic/application/service/get_backup");
 		if (file_exists("conf/proxy")) include("conf/proxy");
@@ -125,6 +168,18 @@ class RemoteAccess {
 		return strlen($result);
 	}
 	
+	/**
+	 * Download a file in a backup
+	 * @param string $domain the domain
+	 * @param string $domain_version the version used by the domain
+	 * @param string $url the URL of the domain
+	 * @param string $password the remote access password
+	 * @param string $backup_version the version of the backup
+	 * @param integer $backup_time the timestamp of the backup
+	 * @param string $backup_file the file in the backup
+	 * @param integer $filesize the size of the file to download
+	 * @param string $target the path of the file in which to save the downloaded portion
+	 */
 	public static function downloadBackupFile($domain, $domain_version, $url, $password, $backup_version, $backup_time, $backup_file, $filesize, $target) {
 		$f = fopen($target, "w");
 		fclose($f);
@@ -138,7 +193,6 @@ class RemoteAccess {
 			$from += $downloaded;
 		}
 	}
-	
 	
 }
 ?>

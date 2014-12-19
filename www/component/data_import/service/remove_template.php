@@ -3,9 +3,9 @@ class service_remove_template extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Remove a template"; }
+	public function inputDocumentation() { echo "id"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		$id = $input["id"];

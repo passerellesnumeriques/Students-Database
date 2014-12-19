@@ -59,11 +59,11 @@ class CronMaintenanceTask {
 interface CronPlugin {
 	
 	/** List of tasks to execute
-	 * @return CronTask[]
+	 * @return CronTask[] the list of tasks
 	 */
 	public function getTasks();
 	/** List of maintenance tasks to execute
-	 * @return CronMaintenanceTask[]
+	 * @return CronMaintenanceTask[] the list of tasks
 	 */
 	public function getMaintenanceTasks();
 	

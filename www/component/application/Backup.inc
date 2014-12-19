@@ -75,6 +75,8 @@ class Backup {
 
 	/** Create a new backup of the database
 	 * @param string $path directory where to save the backup
+	 * @param array|null $filters_sub_models only backup some sub model instances: associative array with the sub model table as the key, and an array of sub model instance to backup as value.
+	 * @param array|null $filter_storage only backup the given type of storage
 	 * @return string the timestamp given to the backup
 	 */
 	public static function createBackupIn($path, $filters_sub_models = null, $filter_storage = false) {
@@ -137,6 +139,7 @@ class Backup {
 	 * @param string $table_name SQL name of the table
 	 * @param number|null $sub_model the sub model instance
 	 * @param string $path directory where to save the content of the table
+	 * @param integer[]|null $filter_ids if specified, only the given ids will be backup
 	 * @return array list of storage id found
 	 */
 	private static function backupTable($table_spec, $table_name, $sub_model, $path, $filter_ids = null) {
@@ -151,6 +154,7 @@ class Backup {
 	 * @param string $table_name SQL name of the table
 	 * @param number|null $sub_model the sub model instance
 	 * @param resource $f the file to write to
+	 * @param integer[]|null $filter_ids if specified, only the given ids will be backup
 	 * @return array list of storage id found
 	 */
 	public static function exportTable($table_spec, $table_name, $sub_model, $f, $filter_ids = null) {
@@ -312,6 +316,8 @@ class Backup {
 	 * Synchronize a database with the current DataModel, and optionnaly import a backup
 	 * @param string|null $directory the directory containing the backup to import, or null
 	 * @param string $domain domain identifying which database to synchronize
+	 * @param DataBaseSystem $db the database connection to use
+	 * @param string $db_name the database to use
 	 */
 	public static function synchronizeDatabase($directory, $domain, &$db, $db_name) {
 		if (file_exists("data/recover")) self::removeDirectory("data/recover");
@@ -408,6 +414,7 @@ class Backup {
 	 * @param number $time the timestamp identifying the backup
 	 * @param string $version the version of the backup
 	 * @param string $dm_version the version of the DataModel
+	 * @param string $domain the domain in which to import the backup
 	 * @return boolean true on success
 	 */
 	public static function importBackup($time, $version, $dm_version, $domain) {
@@ -453,6 +460,16 @@ class Backup {
 		}
 		return importBackupFrom(realpath("data/backups/$version/$time"), "data/datamodels/datamodel_$dm_version.json", $db_system, $db_config["prefix"].$domain, $domain, realpath("data"));
 	}
+	/**
+	 * Import a backup
+	 * @param string $backup_path the directory containing the files of the backup to import
+	 * @param string $datamodel_json_path the path of the file containing the datamodel to use for the import 
+	 * @param DataBaseSystem $db_system the database connection to user
+	 * @param string $db_name the database in which to import the backup
+	 * @param string $domain the domain in which the backup is imported
+	 * @param string $target the 'data' directory in which to import the backup 
+	 * @return boolean true on success
+	 */
 	public static function importBackupFrom($backup_path, $datamodel_json_path, $db_system, $db_name, $domain, $target) {
 		// get the datamodel specification
 		$json = file_get_contents($datamodel_json_path);

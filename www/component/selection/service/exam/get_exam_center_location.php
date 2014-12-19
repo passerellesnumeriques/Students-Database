@@ -1,7 +1,7 @@
 <?php 
 /* Contains services needed for processing exam results */
 class service_exam_get_exam_center_location extends Service {
-	public function getRequiredRights() {} // TODO
+	public function getRequiredRights() { return array("can_access_selection_data"); }
 	public function documentation() { echo "get exam center partner location "; }
 	public function inputDocumentation() { 
 		echo "<code>id</code>: exam center id";

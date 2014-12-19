@@ -1,4 +1,11 @@
+/**
+ * Screen to edit a Subject
+ * @param {CurriculumSubject} subject the subject to edit
+ * @param {Array} existing_subjects list of CurriculumSubject
+ * @param {Function} onvalidation called when we validate the data enter by the user, with a boolean as parameter indicating if this is valid or not
+ */
 function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
+	/** Top level element, to put where we want to display this screen */
 	this.element = document.createElement("TABLE");
 	var tr,td;
 	var spes = getPeriodSpecializations(subject.period_id);
@@ -6,6 +13,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 		this.element.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td = document.createElement("TD"));
 		td.colSpan = 2;
+		/** List of radio buttons for the specializations */
 		this.radios_spes = [];
 		for (var i = 0; i < spes.length; ++i) {
 			var radio = document.createElement("INPUT");
@@ -32,6 +40,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	tr.appendChild(td = document.createElement("TD"));
 	td.innerHTML = "Code";
 	tr.appendChild(td = document.createElement("TD"));
+	/** Input to edit the code of the subject */
 	this.input_code = document.createElement("INPUT");
 	this.input_code.type = "text";
 	this.input_code.size = "15";
@@ -46,6 +55,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	tr.appendChild(td = document.createElement("TD"));
 	td.innerHTML = "Name";
 	tr.appendChild(td = document.createElement("TD"));
+	/** Input to edit the name of the subject */
 	this.input_name = document.createElement("INPUT");
 	this.input_name.type = "text";
 	this.input_name.size = "40";
@@ -60,12 +70,14 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	tr.appendChild(td = document.createElement("TD"));
 	td.innerHTML = "Hours";
 	tr.appendChild(td = document.createElement("TD"));
+	/** Input to edit the number of hours of the subject */
 	this.input_hours = document.createElement("INPUT");
 	this.input_hours.type = "text";
 	this.input_hours.maxLength = 5;
 	this.input_hours.size = 5;
 	this.input_hours.value = subject.hours ? subject.hours : "";
 	td.appendChild(this.input_hours);
+	/** Select to choose if the hours are by week or by period */
 	this.select_hours_type = document.createElement("SELECT");
 	var o;
 	o = document.createElement("OPTION");
@@ -87,6 +99,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	tr.appendChild(td = document.createElement("TD"));
 	td.innerHTML = "Coefficient";
 	tr.appendChild(td = document.createElement("TD"));
+	/** Input fo the coefficient of the subject */
 	this.input_coef = document.createElement("INPUT");
 	this.input_coef.type = "text";
 	this.input_coef.size = "2";
@@ -98,6 +111,11 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 	this.tr_coef_error.appendChild(td = document.createElement("TD"));
 	td.colSpan = 2;
 	
+	/**
+	 * Signal an error
+	 * @param {Element} tr the tr containing the error message
+	 * @param {String} msg the error message or null if no error
+	 */
 	this._error = function(tr, msg) {
 		var title = tr.previousSibling;
 		title = title.childNodes[0];
@@ -116,6 +134,7 @@ function edit_curriculum_subject(subject,existing_subjects,onvalidation) {
 		}
 	};
 	
+	/** Validate the data enter by the user */
 	this.validate = function() {
 		var ok = true;
 		// code

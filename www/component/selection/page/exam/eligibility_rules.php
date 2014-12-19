@@ -429,6 +429,14 @@ class page_exam_eligibility_rules extends SelectionPage {
 		<?php 
 	}
 	
+	/**
+	 * Build the graph/tree of eligibility rules
+	 * @param array $rules lsit of existing rules
+	 * @param integer $parent_id id of the rule from which we want the children
+	 * @param integer $total_applicants total number of applicants
+	 * @param integer $applicants_from_parent applicants still present in the parent
+	 * @return array children rules
+	 */
 	private function buildRulesTree(&$rules, $parent_id, $total_applicants, $applicants_from_parent) {
 		$children = array();
 		foreach ($rules as $rule) {

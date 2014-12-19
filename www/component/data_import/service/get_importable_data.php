@@ -3,9 +3,17 @@ class service_get_importable_data extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Retrieve a list of DataDisplay that can be imported from the given table"; }
+	public function inputDocumentation() {
+		echo "<ul>";
+		echo "<li><code>root</code>: the table where to start</li>";
+		echo "<li><code>sub_model</code>: optional, the sub model of <code>root</code></li>";
+		echo "<li><code>known_columns</code>: optional, the values of columns we know, to help find data</li>";
+		echo "</ul>";
+	}
+	public function outputDocumentation() {
+		echo "An array of {data,path} with data being a DataDisplay and path a DataPath";
+	}
 	
 	public function execute(&$component, $input) {
 		$root_table = $input["root"];

@@ -3,7 +3,7 @@ class service_applicant_get_applicants extends Service {
 	
 	public function getRequiredRights() { return array("see_applicant_info"); }
 	
-	public function documentation() { return "Retrieve a list of applicants"; }
+	public function documentation() { echo "Retrieve a list of applicants"; }
 	public function inputDocumentation() {
 		echo "All fields are optionals, to select applicants:<ul>";
 		echo "<li><code>information_session</code>: Information session ID</li>";
