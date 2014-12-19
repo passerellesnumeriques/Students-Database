@@ -104,7 +104,9 @@ while (($filename = readdir($dir)) <> null) {
 	copy($sms_path."/server_comm/$filename", dirname(__FILE__)."/$filename");
 }
 closedir($dir);
-// TODO deactivate
+// deactivate the software
+@unlink($sms_path."/index.php");
+copy($sms_path."/index_deactivated.php", $sms_path."/index.php");
 
 echo "OK";
 ?>

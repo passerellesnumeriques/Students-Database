@@ -183,7 +183,9 @@ $db_system->execute("DELETE FROM `selectiontravel_$domain`.`Users` WHERE `domain
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`DataLocks` WHERE 1");
 if (PNApplication::hasErrors()) PNApplication::printErrors();
 else {
-	// TODO activate
+	// activate the software
+	@unlink($sms_path."/index.php");
+	copy($sms_path."/index_activated.php", $sms_path."/index.php");
 	echo "OK";
 }
 @unlink("download_progress");

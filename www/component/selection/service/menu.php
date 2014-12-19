@@ -27,6 +27,9 @@ foreach ($campaigns as $c) {
 }
 ?></select>
 <?php 
+#SELECTION_TRAVEL
+#if (false) {
+#END
 if ($campaign <> null) {
 	if ($can_manage) {
 		if ($campaign["frozen"] == 1) {
@@ -46,15 +49,27 @@ if ($campaign <> null) {
 		echo "' style='vertical-align:bottom'/>";
 	}
 }
+#SELECTION_TRAVEL
+#}
+#END
 ?>
 <br/>
-<?php if ($can_manage) { ?>
+<?php 
+#SELECTION_TRAVEL
+#if (false) {
+#END
+if ($can_manage) { ?>
 	<?php if ($id <> null && $id > 0) {?>
 	<button class='flat' style='margin:0px' onclick='renameCampaign();' title='Rename this campaign'><img src='<?php echo theme::$icons_16["edit_white"];?>'/></button>
 	<button class='flat' style='margin:0px' onclick='removeCampaign();' title='Remove this campaign'><img src='<?php echo theme::$icons_16["remove_white"];?>'/></button>
 	<?php } ?>
 <button class='flat' style='margin:0px' onclick='createCampaign();' title='Create a new Selection Campaign'><img src='<?php echo theme::$icons_16["add_white"];?>'/></button>
-<?php } ?>
+<?php 
+}
+#SELECTION_TRAVEL
+#}
+#END
+?>
 </div>
 
 <div class="application_left_menu_separator"></div>

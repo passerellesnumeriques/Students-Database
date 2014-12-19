@@ -316,6 +316,8 @@ if (isset($res["errors"]) && count($res["errors"]) > 0) {
 }
 curl_close($c);
 
-// TODO deactivate
+// deactivate the software
+@unlink($sms_path."/index.php");
+copy($sms_path."/index_deactivated.php", $sms_path."/index.php");
 echo "OK";
 ?>

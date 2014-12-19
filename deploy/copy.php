@@ -53,6 +53,10 @@ copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]."/
 copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]."/www_selection_travel"));
 mkdir(realpath($_POST["path"]."/www_selection_travel")."/server_comm");
 copy_directory(realpath(dirname(__FILE__)."/../selection_travel/server_comm"), realpath($_POST["path"]."/www_selection_travel/server_comm"));
+copy_directory(realpath(dirname(__FILE__)."/../selection_travel/sms"), realpath($_POST["path"]."/www_selection_travel"));
+// replace the index by the deactivated one
+rename(realpath($_POST["path"]."/www_selection_travel")."/index.php", realpath($_POST["path"]."/www_selection_travel")."/index_activated.php");
+copy(realpath($_POST["path"]."/www_selection_travel")."/index_deactivated.php", realpath($_POST["path"]."/www_selection_travel")."/index.php");
 
 if ($has_errors) die();
 ?>
