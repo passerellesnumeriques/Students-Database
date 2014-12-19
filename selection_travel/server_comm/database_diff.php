@@ -259,13 +259,21 @@ function sendFile($path, $type, $info) {
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_INFILESIZE, filesize($path));
-	curl_setopt($c, CURLOPT_POSTFIELDS, array("username"=>$username,"uid"=>$synch_uid,"key"=>$synch_key,"filedata"=>"@".realpath($path),"filesize"=>filesize($path)));
+	curl_setopt($c, CURLOPT_POSTFIELDS, array("username"=>$username,"uid"=>$synch_uid,"key"=>$synch_key,"storage_upload"=>"@".realpath($path),"filesize"=>filesize($path)));
 	curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$app_version","User-Agent: Students Management Software - Travel Version Synchronization"));
 	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
 	curl_setopt($c, CURLOPT_TIMEOUT, 1000);
 	set_time_limit(1100);
 	$result = curl_exec($c);
-	// TODO
+	if ($result === false) die("Error while sending data to the server: ".curl_error($c));
+	$res = json_decode($result, true);
+	if ($res == null) die("Unexpected data from the server: ".$result);
+	if (isset($res["errors"]) && count($res["errors"]) > 0) {
+		echo "Error while sending data to the server:<ul>";
+		foreach ($res["errors"] as $err) echo "<li>$err</li>";
+		echo "</ul>";
+		die();
+	}
 	curl_close($c);
 }
 
@@ -297,8 +305,17 @@ curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
 curl_setopt($c, CURLOPT_TIMEOUT, 1000);
 set_time_limit(1100);
 $result = curl_exec($c);
-// TODO
+if ($result === false) die("Error during server synchronization: ".curl_error($c));
+$res = json_decode($result, true);
+if ($res == null) die("Unexpected data from the server: ".$result);
+if (isset($res["errors"]) && count($res["errors"]) > 0) {
+	echo "Error during server synchronization:<ul>";
+	foreach ($res["errors"] as $err) echo "<li>$err</li>";
+	echo "</ul>";
+	die();
+}
 curl_close($c);
 
 // TODO deactivate
+echo "OK";
 ?>

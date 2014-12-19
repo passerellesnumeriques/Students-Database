@@ -143,8 +143,14 @@ function synch() {
 			ajax.post("http://127.0.0.1:8888/server_comm/database_diff",{synch_key:res.synch_key,server:location.host},function(error) {
 				alert(error);
 			},function(xhr) {
-				content.innerHTML = xhr.responseText.replace(/\n/g,"<br/>");
+				if (xhr.responseText != "OK") {
+					content.innerHTML = xhr.responseText;
+					layout.changed(content);
+					return;
+				}
+				content.innerHTML = "Database successfully synchronized!";
 				layout.changed(content);
+				unlock();
 			});
 			var progress = function() {
 				ajax.post("http://127.0.0.1:8888/server_comm/database_diff_progress",{},function(error){},function(xhr){

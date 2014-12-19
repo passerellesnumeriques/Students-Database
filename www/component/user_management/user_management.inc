@@ -583,6 +583,14 @@ class user_management extends Component {
 		return $res["first_name"]." ".$res["last_name"];
 	}
 	
+	public function getUsernameFromId($user_id) {
+		return SQLQuery::create()->bypassSecurity()
+			->select("Users")
+			->whereValue("Users", "id", $user_id)
+			->field("username")
+			->executeSingleValue();
+	}
+	
 	public function assignDefaultRoles($user_id, $people_id) {
 		SQLQuery::startTransaction();
 		$people = PNApplication::$instance->people->getPeople($people_id, true);

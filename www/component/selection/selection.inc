@@ -19,6 +19,7 @@ class selection extends Component {
 	public function initRequest() {
 		Component::allowServiceWithoutLogin("selection", "travel/download_backup");
 		Component::allowServiceWithoutLogin("selection", "travel/download_update");
+		Component::allowServiceWithoutLogin("selection", "travel/synch_file");
 		if ($this->campaign_id == null) {
 			if (isset($_COOKIE["selection_campaign"])) {
 				try {

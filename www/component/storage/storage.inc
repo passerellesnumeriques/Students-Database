@@ -335,7 +335,9 @@ class storage extends Component {
 							array_push($ids, $id);
 							array_push($names, $fn);
 							array_push($types, $files['type'][$file_id]);
-							array_push($sizes, $files['size'][$file_id]);
+							$size = $files['size'][$file_id];
+							if ($size == null) $size = filesize($path);
+							array_push($sizes, $size);
 						}
 					} else
 						PNApplication::error("File ".$files['name'][$file_id].": error ".$files['error'][$file_id]);
