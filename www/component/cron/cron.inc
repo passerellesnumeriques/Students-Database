@@ -52,6 +52,7 @@ class cron extends Component {
 	 * @param CronTask $task
 	 */
 	public function executeCronTask($task) {
+		if (!file_exists("data/cron")) @mkdir("data/cron");
 		if (file_exists("data/cron/".$task->task_id)) {
 			$last = filemtime("data/cron/".$task->task_id);
 			if ((time()-$last+10)/60 < $task->every_minutes) return;
