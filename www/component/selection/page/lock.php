@@ -4,7 +4,7 @@ class page_lock extends SelectionPage {
 	public function getRequiredRights() { return array("manage_selection_campaign"); }
 	public function executeSelectionPage(){
 		$campaign = SQLQuery::create()->select("SelectionCampaign")->whereValue("SelectionCampaign","id",$this->component->getCampaignId())->executeSingleRow();
-		if ($campaign["frozen"] == 1) { echo "Already locked!"; return; }
+		if ($campaign["frozen"] == 1) { echo "<div>Already locked!</div>"; return; }
 ?>
 <div style='background-color:white;padding:10px'>
 	When you lock a selection campaign, it won't be editable anymore.<br/>

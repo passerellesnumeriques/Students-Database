@@ -17,7 +17,8 @@ class selection extends Component {
 	 * If the campaign_id is set, the matching submodels is selected in the database
 	 */
 	public function initRequest() {
-		Component::allowServiceWithoutLogin("selection", "download_backup_from_travel_install");
+		Component::allowServiceWithoutLogin("selection", "travel/download_backup");
+		Component::allowServiceWithoutLogin("selection", "travel/download_update");
 		if ($this->campaign_id == null) {
 			if (isset($_COOKIE["selection_campaign"])) {
 				try {
@@ -273,6 +274,7 @@ class selection extends Component {
 		require_once 'component/data_model/Model.inc';
 		require_once 'component/data_model/DataBaseLock.inc';
 		foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables() as $table) {
+			if ($table->getName() == "TravelVersion" || $table->getName() == "TravelVersionSynchStorage") continue;
 			$locked_by = null;
 			$id = DataBaseLock::lockTableForEver($table->getSQLNameFor($this->getCampaignId()), $reason, $locked_by);
 			if ($id == null) {

@@ -29,13 +29,11 @@ function checkInstall() {
 			"If you never installed it, please follow the steps:<ol>"+
 			"<li>Download the file <a href='<?php echo $server_url;?>' target='_blank'><?php echo $server_filename;?></a></li>"+
 			"<li>Create a directory <b>C:\\SelectionToolTravel</b>, and extract the file you downloaded inside this directory</li>"+
-			"<li>Download another file <a href='<?php echo $www_url;?>' target='_blank'><?php echo $www_filename;?></a></li>"+
-			"<li>Extract this second file into the directory <b>C:\\SelectionToolTravel\\www</b> (so this is the directory www inside the previous directory)</li>"+
-			"<li>Execute the file <b>start.bat</b> located in the directory C:\\SelectionToolTravel</li>"+
+			"<li>Execute the file <b>start.bat</b> located in the directory C:\\SelectionToolTravel to start the software on your computer</li>"+
 			"<li>Finally, click on the button 'try again' below</li>"+
 			"</ol>"+
 			"<br/>"+
-			"If you already installed it, please start it by launching the file <b>start.bat</b> located in the directory <b>C:\\SelectionToolTravel</b><br/>"+
+			"If you already installed it, please start it by executing the file <b>start.bat</b> located in the directory <b>C:\\SelectionToolTravel</b><br/>"+
 			"Once done, try again.<br/>"+
 			"<br/>"+
 			"<button class='action' onclick='checkInstall();'>Try Again</button>";
@@ -43,23 +41,70 @@ function checkInstall() {
 	},function(xhr) {
 		var version = xhr.responseText;
 		if (version != server_version) {
-			content.innerHTML = 
-				"The version on your computer is outdated and we need to update it.<br/>"+
-				"<br/>"+
-				"To update your version, follow the steps:<ol>"+
-				"<li>Stop it, by launching the file <b>stop.bat</b> in the directory <b>C:\\SelectionToolTravel</b></li>"+
-				"<li>Go into the directory <b>C:\\SelectionToolTravel\\www</b> and remove everything: all files and directories, it must be empty</li>"+
-				"<li>Download the latest version <a href='<?php echo $www_url;?>' target='_blank'><?php echo $www_filename;?></a></li>"+
-				"<li>Extract it in your directory <b>C:\\SelectionToolTravel\\www</b></li>"+
-				"<li>Start it by launching the file <b>start.bat</b> located in the directory C:\\SelectionToolTravel</li>"+
-				"<li>Once done, you can try again</li>"+
-				"</ol>"+
-				"<br/>"+
-				"<button class='action' onclick='checkInstall();'>Try Again</button>";
-			layout.changed(content);
+			upgradeVersion(version);
 			return;
 		}
 		synchronizeDatabases();
+	});
+}
+
+function upgradeVersion(version) {
+	if (version.length == 0)
+		content.innerHTML = 
+			"This is the first time you installed the software on your computer, and we need to<br/>"+
+			"download the latest version of Students Management Software for Travel<br/><br/>";
+	else
+		content.innerHTML = 
+			"The version on your computer ("+version+") is outdated and we need to update it to version "+server_version+"<br/><br/>";
+	var text = document.createElement("DIV");
+	text.style.marginBottom = "2px";
+	content.appendChild(text);
+	layout.changed(content);
+	require("progress_bar.js", function() {
+		var pb = new progress_bar(400,20);
+		text.innerHTML = "Starting download...";
+		pb.element.style.display = "none";
+		content.appendChild(pb.element);
+		layout.changed(text);
+		ajax.post("http://127.0.0.1:8888/server_comm/update_sms",{server:location.host,version:server_version},function(error) {
+			content.innerHTML = "An error occured while connecting to your computer: "+error;
+			layout.changed(content);
+		},function(xhr) {
+			if (xhr.responseText == "OK") {
+				synchronizeDatabases();
+				return;
+			}
+			content.innerHTML = xhr.responseText;
+			var try_again = document.createElement("BUTTON");
+			try_again.className = "action";
+			try_again.innerHTML = "Try Again";
+			content.appendChild(try_again);
+			layout.changed(content);
+			try_again.onclick = function() { upgradeVersion(version); };
+		});
+		var progress = function() {
+			ajax.post("http://127.0.0.1:8888/server_comm/update_sms_progress",{},function(error){},function(xhr){
+				if (!text.parentNode) return;
+				var s = xhr.responseText;
+				if (s.substring(0,1) == "%") {
+					s = s.substring(1);
+					var i = s.indexOf('%');
+					var s2 = s.substr(0,i);
+					s = s.substr(i+1);
+					if (pb) {
+						i = s2.indexOf(',');
+						pb.setTotal(parseInt(s2.substr(i+1)));
+						pb.setPosition(parseInt(s2.substr(0,i)));
+						pb.element.style.display = "";
+					}
+				} else
+					pb.element.style.display = "none";
+				text.innerHTML = s;
+				layout.changed(content);
+				setTimeout(progress,1000);
+			});
+		};
+		setTimeout(progress, 1000);
 	});
 }
 

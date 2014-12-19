@@ -202,6 +202,7 @@ window.top.pndocuments = {
 };
 window.top.require("upload.js");
 window.top.require("application.js",function() {
+	if (!window.top.pnapplication) return;
 	window.top.pnapplication.onlogout.add_listener(function(){
 		window.top.pndocuments._connected_port = -1;
 		window.top.pndocuments.opener = null;

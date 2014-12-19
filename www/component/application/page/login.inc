@@ -235,7 +235,8 @@ window.top.require("documents.js",function(){
 	window.top.pndocuments.connected_port = -1;
 	window.top.pndocuments.connect();
 });
-window.top.pnapplication.onlogout.fire();
+if (window.top.pnapplication)
+	window.top.pnapplication.onlogout.fire();
 function login() {
 	window.no_loading = true;
 	window.top.pn_loading_start();

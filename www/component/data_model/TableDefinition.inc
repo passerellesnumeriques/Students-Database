@@ -732,7 +732,7 @@ namespace datamodel {
 			return $this->customization_right;
 		}
 		private function load_customization($table_name) {
-			$data_path = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".\PNApplication::$instance->current_domain);
+			$data_path = realpath(dirname(__FILE__)."/../../data/".\PNApplication::$instance->current_domain);
 			if (!file_exists($data_path."/custom_tables/$table_name"))
 				return array();
 			try {

@@ -641,6 +641,10 @@ xhr.open("GET","/dynamic/development/service/get_datamodel?output=json", true);
 xhr.onreadystatechange = function() {
     if (this.readyState != 4) return;
     var new_datamodel = eval('('+xhr.responseText+')');
+    if (!new_datamodel || !new_datamodel.result || !new_datamodel.result.model) {
+        panel.innerHTML = "Unexpected data received while asking the datamodel: "+xhr.responseText;
+        return;
+    }
 	panel.innerHTML = "Comparing models...";
     setTimeout(function() {
     	compare_datamodels(old_datamodel.result.model, new_datamodel.result.model,null,function(){

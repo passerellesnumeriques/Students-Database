@@ -1,5 +1,5 @@
 <?php 
-class service_download_backup_from_travel_install extends Service {
+class service_travel_download_backup extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	

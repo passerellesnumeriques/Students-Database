@@ -336,7 +336,7 @@ class SubDataModel extends DataModel {
 			return;
 		}
 		require_once("DataBaseUtilities.inc");
-		$path = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".PNApplication::$instance->current_domain);
+		$path = realpath(dirname(__FILE__)."/../../data/".PNApplication::$instance->current_domain);
 		foreach ($this->tables as $t) {
 			DataBaseUtilities::dropTable(SQLQuery::getDataBaseAccessWithoutSecurity(), $t, "_".$key);
 			if ($t->isCustomized())

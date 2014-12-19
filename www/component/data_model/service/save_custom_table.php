@@ -58,7 +58,7 @@ class service_save_custom_table extends Service {
 		
 		$sql_name = $table->getSQLNameFor($sub_model);
 		
-		$data_path = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".\PNApplication::$instance->current_domain);
+		$data_path = realpath(dirname(__FILE__)."/../../../data/".\PNApplication::$instance->current_domain);
 		if (!file_exists($data_path."/custom_tables"))
 			if (!mkdir($data_path."/custom_tables")) {
 				PNApplication::error("Unable to create directory for custom tables in ".$data_path);

@@ -289,4 +289,5 @@ foreach ($storage_updated as $id) {
 }
 
 // TODO send signal to the server we are done
+// TODO deactivate
 ?>

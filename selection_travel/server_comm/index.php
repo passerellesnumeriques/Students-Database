@@ -5,6 +5,13 @@ switch ($path) {
 case "check_install":
 	echo @file_get_contents(realpath(dirname(__FILE__))."/../sms/version");
 	die();
+case "update_sms":
+	include("update_sms.php");
+	die();
+case "update_sms_progress":
+	if (!file_exists("update_sms_progress")) die();
+	readfile("update_sms_progress");
+	die();
 case "download_database":
 	include('download_database.php');
 	die();

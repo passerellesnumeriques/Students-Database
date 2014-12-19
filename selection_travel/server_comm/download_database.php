@@ -33,7 +33,9 @@ function removeDirectory($path) {
 	}
 	closedir($dir);
 	if (!@rmdir($path))
-		rmdir($path);
+		if (!@rmdir($path))
+			if (!@rmdir($path))
+				rmdir($path);
 }
 
 // save the synch uid
@@ -80,7 +82,7 @@ fclose($f);
 
 // download a backup
 progress("The server is preparing a copy of the database");
-$c = curl_init("http://$server/dynamic/selection/service/download_backup_from_travel_install?type=get_info&campaign=".$campaign_id);
+$c = curl_init("http://$server/dynamic/selection/service/travel/download_backup?type=get_info&campaign=".$campaign_id);
 curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($c, CURLOPT_POSTFIELDS, array("username"=>$username,"session"=>$session,"token"=>$token));
@@ -96,15 +98,30 @@ if (isset($info["errors"]) && count($info["errors"]) > 0) die("Error: server ret
 if (!isset($info["result"])) die("Error: no result received from the server: ".$result);
 $info = $info["result"];
 if (!isset($info["size"]) || !isset($info["id"])) die("Error: missing data received from the server: ".$result);
-removeDirectory(dirname(__FILE__)."/data");
+if (file_exists(dirname(__FILE__)."/data"))
+	removeDirectory(dirname(__FILE__)."/data");
+if (file_exists(dirname(__FILE__)."/data")) {
+	sleep(1);
+	removeDirectory(dirname(__FILE__)."/data");
+}
 @mkdir(dirname(__FILE__)."/data");
+if (!file_exists(dirname(__FILE__)."/data")) {
+	sleep(1);
+	mkdir(dirname(__FILE__)."/data");
+}
 progress("Downloading a copy of the database",0,$info["size"]);
 $step = 5*1024*1024;
-$f = fopen(dirname(__FILE__)."/data/data.zip","w");
+$f = @fopen(dirname(__FILE__)."/data/data.zip","w");
+if (!$f) {
+	sleep(1);
+	@mkdir(dirname(__FILE__)."/data");
+	$f = fopen(dirname(__FILE__)."/data/data.zip","w");
+	if (!$f) die();
+}
 for ($from = 0; $from < intval($info["size"]); ) {
 	$to = $from + $step;
 	if ($to > intval($info["size"])-1) $to = intval($info["size"])-1;
-	$c = curl_init("http://$server/dynamic/selection/service/download_backup_from_travel_install?type=download&from=$from&to=$to&id=".$info["id"]);
+	$c = curl_init("http://$server/dynamic/selection/service/travel/download_backup?type=download&from=$from&to=$to&id=".$info["id"]);
 	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 	curl_setopt($c, CURLOPT_POSTFIELDS, array("username"=>$username,"session"=>$session,"token"=>$token));
@@ -165,6 +182,9 @@ $db_system->execute("DELETE FROM `selectiontravel_$domain`.`Users` WHERE `domain
 // remove any locks
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`DataLocks` WHERE 1");
 if (PNApplication::hasErrors()) PNApplication::printErrors();
-else echo "OK";
+else {
+	// TODO activate
+	echo "OK";
+}
 @unlink("download_progress");
 ?>
