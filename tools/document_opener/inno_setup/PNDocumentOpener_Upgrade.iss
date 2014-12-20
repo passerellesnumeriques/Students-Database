@@ -29,7 +29,6 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "../document_opener\bin\Release\PNDocumentOpener.exe"; DestDir: "{app}"; Check: MakeAPause; Flags: ignoreversion overwritereadonly
-Source: "dotNetFx40_Full_x86_x64.exe"; DestDir: "{app}"; Check: FrameworkIsNotInstalled; Flags: deleteafterinstall
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -38,14 +37,9 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commonstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 
 [Run]
-Filename: "{app}\dotNetFx40_Full_x86_x64.exe"; Parameters: "/passive /norestart"; Check: FrameworkIsNotInstalled; Flags: waituntilterminated
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait runasoriginaluser
 
 [Code]
-function FrameworkIsNotInstalled(): Boolean;
-begin
-  Result := not RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\.NETFramework\Policy\v4.0');
-end;
 function MakeAPause(): Boolean;
 begin
   Sleep(1500);
