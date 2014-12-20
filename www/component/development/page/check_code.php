@@ -228,10 +228,13 @@ function check_js_type(type, descr, item, location) {
 	if (type == "Date") return;
 	if (type == "Number") return;
 	if (type == "Boolean") return;
-	if (type == "window") return;
+	if (type == "Window") return;
+	if (type == "Document") return;
+	if (type == "Location") return;
 	if (type == "Element") return;
 	if (type == "Function") return;
 	if (type == "Object") return;
+	if (type == "Event") return;
 	if (type == "null") return;
 	var cl = get_class(window.jsdoc, type);
 	if (cl == null)

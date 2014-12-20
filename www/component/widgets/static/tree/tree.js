@@ -249,7 +249,7 @@ function tree(container) {
 	this.show_columns = false;
 	this.items = [];
 	this.children = this.items;
-	var url = get_script_path("tree.js");
+	var url = getScriptPath("tree.js");
 	container.className = "tree";
 	var t=this;
 	

@@ -156,7 +156,7 @@ abstract class Page {
 		pageHeaderStart();
 		foreach ($this->init_scripts as $s) echo "<script type='text/javascript'>".$s."</script>";
 		foreach ($this->javascripts as $js) {
-			echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(this);".$js[1].";this._loaded=true;'>";
+			echo "<script type='text/javascript' src='".$js[0]."' onload='javascriptLoaded(this);".$js[1].";this._loaded=true;'>";
 			echo "</script>";
 		}
 		foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."' onload='if (window.layout && window.document.body) window.layout.changed(window.document.body); this._loaded = true;' media='all'/>";
@@ -240,20 +240,20 @@ function pageHeaderStart() {
 	<script id='init_js_14' type="text/javascript" src="/static/widgets/common_dialogs.js" onload="this._loaded=true;"></script>
 	<script id='init_js_15' type="text/javascript" src="/static/data_model/databaselock.js" onload="this._loaded=true;"></script>
 	<script type="text/javascript">
-	javascript_loaded(document.getElementById('init_js_1'));
-	javascript_loaded(document.getElementById('init_js_3'));
-	javascript_loaded(document.getElementById('init_js_4'));
-	javascript_loaded(document.getElementById('init_js_5'));
-	javascript_loaded(document.getElementById('init_js_6'));
-	javascript_loaded(document.getElementById('init_js_7'));
-	javascript_loaded(document.getElementById('init_js_8'));
-	javascript_loaded(document.getElementById('init_js_9'));
-	javascript_loaded(document.getElementById('init_js_10'));
-	javascript_loaded(document.getElementById('init_js_11'));
-	javascript_loaded(document.getElementById('init_js_12'));
-	javascript_loaded(document.getElementById('init_js_13'));
-	javascript_loaded(document.getElementById('init_js_14'));
-	javascript_loaded(document.getElementById('init_js_15'));
+	javascriptLoaded(document.getElementById('init_js_1'));
+	javascriptLoaded(document.getElementById('init_js_3'));
+	javascriptLoaded(document.getElementById('init_js_4'));
+	javascriptLoaded(document.getElementById('init_js_5'));
+	javascriptLoaded(document.getElementById('init_js_6'));
+	javascriptLoaded(document.getElementById('init_js_7'));
+	javascriptLoaded(document.getElementById('init_js_8'));
+	javascriptLoaded(document.getElementById('init_js_9'));
+	javascriptLoaded(document.getElementById('init_js_10'));
+	javascriptLoaded(document.getElementById('init_js_11'));
+	javascriptLoaded(document.getElementById('init_js_12'));
+	javascriptLoaded(document.getElementById('init_js_13'));
+	javascriptLoaded(document.getElementById('init_js_14'));
+	javascriptLoaded(document.getElementById('init_js_15'));
 	window._page_ready = false;
 	window._page_ready_step = 0;
 	function _pageReadyStep() {

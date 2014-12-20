@@ -38,12 +38,12 @@ function color_choice(container, current_color) {
 			simple_choice_table.appendChild(tr = document.createElement("TR"));
 			this.default_boxes.push([]);
 			for (var j = 0; j < default_colors[i].length; ++j) {
-				var color = parse_color(default_colors[i][j]);
+				var color = parseColor(default_colors[i][j]);
 				tr.appendChild(td = document.createElement("TD"));
 				var box = document.createElement("DIV");
 				box.color = color;
 				box.style.border = "2px solid white";
-				box.style.backgroundColor = color_string(color);
+				box.style.backgroundColor = colorToString(color);
 				box.style.width = "15px";
 				box.style.height = "15px";
 				td.appendChild(box);
@@ -69,7 +69,7 @@ function color_choice(container, current_color) {
 				frame.oncolorchanged = function(hex) {
 					t.setColor('#'+hex);
 				};
-				frame.src = "/static/widgets/color_choice/lib_colorpicker/default.html"+color_string(t.color);
+				frame.src = "/static/widgets/color_choice/lib_colorpicker/default.html"+colorToString(t.color);
 				frame.onload = function() {
 					layout.changed(container);
 				};
@@ -104,11 +104,11 @@ function color_choice(container, current_color) {
 		div.style.textAlign = "center";
 		div.innerHTML = "<b>PN Colors</b><br/>";
 		for (var i = 0; i < pn_colors.length; ++i) {
-			var color = parse_color(pn_colors[i]);
+			var color = parseColor(pn_colors[i]);
 			var box = document.createElement("DIV");
 			box.color = color;
 			box.style.border = "2px solid white";
-			box.style.backgroundColor = color_string(color);
+			box.style.backgroundColor = colorToString(color);
 			box.style.width = "15px";
 			box.style.height = "15px";
 			box.style.display = "inline-block";
@@ -120,11 +120,11 @@ function color_choice(container, current_color) {
 		container.appendChild(div);
 	};
 	this.setColor = function(color) {
-		if (typeof color == 'string') color = parse_color(color);
+		if (typeof color == 'string') color = parseColor(color);
 		for (var i = 0; i < this.default_boxes.length; ++i) {
 			for (var j = 0; j < this.default_boxes[i].length; ++j) {
 				var box = this.default_boxes[i][j];
-				if (color_equals(box.color, color))
+				if (colorEquals(box.color, color))
 					box.style.border = "2px solid #FF8000";
 				else
 					box.style.border = "2px solid white";
@@ -159,7 +159,7 @@ function color_widget(container, color) {
 			var popup = new popup_window("Change Color", theme.icons_16.color, content);
 			var chooser = new color_choice(content, t.color);
 			popup.addOkCancelButtons(function() {
-				t.color = color_string(chooser.color);
+				t.color = colorToString(chooser.color);
 				div.style.backgroundColor = t.color;
 				if (t.onchange) t.onchange(t);
 				popup.close();

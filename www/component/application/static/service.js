@@ -18,7 +18,7 @@ window.service = {
 		var data = "";
 		if (input != null)
 			data = service.generateInput(input);
-		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "application/json;charset=UTF-8", data, 
+		ajax.customPostParseResult("/dynamic/"+component+"/service/"+service_name, "application/json;charset=UTF-8", data, 
 			function(result){
 				if (result && result.warnings)
 					for (var i = 0; i < result.warnings.length; ++i)
@@ -71,7 +71,7 @@ window.service = {
 					data += encodeURIComponent(service.generateInput(input[name]));
 			}
 		}
-		ajax.post_parse_result("/dynamic/"+component+"/service/"+service_name, data, 
+		ajax.postParseResult("/dynamic/"+component+"/service/"+service_name, data, 
 			function(xml){
 				handler(xml);
 			},

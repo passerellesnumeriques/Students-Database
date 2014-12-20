@@ -78,7 +78,7 @@ function select(container) {
 		this._button.style.height = "100%";
 		this._button.style.border = "1px solid #808080";
 		this._button.style.padding = "0px";
-		this._button.innerHTML = "<table style='height:100%;border-collapse:collapse;border-spacing:0'><tr><td valign=middle align=center style='padding:0px'><img src='"+get_script_path("select.js")+"button.gif'/></td></tr></table>";
+		this._button.innerHTML = "<table style='height:100%;border-collapse:collapse;border-spacing:0'><tr><td valign=middle align=center style='padding:0px'><img src='"+getScriptPath("select.js")+"button.gif'/></td></tr></table>";
 		setBackgroundGradient(this._button, "vertical", [{pos:0,color:"#FFFFFF"},{pos:33,color:"#FFFFFF"},{pos:100,color:"#A0A0A0"}]);
 		container.appendChild(this._div);
 		this._div.style.cursor = "pointer";

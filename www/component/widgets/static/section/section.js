@@ -206,7 +206,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 			this.collapse_container = document.createElement("DIV");
 			this.collapse_container.style.padding = "4px";
 			this.collapse_button = document.createElement("IMG");
-			this.collapse_button.src = get_script_path("section.js")+(collapsed?"expand.png":"collapse.png");
+			this.collapse_button.src = getScriptPath("section.js")+(collapsed?"expand.png":"collapse.png");
 			this.collapse_button.onload = function() { if (layout) layout.changed(t.element); };
 			this.collapse_button.style.cursor = 'pointer';
 			this.collapse_button.onclick = function() { t.toggleCollapseExpand(); }; 
@@ -247,7 +247,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 	/** Toogle between collapsed and expanded */
 	this.toggleCollapseExpand = function() {
 		if (this.collapsed) {
-			this.collapse_button.src = get_script_path("section.js")+"collapse.png";
+			this.collapse_button.src = getScriptPath("section.js")+"collapse.png";
 			this.collapsed = false;
 			require("animation.js",function() {
 				if (t.content_container.anim1) animation.stop(t.content_container.anim1);
@@ -270,7 +270,7 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 			this.footer.style.position = 'static';
 			this.footer.style.visibility = 'visible';
 		} else {
-			this.collapse_button.src = get_script_path("section.js")+"expand.png";
+			this.collapse_button.src = getScriptPath("section.js")+"expand.png";
 			this.collapsed = true;
 			require("animation.js",function() {
 				if (t.content_container.anim1) animation.stop(t.content_container.anim1);

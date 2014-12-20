@@ -266,7 +266,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	};
 	
 	this.addFiltering = function() {
-		var url = get_script_path("grid.js");
+		var url = getScriptPath("grid.js");
 		var t=this;
 		var a = new GridColumnAction('filter', url+"/filter.gif",function(ev,a,col){
 			stopEventPropagation(ev);
@@ -354,7 +354,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	};
 	
 	this._refresh_title = function() {
-		var url = get_script_path("grid.js");
+		var url = getScriptPath("grid.js");
 		var t=this;
 		this.th.removeAllChildren();
 		this.th.style.textAlign = this.align;
@@ -545,7 +545,7 @@ function grid(element) {
 	t.selectable_unique = false;
 	t.columns_movable = false;
 	t.on_column_moved = new Custom_Event();
-	t.url = get_script_path("grid.js");
+	t.url = getScriptPath("grid.js");
 	t.onrowselectionchange = null;
 	t.oncellcreated = new Custom_Event();
 	t.onrowfocus = new Custom_Event();

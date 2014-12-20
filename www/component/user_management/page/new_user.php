@@ -23,7 +23,7 @@ Confirm password: <input type='password' name='password2'/>
 var popup = window.parent.get_popup_window_from_frame(window);
 popup.addOkCancelButtons(function() {
 	var form = document.forms['new_user'];
-	var type = get_radio_value(form,'type');
+	var type = getRadioValue(form,'type');
 	if (!type) { alert("Please select the type of user"); return; }
 	var username = form.elements['username'].value;
 	username = username.trim().latinize().toLowerCase();

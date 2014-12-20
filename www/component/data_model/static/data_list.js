@@ -738,7 +738,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 		div.title = "Select columns to display";
-		img.src = get_script_path("data_list.js")+"/table_column.png";
+		img.src = getScriptPath("data_list.js")+"/table_column.png";
 		div.onclick = function() { t._selectColumnsDialog(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);
@@ -746,7 +746,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		div = document.createElement("BUTTON");
 		img = document.createElement("IMG"); img.onload = function() { layout.changed(t.header); };
 		div.title = "Filters";
-		img.src = get_script_path("data_list.js")+"/filter.gif";
+		img.src = getScriptPath("data_list.js")+"/filter.gif";
 		div.onclick = function() { t._filtersDialog(this); };
 		div.appendChild(img);
 		t.header_right.appendChild(div);

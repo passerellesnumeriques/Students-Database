@@ -1,4 +1,12 @@
+/**
+ * Functionalities to automatically adjust the layout
+ */
 window.layout = {
+	/**
+	 * Listen when the size of an element changed
+	 * @param {Element} element the element we want to watch
+	 * @param {Function} listener the function to called when the element changed size
+	 */
 	listenElementSizeChanged: function(element, listener) {
 		var w = getWindowFromElement(element);
 		if (!w) return;
@@ -13,6 +21,11 @@ window.layout = {
 			element._layout_info.size = {scrollWidth:element.scrollWidth, scrollHeight:element.scrollHeight, clientWidth: element.clientWidth, clientHeight: element.clientHeight};
 		layout._element_size_listeners.push({element:element,listener:listener});
 	},
+	/**
+	 * Listen when something changed inside an element (something added, removed, changed its size...)
+	 * @param {Element} element the element to watch
+	 * @param {Function} listener the function to call
+	 */
 	listenInnerElementsChanged: function(element, listener) {
 		var w = getWindowFromElement(element);
 		if (!w) return;
@@ -29,6 +42,10 @@ window.layout = {
 		element._layout_info.from_inside.push(listener);
 		layout._element_inside_listeners.push({element:element,listener:listener});
 	},
+	/** Stop listening
+	 * @param {Element} element the element which was watched
+	 * @param {Function} listener the function previously given to listenElementSizeChanged
+	 */
 	unlistenElementSizeChanged: function(element, listener) {
 		var w = getWindowFromElement(element);
 		if (!w) return;
@@ -44,6 +61,10 @@ window.layout = {
 				i--;
 			}
 	},
+	/** Stop listening
+	 * @param {Element} element the element which was watched
+	 * @param {Function} listener the function previously given to listenInnerElementsChanged
+	 */
 	unlistenInnerElementsChanged: function(element, listener) {
 		var w = getWindowFromElement(element);
 		if (!w) return;
@@ -60,6 +81,10 @@ window.layout = {
 		if (element._layout_info && element._layout_info.from_inside)
 			element._layout_info.from_inside.remove(listener);
 	},
+	/**
+	 * Signal some changes have been done on this element
+	 * @param {Element} element the element which has been changed
+	 */
 	changed: function(element) {
 		if (this._changes === null) return;
 		if (element == null) {
@@ -80,6 +105,7 @@ window.layout = {
 		layout._layout_needed();
 	},
 	
+	/** Force to re-compute the layout */
 	forceLayout: function() {
 		if (layout._process_timeout) clearTimeout(layout._process_timeout);
 		layout._process_timeout = null;
@@ -96,22 +122,34 @@ window.layout = {
 		}
 	},
 	
+	/** Listeners for element size */
 	_element_size_listeners: [],
+	/** Listeners for modifications */
 	_element_inside_listeners: [],
+	/** List of changes made */
 	_changes: [],
 	
+	/** The layout should not process */
 	_paused: false,
+	/** Ask to do not process layout anymore */
 	pause: function() {
 		this._paused = true;
 	},
+	/** Ask to resume processing the layout, after a previous call to pause */
 	resume: function() {
 		this._paused = false;
 		this._layout_needed();
 	},
+	/** Indicates if the layout is processing or not
+	 * @returns {Boolean} true if the layout is not processing
+	 */
 	isPaused: function() { return this._paused; },
 	
+	/** timeout used to fire processing of layout */
 	_process_timeout: null,
+	/** counter to know if we are getting a lot of layout processing in a short time */
 	_layouts_short_time: 0,
+	/** Called when we will need to process the layout */
 	_layout_needed: function() {
 		if (layout._process_timeout != null || this._paused) return;
 		var f = function() {
@@ -135,6 +173,7 @@ window.layout = {
 		}
 		layout._process_timeout = setTimeout(f,timing);
 	},
+	/** Called to process the layout events */
 	_process: function() {
 		if (window.closing || layout._changes === null || this._paused) return;
 		if (layout._changes.length == 0) return; // nothing to do
@@ -193,6 +232,10 @@ window.layout = {
 		
 		layout._last_layout_activity = new Date().getTime();
 	},
+	/** Given a list of elements, return only the leaves, meaning the deepest elements in the DOM among them
+	 * @param {Array} elements the list of element
+	 * @returns {Array} the deepest one (no element can be the parent of another one)
+	 */
 	_getLeavesElements: function(elements) {
 		var leaves = [];
 		var leaves_ids = {};
@@ -230,6 +273,7 @@ window.layout = {
 		}
 		return leaves;
 	},
+	/** Process the listeners of inner element changed */
 	_processInsideChanged: function(elements) {
 		var parents = [];
 		var parents_ids = {};
@@ -249,11 +293,18 @@ window.layout = {
 		layout._processInsideChanged(parents);
 	},
 	
+	/** Indicate we should not fire event if the window is resized */
 	_noresize_event: false,
+	/** Do not re-layout when the window is resized. May be useful on IFRAME being already handled by a layout functionality */
 	cancelResizeEvent: function() {
 		this._noresize_event = true;
 	},
 	
+	/** Calculate the best size to contain the given BODY
+	 * @param {Element} body the BODY
+	 * @param {Boolean} keep_styles if true, we won't try to temporarly adjust the style to be able to compute the best size
+	 * @returns {Object} x,y: the width and height
+	 */
 	computeContentSize: function(body,keep_styles) {
 		var win = getWindowFromElement(body);
 		var max_width = 0, max_height = 0;
@@ -295,6 +346,11 @@ window.layout = {
 		return {x:max_width, y:max_height};
 	},
 
+	/**
+	 * Automatically resize the given frame, according to its content, and re-compute each time the content changed
+	 * @param {Element} frame the frame
+	 * @param {Function} onresize called when we updated the frame size because its content changed
+	 */
 	autoResizeIFrame: function(frame, onresize) {
 		if (frame._autoresize) return;
 		frame._autoresize = function() {
@@ -350,6 +406,9 @@ window.layout = {
 		frame._check_ready();
 		listenEvent(frame, 'load', frame._check_ready);
 	},
+	/** Stop to automatically resize the frame (with a previous call to autoResizeIFrame)
+	 * @param {Element} frame the frame
+	 */
 	stopResizingIFrame: function(frame) {
 		if (!frame._check_ready) return;
 		unlistenEvent(frame, 'load', frame._check_ready);
@@ -361,6 +420,10 @@ window.layout = {
 		}
 	},
 	
+	/**
+	 * Check if everything is loaded on the page (Javascripts, CSS, images)
+	 * @returns {Boolean} true if done
+	 */
 	everythingOnPageLoaded: function() {
 		var head = document.getElementsByTagName("HEAD")[0];
 		for (var i = 0; i < head.childNodes.length; ++i) {
@@ -379,6 +442,10 @@ window.layout = {
 		}
 		return true;
 	},
+	/**
+	 * In case the function everythingOnPageLoaded returns false, indicates what is still pending
+	 * @returns {String} the URL of the pending element
+	 */
 	whatIsNotYetLoaded: function() {
 		var head = document.getElementsByTagName("HEAD")[0];
 		for (var i = 0; i < head.childNodes.length; ++i) {
@@ -398,9 +465,13 @@ window.layout = {
 		return null;
 	},
 	
+	/** List of functions to be called to modify the DOM */
 	_dom_modifications: [],
+	/** List of functions to read the layout information */
 	_layout_reading: [],
+	/** Timeout used to fire processing */
 	_process_steps_timeout: null,
+	/** Process the dom modifications and layout reading listeners */
 	_process_steps: function() {
 		if (this._process_steps_timeout) return;
 		this._process_steps_timeout = setTimeout(function() {
@@ -423,6 +494,11 @@ window.layout = {
 		},1);
 	},
 	
+	/** Functionality needing 3 steps to process. See function modifyDOM for more info.
+	 * @param {Function} step1_dom_modification step 1
+	 * @param {Function} step2_layout_reading step 2
+	 * @param {Function} step3_dom_modification step 3
+	 */
 	three_steps_process: function(step1_dom_modification, step2_layout_reading, step3_dom_modification) {
 		this._dom_modifications.push(function() {
 			var r1 = step1_dom_modification();
@@ -433,6 +509,10 @@ window.layout = {
 		});
 		this._process_steps();
 	},
+	/** Functionality needing 2 steps to process. See function modifyDOM for more info.
+	 * @param {Function} step1_layout_reading step 1
+	 * @param {Function} step2_dom_modification step 2
+	 */
 	two_steps_process: function(step1_layout_reading, step2_dom_modification) {
 		this._layout_reading.push(function() {
 			var r1 = step1_layout_reading();
@@ -440,15 +520,29 @@ window.layout = {
 		});
 		this._process_steps();
 	},
+	/** When working on the DOM, what can make the performance very poor is the alternance between modifying the DOM
+	 * and styles, and reading layout information (i.e. clientWidth, scrollHeight, style...).. This is because each time
+	 * we modify the DOM, the browser knowns that the layout may have changed and need to be processed. But each time
+	 * we read layout information, it forces the browser to re-compute the layout immediately to be able to give the correct
+	 * layout information. This may be very slow if done too many times.
+	 * In order to optimize, we need to try to first do as much as possible modifications without reading any layout information,
+	 * then read as mush as possible the layout information without modifying anything, and so on...
+	 * 
+	 * @param {Function} handler function that will do DOM modifications, without reading any layout information
+	 */
 	modifyDOM: function(handler) {
 		this._dom_modifications.push(handler);
 		this._process_steps();
 	},
+	/** See modifyDOM for more exlaination
+	 * @param {Function} handler function that will read layout information without modifying anything
+	 */
 	readLayout: function(handler) {
 		this._layout_reading.push(handler);
 		this._process_steps();
 	},
 	
+	/** Cleanup before unloading page, and avoid memory leaks */
 	cleanup: function() {
 		if (!this._w) return;
 		if (this._w._layout_interval) clearInterval(this._w._layout_interval);
@@ -462,7 +556,9 @@ window.layout = {
 		this._w = null;
 	}
 };
+/** @no_doc */
 window.layout._w = window;
+/** List of functions to call before to close/unload a window, so that we can clean-up and avoid memory leaks */
 if (!window.to_cleanup) window.to_cleanup = [];
 window.to_cleanup.push(layout);
 

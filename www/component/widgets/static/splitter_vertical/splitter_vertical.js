@@ -60,7 +60,7 @@ function splitter_vertical(element, position) {
 	t.separator.style.position = "absolute";
 	t.separator.style.top = "0px";
 	t.separator.className = "splitter_vertical_separator";
-	t.separator.style.backgroundImage = "url(\""+get_script_path('splitter_vertical.js')+"splitter_vertical.gif\")";
+	t.separator.style.backgroundImage = "url(\""+getScriptPath('splitter_vertical.js')+"splitter_vertical.gif\")";
 	t.part1.style.position = "absolute";
 	t.part1.style.top = "0px";
 	t.part1.style.left = "0px";

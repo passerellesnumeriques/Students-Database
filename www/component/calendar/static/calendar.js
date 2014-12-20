@@ -498,7 +498,7 @@ function CalendarControl(container, cal, manager) {
 						var chooser = new color_choice(content, "#"+cal.color);
 						var popup = new popup_window("Change Color", theme.icons_16.color, content);
 						popup.addOkCancelButtons(function() {
-							var col = color_string(chooser.color).substring(1);
+							var col = colorToString(chooser.color).substring(1);
 							manager.setCalendarColor(cal, col);
 							t.box.style.backgroundColor = "#"+col;
 							t.box.style.border = "1px solid #"+col;

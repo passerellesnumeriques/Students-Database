@@ -72,7 +72,7 @@ function validateForm() {
 	var form = document.forms['feedback_form'];
 	var ok = true;
 	
-	var feedback_type = get_radio_value(form, 'type');
+	var feedback_type = getRadioValue(form, 'type');
 	if (!feedback_type) ok = false;
 
 	var part = form.elements['app_part'].value;

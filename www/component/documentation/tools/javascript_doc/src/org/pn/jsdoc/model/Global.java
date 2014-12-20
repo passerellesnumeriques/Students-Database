@@ -18,6 +18,7 @@ import org.pn.jsdoc.model.builtin.BuiltinBoolean;
 import org.pn.jsdoc.model.builtin.BuiltinDate;
 import org.pn.jsdoc.model.builtin.BuiltinDocument;
 import org.pn.jsdoc.model.builtin.BuiltinElement;
+import org.pn.jsdoc.model.builtin.BuiltinEvent;
 import org.pn.jsdoc.model.builtin.BuiltinHistory;
 import org.pn.jsdoc.model.builtin.BuiltinLocation;
 import org.pn.jsdoc.model.builtin.BuiltinMath;
@@ -154,6 +155,7 @@ public class Global extends Container {
 		content.put("Math", new BuiltinMath(this));
 		content.put("Array", new BuiltinArray(this));
 		content.put("Element", new BuiltinElement(this));
+		content.put("Event", new BuiltinEvent(this));
 		content.put("Undefined", new BuiltinUndefined(this));
 	}
 	

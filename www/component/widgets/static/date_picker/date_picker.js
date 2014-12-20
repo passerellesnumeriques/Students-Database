@@ -20,7 +20,7 @@ function date_picker(date, minimum, maximum, onready) {
 
 	require(["date_select.js","small_calendar.js"],function() {
 		var back = document.createElement("IMG");
-		back.src = get_script_path("date_picker.js")+'back.png';
+		back.src = getScriptPath("date_picker.js")+'back.png';
 		back.className = "button_verysoft";
 		back.style.margin = "0px 2px 0px 2px";
 		back.style.padding = "0px 1px 0px 1px";
@@ -35,7 +35,7 @@ function date_picker(date, minimum, maximum, onready) {
 		// header: 3 selects for day, month and year 
 		t.select = new date_select(t.header, date, minimum, maximum);
 		var forward = document.createElement("IMG");
-		forward.src = get_script_path("date_picker.js")+'forward.png';
+		forward.src = getScriptPath("date_picker.js")+'forward.png';
 		forward.className = "button_verysoft";
 		forward.style.margin = "0px 2px 0px 2px";
 		forward.style.padding = "0px 1px 0px 1px";

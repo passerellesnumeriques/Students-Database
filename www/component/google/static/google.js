@@ -199,7 +199,7 @@ if (window == window.top && !window.top.google) {
 		window.top.addJavascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 		window.top.setTimeout(function(){
 			if (window.top.google.api_loaded) return;
-			window.top.remove_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
+			window.top.removeJavascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 			window.top.google.connection_error = "cannot load google api";
 			window.top.google.connection_status = -1;
 			window.top.google.connection_event.fire();

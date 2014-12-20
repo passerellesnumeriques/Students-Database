@@ -62,7 +62,7 @@ var data = {
 popup.addOkCancelButtons(function() {
 	popup.removeButtons();
 	var form = document.forms['form'];
-	var type = get_radio_value(form, "type");
+	var type = getRadioValue(form, "type");
 	if (type == "new_person") {
 		window.frameElement._ondone = function(peoples) {
 			var people_id = null;
