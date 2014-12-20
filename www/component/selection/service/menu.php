@@ -84,12 +84,22 @@ if ($can_manage) { ?>
 	Configure Process
 </a>
 <?php } ?>
-<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) {?>
+<?php
+#SELECTION_TRAVEL
+#if (false) {
+#END 
+if (PNApplication::$instance->user_management->has_right("edit_applicants")) {
+?>
 <a class='application_left_menu_item' href='/dynamic/data_model/page/edit_customizable_table?table=ApplicantMoreInfo'>
 	<img src='/static/people/profile_white.png'/>
 	Edit Application Form
 </a>
-<?php } ?>
+<?php 
+}
+#SELECTION_TRAVEL
+#}
+#END
+?>
 <a class='application_left_menu_item' href='/dynamic/selection/page/is/main_page'>
 	<img src='/static/selection/is/is_white.png'/>
 	Information Sessions

@@ -110,7 +110,7 @@ function connectToComputer() {
 					"The server has been updated to version "+server_version+" during your travel and your computer is using version "+version+"<br/>"+
 					"We need to update your computer to version "+server_version+" before we can synchronize the database<br/>"+
 					"<br/>"+
-					"<button class='action' onclick='upgrade();'>Upgrade my computer</button><br/>"+
+					"<button class='action' onclick=\"upgrade('"+version+"','"+server_version+"');\">Upgrade my computer</button><br/>"+
 					"<br/>"+
 					"If you don't want to synchronize your computer and only want to unlock this campaign<br/>"+
 					"<button class='action red' onclick='unlock();'>Unlock campaign without synchronization</button><br/>"+
@@ -128,8 +128,67 @@ function connectToComputer() {
 		});
 	});
 }
-function upgrade() {
-	// TODO
+function upgrade(computer_version, server_version) {
+	var content = document.getElementById('progress');
+	content.innerHTML = "Upgrade of Students Management Software on your computer in progress<br/>It may take few minutes...<br/><br/>";
+	layout.changed(content);
+	require("progress_bar.js",function() {
+		var text = document.createElement("DIV");
+		var pb = new progress_bar(250,20);
+		content.appendChild(text);
+		content.appendChild(pb.element);
+		pb.element.style.display = "none";
+		pb.element.style.marginTop = "2px";
+		text.innerHTML = "Starting download";
+		layout.changed(text);
+		ajax.post("http://127.0.0.1:8888/server_comm/update_sms",{server:location.host,version:server_version,migrate_from:computer_version},function(error) {
+			content.innerHTML = "An error occured while connecting to your computer: "+error;
+			layout.changed(content);
+		},function(xhr) {
+			if (xhr.responseText == "OK") {
+				connectToComputer();
+				return;
+			}
+			if (xhr.responseText.substr(0,3) == "OK:") {
+				var new_version = xhr.responseText.substr(3);
+				if (new_version == server_version)
+					connectToComputer();
+				else
+					upgrade(new_version, server_version);
+				return;
+			}
+			content.innerHTML = xhr.responseText;
+			var try_again = document.createElement("BUTTON");
+			try_again.className = "action";
+			try_again.innerHTML = "Try Again";
+			content.appendChild(try_again);
+			layout.changed(content);
+			try_again.onclick = function() { upgrade(computer_version, server_version); };
+		});
+		var progress = function() {
+			ajax.post("http://127.0.0.1:8888/server_comm/update_sms_progress",{},function(error){},function(xhr){
+				if (!text.parentNode) return;
+				var s = xhr.responseText;
+				if (s.substring(0,1) == "%") {
+					s = s.substring(1);
+					var i = s.indexOf('%');
+					var s2 = s.substr(0,i);
+					s = s.substr(i+1);
+					if (pb) {
+						i = s2.indexOf(',');
+						pb.setTotal(parseInt(s2.substr(i+1)));
+						pb.setPosition(parseInt(s2.substr(0,i)));
+						pb.element.style.display = "";
+					}
+				} else
+					pb.element.style.display = "none";
+				text.innerHTML = s;
+				layout.changed(content);
+				setTimeout(progress,1000);
+			});
+		};
+		setTimeout(progress, 1000);
+	});
 }
 function synch() {
 	var content = document.getElementById('progress');

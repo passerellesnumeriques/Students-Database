@@ -24,7 +24,7 @@ fwrite($f,"global \$db_config;\n");
 fwrite($f,"require_once(\"DataBaseSystem_\".\$db_config[\"type\"].\".inc\");\n");
 fwrite($f,"\$db_system_class = \"DataBaseSystem_\".\$db_config[\"type\"];\n");
 fwrite($f,"\$db_system = new \$db_system_class;\n");
-fwrite($f,"\$res = \$db_system->connect(\$db_config[\"server\"], \$db_config[\"user\"], \$db_config[\"password\"]);\n");
+fwrite($f,"\$res = \$db_system->connect(\$db_config[\"server\"], \$db_config[\"user\"], \$db_config[\"password\"], null, @\$db_config[\"port\"]);\n");
 fwrite($f,"if (\$res <> DataBaseSystem::ERR_OK)\n");
 fwrite($f,"\tdie(\"Error: unable to migrate because we cannot connect to the database\");\n");
 fwrite($f,"require_once(\"component/data_model/DataBaseUtilities.inc\");\n");
