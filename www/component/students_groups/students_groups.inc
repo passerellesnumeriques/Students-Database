@@ -163,12 +163,12 @@ class students_groups extends Component {
 			;
 	}
 	
-	public function getStudentsForPeriod($period_id, $spe_id = false) {
-		$q = SQLQuery::create()->select("StudentsGroup")->whereValue("StudentsGroup","period",$period_id);
+	public function getStudentsForPeriod($period_id, $spe_id = false, $bypass_security = false) {
+		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentsGroup")->whereValue("StudentsGroup","period",$period_id);
 		if ($spe_id !== false) $q->whereValue("StudentsGroup","specialization",$spe_id);
 		$q->field("id");
 		$groups_ids = $q->executeSingleField();
-		return SQLQuery::create()->select("StudentGroup")->whereIn("StudentGroup","group",$groups_ids)->field("StudentGroup","people")->distinct()->executeSingleField();
+		return SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentGroup")->whereIn("StudentGroup","group",$groups_ids)->field("StudentGroup","people")->distinct()->executeSingleField();
 	}
 	
 	public function getStudentGroupSpecialization($people_id) {
