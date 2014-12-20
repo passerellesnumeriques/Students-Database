@@ -192,7 +192,7 @@ window.top.pndocuments = {
 		window.top.pndocuments.connect(function(port) {
 			if (port == -1) {
 				unlock_screen(locker);
-				error_dialog("You need the software <b>PN Document Opener</b> to open or edit files.<br/>You can download this software <a href='/dynamic/documents/service/download_document_opener' target='_blank'>here</a><br/><br/>If you already installed it, please launch it.<br/><br/>Without this software, you can still download and upload files.");
+				error_dialog("You need the software <b>PN Document Opener</b> to open or edit files.<br/>You can download this software <a href='http://sourceforge.net/projects/studentsdatabase/files/installPNDocumentOpener.exe/download' target='_blank'>here</a><br/><br/>If you already installed it, please launch it.<br/><br/>Without this software, you can still download and upload files.");
 				return;
 			}
 			unlock_screen(locker);
