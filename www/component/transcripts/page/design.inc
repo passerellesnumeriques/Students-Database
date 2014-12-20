@@ -213,7 +213,8 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 				if ($student_grade === null) continue;
 				$total_grade += floatval($student_grade)*intval($subject["coefficient"]);
 				$total_coef += intval($subject["coefficient"]);
-				$passing += floatval($subject["passing_grade"])*intval($subject["coefficient"]);
+				$pass = floatval($subject["passing_grade"])*100/floatval($subject["max_grade"]); // make it as %
+				$passing += $pass*intval($subject["coefficient"]);
 				$hours = $subject["hours"];
 				if ($hours !== null) {
 					if (@$config["hours_type"] == "Per period") {
@@ -305,7 +306,8 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 		if ($student_grade === null) continue;
 		$total_grade += floatval($student_grade)*intval($subject["coefficient"]);
 		$total_coef += intval($subject["coefficient"]);
-		$passing += floatval($subject["passing_grade"])*intval($subject["coefficient"]);
+		$pass = floatval($subject["passing_grade"])*100/floatval($subject["max_grade"]); // make it as %
+		$passing += $pass*intval($subject["coefficient"]);
 	}
 	$total_grade = $total_coef > 0 ? $total_grade/$total_coef : "null";
 	$passing = $total_coef > 0 ? $passing/$total_coef : "null";
