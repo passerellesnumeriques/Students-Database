@@ -1,5 +1,10 @@
 <?php
+// only allow local connections, as it is supposed to be accessed only locally by JavaScript
+if ($_SERVER["SERVER_ADDR"] <> "127.0.0.1") die("Access denied");
+if ($_SERVER["REMOTE_ADDR"] <> "127.0.0.1") die("Access denied");
+// allow cross-domain
 header("Access-Control-Allow-Origin: *");
+// process the request
 $path = substr($_SERVER["PATH_INFO"],1);
 switch ($path) {
 case "check_install":

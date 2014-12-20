@@ -8,7 +8,7 @@ class service_travel_download_update extends Service {
 	public function outputDocumentation() {}
 	
 	public function getOutputFormat($input) {
-		if (isset($_GET["from"]) || isset($_GET["md5"]))
+		if (isset($_GET["from"]) || isset($_GET["file"]))
 			return "application/octet-stream";
 		return parent::getOutputFormat($input);
 	}
@@ -17,9 +17,10 @@ class service_travel_download_update extends Service {
 		require_once("component/application/service/deploy_utils.inc");
 		require_once("update_urls.inc");
 		global $pn_app_version;
-		if (!isset($_GET["from"]) && !isset($_GET["md5"])) {
+		if (!isset($_GET["from"]) && !isset($_GET["file"])) {
 			// get the file size
-			$url = getUpdateURL("Students_Management_Software_".$pn_app_version."_Selection_Travel.zip");
+			$version = isset($_GET["version"]) ? $_GET["version"] : $pn_app_version;
+			$url = getUpdateURL("Students_Management_Software_".$version."_Selection_Travel.zip");
 			try {
 				$info = getURLFileSize($url, "application/octet-stream");
 				if ($info <> -1) $info = json_decode($info, true);
@@ -31,11 +32,12 @@ class service_travel_download_update extends Service {
 				PNApplication::error($e);
 				return;
 			}
-			echo "{\"size\":".$info["size"].",\"filename\":".json_encode("Students_Management_Software_".$pn_app_version."_Selection_Travel.zip")."}";
+			echo "{\"size\":".$info["size"].",\"filename\":".json_encode("Students_Management_Software_".$version."_Selection_Travel.zip")."}";
 			return;
 		}
 		if (isset($_GET["from"])) {
-			$url = getUpdateURL("Students_Management_Software_".$pn_app_version."_Selection_Travel.zip");
+			$version = isset($_GET["version"]) ? $_GET["version"] : $pn_app_version;
+			$url = getUpdateURL("Students_Management_Software_".$version."_Selection_Travel.zip");
 			$from = intval($_GET["from"]);
 			$size = intval($_GET["size"]);
 			$to = $from + 512*1024 -1;
@@ -53,8 +55,8 @@ class service_travel_download_update extends Service {
 			curl_close($c);
 			if ($result === false) return;
 			echo $result;
-		} else if (isset($_GET["md5"])) {
-			$url = getUpdateURL("Students_Management_Software_".$pn_app_version."_Selection_Travel.zip.md5");
+		} else if (isset($_GET["file"])) {
+			$url = getUpdateURL($_GET["file"]);
 			$c = curl_init($url);
 			if (file_exists("conf/proxy")) include("conf/proxy");
 			curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);

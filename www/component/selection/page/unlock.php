@@ -110,7 +110,12 @@ function connectToComputer() {
 					"The server has been updated to version "+server_version+" during your travel and your computer is using version "+version+"<br/>"+
 					"We need to update your computer to version "+server_version+" before we can synchronize the database<br/>"+
 					"<br/>"+
-					"<button class='action' onclick='upgrade();'>Upgrade my computer</button>";
+					"<button class='action' onclick='upgrade();'>Upgrade my computer</button><br/>"+
+					"<br/>"+
+					"If you don't want to synchronize your computer and only want to unlock this campaign<br/>"+
+					"<button class='action red' onclick='unlock();'>Unlock campaign without synchronization</button><br/>"+
+					"<span style='font-weight:bold;color:red'>but note that all the modifications you made on your computer will be lost!</span>"
+					;
 				layout.changed(content);
 			} else {
 				content.innerHTML =	

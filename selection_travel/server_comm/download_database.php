@@ -46,6 +46,7 @@ fclose($f);
 
 // first, reset our database
 progress("Initializing the database on your computer...");
+set_time_limit(300);
 $db = mysqli_connect("localhost","root","","",8889);
 if ($db === false) die("Error: unable to connect to the database");
 mysqli_query($db, "DROP DATABASE `selectiontravel_$domain`");
@@ -174,8 +175,11 @@ require_once 'component/application/Backup.inc';
 
 $db_system = new DataBaseSystem_MySQL();
 $db_system->connect("localhost", "root", "", null, 8889);
+set_time_limit(300);
 Backup::synchronizeDatabase(dirname(__FILE__)."/data/unzip", $domain, $db_system, "selectiontravel_init");
+set_time_limit(300);
 Backup::synchronizeDatabase(dirname(__FILE__)."/data/unzip", $domain, $db_system, "selectiontravel_$domain");
+set_time_limit(30);
 // remove other users
 $db_system->execute("DELETE FROM `selectiontravel_init`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
