@@ -3,9 +3,11 @@ class service_search_geonames extends Service {
 	
 	public function getRequiredRights() { return array("edit_geography"); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Search a name in Geonames"; }
+	public function inputDocumentation() { echo "country_id, name"; }
+	public function outputDocumentation() {
+		echo "An array of {name,full_name[,north,south,west,east][,lat,lng]}";
+	}
 	
 	public function execute(&$component, $input) {
 		$country_id = $input["country_id"];
@@ -46,6 +48,14 @@ class service_search_geonames extends Service {
 		echo "]";
 	}
 	
+	/**
+	 * Call the geonames API
+	 * @param string $search_name the name to search
+	 * @param string $country_code the code of the country to search in
+	 * @param string $featureCode type of entity to search
+	 * @param boolean $resolve if true, when we get a result with geographic coordinates, we try a sub-request to search the coordinates of it
+	 * @return array the results from geonames
+	 */
 	private function search($search_name, $country_code, $featureCode, $resolve = true) {
 		set_time_limit(300);
 		$url = "http://api.geonames.org/search";
@@ -77,6 +87,13 @@ class service_search_geonames extends Service {
 		return $results;
 	}
 	
+	/**
+	 * Check every result, and for those which don't have coordinates, we try a sub-request
+	 * @param array $results the results from the initial request, to be enhanced with new results, and to be reduced to contain only result with coordinates
+	 * @param string $original_name the name searched
+	 * @param string $country_code the country code
+	 * @param string $featureCode the type of entity searched
+	 */
 	private function resolveResultsWithoutBox(&$results, $original_name, $country_code, $featureCode) {
 		$original_name = strtolower($original_name);
 		$to_search = array();

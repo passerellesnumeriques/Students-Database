@@ -682,7 +682,7 @@ function addJavascript(url, onload, additional_attributes) {
 }
 /**
  * Indicate a javascript is already loaded. This is automatically called by addJavascript, but may be useful in case some scripts are loaded in a different way
- * @param {String} url the URL of the loaded JavaScript
+ * @param {Element} node the SCRIPT node
  */
 function javascript_loaded(node) {
 	var url = new URL(node.src).toString();

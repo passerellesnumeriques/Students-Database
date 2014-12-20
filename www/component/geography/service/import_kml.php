@@ -3,9 +3,11 @@ class service_import_kml extends Service {
 	
 	public function getRequiredRights() { return array("edit_geography"); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Receive an uploaded KML file, and return the content in JSON"; }
+	public function inputDocumentation() { echo "An uploaded file"; }
+	public function outputDocumentation() {
+		echo "A list of objects {name,north,west,south,east,description}";
+	}
 	
 	public function execute(&$component, $input) {
 		echo "[";
@@ -118,6 +120,11 @@ class service_import_kml extends Service {
 		echo "]";
 	}
 	
+	/**
+	 * From the XML node, return a rectangle according to the plygon specification
+	 * @param SimpleXMLElement $node the XML node
+	 * @return array the rectangle: 4 elements: north, west, south, east
+	 */
 	private function getPolygonBounds($node) {
 		foreach ($node->children() as $node2) {
 			if ($node2->getName() == "outerBoundaryIs") {
@@ -135,6 +142,11 @@ class service_import_kml extends Service {
 		}
 		return null;
 	}
+	/**
+	 * Create a rectangle from a list of points, the rectangle containing all the points
+	 * @param string $str a list of points, one by line
+	 * @return array|null if successfully read, an array with 4 elements: north, west, south, east
+	 */
 	private function pointListToBounds($str) {
 		$points = explode("\n", $str);
 		//return array(count($points),$str,1,2);
@@ -156,6 +168,11 @@ class service_import_kml extends Service {
 		return null;
 	}
 	
+	/**
+	 * Merge a list of rectangles, into a single one containing all (union)
+	 * @param array $list list of rectangles to merge
+	 * @return array the resulting rectangle
+	 */
 	private function mergeBounds($list) {
 		if (count($list) == 0) return null;
 		$bounds = $list[0];

@@ -25,6 +25,7 @@ import org.pn.jsdoc.model.builtin.BuiltinNavigator;
 import org.pn.jsdoc.model.builtin.BuiltinNumber;
 import org.pn.jsdoc.model.builtin.BuiltinScreen;
 import org.pn.jsdoc.model.builtin.BuiltinString;
+import org.pn.jsdoc.model.builtin.BuiltinUndefined;
 import org.pn.jsdoc.model.builtin.BuiltinWindow;
 
 public class Global extends Container {
@@ -33,6 +34,10 @@ public class Global extends Container {
 		super(null, new Location());
 	}
 	
+	@Override
+	public boolean skip() {
+		return false;
+	}
 	@Override
 	protected String getJSDocConstructor() {
 		return "JSDoc_Namespace(";
@@ -149,6 +154,7 @@ public class Global extends Container {
 		content.put("Math", new BuiltinMath(this));
 		content.put("Array", new BuiltinArray(this));
 		content.put("Element", new BuiltinElement(this));
+		content.put("Undefined", new BuiltinUndefined(this));
 	}
 	
 }

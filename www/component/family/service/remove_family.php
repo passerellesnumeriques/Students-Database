@@ -3,9 +3,9 @@ class service_remove_family extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Remove all information about a family"; }
+	public function inputDocumentation() { echo "id: the family id"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		$family_id = $input["id"];

@@ -40,4 +40,9 @@ public class ValuesToEvaluate extends Element implements Evaluable {
 	@Override
 	public Location getLocation() { return location; }
 	
+	@Override
+	public boolean skip() {
+		return v1.skip() || v2.skip();
+	}
+	
 }

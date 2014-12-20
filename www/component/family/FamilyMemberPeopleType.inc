@@ -1,5 +1,8 @@
 <?php
-require_once("component/people/PeopleTypePlugin.inc"); 
+require_once("component/people/PeopleTypePlugin.inc");
+/**
+ * Plug-in to add the 'family_member' type of people
+ */
 class FamilyMemberPeopleType implements PeopleTypePlugin {
 	
 	public function getSecurityPriority() { return 1000; }

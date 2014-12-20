@@ -322,7 +322,7 @@ function newGroup(parent_node) {
 	});
 }
 /** Ask the user to confirm, then remove the StudentsGroup from database and from the tree
- * @param {CurriculumTreeNode_Class} class_node tree node of the class to remove
+ * @param {CurriculumTreeNode_Group} group_node tree node of the class to remove
  */
 function removeGroup(group_node) {
 	confirm_dialog("Are you sure you want to remove the "+getSelectedGroupType().name+" '"+group_node.group.name+"' ?",function(yes){

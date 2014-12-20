@@ -10,6 +10,7 @@ public interface Evaluable {
 	public Location getLocation();
 	public AstNode getNode();
 	public Node[] getDocs();
+	public boolean skip();
 	
 	public static class Context {
 		public Global global;

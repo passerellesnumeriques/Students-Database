@@ -22,3 +22,23 @@ function GeographicArea(id, name, parent_id) {
 	this.area_name = name;
 	this.area_parent_id = parent_id;
 }
+
+/**
+ * Information about a country
+ * @param {Number} country_id the id
+ * @param {String} country_code the code
+ * @param {String} country_name the name
+ * @param {Number} north the north
+ * @param {Number} west the west
+ * @param {Number} south the south
+ * @param {Number} east the east
+ */
+function CountryInfo(country_id, country_code, country_name, north, west, south, east) {
+	this.country_id = country_id;
+	this.country_code = country_code;
+	this.country_name = country_name;
+	this.north = north;
+	this.west = west;
+	this.south = south;
+	this.east = east;
+}

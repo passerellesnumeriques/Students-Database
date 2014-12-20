@@ -35,6 +35,7 @@ public class BuiltinWindow extends Class implements Builtin {
 		add("eval", new Function(this, "Object"));
 		add("parseInt", new Function(this, "Number"));
 		add("parseFloat", new Function(this, "Number"));
+		add("undefined", new BuiltinAttribute("Undefined"));
 	}
 	
 }

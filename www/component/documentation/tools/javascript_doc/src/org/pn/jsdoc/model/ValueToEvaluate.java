@@ -157,6 +157,7 @@ public class ValueToEvaluate extends Element implements Evaluable {
 					} else {
 						String name = ((Name)right).getIdentifier();
 						Element o = cont.content.get(name);
+						if (o == null && name.equals("prototype")) o = cont;
 						if (o == null)
 							error("Container "+cont.getType()+" does not have element "+name, this.location.file, value);
 						else if (o instanceof FinalElement) 
@@ -223,5 +224,11 @@ public class ValueToEvaluate extends Element implements Evaluable {
 		if (!(e instanceof Container)) return null;
 		if (type == null) return (Container)e;
 		return getContainer(type, (Container)e);
+	}
+	
+	@Override
+	public boolean skip() {
+		JSDoc doc = new JSDoc(value, docs);
+		return doc.hasTag("no_doc");
 	}
 }

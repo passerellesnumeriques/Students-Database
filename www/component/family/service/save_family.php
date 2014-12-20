@@ -3,9 +3,9 @@ class service_save_family extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Save family information"; }
+	public function inputDocumentation() { echo "family and members"; }
+	public function outputDocumentation() { echo "family and members with eventually new ids or modifications"; }
 	
 	public function execute(&$component, $input) {
 		// TODO check security

@@ -1,5 +1,10 @@
 /* #depends[/static/widgets/typed_field/typed_field.js] */
 
+/**
+ * Field representing either the father, or the mother of a family.
+ * It can be a single read-only field, with all information.
+ * Or it can be used with sub-fields: name, age, occupation...
+ */
 function field_parent(data,editable,config){
 	typed_field.call(this, data, editable, config);
 }

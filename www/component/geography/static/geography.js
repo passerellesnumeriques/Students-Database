@@ -1,11 +1,22 @@
 if (window == window.top && !window.top.geography) {
 	var wt = window.top;
+	/**
+	 * Functionalities to get geographic information
+	 */
 	window.top.geography = {
+		/** {Array} the list of countries */
 		_countries: null,
+		/** Indicates if we are currently retrieving the list of countries */
 		_countries_ongoing: false,
+		/** List of functions waiting for the list of countries */
 		_countries_listeners: [],
+		/** Geographic data for countries */
 		_countries_data: [],
+		/** Functions waiting for geographic data of a country */
 		_countries_data_listeners: [],
+		/** Get the list of countries
+		 * @param {Function} onready called with the list of countries (eash being a CountryInfo), when it's loaded
+		 */
 		getCountries: function(onready) {
 			if (wt.geography._countries_ongoing) {
 				wt.geography._countries_listeners.push(onready);
@@ -25,22 +36,39 @@ if (window == window.top && !window.top.geography) {
 			}
 			onready(wt.geography._countries);
 		},
+		/** Get a country information
+		 * @param {Number} country_id the country to get
+		 * @param {Function} onready called when the information is ready (with a CountryInfo as parameter)
+		 */
 		getCountry: function(country_id, onready) {
 			this.getCountries(function(countries) {
 				for (var i = 0; i < countries.length; ++i)
 					if (countries[i].country_id == country_id) { onready(countries[i]); return; }
 			});
 		},
+		/** Given a list of countries, search the given country by id
+		 * @param {Number} country_id the country to search
+		 * @param {Array} countries the list of known countries
+		 * @returns {CountryInfo} the searched country, or null if not found
+		 */
 		getCountryFromList: function(country_id, countries) {
 			for (var i = 0; i < countries.length; ++i)
 				if (countries[i].country_id == country_id) return countries[i];
 			return null;
 		},
+		/** Get the name of a country from its id
+		 * @param {Number} country_id the id
+		 * @param {Function} onready called with the name as parameter once found
+		 */
 		getCountryName: function(country_id, onready) {
 			this.getCountry(country_id, function(country) {
 				onready(country.country_name);
 			});
 		},
+		/** Get the id of a country from its code
+		 * @param {String} country_code the code to search
+		 * @param {Function} callback called with the country id once found, or null if not found
+		 */
 		getCountryIdFromCode: function(country_code, callback) {
 			this.getCountries(function(countries) {
 				for (var i = 0; i < countries.length; ++i)

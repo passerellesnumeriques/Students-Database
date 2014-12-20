@@ -18,6 +18,7 @@ public class Function extends FinalElement {
 	public String return_description = "";
 	public Node[] docs_nodes;
 	public boolean no_name_check = false;
+	public boolean skip = false;
 	
 	public static class Parameter {
 		public String name;
@@ -37,6 +38,10 @@ public class Function extends FinalElement {
 			parameters.add(p);
 		}
 		JSDoc doc = new JSDoc(node, docs);
+		if (doc.hasTag("no_doc")) {
+			skip = true;
+			return;
+		}
 		this.description = doc.description;
 		for (JSDoc.Tag tag : doc.tags) {
 			if (tag.name.equals("param")) {
@@ -122,6 +127,9 @@ public class Function extends FinalElement {
 		super(new Location(file, node));
 		this.description = description;
 	}
+	
+	@Override
+	public boolean skip() { return skip; }
 	
 	@Override
 	public String getType() {

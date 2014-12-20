@@ -22,10 +22,12 @@ public class Class extends Container {
 	public String name;
 	public String description;
 	public String extended_class = null;
+	public boolean skip = false;
 	
 	public Class(Container parent, final String file, FunctionNode node, Node[] docs) {
 		super(parent, new Location(file,node));
 		JSDoc doc = new JSDoc(node, docs);
+		if (doc.hasTag("no_doc")) { skip = true; return; }
 		description = doc.description;
 		constructor = new Function(this, file, node, node);
 		name = node.getName();
@@ -99,6 +101,10 @@ public class Class extends Container {
 		super(global, new Location());
 	}
 	
+	@Override
+	public boolean skip() {
+		return skip;
+	}
 	@Override
 	protected String getJSDocConstructor() {
 		return "JSDoc_Class("+(extended_class != null ? "\""+extended_class+"\"" : "null")+",";

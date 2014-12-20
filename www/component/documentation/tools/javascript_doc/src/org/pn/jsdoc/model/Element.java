@@ -10,6 +10,8 @@ public abstract class Element {
 		this.location = location;
 	}
 	
+	public abstract boolean skip();
+	
 	protected void error(String message) {
 		System.err.println(message+" ("+this.location.file+":"+this.location.line+")");
 	}

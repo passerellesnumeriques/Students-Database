@@ -66,4 +66,9 @@ public class JSDoc {
 		}
 	}
 	
+	public boolean hasTag(String name) {
+		for (Tag t : tags) if (t.name.equals(name)) return true;
+		return false;
+	}
+	
 }

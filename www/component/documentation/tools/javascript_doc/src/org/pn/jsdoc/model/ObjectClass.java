@@ -8,6 +8,7 @@ public class ObjectClass extends FinalElement {
 	public String type = null;
 	public String description = "";
 	public boolean no_name_check = false;
+	public boolean skip = false;
 	
 	public ObjectClass(String file, String type, AstNode node, Node... docs) {
 		super(new Location(file, node));
@@ -25,6 +26,10 @@ public class ObjectClass extends FinalElement {
 	}
 	private void parse_doc(AstNode node, Node... docs) {
 		JSDoc doc = new JSDoc(node, docs);
+		if (doc.hasTag("no_doc")) {
+			skip = true;
+			return;
+		}
 		this.description = doc.description;
 		for (JSDoc.Tag tag : doc.tags) {
 			if (tag.name.equals("no_name_check"))
@@ -34,6 +39,10 @@ public class ObjectClass extends FinalElement {
 		}
 	}
 	
+	@Override
+	public boolean skip() {
+		return skip;
+	}
 	@Override
 	public String getType() {
 		return type;

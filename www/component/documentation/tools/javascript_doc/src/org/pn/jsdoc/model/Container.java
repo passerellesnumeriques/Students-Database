@@ -40,6 +40,7 @@ public abstract class Container extends FinalElement {
 	}
 	
 	public void add(String name, Element element) {
+		if (element.skip()) return;
 		if (content.containsKey(name)) {
 			Element current = content.get(name);
 			if (current instanceof Evaluable) {
