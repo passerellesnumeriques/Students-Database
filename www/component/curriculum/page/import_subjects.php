@@ -5,48 +5,98 @@ class page_import_subjects extends Page {
 	
 	public function execute() {
 		$batch_period_id = $_GET["period"];
+		$filter = @$_GET["filter"];
+		
 		$batch_period = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","id",$batch_period_id)->executeSingleRow();
 		$specializations = SQLQuery::create()->select("BatchPeriodSpecialization")->whereValue("BatchPeriodSpecialization","period",$batch_period_id)->join("BatchPeriodSpecialization","Specialization",array("specialization"=>"id"))->execute();
 		$current_subjects = SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject","period",$batch_period_id)->execute();
 		$categories = SQLQuery::create()->select("CurriculumSubjectCategory")->execute();
-		$batches = SQLQuery::create()->select("StudentBatch")->execute();
+		$batches = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch","start_date")->execute();
 		$periods = SQLQuery::create()->select("BatchPeriod")->execute();
 		
+		$batch = null;
+		$previous_batch = null;
+		for ($i = count($batches)-1; $i >= 0; $i--) {
+			if ($batches[$i]["id"] == $batch_period["batch"]) {
+				$batch = $batches[$i];
+				if ($i > 0) $previous_batch = $batches[$i-1];
+				break;
+			}
+		}
+		$previous_batch_period = null;
+		if ($previous_batch <> null) {
+			foreach ($periods as $p)
+				if ($p["batch"] == $previous_batch["id"] && $p["name"] == $batch_period["name"]) {
+					$previous_batch_period = $p;
+					break;
+				} 
+		}
+		
+		if ($filter == null) $filter = "prev_batch_period";
+		$filter_batch = null;
+		$filter_period = null;
+		$order = null;
+		switch ($filter) {
+			case "all_chrono": $order = "chrono_batch"; break;
+			case "all_alpha": $order = "alpha"; break;
+			case "prev_batch_chrono": $filter_batch = @$previous_batch["id"]; $order = "chrono_period"; break;
+			case "prev_batch_alpha": $filter_batch = @$previous_batch["id"]; $order = "alpha"; break;
+			case "prev_batch_period": $filter_batch = @$previous_batch["id"]; $filter_period = @$previous_batch_period["id"]; $order = "alpha"; break;
+			default: $order = "chrono_batch"; // just in case
+		}
+		
 		$available_subjects = array();
-		if (count($specializations) == 0) {
-			// no specialization
-			$available_subjects[null] = SQLQuery::create()
-				->select("CurriculumSubject")
-				->whereNull("CurriculumSubject","specialization") // no specialization
-				->whereNotValue("CurriculumSubject","period",$batch_period_id) // remove current period
-				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
-				->whereNotValue("BatchPeriod","batch",$batch_period["batch"]) // remove current batch
-				->orderBy("BatchPeriod", "batch",false)
-				->orderBy("CurriculumSubject", "code")
-				->fieldsOfTable("CurriculumSubject")
-				->execute();
-		} else {
-			foreach ($specializations as $spe)
-				$available_subjects[$spe["specialization"]] = SQLQuery::create()
+		// no specialization
+		$q = SQLQuery::create()
+			->select("CurriculumSubject")
+			->whereNull("CurriculumSubject","specialization") // no specialization
+			->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
+			;
+		if ($filter_period <> null)
+			$q->whereValue("BatchPeriod", "id", $filter_period);
+		else if ($filter_batch <> null)
+			$q->whereValue("BatchPeriod", "batch", $filter_batch);
+		else
+			$q->whereNotValue("CurriculumSubject","period",$batch_period_id) // remove current period
+			  ->whereNotValue("BatchPeriod","batch",$batch_period["batch"]) // remove current batch
+			  ;
+		if ($order == "chrono_batch") {
+			$q->orderBy("BatchPeriod", "batch", false);
+			$q->orderBy("CurriculumSubject", "code");
+		} else if ($order == "chrono_period") {
+			$q->join("BatchPeriod", "AcademicPeriod", array("academic_period"=>"id"));
+			$q->orderBy("AcademicPeriod", "start");
+			$q->orderBy("CurriculumSubject", "code");
+		} else if ($order == "alpha") {
+			$q->orderBy("CurriculumSubject", "code");
+		}
+		$q->fieldsOfTable("CurriculumSubject");
+		$available_subjects[null] = $q->execute();
+		
+		if (count($specializations) > 0) {
+			foreach ($specializations as $spe) {
+				$q = SQLQuery::create()
 					->select("CurriculumSubject")
 					->whereValue("CurriculumSubject","specialization", $spe["specialization"])
-					->whereNotValue("CurriculumSubject","period",$batch_period_id) // remove current period
 					->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
-					->whereNotValue("BatchPeriod","batch",$batch_period["batch"]) // remove current batch
-					->orderBy("BatchPeriod", "batch",false)
-					->orderBy("CurriculumSubject", "code")
-					->fieldsOfTable("CurriculumSubject")
-					->execute();
-			$available_subjects[null] = SQLQuery::create()
-				->select("CurriculumSubject")
-				->whereNull("CurriculumSubject","specialization")
-				->whereNotValue("CurriculumSubject","period",$batch_period_id) // remove current period
-				->join("CurriculumSubject","BatchPeriod",array("period"=>"id"))
-				->whereNotValue("BatchPeriod","batch",$batch_period["batch"]) // remove current batch
-				->orderBy("BatchPeriod", "batch",false)
-				->orderBy("CurriculumSubject", "code")
-				->fieldsOfTable("CurriculumSubject")
-				->execute();
+					;
+				if ($filter_period <> null)
+					$q->whereValue("BatchPeriod", "id", $filter_period);
+				else if ($filter_batch <> null)
+					$q->whereValue("BatchPeriod", "batch", $filter_batch);
+				else
+					$q->whereNotValue("CurriculumSubject","period",$batch_period_id) // remove current period
+					  ->whereNotValue("BatchPeriod","batch",$batch_period["batch"]) // remove current batch
+					  ;
+				if ($order == "chrono") {
+					$q->orderBy("BatchPeriod", "batch",false);
+					$q->orderBy("CurriculumSubject", "code");
+				} else if ($order == "alpha") {
+					$q->orderBy("CurriculumSubject", "code");
+				}
+				$q->fieldsOfTable("CurriculumSubject");
+				$available_subjects[$spe["specialization"]] = $q->execute();
+			}
 		}
 ?>
 <style type='text/css'>
@@ -61,7 +111,21 @@ class page_import_subjects extends Page {
 	text-align: center;
 }
 </style>
-<div style='background-color:white;padding:5px;overflow:visible'>
+<div style='background-color:white;overflow:visible'>
+	<div class='page_section_title3 shadow'>
+	Show <select onchange="location.href = '?period=<?php echo $batch_period_id;?>&filter='+this.value;">
+		<option value='all_chrono'<?php if ($filter == "all_chrono") echo " selected='selected'";?>>Subjects from all batches, by chronological order of the batches</option>
+		<option value='all_alpha'<?php if ($filter == "all_alpha") echo " selected='selected'";?>>Subjects from all batches, by alphbetical order of the code</option>
+		<?php if ($previous_batch <> null) { ?>
+		<option value='prev_batch_chrono'<?php if ($filter == "prev_batch_chrono") echo " selected='selected'";?>>Subjects from previous batch (<?php echo $previous_batch["name"];?>), all periods, by chronological order</option>
+		<option value='prev_batch_alpha'<?php if ($filter == "prev_batch_alpha") echo " selected='selected'";?>>Subjects from previous batch (<?php echo $previous_batch["name"];?>), all periods, by alphabetical order of the code</option>
+		<?php if ($previous_batch_period <> null) { ?>
+		<option value='prev_batch_period'<?php if ($filter == "prev_batch_period") echo " selected='selected'";?>>Subjects from previous batch (<?php echo $previous_batch["name"];?>), <?php echo $previous_batch_period["name"];?>, by alphabetical order of the code</option>
+		<?php } ?>
+		<?php } ?>
+	</select>
+	</div>
+	<div style='padding:5px;'>
 	<table class='subjects_table'>
 		<tr id='header_row'>
 			<th></th>
@@ -113,11 +177,13 @@ class page_import_subjects extends Page {
 		} 
 		?>
 	</table>
+	</div>
 </div>
 <script type='text/javascript'>
 var subjects = <?php echo json_encode($all_subjects);?>;
 		
 var popup = window.parent.get_popup_window_from_frame(window);
+popup.removeButtons();
 popup.addIconTextButton(theme.icons_16._import, "Import Selected Subjects", "import", function() {
 	popup.freeze();
 	var to_import = [];

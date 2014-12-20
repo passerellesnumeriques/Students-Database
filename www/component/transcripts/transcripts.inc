@@ -287,11 +287,11 @@ class transcripts extends Component {
 		$this->compute_subject_grades($subject_id);
 	}
 	
-	public function compute_subject_grades($subject_id) {
+	public function compute_subject_grades($subject_id, $bypass_security = false) {
 		// get subject, evaluation types, and evaluations
 		$subject_info = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectGrading")->whereValue("CurriculumSubjectGrading", "subject", $subject_id)->executeSingleRow();
 		if ($subject_info == null) throw new Exception("Invalid subject id");
-		$subject = PNApplication::$instance->curriculum->getSubjectQuery($subject_id)->executeSingleRow();
+		$subject = PNApplication::$instance->curriculum->getSubjectQuery($subject_id)->bypassSecurity($bypass_security)->executeSingleRow();
 		$types = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType", "subject", $subject_id)->execute();
 		$types_ids = array();
 		foreach ($types as $type) array_push($types_ids, $type["id"]);
@@ -307,7 +307,7 @@ class transcripts extends Component {
 					array_push($type["evaluations"], $eval);
 		}
 		// get all students attached to this subject, with their grades
-		$students_ids = PNApplication::$instance->students_groups->getStudentsForPeriod($subject["period"], $subject["specialization"] <> null ? $subject["specialization"] : false);
+		$students_ids = PNApplication::$instance->students_groups->getStudentsForPeriod($subject["period"], $subject["specialization"] <> null ? $subject["specialization"] : false, $bypass_security);
 		$evaluations_ids = array();
 		foreach ($evaluations as $eval) array_push($evaluations_ids, $eval["id"]);
 		if (count($evaluations_ids) > 0 && count($students_ids) > 0)

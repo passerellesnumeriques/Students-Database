@@ -38,6 +38,7 @@ if (isset($_GET["install"])) {
 	if ($current_channel <> $install_channel) die("Your are trying to install an update from the channel ".$install_channel.", while your current version comes from channel ".$current_channel);
 	
 	copy("install_config.inc","maintenance/update/www/install_config.inc");
+	copy("conf/instance.uid","maintenance/update/www/conf/instance.uid");
 	
 	// instantiate new PNApplication
 	global $previous_version_path, $new_version_path;

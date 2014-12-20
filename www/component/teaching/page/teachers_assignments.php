@@ -12,6 +12,8 @@ class page_teachers_assignments extends Page {
 			if ($academic_period_id == null) $academic_period_id = 0;
 		} else
 			$academic_period = PNApplication::$instance->curriculum->getAcademicPeriod($academic_period_id);
+		
+		$current_academic_period = PNApplication::$instance->curriculum->getCurrentAcademicPeriod();
 
 		$years = PNApplication::$instance->curriculum->getAcademicYears();
 		$periods = PNApplication::$instance->curriculum->getAcademicPeriods();
@@ -74,6 +76,7 @@ class page_teachers_assignments extends Page {
 				if ($period["id"] == $academic_period_id) echo " selected='selected'";
 				$year = $this->getAcademicYear($period["year"], $years);
 				echo ">Academic Year ".toHTML($year["name"]).", ".toHTML($period["name"]);
+				if ($period["id"] == $current_academic_period["id"]) echo " (current)";
 				echo "</option>";
 			} 
 			?>
@@ -217,13 +220,12 @@ class page_teachers_assignments extends Page {
 		?>
 		</div>
 		<div id='teachers_section' style='display:inline-block;flex:1 0 auto;min-width:0px;background-color:white;overflow-y:auto;overflow-x:hidden;' icon='/static/teaching/teacher_16.png' title='Available Teachers' collapsable='false'>
-		<div id='teachers_list' style='background-color:white;margin-right:15px;'>
-		<?php $teachers_table_id = $this->generateID();?>
-		<table class='teachers_table'><tbody id='<?php echo $teachers_table_id;?>'>
-		<tr><th>Teacher</th><th>Hours</th></tr>
-		</tbody></table>
-		</div>
-		<?php $this->onload("sectionFromHTML('teachers_section');")?>
+			<div id='teachers_list' style='background-color:white;margin-right:15px;'>
+				<?php $teachers_table_id = $this->generateID();?>
+				<table class='teachers_table'><tbody id='<?php echo $teachers_table_id;?>'>
+					<tr><th>Teacher</th><th>Hours</th></tr>
+				</tbody></table>
+			</div>
 		</div>
 		</div>
 		</div>
@@ -302,6 +304,7 @@ class page_teachers_assignments extends Page {
 		var all_groups = <?php echo json_encode($all_groups); ?>;
 		var editing = <?php echo json_encode($can_edit);?>;
 		var teachers = <?php echo PeopleJSON::Peoples($teachers);?>;
+		var teachers_section = sectionFromHTML('teachers_section');
 
 		teachers.sort(function(p1,p2) {
 			return (p1.last_name+' '+p1.first_name).localeCompare(p2.last_name+' '+p2.first_name);
@@ -1043,15 +1046,35 @@ class page_teachers_assignments extends Page {
 				td.innerHTML = "<i>No teacher for this period</i>";
 				tr.appendChild(td);
 				table.appendChild(tr);
-				return;
-			}
-			for (var i = 0; i < teachers.length; ++i)
-				teachers_rows.push(new TeacherRow(table, teachers[i]));
+			} else
+				for (var i = 0; i < teachers.length; ++i)
+					teachers_rows.push(new TeacherRow(table, teachers[i]));
+			this.addTeacher = function(teacher) {
+				if (teachers.length == 1) {
+					// first one, remove the 'No teacher'
+					table.removeChild(table.childNodes[table.childNodes.length-1]);
+				}
+				teachers_rows.push(new TeacherRow(table, teacher, true));				
+			};
 		}
-		function TeacherRow(table, teacher) {
+		function TeacherRow(table, teacher, is_new) {
 			this.teacher = teacher;
-			var tr = document.createElement("TR"); table.appendChild(tr);
-			var td_name = document.createElement("TD"); tr.appendChild(td_name);
+			this.tr = document.createElement("TR");
+			if (!is_new) table.appendChild(this.tr);
+			else {
+				// newly created teacher, we need to put it in alphabetical order
+				var i;
+				for (i = 0; i < teachers_rows.length; ++i) {
+					var ln = teachers_rows[i].teacher.last_name.localeCompare(teacher.last_name);
+					if (ln == 0) ln = teachers_rows[i].teacher.first_name.localeCompare(teacher.first_name);
+					if (ln > 0) break;
+				}
+				if (i == teachers_rows.length)
+					table.appendChild(this.tr);
+				else
+					table.insertBefore(this.tr, teachers_rows[i].tr);
+			}
+			var td_name = document.createElement("TD"); this.tr.appendChild(td_name);
 			var span = document.createElement("SPAN"); td_name.appendChild(span);
 			span.appendChild(document.createTextNode(teacher.last_name+" "+teacher.first_name));
 			span.style.cursor = "default";
@@ -1069,7 +1092,7 @@ class page_teachers_assignments extends Page {
 			span.onclick = function() {
 				window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+this.teacher.id,null,95,95);
 			};
-			var td_hours = document.createElement("TD"); tr.appendChild(td_hours);
+			var td_hours = document.createElement("TD"); this.tr.appendChild(td_hours);
 			td_hours.style.whiteSpace = "nowrap";
 			this.update = function() {
 				var total = 0;
@@ -1101,7 +1124,30 @@ class page_teachers_assignments extends Page {
 		foreach ($periods_js as $id=>$json)
 			echo "periods.push(new PeriodSubjects('$id',$json));\n"; 
 		?>
-		new TeachersTable('<?php echo $teachers_table_id;?>');
+		var teachers_table = new TeachersTable('<?php echo $teachers_table_id;?>');
+
+		<?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) { ?>
+		var add_teacher_button = document.createElement("BUTTON");
+		add_teacher_button.className = "flat icon";
+		add_teacher_button.innerHTML = "<img src='"+theme.build_icon("/static/teaching/teacher_16.png",theme.icons_10.add)+"'/>";
+		add_teacher_button.title = "Create a new teacher";
+		add_teacher_button.style.marginRight = "3px";
+		teachers_section.addToolRight(add_teacher_button);
+		add_teacher_button.onclick = function() {
+			require("popup_window.js", function() {
+				var p = new popup_window("New Teacher", theme.build_icon("/static/teaching/teacher_16.png",theme.icons_10.add), "");
+				var frame = p.setContentFrame("/dynamic/people/page/popup_new_person?type=teacher&ondone=teacher_created");
+				frame.teacher_created = function(people_id) {
+					service.json("people","get_peoples",{ids:[people_id]},function(res) {
+						var teacher = res[0];
+						teachers.push(teacher);
+						teachers_table.addTeacher(teacher);
+					});
+				};
+				p.show();
+			});
+		};
+		<?php } ?>
 		
 		window.help_display_ready = true;
 		</script>

@@ -224,7 +224,7 @@ for (var i = 0; i < subjects.length; ++i) {
 	var sg = getSubjectGrading(subjects[i].id);
 	if (!sg || !sg.max_grade || !sg.passing_grade) continue;
 	global_coef += subjects[i].coefficient;
-	global_passing += parseFloat(sg.passing_grade);
+	global_passing += parseFloat(sg.passing_grade)*100/parseFloat(sg.max_grade); // make it as %
 }
 if (global_coef > 0) global_passing /= global_coef;
 function computeStudentGlobalGrade(people_id) {
