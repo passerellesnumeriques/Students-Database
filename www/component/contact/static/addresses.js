@@ -50,7 +50,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			th_head.colSpan = 2;
 			th_head.style.textAlign = "left";
 			th_head.style.padding = "2px 5px 2px 5px";
-			th_head.innerHTML = "<img src='/static/contact/address_16.png' style='vertical-align:bottom;padding-right:3px'/>Address";
+			th_head.innerHTML = "<img src='/static/contact/address_16.png' style='vertical-align:bottom;padding-right:3px' onload='layout.changed(this);'/>Address";
 			th_head.style.backgroundColor = "#F0F0F0";
 			setBorderRadius(th_head, 5, 5, 5, 5, 0, 0, 0, 0);
 			tr_head.appendChild(th_head);

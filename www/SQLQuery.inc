@@ -1269,7 +1269,8 @@ class SQLQuery {
 				$sub_model_instance = null;
 				if ($t->getModel() instanceof SubDataModel)
 					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
-				$t->fireBeforeUpdate(array(array(array($key),$fields_values)), $sub_model_instance);
+				$before_update = array(array(array($key),&$fields_values));
+				$t->fireBeforeUpdate($before_update, $sub_model_instance);
 			}
 			
 			// check we are allowed to modify this row
@@ -1671,7 +1672,8 @@ class SQLQuery {
 				$sub_model_instance = null;
 				if ($t->getModel() instanceof SubDataModel)
 					$sub_model_instance = @$this->sub_models[$t->getModel()->getParentTable()];
-				$t->fireBeforeUpdate(array(array($keys,$fields_values)), $sub_model_instance);
+				$before_update = array(array($keys,&$fields_values));
+				$t->fireBeforeUpdate($before_update, $sub_model_instance);
 			}
 				
 			// check we are allowed to modify this row
