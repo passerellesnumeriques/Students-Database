@@ -16,6 +16,23 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	/** {Boolean} indicates if we can remove this event */
 	this.removable = ev ? (typeof this.original_calendar.removeEvent) == 'function' : false;
 
+	if (!ev) {
+		if (default_calendar && !default_calendar.saveEvent) default_calendar = null;
+		if (!default_calendar) {
+			 var providers = window.top.CalendarsProviders.getCurrentProviders();
+			 for (var i = 0; i < providers.length && !default_calendar; ++i)
+				 for (var j = 0; j < providers[i].calendars.length; ++j)
+					 if (providers[i].calendars[j].saveEvent) {
+						 default_calendar = providers[i].calendars[j];
+						 break;
+					 }
+		}
+		if (!default_calendar) {
+			errorDialog("You don't have any calendar that you are allowed to modify, so we cannot create any event.");
+			return;
+		}
+	}
+	
 	/**
 	 * Populate information from the display into the given event
 	 * @param {CalendarEvent} event the event to populate

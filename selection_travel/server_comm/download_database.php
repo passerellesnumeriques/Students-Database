@@ -198,6 +198,15 @@ foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables()
 $calendar_id = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->whereValue("SelectionCampaign","id",$campaign_id)->field("calendar")->executeSingleValue();
 $db_system->execute("DELETE FROM `UserCalendar` WHERE 1");
 $db_system->execute("DELETE FROM `CalendarRights` WHERE `calendar`!=".$calendar_id);
+// add necessary rights on the calendar
+$db_system->execute("INSERT INTO `CalendarRights` (`calendar`,`right_name`,`right_value`,`writable`) VALUES ".
+		 "($calendar_id,'manage_information_session',1,1)".
+		",($calendar_id,'manage_exam_center',1,1)".
+		",($calendar_id,'manage_interview_center',1,1)".
+		",($calendar_id,'manage_selection_campaign',1,1)".
+		",($calendar_id,'manage_trips',1,1)".
+		",($calendar_id,'edit_social_investigation',1,1)"
+);
 if (PNApplication::hasErrors()) PNApplication::printErrors();
 else {
 	// activate the software

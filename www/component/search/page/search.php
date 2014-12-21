@@ -4,6 +4,9 @@ class page_search extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
+#SELECTION_TRAVEL
+#return;
+#END
 		require_once("component/search/SearchPlugin.inc");
 		if (isset($_POST["input"]))
 			$_POST = json_decode($_POST["input"], true);

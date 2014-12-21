@@ -120,7 +120,7 @@ class Backup {
 		else {
 			if ($filter_storage_types !== true && $filter_storage_types !== false) {
 				if (count($storage_ids) > 0)
-					$storage_ids = SQLQuery::create()->bypassSecurity()->select("Storage")->whereIn("Storage","id",$storage_ids)->whereIn("Storage","type",$filter_storage)->field("id")->executeSingleField();
+					$storage_ids = SQLQuery::create()->bypassSecurity()->select("Storage")->whereIn("Storage","id",$storage_ids)->whereIn("Storage","type",$filter_storage_types)->field("id")->executeSingleField();
 			}
 			mkdir($path."/storage");
 			set_time_limit(30+count($storage_ids)*2);

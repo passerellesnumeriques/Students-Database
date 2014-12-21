@@ -38,7 +38,17 @@ class page_selection_main_page extends SelectionPage {
 							<div style='padding:3px;'>
 								1- <a href='config/manage' class='black_link'> Configure how this selection process will work</a><br/>
 								2- <a href='staff/status' class='black_link'> Set staff status (who can do which step)</a><br/>
+<?php
+#SELECTION_TRAVEL
+#if (false) {
+#END 
+?>
 								3- <a href='/dynamic/data_model/page/edit_customizable_table?table=ApplicantMoreInfo' class='black_link'> Customize information you will enter about each applicant</a>
+<?php
+#SELECTION_TRAVEL
+#}
+#END 
+?>
 							</div>
 						</div>
 						<?php } ?>

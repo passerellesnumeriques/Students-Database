@@ -232,7 +232,17 @@ echo "<div id='application_title_label'>Dev</div>";
 					?>
 				</div>
 				<div id="application_right_menu" style="flex:none;">
+					<?php
+#SELECTION_TRAVEL
+#echo "<!-- ";
+#END 
+					?>
 					<input type='text' id='application_search' onchange="postFrame('/dynamic/search/page/search',{q:this.value},'application_frame');this.value='';"/>
+					<?php
+#SELECTION_TRAVEL
+#echo "--> ";
+#END 
+					?>
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>' target='application_frame'><div id='user_picture'></div></a>
 					<!-- <button class="flat" id='notifications'><img src='/static/application/menu/notifications.png'/></button>  -->
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat" id='calendars'><img src='/static/calendar/calendar_white.png'/></button></a>
