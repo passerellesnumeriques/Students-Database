@@ -132,11 +132,16 @@ class page_student_grades extends Page {
 			<?php 
 			$transcripts_ids = array();
 			foreach ($published_grades as $pg) if (!in_array($pg["id"], $transcripts_ids)) array_push($transcripts_ids, $pg["id"]);
-			$transcripts = SQLQuery::create()->select("PublishedTranscript")->whereIn("PublishedTranscript","id",$transcripts_ids)->execute();
+			if (count($transcripts_ids) > 0) {
+				$transcripts = SQLQuery::create()->select("PublishedTranscript")->whereIn("PublishedTranscript","id",$transcripts_ids)->execute();
+				$periods_ids = array();
+				foreach ($transcripts as $t) if (!in_array($t["period"], $periods_ids)) array_push($periods_ids, $t["period"]);
+				$periods = PNApplication::$instance->curriculum->getBatchPeriodsById($periods_ids);
+			} else {
+				$transcripts = array();
+				$periods = array();
+			}
 			
-			$periods_ids = array();
-			foreach ($transcripts as $t) if (!in_array($t["period"], $periods_ids)) array_push($periods_ids, $t["period"]);
-			$periods = PNApplication::$instance->curriculum->getBatchPeriodsById($periods_ids);
 			
 			require_once("component/transcripts/page/design.inc");
 			echo "<div id='transcripts_tabs' style='display:flex;flex-direction:column;height:100%;padding:5px;'>";
