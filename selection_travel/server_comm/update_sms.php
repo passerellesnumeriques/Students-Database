@@ -202,6 +202,8 @@ if ($migrate_from == null) {
 	progress("Downloading necessary files to upgrade from version $from_version to $to_version");
 	downloadFile($server, $version, $migration_filename, $target);
 	checkFile($server, $version, $migration_filename);
+	progress("Creation of a backup of your database");
+	exec(realpath(dirname(__FILE__)."/../../server")."/mysqldump.exe --host=localhost --port=8889 --user=root --password= selectiontravel_PNC > ".realpath(dirname(__FILE__)."/..")."/backup_".time().".sql");
 	progress("Upgrading your computer from version $from_version to $to_version");
 	if (file_exists(dirname(__FILE__)."/migrate")) removeDirectory(dirname(__FILE__)."/migrate");
 	if (file_exists(dirname(__FILE__)."/migrate")) {
