@@ -1,4 +1,7 @@
 <?php
+#SELECTION_TRAVEL
+#return;
+#END
 if (!PNApplication::$instance->google->isInstalled()) {
 	PNApplication::error("Google is not configured.");
 	return;
