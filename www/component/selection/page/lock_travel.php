@@ -11,7 +11,7 @@ class page_lock_travel extends SelectionPage {
 		$server_url = "http://sourceforge.net/projects/studentsdatabase/files/$server_filename/download";
 ?>
 <div style='background-color:white;padding:10px' id='content'>
-	Are you currently on the computer with which you will travel ?
+	Are you the one who will use the software during the travel ?
 </div>
 <script type='text/javascript'>
 var popup = window.parent.get_popup_window_from_frame(window);
@@ -181,14 +181,23 @@ function synchronizeDatabases() {
 
 popup.removeButtons();
 popup.addYesNoButtons(function() {
-	checkInstall();
+	content.innerHTML = "Are you currently on the computer with which you will travel ?";
+	layout.changed(content);
+	popup.removeButtons();
+	popup.addYesNoButtons(function() {
+		checkInstall();
+	}, function() {
+		content.innerHTML = "You must lock the campaign using the computer that you will use for travelling,<br/>so we can install this software on it.";
+		layout.changed(content);
+		popup.removeButtons();
+		popup.addCloseButton();
+	});
 }, function() {
-	content.innerHTML = "You must lock the campaign using the computer that you will use for travelling,<br/>so we can install this software on it.";
+	content.innerHTML = "You must lock the campaign using the user who will be the one using the software during the travel.";
 	layout.changed(content);
 	popup.removeButtons();
 	popup.addCloseButton();
 });
-
 </script>
 <?php 
 	}
