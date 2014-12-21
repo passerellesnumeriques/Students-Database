@@ -763,12 +763,23 @@ namespace datamodel {
 			$this->unique = $unique;
 		}
 
+		/**
+		 * Get the SQL definition of this column
+		 * @param \DataBaseSystem $db_system database connection
+		 * @param string $sql_table_name SQL name of the table
+		 * @return string the SQL definition
+		 */
 		public function get_sql($db_system, $sql_table_name) {
 			$sql = "`".$this->name."` ";
 			$sql .= $this->get_sql_type($db_system, $sql_table_name);
 			if (!$this->can_be_null) $sql .= " NOT NULL";
 			return $sql;
 		}
+		/**
+		 * Get the SQL type for this column
+		 * @param \DataBaseSystem $db_system database connection
+		 * @param string $sql_table_name SQL name of the table
+		 */
 		public abstract function get_sql_type($db_system, $sql_table_name);
 
 		public function validate($value) {
@@ -925,7 +936,7 @@ namespace datamodel {
 			$first = true;
 			foreach ($this->values as $v) {
 				if ($first) $first = false; else $sql.=",";
-				$sql .= "'".\SQLQuery::escape($v)."'";
+				$sql .= "'".$db_system->escapeString($v)."'";
 			}
 			$sql .= ")";
 			return $sql;

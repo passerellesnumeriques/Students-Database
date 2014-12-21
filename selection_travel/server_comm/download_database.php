@@ -46,11 +46,12 @@ fclose($f);
 
 // first, reset our database
 progress("Initializing the database on your computer...");
-set_time_limit(300);
 $db = mysqli_connect("localhost","root","","",8889);
 if ($db === false) die("Error: unable to connect to the database");
+set_time_limit(300);
 mysqli_query($db, "DROP DATABASE `selectiontravel_$domain`");
 mysqli_query($db, "CREATE DATABASE `selectiontravel_$domain` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
+set_time_limit(300);
 mysqli_query($db, "DROP DATABASE `selectiontravel_init`");
 mysqli_query($db, "CREATE DATABASE `selectiontravel_init` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci");
 mysqli_close($db);
@@ -185,21 +186,27 @@ $db_system->execute("DELETE FROM `selectiontravel_init`.`Users` WHERE `domain` !
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
 // remove any locks
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`DataLocks` WHERE 1");
+// for potential access without full name, we are now using the domain database
+$db_system->execute("USE `selectiontravel_$domain`");
 // lock other campaigns
-$campaigns = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("id")->executeSingleField();
+$res = $db_system->execute("SELECT `id` FROM `selectiontravel_$domain`.`SelectionCampaign` WHERE `id`!=".$campaign_id);
+$campaigns = array();
+while (($row = $db_system->nextRowArray($res)) <> null)
+	array_push($campaigns, $row[0]);
 foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables() as $table) {
 	foreach ($campaigns as $cid) {
-		if ($cid == $campaign_id) continue;
 		$locked_by = null;
 		DataBaseLock::lockTableForEver($table->getSQLNameFor($cid), "Selection Travel Version - You can only edit the campaign you locked", $locked_by);
 	}
 }
 // remove rights on any calendar except the one of the selection selection campaign
-$calendar_id = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->whereValue("SelectionCampaign","id",$campaign_id)->field("calendar")->executeSingleValue();
-$db_system->execute("DELETE FROM `UserCalendar` WHERE 1");
-$db_system->execute("DELETE FROM `CalendarRights` WHERE `calendar`!=".$calendar_id);
+$res = $db_system->execute("SELECT `calendar` FROM `selectiontravel_$domain`.`SelectionCampaign` WHERE `id`=".$campaign_id);
+$row = $db_system->nextRowArray($res);
+$calendar_id = $row[0];
+$db_system->execute("DELETE FROM `selectiontravel_$domain`.`UserCalendar` WHERE 1");
+$db_system->execute("DELETE FROM `selectiontravel_$domain`.`CalendarRights` WHERE `calendar`!=".$calendar_id);
 // add necessary rights on the calendar
-$db_system->execute("INSERT INTO `CalendarRights` (`calendar`,`right_name`,`right_value`,`writable`) VALUES ".
+$db_system->execute("INSERT INTO `selectiontravel_$domain`.`CalendarRights` (`calendar`,`right_name`,`right_value`,`writable`) VALUES ".
 		 "($calendar_id,'manage_information_session',1,1)".
 		",($calendar_id,'manage_exam_center',1,1)".
 		",($calendar_id,'manage_interview_center',1,1)".
