@@ -186,22 +186,22 @@ $model->addTable("CurriculumSubject")
  	->onInsert(function($inserted) {
  		foreach ($inserted as $row)
 			try {
-				$category = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectCategory")->whereValue("CurriculumSubjectCategory","id",$row["fields_value"]["category"])->field("CurriculumSubjectCategory","name")->executeSingleValue();
+				$category = SQLQuery::create()->bypassSecurity()->select("CurriculumSubjectCategory")->whereValue("CurriculumSubjectCategory","id",$row["fields_values"]["category"])->field("CurriculumSubjectCategory","name")->executeSingleValue();
 				$period = SQLQuery::create()->bypassSecurity()
 					->select("BatchPeriod")
-					->whereValue("BatchPeriod","id",$row["fields_value"]["period"])
+					->whereValue("BatchPeriod","id",$row["fields_values"]["period"])
 					->field("BatchPeriod","name","period_name")
 					->join("BatchPeriod", "StudentBatch", array("batch"=>"id"))
 					->field("StudentBatch", "name", "batch_name")
 					->field("StudentBatch", "id", "batch_id")
 					->executeSingleRow()
 					;
-				$message = "Subject <i>".toHTML($row["fields_value"]["name"])."</i> (code <i>".toHTML($row["fields_value"]["code"])."</i>) created in category ".toHTML($category)." for period ".toHTML($period["period_name"])." of batch ".toHTML($period["batch_name"]);
-				if (isset($row["fields_value"]["specialization"]) && $row["fields_value"]["specialization"] <> null) {
+				$message = "Subject <i>".toHTML($row["fields_values"]["name"])."</i> (code <i>".toHTML($row["fields_values"]["code"])."</i>) created in category ".toHTML($category)." for period ".toHTML($period["period_name"])." of batch ".toHTML($period["batch_name"]);
+				if (isset($row["fields_values"]["specialization"]) && $row["fields_values"]["specialization"] <> null) {
 					$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $row["fields_value"]["specialization"])->field("Specialization","name")->executeSingleValue();
 					$message .= " in specialization ".toHTML($spe);
 				}
-				PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch_id"],"period".$row["fields_value"]["period"]), "activity", $message);
+				PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch_id"],"period".$row["fields_values"]["period"]), "activity", $message);
 			} catch (Exception $e) { PNApplication::error($e); }
  	})
  	->onRemove(function($table,$rows,$sm){

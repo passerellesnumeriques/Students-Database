@@ -35,6 +35,7 @@ window.datamodel = {
 	},
 	unregisterDataWidget: function(win, element) {
 		var dw = this._data_widgets[win._id][element.id];
+		if (!dw) return;
 		dw.unregister_listener(dw.listener);
 		delete this._data_widgets[win._id][element.id];
 	},
@@ -66,6 +67,7 @@ window.datamodel = {
 	},
 	unregisterCellWidget: function(win, element) {
 		var w = this._cell_widgets[win._id][element.id];
+		if (!w) return;
 		w.unregister_listener(w.listener);
 		delete this._cell_widgets[win._id][element.id];
 	},
