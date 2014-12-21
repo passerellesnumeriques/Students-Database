@@ -60,6 +60,8 @@ function getTableDiff(&$table, $sub_model, &$done) {
 	$table_name = $table->getSQLNameFor($sub_model);
 	if ($table_name == "DataLocks") return;
 	if ($table_name == "Users") return;
+	if ($table_name == "UserCalendar") return;
+	if ($table_name == "CalendarRights") return;
 	if (in_array($table_name, $done)) return;
 	array_push($done, $table_name);
 	

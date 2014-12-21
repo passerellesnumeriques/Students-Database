@@ -87,6 +87,25 @@ class calendar extends Component {
 	}
 	
 	/**
+	 * Remove a writable right on a shared calendar
+	 * @param integer $calendar_id the calendar
+	 * @param string $right_name which right
+	 * @param string $right_value which value for the right
+	 */
+	public function removeSharedCalendarWritableRight($calendar_id, $right_name, $right_value) {
+		SQLQuery::create()->bypassSecurity()->removeKey("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$right_name));
+	}
+	/**
+	 * Add a writable right on a shared calendar
+	 * @param integer $calendar_id the calendar
+	 * @param string $right_name which right
+	 * @param string $right_value which value for the right
+	 */
+	public function addSharedCalendarWritableRight($calendar_id, $right_name, $right_value) {
+		SQLQuery::create()->bypassSecurity()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$right_name,"right_value"=>$right_value,"writable"=>true));
+	}
+	
+	/**
 	 * Remove the given shared calendar
 	 * @param integer $id identifier of the calendar to remove
 	 * @return boolean true on success

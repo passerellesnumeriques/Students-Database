@@ -23,7 +23,8 @@ class service_lock_campaign extends Service {
 				if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("TravelVersion",$rows);
 				SQLQuery::create()->bypassSecurity()->insert("TravelVersion",array("uid"=>$uid,"user"=>PNApplication::$instance->user_management->user_id));
 				echo "{token:".json_encode($token).",uid:".json_encode($uid)."}";
-			}
+			} else
+				echo "true";
 		}
 	}
 	

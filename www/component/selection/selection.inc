@@ -140,7 +140,7 @@ class selection extends Component {
 				return;
 			}
 			/* Create a calendar for this campaign */
-			$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("manage_information_session"=>true));
+			$calendar_id = PNApplication::$instance->calendar->createSharedCalendar($campaign_name,"FFA040","/static/selection/selection_16.png",array("can_access_selection_data"=>true),array("manage_information_session"=>true,"manage_exam_center"=>true,"manage_interview_center"=>true,"manage_selection_campaign"=>true,"manage_trips"=>true,"edit_social_investigation"=>true));
 			
 			/* if the calendar was properly created, continue */
 			if($calendar_id <> null){
@@ -285,6 +285,14 @@ class selection extends Component {
 			}
 			array_push($locks, $id);
 		}
+		// freeze calendar
+		PNApplication::$instance->calendar->removeSharedCalendarWritableRight($this->calendar_id, "manage_information_session", true);
+		PNApplication::$instance->calendar->removeSharedCalendarWritableRight($this->calendar_id, "manage_exam_center", true);
+		PNApplication::$instance->calendar->removeSharedCalendarWritableRight($this->calendar_id, "manage_interview_center", true);
+		PNApplication::$instance->calendar->removeSharedCalendarWritableRight($this->calendar_id, "manage_selection_campaign", true);
+		PNApplication::$instance->calendar->removeSharedCalendarWritableRight($this->calendar_id, "manage_trips", true);
+		PNApplication::$instance->calendar->removeSharedCalendarWritableRight($this->calendar_id, "edit_social_investigation", true);
+		// mark the campaign as frozen
 		SQLQuery::create()->bypassSecurity()->updateByKey("SelectionCampaign", $this->getCampaignId(), array("frozen"=>1,"frozen_reason"=>$reason));
 		$this->frozen_reason = $reason;
 		return true;
@@ -300,7 +308,16 @@ class selection extends Component {
 		require_once 'component/data_model/DataBaseLock.inc';
 		foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables() as $table)
 			DataBaseLock::unlockTableForEver($table->getSQLNameFor($this->getCampaignId()), $this->frozen_reason);
+		// unlock the calendar
+		PNApplication::$instance->calendar->addSharedCalendarWritableRight($this->calendar_id, "manage_information_session", true);
+		PNApplication::$instance->calendar->addSharedCalendarWritableRight($this->calendar_id, "manage_exam_center", true);
+		PNApplication::$instance->calendar->addSharedCalendarWritableRight($this->calendar_id, "manage_interview_center", true);
+		PNApplication::$instance->calendar->addSharedCalendarWritableRight($this->calendar_id, "manage_selection_campaign", true);
+		PNApplication::$instance->calendar->addSharedCalendarWritableRight($this->calendar_id, "manage_trips", true);
+		PNApplication::$instance->calendar->addSharedCalendarWritableRight($this->calendar_id, "edit_social_investigation", true);
+		// mark the campaign as not frozen
 		SQLQuery::create()->bypassSecurity()->updateByKey("SelectionCampaign", $this->getCampaignId(), array("frozen"=>0,"frozen_reason"=>null));
+		// remove synch with travel version information
 		$rows = SQLQuery::create()->bypassSecurity()->select("TravelVersion")->execute();
 		if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("TravelVersion", $rows);
 		$this->frozen_reason = null;

@@ -194,6 +194,10 @@ foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables()
 		DataBaseLock::lockTableForEver($table->getSQLNameFor($cid), "Selection Travel Version - You can only edit the campaign you locked", $locked_by);
 	}
 }
+// remove rights on any calendar except the one of the selection selection campaign
+$calendar_id = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->whereValue("SelectionCampaign","id",$campaign_id)->field("calendar")->executeSingleValue();
+$db_system->execute("DELETE FROM `UserCalendar` WHERE 1");
+$db_system->execute("DELETE FROM `CalendarRights` WHERE `calendar`!=".$calendar_id);
 if (PNApplication::hasErrors()) PNApplication::printErrors();
 else {
 	// activate the software

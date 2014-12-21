@@ -1923,7 +1923,7 @@ class SQLQuery {
 		if($lock_id == null)
 			DataBaseLock::unlock($lock);
 		// events
-		$t->fireInsert(array("fields_values"=>$fields_values, "id"=>$id, "sub_model_instance"=>($t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null)));
+		$t->fireInsert(array(array("fields_values"=>$fields_values, "id"=>$id, "sub_model_instance"=>($t->getModel() instanceof SubDataModel ? @$this->sub_models[$t->getModel()->getParentTable()] : null))));
 		return $id;
 	}
 	
