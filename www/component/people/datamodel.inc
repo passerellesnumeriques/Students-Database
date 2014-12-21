@@ -64,11 +64,12 @@ $model->addTable("People")
 		$q->where("(".$w.")");
 	})
 	->addWriteFilter(function(&$q, $table_alias) {
-		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return;
-		// restrict by type of people
 #SELECTION_TRAVEL
 #		$q->where("(`".$table_alias."`.`types` LIKE '%/applicant/%')"); // can only modify applicants
+#		return;
 #END
+		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return;
+		// restrict by type of people
 		$types = array();
 		require_once("PeopleTypePlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {

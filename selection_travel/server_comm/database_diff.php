@@ -183,7 +183,7 @@ function getTableDiff(&$table, $sub_model, &$done) {
 		if ($col == $pk) continue;
 		if ($pk == null && in_array($col->name, $key)) continue;
 		$sql .= ",`t1`.`".$col->name."` AS `c$i`";
-		$sql .= ",(`t1`.`".$col->name."` <> `t2`.`".$col->name."`) AS `m$i`";
+		$sql .= ",(NOT(`t1`.`".$col->name."` <=> `t2`.`".$col->name."`)) AS `m$i`";
 		array_push($modifiable_columns, $i);
 	}
 	if (count($modifiable_columns) > 0) {

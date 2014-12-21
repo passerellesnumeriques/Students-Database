@@ -221,6 +221,10 @@ class people extends Component {
 		return $p <> null;
 	}
 	public function canModify($people_id) {
+#SELECTION_TRAVEL
+#		$row = $q = SQLQuery::create()->bypassSecurity()->select("People")->whereValue("People","id",$people_id)->where("`types` LIKE '%/applicant/%'")->executeSingleRow();
+#		return $row <> null;
+#END
 		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return true;
 		$q = SQLQuery::create();
 		$table_alias = $q->generateTableAlias();

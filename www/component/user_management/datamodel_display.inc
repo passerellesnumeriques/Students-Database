@@ -51,7 +51,9 @@ class UserDataScreen extends datamodel\GenericDataScreen {
 	}
 	
 }
+#!SELECTION_TRAVEL
 $model->addDataScreen(new UserDataScreen($display));
+#END
 
 $display = new datamodel\TableDataDisplay("UserRole", $category);
 $display->addDataDisplay(new datamodel\JoiningTableDataDisplay("Roles", "user", "role", "name"));
