@@ -76,10 +76,11 @@ class Backup {
 	/** Create a new backup of the database
 	 * @param string $path directory where to save the backup
 	 * @param array|null $filters_sub_models only backup some sub model instances: associative array with the sub model table as the key, and an array of sub model instance to backup as value.
-	 * @param array|null $filter_storage only backup the given type of storage
+	 * @param array|null $filter_storage_types only backup the given type of storage
+	 * @param array|null $filter_storage_sub_models backup storage only for the specified sub models
 	 * @return string the timestamp given to the backup
 	 */
-	public static function createBackupIn($path, $filters_sub_models = null, $filter_storage = false) {
+	public static function createBackupIn($path, $filters_sub_models = null, $filter_storage_types = false, $filter_storage_sub_models = false) {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
 		if (PNApplication::$instance == null) {
@@ -96,7 +97,7 @@ class Backup {
 			if ($filters_sub_models <> null && isset($filters_sub_models[$table->getName()])) $filter = $filters_sub_models[$table->getName()];
 			else $filter = null;
 			$ids = self::backupTable($table, $table->getName(), null, $path."/db", $filter);
-			if ($filter_storage !== false) $storage_ids = array_merge($storage_ids, $ids);
+			if ($filter_storage_types !== false || $filter_storage_sub_models !== false) $storage_ids = array_merge($storage_ids, $ids);
 		}
 		foreach (DataModel::get()->getSubModels() as $sm) {
 			if ($filters_sub_models <> null && array_key_exists($sm->getParentTable(), $filters_sub_models)) $filter = $filters_sub_models[$sm->getParentTable()];
@@ -105,17 +106,19 @@ class Backup {
 				if ($filter <> null && !in_array($sub_model, $filter)) continue;
 				foreach ($sm->internalGetTables() as $table) {
 					$ids = self::backupTable($table, $table->getSQLNameFor($sub_model), $sub_model, $path."/db");
-					if ($filter_storage !== false) $storage_ids = array_merge($storage_ids, $ids);
+					if ($filter_storage_sub_models === false || !array_key_exists($sm->getParentTable(), $filter_storage_sub_models) || in_array($sub_model, $filter_storage_sub_models[$sm->getParentTable()])) {
+						if ($filter_storage_types !== false) $storage_ids = array_merge($storage_ids, $ids);
+					}
 				}
 			}
 		}
 		self::zipDirectory(realpath($path)."/db", realpath($path)."/db.zip");
 		self::removeDirectory($path."/db");
 		set_time_limit(60*60);
-		if ($filter_storage === false)
+		if ($filter_storage_types === false && $filter_storage_sub_models === false)
 			self::zipDirectory(realpath("data/$local_domain/storage"), realpath($path)."/storage.zip", true);
 		else {
-			if ($filter_storage !== true) {
+			if ($filter_storage_types !== true && $filter_storage_types !== false) {
 				if (count($storage_ids) > 0)
 					$storage_ids = SQLQuery::create()->bypassSecurity()->select("Storage")->whereIn("Storage","id",$storage_ids)->whereIn("Storage","type",$filter_storage)->field("id")->executeSingleField();
 			}

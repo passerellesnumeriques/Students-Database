@@ -185,6 +185,15 @@ $db_system->execute("DELETE FROM `selectiontravel_init`.`Users` WHERE `domain` !
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`Users` WHERE `domain` != '".$db_system->escapeString($domain)."' OR `username` != '".$db_system->escapeString($username)."'");
 // remove any locks
 $db_system->execute("DELETE FROM `selectiontravel_$domain`.`DataLocks` WHERE 1");
+// lock other campaigns
+$campaigns = SQLQuery::create()->bypassSecurity()->select("SelectionCampaign")->field("id")->executeSingleField();
+foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables() as $table) {
+	foreach ($campaigns as $cid) {
+		if ($cid == $campaign_id) continue;
+		$locked_by = null;
+		DataBaseLock::lockTableForEver($table->getSQLNameFor($cid), "Selection Travel Version - You can only edit the campaign you locked", $locked_by);
+	}
+}
 if (PNApplication::hasErrors()) PNApplication::printErrors();
 else {
 	// activate the software

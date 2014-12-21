@@ -42,7 +42,7 @@ class service_travel_download_backup extends Service {
 			$path = realpath("data")."/tmp_backup_for_selection_travel";
 			if (file_exists($path)) Backup::removeDirectory($path);
 			mkdir($path);
-			Backup::createBackupIn($path, array("SelectionCampaign"=>array($campaign_id)), array("people_picture","social_investigation_picture"));
+			Backup::createBackupIn($path, false, array("people_picture","social_investigation_picture"), array("SelectionCampaign"=>array($campaign_id)));
 			// generate the datamodel
 			//require_once 'component/data_model/Model.inc';
 			//require_once 'component/data_model/DataModelJSON.inc';
