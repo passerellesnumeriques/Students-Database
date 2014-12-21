@@ -1090,7 +1090,7 @@ class page_teachers_assignments extends Page {
 			span.onmouseover = function() { this.style.textDecoration = "underline"; };
 			span.onmouseout = function() { this.style.textDecoration = ""; };
 			span.onclick = function() {
-				window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+this.teacher.id,null,95,95);
+				window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+this.teacher.id,null,95,95);
 			};
 			var td_hours = document.createElement("TD"); this.tr.appendChild(td_hours);
 			td_hours.style.whiteSpace = "nowrap";

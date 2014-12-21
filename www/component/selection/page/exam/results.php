@@ -215,7 +215,7 @@ function editResults() {
 	/* Check if an exam session row is selected */ 
 	if(selected["session_id"] != null) {
 		/* open a new window pop up for results edition */
-		window.top.popup_frame(
+		window.top.popupFrame(
 			"/static/transcripts/grades_16.png",
 			"Exam Session Results",
 			"/dynamic/selection/page/exam/edit_results?session="+selected["session_id"]+"&room="+selected["room_id"],

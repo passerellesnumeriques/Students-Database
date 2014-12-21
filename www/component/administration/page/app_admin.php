@@ -577,7 +577,7 @@ function saveRemoteAccess(domain) {
 	});
 }
 function removeRemoteAccess(domain) {
-	confirm_dialog("Remove remote access configuration for "+domain+" ?<br/>No synchronization of data will be done anymore.",function(yes) {
+	confirmDialog("Remove remote access configuration for "+domain+" ?<br/>No synchronization of data will be done anymore.",function(yes) {
 		if (!yes) return;
 		var locker = lock_screen(null,'Saving remote access for domain '+domain+'...');
 		service.json("administration","save_remote_access",{domain:domain,url:"",password:""},function(res) {

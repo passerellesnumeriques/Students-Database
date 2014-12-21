@@ -77,7 +77,7 @@ class page_organizations extends Page {
 					list.grid.makeScrollable();
 					if (can_remove || selected != null || selected_not_changeable != null) {
 						list.grid.setSelectable(true);
-						list.ondataloaded.add_listener(organizations_loaded);
+						list.ondataloaded.addListener(organizations_loaded);
 						list.grid.onrowselectionchange = organizations_selection_changed;
 					}
 					list.addTitle(null, "Organizations of "+creator);
@@ -86,7 +86,7 @@ class page_organizations extends Page {
 						new_org.className = 'flat';
 						new_org.innerHTML = "<img src='"+theme.build_icon("/static/contact/organization.png",theme.icons_10.add)+"'/> New Organization";
 						new_org.onclick = function() {
-							window.top.popup_frame(theme.icons_16.add, "New Selection Partner", "/dynamic/contact/page/organization_profile?creator=Selection&organization=-1",null,null,null,function(frame,p) {
+							window.top.popupFrame(theme.icons_16.add, "New Selection Partner", "/dynamic/contact/page/organization_profile?creator=Selection&organization=-1",null,null,null,function(frame,p) {
 								p.addOkCancelButtons(function(){
 									p.freeze();
 									var win = getIFrameWindow(frame);
@@ -105,7 +105,7 @@ class page_organizations extends Page {
 					}
 					list.makeRowsClickable(function(row){
 						var orga_id = list.getTableKeyForRow('Organization',row.row_id);
-						window.top.popup_frame("/static/contact/organization.png", "Organization Profile", "/dynamic/contact/page/organization_profile?organization="+orga_id,null,null,null,function(frame,p) {
+						window.top.popupFrame("/static/contact/organization.png", "Organization Profile", "/dynamic/contact/page/organization_profile?organization="+orga_id,null,null,null,function(frame,p) {
 							p.onclose = function() { list.reloadData(); };
 						});
 					});
@@ -138,7 +138,7 @@ class page_organizations extends Page {
 				return;
 			}
 			var sel = dl.grid.getSelectionByRowId();
-			confirm_dialog("Are you sure you want to hide the "+(sel.length > 1 ? sel.length : "")+" selected organization"+(sel.length > 1 ? "s" : "")+" ?",function(yes) {
+			confirmDialog("Are you sure you want to hide the "+(sel.length > 1 ? sel.length : "")+" selected organization"+(sel.length > 1 ? "s" : "")+" ?",function(yes) {
 				if (!yes) return;
 				var ids = [];
 				for (var i = 0; i < sel.length; ++i)

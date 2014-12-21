@@ -40,12 +40,12 @@ function event_date_time_duration(container, start, duration, minimum_date, maxi
 		container.appendChild(document.createTextNode("Time: "));
 		this._start_time = new field_time(null,true,{can_be_null:can_be_null});
 		this._start_time.setData(this.time);
-		this._start_time.onchange.add_listener(function() { t.time = t._start_time.getCurrentMinutes(); });
+		this._start_time.onchange.addListener(function() { t.time = t._start_time.getCurrentMinutes(); });
 		container.appendChild(this._start_time.getHTMLElement());
 		container.appendChild(document.createTextNode(" Duration: "));
 		this._duration = new field_time(null,true,{can_be_null:can_be_null,is_duration:true});
 		if (this.duration) this._duration.setData(this.duration);
-		this._duration.onchange.add_listener(function() { t.duration = t._duration.getCurrentMinutes(); });
+		this._duration.onchange.addListener(function() { t.duration = t._duration.getCurrentMinutes(); });
 		container.appendChild(this._duration.getHTMLElement());
 		if (onready) onready(this);
 	};

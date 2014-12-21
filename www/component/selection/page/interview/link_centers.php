@@ -227,11 +227,11 @@ class page_interview_link_centers extends SelectionPage {
 					};
 					if (exam_center.nb_applicants_assigned_past > 0 || exam_center.nb_applicants_assigned_future) {
 						if (exam_center.nb_applicants_assigned_past == 0)
-							confirm_dialog(exam_center.nb_applicants_assigned_future+" applicant(s) from this Exam Center are already scheduled for an interview session.<br/>If you unlink this Exam Center, those applicants will be automatically remove from the scheduled session.<br/>Are you sure you want to do this ?", function(yes){
+							confirmDialog(exam_center.nb_applicants_assigned_future+" applicant(s) from this Exam Center are already scheduled for an interview session.<br/>If you unlink this Exam Center, those applicants will be automatically remove from the scheduled session.<br/>Are you sure you want to do this ?", function(yes){
 								if (yes) doit();
 							});
 						else {
-							error_dialog(exam_center.nb_applicants_assigned_past+" applicant(s) from this Exam Center already had their interview (assigned to an interview session in the past).<br/>You cannot unlink this Exam Center.<br/>If you really need to do it, you need to go to the Interview Center screen, and unlink the session.");
+							errorDialog(exam_center.nb_applicants_assigned_past+" applicant(s) from this Exam Center already had their interview (assigned to an interview session in the past).<br/>You cannot unlink this Exam Center.<br/>If you really need to do it, you need to go to the Interview Center screen, and unlink the session.");
 						}
 					} else
 						doit();

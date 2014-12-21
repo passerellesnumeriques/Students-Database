@@ -41,10 +41,10 @@ field_timestamp.prototype._create = function(data) {
 			if (t.config && t.config.minimum_date) cfg.minimum = t.config.minimum_date;
 			if (t.config && t.config.maximum_date) cfg.maximum = t.config.maximum_date;
 			t._field_date = new field_date(date,true,cfg);
-			t._field_date.onchange.add_listener(function() { t._datachange(); });
+			t._field_date.onchange.addListener(function() { t._datachange(); });
 			t.element.appendChild(t._field_date.getHTMLElement());
 			t._field_date.getHTMLElement().style.verticalAlign = "bottom";
-			t._field_date.onfocus.add_listener(function(){t.onfocus.fire();});
+			t._field_date.onfocus.addListener(function(){t.onfocus.fire();});
 			if (t.config && t.config.show_time) {
 				var time = 0;
 				if (d != null) time = d.getMinutes()+d.getHours()*60;
@@ -53,10 +53,10 @@ field_timestamp.prototype._create = function(data) {
 				span.style.verticalAlign = "bottom";
 				t.element.appendChild(span);
 				t._field_time = new field_time(time,true,{});
-				t._field_time.onchange.add_listener(function() { t._datachange(); });
+				t._field_time.onchange.addListener(function() { t._datachange(); });
 				t.element.appendChild(t._field_time.getHTMLElement());
 				t._field_time.getHTMLElement().style.verticalAlign = "bottom";
-				t._field_time.onfocus.add_listener(function(){t.onfocus.fire();});
+				t._field_time.onfocus.addListener(function(){t.onfocus.fire();});
 			}
 		});
 		this._setData = function(data) {

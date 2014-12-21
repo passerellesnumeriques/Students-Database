@@ -221,7 +221,7 @@ function updateGroupTypeButtons() {
 updateGroupTypeButtons();
 function editGroupType() {
 	var gt = getSelectedGroupType();
-	input_dialog(theme.icons_16.edit,"Rename Group Type","Group Type Name",gt.name,100,function(name) {
+	inputDialog(theme.icons_16.edit,"Rename Group Type","Group Type Name",gt.name,100,function(name) {
 		if (name.trim().length == 0) return "The name cannot be empty";
 		for (var i = 0; i < group_types.length; ++i)
 			if (group_types[i].id != gt.id && group_types[i].name.isSame(name))

@@ -45,11 +45,11 @@ function init_top_calendar_manager() {
 		if (!window.top.calendar_manager) return;
 		for (var i = 0; i < provider.calendars.length; ++i)
 			window.top.calendar_manager.addCalendar(provider.calendars[i]);
-		provider.on_calendar_added.add_listener(function(cal){
+		provider.on_calendar_added.addListener(function(cal){
 			if (!window.top.calendar_manager) return;
 			window.top.calendar_manager.addCalendar(cal);
 		});
-		provider.on_calendar_removed.add_listener(function(cal){
+		provider.on_calendar_removed.addListener(function(cal){
 			if (!window.top.calendar_manager) return;
 			window.top.calendar_manager.removeCalendar(cal);
 		});
@@ -63,7 +63,7 @@ function init_top_calendar_manager() {
 			});
 			window.top.calendar_manager = null;
 		};
-		window.top.pnapplication.onlogout.add_listener(window.top._logout_remove_calendars);
+		window.top.pnapplication.onlogout.addListener(window.top._logout_remove_calendars);
 	}
 }
 window.top.require("calendar.js",function() {

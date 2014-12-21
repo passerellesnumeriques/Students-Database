@@ -55,7 +55,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		var field_name = new field_text(room.name, can_edit, {can_be_null:false,max_length:20});
 		td.appendChild(field_name.getHTMLElement());
 		field_name.register_datamodel_cell("ExamCenterRoom", "name", room.id);
-		field_name.onchange.add_listener(function (f) {
+		field_name.onchange.addListener(function (f) {
 			room.name = f.getCurrentData();
 			window.pnapplication.dataUnsaved("ExamCenterRooms");
 		});
@@ -65,7 +65,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		td.appendChild(field_capacity.getHTMLElement());
 		field_capacity.register_datamodel_cell("ExamCenterRoom", "capacity", room.id);
 		field_capacity.t = this;
-		field_capacity.onchange.add_listener(function(f) {
+		field_capacity.onchange.addListener(function(f) {
 			var new_cap = f.getCurrentData();
 			// calculate number of applicants already done with a past session
 			var now = new Date().getTime();
@@ -159,7 +159,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 					window.pnapplication.dataUnsaved("ExamCenterSessions");
 				};
 				if (d.getTime() < new Date().getTime())
-					confirm_dialog("You are creating a session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
+					confirmDialog("You are creating a session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
 						if (yes) doit();
 					});
 				else
@@ -251,7 +251,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			return false; // no more seat
 		if (!already_confirmed_for_past_session && session.start.getTime() < new Date().getTime()) {
 			var t=this;
-			confirm_dialog("You are going to assign an applicant to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
+			confirmDialog("You are going to assign an applicant to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
 				if (yes) t._assignTo(applicant, session, room, true);
 			});
 			return true;
@@ -267,7 +267,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	this._unassign = function(applicant, session_section, room_section, ondone, already_confirmed_for_past_session) {
 		if (!already_confirmed_for_past_session && session_section.event.start.getTime() < new Date().getTime()) {
 			var t=this;
-			confirm_dialog("The exam session is already done, and this applicant may already have results. Are you sure you want to remove this applicant from this session ?", function(yes) {
+			confirmDialog("The exam session is already done, and this applicant may already have results. Are you sure you want to remove this applicant from this session ?", function(yes) {
 				if (yes) t._unassign(applicant, session_section, room_section, ondone, true);
 			});
 			return;
@@ -400,7 +400,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		
 		// listen to events on linked information sessions
 		var t=this;
-		linked_is.onapplicantsadded.add_listener(function(list) {
+		linked_is.onapplicantsadded.addListener(function(list) {
 			window.pnapplication.dataUnsaved("ExamCenterApplicants");
 			for (var i = 0; i < list.length; ++i) {
 				var app = list[i];
@@ -417,7 +417,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			}
 			t._span_total_applicants.innerHTML = t.applicants.length;
 		});
-		linked_is.onapplicantsremoved.add_listener(function(list) {
+		linked_is.onapplicantsremoved.addListener(function(list) {
 			window.pnapplication.dataUnsaved("ExamCenterApplicants");
 			var assigned_and_done = [];
 			var now = new Date().getTime();
@@ -462,7 +462,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 					li.appendChild(document.createTextNode(" "+assigned_and_done[i].people.first_name+" "+assigned_and_done[i].people.last_name));
 				}
 				content.appendChild(document.createTextNode("Please select the ones you really want to remove."));
-				confirm_dialog(content, function(yes) {
+				confirmDialog(content, function(yes) {
 					if (!yes) return;
 					var list = [];
 					for (var i = 0; i < boxes.length; ++i)
@@ -513,8 +513,8 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			t._section_not_assigned.header.style.background = t.not_assigned.getList().length > 0 ? "#FF8000" : "";
 		};
 		listener();
-		this.not_assigned.object_added.add_listener(listener);
-		this.not_assigned.object_removed.add_listener(listener);
+		this.not_assigned.object_added.addListener(listener);
+		this.not_assigned.object_removed.addListener(listener);
 		if (can_edit)
 		this.not_assigned.addDropSupport("applicant", function(people_id) {
 			// check applicant before drop
@@ -546,7 +546,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			button.title = "Remove this applicant from this exam center";
 			button.innerHTML = "<img src='/static/selection/common_centers/remove_applicant_from_center.png'/>";
 			button.onclick = function() {
-				confirm_dialog("Are you sure this applicant will not come to this exam center ?", function(yes) {
+				confirmDialog("Are you sure this applicant will not come to this exam center ?", function(yes) {
 					if (yes) t.removeApplicantFromCenter(applicant);
 				});
 				return false;
@@ -590,7 +590,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 										}
 								};
 								if (o.session.start.getTime() < new Date().getTime()) {
-									confirm_dialog("You are going to assign applicants to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
+									confirmDialog("You are going to assign applicants to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
 										if (!yes) return;
 										doit();
 									});
@@ -604,7 +604,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			});
 			// add remove button
 			not_assigned_header.addSelectionAction("<img src='/static/selection/common_centers/remove_applicant_from_center.png'/> Remove", "action red", "Remove selected applicants from this exam center", function() {
-				confirm_dialog("Are you sure those applicants will not come to this exam center ?", function(yes) {
+				confirmDialog("Are you sure those applicants will not come to this exam center ?", function(yes) {
 					if (yes) {
 						var applicants = t.not_assigned.getSelection();
 						for (var i = 0; i < applicants.length; ++i)
@@ -677,11 +677,11 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 				};
 				var now = new Date().getTime();
 				if (t.event.start.getTime() < now && d.getTime() > now)
-					confirm_dialog("This session was in the past, and you reschedule it in the future.<br/>If any applicant assigned to this session already has exam results, those results will be removed! (when you will save)<br/>Are you sure you want to do this ?", function(yes) {
+					confirmDialog("This session was in the past, and you reschedule it in the future.<br/>If any applicant assigned to this session already has exam results, those results will be removed! (when you will save)<br/>Are you sure you want to do this ?", function(yes) {
 						if (yes) doit();
 					});
 				else if (t.event.start.getTime() > now && d.getTime() < now)
-					confirm_dialog("This session was in the future, and you reschedule it in the past.<br/>Do you confirm this session already occured ?", function(yes) {
+					confirmDialog("This session was in the future, and you reschedule it in the past.<br/>Do you confirm this session already occured ?", function(yes) {
 						if (yes) doit();
 					});
 				else
@@ -729,7 +729,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 					message = "This session is in the past. If you remove it, all applicants assigned to it will be marked as not assigned, and if any already has exam results, those results will be removed.<br/>Are you sure you want to remove this session ?";
 				else
 					message = "Are you sure you want to remove this session, and unassign all applicants from it ?";
-				confirm_dialog(message, function(yes) {
+				confirmDialog(message, function(yes) {
 					if (yes) sessions._removeSession(event);
 				});
 			};
@@ -748,7 +748,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		this.who = new who_container(wc, peoples, can_edit, 'exam');
 		if (can_edit)
 			wc.appendChild(this.who.createAddButton("Which staff will be at this exam session ?"));
-		this.who.onadded.add_listener(function(people) {
+		this.who.onadded.addListener(function(people) {
 			var a;
 			if (typeof people == 'string') {
 				a = new CalendarEventAttendee(people,calendar_event_role_requested,calendar_event_participation_unknown,false,false);
@@ -757,7 +757,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 			}
 			event.attendees.push(a);
 		});
-		this.who.onremoved.add_listener(function(people) {
+		this.who.onremoved.addListener(function(people) {
 			if (typeof people == 'string') {
 				for (var i = 0; i < event.attendees.length; ++i)
 					if (event.attendees[i].people == null && event.attendees[i].name == people) {
@@ -840,8 +840,8 @@ function RoomSection(container, room, session_section, can_edit) {
 			room_usage.innerHTML = t.applicants_list.getList().length;
 		};
 		listener();
-		this.applicants_list.object_added.add_listener(listener);
-		this.applicants_list.object_removed.add_listener(listener);
+		this.applicants_list.object_added.addListener(listener);
+		this.applicants_list.object_removed.addListener(listener);
 		var print = document.createElement("BUTTON");
 		print.className = "flat icon";
 		print.innerHTML = "<img src='"+theme.icons_16.print+"'/>";
@@ -876,7 +876,7 @@ function RoomSection(container, room, session_section, can_edit) {
 				};
 				if (t.session_section.event.start.getTime() < new Date().getTime()) {
 					// the session is in the past !
-					confirm_dialog("The session is already done. When you will save, if any of those applicants already has results for the exams, the results will be removed. Are you sure you want to unassign those applicants ?", function(yes) {
+					confirmDialog("The session is already done. When you will save, if any of those applicants already has results for the exams, the results will be removed. Are you sure you want to unassign those applicants ?", function(yes) {
 						if (yes) doit();
 					});
 				} else
@@ -938,7 +938,7 @@ function ApplicantsListHeader(data_grid) {
 	};
 	
 	var t=this;
-	data_grid.selection_changed.add_listener(function() { t.refresh(); });
-	data_grid.object_added.add_listener(function() { t.refresh(); });
-	data_grid.object_removed.add_listener(function() { t.refresh(); });
+	data_grid.selection_changed.addListener(function() { t.refresh(); });
+	data_grid.object_added.addListener(function() { t.refresh(); });
+	data_grid.object_removed.addListener(function() { t.refresh(); });
 }

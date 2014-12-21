@@ -112,7 +112,7 @@ field_decimal.prototype._create = function(data) {
 			t.input.title = error ? error : "";
 		};
 		this.onenter = function(listener) {
-			onkeyup.add_listener(function(e) {
+			onkeyup.addListener(function(e) {
 				var ev = getCompatibleKeyEvent(e);
 				if (ev.isEnter) listener(t);
 			});

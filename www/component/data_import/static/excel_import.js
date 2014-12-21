@@ -8,7 +8,7 @@ function excel_import(popup, container, onready) {
 	this.loadImportDataURL = function(url, post_data) {
 		t.frame_import.onload = function() {
 			t.frame_import.onload = null;
-			getIFrameWindow(t.frame_import).pnapplication.onclose.add_listener(function() {
+			getIFrameWindow(t.frame_import).pnapplication.onclose.addListener(function() {
 				t.splitter.hide_left();
 			});
 		};
@@ -179,7 +179,7 @@ function excel_import(popup, container, onready) {
 				for (var i = 0; i < xl.sheets.length; ++i) {
 					var sheet = xl.sheets[i];
 					sheet.enableSelection(false);
-					sheet.selection_changed.remove_listener(selection_changed);
+					sheet.selection_changed.removeListener(selection_changed);
 					for (var j = 0; j < sheet.columns.length; ++j) {
 						var col = sheet.columns[j];
 						if (col.header) {
@@ -188,7 +188,7 @@ function excel_import(popup, container, onready) {
 						}
 					}
 				}
-				t.header_rows_field.onchange.add_listener(header_rows_changed);
+				t.header_rows_field.onchange.addListener(header_rows_changed);
 				header_rows_changed();
 				layout.changed(t.left);
 			}
@@ -203,7 +203,7 @@ function excel_import(popup, container, onready) {
 				for (var i = 0; i < xl.sheets.length; ++i) {
 					var sheet = xl.sheets[i];
 					sheet.enableSelection(true);
-					sheet.selection_changed.add_listener(selection_changed);
+					sheet.selection_changed.addListener(selection_changed);
 					if (sheet._header_layer) sheet.removeLayer(sheet._header_layer);
 					sheet._header_layer = null;
 					for (var j = 0; j < sheet.columns.length; ++j) {
@@ -214,7 +214,7 @@ function excel_import(popup, container, onready) {
 						}
 					}
 				}
-				t.header_rows_field.onchange.remove_listener(header_rows_changed);
+				t.header_rows_field.onchange.removeListener(header_rows_changed);
 				layout.changed(t.left);
 			}
 		};

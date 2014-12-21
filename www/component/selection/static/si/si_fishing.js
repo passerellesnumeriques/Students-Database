@@ -37,7 +37,7 @@ function fishing(container, info, applicant_id, can_edit) {
 		if (can_edit) {
 			var boat = new field_text(this.info.boat, true, {can_be_null:true,max_length:250});
 			div.appendChild(boat.getHTMLElement());
-			boat.onchange.add_listener(function() { t.info.boat = boat.getCurrentData(); });
+			boat.onchange.addListener(function() { t.info.boat = boat.getCurrentData(); });
 		} else if (this.info.boat)
 			div.appendChild(document.createTextNode(this.info.boat));
 		// Net
@@ -47,7 +47,7 @@ function fishing(container, info, applicant_id, can_edit) {
 		if (can_edit) {
 			var net = new field_text(this.info.net, true, {can_be_null:true,max_length:250});
 			div.appendChild(net.getHTMLElement());
-			net.onchange.add_listener(function() { t.info.net = net.getCurrentData(); });
+			net.onchange.addListener(function() { t.info.net = net.getCurrentData(); });
 		} else if (this.info.net)
 			div.appendChild(document.createTextNode(this.info.net));
 		// Income
@@ -57,11 +57,11 @@ function fishing(container, info, applicant_id, can_edit) {
 		if (can_edit) {
 			var income = new field_integer(this.info.income, true, {can_be_null:true,min:0});
 			div.appendChild(income.getHTMLElement());
-			income.onchange.add_listener(function() { t.info.income = income.getCurrentData(); });
+			income.onchange.addListener(function() { t.info.income = income.getCurrentData(); });
 			div.appendChild(document.createTextNode(" Frequency: "));
 			var freq = new field_text(this.info.income_freq, true, {can_be_null:true,max_length:25});
 			div.appendChild(freq.getHTMLElement());
-			freq.onchange.add_listener(function() { t.info.income_freq = freq.getCurrentData(); });
+			freq.onchange.addListener(function() { t.info.income_freq = freq.getCurrentData(); });
 		} else if (this.info.income > 0) {
 			div.appendChild(document.createTextNode(this.info.income));
 			if (this.info.income_freq)

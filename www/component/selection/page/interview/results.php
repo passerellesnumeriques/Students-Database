@@ -153,7 +153,7 @@ function selectSession(row, session_id) {
 }
 
 function editResults() {
-	window.top.popup_frame(
+	window.top.popupFrame(
 		"/static/transcripts/grades_16.png",
 		"Interview Session Results",
 		"/dynamic/selection/page/interview/edit_results?session="+selected_session_id,
@@ -166,7 +166,7 @@ function editResults() {
 }
 
 function resetSession() {
-	confirm_dialog("Are you sure you want to remove all interview results and attendance for this interview session ?",function(yes) {
+	confirmDialog("Are you sure you want to remove all interview results and attendance for this interview session ?",function(yes) {
 		if (!yes) return;
 		var locker = lock_screen(null,"Removing results of applicants...");
 		service.json("selection","interview/reset_results",{session:selected_session_id},function(res) {
@@ -177,7 +177,7 @@ function resetSession() {
 }
 
 function resetAll() {
-	confirm_dialog("Are you sure you want to remove all interview results and attendance for all applicants ?",function(yes) {
+	confirmDialog("Are you sure you want to remove all interview results and attendance for all applicants ?",function(yes) {
 		if (!yes) return;
 		var locker = lock_screen(null,"Removing results of applicants...");
 		service.json("selection","interview/reset_results",{session:null},function(res) {

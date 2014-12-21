@@ -117,7 +117,7 @@ function addColumnActions(col) {
 						}
 					};
 					if (helper.validated)
-						helper.validated.add_listener(function() { apply(); p.close(); });
+						helper.validated.addListener(function() { apply(); p.close(); });
 					else
 						p.addOkButton(function() {
 							apply();
@@ -137,7 +137,7 @@ function addColumnActions(col) {
 	if (col._loaded)
 		needFieldInfo();
 	else
-		col.onloaded.add_listener(needFieldInfo);
+		col.onloaded.addListener(needFieldInfo);
 }
 function addColumnContainerActions(col,field_type,field_args) {
 	require([["typed_field.js",field_type+".js"]], function() {

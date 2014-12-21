@@ -106,7 +106,7 @@ new data_list(
 		remove_button.onclick = function() {
 			var sel = list.grid.getSelectionByRowId();
 			if (!sel || sel.length == 0) return;
-			confirm_dialog("Are you sure you want to remove those students ?<br/><br/><img src='"+theme.icons_16.warning+"' style='vertical-align:bottom;'/> All information related to those students will be removed from the database!<br/><br/><b>If a student is out of PN, please use the <i>Exclude student</i> functionality on his/her profile page, but do not remove all its information from the database.</b>", function(yes) {
+			confirmDialog("Are you sure you want to remove those students ?<br/><br/><img src='"+theme.icons_16.warning+"' style='vertical-align:bottom;'/> All information related to those students will be removed from the database!<br/><br/><b>If a student is out of PN, please use the <i>Exclude student</i> functionality on his/her profile page, but do not remove all its information from the database.</b>", function(yes) {
 				if (yes) {
 					var lock_div = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Blocking students from being modified by another user...");
 					// get people ids
@@ -126,7 +126,7 @@ new data_list(
 								return; 
 							}
 							var next = function(pos) {
-								popup_frame(null,"Remove Student","/dynamic/people/page/remove_people_type?people="+ids[pos]+"&type=student&ontyperemoved=removed&onpeopleremoved=removed&oncancel=removed",null,null,null,function(frame,pop){
+								popupFrame(null,"Remove Student","/dynamic/people/page/remove_people_type?people="+ids[pos]+"&type=student&ontyperemoved=removed&onpeopleremoved=removed&oncancel=removed",null,null,null,function(frame,pop){
 									frame.removed = function() {
 										if (pos < ids.length-1) {
 											next(pos+1);
@@ -254,13 +254,13 @@ new data_list(
 		
 		list.makeRowsClickable(function(row){
 			if (typeof row.row_id == 'undefined') return;
-			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
+			window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
 		});
 		layout.changed(list.container);
 
 		if (batches && batches.length == 1 && can_manage) {
 			refreshToDo(function() {
-				list.ondataloaded.add_listener(function() { refreshToDo(); });
+				list.ondataloaded.addListener(function() { refreshToDo(); });
 			});
 		}
 

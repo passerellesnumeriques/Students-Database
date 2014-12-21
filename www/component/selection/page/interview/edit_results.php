@@ -211,7 +211,7 @@ function save() {
 		error += "</ul>";
 	}
 	var doit = function() {
-		if (data.length == 0) { error_dialog("Nothing to save !"); return; }
+		if (data.length == 0) { errorDialog("Nothing to save !"); return; }
 		var locker = lock_screen(null, "Saving results, and applying eligibility rules...");
 		service.json("selection","interview/save_results",{session:<?php echo $_GET["session"];?>,applicants:data},function(res) {
 			if (res === null || res === false) { unlock_screen(locker); return; }
@@ -244,7 +244,7 @@ function save() {
 		});
 	};
 	if (error.length == 0) doit();
-	else confirm_dialog(error,function(yes){ if(yes) doit(); });
+	else confirmDialog(error,function(yes){ if(yes) doit(); });
 }
 </script>
 <?php 

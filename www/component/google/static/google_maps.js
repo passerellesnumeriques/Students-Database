@@ -4,7 +4,7 @@ function loadGoogleMaps(callback) {
 			if (!window.top.initGoogleMaps) {
 				if (!window.top.initGoogleMapsEvent)
 					window.top.initGoogleMapsEvent = new Custom_Event();
-				window.top.initGoogleMapsEvent.add_listener(callback);
+				window.top.initGoogleMapsEvent.addListener(callback);
 				window.top.googleMapsLoaded = false;
 				window.top.initGoogleMaps = function() {
 					window.top.googleMapsLoaded = true;
@@ -21,7 +21,7 @@ function loadGoogleMaps(callback) {
 				},10000);
 				window.top.googleMapJS = window.top.addJavascript("http://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&sensor=false&callback=initGoogleMaps&key="+window.top.google._api_key);
 			} else
-				window.top.initGoogleMapsEvent.add_listener(callback);
+				window.top.initGoogleMapsEvent.addListener(callback);
 		} else
 			callback();
 	};

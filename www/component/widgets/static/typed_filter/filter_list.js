@@ -49,7 +49,7 @@ function filter_list(data, config, editable) {
 		t.sub_filter = new window[config.element_type](t.data.element_data, config.element_cfg, editable);
 		t.sub_filter.element.style.display = "inline-block";
 		t.element.appendChild(t.sub_filter.element);
-		t.sub_filter.onchange.add_listener(function() { t.onchange.fire(t); });
+		t.sub_filter.onchange.addListener(function() { t.onchange.fire(t); });
 		update();
 	});
 	this.isActive = function() {

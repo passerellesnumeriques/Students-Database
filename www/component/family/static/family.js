@@ -217,7 +217,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				require([["typed_field.js","field_integer.js"]], function() {
 					tr.rank = new field_integer(member.child_rank ? parseInt(member.child_rank) : null, true, {min:1,can_be_null:false});
 					td_rank.appendChild(tr.rank.getHTMLElement());
-					tr.rank.onchange.add_listener(function() {
+					tr.rank.onchange.addListener(function() {
 						t._orderChildren(title_row, tr);
 						if (t.onchange) t.onchange();
 					});
@@ -236,7 +236,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				require([["typed_field.js","field_text.js"]],function() {
 					var f = new field_text(member.other_member_type, true, {min_length:1,can_be_null:false,max_length:50});
 					td_type.appendChild(f.getHTMLElement());
-					f.onchange.add_listener(function() {
+					f.onchange.addListener(function() {
 						member.other_member_type = f.getCurrentData();
 						if (t.onchange) t.onchange();
 					});
@@ -267,7 +267,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 					}
 				}
 			}
-			popup_frame(null, "New Family Member", "/dynamic/people/page/popup_create_people?multiple=false&donotcreate=oncreated&types=family_member", data, 80, 80, function(frame,pop){
+			popupFrame(null, "New Family Member", "/dynamic/people/page/popup_create_people?multiple=false&donotcreate=oncreated&types=family_member", data, 80, 80, function(frame,pop){
 				frame.oncreated = function(peoples) {
 					if (t.onchange) t.onchange();
 					require("datadisplay.js", function() {
@@ -331,7 +331,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			td_people.appendChild(span_first_name);
 			window.top.datamodel.registerCellSpan(window, "People", "first_name", member.people.people_id, span_first_name);
 			td_people.onclick = function() {
-				popup_frame(null,"Family Member","/dynamic/people/page/profile?people="+member.people.people_id,null,80,80);
+				popupFrame(null,"Family Member","/dynamic/people/page/profile?people="+member.people.people_id,null,80,80);
 			};
 			if (member.people.people_id != fixed_people_id && can_edit) {
 				var remove = document.createElement("BUTTON");
@@ -341,7 +341,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				td_people.appendChild(remove);
 				remove.onclick = function(ev) {
 					stopEventPropagation(ev);
-					popup_frame(null,"Remove Family Member","/dynamic/people/page/remove_people_type?people="+member.people.people_id+"&type=family_member&ontyperemoved=removed&onpeopleremoved=removed",null,null,null,function(frame,pop){
+					popupFrame(null,"Remove Family Member","/dynamic/people/page/remove_people_type?people="+member.people.people_id+"&type=family_member&ontyperemoved=removed&onpeopleremoved=removed",null,null,null,function(frame,pop){
 						frame.removed = function() {
 							for (var i = 0; i < members.length; ++i)
 								if (members[i].people && members[i].people.people_id == member.people.people_id) {
@@ -420,7 +420,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				var f = new field_text(member.occupation, true, {min_length:1,can_be_null:true,max_length:100,min_size:5});
 				div.appendChild(f.getHTMLElement());
 				f.getHTMLElement().style.flex = "1 1 auto";
-				f.onchange.add_listener(function() {
+				f.onchange.addListener(function() {
 					member.occupation = f.getCurrentData();
 					if (t.onchange) t.onchange();
 				});
@@ -441,7 +441,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				require([["typed_field.js","field_text.js"]],function() {
 					var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100,min_size:10});
 					td_educ.appendChild(f.getHTMLElement());
-					f.onchange.add_listener(function() {
+					f.onchange.addListener(function() {
 						member.education_level = f.getCurrentData();
 						if (t.onchange) t.onchange();
 					});
@@ -464,7 +464,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			require([["typed_field.js","field_text.js"]],function() {
 				var f = new field_text(member.revenue, true, {min_length:0,can_be_null:true,max_length:500,min_size:5});
 				td_revenue.appendChild(f.getHTMLElement());
-				f.onchange.add_listener(function() {
+				f.onchange.addListener(function() {
 					member.revenue = f.getCurrentData();
 					if (t.onchange) t.onchange();
 				});
@@ -485,7 +485,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			require([["typed_field.js","field_text.js"]],function() {
 				var f = new field_text(member.comment, true, {min_length:0,can_be_null:true,max_length:1000,min_size:10});
 				td_comment.appendChild(f.getHTMLElement());
-				f.onchange.add_listener(function() {
+				f.onchange.addListener(function() {
 					member.comment = f.getCurrentData();
 					if (t.onchange) t.onchange();
 				});

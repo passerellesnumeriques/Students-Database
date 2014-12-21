@@ -104,7 +104,7 @@ class page_teachers extends Page {
 		
 		$search_id = $this->generateID();
 		echo "<div style='display:inline-block' id='$search_id'></div>";
-		$this->onload("new people_search('$search_id','teacher',function(people){ window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+people.id,null,95,95); });");
+		$this->onload("new people_search('$search_id','teacher',function(people){ window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+people.id,null,95,95); });");
 		if ($can_edit) {
 		?>
 		<button class='action green' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/teaching/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
@@ -150,7 +150,7 @@ require_once("component/data_model/page/utils.inc");
 foreach ($teachers_ids as $people_id) {
 	$people = null;
 	foreach ($peoples as $p) if ($p["id"] == $people_id) { $people = $p; break; }
-	echo "<tr class='teacher_row' style='cursor:pointer' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\">";
+	echo "<tr class='teacher_row' style='cursor:pointer' onclick=\"window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\">";
 	$id = $this->generateID();
 	echo "<td id='$id'></td>";
 	$this->onload("new profile_picture('$id',50,50,'center','middle').loadPeopleStorage($people_id,".json_encode($people["picture"]).",".json_encode($people["picture_revision"]).");");

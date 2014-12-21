@@ -48,7 +48,7 @@ class service_exam_status extends Service {
 		if (count($is_not_linked) == 0) {
 			echo "<div class='ok'>All (".$total_nb_is.") linked to an exam center</div>";
 		} else {
-			echo "<a href='#' class='need_action' onclick=\"popup_frame(null,'Link Information Sessions to Exam Centers','/dynamic/selection/page/exam/link_is_with_exam_center?onsaved=saved',null,null,null,function(frame,pop){frame.saved=loadExamCenterStatus;});return false;\">".count($is_not_linked)." not linked to an exam center</a><br/>";
+			echo "<a href='#' class='need_action' onclick=\"popupFrame(null,'Link Information Sessions to Exam Centers','/dynamic/selection/page/exam/link_is_with_exam_center?onsaved=saved',null,null,null,function(frame,pop){frame.saved=loadExamCenterStatus;});return false;\">".count($is_not_linked)." not linked to an exam center</a><br/>";
 		}
 		echo "</div>";
 		
@@ -109,7 +109,7 @@ class service_exam_status extends Service {
 						foreach ($applicants_no_schedule as $center) {
 							echo "menu.addIconItem(null,".json_encode($center["nb"]." applicant(s) in ".$center["center_name"]).",function() {";
 							?>
-							window.top.popup_frame('/static/selection/exam/exam_center_16.png','Exam Center','/dynamic/selection/page/exam/center_profile?onsaved=saved&id=<?php echo $center["center_id"];?>',null,95,95,function(frame,pop) {
+							window.top.popupFrame('/static/selection/exam/exam_center_16.png','Exam Center','/dynamic/selection/page/exam/center_profile?onsaved=saved&id=<?php echo $center["center_id"];?>',null,95,95,function(frame,pop) {
 								frame.saved = function() { if (window.refreshPage) window.refreshPage(); else window.loadExamCenterStatus(); };
 							});
 							<?php 

@@ -335,6 +335,11 @@ namespace datamodel {
 			return $this;
 		}
 		
+		public function &addColumn($col) {
+			array_push($this->columns, $col);
+			return $this;
+		}
+		
 		/**
 		 * @param function $fct take as parameter and array, with each element being an associative array with 3 keys: fields_values, id, sub_model_instance
 		 * @return \datamodel\Table
@@ -758,13 +763,13 @@ namespace datamodel {
 			$this->unique = $unique;
 		}
 
-		public function get_sql() {
+		public function get_sql($db_system, $sql_table_name) {
 			$sql = "`".$this->name."` ";
-			$sql .= $this->get_sql_type();
+			$sql .= $this->get_sql_type($db_system, $sql_table_name);
 			if (!$this->can_be_null) $sql .= " NOT NULL";
 			return $sql;
 		}
-		public abstract function get_sql_type();
+		public abstract function get_sql_type($db_system, $sql_table_name);
 
 		public function validate($value) {
 			return $value;
@@ -790,7 +795,7 @@ namespace datamodel {
 			$this->max = $max;
 		}
 
-		public function get_sql_type() {
+		public function get_sql_type($db_system, $sql_table_name) {
 			if ($this->size == 1)
 				return "BIT(1)";
 			if ($this->size <= 8)
@@ -832,7 +837,7 @@ namespace datamodel {
 			$this->max = $max;
 		}
 
-		public function get_sql_type() {
+		public function get_sql_type($db_system, $sql_table_name) {
 			return "DECIMAL(".($this->integer_digits+$this->decimal_digits).",".$this->decimal_digits.")";
 		}
 
@@ -876,7 +881,9 @@ namespace datamodel {
 			$this->specific_lang = $specific_lang;
 		}
 
-		public function get_sql_type() { /* TODO choose the type depending on max_length */ return "VARCHAR(".$this->max_length.")";
+		public function get_sql_type($db_system, $sql_table_name) {
+			/* TODO choose the type depending on max_length */
+			return "VARCHAR(".$this->max_length.")";
 		}
 
 		public function validate($value) {
@@ -913,7 +920,7 @@ namespace datamodel {
 			$this->values = $values;
 		}
 
-		public function get_sql_type() {
+		public function get_sql_type($db_system, $sql_table_name) {
 			$sql = "ENUM(";
 			$first = true;
 			foreach ($this->values as $v) {
@@ -962,7 +969,7 @@ namespace datamodel {
 			$this->maximum_date = $maximum_date;
 		}
 
-		public function get_sql_type() {
+		public function get_sql_type($db_system, $sql_table_name) {
 			return "DATE";
 		}
 		
@@ -1039,7 +1046,7 @@ namespace datamodel {
 		}
 
 
-		public function get_sql_type() {
+		public function get_sql_type($db_system, $sql_table_name) {
 			return "TIME";
 		}
 
@@ -1060,8 +1067,8 @@ namespace datamodel {
 			parent::__construct($table, $name, $size, null, null, false, true);
 		}
 
-		public function get_sql_type() {
-			return parent::get_sql_type()." AUTO_INCREMENT";
+		public function get_sql_type($db_system, $sql_table_name) {
+			return parent::get_sql_type($db_system, $sql_table_name)." AUTO_INCREMENT";
 		}
 	}
 	

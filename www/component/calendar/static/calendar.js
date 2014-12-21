@@ -48,12 +48,12 @@ function CalendarManager() {
 		  function(cal) { t.removeCalendar(cal); }
 		]};
 		this._calendars_listeners.push(listeners);
-		cal.onrefresh.add_listener(listeners.listeners[0]);
-		cal.onrefreshdone.add_listener(listeners.listeners[1]);
-		cal.on_event_added.add_listener(listeners.listeners[2]);
-		cal.on_event_updated.add_listener(listeners.listeners[3]);
-		cal.on_event_removed.add_listener(listeners.listeners[4]);
-		cal.on_removed.add_listener(listeners.listeners[5]);
+		cal.onrefresh.addListener(listeners.listeners[0]);
+		cal.onrefreshdone.addListener(listeners.listeners[1]);
+		cal.on_event_added.addListener(listeners.listeners[2]);
+		cal.on_event_updated.addListener(listeners.listeners[3]);
+		cal.on_event_removed.addListener(listeners.listeners[4]);
+		cal.on_removed.addListener(listeners.listeners[5]);
 		if (!cal.last_update) cal.last_update = 0;
 		if (cal.show && cal.last_update < new Date().getTime() - 60000)
 			cal.refresh();
@@ -70,12 +70,12 @@ function CalendarManager() {
 		for (var i = 0; i < this._calendars_listeners.length; ++i) {
 			if (this._calendars_listeners[i].calendar == cal) {
 				var listeners = this._calendars_listeners[i].listeners;
-				cal.onrefresh.remove_listener(listeners[0]);
-				cal.onrefreshdone.remove_listener(listeners[1]);
-				cal.on_event_added.remove_listener(listeners[2]);
-				cal.on_event_updated.remove_listener(listeners[3]);
-				cal.on_event_removed.remove_listener(listeners[4]);
-				cal.on_removed.remove_listener(listeners[5]);
+				cal.onrefresh.removeListener(listeners[0]);
+				cal.onrefreshdone.removeListener(listeners[1]);
+				cal.on_event_added.removeListener(listeners[2]);
+				cal.on_event_updated.removeListener(listeners[3]);
+				cal.on_event_removed.removeListener(listeners[4]);
+				cal.on_removed.removeListener(listeners[5]);
 				this._calendars_listeners.splice(i,1);
 				break;
 			}
@@ -326,7 +326,7 @@ if (window == window.top && !window.top.CalendarsProviders) {
 		if (!window.top.pnapplication) {
 			setTimeout(listenLoginLogout, 20);
 		}
-		window.top.pnapplication.onlogout.add_listener(function() {
+		window.top.pnapplication.onlogout.addListener(function() {
 			for (var i = 0; i < window.top.CalendarsProviders._providers.length; ++i) {
 				var prev_calendars = window.top.CalendarsProviders._providers[i].calendars;
 				window.top.CalendarsProviders._providers[i].calendars = [];
@@ -336,7 +336,7 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				}
 			}
 		});
-		window.top.pnapplication.onlogin.add_listener(function() {
+		window.top.pnapplication.onlogin.addListener(function() {
 			window.top.CalendarsProviders._refreshCalendarsList(true);
 			window.top.CalendarsProviders._refreshCalendars(true);
 		});
@@ -509,7 +509,7 @@ function CalendarControl(container, cal, manager) {
 				});
 				if (cal.rename != null)
 					menu.addIconItem(theme.icons_16.edit, "Rename", function() {
-						input_dialog(theme.icons_16.edit,"Rename Calendar","Enter the new name",cal.name,100,function(name) {
+						inputDialog(theme.icons_16.edit,"Rename Calendar","Enter the new name",cal.name,100,function(name) {
 							if (name.length == 0) return "Please enter a name";
 							return null;
 						},function(name) {
@@ -521,7 +521,7 @@ function CalendarControl(container, cal, manager) {
 					});
 				if (cal.remove != null)
 					menu.addIconItem(theme.icons_16.remove, "Remove", function() {
-						confirm_dialog("Are you sure you want to completely remove this calendar ?", function(yes) {
+						confirmDialog("Are you sure you want to completely remove this calendar ?", function(yes) {
 							if (!yes) return;
 							cal.remove();
 						});
@@ -536,22 +536,22 @@ function CalendarControl(container, cal, manager) {
 			t.loading.src = theme.icons_10.loading;
 			t.div.appendChild(t.loading);
 		};
-		cal.onrefresh.add_listener(start_refresh);
+		cal.onrefresh.addListener(start_refresh);
 		var refresh_done = function(){
 			if (!t.loading || !t.div) return;
 			t.div.removeChild(t.loading);
 			t.loading = null;
 		};
-		cal.onrefreshdone.add_listener(refresh_done);
+		cal.onrefreshdone.addListener(refresh_done);
 		var calendar_removed = function() {
 			t.div.parentNode.removeChild(t.div);
 		};
-		cal.on_removed.add_listener(calendar_removed);
+		cal.on_removed.addListener(calendar_removed);
 		if (cal.updating) start_refresh();
 		this.div.ondomremoved(function() {
-			cal.onrefresh.remove_listener(start_refresh);
-			cal.onrefreshdone.remove_listener(refresh_done);
-			cal.on_removed.remove_listener(calendar_removed);
+			cal.onrefresh.removeListener(start_refresh);
+			cal.onrefreshdone.removeListener(refresh_done);
+			cal.on_removed.removeListener(calendar_removed);
 			start_refresh = null;
 			refresh_done = null;
 			calendar_removed = null;
@@ -619,7 +619,7 @@ function PNCalendar(provider, id, name, color, show, writable, icon, removable) 
 							removed_events[i][n] = null;
 					}
 				} catch (e) {
-					log_exception(e, "Error while refreshing PN calendar");
+					logException(e, "Error while refreshing PN calendar");
 				}
 				ondone();
 			});

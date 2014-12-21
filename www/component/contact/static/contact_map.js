@@ -43,7 +43,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 			link.href = "#";
 			link.entity = this.entities[i];
 			link.onclick = function() {
-				popup_frame(null,t.getEntityName(this.entity),t.getEntityURL(this.entity),null,95,95);
+				popupFrame(null,t.getEntityName(this.entity),t.getEntityURL(this.entity),null,95,95);
 				return false;
 			};
 			highlight.appendChild(link);

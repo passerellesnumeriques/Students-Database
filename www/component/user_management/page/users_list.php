@@ -137,7 +137,7 @@ function init_users_list() {
 			remove.className = "flat";
 			remove.innerHTML = "<img src='"+theme.build_icon("/static/user_management/user_16.png",theme.icons_10.remove)+"'/> Remove";
 			remove.onclick = function() {
-				confirm_dialog("Are you sure you want to remove those users from this software ?",function(yes) {
+				confirmDialog("Are you sure you want to remove those users from this software ?",function(yes) {
 					if (!yes) return;
 					var users = [];
 					var sel = list.grid.getSelectionByRowId();
@@ -169,18 +169,18 @@ function init_users_list() {
 
 			list.makeRowsClickable(function(row){
 				if (typeof row.row_id == 'undefined') return;
-				window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
+				window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
 			});
 		}
 	);
 }
 function synchUsers() {
-	popup_frame(theme.icons_16._import, "Synchronize Users", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_UserList",url:"/dynamic/user_management/page/synch_users"}, null, null, function(frame,popup){
+	popupFrame(theme.icons_16._import, "Synchronize Users", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_UserList",url:"/dynamic/user_management/page/synch_users"}, null, null, function(frame,popup){
 		popup.onclose = function() { window.list.reloadData(); };
 	});
 }
 function newUser() {
-	popup_frame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/user_management/page/new_user",null,null,null,function(frame,popup) {
+	popupFrame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/user_management/page/new_user",null,null,null,function(frame,popup) {
 		popup.onclose = function() { window.list.reloadData(); };
 	});
 }

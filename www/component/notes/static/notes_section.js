@@ -89,7 +89,7 @@ notes_section.prototype = {
 		var author_link = document.createElement("A");
 		author_link.appendChild(document.createTextNode(note.author.first_name+' '+note.author.last_name));
 		author_link.href = "#";
-		author_link.onclick = function() { window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+note.author.id,null,95,95); return false; };
+		author_link.onclick = function() { window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+note.author.id,null,95,95); return false; };
 		author.appendChild(author_link);
 		author_time.appendChild(author);
 		var time = document.createElement("DIV");

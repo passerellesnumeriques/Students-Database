@@ -98,26 +98,68 @@ public abstract class Container extends FinalElement {
 	
 	public void parse(String file, Node script) {
 		for (Node node : script)
-			parse_node(file, node);
+			parse_node(file, node, new HashMap<String,Object>());
 	}
-	protected void parse_node(String file, Node node) {
+	protected void parse_node(String file, Node node, HashMap<String,Object> runtime) {
+		JSDoc doc = new JSDoc((AstNode)node);
+		if (doc.hasTag("no_doc")) return;
 		if (node instanceof EmptyStatement) return;
 		if (node instanceof FunctionCall) return; // ignore calls ?
 		if (node instanceof IfStatement) {
-			parse_node(file, ((IfStatement)node).getThenPart());
-			if (((IfStatement)node).getElsePart() != null)
-				parse_node(file, ((IfStatement)node).getElsePart());
+			IfStatement _if = (IfStatement)node;
+			AstNode cd = _if.getCondition();
+			if (cd instanceof Name) {
+				runtime = new HashMap<String,Object>(runtime);
+				runtime.put(((Name)cd).getIdentifier(), null);
+			} else if (cd instanceof PropertyGet) {
+				LinkedList<String> names = new LinkedList<String>();
+				PropertyGet pg = (PropertyGet)cd;
+				do {
+					names.addFirst(pg.getProperty().getIdentifier());
+					AstNode target = pg.getTarget();
+					if (target instanceof Name) {
+						names.addFirst(((Name)target).getIdentifier());
+						break;
+					}
+					pg = (PropertyGet)target;
+				} while (true);
+				HashMap<String,Object> ctx = new HashMap<String,Object>(runtime);
+				runtime = ctx;
+				while (!names.isEmpty()) {
+					String name = names.removeFirst();
+					if (!ctx.containsKey(name)) {
+						if (names.isEmpty()) ctx.put(name, null);
+						else {
+							HashMap<String,Object> m = new HashMap<String,Object>();
+							ctx.put(name, m);
+							ctx = m;
+						}
+					} else {
+						Object o = ctx.get(name);
+						if (names.isEmpty()) break;
+						if (!(o instanceof HashMap)) {
+							HashMap<String,Object> m = new HashMap<String,Object>();
+							ctx.put(name, m);
+							ctx = m;
+						}
+					}
+				}
+			}
+			parse_node(file, _if.getThenPart(), runtime);
+			if (_if.getElsePart() != null)
+				parse_node(file, _if.getElsePart(), runtime);
 			return;
 		}
 		if (node instanceof Scope) {
 			for (Node n : ((Scope)node).getStatements())
-				parse_node(file, n);
+				parse_node(file, n, runtime);
 			return;
 		}
 		if (node instanceof ExpressionStatement) {
 			AstNode expr = ((ExpressionStatement)node).getExpression();
 			if (expr instanceof Assignment) {
 				ValueToEvaluate e = new ValueToEvaluate(file, expr, (AstNode)node, expr);
+				e.addRuntimeContext(runtime);
 				Object res = evaluateAssignment(getGlobal(), e, false);
 				if (res == null) assignments_to_evaluate.add(e);
 				return;
@@ -204,6 +246,7 @@ public abstract class Container extends FinalElement {
 		}
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private Object evaluateAssignment(Global global, ValueToEvaluate e, boolean generate_errors) {
 		Assignment assign = (Assignment)e.value;
 		AstNode target = assign.getLeft();
@@ -224,7 +267,9 @@ public abstract class Container extends FinalElement {
 			return null;
 		}
 		if (names.size() == 1) {
-			add(names.get(0), new ValueToEvaluate(e.location.file, assign.getRight(), e.value));
+			ValueToEvaluate e2 = new ValueToEvaluate(e.location.file, assign.getRight(), e.value);
+			e2.addRuntimeContext(e.getRuntimeContext());
+			add(names.get(0), e2);
 			return Boolean.TRUE;
 		}
 		do {
@@ -295,9 +340,17 @@ public abstract class Container extends FinalElement {
 					return null;
 				}
 			}
-			names.remove(0);
+			String name = names.remove(0);
+			HashMap<String,Object> runtime = e.getRuntimeContext();
+			if (runtime.containsKey(name)) {
+				Object o = runtime.get(name);
+				if (o instanceof HashMap) runtime = (HashMap)o;
+				else break; // we are working on a runtime thing, do not continue
+			}
 			if (names.size() == 1 && !names.get(0).equals("prototype")) {
-				cont.add(names.get(0), new ValueToEvaluate(e.location.file, assign.getRight(), e.value));
+				ValueToEvaluate e2 = new ValueToEvaluate(e.location.file, assign.getRight(), e.value);
+				if (runtime != null) e2.addRuntimeContext(runtime);
+				cont.add(names.get(0), e2);
 				return Boolean.TRUE;
 			}
 			cont = (Container)elem;

@@ -26,7 +26,7 @@ function editable_datadisplay(container, data_display, come_from, key, sub_model
 					handler(data);
 				});
 			});
-			if (onchange) t.editable_field.field.onchange.add_listener(onchange);
+			if (onchange) t.editable_field.field.onchange.addListener(onchange);
 			t.editable_field.field.register_datamodel_datadisplay(data_display, key);
 		});
 	}

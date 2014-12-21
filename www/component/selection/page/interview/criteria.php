@@ -103,8 +103,8 @@ class page_interview_criteria extends SelectionPage {
 			<?php if ($can_edit) {?>
 			tr.field_name = new field_text(criterion.name, true, {max_length:100,can_be_null:false,min_length:1,min_size:30});
 			td.appendChild(tr.field_name.getHTMLElement());
-			tr.field_name.ondatachanged.add_listener(function() { pnapplication.dataUnsaved('criterion_'+criterion.id+'_name'); });
-			tr.field_name.ondataunchanged.add_listener(function() { pnapplication.dataSaved('criterion_'+criterion.id+'_name'); });
+			tr.field_name.ondatachanged.addListener(function() { pnapplication.dataUnsaved('criterion_'+criterion.id+'_name'); });
+			tr.field_name.ondataunchanged.addListener(function() { pnapplication.dataSaved('criterion_'+criterion.id+'_name'); });
 			<?php } else {?>
 			td.appendChild(document.createTextNode(criterion.name));
 			<?php } ?>
@@ -115,8 +115,8 @@ class page_interview_criteria extends SelectionPage {
 			<?php if ($can_edit) {?>
 			tr.field_score = new field_decimal(criterion.max_score, true, {min:0,integer_digits:3,decimal_digits:2});
 			td.appendChild(tr.field_score.getHTMLElement());
-			tr.field_score.ondatachanged.add_listener(function() { pnapplication.dataUnsaved('criterion_'+criterion.id+'_score'); });
-			tr.field_score.ondataunchanged.add_listener(function() { pnapplication.dataSaved('criterion_'+criterion.id+'_score'); });
+			tr.field_score.ondatachanged.addListener(function() { pnapplication.dataUnsaved('criterion_'+criterion.id+'_score'); });
+			tr.field_score.ondataunchanged.addListener(function() { pnapplication.dataSaved('criterion_'+criterion.id+'_score'); });
 			<?php } else {?>
 			td.appendChild(document.createTextNode(parseFloat(criterion.max_score).toFixed(2)));
 			<?php } ?>
@@ -222,7 +222,7 @@ class page_interview_criteria extends SelectionPage {
 				next.onmouseout = function() { setOpacity(this,0.6); };
 				node.appendChild(next);
 				next.onclick = function() {
-					popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
 				};
 			}
 			container.appendChild(node);
@@ -269,7 +269,7 @@ class page_interview_criteria extends SelectionPage {
 				node.onmouseout = function() { this.style.border = "1px solid #000000"; this.style.boxShadow = ""; };
 				node.title = "Click to edit this rule";
 				node.onclick = function() {
-					popup_frame(null,"Edit Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule?id="+rule.id);
+					popupFrame(null,"Edit Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule?id="+rule.id);
 				};
 			}
 			node_container.appendChild(node);
@@ -284,7 +284,7 @@ class page_interview_criteria extends SelectionPage {
 				remove.onmouseover = function() { setOpacity(this,1); };
 				remove.onmouseout = function() { setOpacity(this,0.6); };
 				remove.onclick = function(ev) {
-					confirm_dialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
+					confirmDialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
 						if (!yes) return;
 						lock_screen();
 						service.json("selection","interview/remove_eligibility_rule",{id:rule.id},function(res){
@@ -305,7 +305,7 @@ class page_interview_criteria extends SelectionPage {
 				add_child.onmouseover = function() { setOpacity(this,1); };
 				add_child.onmouseout = function() { setOpacity(this,0.6); };
 				add_child.onclick = function(ev) {
-					popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule?parent="+rule.id);
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule?parent="+rule.id);
 					stopEventPropagation(ev);
 					return false;
 				};

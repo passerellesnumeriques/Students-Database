@@ -61,7 +61,7 @@ window.animation = {
 				i--;
 				try { anim.handler(anim.to, anim.element); }
 				catch (e) {
-					window.top.log_exception(e, "Animation handler");
+					window.top.logException(e, "Animation handler");
 				}
 				continue;
 			}
@@ -79,7 +79,7 @@ window.animation = {
 			}
 			try { anim.handler(new_value, anim.element); }
 			catch (e) {
-				window.top.log_exception(e, "Animation handler");
+				window.top.logException(e, "Animation handler");
 			}
 		}
 //		var now2 = new Date().getTime();
@@ -110,10 +110,10 @@ window.animation = {
 					element.style.visibility = 'visible';
 				}
 				if (callback) callback(value);
-			} catch (e) { window.top.log_exception(e); }
+			} catch (e) { window.top.logException(e); }
 			if (value == end && end_handler != null) { 
 				try { end_handler(element); }
-				catch (e) { window.top.log_exception(e); }
+				catch (e) { window.top.logException(e); }
 				end_handler = null; 
 			}
 		});
@@ -138,10 +138,10 @@ window.animation = {
 					setOpacity(element,value/100);
 					element.style.visibility = 'visible';
 				}
-			} catch (e) { window.top.log_exception(e); }
+			} catch (e) { window.top.logException(e); }
 			if (value == 0 && end_handler != null) {
 				try { end_handler(element); }
-				catch (e) { window.top.log_exception(e); }
+				catch (e) { window.top.logException(e); }
 				end_handler = null;
 			}
 		});
@@ -160,7 +160,7 @@ window.animation = {
 				element.style.transform = "";
 				if (end_handler)
 					try { end_handler(element); }
-					catch (e) { window.top.log_exception(e); }
+					catch (e) { window.top.logException(e); }
 				end_handler = null;
 				return;
 			}
@@ -183,7 +183,7 @@ window.animation = {
 				setOpacity(element, 0);
 				if (end_handler)
 					try { end_handler(element); }
-					catch (e) { window.top.log_exception(e); }
+					catch (e) { window.top.logException(e); }
 				end_handler = null;
 				return;
 			}

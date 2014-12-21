@@ -42,28 +42,28 @@ function farm(container, info, productions, applicant_id, can_edit) {
 			div.appendChild(document.createTextNode("Size: "));
 			var land_size = new field_decimal(this.info.land_size, true, {can_be_null:true,integer_digits:10,decimal_digits:2,min:0});
 			div.appendChild(land_size.getHTMLElement());
-			land_size.onchange.add_listener(function() { t.info.land_size = land_size.getCurrentData(); });
+			land_size.onchange.addListener(function() { t.info.land_size = land_size.getCurrentData(); });
 		} else if (this.info.land_size > 0)
 			div.appendChild(document.createTextNode("Size: "+this.info.land_size));
 		if (can_edit) {
 			div.appendChild(document.createTextNode(" Status: "));
 			var land_status = new field_enum(this.info.land_status, true, {can_be_null:true,possible_values:["Owned","Rented","Lended"]});
 			div.appendChild(land_status.getHTMLElement());
-			land_status.onchange.add_listener(function() { t.info.land_status = land_status.getCurrentData(); });
+			land_status.onchange.addListener(function() { t.info.land_status = land_status.getCurrentData(); });
 		} else if (this.info.land_status)
 			div.appendChild(document.createTextNode(" Status: "+this.info.land_status));
 		if (can_edit) {
 			div.appendChild(document.createTextNode(" Cost ? "));
 			var land_cost = new field_integer(this.info.land_cost, true, {can_be_null:true,min:0});
 			div.appendChild(land_cost.getHTMLElement());
-			land_cost.onchange.add_listener(function() { t.info.land_cost = land_cost.getCurrentData(); });
+			land_cost.onchange.addListener(function() { t.info.land_cost = land_cost.getCurrentData(); });
 		} else if (this.info.land_cost > 0)
 			div.appendChild(document.createTextNode(" Cost: "+this.info.land_cost));
 		if (can_edit) {
 			div.appendChild(document.createTextNode(" Comment: "));
 			var land_comment = new field_text(this.info.land_comment, true, {can_be_null:true,max_length:200});
 			div.appendChild(land_comment.getHTMLElement());
-			land_comment.onchange.add_listener(function() { t.info.land_comment = land_comment.getCurrentData(); });
+			land_comment.onchange.addListener(function() { t.info.land_comment = land_comment.getCurrentData(); });
 		} else if (this.info.land_comment)
 			div.appendChild(document.createTextNode(" Comment: "+this.info.land_comment));
 		
@@ -108,7 +108,7 @@ function farm(container, info, productions, applicant_id, can_edit) {
 			} else {
 				var name = new field_text(animal.name,true,{can_be_null:false,max_length:50,min_length:1});
 				td.appendChild(name.getHTMLElement());
-				name.onchange.add_listener(function() { animal.name = name.getCurrentData(); });
+				name.onchange.addListener(function() { animal.name = name.getCurrentData(); });
 			}
 			var remove = document.createElement("BUTTON");
 			remove.className = "flat small_icon";
@@ -124,28 +124,28 @@ function farm(container, info, productions, applicant_id, can_edit) {
 			if (can_edit) {
 				var nb = new field_integer(animal.nb,true,{can_be_null:false,min:1});
 				td.appendChild(nb.getHTMLElement());
-				nb.onchange.add_listener(function() { animal.nb = nb.getCurrentData(); });
+				nb.onchange.addListener(function() { animal.nb = nb.getCurrentData(); });
 			} else if (animal.nb != null)
 				td.appendChild(document.createTextNode(animal.nb));
 			tr.appendChild(td = document.createElement("TD"));
 			if (can_edit) {
 				var income = new field_decimal(animal.income,true,{can_be_null:true,integer_digits:10,decimal_digits:2,min:0});
 				td.appendChild(income.getHTMLElement());
-				income.onchange.add_listener(function() { animal.income = income.getCurrentData(); });
+				income.onchange.addListener(function() { animal.income = income.getCurrentData(); });
 			} else if (animal.income != null)
 				td.appendChild(document.createTextNode(animal.income));
 			tr.appendChild(td = document.createElement("TD"));
 			if (can_edit) {
 				var income_freq = new field_text(animal.income_freq,true,{can_be_null:true,max_length:25});
 				td.appendChild(income_freq.getHTMLElement());
-				income_freq.onchange.add_listener(function() { animal.income_freq = income_freq.getCurrentData(); });
+				income_freq.onchange.addListener(function() { animal.income_freq = income_freq.getCurrentData(); });
 			} else if (animal.income_freq != null)
 				td.appendChild(document.createTextNode(animal.income_freq));
 			tr.appendChild(td = document.createElement("TD"));
 			if (can_edit) {
 				var comment = new field_text(animal.comment,true,{can_be_null:true,max_length:200});
 				td.appendChild(comment.getHTMLElement());
-				comment.onchange.add_listener(function() { animal.comment = comment.getCurrentData(); });
+				comment.onchange.addListener(function() { animal.comment = comment.getCurrentData(); });
 			} else if (animal.comment != null)
 				td.appendChild(document.createTextNode(animal.comment));
 		};
@@ -200,7 +200,7 @@ function farm(container, info, productions, applicant_id, can_edit) {
 			} else {
 				var name = new field_text(plant.name,true,{can_be_null:false,max_length:50,min_length:1});
 				td.appendChild(name.getHTMLElement());
-				name.onchange.add_listener(function() { plant.name = name.getCurrentData(); });
+				name.onchange.addListener(function() { plant.name = name.getCurrentData(); });
 			}
 			var remove = document.createElement("BUTTON");
 			remove.className = "flat small_icon";
@@ -216,28 +216,28 @@ function farm(container, info, productions, applicant_id, can_edit) {
 			if (can_edit) {
 				var nb = new field_integer(plant.nb,true,{can_be_null:false,min:1});
 				td.appendChild(nb.getHTMLElement());
-				nb.onchange.add_listener(function() { plant.nb = nb.getCurrentData(); });
+				nb.onchange.addListener(function() { plant.nb = nb.getCurrentData(); });
 			} else if (plant.nb != null)
 				td.appendChild(document.createTextNode(plant.nb));
 			tr.appendChild(td = document.createElement("TD"));
 			if (can_edit) {
 				var income = new field_decimal(plant.income,true,{can_be_null:true,integer_digits:10,decimal_digits:2,min:0});
 				td.appendChild(income.getHTMLElement());
-				income.onchange.add_listener(function() { plant.income = income.getCurrentData(); });
+				income.onchange.addListener(function() { plant.income = income.getCurrentData(); });
 			} else if (plant.income != null)
 				td.appendChild(document.createTextNode(plant.income));
 			tr.appendChild(td = document.createElement("TD"));
 			if (can_edit) {
 				var income_freq = new field_text(plant.income_freq,true,{can_be_null:true,max_length:25});
 				td.appendChild(income_freq.getHTMLElement());
-				income_freq.onchange.add_listener(function() { plant.income_freq = income_freq.getCurrentData(); });
+				income_freq.onchange.addListener(function() { plant.income_freq = income_freq.getCurrentData(); });
 			} else if (plant.income_freq != null)
 				td.appendChild(document.createTextNode(plant.income_freq));
 			tr.appendChild(td = document.createElement("TD"));
 			if (can_edit) {
 				var comment = new field_text(plant.comment,true,{can_be_null:true,max_length:200});
 				td.appendChild(comment.getHTMLElement());
-				comment.onchange.add_listener(function() { plant.comment = comment.getCurrentData(); });
+				comment.onchange.addListener(function() { plant.comment = comment.getCurrentData(); });
 			} else if (plant.comment != null)
 				td.appendChild(document.createTextNode(plant.comment));
 		};

@@ -237,11 +237,11 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 					};
 					if (is.nb_applicants_assigned_past > 0 || is.nb_applicants_assigned_future) {
 						if (is.nb_applicants_assigned_past == 0)
-							confirm_dialog(is.nb_applicants_assigned_future+" applicant(s) from this Information Session are already scheduled for an exam session.<br/>If you unlink this Information Session, those applicants will be automatically remove from the scheduled session.<br/>Are you sure you want to do this ?", function(yes){
+							confirmDialog(is.nb_applicants_assigned_future+" applicant(s) from this Information Session are already scheduled for an exam session.<br/>If you unlink this Information Session, those applicants will be automatically remove from the scheduled session.<br/>Are you sure you want to do this ?", function(yes){
 								if (yes) doit();
 							});
 						else {
-							error_dialog(is.nb_applicants_assigned_past+" applicant(s) from this Information Session already had their exam (assigned to an exam session in the past).<br/>You cannot unlink this Information Session.<br/>If you really need to do it, you need to go to the Exam Center screen, and unlink the session.");
+							errorDialog(is.nb_applicants_assigned_past+" applicant(s) from this Information Session already had their exam (assigned to an exam session in the past).<br/>You cannot unlink this Information Session.<br/>If you really need to do it, you need to go to the Exam Center screen, and unlink the session.");
 						}
 					} else
 						doit();

@@ -253,10 +253,10 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 				$html .= "});";
 			$html .= "}";
 			$html .= "function changeExamCenter() {";
-				$html .= "popup_frame('/static/selection/exam/exam_center_16.png', 'Assign applicant to an exam center', '/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refresh', {applicants:[".$applicant_id."]}, null, null, function(frame,popup) { frame.refresh=function() {location.reload();}; });";
+				$html .= "popupFrame('/static/selection/exam/exam_center_16.png', 'Assign applicant to an exam center', '/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refresh', {applicants:[".$applicant_id."]}, null, null, function(frame,popup) { frame.refresh=function() {location.reload();}; });";
 			$html .= "}";
 			$html .= "function changeInterviewCenter() {";
-				$html .= "popup_frame('/static/selection/exam/exam_center_16.png', 'Assign applicant to an interview center', '/dynamic/selection/page/interview/assign_applicants_to_center?ondone=refresh', {applicants:[".$applicant_id."]}, null, null, function(frame,popup) { frame.refresh=function() {location.reload();}; });";
+				$html .= "popupFrame('/static/selection/exam/exam_center_16.png', 'Assign applicant to an interview center', '/dynamic/selection/page/interview/assign_applicants_to_center?ondone=refresh', {applicants:[".$applicant_id."]}, null, null, function(frame,popup) { frame.refresh=function() {location.reload();}; });";
 			$html .= "}";
 			$html .= "</script>";
 		}
@@ -271,7 +271,7 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 <script type='text/javascript'>
 var from_auto = <?php echo $values->hasColumnValue("Applicant", "automatic_exclusion_step") ? json_encode($values->getColumnValue("Applicant", "automatic_exclusion_step")) : "null"; ?>;
 function unexclude() {
-	confirm_dialog(
+	confirmDialog(
 		from_auto
 			? "This applicant has been automatically excluded at "+from_auto+" step because of: "+<?php echo json_encode($values->getColumnValue("Applicant","automatic_exclusion_reason"));?>+".<br/>Are you sure you want to put this applicant back in the process, even he/she do not comply to rules ?"
 			: "Are you sure you want to cancel the exclusion, and put back this applicant in the process ?"
@@ -302,7 +302,7 @@ function unexclude() {
 <button class='action red' onclick='exclude();'>Exclude</button>
 <script type='text/javascript'>
 function exclude() {
-	popup_frame(null,"Exclude Applicant","/dynamic/selection/page/applicant/exclude?ondone=_excluded",{applicants:[<?php echo $values->getColumnValue("Applicant", "people");?>]},null,null,function(f,p) {
+	popupFrame(null,"Exclude Applicant","/dynamic/selection/page/applicant/exclude?ondone=_excluded",{applicants:[<?php echo $values->getColumnValue("Applicant", "people");?>]},null,null,function(f,p) {
 		f._excluded = function() { location.reload(); };
 	});
 }

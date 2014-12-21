@@ -14,21 +14,21 @@ function si_health(section, list, applicant_id, can_edit) {
 		if (can_edit) {
 			var who = new field_text(item.who, true, {can_be_null:false,min_length:1,max_length:200,min_size:10});
 			td.appendChild(who.getHTMLElement());
-			who.onchange.add_listener(function() { item.who = who.getCurrentData(); });
+			who.onchange.addListener(function() { item.who = who.getCurrentData(); });
 		} else
 			td.appendChild(document.createTextNode(item.who)); 
 		tr.appendChild(td = document.createElement("TD"));
 		if (can_edit) {
 			var what = new field_text(item.what, true, {can_be_null:true,max_length:200,min_size:10});
 			td.appendChild(what.getHTMLElement());
-			what.onchange.add_listener(function() { item.what = what.getCurrentData(); });
+			what.onchange.addListener(function() { item.what = what.getCurrentData(); });
 		} else if (item.what)
 			td.appendChild(document.createTextNode(item.what)); 
 		tr.appendChild(td = document.createElement("TD"));
 		if (can_edit) {
 			var cost = new field_text(item.cost, true, {can_be_null:true,max_length:200,min_size:10});
 			td.appendChild(cost.getHTMLElement());
-			cost.onchange.add_listener(function() { item.cost = cost.getCurrentData(); });
+			cost.onchange.addListener(function() { item.cost = cost.getCurrentData(); });
 		} else if (item.cost)
 			td.appendChild(document.createTextNode(item.cost)); 
 		if (can_edit) {

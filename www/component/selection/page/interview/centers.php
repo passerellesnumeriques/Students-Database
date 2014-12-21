@@ -20,7 +20,7 @@ class page_interview_centers extends SelectionPage {
 					<div id='interview_status' class='selection_status'></div>
 				</div>
 				<div style='margin-top:10px'>
-					<button class='action' onclick="window.top.popup_frame('/static/contact/address_16.png','Map','/dynamic/selection/page/map?type=interview',null,95,95);"><img src='/static/contact/address_16.png'/> Open Map</button>
+					<button class='action' onclick="window.top.popupFrame('/static/contact/address_16.png','Map','/dynamic/selection/page/map?type=interview',null,95,95);"><img src='/static/contact/address_16.png'/> Open Map</button>
 				</div>
 			</div>
 			
@@ -56,7 +56,7 @@ class page_interview_centers extends SelectionPage {
 						<?php } ?>
 						list.makeRowsClickable(function(row){
 							var ec_id = list.getTableKeyForRow('InterviewCenter',row.row_id);
-							window.top.popup_frame('/static/selection/exam/exam_center_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?onsaved=saved&id='+ec_id,null,95,95,function(frame,pop) {
+							window.top.popupFrame('/static/selection/exam/exam_center_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?onsaved=saved&id='+ec_id,null,95,95,function(frame,pop) {
 								frame.saved = refreshPage;
 							});
 						});
@@ -68,12 +68,12 @@ class page_interview_centers extends SelectionPage {
 				require("context_menu.js",function(){
 					var menu = new context_menu();
 					menu.addIconItem(null, "Create an interview center in a new place", function() {
-						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "New Interview Center", "/dynamic/selection/page/interview/center_profile?onsaved=saved", null, 95, 95, function(frame,pop) {
+						window.top.popupFrame("/static/selection/exam/exam_center_16.png", "New Interview Center", "/dynamic/selection/page/interview/center_profile?onsaved=saved", null, 95, 95, function(frame,pop) {
 							frame.saved = refreshPage;
 						});
 					});
 					menu.addIconItem(null, "Create an interview center from an exam center", function() {
-						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "Create Interview Center From Exam Center", "/dynamic/selection/page/interview/create_center_from_exam?onsaved=saved", null, null, null, function(frame,pop) {
+						window.top.popupFrame("/static/selection/exam/exam_center_16.png", "Create Interview Center From Exam Center", "/dynamic/selection/page/interview/create_center_from_exam?onsaved=saved", null, null, null, function(frame,pop) {
 							frame.saved = refreshPage;
 						});
 					});

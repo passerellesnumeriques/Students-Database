@@ -108,7 +108,7 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 						remove_family.disabled = "";
 				};
 				remove_family.onclick = function() {
-					confirm_dialog("Are you sure you want to remove all information about this family ?",function(yes) {
+					confirmDialog("Are you sure you want to remove all information about this family ?",function(yes) {
 						if (!yes) return;
 						var locker = lock_screen(null,"Removing family information...");
 						service.json("family","remove_family",{id:family_family.id},function(res) {

@@ -38,12 +38,12 @@ function load_google_calendars(ondone, feedback_handler) {
 			case -1: if (feedback_handler) feedback_handler("Not connected to Google"); ondone(null); break;
 			case 0: if (feedback_handler) feedback_handler("Connecting to Google..."); break;
 			case 1:
-				window.top.google.connection_event.remove_listener(listener);
+				window.top.google.connection_event.removeListener(listener);
 				googleConnected();
 				break;
 			}
 		};
-		window.top.google.connection_event.add_listener(listener);
+		window.top.google.connection_event.addListener(listener);
 		listener();
 	};
 	var googleApiNotReady = function() {

@@ -63,7 +63,7 @@ function next(index, span, pb) {
 		window.popup.onclose = function() {
 			try {
 				<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
-			} catch (e) { log_exception(e); }
+			} catch (e) { logException(e); }
 		};
 		window.popup.disableClose();
 		return;

@@ -39,7 +39,7 @@ popup.addOkCancelButtons(function() {
 		service.json("user_management","check_username",{username:username},function(res) {
 			popup.unfreeze();
 			if (!res) return;
-			popup_frame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/people/page/popup_new_person?type=user&ondone=people_created",{
+			popupFrame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/people/page/popup_new_person?type=user&ondone=people_created",{
 				fixed_data: [
 				 	{table:'Users',data:'Domain',value:<?php echo json_encode(PNApplication::$instance->local_domain);?>},
 				 	{table:'Users',data:'Username',value:username}

@@ -28,7 +28,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	};
 	/** Called each time a modification is done (edit, add, or remove) */
 	this.onchange = new Custom_Event();
-	this.onchange.add_listener(function() {
+	this.onchange.addListener(function() {
 		layout.changed(container);
 	});
 	
@@ -265,7 +265,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		remove_button.style.cursor = 'pointer';
 		// remove_button.style.verticalAlign = 'bottom';
 		remove_button.onclick = function(ev){
-			confirm_dialog("Are you sure you want to remove this address?", function(yes){if(yes) t.removeAddress(address);});
+			confirmDialog("Are you sure you want to remove this address?", function(yes){if(yes) t.removeAddress(address);});
 			stopEventPropagation(ev);
 			return false;
 		};

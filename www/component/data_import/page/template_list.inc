@@ -87,7 +87,7 @@ function removeTemplate(button,id) {
 	var temp = null;
 	for (var i = 0; i < templates.length; ++i)
 		if (templates[i].id == id) { temp = templates[i]; break; }
-	confirm_dialog("Are you sure to remove the template "+temp.name+" ?",function(yes) {
+	confirmDialog("Are you sure to remove the template "+temp.name+" ?",function(yes) {
 		if (!yes) return;
 		popup.freeze("Removing template...");
 		service.json("data_import","remove_template",{id:id},function(res) {
@@ -129,7 +129,7 @@ function useTemplate(ev,id) {
 							var next = function(i) {
 								if (i >= temp.to_import.length) {
 									if (errors.length == 1)
-										error_dialog(errors[0]);
+										errorDialog(errors[0]);
 									else if (errors.length > 1) {
 										var div = document.createElement("DIV");
 										div.appendChild(document.createTextNode("Several errors occured while importing data from Excel file, using template "+temp.name+":"));
@@ -138,7 +138,7 @@ function useTemplate(ev,id) {
 											var li = document.createElement("LI"); ul.appendChild(li);
 											li.appendChild(document.createTextNode(errors[j]));
 										}
-										error_dialog_html(div);
+										errorDialogHTML(div);
 									}
 									ondone();
 									return;

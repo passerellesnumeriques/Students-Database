@@ -2,9 +2,29 @@
 /* @var $model DataModel */
 /* @var $sm SubDataModel */
 
-$sm->addTable("Applicant")
+class ApplicantIDColumn extends datamodel\ColumnInteger {
+	
+	public function __construct(&$table) {
+		parent::__construct($table, "applicant_id", 32, 0, null, false, true);
+	}
+	
+	public function get_sql_type($db_system, $sql_table_name) {
+		$type = parent::get_sql_type($db_system, $sql_table_name);
+		$i = strpos($sql_table_name, "_");
+		$sub_model = substr($sql_table_name, $i+1);
+		$res = $db_system->execute("SELECT `value` FROM `SelectionCampaignConfig_$sub_model` WHERE `name`='generate_applicant_id'", false);
+		if ($res === false) return $type;
+		$row = $db_system->nextRowArray($res);
+		if ($row == null) return $type;
+		if ($row[0] == "true") $type .= " AUTO_INCREMENT";
+		return $type;
+	}
+}
+
+$applicant_table = $sm->addTable("Applicant");
+$applicant_table
 	->addForeignKey("people", "People", true, false, false, false, true)
-	->addInteger("applicant_id",32,0,null,false,true)//applicant_id must be a number, minimum 0 so we can also generate using AUTO_INCREMENT
+	->addColumn(new ApplicantIDColumn($applicant_table))//applicant_id must be a number, minimum 0 so we can also generate using AUTO_INCREMENT
 	->addEnum("automatic_exclusion_step", array("Application Form","Written Exam","Interview","Social Investigation"))
 	->addString("automatic_exclusion_reason",255,0,true,false)//This field must be filled up by functionalities ("missing",...) to explain the automatic exclusion step
 	/* Possible values are:

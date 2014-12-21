@@ -231,7 +231,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		people_name.appendChild(document.createTextNode(n.people.first_name+" "+n.people.last_name));
 		people_name.style.cursor = "pointer";
 		people_name.onclick = function() {
-			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain,null,95,95);
+			window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain,null,95,95);
 		};
 		var timing = document.createElement("DIV"); header.appendChild(timing);
 		timing.style.display = "inline-block";
@@ -440,7 +440,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 				i--;
 			}
 			if (secs.length == 0) {
-				error_dialog("You don't have the right to post in any available section");
+				errorDialog("You don't have the right to post in any available section");
 				return;
 			}
 			var select_section = null;

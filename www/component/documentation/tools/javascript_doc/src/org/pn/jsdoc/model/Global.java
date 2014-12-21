@@ -1,5 +1,6 @@
 package org.pn.jsdoc.model;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -52,7 +53,7 @@ public class Global extends Container {
 	}
 	
 	@Override
-	protected void parse_node(String file, Node node) {
+	protected void parse_node(String file, Node node, HashMap<String,Object> runtime) {
 		if (node instanceof FunctionNode) {
 			parse_function(file, (FunctionNode)node);
 			return;
@@ -65,7 +66,7 @@ public class Global extends Container {
 			}
 			return;
 		}
-		super.parse_node(file, node);
+		super.parse_node(file, node, runtime);
 	}
 	
 	private void parse_function(String file, FunctionNode node) {

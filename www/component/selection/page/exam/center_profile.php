@@ -173,7 +173,7 @@ class page_exam_center_profile extends SelectionPage {
 
 		function save_center() {
 			if (window.center_location.geographic_area_text == null) {
-				error_dialog("You must at set a location before saving");
+				errorDialog("You must at set a location before saving");
 				return;
 			}
 			var data = {};
@@ -263,13 +263,13 @@ class page_exam_center_profile extends SelectionPage {
 		center_popup.removeButtons();
 		<?php if ($editable && $id <> null) {?>
 		center_popup.addIconTextButton(theme.icons_16.remove, "Remove this exam center", "remove", function() {
-			confirm_dialog("Are you sure you want to remove this exam center ?",function(res){
+			confirmDialog("Are you sure you want to remove this exam center ?",function(res){
 				if(res){
 					center_popup.freeze();
 					service.json("selection","exam/remove_center",{id:<?php echo $id;?>},function(r){
 						if(!r){
 							center_popup.unfreeze();
-							error_dialog("An error occured, this center was not removed properly");
+							errorDialog("An error occured, this center was not removed properly");
 							return;
 						}
 						window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Exam center succesfully removed!", [{action:"close"}], 5000));

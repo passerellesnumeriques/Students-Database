@@ -70,7 +70,7 @@ class StudentDataScreen extends datamodel\GenericDataScreen {
 				?>
 				<script type='text/javascript'>
 				function unexclude() {
-					confirm_dialog("Are you sure you want this student back in PN ?",function(yes) {
+					confirmDialog("Are you sure you want this student back in PN ?",function(yes) {
 						if (!yes) return;
 						var lock = lock_screen(null, "Put student back in PN !");
 						service.json("students","exclude_student",{student:<?php echo $values->getColumnValue("Student","people");?>,date:null,reason:null},function(res) {

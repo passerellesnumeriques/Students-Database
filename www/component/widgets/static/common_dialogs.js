@@ -2,7 +2,7 @@
  * Display a popup with the given error message
  * @param {string} message error message
  */
-function error_dialog(message) {
+function errorDialog(message) {
 	require("popup_window.js",function() {
 		var p = new popup_window("Error", theme.icons_16.error, "<div style='padding:5px'>"+message+"</div>");
 		p.show();
@@ -13,7 +13,7 @@ function error_dialog(message) {
  * Display a popup with the given error message
  * @param {HTMLElement} content error message
  */
-function error_dialog_html(content){
+function errorDialogHTML(content){
 	require("popup_window.js",function() {
 		var div = document.createElement("div");
 		div.style.padding = "5px";
@@ -27,7 +27,7 @@ function error_dialog_html(content){
  * @param {string} message the message to display, asking confirmation
  * @param {function} handler called with true if the user answered Yes, or false if the user answered No or closed the window without answering
  */
-function confirm_dialog(message, handler) {
+function confirmDialog(message, handler) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
 		content.style.padding = "5px";
@@ -46,14 +46,14 @@ function confirm_dialog(message, handler) {
 	});
 }
 
-function info_dialog(message) {
+function infoDialog(message) {
 	require("popup_window.js",function() {
 		var p = new popup_window("Information", theme.icons_16.info, "<div style='padding:5px'>"+message+"</div>");
 		p.show();
 	});
 }
 
-function choice_buttons_dialog(message, choices, handler) {
+function choiceButtonsDialog(message, choices, handler) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
 		content.style.padding = "5px";
@@ -81,7 +81,7 @@ function choice_buttons_dialog(message, choices, handler) {
  * @param ok_handler called when the user clicked on Ok or Cancel. If ok the value is given as parameter (and is already validated by the validation_handler), if cancel, null is given as parameter
  * @param oncancel (optional) called when the user clicks on cancel button
  */
-function input_dialog(icon,title,message,default_value,max_length,validation_handler,ok_handler, oncancel) {
+function inputDialog(icon,title,message,default_value,max_length,validation_handler,ok_handler, oncancel) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
 		content.innerHTML = message+"<br/>";
@@ -158,7 +158,7 @@ function input_dialog(icon,title,message,default_value,max_length,validation_han
 /**
  * TODO: documentation
  */
-function multiple_input_dialog(icon,title,inputs,ok_handler) {
+function multipleInputDialog(icon,title,inputs,ok_handler) {
 	require("popup_window.js",function() {
 		var p = null;
 		var content = document.createElement("TABLE");
@@ -229,7 +229,7 @@ function multiple_input_dialog(icon,title,inputs,ok_handler) {
 	});
 }
 
-function select_dialog(icon,title,message,default_value,possibilities, ok_handler, oncancel) {
+function selectDialog(icon,title,message,default_value,possibilities, ok_handler, oncancel) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
 		content.innerHTML = message;
@@ -267,7 +267,7 @@ function select_dialog(icon,title,message,default_value,possibilities, ok_handle
 }
 
 
-function popup_frame(icon, title, url, post_data, percent_w, percent_h, onframecreated) {
+function popupFrame(icon, title, url, post_data, percent_w, percent_h, onframecreated) {
 	require("popup_window.js", function() {
 		var p = new popup_window(title, icon, "");
 		var frame = p.setContentFrame(url, null, post_data);

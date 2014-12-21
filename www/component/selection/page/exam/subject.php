@@ -232,7 +232,7 @@ class page_exam_subject extends SelectionPage {
 				this.button_remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
 				this.button_remove.title = "Remove this part and all its questions";
 				this.button_remove.onclick = function() {
-					confirm_dialog("Are you sure you want to remove this part and all its questions ?", function(yes) {
+					confirmDialog("Are you sure you want to remove this part and all its questions ?", function(yes) {
 						if (!yes) return;
 						t.remove();
 					});
@@ -379,7 +379,7 @@ class page_exam_subject extends SelectionPage {
 				this.field_score = new field_decimal(this.question.max_score,true,{integer_digits:3,decimal_digits:2,min:0,max:100,can_be_null:false});
 				td.appendChild(this.field_score.getHTMLElement());
 				td.appendChild(document.createTextNode(" point(s)"));
-				this.field_score.onchange.add_listener(function(f) {
+				this.field_score.onchange.addListener(function(f) {
 					var pts = parseFloat(f.getCurrentData());
 					if (isNaN(pts)) pts = 0;
 					t.question.max_score = pts;
@@ -430,7 +430,7 @@ class page_exam_subject extends SelectionPage {
 					if (part.questions.length > 1)
 						t.remove();
 					else
-						confirm_dialog("This is the last question of this part. If you remove it, the part will be removed as well. Do you want to do this ?", function(yes) {
+						confirmDialog("This is the last question of this part. If you remove it, the part will be removed as well. Do you want to do this ?", function(yes) {
 							if (!yes) return;
 							part.remove();
 						}); 
@@ -743,13 +743,13 @@ class page_exam_subject extends SelectionPage {
 
 		function importQuestionsInfo(questions) {
 			if (questions.length == 0) {
-				info_dialog("The information to import is empty.");
+				infoDialog("The information to import is empty.");
 				return;
 			}
 			var nb_questions = 0;
 			for (var i = 0; i < subject.parts.length; ++i) nb_questions += subject.parts[i].questions.length;
 			if (nb_questions != questions.length) {
-				error_dialog("The number of questions does not match: the subject has "+nb_questions+" question(s), the imported information contain "+questions.length+" question(s). Unable to import information.");
+				errorDialog("The number of questions does not match: the subject has "+nb_questions+" question(s), the imported information contain "+questions.length+" question(s). Unable to import information.");
 				return;
 			}
 			var importForVersion = function(version_index) {
@@ -790,7 +790,7 @@ class page_exam_subject extends SelectionPage {
 			if (answers.length > 1 && typeof questions[0].answer != 'undefined') {
 				var options = [];
 				for (var i = 0; i < answers.length; ++i) options.push([i,String.fromCharCode("A".charCodeAt(0)+i)]);
-				select_dialog(null,"Subject Version","For which version of the subject do you want to import the information ?",null,options,function(version_index) {
+				selectDialog(null,"Subject Version","For which version of the subject do you want to import the information ?",null,options,function(version_index) {
 					importForVersion(version_index);
 				});
 			} else

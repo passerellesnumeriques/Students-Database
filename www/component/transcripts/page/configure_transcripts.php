@@ -437,7 +437,7 @@ function refreshDesign() {
 	});
 }
 function publish() {
-	popup_frame("/static/transcripts/publish.png", "Publish Transcripts", "/dynamic/transcripts/page/publish?period=<?php echo $_GET["period"]; if (isset($_GET["specialization"])) echo "&specialization=".$_GET["specialization"];?>");
+	popupFrame("/static/transcripts/publish.png", "Publish Transcripts", "/dynamic/transcripts/page/publish?period=<?php echo $_GET["period"]; if (isset($_GET["specialization"])) echo "&specialization=".$_GET["specialization"];?>");
 }
 </script>
 		<?php 

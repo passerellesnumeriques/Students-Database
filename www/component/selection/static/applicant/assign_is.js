@@ -27,7 +27,7 @@ function assign_is(button, applicants_ids, onchanged) {
 							}
 							// need confirmation
 							confirm_data = res.confirm_data;
-							confirm_dialog(res.confirm_message, function(yes) {
+							confirmDialog(res.confirm_message, function(yes) {
 								if (!yes) { unlock_screen(lock); return; }
 								call_service();
 							});

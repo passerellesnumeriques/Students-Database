@@ -151,8 +151,8 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 		};
 		t._td_partners.appendChild(t._create_partner_button);
 		//Set the listeners of the partners list
-		t._partners_lists.onpartnerselected.add_listener(t._onPartnerRowSelected);
-		t._partners_lists.onpartnerunselected.add_listener(t._onPartnerRowUnselected);
+		t._partners_lists.onpartnerselected.addListener(t._onPartnerRowSelected);
+		t._partners_lists.onpartnerunselected.addListener(t._onPartnerRowUnselected);
 	};
 	
 	/**

@@ -105,7 +105,7 @@ window.datamodel = {
 		input.cellSaved = function() {
 			original = input.value;
 		};
-		win.pnapplication.onclose.add_listener(function() {
+		win.pnapplication.onclose.addListener(function() {
 			if (input.value != original) {
 				input.value = original;
 				input.onchange();
@@ -137,7 +137,7 @@ window.datamodel = {
 		date_select.cellSaved = function() {
 			original = date_select.getDate();
 		};
-		win.pnapplication.onclose.add_listener(function() {
+		win.pnapplication.onclose.addListener(function() {
 			var d = date_select.getDate();
 			if ((d == null && original != null) || original == null || d.getTime() != original.getTime()) {
 				date_select.selectDate(original);
@@ -301,7 +301,7 @@ window.datamodel = {
 			else {
 				var field = new win[field_type](value,editable,field_cfg);
 				container.appendChild(field.getHTMLElement());
-				if (onchange) field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
+				if (onchange) field.onchange.addListener(function(f) { onchange(f.getCurrentData()); });
 				field.register_datamodel_cell(table,column,row_key);
 				if (oncreated) oncreated(field);
 			}
@@ -348,7 +348,7 @@ function _init_datamodel_js() {
 		setTimeout(_init_datamodel_js, 25);
 		return;
 	}
-	window.top.pnapplication.onwindowclosed.add_listener(function(c) { c.top.datamodel._windowClosed(c.win); });
+	window.top.pnapplication.onwindowclosed.addListener(function(c) { c.top.datamodel._windowClosed(c.win); });
 }
 if (!window.top.datamodel_prototype) {
 window.top.datamodel_prototype = {

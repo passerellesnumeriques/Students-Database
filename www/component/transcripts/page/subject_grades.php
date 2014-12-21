@@ -615,9 +615,9 @@ pnapplication.autoDisableSaveButton(document.getElementById('save_button'));
 var field_max_grade = new field_decimal(<?php echo json_encode($subject["max_grade"]);?>,true,{integer_digits:3,decimal_digits:2,can_be_null:false,min:1,max:100});
 var field_passing_grade = new field_decimal(<?php echo json_encode($subject["passing_grade"]);?>,true,{integer_digits:3,decimal_digits:2,can_be_null:false,min:1,max:<?php if ($subject["max_grade"] <> null) echo $subject["max_grade"]; else echo "100";?>});
 
-field_max_grade.ondatachanged.add_listener(function() {window.pnapplication.dataUnsaved("subject_max_grade");});
-field_max_grade.ondataunchanged.add_listener(function() {window.pnapplication.dataSaved("subject_max_grade");});
-field_max_grade.onchange.add_listener(function() {
+field_max_grade.ondatachanged.addListener(function() {window.pnapplication.dataUnsaved("subject_max_grade");});
+field_max_grade.ondataunchanged.addListener(function() {window.pnapplication.dataSaved("subject_max_grade");});
+field_max_grade.onchange.addListener(function() {
 	field_passing_grade.config.max = parseFloat(field_max_grade.getCurrentData());
 	field_passing_grade.validate();
 	subject_max_grade = field_max_grade.getCurrentData();
@@ -631,9 +631,9 @@ field_max_grade.onchange.add_listener(function() {
 	}
 });
 document.getElementById('max_grade_container').appendChild(field_max_grade.getHTMLElement());
-field_passing_grade.ondatachanged.add_listener(function() {window.pnapplication.dataUnsaved("subject_passing_grade");});
-field_passing_grade.ondataunchanged.add_listener(function() {window.pnapplication.dataSaved("subject_passing_grade");});
-field_passing_grade.onchange.add_listener(function() {
+field_passing_grade.ondatachanged.addListener(function() {window.pnapplication.dataUnsaved("subject_passing_grade");});
+field_passing_grade.ondataunchanged.addListener(function() {window.pnapplication.dataSaved("subject_passing_grade");});
+field_passing_grade.onchange.addListener(function() {
 	// refresh final grades
 	var col_index = grades_grid.grid.getColumnIndexById('final_grade');
 	for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
@@ -756,8 +756,8 @@ function createEvaluation(type, eval) {
 		computeGrades();
 	};
 	<?php if ($edit) { ?>
-	field_max_grade.onchange.add_listener(update_passing);
-	field_passing_grade.onchange.add_listener(update_passing);
+	field_max_grade.onchange.addListener(update_passing);
+	field_passing_grade.onchange.addListener(update_passing);
 	<?php } ?>
 	grades_grid.addColumnInContainer(type.col_container,eval.col,type.col_container.sub_columns.length-1);
 	grades_grid.grid.onallrowsready(update_passing);
@@ -787,8 +787,8 @@ function createEvaluationType(eval) {
 		computeGrades();
 	};
 	<?php if ($edit) { ?>
-	field_max_grade.onchange.add_listener(update_passing);
-	field_passing_grade.onchange.add_listener(update_passing);
+	field_max_grade.onchange.addListener(update_passing);
+	field_passing_grade.onchange.addListener(update_passing);
 	<?php } ?>
 	cols.push(eval.col_total);
 	var div = document.createElement("DIV");

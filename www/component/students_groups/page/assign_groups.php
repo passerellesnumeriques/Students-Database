@@ -253,7 +253,7 @@ class page_assign_groups extends Page {
 				echo "\tassign.addElement(getStudent(".$s["people_id"]."),".json_encode($s["group"]).",true);\n";
 			}
 			echo "\tif (previous_groups) assign.addUnassignedButton(null,'From '+".json_encode($previous_batch_period["name"]).",function(){fromPreviousPeriod(this,assign);});\n";
-			echo "\tassign.onchange.add_listener(changed);\n";
+			echo "\tassign.onchange.addListener(changed);\n";
 			echo "\tlayout.changed(assign.container);\n";
 			echo "});\n";
 			echo "assigns.push(assign);\n";

@@ -284,10 +284,10 @@ class page_edit_customizable_table extends Page {
 				container.appendChild(document.createTextNode(" Maximum "));
 				container.spec.max = new field_integer(spec ? spec.max : null,true,{can_be_null:true});
 				container.appendChild(container.spec.max.getHTMLElement());
-				container.spec.min.onchange.add_listener(function() {
+				container.spec.min.onchange.addListener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());
 				});
-				container.spec.max.onchange.add_listener(function() {
+				container.spec.max.onchange.addListener(function() {
 					container.spec.min.setMaximum(container.spec.max.getCurrentData());
 				});
 				container.spec.get = function() {
@@ -299,7 +299,7 @@ class page_edit_customizable_table extends Page {
 				container.appendChild(document.createTextNode(" Number of decimals "));
 				container.spec.digits = new field_integer(spec ? spec.decimal_digits : 2,true,{can_be_null:false,min:1,max:6});
 				container.appendChild(container.spec.digits.getHTMLElement());
-				container.spec.digits.onchange.add_listener(function() {
+				container.spec.digits.onchange.addListener(function() {
 					container.spec.min.setDecimalDigits(container.spec.digits.getCurrentData());
 					container.spec.max.setDecimalDigits(container.spec.digits.getCurrentData());
 				});
@@ -309,10 +309,10 @@ class page_edit_customizable_table extends Page {
 				container.appendChild(document.createTextNode(" Maximum "));
 				container.spec.max = new field_decimal(spec ? spec.max : null,true,{can_be_null:true,integer_digits:10,decimal_digits:2});
 				container.appendChild(container.spec.max.getHTMLElement());
-				container.spec.min.onchange.add_listener(function() {
+				container.spec.min.onchange.addListener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());
 				});
-				container.spec.max.onchange.add_listener(function() {
+				container.spec.max.onchange.addListener(function() {
 					container.spec.min.setMaximum(container.spec.max.getCurrentData());
 				});
 				container.spec.get = function() {
@@ -327,10 +327,10 @@ class page_edit_customizable_table extends Page {
 				container.appendChild(document.createTextNode(" Maximum "));
 				container.spec.max = new field_date(spec ? spec.max : null,true,{can_be_null:true});
 				container.appendChild(container.spec.max.getHTMLElement());
-				container.spec.min.onchange.add_listener(function() {
+				container.spec.min.onchange.addListener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());
 				});
-				container.spec.max.onchange.add_listener(function() {
+				container.spec.max.onchange.addListener(function() {
 					container.spec.min.setMaximum(container.spec.max.getCurrentData());
 				});
 				container.spec.get = function() {

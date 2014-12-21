@@ -197,7 +197,7 @@ function refreshCampaigns() {
 	getIFrameWindow(findFrame('application_frame')).location.reload();
 }
 function createCampaign() {
-	input_dialog(theme.icons_16.question,
+	inputDialog(theme.icons_16.question,
 		"Create a selection campaign",
 		"Enter the name of the new selection campaign",
 		'',
@@ -227,7 +227,7 @@ function changeCampaign(id) {
 }
 <?php if ($id <> null && $id > 0) {?>
 function renameCampaign() {
-	input_dialog(theme.icons_16.question,
+	inputDialog(theme.icons_16.question,
 		"Rename the current selection campaign",
 		"Enter the new name of the selection campaign",
 		current_campaign_name,
@@ -254,7 +254,7 @@ function renameCampaign() {
 	);
 }
 function removeCampaign() {
-	confirm_dialog("Are you sure you want to remove this campaign?<br/><i><b>All the related data will be removed</i></b>",function(res){
+	confirmDialog("Are you sure you want to remove this campaign?<br/><i><b>All the related data will be removed</i></b>",function(res){
 		if(!res) return;
 		var div_locker = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing Selection Campaign and every applicant of it...");
 		service.json("selection","remove_campaign",{id:<?php echo $id;?>},function(res){
@@ -265,10 +265,10 @@ function removeCampaign() {
 	});
 }
 function lockCampaign() {
-	popup_frame(theme.icons_16.lock, "Lock Selection Campaign", "/dynamic/selection/page/lock");
+	popupFrame(theme.icons_16.lock, "Lock Selection Campaign", "/dynamic/selection/page/lock");
 }
 function unlockCampaign() {
-	popup_frame(theme.icons_16.unlock, "Unlock Selection Campaign", "/dynamic/selection/page/unlock");
+	popupFrame(theme.icons_16.unlock, "Unlock Selection Campaign", "/dynamic/selection/page/unlock");
 }
 <?php } ?>
 </script>

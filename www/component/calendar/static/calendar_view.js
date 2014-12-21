@@ -755,14 +755,14 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			t.view.removeEvent(ev.uid);
 			t.addEvent(ev);
 		};
-		t.calendar_manager.on_event_added.add_listener(add_event_listener);
-		t.calendar_manager.on_event_removed.add_listener(remove_event_listener);
-		t.calendar_manager.on_event_updated.add_listener(update_event_listener);
-		pnapplication.onclose.add_listener(function() {
+		t.calendar_manager.on_event_added.addListener(add_event_listener);
+		t.calendar_manager.on_event_removed.addListener(remove_event_listener);
+		t.calendar_manager.on_event_updated.addListener(update_event_listener);
+		pnapplication.onclose.addListener(function() {
 			if (!t) return;
-			t.calendar_manager.on_event_added.remove_listener(add_event_listener);
-			t.calendar_manager.on_event_removed.remove_listener(remove_event_listener);
-			t.calendar_manager.on_event_updated.remove_listener(update_event_listener);
+			t.calendar_manager.on_event_added.removeListener(add_event_listener);
+			t.calendar_manager.on_event_removed.removeListener(remove_event_listener);
+			t.calendar_manager.on_event_updated.removeListener(update_event_listener);
 		});
 		t._init();
 	});

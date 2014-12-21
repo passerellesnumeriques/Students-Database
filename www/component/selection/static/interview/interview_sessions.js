@@ -49,7 +49,7 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 						t.updateHeader();
 					};
 					if (d.getTime() < new Date().getTime())
-						confirm_dialog("You are creating a session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
+						confirmDialog("You are creating a session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
 							if (yes) doit();
 						});
 					else
@@ -193,14 +193,14 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 		}
 	};
 	this._initListeners = function() {
-		linked_exam_centers.onapplicantsadded.add_listener(function(new_applicants) {
+		linked_exam_centers.onapplicantsadded.addListener(function(new_applicants) {
 			for (var i = 0; i < new_applicants.length; ++i) {
 				t.applicants.push(new_applicants[i]);
 				t._not_assigned.not_assigned.addApplicant(new_applicants[i]);
 			}
 			t.updateHeader();
 		});
-		linked_exam_centers.onapplicantsremoved.add_listener(function(removed_applicants) {
+		linked_exam_centers.onapplicantsremoved.addListener(function(removed_applicants) {
 			for (var i = 0; i < removed_applicants.length; ++i) {
 				t.applicants.remove(removed_applicants[i]);
 				if (removed_applicants[i].interview_session_id == null)
@@ -251,9 +251,9 @@ function ApplicantsListHeader(data_grid) {
 	};
 	
 	var t=this;
-	data_grid.selection_changed.add_listener(function() { t.refresh(); });
-	data_grid.object_added.add_listener(function() { t.refresh(); });
-	data_grid.object_removed.add_listener(function() { t.refresh(); });
+	data_grid.selection_changed.addListener(function() { t.refresh(); });
+	data_grid.object_added.addListener(function() { t.refresh(); });
+	data_grid.object_removed.addListener(function() { t.refresh(); });
 }
 
 function NotAssignedApplicants(interview_sessions, container, can_edit) {
@@ -277,8 +277,8 @@ function NotAssignedApplicants(interview_sessions, container, can_edit) {
 		t._section_not_assigned.header.style.background = t.not_assigned.getList().length > 0 ? "#FF8000" : "";
 	};
 	listener();
-	this.not_assigned.object_added.add_listener(listener);
-	this.not_assigned.object_removed.add_listener(listener);
+	this.not_assigned.object_added.addListener(listener);
+	this.not_assigned.object_removed.addListener(listener);
 	if (can_edit)
 		this.not_assigned.addDropSupport("applicant", function(people_id) {
 			// check applicant before drop
@@ -301,7 +301,7 @@ function NotAssignedApplicants(interview_sessions, container, can_edit) {
 			button.title = "Remove this applicant from this interview center";
 			button.innerHTML = "<img src='/static/selection/common_centers/remove_applicant_from_center.png'/>";
 			button.onclick = function() {
-				confirm_dialog("Are you sure this applicant will not come to this interview center ?", function(yes) {
+				confirmDialog("Are you sure this applicant will not come to this interview center ?", function(yes) {
 					if (yes) interview_sessions.removeApplicantFromCenter(applicant);
 				});
 				return false;
@@ -342,7 +342,7 @@ function NotAssignedApplicants(interview_sessions, container, can_edit) {
 								}
 						};
 						if (session.event.start.getTime() < new Date().getTime()) {
-							confirm_dialog("You are going to assign applicants to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
+							confirmDialog("You are going to assign applicants to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
 								if (!yes) return;
 								doit();
 							});
@@ -355,7 +355,7 @@ function NotAssignedApplicants(interview_sessions, container, can_edit) {
 		});
 		// add remove button
 		not_assigned_header.addSelectionAction("<img src='/static/selection/common_centers/remove_applicant_from_center.png'/> Remove", "action red", "Remove selected applicants from this interview center", function() {
-			confirm_dialog("Are you sure those applicants will not come to this interview center ?", function(yes) {
+			confirmDialog("Are you sure those applicants will not come to this interview center ?", function(yes) {
 				if (yes) {
 					var applicants = t.not_assigned.getSelection();
 					for (var i = 0; i < applicants.length; ++i)
@@ -414,7 +414,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 						t.refresh();
 					};
 					if (d.getTime() < new Date().getTime())
-						confirm_dialog("You set the session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
+						confirmDialog("You set the session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
 							if (yes) doit();
 						});
 					else
@@ -483,7 +483,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 					if (typeof staffs[j] != 'string' && staffs[j].people.id == session.event.attendees[i].people) { staff_list.push(staffs[j]); break; }
 			}
 		this.who = new who_container(wc, staff_list, can_edit, 'interview');
-		this.who.onadded.add_listener(function(people) {
+		this.who.onadded.addListener(function(people) {
 			var a;
 			if (typeof people == 'string') {
 				a = new CalendarEventAttendee(people,calendar_event_role_requested,calendar_event_participation_unknown,false,false);
@@ -493,7 +493,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 			session.event.attendees.push(a);
 			t.refresh();
 		});
-		this.who.onremoved.add_listener(function(people) {
+		this.who.onremoved.addListener(function(people) {
 			if (typeof people == 'string') {
 				for (var i = 0; i < session.event.attendees.length; ++i)
 					if (session.event.attendees[i].people == null && session.event.attendees[i].name == people) {
@@ -521,7 +521,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.header.appendChild(document.createTextNode("How many parallel interviews can be done by those staffs ? "));
 		this.nb_interviews = new field_integer(session.parallel_interviews,can_edit,{min:staffs.length == 0 ? 0 : 1,max:staffs.length,can_be_null:false});
 		this.header.appendChild(this.nb_interviews.getHTMLElement());
-		this.nb_interviews.onchange.add_listener(function() { session.parallel_interviews = t.nb_interviews.getCurrentData(); pnapplication.dataUnsaved("InterviewSessions"); t.refresh(); });
+		this.nb_interviews.onchange.addListener(function() { session.parallel_interviews = t.nb_interviews.getCurrentData(); pnapplication.dataUnsaved("InterviewSessions"); t.refresh(); });
 		this.header.appendChild(document.createElement("BR"));
 		this.header.appendChild(document.createTextNode("With 1 interview done every "));
 		this.span_every_minutes = document.createElement("SPAN");
@@ -542,8 +542,8 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.applicants_list = new applicant_data_grid(content, function(obj) { return obj; },true);
 		this.applicants_list.addDragSupport("applicant", function(obj) { return obj.people.id; });
 		this.applicants_list.addPeopleProfileAction();
-		this.applicants_list.object_added.add_listener(function(){t.refresh();});
-		this.applicants_list.object_removed.add_listener(function(){t.refresh();});
+		this.applicants_list.object_added.addListener(function(){t.refresh();});
+		this.applicants_list.object_removed.addListener(function(){t.refresh();});
 		
 		if (can_edit) {
 			var reschedule_button = document.createElement("BUTTON");
@@ -566,7 +566,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 					message = "This session is in the past. If you remove it, all applicants assigned to it will be marked as not assigned, but may be they already have their results.<br/>Are you sure you want to remove this session ?";
 				else
 					message = "Are you sure you want to remove this session, and unassign all applicants from it ?";
-				confirm_dialog(message, function(yes) {
+				confirmDialog(message, function(yes) {
 					if (yes) interview_sessions.removeSession(session);
 				});
 			};
@@ -591,7 +591,7 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 				};
 				if (session.event.start.getTime() < new Date().getTime()) {
 					// the session is in the past !
-					confirm_dialog("The session is already done. May be some of those applicants already have their results. Are you sure you want to unassign those applicants ?", function(yes) {
+					confirmDialog("The session is already done. May be some of those applicants already have their results. Are you sure you want to unassign those applicants ?", function(yes) {
 						if (yes) doit();
 					});
 				} else

@@ -103,7 +103,7 @@ function filter_organization(data, config, editable) {
 						p.content.appendChild(container);
 					}
 					container.appendChild(s.content);
-					s.onchange.add_listener(function() {
+					s.onchange.addListener(function() {
 						if (s.selected_ids.length == t.config.list.length) {
 							if (cb_nn) cb_nn.checked = "checked";
 						} else {

@@ -183,7 +183,7 @@ sectionFromHTML('section_calendars');
 sectionFromHTML('section_users');
 function searchEvent(uid) {
 	service.json("google","search_event_uid",{uid:uid},function(res) {
-		info_dialog(res);
+		infoDialog(res);
 	});
 }
 <?php } ?>

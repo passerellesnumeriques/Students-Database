@@ -10,7 +10,7 @@ function center_name(container, name, can_edit, title){
 	var t = this;
 	t.table = document.createElement("table");
 	t.onupdate = new Custom_Event();
-	t.onupdate.add_listener(function() {
+	t.onupdate.addListener(function() {
 		if (t._name == name) // didn't change
 			window.pnapplication.dataSaved("SelectionCenterCustomName");
 		else

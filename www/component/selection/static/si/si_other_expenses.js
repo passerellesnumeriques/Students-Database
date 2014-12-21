@@ -14,28 +14,28 @@ function si_other_expenses(section, list, applicant_id, can_edit) {
 		if (can_edit) {
 			var descr = new field_text(item.description, true, {can_be_null:false,min_length:1,max_length:200,min_size:10});
 			td.appendChild(descr.getHTMLElement());
-			descr.onchange.add_listener(function() { item.description = descr.getCurrentData(); });
+			descr.onchange.addListener(function() { item.description = descr.getCurrentData(); });
 		} else
 			td.appendChild(document.createTextNode(item.description)); 
 		tr.appendChild(td = document.createElement("TD"));
 		if (can_edit) {
 			var expense = new field_decimal(item.expense, true, {can_be_null:true,min:0,integer_digits:10,decimal_digits:2});
 			td.appendChild(expense.getHTMLElement());
-			expense.onchange.add_listener(function() { item.expense = expense.getCurrentData(); });
+			expense.onchange.addListener(function() { item.expense = expense.getCurrentData(); });
 		} else if (item.expense)
 			td.appendChild(document.createTextNode(item.expense)); 
 		tr.appendChild(td = document.createElement("TD"));
 		if (can_edit) {
 			var expense_freq = new field_text(item.expense_freq, true, {can_be_null:true,max_length:25,min_size:5});
 			td.appendChild(expense_freq.getHTMLElement());
-			expense_freq.onchange.add_listener(function() { item.expense_freq = expense_freq.getCurrentData(); });
+			expense_freq.onchange.addListener(function() { item.expense_freq = expense_freq.getCurrentData(); });
 		} else if (item.expense_freq)
 			td.appendChild(document.createTextNode(item.expense_freq)); 
 		tr.appendChild(td = document.createElement("TD"));
 		if (can_edit) {
 			var comment = new field_text(item.comment, true, {can_be_null:true,max_length:200,min_size:10});
 			td.appendChild(comment.getHTMLElement());
-			comment.onchange.add_listener(function() { item.comment = comment.getCurrentData(); });
+			comment.onchange.addListener(function() { item.comment = comment.getCurrentData(); });
 		} else if (item.comment)
 			td.appendChild(document.createTextNode(item.comment));
 		if (can_edit) {

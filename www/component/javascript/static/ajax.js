@@ -66,7 +66,7 @@ window.ajax = {
 		catch (e) {
 			// error opening the AJAX request
 			if (window == window.top) {
-				log_exception(e, "while creating AJAX request to "+url.toString()); 
+				logException(e, "while creating AJAX request to "+url.toString()); 
 			} else {
 				// try on top
 				window.top.ajax.call(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, override_response_mime_type);
@@ -119,7 +119,7 @@ window.ajax = {
 	    try {
 	    	xhr.send(content_data);
 	    } catch (e) {
-	    	log_exception(e, "Sending AJAX request to "+url);
+	    	logException(e, "Sending AJAX request to "+url);
 	    	error_handler(e);
 	    }
 	},
@@ -159,7 +159,7 @@ window.ajax = {
 			if (error_handler)
 				error_handler(error);
 			else
-				error_dialog(error);
+				errorDialog(error);
 			handler(null);
 		};
 		ajax.post(url, data, eh, function(xhr) {
@@ -229,7 +229,7 @@ window.ajax = {
 			if (error_handler)
 				error_handler(error);
 			else
-				error_dialog(error);
+				errorDialog(error);
 			handler(null);
 		};
 		ajax.call("POST", url, data_type, data, eh, function(xhr) {

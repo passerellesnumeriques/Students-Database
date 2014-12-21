@@ -105,11 +105,11 @@ function house(container, house, can_edit, onremove) {
 		td.appendChild(document.createTextNode(" Cost ? "));
 		this.house_status_cost = new field_integer(house.house_cost,true,{can_be_null:true,min:0});
 		td.appendChild(this.house_status_cost.getHTMLElement());
-		this.house_status_cost.onchange.add_listener(function(f) { house.house_cost = f.getCurrentData(); });
+		this.house_status_cost.onchange.addListener(function(f) { house.house_cost = f.getCurrentData(); });
 		td.appendChild(document.createTextNode(" Comment: "));
 		this.house_comment = new field_text(house.house_comment, true, {can_be_null:true,max_length:200});
 		td.appendChild(this.house_comment.getHTMLElement());
-		this.house_comment.onchange.add_listener(function(f) { house.house_comment = f.getCurrentData(); });
+		this.house_comment.onchange.addListener(function(f) { house.house_comment = f.getCurrentData(); });
 	} else {
 		var s = house.house_status ? house.house_status : "";
 		if (house.house_cost) {
@@ -139,11 +139,11 @@ function house(container, house, can_edit, onremove) {
 		td.appendChild(document.createTextNode(" Cost ? "));
 		this.lot_status_cost = new field_integer(house.lot_cost,true,{can_be_null:true,min:0});
 		td.appendChild(this.lot_status_cost.getHTMLElement());
-		this.lot_status_cost.onchange.add_listener(function(f) { house.lot_cost = f.getCurrentData(); });
+		this.lot_status_cost.onchange.addListener(function(f) { house.lot_cost = f.getCurrentData(); });
 		td.appendChild(document.createTextNode(" Comment: "));
 		this.lot_comment = new field_text(house.lot_comment, true, {can_be_null:true,max_length:200});
 		td.appendChild(this.lot_comment.getHTMLElement());
-		this.lot_comment.onchange.add_listener(function(f) { house.lot_comment = f.getCurrentData(); });
+		this.lot_comment.onchange.addListener(function(f) { house.lot_comment = f.getCurrentData(); });
 	} else {
 		var s = house.lot_status ? house.lot_status : "";
 		if (house.lot_cost) {
@@ -191,7 +191,7 @@ function house(container, house, can_edit, onremove) {
 		div.appendChild(document.createElement("BR"));
 		this.roof_comment = new field_text(house.roof_comment, true, {can_be_null:true,max_length:200});
 		div.appendChild(this.roof_comment.getHTMLElement());
-		this.roof_comment.onchange.add_listener(function(f) { house.roof_comment = f.getCurrentData(); });
+		this.roof_comment.onchange.addListener(function(f) { house.roof_comment = f.getCurrentData(); });
 	} else {
 		div.appendChild(document.createTextNode(house.roof_condition ? house.roof_condition : "Unknown"));
 		if (house.roof_comment) div.appendChild(document.createTextNode(", Comment: "+house.roof_comment));
@@ -230,7 +230,7 @@ function house(container, house, can_edit, onremove) {
 		div.appendChild(document.createElement("BR"));
 		this.walls_comment = new field_text(house.walls_comment, true, {can_be_null:true,max_length:200});
 		div.appendChild(this.walls_comment.getHTMLElement());
-		this.walls_comment.onchange.add_listener(function(f) { house.walls_comment = f.getCurrentData(); });
+		this.walls_comment.onchange.addListener(function(f) { house.walls_comment = f.getCurrentData(); });
 	} else {
 		div.appendChild(document.createTextNode(house.walls_condition ? house.walls_condition : "Unknown"));
 		if (house.walls_comment) div.appendChild(document.createTextNode(", Comment: "+house.walls_comment));
@@ -270,7 +270,7 @@ function house(container, house, can_edit, onremove) {
 		div.appendChild(document.createElement("BR"));
 		this.floor_comment = new field_text(house.floor_comment, true, {can_be_null:true,max_length:200});
 		div.appendChild(this.floor_comment.getHTMLElement());
-		this.floor_comment.onchange.add_listener(function(f) { house.floor_comment = f.getCurrentData(); });
+		this.floor_comment.onchange.addListener(function(f) { house.floor_comment = f.getCurrentData(); });
 	} else {
 		div.appendChild(document.createTextNode(house.floor_condition ? house.floor_condition : "Unknown"));
 		if (house.floor_comment) div.appendChild(document.createTextNode(", Comment: "+house.floor_comment));

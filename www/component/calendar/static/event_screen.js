@@ -149,7 +149,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 				});
 			if (this.removable)
 				popup.addIconTextButton(theme.icons_16.remove, "Remove this event", 'remove', function() {
-					confirm_dialog("Are you sure you want to remove this event ?", function(yes) {
+					confirmDialog("Are you sure you want to remove this event ?", function(yes) {
 						if (!yes) return;
 						t.original_calendar.removeEvent(ev);
 						popup.close();
@@ -314,7 +314,7 @@ function event_screen_what(container, title, description, editable) {
 		div.style.fontWeight = "bold";
 		if (editable) {
 			var io = new InputOver(title, "Enter a title for this event");
-			io.onchange.add_listener(function(io) { t.title = io.input.value; });
+			io.onchange.addListener(function(io) { t.title = io.input.value; });
 			div.appendChild(io.container);
 		} else {
 			div.appendChild(document.createTextNode(this.title));
@@ -607,7 +607,7 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 				}
 				layout.changed(from_time_span.parentNode);
 			};
-			from_date.onchange.add_listener(function() {
+			from_date.onchange.addListener(function() {
 				var d = from_date.getCurrentData();
 				if (!d) return;
 				to_date.setMinimum(d);
@@ -615,17 +615,17 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 				d = parseSQLDate(d);
 				t.start.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
 			});
-			to_date.onchange.add_listener(function() {
+			to_date.onchange.addListener(function() {
 				var d = to_date.getCurrentData();
 				if (!d) return;
 				from_date.setMaximum(d);
 				d = parseSQLDate(d);
 				t.end.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
 			});
-			from_time.onchange.add_listener(function() {
+			from_time.onchange.addListener(function() {
 				t.start.setHours(0,from_time.getCurrentMinutes(),0,0);
 			});
-			to_time.onchange.add_listener(function() {
+			to_time.onchange.addListener(function() {
 				t.end.setHours(0,to_time.getCurrentMinutes(),0,0);
 			});
 			var getFrequency = function() {
@@ -707,7 +707,7 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 			repeat_until_count.onchange = function() { getFrequency(); };
 			repeat_count.onchange = function() { getFrequency(); };
 			repeat_until_date.onchange = function() { getFrequency(); };
-			repeat_until.onchange.add_listener(function() { getFrequency(); });
+			repeat_until.onchange.addListener(function() { getFrequency(); });
 			
 			t.populate = function(event) {
 				var from = parseSQLDate(from_date.getCurrentData());

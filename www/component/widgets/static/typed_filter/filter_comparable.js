@@ -57,13 +57,13 @@ function filter_comparable(data, config, editable) {
 		t.field2.getHTMLElement().style.verticalAlign = "bottom";
 		t.span_to.style.verticalAlign = "bottom";
 		layout.changed(t.element);
-		t.field1.onchange.add_listener(function() {
+		t.field1.onchange.addListener(function() {
 			data.value = t.field1.getCurrentData();
 			if (typeof t.field2.setMinimum != 'undefined')
 				t.field2.setMinimum(data.value);
 			t.onchange.fire(t);
 		});
-		t.field2.onchange.add_listener(function() {
+		t.field2.onchange.addListener(function() {
 			data.value_to = t.field2.getCurrentData();
 			if (typeof t.field1.setMaximum != 'undefined')
 				t.field1.setMaximum(data.value_to);

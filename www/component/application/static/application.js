@@ -330,8 +330,8 @@ function initPNApplication() {
 			autoDisableSaveButton: function(button) {
 				if (typeof button == 'string') button = document.getElementById(button);
 				button.disabled = this.hasDataUnsaved() ? "" : "disabled"; 
-				this.ondatatosave.add_listener(function() { button.disabled = ""; });
-				this.onalldatasaved.add_listener(function() { button.disabled = "disabled"; });
+				this.ondatatosave.addListener(function() { button.disabled = ""; });
+				this.onalldatasaved.addListener(function() { button.disabled = "disabled"; });
 			}
 		};
 		var f = function() {

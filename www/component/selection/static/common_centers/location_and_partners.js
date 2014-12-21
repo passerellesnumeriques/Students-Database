@@ -326,7 +326,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 					else
 						data.selected.push(t.partners[i].organization.id);
 				}
-				window.top.popup_frame("/static/contact/organization.png", "Partners", "/dynamic/contact/page/organizations?creator=Selection", data, 95, 95, function(frame,pop) {
+				window.top.popupFrame("/static/contact/organization.png", "Partners", "/dynamic/contact/page/organizations?creator=Selection", data, 95, 95, function(frame,pop) {
 					pop.addOkCancelButtons(function(){
 						var win = getIFrameWindow(frame);
 						var selected = win.selected;
@@ -429,9 +429,9 @@ function partnerRow(table, partner, editable, onchange) {
 		window.top.datamodel.registerCellText(window, "Organization", "name", partner.organization.id, name_node);
 		var t=this;
 		td.onclick = function(){
-			window.top.popup_frame("/static/contact/organization.png","Organization Profile","/dynamic/contact/page/organization_profile?organization="+partner.organization.id+"&onready=orgready", null, null, null, function(frame) {
+			window.top.popupFrame("/static/contact/organization.png","Organization Profile","/dynamic/contact/page/organization_profile?organization="+partner.organization.id+"&onready=orgready", null, null, null, function(frame) {
 				frame.orgready = function(org) {
-					org.onchange.add_listener(function () {
+					org.onchange.addListener(function () {
 						if (onchange) onchange(org.getStructure(), partner);
 						t._refresh();
 					});
@@ -457,7 +457,7 @@ function partnerRow(table, partner, editable, onchange) {
 				div.people_id = contact.people.id;
 				div.title = "Click to see details of this contact";
 				div.onclick = function() {
-					window.top.popup_frame("/static/people/profile_16.png", "Profile", "/dynamic/people/page/profile?people="+this.people_id, null, 95, 95);
+					window.top.popupFrame("/static/people/profile_16.png", "Profile", "/dynamic/people/page/profile?people="+this.people_id, null, 95, 95);
 				};
 				var span_fn = document.createElement("SPAN"); div.appendChild(span_fn);
 				span_fn.className = "contact_point_name";

@@ -6,17 +6,17 @@ function Point2D(x,y) {
 	this.y = y;
 
 	/** 
-	 * @method Point2D#getDistanceSquared
-	 * @param {Point2D} pt
+	 * square of the distance between this point and the given point
+	 * @param {Point2D} pt the other point
 	 * @returns {Number} the square of the distance between this point and the given point
 	 */
 	this.getDistanceSquared = function(pt) {
 		return (pt.x-this.x)*(pt.x-this.x)+(pt.y-this.y)*(pt.y-this.y);
 	};
 	/** 
-	 * @method Point2D#getDistance
-	 * @param {Point2D} pt
-	 * @returns {Number} the the distance between this point and the given point
+	 * the distance between this point and the given point
+	 * @param {Point2D} pt the other point
+	 * @returns {Number} the distance between this point and the given point
 	 */
 	this.getDistance = function(pt) {
 		return Math.sqrt(this.getDistanceSquared(pt));

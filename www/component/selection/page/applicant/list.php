@@ -191,7 +191,7 @@ class page_applicant_list extends SelectionPage {
 						update_batch.style.fontWeight = "bold";
 						update_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Update Batch <?php echo toHTML($batch["name"]); ?> with final list";
 						update_batch.onclick = function() {
-							popup_frame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch=<?php echo $batch_id;?>", null, null, null, function(frame,popup) {
+							popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch=<?php echo $batch_id;?>", null, null, null, function(frame,popup) {
 								frame.confirmed = function() {
 									var locker = lock_screen(null, "Updating batch of students...");
 									service.json("selection","update_batch",{batch:<?php echo $batch_id;?>},function(res) {
@@ -206,7 +206,7 @@ class page_applicant_list extends SelectionPage {
 						unlink_batch.style.fontWeight = "bold";
 						unlink_batch.innerHTML = "<img src='"+theme.icons_16.unlink+"'/> Unlink this selection with Batch <?php echo toHTML($batch["name"]); ?>";
 						unlink_batch.onclick = function() {
-							confirm_dialog("Are you sure you want to unlink this selection process with this Batch ?<br/>All the applicants who were already included in the batch will be removed from the batch.",function(yes) {
+							confirmDialog("Are you sure you want to unlink this selection process with this Batch ?<br/>All the applicants who were already included in the batch will be removed from the batch.",function(yes) {
 								if (!yes) return;
 								service.json("selection","unlink_batch",{},function(res) {
 									if (res) location.reload();
@@ -220,7 +220,7 @@ class page_applicant_list extends SelectionPage {
 						create_batch.style.fontWeight = "bold";
 						create_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Create a Batch of students with final list";
 						create_batch.onclick = function() {
-							popup_frame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Create Batch from Selection", "/dynamic/selection/page/create_batch?ondone=reloadPage", null, null, null, function(frame,popup) {
+							popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Create Batch from Selection", "/dynamic/selection/page/create_batch?ondone=reloadPage", null, null, null, function(frame,popup) {
 								frame.reloadPage = function() {
 									location.reload();
 								};
@@ -452,7 +452,7 @@ class page_applicant_list extends SelectionPage {
 					<?php } ?>
 
 					list.makeRowsClickable(function(row){
-						window.top.popup_frame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id)<?php if ($profile_page<>null) echo "+'&page=".urlencode($profile_page)."'";?>, {sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}}, 95, 95); 
+						window.top.popupFrame('/static/selection/applicant/applicant_16.png', 'Applicant', "/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id)<?php if ($profile_page<>null) echo "+'&page=".urlencode($profile_page)."'";?>, {sub_models:{SelectionCampaign:<?php echo PNApplication::$instance->selection->getCampaignId();?>}}, 95, 95); 
 					});
 
 					<?php 
@@ -504,17 +504,17 @@ class page_applicant_list extends SelectionPage {
 			});
 		}
 		function assignExamCenter(button) {
-			popup_frame("/static/selection/exam/exam_center_16.png", "Assign applicants to an exam center", "/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
+			popupFrame("/static/selection/exam/exam_center_16.png", "Assign applicants to an exam center", "/dynamic/selection/page/exam/assign_applicants_to_center?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
 				frame.refreshList = reload_list;
 			});
 		}
 		function assignInterviewCenter(button) {
-			popup_frame("/static/selection/interview/interview_16.png", "Assign applicants to an interview center", "/dynamic/selection/page/interview/assign_applicants_to_center?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
+			popupFrame("/static/selection/interview/interview_16.png", "Assign applicants to an interview center", "/dynamic/selection/page/interview/assign_applicants_to_center?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
 				frame.refreshList = reload_list;
 			});
 		}
 		function excludeStudents() {
-			popup_frame(null, "Exclude applicants from the selection process", "/dynamic/selection/page/applicant/exclude?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
+			popupFrame(null, "Exclude applicants from the selection process", "/dynamic/selection/page/applicant/exclude?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
 				frame.refreshList = reload_list;
 			});
 		}
@@ -579,7 +579,7 @@ class page_applicant_list extends SelectionPage {
 			});
 		}
 		function ApplicantNo() {
-			popup_frame(null, "Applicants declined", "/dynamic/selection/page/applicant/declined?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
+			popupFrame(null, "Applicants declined", "/dynamic/selection/page/applicant/declined?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
 				frame.refreshList = reload_list;
 			});
 		}

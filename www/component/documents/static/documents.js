@@ -138,7 +138,7 @@ window.top.pndocuments = {
 				service.json("documents","lock?id="+doc.id,null,function(res) {
 					if (!res) { callback(true); return; }
 					if (typeof res.locked != 'undefined') {
-						error_dialog("This file is currently edited by "+res.locked+".");
+						errorDialog("This file is currently edited by "+res.locked+".");
 						callback(true);
 						return;
 					}
@@ -146,7 +146,7 @@ window.top.pndocuments = {
 				});
 			};
 			if (files[0].name == doc.name) { lock_and_start(); return; }
-			confirm_dialog("The file <i>"+files[0].name+"</i> does not match with current name <i>"+doc.name+"</i>. Are you sure this is the correct file ?", function(yes){
+			confirmDialog("The file <i>"+files[0].name+"</i> does not match with current name <i>"+doc.name+"</i>. Are you sure this is the correct file ?", function(yes){
 				if (!yes) { callback(true); return; }
 				lock_and_start();
 			});
@@ -192,7 +192,7 @@ window.top.pndocuments = {
 		window.top.pndocuments.connect(function(port) {
 			if (port == -1) {
 				unlock_screen(locker);
-				error_dialog("You need the software <b>PN Document Opener</b> to open or edit files.<br/>You can download this software <a href='http://sourceforge.net/projects/studentsdatabase/files/installPNDocumentOpener.exe/download' target='_blank'>here</a><br/><br/>If you already installed it, please launch it.<br/><br/>Without this software, you can still download and upload files.");
+				errorDialog("You need the software <b>PN Document Opener</b> to open or edit files.<br/>You can download this software <a href='http://sourceforge.net/projects/studentsdatabase/files/installPNDocumentOpener.exe/download' target='_blank'>here</a><br/><br/>If you already installed it, please launch it.<br/><br/>Without this software, you can still download and upload files.");
 				return;
 			}
 			unlock_screen(locker);
@@ -203,7 +203,7 @@ window.top.pndocuments = {
 window.top.require("upload.js");
 window.top.require("application.js",function() {
 	if (!window.top.pnapplication) return;
-	window.top.pnapplication.onlogout.add_listener(function(){
+	window.top.pnapplication.onlogout.addListener(function(){
 		window.top.pndocuments._connected_port = -1;
 		window.top.pndocuments.opener = null;
 		window.top.pndocuments._connected_port = -1;
@@ -343,7 +343,7 @@ AttachedDocuments.prototype = {
 					});
 				if (t.can_add_remove)
 					menu.addIconItem(theme.icons_16.remove, "Remove file", function() {
-						confirm_dialog("Are you sure to remove file "+doc.name+" ?", function(yes) {
+						confirmDialog("Are you sure to remove file "+doc.name+" ?", function(yes) {
 							if (!yes) return;
 							service.json("documents","remove",{id:doc.id},function(res) {
 								if (res) t.removeDocument(doc);

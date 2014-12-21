@@ -378,20 +378,12 @@ class selection extends Component {
 			if (isset($configs["generate_applicant_id"])) {
 				$res = SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DESCRIBE `Applicant_".$this->getCampaignId()."` `applicant_id`");
 				$descr = SQLQuery::getDataBaseAccessWithoutSecurity()->nextRow($res);
-				if ($configs["generate_applicant_id"] == "true") {
-					if ($descr["Extra"] == "") {
-						require_once("component/data_model/Model.inc");
-						$t = DataModel::get()->internalGetTable("Applicant");
-						$col = $t->internalGetColumnFor("applicant_id", $this->getCampaignId());
-						SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `Applicant_".$this->getCampaignId()."` CHANGE `applicant_id` ".$col->get_sql()." AUTO_INCREMENT");
-					}
-				} else {
-					if ($descr["Extra"] == "auto_increment") {
-						require_once("component/data_model/Model.inc");
-						$t = DataModel::get()->internalGetTable("Applicant");
-						$col = $t->internalGetColumnFor("applicant_id", $this->getCampaignId());
-						SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `Applicant_".$this->getCampaignId()."` CHANGE `applicant_id` ".$col->get_sql());
-					}
+				if (($configs["generate_applicant_id"] == "true" && $descr["Extra"] == null) ||
+					($configs["generate_applicant_id"] <> "true" && $descr["Extra"] == "auto_increment")) {
+					require_once("component/data_model/Model.inc");
+					$t = DataModel::get()->internalGetTable("Applicant");
+					$col = $t->internalGetColumnFor("applicant_id", $this->getCampaignId());
+					SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `Applicant_".$this->getCampaignId()."` CHANGE `applicant_id` ".$col->get_sql(SQLQuery::getDataBaseAccessWithoutSecurity(), "Applicant_".$this->getCampaignId()));
 				}
 			}
 			// apply maximum age

@@ -39,7 +39,7 @@ field_addresses.prototype._createEditableTogether = function(data) {
 	var t=this;
 	require("addresses.js",function() {
 		t.control = new addresses(t.element, false, data.type, data.type_id, valueCopy(data.addresses,10), true, true, true);
-		t.control.onchange.add_listener(function() { t._data.addresses = t.originalData.addresses = valueCopy(t.control.getAddresses(),10); });
+		t.control.onchange.addListener(function() { t._data.addresses = t.originalData.addresses = valueCopy(t.control.getAddresses(),10); });
 	});
 	this.addData = function(new_data) {
 		var finalize = function(address) {
@@ -105,7 +105,7 @@ field_addresses.prototype._createReadOnlyTogether = function(data) {
  */
 field_addresses.prototype._createEditableAddressType = function(data) {
 	window.top.sub_field_registry.register(window, this);
-	this.onchange.add_listener(function(f){
+	this.onchange.addListener(function(f){
 		window.top.sub_field_registry.changed(window, f);
 	});
 	this._setData = function(data) {
@@ -167,7 +167,7 @@ field_addresses.prototype._createEditableAddressType = function(data) {
  */
 field_addresses.prototype._createReadOnlyAddressType = function(data) {
 	window.top.sub_field_registry.register(window, this);
-	this.onchange.add_listener(function(f){
+	this.onchange.addListener(function(f){
 		window.top.sub_field_registry.changed(window, f);
 	});
 	this._setData = function(data) {
@@ -198,7 +198,7 @@ field_addresses.prototype._createAddressDivision = function(data, sub_division_i
 		});
 	});
 	window.top.sub_field_registry.register(window, this);
-	this.onchange.add_listener(function(f){
+	this.onchange.addListener(function(f){
 		window.top.sub_field_registry.changed(window, f);
 	});
 	this._setData = function(data) {

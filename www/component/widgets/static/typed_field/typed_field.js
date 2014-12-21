@@ -165,9 +165,9 @@ typed_field.prototype = {
 		},function(data){
 			t._data = t._setData(data);
 		},function(listener) {
-			t.onchange.add_listener(listener);
+			t.onchange.addListener(listener);
 		},function(listener) {
-			t.onchange.remove_listener(listener);
+			t.onchange.removeListener(listener);
 		});
 	},
 	unregister_datamodel_cell: function() {
@@ -180,9 +180,9 @@ typed_field.prototype = {
 		},function(data){
 			t._data = t._setData(data);
 		},function(listener) {
-			t.onchange.add_listener(listener);
+			t.onchange.addListener(listener);
 		}, function(listener) {
-			t.onchange.remove_listener(listener);
+			t.onchange.removeListener(listener);
 		});
 	},
 	unregister_datamodel_datadisplay: function() {
@@ -246,5 +246,5 @@ if (!window.top.sub_field_registry) {
 			return list;
 		}
 	};
-	window.top.pnapplication.onwindowclosed.add_listener(function(c) {c.top.sub_field_registry._clean(c.win); });
+	window.top.pnapplication.onwindowclosed.addListener(function(c) {c.top.sub_field_registry._clean(c.win); });
 }

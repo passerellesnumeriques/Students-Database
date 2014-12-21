@@ -95,7 +95,7 @@ function linked_exam_centers(container, all_centers, already_linked_ids, linked_
 				var t=this.t;
 				var tr=this.tr;
 				var twin = window;
-				confirm_dialog("If you unlink an Exam Center, all its associated applicants will be removed from the interview center.<br/>Are you sure you want to do this ?", function(yes) {
+				confirmDialog("If you unlink an Exam Center, all its associated applicants will be removed from the interview center.<br/>Are you sure you want to do this ?", function(yes) {
 					if (!yes) return;
 					if (tr.applicants_list)
 						t.onapplicantsremoved.fire(tr.applicants_list);
@@ -113,7 +113,7 @@ function linked_exam_centers(container, all_centers, already_linked_ids, linked_
 		button.title = "Open Exam Center profile";
 		td.appendChild(button);
 		button.onclick = function() {
-			window.top.popup_frame("/static/selection/exam/exam_center_16.png","Exam Center","/dynamic/selection/page/exam/center_profile?id="+center_id+"&readonly=true",null,95,95);
+			window.top.popupFrame("/static/selection/exam/exam_center_16.png","Exam Center","/dynamic/selection/page/exam/center_profile?id="+center_id+"&readonly=true",null,95,95);
 		};
 
 		if (can_edit) {

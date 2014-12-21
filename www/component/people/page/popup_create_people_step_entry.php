@@ -100,7 +100,7 @@ class page_popup_create_people_step_entry extends Page {
 					postData("popup_create_people_step_check", data, window);
 				});
 				popup.addCancelButton(function () {
-					confirm_dialog("Cancel creation ?",function(yes){
+					confirmDialog("Cancel creation ?",function(yes){
 						if (yes) {
 							<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]."();"; ?>
 							popup.onclose = null;

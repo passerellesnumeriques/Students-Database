@@ -110,7 +110,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 					return text;
 				}
 				else{
-					error_dialog("You must enter at least one visible character");
+					errorDialog("You must enter at least one visible character");
 					return this.contact;
 				}
 			};
@@ -129,12 +129,12 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	};
 	
 	/**
-	 * Creates the input_dialog displayed when clicking on the add contact button
+	 * Creates the inputDialog displayed when clicking on the add contact button
 	 * The input the dialog will check that the given data is visible
-	 * The input_dialog created will call the createContact method
+	 * The inputDialog created will call the createContact method
 	 */
 	this.dialogAddContact = function (){
-		input_dialog(theme.icons_16.question,
+		inputDialog(theme.icons_16.question,
 			"Add a new "+contact_type_name,
 			"Enter the new "+contact_type_name,
 			"",
@@ -198,7 +198,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		remove_button.onclick = function(ev){
 			if (edit)
 				edit.editable_field.unedit();
-			confirm_dialog("Are you sure you want to remove this "+contact_type_name+"?", function(text){if(text) t.removeContact(contact);});
+			confirmDialog("Are you sure you want to remove this "+contact_type_name+"?", function(text){if(text) t.removeContact(contact);});
 			stopEventPropagation(ev);
 			return false;
 		};

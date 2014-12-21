@@ -143,7 +143,7 @@ field_parent.prototype._create = function(data) {
 				input.title = error ? error : "";
 			};
 			window.top.sub_field_registry.register(window, this);
-			this.onchange.add_listener(function(f){
+			this.onchange.addListener(function(f){
 				window.top.sub_field_registry.changed(window, f);
 			});
 		}

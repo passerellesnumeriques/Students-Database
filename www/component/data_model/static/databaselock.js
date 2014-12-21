@@ -98,7 +98,7 @@ function initDatabaselock() {
 		return;
 	}
 	var w = window;
-	window.pnapplication.onclose.add_listener(function() {
+	window.pnapplication.onclose.addListener(function() {
 		w.databaselock._closeWindow();
 		w = null;
 	});

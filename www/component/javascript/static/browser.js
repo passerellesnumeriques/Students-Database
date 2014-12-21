@@ -695,7 +695,7 @@ function addJavascript(url, onload, additional_attributes) {
 		return _scripts_loaded[p];
 	}
 	if (typeof _scripts_loading[p] != 'undefined') {
-		if (onload) _scripts_loading[p].data.add_listener(onload);
+		if (onload) _scripts_loading[p].data.addListener(onload);
 		return _scripts_loading[p];
 	}
 	if (document.readyState != "complete") {
@@ -720,7 +720,7 @@ function addJavascript(url, onload, additional_attributes) {
 				// already using data ?? should be in the _scripts_loading...
 				_scripts_loading[p] = e;
 				if (onload)
-					e.data.add_listener(onload);
+					e.data.addListener(onload);
 				return e;
 			}
 			// didn't use this way...
@@ -732,8 +732,8 @@ function addJavascript(url, onload, additional_attributes) {
 			}
 			e.data = new Custom_Event();
 			_scripts_loading[p] = e;
-			if (onload) e.data.add_listener(onload);
-			if (e.onload) e.data.add_listener(e.onload);
+			if (onload) e.data.addListener(onload);
+			if (e.onload) e.data.addListener(e.onload);
 			e.onload = function() { if (_scripts_loading) delete _scripts_loading[p]; if (_scripts_loaded) _scripts_loaded[p]=e; this.data.fire(); this.data.cleanup(); this.data = null; };
 			return e;
 		}
@@ -744,7 +744,7 @@ function addJavascript(url, onload, additional_attributes) {
 		for (var name in additional_attributes)
 			s[name] = additional_attributes[name];
 	s.data = new Custom_Event();
-	if (onload) s.data.add_listener(onload);
+	if (onload) s.data.addListener(onload);
 	s.type = "text/javascript";
 	s.onload = function() { if (_scripts_loading) delete _scripts_loading[p]; if (_scripts_loaded) _scripts_loaded[p]=s; this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; s.onload = null; s.onreadystatechange = null; };
 	//s.onerror = function(ev) { alert("Error loading javascript file: "+this.src); for (var name in ev) alert("Event: "+name+"="+ev[name]); };

@@ -102,7 +102,7 @@ window.layout = {
 		}
 		if (!element.id) element.id = generateID();
 		layout._changes.push(element);
-		layout._layout_needed();
+		layout._layoutNeeded();
 	},
 	
 	/** Force to re-compute the layout */
@@ -138,7 +138,7 @@ window.layout = {
 	/** Ask to resume processing the layout, after a previous call to pause */
 	resume: function() {
 		this._paused = false;
-		this._layout_needed();
+		this._layoutNeeded();
 	},
 	/** Indicates if the layout is processing or not
 	 * @returns {Boolean} true if the layout is not processing
@@ -150,7 +150,7 @@ window.layout = {
 	/** counter to know if we are getting a lot of layout processing in a short time */
 	_layouts_short_time: 0,
 	/** Called when we will need to process the layout */
-	_layout_needed: function() {
+	_layoutNeeded: function() {
 		if (layout._process_timeout != null || this._paused) return;
 		var f = function() {
 			if (window.closing) return;
@@ -273,7 +273,9 @@ window.layout = {
 		}
 		return leaves;
 	},
-	/** Process the listeners of inner element changed */
+	/** Process the listeners of inner element changed
+	 * @param {Array} elements list of elements which have been changed: first call this is the leaves, then we go to the parents and so on...
+	 */
 	_processInsideChanged: function(elements) {
 		var parents = [];
 		var parents_ids = {};
@@ -472,7 +474,7 @@ window.layout = {
 	/** Timeout used to fire processing */
 	_process_steps_timeout: null,
 	/** Process the dom modifications and layout reading listeners */
-	_process_steps: function() {
+	_processSteps: function() {
 		if (this._process_steps_timeout) return;
 		this._process_steps_timeout = setTimeout(function() {
 			if (window.closing || !layout) return;
@@ -490,7 +492,7 @@ window.layout = {
 					list[i]();
 			}
 			if (layout._dom_modifications.length > 0 || layout._layout_reading.length > 0)
-				layout._process_steps();
+				layout._processSteps();
 		},1);
 	},
 	
@@ -499,7 +501,7 @@ window.layout = {
 	 * @param {Function} step2_layout_reading step 2
 	 * @param {Function} step3_dom_modification step 3
 	 */
-	three_steps_process: function(step1_dom_modification, step2_layout_reading, step3_dom_modification) {
+	threeStepsProcess: function(step1_dom_modification, step2_layout_reading, step3_dom_modification) {
 		this._dom_modifications.push(function() {
 			var r1 = step1_dom_modification();
 			layout._layout_reading.push(function() {
@@ -507,18 +509,18 @@ window.layout = {
 				layout._dom_modifications.push(function() { step3_dom_modification(r2); });
 			});
 		});
-		this._process_steps();
+		this._processSteps();
 	},
 	/** Functionality needing 2 steps to process. See function modifyDOM for more info.
 	 * @param {Function} step1_layout_reading step 1
 	 * @param {Function} step2_dom_modification step 2
 	 */
-	two_steps_process: function(step1_layout_reading, step2_dom_modification) {
+	twoStepsProcess: function(step1_layout_reading, step2_dom_modification) {
 		this._layout_reading.push(function() {
 			var r1 = step1_layout_reading();
 			layout._dom_modifications.push(function() { step2_dom_modification(r1); });
 		});
-		this._process_steps();
+		this._processSteps();
 	},
 	/** When working on the DOM, what can make the performance very poor is the alternance between modifying the DOM
 	 * and styles, and reading layout information (i.e. clientWidth, scrollHeight, style...).. This is because each time
@@ -532,14 +534,14 @@ window.layout = {
 	 */
 	modifyDOM: function(handler) {
 		this._dom_modifications.push(handler);
-		this._process_steps();
+		this._processSteps();
 	},
 	/** See modifyDOM for more exlaination
 	 * @param {Function} handler function that will read layout information without modifying anything
 	 */
 	readLayout: function(handler) {
 		this._layout_reading.push(handler);
-		this._process_steps();
+		this._processSteps();
 	},
 	
 	/** Cleanup before unloading page, and avoid memory leaks */
@@ -564,11 +566,14 @@ window.to_cleanup.push(layout);
 
 // fire layout when an image is loaded and when window size change
 
+/** @no_doc */
 var _resize_triggered_on_images_loaded = false;
-var _all_images_loaded_timeout = null;
-function _all_images_loaded() {
+/** @no_doc */
+var _allImagesLoaded_timeout = null;
+/** Check if there is still remaining images to be loaded */
+function _allImagesLoaded() {
 	if (window.closing) return;
-	_all_images_loaded_timeout = null;
+	_allImagesLoaded_timeout = null;
 	var img = document.getElementsByTagName("IMG");
 	for (var i = 0; i < img.length; ++i) {
 		if (img[i].complete || img[i].height != 0) continue;
@@ -583,20 +588,22 @@ function _all_images_loaded() {
 		},10);
 	}
 }
-function _init_images() {
+/** Check all images on the page, and listen event onload for the ones not yet loaded */
+function _initImages() {
 	var img = document.getElementsByTagName("IMG");
 	for (var i = 0; i < img.length; ++i) {
 		img[i]._layout_done = true;
 		listenEvent(img[i],'load',function() {
 			if (window.closing) return;
 			if (!layout) return;
-			if (_all_images_loaded_timeout) return;
-			_all_images_loaded_timeout = setTimeout(_all_images_loaded,10);
+			if (_allImagesLoaded_timeout) return;
+			_allImagesLoaded_timeout = setTimeout(_allImagesLoaded,10);
 		});
 	}
 }
 
-function _layout_auto() {
+/** Called with regular interval to check if images may have change the layout */
+function _layoutAuto() {
 	// due to scroll bars, and flex box model, which can resize elements without notice, we re-check regularly
 	/*for (var i = 0; i < layout._element_size_listeners.length; ++i) {
 		var e = layout._element_size_listeners[i].element;
@@ -636,19 +643,22 @@ function _layout_auto() {
 	else timing = 10000;
 	if (_layout_interval_time != timing) {
 		clearInterval(_layout_interval);
-		_layout_interval = setInterval(_layout_auto, timing);
+		_layout_interval = setInterval(_layoutAuto, timing);
 		_layout_interval_time = timing;
 	}
 }
+/** @no_doc */
 var _layout_interval_time = 5000;
-var _layout_interval = setInterval(_layout_auto,5000);
+/** @no_doc */
+var _layout_interval = setInterval(_layoutAuto,5000);
 
 if (typeof listenEvent != 'undefined') {
 	listenEvent(window, 'load', function() {
-		if (_all_images_loaded_timeout) return;
-		_all_images_loaded_timeout = setTimeout(_all_images_loaded,10);
+		if (_allImagesLoaded_timeout) return;
+		_allImagesLoaded_timeout = setTimeout(_allImagesLoaded,10);
 	});
-	_init_images();
+	_initImages();
+	/** @no_doc */
 	var listener = function(ev) {
 		if (!layout) return;
 		if (layout._noresize_event) {
@@ -660,8 +670,9 @@ if (typeof listenEvent != 'undefined') {
 	};
 	listenEvent(window, 'resize', listener);
 }
-
+/** @no_doc */
 var _layout_add_css = window.addStylesheet;
+/* Override the addStylesheet, in order to fire layout event when a CSS has been loaded */
 window.addStylesheet = function(url, onload) {
 	_layout_add_css(url, function() {
 		if (!document.body || window.closing) return;
@@ -670,7 +681,9 @@ window.addStylesheet = function(url, onload) {
 	});
 };
 if (!window.top.browser_scroll_bar_size) {
+	/** Size of a scroll bar for the current browser */
 	window.top.browser_scroll_bar_size = 20;
+	/** @no_doc */
 	var container = window.top.document.createElement("DIV");
 	container.style.position = "fixed";
 	container.style.top = "-300px";

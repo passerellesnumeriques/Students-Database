@@ -33,7 +33,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 							popup.addSaveButton(function() {
 								if (temp_name.value) save();
 								else
-									input_dialog(null,"New Import Template","Please choose a name for this new template","",100,function(name) {
+									inputDialog(null,"New Import Template","Please choose a name for this new template","",100,function(name) {
 										name = name.trim();
 										if (name.length == 0) return "Please enter a name";
 										return null;

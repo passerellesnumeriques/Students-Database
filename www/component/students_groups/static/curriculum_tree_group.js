@@ -44,7 +44,7 @@ CurriculumTreeNode_Group.prototype.createInfo = function() {
 		button.g = this.group;
 		button.onclick = function() {
 			var group = this.g;
-			input_dialog(theme.icons_16.edit,"Edit "+gt.name+" Name","Name of the "+gt.name,group.name,100,
+			inputDialog(theme.icons_16.edit,"Edit "+gt.name+" Name","Name of the "+gt.name,group.name,100,
 				function(name){
 					if (!name.checkVisible()) return "Please enter a name";
 					return null;
@@ -325,7 +325,7 @@ function newGroup(parent_node) {
  * @param {CurriculumTreeNode_Group} group_node tree node of the class to remove
  */
 function removeGroup(group_node) {
-	confirm_dialog("Are you sure you want to remove the "+getSelectedGroupType().name+" '"+group_node.group.name+"' ?",function(yes){
+	confirmDialog("Are you sure you want to remove the "+getSelectedGroupType().name+" '"+group_node.group.name+"' ?",function(yes){
 		if (!yes) return;
 		var lock = lock_screen();
 		service.json("data_model","remove_row",{table:"StudentsGroup",row_key:group_node.group.id},function(res){

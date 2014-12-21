@@ -185,7 +185,7 @@ field_grade.prototype._create = function(data) {
 		};
 		listenEvent(input, 'focus', function() { t.onfocus.fire(); });
 		this.onenter = function(listener) {
-			onkeyup.add_listener(function(e) {
+			onkeyup.addListener(function(e) {
 				var ev = getCompatibleKeyEvent(e);
 				if (ev.isEnter) listener(t);
 			});

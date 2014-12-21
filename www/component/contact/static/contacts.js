@@ -118,19 +118,19 @@ function contacts(container, owner_type, owner_id, contacts, can_edit, can_add, 
 		t.emails = new contact_type("email", "EMail", owner_type, owner_id, emails, can_edit, can_add, can_remove, false, t._updateCol1, function(email){
 			t._initTable(email, "email", "EMail", "#304060", "#D8D8F0");
 			t.email = email;
-			email.onchange.add_listener(function(){ t.onchange.fire(t); });
+			email.onchange.addListener(function(){ t.onchange.fire(t); });
 			t._ready();
 		});
 		t.phones = new contact_type("phone", "Phone", owner_type, owner_id, phones, can_edit, can_add, can_remove, false, t._updateCol1, function(phone){
 			t._initTable(phone, "phone", "Phone", "#3080b8", "#D0E0FF");
 			t.phone = phone;
-			phone.onchange.add_listener(function(){ t.onchange.fire(t); });
+			phone.onchange.addListener(function(){ t.onchange.fire(t); });
 			t._ready();
 		});
 		t.im = new contact_type("IM", "Instant Messaging", owner_type, owner_id, im, can_edit, can_add, can_remove, false, t._updateCol1, function(im){
 			t._initTable(im, "IM", "Instant Messaging", "#70a840", "#D8F0D8");
 			t.im = im;
-			im.onchange.add_listener(function(){ t.onchange.fire(t); });
+			im.onchange.addListener(function(){ t.onchange.fire(t); });
 			t._ready();
 		});
 	});

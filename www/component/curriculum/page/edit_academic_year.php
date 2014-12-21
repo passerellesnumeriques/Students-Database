@@ -245,11 +245,11 @@ function addPeriod(period) {
 			menu.showBelowElement(span_start);
 		});
 	};
-	input_weeks.onchange.add_listener(function() {
+	input_weeks.onchange.addListener(function() {
 		period.weeks = input_weeks.getCurrentData();
 		period.update_end();
 	});
-	input_weeks_break.onchange.add_listener(function() {
+	input_weeks_break.onchange.addListener(function() {
 		period.weeks_break = input_weeks_break.getCurrentData();
 		period.update_end();
 	});
@@ -337,7 +337,7 @@ popup.addIconTextButton("/static/calendar/calendar_16.png", "Change starting yea
 		echo "avail_years.push([".$i.",".$i."]);";
 	} 
 	?>
-	select_dialog("/static/calendar/calendar_16.png", "Change starting year", "Starting year", year_object.year, avail_years, function(value) {
+	selectDialog("/static/calendar/calendar_16.png", "Change starting year", "Starting year", year_object.year, avail_years, function(value) {
 		if (value == null) return;
 		popup.removeButtons();
 		location.href = "/dynamic/curriculum/page/edit_academic_year?year="+value+"&onsave=<?php echo $_GET["onsave"];?>";

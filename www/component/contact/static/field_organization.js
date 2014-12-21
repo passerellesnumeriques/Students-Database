@@ -32,7 +32,7 @@ field_organization.prototype.createValue = function(value, name, oncreated) {
 	if (value)
 		url_params += "&name="+encodeURIComponent(value);
 	var t=this;
-	window.top.popup_frame(
+	window.top.popupFrame(
 		theme.build_icon("/static/contact/organization.png",theme.icons_10.add),
 		"New "+(name ? name : "Organization"), 
 		"/dynamic/contact/page/organization_profile?organization=-1"+url_params,
@@ -78,7 +78,7 @@ field_organization.prototype.helpFillMultipleItems = function() {
 		},
 		validated: new Custom_Event()
 	};
-	s.onchange.add_listener(function() {
+	s.onchange.addListener(function() {
 		helper.validated.fire();
 	});
 	return helper;
@@ -154,7 +154,7 @@ field_organization.prototype._create = function(data) {
 			t.select.input.focus();
 			t.select.input.onfocus = f;
 		};
-		this.select.onchanged.add_listener(function() { t._datachange(); });
+		this.select.onchanged.addListener(function() { t._datachange(); });
 		this._getEditedData = function() {
 			return this.select.selected_id;
 		};
@@ -220,7 +220,7 @@ function OrganizationSelectionField(list, selected_id, name, create) {
 		require("mini_popup.js",function() {
 			var p = new mini_popup("Select "+name, true);
 			var s = new OrganizationSelectionPopupContent(list, false, [], create ? function(new_name) {
-				confirm_dialog("Do you want to create a new "+name+" <b>"+new_name+"</b> ?", function(yes) {
+				confirmDialog("Do you want to create a new "+name+" <b>"+new_name+"</b> ?", function(yes) {
 					if (!yes) return;
 					p.close();
 					create(new_name);
@@ -236,7 +236,7 @@ function OrganizationSelectionField(list, selected_id, name, create) {
 			p.content.style.flexDirection = "column";
 			s.content.style.flex = "1 1 auto";
 			p.content.appendChild(s.content);
-			s.onchange.add_listener(function() {
+			s.onchange.addListener(function() {
 				for (var i = 0; i < list.length; ++i)
 					if (list[i].id == s.selected_ids[0]) { t.input.value = list[i].name; if (t.input.autoresize) t.input.autoresize(); break; }
 				t.selected_id = s.selected_ids[0];
@@ -753,7 +753,7 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 		t.selected_ids = [];
 		if (checked) for (var i = 0; i < list.length; ++i) t.selected_ids.push(list[i].id);
 	};
-	if (multiple) t.onchange.add_listener(function() {
+	if (multiple) t.onchange.addListener(function() {
 		for (var i = 0; i < t.checkboxes.length; ++i)
 			t.checkboxes[i].checked = t.selected_ids.indexOf(t.checkboxes[i].parentNode._org.id) >= 0 ? "checked" : "";
 	});

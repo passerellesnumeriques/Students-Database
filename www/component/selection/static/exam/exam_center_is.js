@@ -94,7 +94,7 @@ function exam_center_is(container, all_is, already_linked_ids, linked_is, can_ed
 				var t=this.t;
 				var tr=this.tr;
 				var twin = window;
-				confirm_dialog("If you unlink an Information Session, all its associated applicants will be removed from the exam center planning.<br/>Are you sure you want to do this ?", function(yes) {
+				confirmDialog("If you unlink an Information Session, all its associated applicants will be removed from the exam center planning.<br/>Are you sure you want to do this ?", function(yes) {
 					if (!yes) return;
 					if (tr.applicants_list)
 						t.onapplicantsremoved.fire(tr.applicants_list);
@@ -112,7 +112,7 @@ function exam_center_is(container, all_is, already_linked_ids, linked_is, can_ed
 		button.title = "Open Information Session profile";
 		td.appendChild(button);
 		button.onclick = function() {
-			window.top.popup_frame("/static/selection/is/is_16.png","Information Session","/dynamic/selection/page/is/profile?id="+is_id+"&readonly=true",null,95,95);
+			window.top.popupFrame("/static/selection/is/is_16.png","Information Session","/dynamic/selection/page/is/profile?id="+is_id+"&readonly=true",null,95,95);
 		};
 
 		if (can_edit) {

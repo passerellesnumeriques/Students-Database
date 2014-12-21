@@ -65,7 +65,7 @@ function launchUpdate(batch_id) {
 	});
 }
 function updateBatch(batch_id) {
-	popup_frame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch="+batch_id, null, null, null, function(frame,popup) {
+	popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch="+batch_id, null, null, null, function(frame,popup) {
 		frame.confirmed = function() { launchUpdate(batch_id); };
 	});
 }
@@ -73,7 +73,7 @@ window.parent.batchCreated = function(batch_id) {
 	launchUpdate(batch_id);
 }
 function newBatch() {
-	popup_frame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "New Batch of Students", "/dynamic/curriculum/page/edit_batch?onsave=batchCreated");
+	popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "New Batch of Students", "/dynamic/curriculum/page/edit_batch?onsave=batchCreated");
 }
 </script>
 <?php 

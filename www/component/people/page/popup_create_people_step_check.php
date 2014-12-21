@@ -218,7 +218,7 @@ class page_popup_create_people_step_check extends Page {
 							for (var k = 0; k < p.value.length; ++k)
 								data.prefilled_data.push({table:table,data:p.value[k].name,value:p.value[k].value});
 					}
-					window.parent.popup_frame(
+					window.parent.popupFrame(
 						null,'New Person',
 						'/dynamic/people/page/people_new_type?people='+people_id+'&ondone=done&oncancel=done&type='+types[i]<?php if ($sub_models <> null) echo "+'&sub_models=".urlencode(json_encode($sub_models))."'";?>,
 						data,null,null,
@@ -244,10 +244,10 @@ class page_popup_create_people_step_check extends Page {
 		$id = $this->generateID();
 		echo "<tr id='$id'>";
 		$pic_id = $this->generateID();
-		echo "<td id='$pic_id' style='cursor:pointer;vertical-align:top;border-bottom:1px solid #808080' title='Click to see the details of this person' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$similar["id"]."',null,95,95);return false;\">";
+		echo "<td id='$pic_id' style='cursor:pointer;vertical-align:top;border-bottom:1px solid #808080' title='Click to see the details of this person' onclick=\"window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$similar["id"]."',null,95,95);return false;\">";
 		$this->onload("new profile_picture('$pic_id',30,30,'center','center').loadPeopleID(".$similar["id"].");");
 		echo "</td>"; 
-		echo "<td style='cursor:pointer;vertical-align:top;border-bottom:1px solid #808080' title='Click to see the details of this person' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$similar["id"]."',null,95,95);return false;\">";
+		echo "<td style='cursor:pointer;vertical-align:top;border-bottom:1px solid #808080' title='Click to see the details of this person' onclick=\"window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$similar["id"]."',null,95,95);return false;\">";
 		echo $msg.": <br/>";
 		echo $table->getRowDescription($similar);
 		echo "</td>";

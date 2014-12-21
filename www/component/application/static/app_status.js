@@ -59,7 +59,7 @@ function app_status(container) {
 		}
 	};
 
-	window.top.ping_event.add_listener(function(res) {
+	window.top.ping_event.addListener(function(res) {
 		t.updateIcon();
 	});
 }

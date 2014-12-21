@@ -137,14 +137,14 @@ class page_exam_subjects extends SelectionPage {
 				remove_button.className = "action red";
 				remove_button.innerHTML = "<img src='"+theme.icons_16.remove_white+"'/> Remove this subject";
 				remove_button.onclick = function() {
-					confirm_dialog("Are you sure you want to remove this exam ?",
+					confirmDialog("Are you sure you want to remove this exam ?",
 						function(answer){
 							if(!answer) return;
 							var locker = lock_screen(null,"Removing subject...");
 							service.json("selection","exam/remove_subject",{id:subject.id},function(res){
 								unlock_screen(locker);
 								if(!res)
-									error_dialog("An error occured");
+									errorDialog("An error occured");
 								else {
 									if (selected_index == subjects.indexOf(subject)) {
 										var frame = document.getElementById('subject_frame');
@@ -265,7 +265,7 @@ class page_exam_subjects extends SelectionPage {
 				else {
 					var options = [];
 					for (var i = 0; i < win.answers.length; ++i) options.push([i,String.fromCharCode("A".charCodeAt(0)+i)]);
-					select_dialog(null,"Subject Version","For which version of the subject do you want to export ?",null,options,function(version_index) {
+					selectDialog(null,"Subject Version","For which version of the subject do you want to export ?",null,options,function(version_index) {
 						postToDownload("/dynamic/selection/service/exam/export_exam_answers_to_sunvote", {subject:win.subject.id,version_index:version_index});
 					});
 				}

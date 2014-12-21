@@ -31,7 +31,7 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 			if (this.country_data[index].division_id == division_id) break;
 		if (index >= this.country_data.length) return; // invalid id
 		
-		confirm_dialog("Are you sure you want to delete this division?<br/><b>Note: All geographic areas of this division will bre removed.</b>", function(yes) {
+		confirmDialog("Are you sure you want to delete this division?<br/><b>Note: All geographic areas of this division will bre removed.</b>", function(yes) {
 			if (!yes) return;
 			var lock = lock_screen(null, "Removing division...");
 			service.json("data_model","remove_row",{table:"CountryDivision", row_key:division_id}, function(res){
@@ -60,13 +60,13 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 			edit.onsave = function(text){
 				text = text.trim().uniformFirstLetterCapitalized();
 				if (!text.checkVisible()) {
-					error_dialog("You must enter at least one visible character");
+					errorDialog("You must enter at least one visible character");
 					return division.division_name;
 				}
 				for (var i = 0; i < t.country_data.length; ++i) {
 					if (t.country_data[i].division_id == division.division_id) continue; // this is us
 					if (t.country_data[i].division_name.toLowerCase() == text.toLowerCase()) {
-						error_dialog("A division already exists with this name");
+						errorDialog("A division already exists with this name");
 						return division.division_name;
 					}
 				}
@@ -105,7 +105,7 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 		add_button.className = 'action green';
 		add_button.innerHTML = "<img src='"+theme.icons_16.add_white+"'/> Append a new division";
 		add_button.onclick = function(){
-			input_dialog(theme.icons_16.question,
+			inputDialog(theme.icons_16.question,
 				"Add a new division",
 				"Please enter the name of the new division",
 				"",

@@ -1458,7 +1458,7 @@ function save() {
 				}
 				s += "</ul>All others have been exluded from the Selection Process.";
 				if (res.interview_center_id) {
-					s += "<br/><br/>All passers who were not yet assigned to an interview center have been automatically assigned to the center <b>"+res.interview_center_name+"</b> <button class='action' onclick=\"window.top.popup_frame('/static/selection/exam/exam_center_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?id="+res.interview_center_id+"');\">Open this interview center</button>";
+					s += "<br/><br/>All passers who were not yet assigned to an interview center have been automatically assigned to the center <b>"+res.interview_center_name+"</b> <button class='action' onclick=\"window.top.popupFrame('/static/selection/exam/exam_center_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?id="+res.interview_center_id+"');\">Open this interview center</button>";
 				}
 			}
 			e.innerHTML = s;
@@ -1491,7 +1491,7 @@ function save() {
 		}
 		msg += "</ul>";
 		msg += "For "+(missing.length>1?"those applicants":"this applicant")+" nothing will be saved.<br/>Do you confirm ?";
-		confirm_dialog(msg, function(yes) {
+		confirmDialog(msg, function(yes) {
 			if (!yes) return;
 			saveResults();
 		});
@@ -1510,7 +1510,7 @@ function save() {
 			}
 			msg += "</ul>";
 			msg += "For "+(attendance_missing.length>1?"those applicants":"this applicant")+" nothing will be saved.<br/>Do you confirm ?";
-			confirm_dialog(msg, function(yes) {
+			confirmDialog(msg, function(yes) {
 				if (!yes) return;
 				checkExamVersion();
 			});

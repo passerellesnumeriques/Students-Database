@@ -141,7 +141,7 @@ field_enum.prototype._create = function(data) {
 				cache = {onavail:[]};
 				layout.readLayout(function() {
 					var style = getComputedStyle(select);
-					layout.three_steps_process(function() {
+					layout.threeStepsProcess(function() {
 						var sel = document.createElement("SELECT");
 						sel.style.display = "inline-block";
 						sel.style.position = "absolute";

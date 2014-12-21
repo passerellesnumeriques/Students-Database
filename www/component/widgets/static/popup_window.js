@@ -240,8 +240,8 @@ function popup_window(title,icon,content,hide_close_button) {
 				return;
 			}
 			if (!win.pnapplication.hasDataUnsaved()) t.disableButton('save'); else t.enableButton('save');
-			win.pnapplication.ondatatosave.add_listener(function() { t.enableButton('save'); });
-			win.pnapplication.onalldatasaved.add_listener(function() { t.disableButton('save'); });
+			win.pnapplication.ondatatosave.addListener(function() { t.enableButton('save'); });
+			win.pnapplication.onalldatasaved.addListener(function() { t.disableButton('save'); });
 		};
 		check_frame();
 	};
@@ -363,7 +363,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	
 	t._onwindow_closed_listener = function(){
 		if (!t || !t.popup) return;
-		pnapplication.onclose.remove_listener(t._onwindow_closed_listener);
+		pnapplication.onclose.removeListener(t._onwindow_closed_listener);
 		t.close();
 	};
 	
@@ -381,7 +381,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (t.anim) win.animation.stop(t.anim);
 			t.anim = win.animation.appear(t.popup, 200);
 		}
-		pnapplication.onclose.add_listener(t._onwindow_closed_listener);
+		pnapplication.onclose.addListener(t._onwindow_closed_listener);
 	};
 	
 	/** Display the popup window
@@ -441,7 +441,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (t.anim) win.animation.stop(t.anim);
 			t.anim = win.animation.appear(t.popup, 200);
 		}
-		pnapplication.onclose.add_listener(t._onwindow_closed_listener);
+		pnapplication.onclose.addListener(t._onwindow_closed_listener);
 	};
 	
 	t._size_type = "fit";

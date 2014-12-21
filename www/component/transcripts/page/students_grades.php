@@ -382,7 +382,7 @@ function editGeneralAppreciation(button) {
 		if (!res) { unlock_screen(locker); return; }
 		if (res.locker) {
 			unlock_screen(locker);
-			error_dialog(res.locker+" is already editing general appreciations, you cannot edit at the same time.");
+			errorDialog(res.locker+" is already editing general appreciations, you cannot edit at the same time.");
 			return;
 		}
 		general_appreciation_lock_id = res.lock;

@@ -34,7 +34,7 @@ function init_calendars() {
 			create_button.className = "button";
 			sec.addTool(create_button);
 			create_button.onclick = function() {
-				input_dialog(
+				inputDialog(
 					theme.build_icon("/static/calendar/event.png",theme.icons_10.add,"right_bottom"),
 					"New Calendar",
 					"Enter the name of the new calendar",
@@ -55,7 +55,7 @@ function init_calendars() {
 			};
 		}
 		content.innerHTML = provider.connection_status;
-		provider.on_connection_status.add_listener(function(status) {
+		provider.on_connection_status.addListener(function(status) {
 			if (p.calendars.length == 0)
 				content.innerHTML = status;
 		});
@@ -74,9 +74,9 @@ function init_calendars() {
 	};
 	for (var i = 0; i < window.top.calendar_manager.calendars.length; ++i)
 		new_calendar(window.top.calendar_manager.calendars[i]);
-	window.top.calendar_manager.on_calendar_added.add_listener(new_calendar);
-	pnapplication.onclose.add_listener(function() {
-		window.top.calendar_manager.on_calendar_added.remove_listener(new_calendar);
+	window.top.calendar_manager.on_calendar_added.addListener(new_calendar);
+	pnapplication.onclose.addListener(function() {
+		window.top.calendar_manager.on_calendar_added.removeListener(new_calendar);
 	});
 }
 </script>

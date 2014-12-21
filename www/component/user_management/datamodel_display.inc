@@ -38,9 +38,9 @@ class UserDataScreen extends datamodel\GenericDataScreen {
 					<script type='text/javascript'>
 					function resetPassword() {
 						<?php if ($user["domain"] == PNApplication::$instance->local_domain) {?>
-							popup_frame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/reset_pass?domain=<?php echo PNApplication::$instance->local_domain;?>&username=<?php echo urlencode($user["username"]);?>");
+						popupFrame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/reset_pass?domain=<?php echo PNApplication::$instance->local_domain;?>&username=<?php echo urlencode($user["username"]);?>");
 						<?php } else { ?>
-							popup_frame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_ResetPassword",url:"/dynamic/user_management/page/reset_pass?domain=<?php echo $user["domain"];?>&username=<?php echo urlencode($user["username"]);?>",domain:<?php echo json_encode($user["domain"]);?>});
+						popupFrame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_ResetPassword",url:"/dynamic/user_management/page/reset_pass?domain=<?php echo $user["domain"];?>&username=<?php echo urlencode($user["username"]);?>",domain:<?php echo json_encode($user["domain"]);?>});
 						<?php } ?>
 					}
 					</script>

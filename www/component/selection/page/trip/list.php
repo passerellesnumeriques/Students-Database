@@ -54,7 +54,7 @@ class page_trip_list extends SelectionPage {
 </div>
 <script type='text/javascript'>
 function newTrip() {
-	window.top.popup_frame("/static/selection/trip/bus_black_16.png", "Plan New Trip", "/dynamic/selection/page/trip/trip", null, 90, 90, function(frame,popup) {
+	window.top.popupFrame("/static/selection/trip/bus_black_16.png", "Plan New Trip", "/dynamic/selection/page/trip/trip", null, 90, 90, function(frame,popup) {
 		popup.onclose = function() { location.reload(); };
 	});
 }

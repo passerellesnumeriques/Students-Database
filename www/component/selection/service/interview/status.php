@@ -48,7 +48,7 @@ class service_interview_status extends Service {
 		if (count($centers_not_linked) == 0) {
 			echo "<div class='ok'>All (".$total_nb_exam_centers.") linked to an interview center</div>";
 		} else {
-			echo "<a href='#' class='need_action' onclick=\"popup_frame(null,'Link Exam Centers to Interview Centers','/dynamic/selection/page/interview/link_centers?onsaved=saved',null,null,null,function(frame,pop){frame.saved=loadInterviewCenterStatus;});return false;\">".count($centers_not_linked)." not linked to an interview center</a><br/>";
+			echo "<a href='#' class='need_action' onclick=\"popupFrame(null,'Link Exam Centers to Interview Centers','/dynamic/selection/page/interview/link_centers?onsaved=saved',null,null,null,function(frame,pop){frame.saved=loadInterviewCenterStatus;});return false;\">".count($centers_not_linked)." not linked to an interview center</a><br/>";
 		}
 		echo "</div>";
 		
@@ -109,7 +109,7 @@ class service_interview_status extends Service {
 						foreach ($applicants_no_schedule as $center) {
 							echo "menu.addIconItem(null,".json_encode($center["nb"]." applicant(s) in ".$center["center_name"]).",function() {";
 							?>
-							window.top.popup_frame('/static/selection/interview/interview_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?onsaved=saved&id=<?php echo $center["center_id"];?>',null,95,95,function(frame,pop) {
+							window.top.popupFrame('/static/selection/interview/interview_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?onsaved=saved&id=<?php echo $center["center_id"];?>',null,95,95,function(frame,pop) {
 								frame.saved = function() { if (window.refreshPage) window.refreshPage(); else window.loadInterviewCenterStatus(); };
 							});
 							<?php 

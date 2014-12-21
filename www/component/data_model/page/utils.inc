@@ -10,7 +10,7 @@ function datamodel_cell(&$page, $container_id, $editable, $table, $column, $key,
 		$page->addJavascript("/static/data_model/editable_cell.js");
 		$page->onload("new editable_cell(".json_encode($container_id).",".json_encode($table).",".json_encode($column).",".json_encode($key).",".json_encode($typed_field[0]).",".$typed_field[1].",".json_encode($value).",null,".($onchange <> null ? $onchange : "null").");");
 	} else {
-		$page->onload("{var f=new ".$typed_field[0]."(".json_encode($value).",false,".$typed_field[1].");f.register_datamodel_cell(".json_encode($table).",".json_encode($column).",".json_encode($key).");document.getElementById(".json_encode($container_id).").appendChild(f.getHTMLElement());".($onchange <> null ? "f.onchange.add_listener(".$onchange.");" : "")."};");
+		$page->onload("{var f=new ".$typed_field[0]."(".json_encode($value).",false,".$typed_field[1].");f.register_datamodel_cell(".json_encode($table).",".json_encode($column).",".json_encode($key).");document.getElementById(".json_encode($container_id).").appendChild(f.getHTMLElement());".($onchange <> null ? "f.onchange.addListener(".$onchange.");" : "")."};");
 	}
 }
 
@@ -44,7 +44,7 @@ function datamodel_cell_inline(&$page, $variable_name, $container_variable, $edi
 		$page->addJavascript("/static/data_model/editable_cell.js");
 		echo "$variable_name = new editable_cell($container_variable,".json_encode($table).",".json_encode($column).",$key_variable,".json_encode($typed_field[0]).",".$typed_field[1].",$value_variable,null,".($onchange <> null ? $onchange : "null").");";
 	} else {
-		echo "$variable_name = new ".$typed_field[0]."($value_variable,false,".$typed_field[1].");$variable_name.register_datamodel_cell(".json_encode($table).",".json_encode($column).",$key_variable);$container_variable.appendChild($variable_name.getHTMLElement());".($onchange <> null ? "$variable_name.onchange.add_listener($onchange);" : "");
+		echo "$variable_name = new ".$typed_field[0]."($value_variable,false,".$typed_field[1].");$variable_name.register_datamodel_cell(".json_encode($table).",".json_encode($column).",$key_variable);$container_variable.appendChild($variable_name.getHTMLElement());".($onchange <> null ? "$variable_name.onchange.addListener($onchange);" : "");
 	}
 }
 
@@ -69,7 +69,7 @@ function datamodel_datadisplay(&$page, $data, $data_key, $value, $sub_model, $co
 		$page->addJavascript("/static/data_model/editable_datadisplay.js");
 		$page->onload("new editable_datadisplay('".$container_id."',".$data->javascriptDataDisplay($sub_model).",null,".json_encode($data_key).",".json_encode($sub_model).",".json_encode($value).",".($onchange <> null ? $onchange : "null").");");
 	} else {
-		$page->onload("{var f=new ".$typed_field[0]."(".json_encode($value).",false,".$typed_field[1].");f.register_datamodel_datadisplay(".$data->javascriptDataDisplay($sub_model).",".json_encode($data_key).");document.getElementById('$container_id').appendChild(f.getHTMLElement());".($onchange <> null ? "f.onchange.add_listener(".$onchange.");" : "")."};");
+		$page->onload("{var f=new ".$typed_field[0]."(".json_encode($value).",false,".$typed_field[1].");f.register_datamodel_datadisplay(".$data->javascriptDataDisplay($sub_model).",".json_encode($data_key).");document.getElementById('$container_id').appendChild(f.getHTMLElement());".($onchange <> null ? "f.onchange.addListener(".$onchange.");" : "")."};");
 	}
 	
 }

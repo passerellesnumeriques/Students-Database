@@ -54,22 +54,22 @@ function EditCoordinates(container, coordinates, onready) {
 		t.element.appendChild(document.createTextNode("North "));
 		t.field_north = new field_decimal(coordinates.north, true, {can_be_null:true,integer_digits:3,decimal_digits:6,min:-90,max:90});
 		t.element.appendChild(t.field_north.getHTMLElement());
-		t.field_north.onchange.add_listener(function() { coordinates.north = t.field_north.getCurrentData(); });
+		t.field_north.onchange.addListener(function() { coordinates.north = t.field_north.getCurrentData(); });
 		
 		t.element.appendChild(document.createTextNode("East "));
 		t.field_east = new field_decimal(coordinates.east, true, {can_be_null:true,integer_digits:3,decimal_digits:6,min:-180,max:180});
 		t.element.appendChild(t.field_east.getHTMLElement());
-		t.field_east.onchange.add_listener(function() { coordinates.east = t.field_east.getCurrentData(); });
+		t.field_east.onchange.addListener(function() { coordinates.east = t.field_east.getCurrentData(); });
 
 		t.element.appendChild(document.createTextNode("South "));
 		t.field_south = new field_decimal(coordinates.south, true, {can_be_null:true,integer_digits:3,decimal_digits:6,min:-90,max:90});
 		t.element.appendChild(t.field_south.getHTMLElement());
-		t.field_south.onchange.add_listener(function() { coordinates.south = t.field_south.getCurrentData(); });
+		t.field_south.onchange.addListener(function() { coordinates.south = t.field_south.getCurrentData(); });
 
 		t.element.appendChild(document.createTextNode("West "));
 		t.field_west = new field_decimal(coordinates.west, true, {can_be_null:true,integer_digits:3,decimal_digits:6,min:-180,max:180});
 		t.element.appendChild(t.field_west.getHTMLElement());
-		t.field_west.onchange.add_listener(function() { coordinates.west = t.field_west.getCurrentData(); });
+		t.field_west.onchange.addListener(function() { coordinates.west = t.field_west.getCurrentData(); });
 		
 		onready(t);
 	});
@@ -159,8 +159,8 @@ function linkEditCoordinatesWithMap(edit_coordinates, map) {
 	this._init();
 	this.updateMap();
 	var t=this;
-	edit_coordinates.field_north.onchange.add_listener(function() { t.updateMap(); });
-	edit_coordinates.field_east.onchange.add_listener(function() { t.updateMap(); });
-	edit_coordinates.field_south.onchange.add_listener(function() { t.updateMap(); });
-	edit_coordinates.field_west.onchange.add_listener(function() { t.updateMap(); });
+	edit_coordinates.field_north.onchange.addListener(function() { t.updateMap(); });
+	edit_coordinates.field_east.onchange.addListener(function() { t.updateMap(); });
+	edit_coordinates.field_south.onchange.addListener(function() { t.updateMap(); });
+	edit_coordinates.field_west.onchange.addListener(function() { t.updateMap(); });
 }

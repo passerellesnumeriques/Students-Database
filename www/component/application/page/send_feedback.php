@@ -120,7 +120,7 @@ function sendFeedback() {
 	var is_sent = false;
 	var sent = function() {
 		is_sent = true;
-		window.top.info_dialog("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Your feedback has been sent. Thank you !");
+		window.top.infoDialog("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Your feedback has been sent. Thank you !");
 		location.href = '/dynamic/application/page/overview';
 		sent = null;
 	};

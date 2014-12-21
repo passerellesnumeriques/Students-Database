@@ -793,13 +793,13 @@ function match_division_level_names(container, country, country_data, division_i
 			function(text,ec){
 				text = text.trim();
 				if (!text.checkVisible()) {
-					error_dialog("You must enter at least one visible character");
+					errorDialog("You must enter at least one visible character");
 					return ec.area.area_name;
 				}
 				// check unicity
 				for (var i = 0; i < areas.length; ++i)
 					if (areas[i] != ec.area && areas[i].area_name.toLowerCase() == text.toLowerCase()) {
-						error_dialog("An area already exists with this name");
+						errorDialog("An area already exists with this name");
 						return ec.area.area_name;
 					}
 				ec.area.area_name = text;

@@ -113,7 +113,7 @@ class page_is_profile extends SelectionPage {
 			}
 			window.is_who = null;
 			<?php if (@$session["date"] <> null) echo "addWho();";?>
-			window.is_schedule.onchange.add_listener(function() {
+			window.is_schedule.onchange.addListener(function() {
 				var ev = window.is_schedule.getEvent();
 				if (ev && ev.start) {
 					if (!window.is_who) addWho();
@@ -150,7 +150,7 @@ class page_is_profile extends SelectionPage {
 
 		function save_is() {
 			if (window.center_location.geographic_area_text == null) {
-				error_dialog("You must at set a location before saving");
+				errorDialog("You must at set a location before saving");
 				return;
 			}
 			is_popup.freeze("Saving...");
@@ -190,7 +190,7 @@ class page_is_profile extends SelectionPage {
 			service.json("selection","is/save",{event:event, data:data},function(res){
 				if(!res) {
 					is_popup.unfreeze();
-					error_dialog("An error occured, your informations were not saved");
+					errorDialog("An error occured, your informations were not saved");
 				} else {
 					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Information session successfuly saved!", [{action:"close"}], 5000));
 					// Update the data on the page (some ids have been generated)
@@ -221,7 +221,7 @@ class page_is_profile extends SelectionPage {
 		is_popup.removeButtons();
 		<?php if ($editable && $id <> null) {?>
 		is_popup.addIconTextButton(theme.icons_16.remove, "Remove this session", "remove", function() {
-			confirm_dialog("Are you sure you want to remove this information session ?<br/>Note: Any applicant already assigned to this information session will remain in the system, but without information session.",function(res){
+			confirmDialog("Are you sure you want to remove this information session ?<br/>Note: Any applicant already assigned to this information session will remain in the system, but without information session.",function(res){
 				if(res){
 					is_popup.freeze();
 					service.json("selection","is/remove",{id:<?php echo $id;?>},function(r){
@@ -230,7 +230,7 @@ class page_is_profile extends SelectionPage {
 							<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
 							is_popup.close();
 						} else
-							error_dialog("An error occured");
+							errorDialog("An error occured");
 					});
 				}
 			});

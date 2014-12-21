@@ -114,7 +114,7 @@ function tabs(container, fill_tab_content) {
 	t._style_knowledge_content = [];
 	t._layout = function() {
 		if (fill_tab_content) {
-			layout.two_steps_process(function() {
+			layout.twoStepsProcess(function() {
 				getWidth(t.content, t._style_knowledge_content);
 				return {w:container.clientWidth, h:container.clientHeight - t.header.offsetHeight};
 			}, function(sizes) {
@@ -123,7 +123,7 @@ function tabs(container, fill_tab_content) {
 				layout.changed(t.content);
 				if (t.selected != -1) {
 					var knowledge = [];
-					layout.two_steps_process(function() {
+					layout.twoStepsProcess(function() {
 						getWidth(t.tabs[t.selected].content, knowledge);
 						return {w:t.content.clientWidth, h:t.content.clientHeight};
 					}, function(sizes) {

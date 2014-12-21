@@ -512,12 +512,12 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 					for (var i = 0; i < sheet.__columns_layers.length; ++i)
 						sheet.__columns_layers[i].setRange(sheet.__columns_layers[i].col_start, nb_rows, sheet.__columns_layers[i].col_start, sheet.__columns_layers[i].row_end);
 			};
-			excel.onactivesheetchanged.add_listener(function() {
+			excel.onactivesheetchanged.addListener(function() {
 				var nb_rows = excel.getActiveSheet().__header_rows;
 				f.setData(nb_rows);
 				update_layer(nb_rows);
 			});
-			f.onchange.add_listener(function() {
+			f.onchange.addListener(function() {
 				var nb_rows = f.hasError() ? 0 : f.getCurrentData();
 				excel.getActiveSheet().__header_rows = nb_rows;
 				update_layer(nb_rows);

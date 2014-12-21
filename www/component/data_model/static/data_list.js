@@ -349,9 +349,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						}, function(data) {
 							t.field.setData(data);
 						}, function(listener) {
-							t.field.onchange.add_listener(listener);
+							t.field.onchange.addListener(listener);
 						}, function(listener) {
-							t.field.onchange.remove_listener(listener);
+							t.field.onchange.removeListener(listener);
 						});
 					}
 				};
@@ -716,7 +716,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			require("typed_field.js",function(){
 				require("field_integer.js",function(){
 					t._page_size_field = new field_integer(t._page_size, true, {can_be_null:false,min:1,max:2000});
-					t._page_size_field.onchange.add_listener(function() {
+					t._page_size_field.onchange.addListener(function() {
 						t._page_size = t._page_size_field.getCurrentData();
 						t._loadData();
 					});
@@ -767,7 +767,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		} else
 			t._filterNumber.style.visibility = "hidden";
 		div.appendChild(t._filterNumber);
-		t.onfilterschanged.add_listener(function() {
+		t.onfilterschanged.addListener(function() {
 			if (t._filters.length > 0) {
 				t._filterNumber.style.visibility = "visible";
 				t._filterNumber.innerHTML = t._filters.length;
@@ -819,7 +819,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		require("grid.js",function(){
 			t.grid = new grid(t.grid_container);
 			t.grid.columns_movable = true;
-			t.grid.on_column_moved.add_listener(function(move) {
+			t.grid.on_column_moved.addListener(function(move) {
 				// update the order of show_fields, so we can save it
 				if (move.column instanceof GridColumn) {
 					// final column
@@ -1116,7 +1116,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				}
 			}, has ? "Edit filters (this column is currently filtered)" : "Filter");
 			col.addAction(a);
-			t.onfilterschanged.add_listener(function() {
+			t.onfilterschanged.addListener(function() {
 				update_action(a);
 			});
 		}
@@ -1143,7 +1143,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	};
 	t.onNotLoading = function(listener) {
 		if (!t._loading_hidder) { listener(); return; }
-		t._end_loading_event.add_listener(listener);
+		t._end_loading_event.addListener(listener);
 	};
 	t.isLoading = function() {
 		return (typeof t._loading_hidder != 'undefined') && t._loading_hidder != null;
@@ -1676,7 +1676,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		var f = new window[classname](filter.data, config, !filter.force);
 		div.appendChild(f.getHTMLElement());
 		f.getHTMLElement().style.verticalAlign = "middle";
-		f.onchange.add_listener(function (f) {
+		f.onchange.addListener(function (f) {
 			filter.data = f.getData();
 			t._loadData();
 		});

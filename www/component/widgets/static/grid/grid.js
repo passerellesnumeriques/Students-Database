@@ -241,7 +241,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			this.sort_order = 3; // not sorted
 		this.sort_function = sort_function;
 		var t=this;
-		this.onclick.add_listener(function(){
+		this.onclick.addListener(function(){
 			var new_sort = t.sort_order == 1 ? 2 : 1;
 			t._onsort(new_sort);
 		});
@@ -251,7 +251,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		if (!this.sort_order)
 			this.sort_order = 3; // not sorted
 		this.sort_handler = handler;
-		this.onclick.add_listener(function(){
+		this.onclick.addListener(function(){
 			var new_sort = t.sort_order == 1 ? 2 : 1;
 			t._onsort(new_sort);
 		});
@@ -717,7 +717,7 @@ function grid(element) {
 		col._refresh_title();
 		if (!col._loaded) {
 			t._columns_loading++;
-			col.onloaded.add_listener(function() { t._columns_loading--; t._check_loaded(); });
+			col.onloaded.addListener(function() { t._columns_loading--; t._check_loaded(); });
 		}
 		// add cells
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -741,7 +741,7 @@ function grid(element) {
 				td.style.textAlign = col.align;
 				t._create_cell(col, data, td, function(field, original_data){
 					if (typeof original_data != 'undefined') field.originalData = original_data;
-					field.onfocus.add_listener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
+					field.onfocus.addListener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
 				}, original_data);
 				td.ondomremoved(function(td) { td.field = null; });
 			}
@@ -940,7 +940,7 @@ function grid(element) {
 				td.removeAllChildren();
 				t._create_cell(column, data, td, function(field){
 					field.originalData = original;
-					field.onfocus.add_listener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
+					field.onfocus.addListener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
 				});
 				td.style.textAlign = column.align;
 			}
@@ -1358,7 +1358,7 @@ function grid(element) {
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
 				t._create_cell(t.columns[j], data.data, td, function(field,data){
-					field.onfocus.add_listener(function() { t.onrowfocus.fire(tr); });
+					field.onfocus.addListener(function() { t.onrowfocus.fire(tr); });
 					if (typeof data.data_display != 'undefined' && data.data_display)
 						field.setDataDisplay(data.data_display, data.data_id);
 				},data);
@@ -1825,7 +1825,7 @@ function grid(element) {
 		parent.style.display = column.hidden ? "none" : "";
 		t._cells_loading++;
 		t._create_field(column, column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
-			field.onchange.add_listener(function() {
+			field.onchange.addListener(function() {
 				var tr = parent;
 				while (tr.nodeName != 'TR') tr = tr.parentNode;
 				if (tr.row_data)
@@ -1844,8 +1844,8 @@ function grid(element) {
 		require([["typed_field.js",field_type+".js"]], function() {
 			layout.modifyDOM(function() {
 				var f = new window[field_type](data, editable, field_args);
-				if (onchanged) f.ondatachanged.add_listener(onchanged);
-				if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
+				if (onchanged) f.ondatachanged.addListener(onchanged);
+				if (onunchanged) f.ondataunchanged.addListener(onunchanged);
 				parent.appendChild(f.getHTMLElement());
 				ondone(f);
 				setTimeout(function() {

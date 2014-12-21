@@ -3,6 +3,10 @@ if (typeof require != 'undefined')
 if (typeof theme != 'undefined')
 	theme.css("wizard.css");
 
+/**
+ * Create a Wizard, composed of different pages which can be validated to go to the next one
+ * @param {Element} container where to put the wizard
+ */
 function wizard(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t = this;
@@ -69,9 +73,13 @@ function wizard(container) {
 		t.keep_on_close = true;
 		if (container.data) {
 			// wizard already loaded
+			/** @no_doc */
 			t.icon = container.data.icon;
+			/** @no_doc */
 			t.title = container.data.title;
+			/** @no_doc */
 			t.pages = container.data.pages;
+			/** @no_doc */
 			t.onfinish = container.data.onfinish;
 		} else {
 			// load from elements on page

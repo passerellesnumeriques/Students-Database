@@ -18,7 +18,7 @@ function belongings(section, list, applicant_id, can_edit) {
 			var div = document.createElement("DIV");
 			var text = new field_text(belonging.description, true, {can_be_null:false,min_length:1,max_length:500,min_size:15});
 			div.appendChild(text.getHTMLElement());
-			text.onchange.add_listener(function() { belonging.description = text.getCurrentData(); });
+			text.onchange.addListener(function() { belonging.description = text.getCurrentData(); });
 			var remove = document.createElement("BUTTON");
 			remove.className = "flat small_icon";
 			remove.style.verticalAlign = "middle";

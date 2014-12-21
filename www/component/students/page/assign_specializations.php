@@ -54,7 +54,7 @@ class page_assign_specializations extends Page {
 		}
 		
 		var assign = new assign_elements('assign_container',null,null,display_people,function(assign) {
-			assign.onchange.add_listener(function(){
+			assign.onchange.addListener(function(){
 				var changes = assign.getChanges();
 				if (changes.length > 0)
 					popup.enableButton('save');

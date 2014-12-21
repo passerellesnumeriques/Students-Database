@@ -59,6 +59,11 @@ public class ValueToEvaluate extends Element implements Evaluable {
 			context.put(p.name, new ContextVariable(p.type, p.description));
 		}
 	}
+	private HashMap<String,Object> runtimeContext = new HashMap<String,Object>();
+	public void addRuntimeContext(HashMap<String,Object> runtime) {
+		runtimeContext.putAll(runtime);
+	}
+	public HashMap<String,Object> getRuntimeContext() { return runtimeContext; }
 	
 	private ValueToEvaluate sub(AstNode value, Node... docs) {
 		ValueToEvaluate ve = new ValueToEvaluate(location.file, value, docs);
@@ -163,6 +168,8 @@ public class ValueToEvaluate extends Element implements Evaluable {
 						else if (o instanceof FinalElement) 
 							val = new ObjectClass(this.location.file, ((FinalElement)o).getType(), value, docs);
 						else if (o instanceof ValueToEvaluate)
+							ctx.need_reevaluation = true;
+						else if (o instanceof ValuesToEvaluate)
 							ctx.need_reevaluation = true;
 						else
 							error("Element "+name+" in container "+cont.getType()+": unexpected "+o.getClass().getSimpleName(), this.location.file, value);

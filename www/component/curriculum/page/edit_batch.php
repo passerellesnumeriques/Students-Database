@@ -543,7 +543,7 @@ function editSpecializations() {
 		
 		var popup = new popup_window("Specializations", "/static/curriculum/curriculum_16.png", content);
 		popup.addIconTextButton(theme.build_icon("/static/curriculum/curriculum_16.png",theme.icons_10.add), "Create new specialization", 'create', function() {
-			input_dialog(
+			inputDialog(
 				theme.build_icon("/static/curriculum/curriculum_16.png",theme.icons_10.add),
 				"Create new specialization",
 				"Name of the new specialization:",

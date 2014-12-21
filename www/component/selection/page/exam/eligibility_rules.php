@@ -84,7 +84,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 					<?php foreach ($subjects as $subject) { ?>
 					<div style='display:inline-block;position:relative;vertical-align:top;'>
 						<div style='display:inline-block;text-align:center;margin:10px;vertical-align:top'>
-							<div id='subject_<?php echo $subject["id"];?>' style="border:1px solid rgba(0,0,0,0);border-radius:5px;padding:5px;cursor:pointer" onmouseover="this.style.border='1px solid #F0D080';" onmouseout="this.style.border='1px solid rgba(0,0,0,0)';" onclick="popup_frame('/static/selection/exam/exam_subject_16.png', 'Exam Subject', '/dynamic/selection/page/exam/subject?id=<?php echo $subject["id"];?>&readonly=true');">
+							<div id='subject_<?php echo $subject["id"];?>' style="border:1px solid rgba(0,0,0,0);border-radius:5px;padding:5px;cursor:pointer" onmouseover="this.style.border='1px solid #F0D080';" onmouseout="this.style.border='1px solid rgba(0,0,0,0)';" onclick="popupFrame('/static/selection/exam/exam_subject_16.png', 'Exam Subject', '/dynamic/selection/page/exam/subject?id=<?php echo $subject["id"];?>&readonly=true');">
 								<img src='/static/selection/exam/exam_subject_48.png'/><br/>
 								<span style='font-size:12pt;font-weight:bold'><?php echo toHTML($subject["name"]);?></span><br/>
 								<span style='font-size:9pt;'><?php echo number_format($subject["max_score"],2);?> pt(s)</span><br/>
@@ -147,10 +147,10 @@ class page_exam_eligibility_rules extends SelectionPage {
 		var can_edit = <?php echo json_encode($can_edit);?>;
 		
 		function extractSubject(subject_id) {
-			popup_frame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?subject='+subject_id);
+			popupFrame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?subject='+subject_id);
 		}
 		function editExtract(extract_id) {
-			popup_frame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?id='+extract_id);
+			popupFrame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?id='+extract_id);
 		}
 		function removeExtract(extract_id) {
 			lock_screen();
@@ -213,7 +213,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				next.onmouseout = function() { setOpacity(this,0.6); };
 				node.appendChild(next);
 				next.onclick = function() {
-					popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
 				};
 			}
 			container.appendChild(node);
@@ -288,7 +288,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				node.onmouseout = function() { this.style.border = "1px solid #000000"; this.style.boxShadow = ""; };
 				node.title = "Click to edit this rule";
 				node.onclick = function() {
-					popup_frame(null,"Edit Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?id="+rule.id);
+					popupFrame(null,"Edit Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?id="+rule.id);
 				};
 			}
 			node_container.appendChild(node);
@@ -303,7 +303,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				remove.onmouseover = function() { setOpacity(this,1); };
 				remove.onmouseout = function() { setOpacity(this,0.6); };
 				remove.onclick = function(ev) {
-					confirm_dialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
+					confirmDialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
 						if (!yes) return;
 						lock_screen();
 						service.json("selection","exam/remove_eligibility_rule",{id:rule.id},function(res){
@@ -324,7 +324,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				add_child.onmouseover = function() { setOpacity(this,1); };
 				add_child.onmouseout = function() { setOpacity(this,0.6); };
 				add_child.onclick = function(ev) {
-					popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?parent="+rule.id);
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?parent="+rule.id);
 					stopEventPropagation(ev);
 					return false;
 				};

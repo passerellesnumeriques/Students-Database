@@ -178,7 +178,7 @@ class service_is_status extends Service {
 			echo "</ul>";
 		} else echo "<br/>";
 		if ($applicants_no_IS > 0) {
-			echo "<a class='need_action' href='#' onclick=\"window.top.popup_frame(null,'Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{values:['NULL']}}]},95,95);return false;\">";
+			echo "<a class='need_action' href='#' onclick=\"window.top.popupFrame(null,'Applicants','/dynamic/selection/page/applicant/list',{filters:[{category:'Selection',name:'Information Session',data:{values:['NULL']}}]},95,95);return false;\">";
 			echo $applicants_no_IS." applicant".(count($applicants_no_IS) > 1 ? "s":"")." not attched to an Information Session";
 			echo "</a><br/>\n";
 		}
@@ -204,7 +204,7 @@ class service_is_status extends Service {
 			echo "\t\tmenu.addIconItem("
 				."null"
 				.",".json_encode($s["name"])
-				.",function() { popup_frame('/static/selection/is/is_16.png','Information Session','/dynamic/selection/page/is/profile?id=".$s["id"]."'+(win.ISchanged ? '&onsaved=ISchanged':''),null,95,95,function(frame,pop){if (win.ISchanged) frame.ISchanged=win.ISchanged;}); }"
+				.",function() { popupFrame('/static/selection/is/is_16.png','Information Session','/dynamic/selection/page/is/profile?id=".$s["id"]."'+(win.ISchanged ? '&onsaved=ISchanged':''),null,95,95,function(frame,pop){if (win.ISchanged) frame.ISchanged=win.ISchanged;}); }"
 			.");\n";
 		}
 		echo "\t\tmenu.showBelowElement(link);\n";

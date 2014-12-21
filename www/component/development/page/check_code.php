@@ -235,6 +235,7 @@ function check_js_type(type, descr, item, location) {
 	if (type == "Function") return;
 	if (type == "Object") return;
 	if (type == "Event") return;
+	if (type == "Exception") return;
 	if (type == "null") return;
 	var cl = get_class(window.jsdoc, type);
 	if (cl == null)

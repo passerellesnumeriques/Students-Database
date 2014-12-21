@@ -46,7 +46,7 @@ function organization(container, org, existing_types, can_edit) {
 			require([["typed_field.js","field_text.js"]],function(){
 				t.title = new field_text(org.name, true, {min_length:1,max_length:100,can_be_null:false,style:{fontSize:"x-large"}});
 				t.title_container.appendChild(t.title.getHTMLElement());
-				t.title.onchange.add_listener(function() {
+				t.title.onchange.addListener(function() {
 					org.name = t.title.getCurrentData();
 					if (t.google_search_input)
 						t.google_search_input.value = org.name;
@@ -81,7 +81,7 @@ function organization(container, org, existing_types, can_edit) {
 				var name;
 				for (var j = 0; j < existing_types.length; ++j)
 					if (existing_types[j].id == id) { name = existing_types[j].name; break; }
-				input_dialog(null,"Rename Organization Type","New name",name,100,function(name) {
+				inputDialog(null,"Rename Organization Type","New name",name,100,function(name) {
 					name = name.trim();
 					if (name.length == 0) return "Please enter a name";
 					for (var j = 0; j < existing_types.length; ++j)
@@ -151,7 +151,7 @@ function organization(container, org, existing_types, can_edit) {
 				item.innerHTML = "<img src='"+theme.icons_10.add+"' style='vertical-align:bottom;padding-right:3px;margin-bottom:1px'/> Create a new type";
 				item.style.fontSize = "8pt";
 				item.onclick = function() {
-					input_dialog(theme.icons_16.add,"New Organization Type","Enter the name of the organization type","",100,function(name){
+					inputDialog(theme.icons_16.add,"New Organization Type","Enter the name of the organization type","",100,function(name){
 						if (name.length == 0) return "Please enter a name";
 						for (var i = 0; i < existing_types.length; ++i)
 							if (existing_types[i].name.toLowerCase().trim() == name.toLowerCase().trim())
@@ -208,7 +208,7 @@ function organization(container, org, existing_types, can_edit) {
 		td_contacts.style.verticalAlign = "top";
 		require("contacts.js", function() {
 			t._contacts_widget = new contacts(td_contacts, "organization", org.id, org.contacts, can_edit, can_edit, can_edit);
-			t._contacts_widget.onchange.add_listener(function(c){
+			t._contacts_widget.onchange.addListener(function(c){
 				org.contacts = c.getContacts();
 				t.onchange.fire();
 			});
@@ -217,7 +217,7 @@ function organization(container, org, existing_types, can_edit) {
 		td_addresses.style.verticalAlign = "top";
 		require("addresses.js", function() {
 			t._addresses_widget = new addresses(td_addresses, true, "organization", org.id, org.addresses, can_edit, can_edit, can_edit);
-			t._addresses_widget.onchange.add_listener(function(a){
+			t._addresses_widget.onchange.addListener(function(a){
 				org.addresses = a.getAddresses();
 				t.onchange.fire();
 				t.onaddresschange.fire();
@@ -364,7 +364,7 @@ function organization(container, org, existing_types, can_edit) {
 				return;
 			}
 			update_map();
-			t._addresses_widget.onchange.add_listener(update_map);
+			t._addresses_widget.onchange.addListener(update_map);
 		};
 		window.top.google.loadGoogleMap(map_container, function(m) {
 			t.map = m;
@@ -452,7 +452,7 @@ function organization(container, org, existing_types, can_edit) {
 				var f = new field_text(point.designation, true, {min_length:1,max_length:100,can_be_null:false});
 				td_design.appendChild(f.getHTMLElement());
 				layout.changed(td_design);
-				f.onchange.add_listener(function() {
+				f.onchange.addListener(function() {
 					point.designation = f.getCurrentData();
 					t.onchange.fire();
 				});
@@ -467,7 +467,7 @@ function organization(container, org, existing_types, can_edit) {
 		link.title = "See profile";
 		link.people_id = point.people.id;
 		link.onclick = function(){
-			window.top.popup_frame("/static/people/people_16.png", "People Profile", "/dynamic/people/page/profile?plugin=people&people="+this.people_id);
+			window.top.popupFrame("/static/people/people_16.png", "People Profile", "/dynamic/people/page/profile?plugin=people&people="+this.people_id);
 		};
 		var first_name = document.createTextNode(point.people.first_name);
 		var last_name = document.createTextNode(point.people.last_name);
@@ -854,7 +854,7 @@ function organization(container, org, existing_types, can_edit) {
 															msg += "</ul>";
 														}
 														msg += "Do you want to import it ?";
-														choice_buttons_dialog(msg, choices, function(choice_index) {
+														choiceButtonsDialog(msg, choices, function(choice_index) {
 															if (choice_index == 1) { the_end(); return; } // No
 															if (choice_index == 0) {
 																// Yes

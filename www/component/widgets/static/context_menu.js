@@ -163,7 +163,7 @@ function context_menu(menu) {
 		div.onclick = function(ev) {
 			var sub_menu = new context_menu();
 			provider(sub_menu, function() {
-				sub_menu.element_clicked.add_listener(function(elem) {
+				sub_menu.element_clicked.addListener(function(elem) {
 					if (elem._sub_menu) return;
 					t.hide();
 				});
@@ -247,7 +247,7 @@ function context_menu(menu) {
 		}
 		if (typeof window.top.animation != 'undefined')
 			menu.style.visibility = 'hidden';
-		window.top.pnapplication.onwindowclosed.add_listener(t._window_close_listener);
+		window.top.pnapplication.onwindowclosed.addListener(t._window_close_listener);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);
 			window.top.pnapplication.registerOnclick(window, t._listener);
@@ -259,7 +259,7 @@ function context_menu(menu) {
 	t._window_close_listener = function(c) {
 		if (!t) return;
 		if (c.win != t._this_win) return;
-		c.top.pnapplication.onwindowclosed.remove_listener(t._window_close_listener);
+		c.top.pnapplication.onwindowclosed.removeListener(t._window_close_listener);
 		t._this_win = null;
 		c.top.document.body.removeChild(menu);
 	};
@@ -268,7 +268,7 @@ function context_menu(menu) {
 	 */
 	t.hide = function() {
 		if (!t) return;
-		window.top.pnapplication.onwindowclosed.remove_listener(t._window_close_listener);
+		window.top.pnapplication.onwindowclosed.removeListener(t._window_close_listener);
 		if (t.onclose) t.onclose();
 		if (t.parent_menu) {
 			setTimeout(function(){

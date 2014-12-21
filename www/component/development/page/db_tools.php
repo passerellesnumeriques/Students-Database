@@ -238,7 +238,7 @@ function createBackup() {
 	service.json("development","backup",{},function(res) {
 		unlock_screen(locker);
 		if (!res) {
-			error_dialog("Error during backup");
+			errorDialog("Error during backup");
 			return;
 		}
 		addBackup(res.version, res.time);
