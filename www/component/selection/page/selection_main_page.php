@@ -115,9 +115,9 @@ class page_selection_main_page extends SelectionPage {
 						require("calendar_view.js",function(){
 							new CalendarView(cal_manager, "week", 60, "calendar_container", function(){});
 						});
-						var extend = document.createElement("IMG");
-						extend.className = "button_verysoft";
-						extend.src = theme.icons_16.window_popup;
+						var extend = document.createElement("BUTTON");
+						extend.className = "flat icon transparent";
+						extend.innerHTML = "<img src='"+theme.icons_16.window_popup+"'/>";
 						extend.onclick = function(){
 							var content = document.createElement("div");
 							content.id = 'content_calendar_extend';
