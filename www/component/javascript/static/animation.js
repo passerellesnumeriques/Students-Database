@@ -153,8 +153,9 @@ window.animation = {
 	 * @param {Function} end_handler if given, called at the end of the animation
 	 * @returns {Animation} the created animation
 	 */
-	appear: function(element, duration, end_handler) {
+	appear: function(element, duration, end_handler, vertically) {
 		return animation.create(element, 0, 100, duration, function(value, element) {
+			element.style.visibility = 'visible';
 			if (value == 100) {
 				setOpacity(element, 1);
 				element.style.transform = "";
@@ -167,7 +168,11 @@ window.animation = {
 			// opacity
 			setOpacity(element,value/100);
 			// scale
-			element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";
+			if (vertically) {
+				element.style.transform = "scaleY("+value/100+")";
+				element.style.transformOrigin = "0 0";
+			} else
+				element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";
 		});
 	},
 	/**
@@ -177,7 +182,7 @@ window.animation = {
 	 * @param {Function} end_handler if given, called at the end of the animation
 	 * @returns {Animation} the created animation
 	 */
-	disappear: function(element, duration, end_handler) {
+	disappear: function(element, duration, end_handler, vertically) {
 		return animation.create(element, 100, 0, duration, function(value, element) {
 			if (value == 0) {
 				setOpacity(element, 0);
@@ -190,7 +195,12 @@ window.animation = {
 			// opacity
 			setOpacity(element,value/100);
 			// scale
-			element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";
+			if (vertically) {
+				element.style.transform = "scaleY("+value/100+")";
+				element.style.transformOrigin = "0 0";
+			} else {
+				element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";				
+			}
 		});
 	},
 	/** Implemetation of an animation to modify the color of the element

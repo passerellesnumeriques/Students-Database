@@ -155,10 +155,13 @@ function LoadingHidder(to_hide) {
 	this.remove = function() {
 		this._removed = true;
 		layout.unlistenElementSizeChanged(to_hide, updater);
-		if (this.div.parentNode)
-			this.div.parentNode.removeChild(this.div);
-		this.div = null;
-		t = null;
+		if (!t.div.parentNode) { t.div = null; t = null; return; }
+		animation.fadeOut(this.div, 300, function() {
+			if (t.div.parentNode)
+				t.div.parentNode.removeChild(t.div);
+			t.div = null;
+			t = null;
+		});
 	};
 	
 	this.setContent = function(content) {

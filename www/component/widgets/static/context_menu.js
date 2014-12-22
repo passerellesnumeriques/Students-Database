@@ -240,7 +240,7 @@ function context_menu(menu) {
 			window.top.pnapplication.registerOnclick(window, t._listener);
 		},1);
 		if (typeof window.top.animation != 'undefined')
-			menu.anim = window.top.animation.fadeIn(menu,300,function(){menu.anim = null;if (ondisplayed) ondisplayed();});
+			menu.anim = window.top.animation.appear(menu,200,function(){menu.anim = null;if (ondisplayed) ondisplayed();},true);
 		else if (ondisplayed)
 			ondisplayed();
 	};
@@ -269,7 +269,7 @@ function context_menu(menu) {
 				if (!t) return;
 				if (t.removeOnClose)
 					try { menu.parentNode.removeChild(menu); } catch (e) {}
-			});
+			},true);
 		} else {
 			if (t.removeOnClose)
 				try { menu.parentNode.removeChild(menu); } catch (e) {}
