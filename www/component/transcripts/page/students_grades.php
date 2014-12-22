@@ -269,6 +269,7 @@ grades_grid.setColumnsChooserButton(document.getElementById('columns_chooser_but
 grades_grid.setExportButton(document.getElementById('export_button'),<?php echo json_encode("Grades of ".$title);?>,'Grades');
 grades_grid.setPrintButton(document.getElementById('print_button'));
 grades_grid.grid.makeScrollable();
+grades_grid.highlightRowOnHover();
 for (var i = 0; i < categories.length; ++i) {
 	var cat_subjects = [];
 	for (var j = 0; j < subjects.length; ++j)

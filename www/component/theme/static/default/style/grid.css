@@ -53,7 +53,7 @@ table.grid>tbody>tr>td.first_in_container {
 table.grid>tbody>tr {
 	background-color: #FFFFFF;
 }
-table.grid>tbody>tr.selected {
+table.grid>tbody>tr.selected, table.grid.selected_hover>tbody>tr:hover {
 	background-color: #FFF0D0;
     background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
 }

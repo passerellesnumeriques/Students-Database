@@ -1933,6 +1933,7 @@ function grid(element) {
 		table.appendChild(t.table);
 		t.element.appendChild(t.grid_element);
 		table.className = "grid";
+		this._table = table;
 		// listen to keys
 		listenEvent(window,'keyup',t._key_listener);
 	};

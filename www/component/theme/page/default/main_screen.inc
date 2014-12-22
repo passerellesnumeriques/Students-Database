@@ -158,6 +158,10 @@ global $pn_app_version;
 	background-color: rgba(255,255,255,0.3);
 	border-left: 5px solid #0080C0;
 }
+.application_left_menu_item:hover:not(.selected) {
+	transform: scaleX(1.05) scaleY(1.05);
+	transition: transform 0.1s;
+}
 .application_left_menu_item.selected {
 	background-color: #ff9933;
 	border-left: 5px solid #CC6600;

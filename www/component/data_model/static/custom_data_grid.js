@@ -604,6 +604,11 @@ custom_data_grid.prototype = {
 		};
 	},
 	
+	/** Ask to highlight the row on which the cursor is */
+	highlightRowOnHover : function() {
+		addClassName(this.grid._table, "selected_hover");
+	},
+	
 	/** Internal function to create the context_menu to display for choosing columns to show/hide
 	 * @param {Element} button the button below which we will display the context menu
 	 */
