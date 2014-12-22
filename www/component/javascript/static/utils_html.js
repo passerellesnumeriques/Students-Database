@@ -184,7 +184,7 @@ function waitFrameReady(win, test, onready, timeout, onfail) {
 		if (onfail) onfail();
 		return;
 	}
-	if (!test(win)) { setTimeout(function() { waitFrameReady(win, test, onready, timeout-50); }, 50); return; }
+	if (!test(win)) { setTimeout(function() { waitFrameReady(win, test, onready, timeout-50, onfail); }, 50); return; }
 	onready(win);
 }
 /** Wait for things to be initialized in a frame
@@ -200,7 +200,7 @@ function waitFrameContentReady(frame, test, onready, timeout, onfail) {
 		return;
 	}
 	var win = getIFrameWindow(frame);
-	if (!win || !test(win)) { setTimeout(function() { waitFrameContentReady(frame, test, onready, timeout-50); }, 50); return; }
+	if (!win || !test(win)) { setTimeout(function() { waitFrameContentReady(frame, test, onready, timeout-50, onfail); }, 50); return; }
 	onready(win);
 }
 
@@ -220,7 +220,7 @@ function waitForFrame(frame_name, onready, timeout, onfailed) {
 			}
 		}
 	}
-	setTimeout(function() { waitForFrame(frame_name, onready, timeout-50); }, 50);
+	setTimeout(function() { waitForFrame(frame_name, onready, timeout-50, onfailed); }, 50);
 }
 
 if (typeof window.top._current_tooltip == 'undefined')
