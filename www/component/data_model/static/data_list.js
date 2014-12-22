@@ -704,7 +704,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		for (var i = 0; i < t.grid.columns.length; ++i) {
 			if (t.grid.columns[i].id == field_category+'.'+field_name+'.'+field_sub_index) {
 				t.grid.columns[i].sort_order = asc ? 1 : 2;
-				t.grid.columns[i]._refresh_title();
+				t.grid.columns[i]._refreshTitle();
 				t._sort_column = t.grid.columns[i];
 				t._sort_order = asc ? 1 : 2;
 				if (t._data_loaded) t._loadData(); // reload to apply the sorting
@@ -1196,7 +1196,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				var has = t.hasFilterOn(f.field.category, f.field.name);
 				action.icon = has ? "/static/widgets/grid/filter_active.png" : "/static/widgets/grid/filter.gif";
 				action.tooltip = has ? "Edit filters (this column is currently filtered)" : "Filter";
-				col._refresh_title();
+				col._refreshTitle();
 				layout.changed(container);
 			};
 			var a = new GridColumnAction('filter',has ? "/static/widgets/grid/filter_active.png" : "/static/widgets/grid/filter.gif",function(ev,action,col){
@@ -1204,15 +1204,16 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				if (has)
 					t._filtersDialog(ev.target);
 				else {
-					require(["context_menu.js",["typed_filter.js",f.field.filter_classname+".js"]], function() {
+					require(["context_menu.js","position.js",["typed_filter.js",f.field.filter_classname+".js"]], function() {
 						var menu = new context_menu();
 						var div = document.createElement("DIV");
 						var filter = {category:f.field.category,name:f.field.name,data:null};
 						var tf = t._createFilter(filter, div, false, true);
 						menu.addItem(div,true);
-						menu.showBelowElement(ev.target);
+						menu.showBelowElement(ev.target, false, function() {
+							tf.focus();
+						});
 						t.addFilter(filter);
-						tf.focus();
 						menu.onclose = function() {
 							if (!tf.isActive())
 								t.removeFilter(filter);

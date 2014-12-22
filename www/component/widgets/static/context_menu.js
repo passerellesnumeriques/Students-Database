@@ -179,12 +179,12 @@ function context_menu(menu) {
 	/** Display the menu below the given element
 	 * @param from the element below which the menu will be displayed
 	 */
-	t.showBelowElement = function(from, min_width_is_from) {
+	t.showBelowElement = function(from, min_width_is_from, ondisplayed) {
 		window.top.require("position.js", function() {
 			menu.style.visibility = "visible";
 			menu.style.display = "";
 			t.show_from = from;
-			window.top.positionBelowElement(menu, from, min_width_is_from, function(x,y) { t._shownAt(x,y,from); });
+			window.top.positionBelowElement(menu, from, min_width_is_from, function(x,y) { t._shownAt(x,y,from,ondisplayed); });
 		});
 	};
 	/** Display the menu above the given element
@@ -216,7 +216,7 @@ function context_menu(menu) {
 		menu.style.left = x+"px";
 		t._showAt(x,y,null);
 	};
-	t._shownAt = function(x,y,from) {
+	t._shownAt = function(x,y,from,ondisplayed) {
 		var e = from;
 		var from_inside_menu = false;
 		while (e && e != from.ownerDocument.body) { if (e.className == 'context_menu') { from_inside_menu = true; break; } e = e.parentNode; }
@@ -240,7 +240,9 @@ function context_menu(menu) {
 			window.top.pnapplication.registerOnclick(window, t._listener);
 		},1);
 		if (typeof window.top.animation != 'undefined')
-			menu.anim = window.top.animation.fadeIn(menu,300,function(){menu.anim = null;});
+			menu.anim = window.top.animation.fadeIn(menu,300,function(){menu.anim = null;if (ondisplayed) ondisplayed();});
+		else if (ondisplayed)
+			ondisplayed();
 	};
 	t._this_win = window;
 	t._window_close_listener = function(c) {
