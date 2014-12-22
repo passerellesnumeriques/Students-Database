@@ -175,7 +175,7 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 			if (elem.location.file == location) {
 				var i = filename.indexOf(".js");
 				var fname = filename.substring(0,i);
-				if (name != fname && !name.startsWith(fname)) {
+				if (name != fname && !name.startsWith(fname) && !elem.no_name_check) {
 					// not a class corresponding to the filename: must comply
 					check_name_class(name, "Class "+ns_path+name, item);
 				}

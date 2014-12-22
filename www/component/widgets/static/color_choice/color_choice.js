@@ -1,7 +1,13 @@
 if (typeof require != 'undefined') require("color.js");
 
+/**
+ * Display a screen to choose a color
+ * @param {Element} container where to put the screen
+ * @param {String} current_color currently selected color in #RRGGBB format, or null
+ */
 function color_choice(container, current_color) {
 	var t=this;
+	/** Create the screen */
 	this._init = function() {
 		var page = document.createElement("TABLE"); container.appendChild(page);
 		page.style.display = "inline-block";
@@ -119,6 +125,9 @@ function color_choice(container, current_color) {
 		}
 		container.appendChild(div);
 	};
+	/** Change the selected color
+	 * @param {String} color the color in string format which will be parsed using parseColor
+	 */
 	this.setColor = function(color) {
 		if (typeof color == 'string') color = parseColor(color);
 		for (var i = 0; i < this.default_boxes.length; ++i) {
@@ -140,6 +149,11 @@ function color_choice(container, current_color) {
 	});
 }
 
+/** Small box with selected color, and showing a color_choice when clicking on it
+ * @param {Element} container where to put the box
+ * @param {String} color current color
+ * @no_name_check
+ */
 function color_widget(container, color) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	this.color = color;
