@@ -74,7 +74,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 	this._createSingleField = function(field, sub_index) {
 		if (typeof sub_index == 'undefined' && field.data.sub_data) {
 			for (var i = 0; i < field.data.sub_data.names.length; ++i)
-				if (field.data.sub_data.editableForNew[i])
+				if (field.data.sub_data.editable_for_new[i])
 					this._createSingleField(field, i);
 			return;
 		}
@@ -189,7 +189,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 		var row = {tr:tr,selects:[],layers:[]};
 		rows.push(row);
 		for (var i = 0; i < field.data.sub_data.names.length; ++i) {
-			if (!field.data.sub_data.editableForNew[i]) continue;
+			if (!field.data.sub_data.editable_for_new[i]) continue;
 			td = document.createElement("TD");
 			tr.appendChild(td);
 			var select = this._createSelectColumn(td, field, i, null);
@@ -352,7 +352,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 			var td = document.createElement("TD"); tr_title.appendChild(td);
 			td.appendChild(document.createTextNode(field.data.name));
 			for (var i = 0; i < field.data.sub_data.names.length; ++i) {
-				if (!field.data.sub_data.editableForNew[i]) continue;
+				if (!field.data.sub_data.editable_for_new[i]) continue;
 				td = document.createElement("TD"); tr_title.appendChild(td);
 				td.appendChild(document.createTextNode(field.data.sub_data.names[i]));
 			}
@@ -605,7 +605,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 								}
 							} else {
 								for (var l = 0; l < fields[k].data.sub_data.names.length; ++l) {
-									if (!fields[k].data.sub_data.editableForNew[l]) continue;
+									if (!fields[k].data.sub_data.editable_for_new[l]) continue;
 									var name = fields[k].data.name+" "+fields[k].data.sub_data.names[l];
 									if (name.isSame(value)) {
 										t._columnFound(i,j,fields[k],l);
@@ -637,7 +637,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 								best_field = undefined;
 							} else {
 								for (var l = 0; l < fields[k].data.sub_data.names.length; ++l) {
-									if (!fields[k].data.sub_data.editableForNew[l]) continue;
+									if (!fields[k].data.sub_data.editable_for_new[l]) continue;
 									var match = wordsMatch(value, fields[k].data.name+" "+fields[k].data.sub_data.names[l], true);
 									if (match.nb_words1_in_words2 == 0) continue;
 									if (best_match === null) {

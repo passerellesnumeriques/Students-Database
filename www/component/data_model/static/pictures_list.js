@@ -1,11 +1,22 @@
+/**
+ * Picture list with thumbnail form
+ * @param {Element} container where to put it
+ */
 function pictures_list(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 
+	/** Width of each picture container */ 
 	this.width = 200; 
+	/** Height of each picture container */
 	this.height = 240;
+	/** List of pictures_list_thumbnail */
 	this.pictures = [];
 	
+	/** Change the size of the pictures
+	 * @param {Number} width the maximum width
+	 * @param {Number} height the maximum height
+	 */
 	this.setSize = function(width, height) {
 		this.width = width;
 		this.height = height;
@@ -13,7 +24,7 @@ function pictures_list(container) {
 			this.pictures[i].setSize(width, height);
 		this.adjustSizes();
 	};
-	
+	/** Called to adjust the size of every picture so it will look like a table */
 	this.adjustSizes = function() {
 		for (var i = 0; i < this.pictures.length; ++i) {
 			this.pictures[i].element.style.width = "";
@@ -36,7 +47,10 @@ function pictures_list(container) {
 			this.pictures[i].adjustPicture();
 		}
 	};
-	
+	/** 
+	 * Set the pictures
+	 * @param {Array} lsit of pictures
+	 */
 	this.setPictures = function(pictures) {
 		while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);
 		for (var i = 0; i < this.pictures.length; ++i)

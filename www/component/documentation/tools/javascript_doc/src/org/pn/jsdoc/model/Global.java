@@ -20,11 +20,13 @@ import org.pn.jsdoc.model.builtin.BuiltinDate;
 import org.pn.jsdoc.model.builtin.BuiltinDocument;
 import org.pn.jsdoc.model.builtin.BuiltinElement;
 import org.pn.jsdoc.model.builtin.BuiltinEvent;
+import org.pn.jsdoc.model.builtin.BuiltinException;
 import org.pn.jsdoc.model.builtin.BuiltinHistory;
 import org.pn.jsdoc.model.builtin.BuiltinLocation;
 import org.pn.jsdoc.model.builtin.BuiltinMath;
 import org.pn.jsdoc.model.builtin.BuiltinNavigator;
 import org.pn.jsdoc.model.builtin.BuiltinNumber;
+import org.pn.jsdoc.model.builtin.BuiltinObject;
 import org.pn.jsdoc.model.builtin.BuiltinScreen;
 import org.pn.jsdoc.model.builtin.BuiltinString;
 import org.pn.jsdoc.model.builtin.BuiltinUndefined;
@@ -157,6 +159,8 @@ public class Global extends Container {
 		content.put("Array", new BuiltinArray(this));
 		content.put("Element", new BuiltinElement(this));
 		content.put("Event", new BuiltinEvent(this));
+		content.put("Exception", new BuiltinException(this));
+		content.put("Object", new BuiltinObject(this));
 		content.put("Undefined", new BuiltinUndefined(this));
 	}
 	

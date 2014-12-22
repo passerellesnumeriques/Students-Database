@@ -1117,11 +1117,11 @@ function grid(element) {
 				var tr = t.table.childNodes[i];
 				var td = tr.childNodes[0];
 				var cb = td.childNodes[0];
-				if ((tr.className == 'selected') != (i==index)) {
+				if (hasClassName(tr, 'selected') != (i==index)) {
 					if (t.onrowselectionchange)
 						t.onrowselectionchange(tr.row_id, i==index);
 					cb.checked = i==index ? 'checked' : '';
-					tr.className = i==index ? "selected" : "";
+					if (i == index) addClassName(tr, "selected"); else removeClassName(tr, "selected");
 				}
 			}
 		} else {
@@ -1130,7 +1130,7 @@ function grid(element) {
 			var cb = td.childNodes[0];
 			if (cb.checked != selected) {
 				cb.checked = selected ? 'checked' : '';
-				tr.className = selected ? "selected" : "";
+				if (selected) addClassName(tr, "selected"); else removeClassName(tr, "selected");
 				if (t.onrowselectionchange)
 					t.onrowselectionchange(tr.row_id, selected);
 			}
@@ -1151,16 +1151,16 @@ function grid(element) {
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
 			if (t.selectable_unique && tr.row_id != row_id) {
-				if (tr.className == 'selected') {
+				if (hasClassName(tr,'selected')) {
 					cb.checked = "";
-					tr.className = "";
+					removeClassName(tr, "selected");
 					if (t.onrowselectionchange)
 						t.onrowselectionchange(tr.row_id, false);
 				}
 			} else {
 				if (cb.checked != selected) {
 					cb.checked = selected ? 'checked' : '';
-					tr.className = selected ? "selected" : "";
+					if (selected) addClassName(tr, "selected"); else removeClassName(tr, "selected");
 					if (t.onrowselectionchange)
 						t.onrowselectionchange(tr.row_id, selected);
 				}
@@ -1329,12 +1329,12 @@ function grid(element) {
 		while (t.table.childNodes.length > 0) t.table.removeChild(t.table.childNodes[0]);
 		// create rows
 		for (var i = 0; i < data.length; ++i) {
-			t.addRow(data[i].row_id, data[i].row_data, data[i].background);
+			t.addRow(data[i].row_id, data[i].row_data, data[i].classname);
 		}
 	};
-	t.addRow = function(row_id, row_data, background) {
+	t.addRow = function(row_id, row_data, classname) {
 		var tr = document.createElement("TR");
-		if (background) tr.style.background = background;
+		if (classname) tr.className = classname;
 		var click_listener = function() { t.onrowfocus.fire(tr); };
 		listenEvent(tr, 'click', click_listener);
 		tr.row_id = row_id;
@@ -1412,13 +1412,13 @@ function grid(element) {
 		cb.style.verticalAlign = "middle";
 		cb.onchange = function(ev) {
 			var tr = this.parentNode.parentNode;
-			tr.className = this.checked ? "selected" : "";
+			if (this.checked) addClassName(tr, "selected"); else removeClassName(tr, "selected");
 			if (t.onrowselectionchange)
 				t.onrowselectionchange(tr.row_id, this.checked);
 			if (t.selectable_unique && this.checked) {
 				for (var i = 0; i < t.table.childNodes.length; ++i)
-					if (tr != t.table.childNodes[i] && t.table.childNodes[i].className == "selected") {
-						t.table.childNodes[i].className = "";
+					if (tr != t.table.childNodes[i] && hasClassName(t.table.childNodes[i], "selected")) {
+						removeClassName(t.table.childNodes[i], "selected");
 						if (t.onrowselectionchange)
 							t.onrowselectionchange(t.table.childNodes[i].row_id, false);
 					}

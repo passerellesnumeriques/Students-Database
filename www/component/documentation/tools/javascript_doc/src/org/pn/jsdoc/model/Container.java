@@ -40,7 +40,7 @@ public abstract class Container extends FinalElement {
 	}
 	
 	public void add(String name, Element element) {
-		if (element.skip()) return;
+		//if (element.skip()) return;
 		if (content.containsKey(name)) {
 			Element current = content.get(name);
 			if (current instanceof Evaluable) {
@@ -334,6 +334,19 @@ public abstract class Container extends FinalElement {
 					String name = ((Function)elem).container.getName(elem);
 					((Function)elem).container.content.put(name, c);
 					elem = c;
+				} else if (elem instanceof ObjectClass) {
+					Element type = global.content.get(((ObjectClass)elem).type);
+					if (type == null) {
+						if (generate_errors)
+							error("Unknown type "+((ObjectClass)elem).type+" for element '"+names.get(0)+"'", e);
+						return null;
+					}
+					if (!(type instanceof Container)) {
+						if (generate_errors)
+							error("Type "+((ObjectClass)elem).type+" for element '"+names.get(0)+"' is not a container, we cannot access to its attributes in "+e.value.toSource(), e);
+						return null;						
+					}
+					elem = type;
 				} else {
 					if (generate_errors)
 						error("Element '"+names.get(0)+"' is not a container (found:"+elem.getClass().getName()+") in "+e.value.toSource(), e);

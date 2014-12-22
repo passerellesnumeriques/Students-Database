@@ -33,8 +33,9 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	t.locks = null;
 	/** indicates if we are currently in editabled mode */
 	t.editable = true;
+	/** Indicates if we should fill the width of the container */
 	t._fill_container = false;
-	
+	/** Ask to fill the width of the container */
 	t.fillContainer = function() {
 		t._fill_container = true;
 		t.field.getHTMLElement().style.width = "100%";

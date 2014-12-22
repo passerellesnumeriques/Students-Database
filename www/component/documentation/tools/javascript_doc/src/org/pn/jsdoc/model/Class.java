@@ -52,6 +52,9 @@ public class Class extends Container {
 								AstNode value = ((Assignment)expr).getRight();
 								ValueToEvaluate ve = new ValueToEvaluate(file, value, node, expr, target, value);
 								ve.addContext_FunctionParameters(constructor);
+								HashMap<String,Object> runtime = new HashMap<String,Object>();
+								runtime.putAll(variables);
+								ve.addRuntimeContext(runtime);
 								add(names.get(names.size()-1), ve);
 								break;
 							}

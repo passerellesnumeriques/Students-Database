@@ -159,6 +159,7 @@ public class Function extends FinalElement {
 		// TODO if no comment for return
 		s.append(",").append(location.generate());
 		s.append(",").append(no_name_check ? "true" : "false");
+		s.append(",").append(skip ? "true" : "false");
 		s.append(")");
 		return s.toString();
 	}

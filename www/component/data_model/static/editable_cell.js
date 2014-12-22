@@ -40,7 +40,7 @@ function editable_cell(container, table, column, row_key, field_classname, field
 			if (onready) onready(t);
 		});
 	});
-	
+	/** Ask to make the field fill its container width */
 	t.fillContainer = function() {
 		t.editable_field.fillContainer();
 	};

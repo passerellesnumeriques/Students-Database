@@ -7,8 +7,7 @@ if (typeof theme != 'undefined')
 /**
  * Create a contextual menu.
  * If an element is given, each item inside this element will be identified by having the class 'context_menu_item'
- * @constructor
- * @param menu a div element containing the menu, or the id of the element, or null if you will create items dynamically
+ * @param {Element|null} menu a div element containing the menu, or the id of the element, or null if you will create items dynamically
  */
 function context_menu(menu) {
 	if (typeof menu == "string") menu = document.getElementById(menu);
@@ -16,9 +15,7 @@ function context_menu(menu) {
 		menu.parentNode.removeChild(menu);
 	
 	var t = this;
-	/** Indicate if the menu should be removed when closed, or only hidden
-	 * @member {boolean} context_menu#removeOnClose
-	 */
+	/** {Boolean} Indicate if the menu should be removed when closed, or only hidden */
 	t.removeOnClose = menu ? false : true;
 
 	if (menu == null) {
@@ -29,9 +26,7 @@ function context_menu(menu) {
 	window.top.document.body.appendChild(menu);
 	menu.context_menu=this;
 	this.element = menu;
-	/** Called when the menu is closed
-	 * @member {function} context_menu#onclose
-	 */
+	/** {Function} Called when the menu is closed */
 	t.onclose = null;
 	
 	// populate the items from the given element: take every child having the class 'context_menu_item'
@@ -50,9 +45,8 @@ function context_menu(menu) {
 	t.element_clicked = new Custom_Event();
 	
 	/** Append an item to the menu
-	 * @method context_menu#addItem
-	 * @param element the html element to append
-	 * @param {boolean} keep_onclick if true, the menu will not be closed when the user click on it.
+	 * @param {Element} element the html element to append
+	 * @param {Boolean} keep_onclick if true, the menu will not be closed when the user click on it.
 	 */
 	t.addItem = function(element, keep_onclick) {
 		element.style.position = 'static';
@@ -78,11 +72,10 @@ function context_menu(menu) {
 		return element;
 	};
 	/** Append an item to the menu.
-	 * @method context_menu#addIconItem
-	 * @param {string} icon url of the icon of the item
-	 * @param {string} text the text of the item
-	 * @param {function} onclick called when the user click on the item
-	 * @returns the html element corresponding to the item
+	 * @param {String} icon url of the icon of the item
+	 * @param {String} text the text of the item
+	 * @param {Function} onclick called when the user click on the item
+	 * @returns {Element} the html element corresponding to the item
 	 */
 	t.addIconItem = function(icon, text, onclick, onclick_parameter) {
 		var div = document.createElement("DIV");
@@ -113,8 +106,8 @@ function context_menu(menu) {
 	};
 	/**
 	 * Append a title to the menu
-	 * @param {string} icon url of the icon of the item
-	 * @param {string} text the text of the item
+	 * @param {String} icon url of the icon of the item
+	 * @param {String} text the text of the item
 	 */
 	t.addTitleItem = function(icon, text) {
 		var div = document.createElement("DIV");
@@ -174,20 +167,16 @@ function context_menu(menu) {
 		t.addItem(div, true);
 	};
 	/** Return the items contained in this menu
-	 * @method context_menu#getItems
 	 * @returns the list of html elements contained in the menu
 	 */
 	t.getItems = function() { return menu.childNodes; };
-	/** Remove all items from this menu
-	 * @method context_menu#clearItems
-	 */
+	/** Remove all items from this menu */
 	t.clearItems = function() {
 		while (menu.childNodes.length > 0)
 			menu.childNodes[0].parentNode.removeChild(menu.childNodes[0]);
 	};
 	
 	/** Display the menu below the given element
-	 * @method context_menu#showBelowElement
 	 * @param from the element below which the menu will be displayed
 	 */
 	t.showBelowElement = function(from, min_width_is_from) {
@@ -199,7 +188,6 @@ function context_menu(menu) {
 		});
 	};
 	/** Display the menu above the given element
-	 * @method context_menu#showAboveElement
 	 * @param from the element above which the menu will be displayed
 	 */
 	t.showAboveElement = function(from, min_width_is_from) {
@@ -219,7 +207,6 @@ function context_menu(menu) {
 		});
 	};
 	/** Display the menu at the given position (using absolute positioning)
-	 * @member context_menu#showAt
 	 */
 	t.showAt = function(x,y) {
 		menu.style.visibility = "visible";
@@ -264,7 +251,6 @@ function context_menu(menu) {
 		c.top.document.body.removeChild(menu);
 	};
 	/** Hide the menu: call <code>onclose</code> if specified, then hide or remove the html element of the menu depending on <code>removeOnClose</code> 
-	 * @member context_menu#hide
 	 */
 	t.hide = function() {
 		if (!t) return;

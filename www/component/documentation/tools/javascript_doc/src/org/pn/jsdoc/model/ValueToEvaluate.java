@@ -21,6 +21,7 @@ import org.mozilla.javascript.ast.PropertyGet;
 import org.mozilla.javascript.ast.StringLiteral;
 import org.mozilla.javascript.ast.UnaryExpression;
 import org.pn.jsdoc.model.Function.Parameter;
+import org.pn.jsdoc.model.builtin.BuiltinObject;
 
 public class ValueToEvaluate extends Element implements Evaluable {
 
@@ -163,6 +164,10 @@ public class ValueToEvaluate extends Element implements Evaluable {
 						String name = ((Name)right).getIdentifier();
 						Element o = cont.content.get(name);
 						if (o == null && name.equals("prototype")) o = cont;
+						if (o == null && cont instanceof BuiltinObject) {
+							// we cannot evaluate
+							return null;
+						}
 						if (o == null)
 							error("Container "+cont.getType()+" does not have element "+name, this.location.file, value);
 						else if (o instanceof FinalElement) 

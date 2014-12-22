@@ -150,7 +150,7 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 	
 	/**
 	 * Set the event ID attribute
-	 * @param {Number} id, the new event ID
+	 * @param {Number} id the new event ID
 	 */
 	t.setEventId = function(id){
 		t._event.id = id;
@@ -166,7 +166,7 @@ function is_date(container, event_id, IS_id, calendar_id, default_duration, can_
 
 	/**
 	 * Get the number of hours matching the all_duration attribute ("2 hours"...)
-	 * @param {String} duration_string, a all_duration attribute
+	 * @param {String} duration_string a all_duration attribute
 	 * @returns {Number} the number of hours
 	 */
 	t._getHoursDuration = function(duration_string){

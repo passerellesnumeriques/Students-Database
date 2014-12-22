@@ -206,7 +206,7 @@ if (typeof window.top._last_service_call == 'undefined')
  * Send the given object to the given URL using POST method.
  * @param {String} url the location where to send the data
  * @param {Object} data the data to send
- * @param {window} win the window used to send the data, which will be used to display the resulting page
+ * @param {Window} win the window used to send the data, which will be used to display the resulting page
  */
 function postData(url, data, win) {
 	if (!win) win = window;

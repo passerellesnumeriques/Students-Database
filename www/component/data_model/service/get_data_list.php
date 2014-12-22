@@ -563,22 +563,44 @@ class service_get_data_list extends Service {
 	}
 }
 
+/**
+ * Provide sorting for the list of data
+ */
 class DataListRowSorter {
 	
+	/** @var string $alias alias of the column to sort */
 	private $alias;
+	/** @var boolean $asc if true, sort in ascending order, else descending order */
 	private $asc;
 	
+	/**
+	 * Create a sorter
+	 * @param string $alias alias of the column to sort
+	 * @param boolean $asc if true, sort in ascending order, else descending order
+	 */
 	public function __construct($alias, $asc) {
 		$this->alias = $alias;
 		$this->asc = $asc;
 	}
 	
+	/**
+	 * Compare 2 rows
+	 * @param array $row1 first row
+	 * @param array $row2 second row
+	 * @return number -1 if row1 should be before row2, 1 if row2 should be before row1, 0 if they are equal
+	 */
 	public function compare($row1,$row2) {
 		$r = $this->cmp($row1,$row2);
 		if ($this->asc) return $r;
 		return -$r;
 	}
 	
+	/**
+	 * Compare two rows, but without taking the ascending/descending order
+	 * @param array $row1 first row
+	 * @param array $row2 second row
+	 * @return number -1 if row1 should be before row2 in ascending order, 1 if row2 should be before row1 in ascending order, 0 if they are equal
+	 */
 	public function cmp($row1,$row2) {
 		$v1 = @$row1[$this->alias];
 		$v2 = @$row2[$this->alias];

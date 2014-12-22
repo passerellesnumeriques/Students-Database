@@ -12,6 +12,11 @@ function StatusMessage(type,message,actions,timeout) {
 	this.actions = actions;
 	this.timeout = timeout;
 }
+/** Status message for an error, including an exception stack trace if given
+ * @param {Exception} err the error, or null if no exception
+ * @param {String} message error message
+ * @param {Number} timeout if given, the message will automatically disappear after this timeout specified in milliseconds
+ */
 function StatusMessageError(err, message, timeout) {
 	this.id = generateID();
 	this.type = Status_TYPE_ERROR;

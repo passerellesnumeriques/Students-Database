@@ -5,6 +5,7 @@
  * @param {String} table table on the data model
  * @param {String} field_classname name of the implementation of typed_field to use to display this data
  * @param {Object} field_config configuration of the typed_field
+ * @param {String} horiz_align one of 'left','right','center'
  * @param {Boolean} editable true if the data can be edited
  * @param {Object} edit_locks information to know what to lock when the user wants to edit the data
  * @param {Boolean} sortable indicates if the data can be sorted or not in a list
@@ -12,9 +13,11 @@
  * @param {Object} filter_config configuration of the typed_filter
  * @param {Object} cell if the data represents a single cell in the database, this object indicates which one
  * @param {Object} new_data structure to use for a new data
- * @returns
+ * @param {SubDataDisplay} sub_data if specified, the data contains sub-data
  */
-function DataDisplay(category, name, table, field_classname, field_config, horiz_align, editable, edit_locks, sortable, filter_classname, filter_config, cell, new_data, sub_data) {
+function DataDisplay(category, name, table, field_classname, field_config, 
+		horiz_align, editable, edit_locks, sortable, 
+		filter_classname, filter_config, cell, new_data, sub_data) {
 	this.category = category;
 	this.name = name;
 	this.table = table;
@@ -31,16 +34,23 @@ function DataDisplay(category, name, table, field_classname, field_config, horiz
 	this.sub_data = sub_data;
 }
 
-function SubDataDisplay(names, editable, editableForNew) {
+/**
+ * Represents the sub-data in a DataDisplay
+ * @param {Array} names list of the name of the sub-data
+ * @param {Array} editable array of boolean, indicating if we can edit them
+ * @param {Array} editable_for_new array of boolean, indicating if we can edit them for a new data
+ */
+function SubDataDisplay(names, editable, editable_for_new) {
 	this.names = names;
 	this.editable = editable;
-	this.editableForNew = editableForNew;
+	this.editable_for_new = editable_for_new;
 }
 
 /** Parse a DataPath to get information about it on JavaScript side
  * @param {String} s string representation of the DataPath, to be parsed 
  */
 function DataPath(s) {
+	/** The original path in string format */
 	this.path = s;
 	/** Parse the first section of the path in the given string, then call recursively on the remaining string
 	 * @param {String} s the string to parse
@@ -70,6 +80,10 @@ function DataPath(s) {
 		}
 		this.next = new DataPath(s);
 	};
+	/**
+	 * Parse the path for a table, with parenthesis for a join key, and a brace for sub model
+	 * @param {String} s the string to parse
+	 */
 	this._parseTable = function(s) {
 		var i = s.indexOf('(');
 		if (i > 0) {
@@ -99,7 +113,10 @@ function DataPath(s) {
 		}
 		return true;
 	};
-	
+	/**
+	 * Returns the list element of the path, corresponding to the final table
+	 * @returns {Object} the last table in the path
+	 */
 	this.lastElement = function() {
 		var p = this;
 		while (p.next) p = p.next;

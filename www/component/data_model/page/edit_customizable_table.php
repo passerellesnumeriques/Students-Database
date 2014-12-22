@@ -384,7 +384,7 @@ class page_edit_customizable_table extends Page {
 			<?php 
 			foreach ($plugins as $pi) {
 				echo "function create__".$pi->getId()."(container, spec) {\n";
-				// TODO
+				// nothing needed so far
 				echo "container.spec.get = function() { return {}; };\n";
 				echo "}\n";
 			}
@@ -452,7 +452,7 @@ class page_edit_customizable_table extends Page {
 					foreach ($plugins as $p) if ($p->getForeignTable() == $col->foreign_table) { $pi = $p; break; }
 					if ($pi == null) continue;
 					$type = $pi->getId();
-					// TODO spec ?
+					// nothing in the spec so far
 				} else if ($col instanceof \datamodel\ColumnInteger) {
 					$type = "integer";
 					$spec["min"] = $col->min;

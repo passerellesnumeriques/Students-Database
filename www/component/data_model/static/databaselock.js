@@ -30,7 +30,11 @@ window.databaselock = {
 			if (this._locks[i].id == id)
 				this._locks.splice(i,1);
 	},
-	
+	/**
+	 * Call the unlock service for the given id. If it succeed, the removeLock function will be called.
+	 * @param {Number} id the id of the lock
+	 * @param {Function} handler the function to call once done, with the result as parameter (true on succcess)
+	 */
 	unlock: function(id, handler) {
 		service.json("data_model", "unlock", {lock:id}, function(res) {
 			if (res) databaselock.removeLock(id);
@@ -83,6 +87,7 @@ window.databaselock = {
 		if (ids.length > 0)
 			service.json("data_model","unlock",{locks:ids},function(result){},true);
 	},
+	/** Called regularely, to extend the expiration time of the lock still used */
 	_update: function() {
 		var ids = [];
 		for (var i = 0; i < this._locks.length; ++i) ids.push(this._locks[i].id);

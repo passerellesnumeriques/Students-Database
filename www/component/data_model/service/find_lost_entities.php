@@ -1,7 +1,7 @@
 <?php 
 class service_find_lost_entities extends Service {
 	
-	public function getRequiredRights() { return array(); } // TODO manage database
+	public function getRequiredRights() { return array("manage_application"); }
 	
 	public function documentation() { echo "Look for lost data in the database"; }
 	public function inputDocumentation() { echo "No input"; }
@@ -56,6 +56,7 @@ class service_find_lost_entities extends Service {
 	 * @param array $sub_models list of sub model instances
 	 * @param array $rows rows to check
 	 * @param array $tables_done list of tables already analyzed, to avoid infinite recursivity
+	 * @param array $tables_limits number of rows for each table
 	 */
 	private function findLinked($table, $sub_models, &$rows, $tables_done, $tables_limits) {
 		set_time_limit(300+count($rows)/100);
@@ -252,6 +253,11 @@ class service_find_lost_entities extends Service {
 		}
 	}
 	
+	/** Retrieve the key for the given row
+	 * @param datamodel\Table $table the table
+	 * @param array $row the row
+	 * @return integer|string the key
+	 */
 	private function getRowKey($table, $row) {
 		$pk = $table->getPrimaryKey();
 		if ($pk <> null)

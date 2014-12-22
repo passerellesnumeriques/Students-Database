@@ -62,8 +62,7 @@ public class ObjectClass extends FinalElement {
 	
 	@Override
 	public String generate(String indent) {
-		return "new JSDoc_Value(\""+this.type+"\",\""+this.description.replace("\\", "\\\\").replace("\"", "\\\"")+"\","+location.generate()+","+(no_name_check ? "true" : "false")+")";
-		// TODO if no comment
+		return "new JSDoc_Value(\""+this.type+"\",\""+this.description.replace("\\", "\\\\").replace("\"", "\\\"")+"\","+location.generate()+","+(no_name_check ? "true" : "false")+","+location.generate()+","+(skip ? "true" : "false")+")";
 	}
 	
 }

@@ -11,10 +11,16 @@ if (typeof require != 'undefined') {
 	theme.css("data_list.css");
 }
 /** A data list is a generic view of data: starting from a table, the user can choose what data to display, apply filters, sort data...
- * @param {DOMNode} container where to put it
+ * It provides an additional layer on top of a grid, adding the capacity to automatically retrieve the list of columns we can display,
+ * and to automatically get the data from the back-end.
+ * @param {Element} container where to put it
  * @param {String} root_table starting point in the data model
+ * @param {Number} sub_model sub model of the root table, or null
  * @param {Array} initial_data_shown list of data to show at the beginning, with format 'Category'.'Name' where Category is the category of the DataDisplayHandler, and Name is the display name of the DataDisplay
  * @param {Array} filters list of {category:a,name:b,force:c,data:d,or:e}: category = from DataDisplayHandler; name = display name of the DataDisplay; force = true if the user cannot remove it; data = data of the filter, format depends on filter type; or=another filter data to do a 'or' condition
+ * @param {Number} page_size maximum number of rows to display, or -1 to disable paging.
+ * @param {String} default_sort if specified, at the beginning the data will be sorted by the given column
+ * @param {Boolean} default_sort_asc if a default sort is given, it specifies if it should be ascending order or descending order
  * @param {Function} onready called when everything is ready, and we can start to use this object
  */
 function data_list(container, root_table, sub_model, initial_data_shown, filters, page_size, default_sort, default_sort_asc, onready) {
@@ -22,6 +28,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	if (!page_size) page_size = -1;
 	var t=this;
 	window.to_cleanup.push(t);
+	/** Clean all parameters to avoid memory leaks */
 	t.cleanup = function() {
 		container = null;
 		t.data = null;
@@ -63,17 +70,19 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	
 	/** {grid} the data list use the grid widget to display data, we can access it directly here */
 	t.grid = null;
+	/** List of fields shown. This is not directly the DataDisplay, but objects {field(DataDisplay),sub_index(-1 if no sub data),forced(the user cannot remove it)} */
 	t.show_fields = [];
+	/** List of fields that should always retrieved from the back-end, even if it is not displayed */
 	t.always_fields = [];
-	/** Event when data has been loaded/refreshed */
+	/** Event fired when data has been loaded/refreshed */
 	t.ondataloaded = new Custom_Event();
-	
+	/** Event fired when something changed in the filters, and we should refresh */
 	t.onfilterschanged = new Custom_Event();
 	
 	/* Public methods */
 	
 	/** Add some html in the header of the data list
-	 * @param {DOMNode} html element or string
+	 * @param {Element} html element or string
 	 */
 	t.addHeader = function(html) {
 		var item = document.createElement("DIV");
@@ -95,6 +104,11 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			while (t.header_center.childNodes.length > 0) t.header_center.removeChild(t.header_center.childNodes[0]);
 		layout.changed(t.header);
 	};
+	/** Add an HTML element at the bottom, after the grid.
+	 * The difference with addFooter is that we will ensure all tools will be together, even some other footers have been added
+	 * @param {Element|String} html the element, or its HTML in a string
+	 * @returns {Element} the element added
+	 */
 	t.addFooterTool = function(html) {
 		var item = document.createElement("DIV");
 		if (typeof html == 'string')
@@ -112,11 +126,17 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		layout.changed(t.footer_tools);
 		return item;
 	};
+	/** Remove an element from the footer tools
+	 * @param {Element} item the element to remove
+	 */
 	t.removeFooterTool = function(item) {
 		if (!t.footer_tools) return;
 		t.footer_tools.removeChild(item);
 		layout.changed(t.footer_tools);
 	};
+	/** Add an HTML element at the bottom, after the grid
+	 * @param {Element|String} html the element, or its HTML in a string
+	 */
 	t.addFooter = function(html) {
 		var item = document.createElement("DIV");
 		if (typeof html == 'string')
@@ -132,6 +152,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.footer.appendChild(item);
 		layout.changed(t.footer);
 	};
+	/** Remove everything in the footer */
 	t.resetFooter = function() {
 		if (!t.footer) return;
 		container.removeChild(t.footer);
@@ -159,7 +180,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		layout.changed(t.header);
 	};
 	/** Set the title, with some html
-	 * @param {DOMNode} html the html element, or a string
+	 * @param {Element} html the html element, or a string
 	 */
 	t.setTitle = function(html) {
 		if (typeof html == 'string') {
@@ -171,12 +192,15 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t.header.insertBefore(html, t.header_left);
 		layout.changed(t.header);
 	};
-	/** Force to refresh the data from the server */
+	/** Force to refresh the data from the server
+	 * @param {Function} ondone if given, called when data is ready 
+	 */
 	t.reloadData = function(ondone) {
 		t._loadData(ondone);
 	};
-	/** Remove all filters
-	 * @param {Boolean} remove_forced true to remove also the filters which cannot be remove by the user 
+	/** Remove all filters, and optionally add new ones
+	 * @param {Boolean} remove_forced true to remove also the filters which cannot be remove by the user
+	 * @param {Array} new_filters filters to add
 	 */
 	t.resetFilters = function(remove_forced, new_filters) {
 		if (!new_filters) new_filters = [];
@@ -206,6 +230,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t._filters.push(filter);
 		t.onfilterschanged.fire();
 	};
+	/** Remove the given filter
+	 * @param {Object} filter the filter to remove
+	 */
 	t.removeFilter = function(filter) {
 		for (var i = 0; i < t._filters.length; ++i) {
 			if (t._filters[i] == filter) {
@@ -226,7 +253,15 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		t.onfilterschanged.fire();
 	};
+	/** Return the list of filters currently active
+	 * @returns {Array} list of filters {category,name,force,data,or}
+	 */
 	t.getFilters = function() { return t._filters; };
+	/** Check if it exists a filter on the given field
+	 * @param {String} category the category to search
+	 * @param {String} name the name to search
+	 * @returns {Boolean} true if a filter exists
+	 */
 	t.hasFilterOn = function(category, name) {
 		for (var i = 0; i < t._filters.length; ++i) {
 			if (t._filters[i].category == category && t._filters[i].name == name) return true;
@@ -238,6 +273,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		return false;
 	};
+	/** Remove any filter for the given field
+	 * @param {String} category the category to search
+	 * @param {String} name the name to search
+	 */
 	t.removeFiltersOn = function(category, name) {
 		var changed = false;
 		for (var i = 0; i < t._filters.length; ++i) {
@@ -260,22 +299,42 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		if (changed) t.onfilterschanged.fire();
 	}
-	
+	/** Return the DataDisplay of the given field
+	 * @param {String} category the category to search
+	 * @param {String} name the name to search
+	 * @returns {DataDisplay} the field if found, or null
+	 */
 	t.getField = function(category, name) {
 		for (var i = 0; i < t._available_fields.length; ++i)
 			if (t._available_fields[i].category == category && t._available_fields[i].name == name)
 				return t._available_fields[i];
 		return null;
 	};
+	/** Check if a field is displayed
+	 * @param {DataDisplay} field the field
+	 * @returns {Boolean} true if it is displayed
+	 */
 	t.isShown = function(field) {
 		for (var i = 0; i < t.show_fields.length; ++i)
 			if (t.show_fields[i].field == field)
 				return true;
 		return false;
 	};
+	/** Show the given field
+	 * @param {DataDisplay} field the field to display
+	 * @param {Boolean} forced if true, the user won't be able to remove it
+	 * @param {Function} onready called done and data is ready
+	 * @param {Boolean} no_reload if true, the data won't be loaded, the function onready will be immediately called, and a call to reloadData will be needed. This may be useful if we want to do several changes, before to reload.
+	 */
 	t.showField = function(field, forced, onready,no_reload) {
 		t.showFields([field],forced,onready,no_reload);
 	};
+	/** Show the given fields
+	 * @param {Array} fields the list of DataDisplay of the fields to display
+	 * @param {Boolean} forced if true, the user won't be able to remove it
+	 * @param {Function} onready called done and data is ready
+	 * @param {Boolean} no_reload if true, the data won't be loaded, the function onready will be immediately called, and a call to reloadData will be needed. This may be useful if we want to do several changes, before to reload.
+	 */	
 	t.showFields = function(fields, forced, onready, no_reload) {
 		var changed = false;
 		for (var i = 0; i < fields.length; ++i) {
@@ -300,6 +359,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		t._loadData(onready);
 	};
+	/** Remove the given field
+	 * @param {DataDisplay} field the field to hide
+	 */
 	t.hideField = function(field) {
 		for (var i = 0; i < t.show_fields.length; ++i) {
 			if (t.show_fields[i].field.path.path == field.path.path &&
@@ -311,6 +373,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 		}
 	};
+	/** Show a sub-data from a field
+	 * @param {DataDisplay} field the field
+	 * @param {Number} sub_index index of the sub-data to display inside the field
+	 */
 	t.showSubField = function(field, sub_index) {
 		var found = -1;
 		for (var j = 0; j < t.show_fields.length; ++j) if (t.show_fields[j].field == field) { found = j; break; };
@@ -359,6 +425,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 		}
 	};
+	/** Remove a sub-data from a field
+	 * @param {DataDisplay} field the field containing the sub-data
+	 * @param {Number} sub_index index of the sub-data
+	 */
 	t.hideSubField = function(field, sub_index) {
 		for (var i = 0; i < t.show_fields.length; ++i) {
 			if (t.show_fields[i].field == field && t.show_fields[i].sub_index == sub_index) {
@@ -369,12 +439,22 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 		}
 	};
+	/** Ask to always retrieve the given data, even it is not displayed.
+	 * This may be useful, if we need this data to do some additional process, or to modify the display of a row according to this data.
+	 * @param {String} category the category of the data to always retrieve
+	 * @param {String} name the name of the data to always retrieve
+	 */
 	t.alwaysGetField = function(category, name) {
 		var f = t.getField(category,name);
 		if (!f) return;
 		if (t.always_fields.indexOf(f) >= 0) return;
 		t.always_fields.push(f);
 	};
+	/** Retrieve the ID of the column corresponding to the given field
+	 * @param {Object} f field from show_fields with format {field,sub_index,forced}
+	 * @param {Boolean} skip_check_visible if true, the id will be returned even this field is not visible, meaning the column doesn't actually exist
+	 * @returns {String} the id, or null if the field is not visible, and skip_check_visible was false
+	 */
 	t.getColumnIdFromField = function(f, skip_check_visible) {
 		var id = f.field.category+'.'+f.field.name+'.'+f.sub_index;
 		if (skip_check_visible) return id;
@@ -386,7 +466,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	
 	/** Reset everything in the data list
 	 * @param {String} root_table the new starting point
+	 * @param {Number} sub_model the sub model of the root table
 	 * @param {Array} filters the new filters
+	 * @param {Number} page_size the new maximum number of rows, or -1 to disable paging
 	 * @param {Function} onready called when everything is ready with the new parameters
 	 */
 	t.setRootTable = function(root_table, sub_model, filters, page_size, onready) {
@@ -424,7 +506,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			}
 		}
 	};
-	
+	/** Make a specific row not selectable
+	 * @param {String} table name of the table
+	 * @param {Number} key the key in the table, allowing to identify which row in the grid
+	 */
 	t.disableSelectByTableKey = function(table, key){
 		for (var col = 0; col < t.show_fields.length; ++col) {
 			if (t.show_fields[col].field.table == table) {
@@ -459,7 +544,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		for (var i = 0; i < t.grid.getNbRows(); ++i)
 			t._makeClickable(t.grid.getRow(i));
 	};
-	
+	/** An action provider can provide some HTML elements to put in the actions column, for every row
+	 * @param {Function} provider the action provider
+	 */
 	t.addActionProvider = function(provider) {
 		t._action_providers.push(provider);
 		if (!t._col_actions) {
@@ -468,7 +555,11 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		t._populateActions();
 	};
-	
+	/** If pictures are supported, the user will have the possibility to switch between list, list with picture, and thumbnail
+	 * @param {String} table name of the table the provider will need to know which picture to display
+	 * @param {Function} picture_provider if specified, it provides the capacity to show a picture for every row. It will be called, for every row, with 4 parameters: container (where to put the picture), key (the key of the given table, identifying the row), width (width of the picture), height (height of the picture)
+	 * @param {Function} thumbnail_provider if specified, it provides a thumbnail view.
+	 */
 	t.addPictureSupport = function(table, picture_provider, thumbnail_provider) {
 		t._picture_table = table;
 		t._picture_provider = picture_provider;
@@ -596,14 +687,19 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			};
 		});
 	};
-	
+	/** Print the content of the grid, or the thumbnail */
 	t.print = function() {
 		if (t.grid_container.style.display != "none")
 			t.grid.print();
 		else
 			printContent(t.thumb_container);
 	};
-	
+	/** Set the sort
+	 * @param {String} field_category the category
+	 * @param {String} field_name the name
+	 * @param {Number} field_sub_index index of the sub-data, or -1
+	 * @param {Boolean} asc true for ascending order, false for descending order
+	 */
 	t.orderBy = function(field_category, field_name, field_sub_index, asc) {
 		for (var i = 0; i < t.grid.columns.length; ++i) {
 			if (t.grid.columns[i].id == field_category+'.'+field_name+'.'+field_sub_index) {
@@ -617,15 +713,18 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		// no corresponding column: TODO support it ?
 	};
-	
-	t.setRowBackgroundProvider = function(provider) {
-		t._row_background_provider = provider;
+	/** Provide a CSS class for rows
+	 * @param {Function} provider called with 2 parameters: sent_fields, received_values, and returns a CSS class for the row, or null if no CSS
+	 */
+	t.setRowClassProvider = function(provider) {
+		t._row_class_provider = provider;
 	};
 	
 	/* Private properties */
 	t._root_table = root_table;
 	t._sub_model = sub_model;
 	t._onready = onready;
+	/** Indicates if we already loaded data */
 	t._data_loaded = false;
 	/** {Array} List of available fields retrieved through the service get_available_fields */
 	t._available_fields = null;
@@ -641,16 +740,22 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	t._filters = filters ? filters : [];
 	/** {Function} called when rows are clickable, and the user clicks on a row */
 	t._rowOnclick = null;
+	/** List of actions providers */
 	t._action_providers = [];
 	/** {GridColumn} last column for actions, or null if there is no such a column */
 	t._col_actions = null;
-	t._row_background_provider = null;
+	/** Provides CSS class for rows */
+	t._row_class_provider = null;
 
 	/* Private methods */
 	
-	t._getRowBackground = function(sent_fields, received_values) {
-		if (!t._row_background_provider) return null;
-		return t._row_background_provider(sent_fields, received_values);
+	/** Get the CSS class for a row
+	 * @param {Array} sent_fields the fields requested
+	 * @param {Array} received_values the values received for each field
+	 */
+	t._getRowClass = function(sent_fields, received_values) {
+		if (!t._row_class_provider) return null;
+		return t._row_class_provider(sent_fields, received_values);
 	},
 	
 	/** Initialize the data list display */
@@ -1122,8 +1227,11 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		}
 		return col;
 	};
+	/** @no_doc */
 	t._end_loading_event = null;
+	/** @no_doc */
 	t._loading_count = 0;
+	/** Indicates we start loading data, and display 'Loading' on top of the grid */
 	t.startLoading = function() {
 		t._loading_count++;
 		if (t._loading_hidder) return;
@@ -1131,6 +1239,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t._loading_hidder = new LoadingHidder(container);
 		t._loading_hidder.setContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading data...");
 	};
+	/** Indicates we are done loading data */
 	t.endLoading = function() {
 		t._loading_count--;
 		if (!t._loading_hidder) return;
@@ -1141,16 +1250,24 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		t._end_loading_event = null;
 		ev.fire();
 	};
+	/** Give a function to call when we are done loading data, or to call now if we are not currently loading data
+	 * @param {Function} listener the function to be called
+	 */
 	t.onNotLoading = function(listener) {
 		if (!t._loading_hidder) { listener(); return; }
 		t._end_loading_event.addListener(listener);
 	};
+	/** Indicates if we are currently loading data
+	 * @returns {Boolean} true if we are currently loading data
+	 */
 	t.isLoading = function() {
 		return (typeof t._loading_hidder != 'undefined') && t._loading_hidder != null;
 	};
-
+	/** @no_doc */
 	t._already_reloading = false;
-	/** (Re)load the data from the server */
+	/** (Re)load the data from the server
+	 * @param {Function} onready if given, the function is called when data is ready  
+	 */
 	t._loadData = function(onready) {
 		t._data_loaded = true;
 		if (t.isLoading()) {
@@ -1243,8 +1360,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 						}
 				for (var i = 0; i < result.data.length; ++i) {
 					var row = {row_id:i,row_data:[]};
-					var bg = t._getRowBackground(sent_fields, result.data[i].values);
-					if (bg) row.background = bg;
+					var classname = t._getRowClass(sent_fields, result.data[i].values);
+					if (classname) row.classname = classname;
 					for (var j = 0; j < t.show_fields.length; ++j)
 						row.row_data.push({col_id:cols[j].id,data_id:null,css:"disabled"});
 					for (var j = 0; j < fields.length; ++j) {
@@ -1288,6 +1405,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		layout.pause();
 		t.grid.setData([]);
 	};
+	/** Internal function to ask the actions providers to create them for every row */
 	t._populateActions = function() {
 		if (t._col_actions == null) return;
 		for (var i = 0; i < t.grid.getNbRows(); ++i) {
@@ -1303,6 +1421,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				}
 		}
 	};
+	/** Internal function called when a column is added or removed, to save it in a cookie so next time the user comes back to this screen, the same columns will be displayed */
 	t._updateFieldsCookie = function() {
 		var s = "";
 		for (var i = 0; i < t.show_fields.length; ++i) {
@@ -1314,6 +1433,12 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		var u = new URL(location.href);
 		setCookie("data_list_fields",s,15*24*60,u.path);
 	};
+	/** Internal function to diplsay the list of available columns
+	 * @param {Element} button the button clicked by the user
+	 * @param {Function} createFieldContent called to create the HTML for the given field
+	 * @param {Function} createSubFieldContent called to create the HTML for the given sub-data
+	 * @param {Boolean} keep_on_click if true, the context menu won't be closed when the user click on it
+	 */
 	t._columnDialogLayout = function(button, createFieldContent, createSubFieldContent, keep_on_click) {
 		require("context_menu.js");
 		window.top.theme.css("data_list.css"); // the context menu goes to window.top, we need the stylesheet
@@ -1473,7 +1598,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		});
 	};
 	/** Show the menu to select the columns/fields to display
-	 * @param {DOMNode} button the menu will be display below this element
+	 * @param {Element} button the menu will be display below this element
 	 */
 	t._selectColumnsDialog = function(button) {
 		t._columnDialogLayout(button, function(f,div){
@@ -1541,6 +1666,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			};
 		}, true);
 	};
+	/** Show the menu to choose on which column to add a filter
+	 * @param {Element} button the button clicked by the user
+	 * @param {Function} onselect called when the user selected a field
+	 */
 	t._contextMenuAddFilter = function(button, onselect) {
 		t._columnDialogLayout(button, function(f,div){
 			// check if a filter already exists on that field
@@ -1607,7 +1736,9 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 	};
 	/** Create the display for a filter, inside the given table
 	 * @param {Object} filter the filter
-	 * @param {DOMNode} container where to display the filter
+	 * @param {Element} container where to display the filter
+	 * @param {Boolean} is_or indicates if this is in a Or condition
+	 * @param {Boolean} simple if true, no remove button and no name is displayed
 	 */
 	t._createFilter = function(filter, container, is_or, simple) {
 		var div = document.createElement("DIV");
@@ -1715,7 +1846,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		return f;
 	},
 	/** Display the menu to edit/add/remove filters
-	 * @param {DOMNode} button the menu will be displayed below this element
+	 * @param {Element} button the menu will be displayed below this element
 	 */
 	t._filtersDialog = function(button) {
 		require("typed_filter.js");
@@ -1792,7 +1923,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		});
 	};
 	/** Display the menu to export the list
-	 * @param {DOMNode} button the menu will be displayed below this element
+	 * @param {Element} button the menu will be displayed below this element
 	 */
 	t._exportMenu = function(button) {
 		require("context_menu.js",function(){
@@ -1806,6 +1937,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			menu.showBelowElement(button);
 		});
 	};
+	/** @no_doc */
 	t._download_frame = null;
 	/** Launch the export in the given format
 	 * @param {String} format format to export
@@ -2016,11 +2148,11 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		});
 	};
 	/** Make the row clickable
-	 * @param {DOMNode} row the TR element corresponding to the row in the grid
+	 * @param {Element} row the TR element corresponding to the row in the grid
 	 */
 	t._makeClickable = function(row) {
-		row.onmouseover = function() { this.className = "selected"; };
-		row.onmouseout = function() { this.className = t.grid.isSelected(row.row_id) ? "selected" : ""; };
+		row.onmouseover = function() { addClassName(this, "selected"); };
+		row.onmouseout = function() { if (t.grid.isSelected(row.row_id)) addClassName(this, "selected"); else removeClassName(this, "selected"); };
 		row.style.cursor = 'pointer';
 		row.onclick = function(ev) {
 			if (ev.target.nodeType == 1 && (ev.target.nodeName == 'INPUT' || ev.target.nodeName == 'SELECT')) return;

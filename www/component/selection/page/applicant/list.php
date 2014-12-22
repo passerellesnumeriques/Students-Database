@@ -12,6 +12,7 @@ class page_applicant_list extends SelectionPage {
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("init_list();");
+		$this->addStylesheet("/static/selection/applicant/applicant_list.css");
 		$container_id = $this->generateID();
 		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : array();
 		
@@ -129,12 +130,12 @@ class page_applicant_list extends SelectionPage {
 				function (list) {
 					 // make the info available to be able to change the color
 					list.alwaysGetField('Selection','Excluded');
-					list.setRowBackgroundProvider(function(sent_fields, received_values) {
+					list.setRowClassProvider(function(sent_fields, received_values) {
 						var index;
 						for (index = 0; index < sent_fields.length; ++index)
 							if (sent_fields[index].name == "Excluded" && sent_fields[index].category == "Selection") break;
 						if (received_values[index].v == 1)
-							return "#FFD0D0"; // excluded in red
+							return "excluded_applicant"; // excluded in red
 						return null;
 					});
 					list.grid.makeScrollable();

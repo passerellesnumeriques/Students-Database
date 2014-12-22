@@ -1,7 +1,7 @@
 <?php 
 class page_administration extends Page {
 	
-	public function getRequiredRights() { return array(); } // TODO add right
+	public function getRequiredRights() { return array("manage_application"); }
 	
 	public function execute() {
 		$this->requireJavascript("section.js");

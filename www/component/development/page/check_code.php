@@ -161,6 +161,7 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 		for (var i = 0; i < parent_classes.length; ++i) if (parent_classes[i].content[name]) { is_overriden = true; break; }
 		if (is_overriden) continue; // skip overriden elements
 		var elem = ns.content[name];
+		if (elem.ignore) continue;
 		if (elem instanceof JSDoc_Namespace) {
 			if (elem.location.file == location) {
 				// check name
@@ -199,7 +200,8 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 				if (p.doc.length == 0) add_error(item, "Function "+ns_path+name+": no comment for parameter "+p.name, elem.location);
 				if (!p.type) add_error(item, "Function "+ns_path+name+": no type for parameter "+p.name, elem.location);
 				else check_js_type(p.type, "Function "+ns_path+name+", Parameter "+p.name, item, elem.location);
-				check_name_small_underscore(p.name, "Parameter "+p.name+" in function "+ns_path+name, item);
+				if (p.type != "Function") // we accept different naming for parameters being functions
+					check_name_small_underscore(p.name, "Parameter "+p.name+" in function "+ns_path+name, item);
 			}
 		} else if (elem instanceof JSDoc_Value) {
 			if (elem.location.file != location) continue;

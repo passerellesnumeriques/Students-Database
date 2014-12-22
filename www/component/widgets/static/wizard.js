@@ -73,13 +73,9 @@ function wizard(container) {
 		t.keep_on_close = true;
 		if (container.data) {
 			// wizard already loaded
-			/** @no_doc */
 			t.icon = container.data.icon;
-			/** @no_doc */
 			t.title = container.data.title;
-			/** @no_doc */
 			t.pages = container.data.pages;
-			/** @no_doc */
 			t.onfinish = container.data.onfinish;
 		} else {
 			// load from elements on page

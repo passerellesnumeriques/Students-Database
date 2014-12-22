@@ -6,10 +6,11 @@ if (typeof theme != 'undefined')
 	theme.css("popup_window.css");
 
 /**
- * @constructor
- * @param {string} title title of the window 
- * @param {string} icon path of the icon, or null
- * @param {string|HTMLElement} content content of the window: either an html element, or a string containing the html
+ * Create a popup
+ * @param {String} title title of the window 
+ * @param {String} icon path of the icon, or null
+ * @param {String|HTMLElement} content content of the window: either an html element, or a string containing the html
+ * @param {Boolean} hide_close_button if true, the close button at the top right corner won't be displayed
  */
 function popup_window(title,icon,content,hide_close_button) {
 	theme.css("popup_window.css");
@@ -28,8 +29,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.buttons = [];
 	
 	/** Set (change) the content of the popup window
-	 * @method popup_window#setContent
-	 * @param {string|HTMLElement} content content of the window: either an html element, or a string containing the html
+	 * @param {String|HTMLElement} content content of the window: either an html element, or a string containing the html
 	 */
 	t.setContent = function(content) { 
 		t.content = content;
@@ -105,10 +105,9 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	
 	/** Add a button at the bottom of the popup.
-	 * @method popup_window#addButton
-	 * @param {string} html html to put inside the button 
-	 * @param {string} id id of the button, that can be used to refer it later on
-	 * @param {function} onclick onclick event handler
+	 * @param {String} html html to put inside the button 
+	 * @param {String} id id of the button, that can be used to refer it later on
+	 * @param {Function} onclick onclick event handler
 	 */
 	t.addButton = function(html, id, onclick, onclick_param) {
 		var b = (t.popup ? t.popup.ownerDocument : document).createElement("BUTTON");
@@ -164,8 +163,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addButton(span, id, onclick, onclick_param);
 	};
 	/** Disable the given button.
-	 * @method popup_window#disableButton
-	 * @param {string} id of the button to disable
+	 * @param {String} id of the button to disable
 	 */
 	t.disableButton = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i)
@@ -178,9 +176,8 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	
 	/** Return true if the given button is disabled
-	 * @method popup_window#getIsDisabled
-	 * @param {string} id of the button
-	 * @return {boolean}
+	 * @param {String} id of the button
+	 * @return {Boolean}
 	 */
 	t.getIsDisabled = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i){
@@ -189,8 +186,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		}
 	};
 	/** Enable the given button.
-	 * @method popup_window#enableButton
-	 * @param {string} id if of the button to enable
+	 * @param {String} id if of the button to enable
 	 */
 	t.enableButton = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i)
@@ -202,7 +198,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			}
 	};
 	/** Simulate a button pressed
-	 * @param {string} id the button id
+	 * @param {String} id the button id
 	 */
 	t.pressButton = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i)
@@ -270,9 +266,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addButton(span, "continue", oncontinue);
 	};
 	/** Add 2 buttons to the window: Ok and Cancel. When Cancel is pressed, the window is closed.
-	 * @method popup_window#addOkCancelButtons
-	 * @param {function} onok handler to be called when the Ok button is pressed. 
-	 * @param {function} (optional) oncancel handler to be called when the Cancel button is pressed. 
+	 * @param {Function} onok handler to be called when the Ok button is pressed. 
+	 * @param {Function} oncancel (optional) handler to be called when the Cancel button is pressed. 
 	 */
 	t.addOkCancelButtons = function(onok, oncancel) {
 		t.addOkButton(onok);
@@ -283,8 +278,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addCancelButton(oncancel);
 	};
 	/** Add 2 buttons to the window: Yes and No. When No is pressed, the window is closed.
-	 * @method popup_window#addYesNoButtons
-	 * @param {function} onyes handler to be called when the Yes button is pressed. 
+	 * @param {Function} onyes handler to be called when the Yes button is pressed. 
 	 */
 	t.addYesNoButtons = function(onyes,onno) {
 		t.addIconTextButton(theme.icons_16.yes, "Yes", 'yes', onyes);
@@ -384,9 +378,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		pnapplication.onclose.addListener(t._onwindow_closed_listener);
 	};
 	
-	/** Display the popup window
-	 * @method popup_window#show
-	 */
+	/** Display the popup window */
 	t.show = function(){
 		var win = t._buildPopup();
 		t._setSizeType("fit");
@@ -737,8 +729,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	};
 	
 	/** Close this popup window
-	 * @method popup_window#close
-	 * @param keep_content_hidden
+	 * @param {Boolean} keep_content_hidden
 	 */
 	t.close = function(keep_content_hidden) {
 		if (!t || !t.popup) return;

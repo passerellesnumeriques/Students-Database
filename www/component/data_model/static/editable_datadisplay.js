@@ -3,6 +3,7 @@
  * @param {DataDisplay} data_display the data
  * @param {String} come_from to column from which we come to access to the table containing the data (to use the right DataDisplayHandler)
  * @param {Number} key the key identifying the row in the table
+ * @param {Number} sub_model sub model or null
  * @param {Object} data the initial value
  * @param {Function} onchange (optional) called when the user is editing the value
  * @constructor

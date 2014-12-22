@@ -156,6 +156,11 @@ function getTableRows(table) {
 }
 
 //useful functions to set height and width, taking into account borders, margins, and paddings
+/** Get sizes from computed style
+ * @param {Element} element the element
+ * @param {Array} style_knowledge cached values of style about element
+ * @returns {Object} sizes
+ */
 function getStyleSizes(element, style_knowledge) {
 	if (element.nodeType != 1) {
 		return {

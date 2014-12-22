@@ -1,4 +1,7 @@
 /* #depends[typed_field.js] */
+/**
+ * Typed field to display an age. The data is the birth date, which can be in SQL date format, or a timestamp.
+ */
 function field_age(data,editable,config) {
 	typed_field.call(this, data, false, config);
 }

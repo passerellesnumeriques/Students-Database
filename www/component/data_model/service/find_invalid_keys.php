@@ -1,11 +1,11 @@
 <?php 
 class service_find_invalid_keys extends Service {
 	
-	public function getRequiredRights() { return array(); } // TODO
+	public function getRequiredRights() { return array("manage_application"); }
 	
 	public function documentation() { echo "Find foreign keys without corresponding primary key"; }
 	public function inputDocumentation() { echo "None"; }
-	public function outputDocumentation() { /* TODO */ }
+	public function outputDocumentation() { echo "A list of {table,columns:[{name,keys},...]}"; }
 	
 	public function execute(&$component, $input) {
 		require_once("component/data_model/Model.inc");
@@ -13,9 +13,9 @@ class service_find_invalid_keys extends Service {
 		foreach (DataModel::get()->internalGetTables() as $table) {
 			if ($table->getModel() instanceof SubDataModel) {
 				foreach ($table->getModel()->getExistingInstances() as $sub_model)
-					$this->find_invalid_keys($table, $sub_model, $invalid);
+					$this->findInvalidKeys($table, $sub_model, $invalid);
 			} else
-				$this->find_invalid_keys($table, null, $invalid);
+				$this->findInvalidKeys($table, null, $invalid);
 		}
 		echo "[";
 		$first = true;
@@ -33,11 +33,12 @@ class service_find_invalid_keys extends Service {
 	}
 	
 	/**
-	 * 
-	 * @param \datamodel\Table $table
-	 * @param integer|null $sub_model
+	 * Find invalid foreign keys on the table
+	 * @param \datamodel\Table $table the table to check
+	 * @param integer|null $sub_model the sub model
+	 * @param array $invalid array filled with invalid keys found
 	 */
-	private function find_invalid_keys($table, $sub_model, &$invalid) {
+	private function findInvalidKeys($table, $sub_model, &$invalid) {
 		foreach ($table->internalGetColumnsFor($sub_model) as $col) {
 			if (!($col instanceof \datamodel\ForeignKey)) continue;
 			$ft = $col->foreign_table;
