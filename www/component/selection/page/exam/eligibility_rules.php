@@ -251,7 +251,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 					var max = 0;
 					for (var j = 0; j < extracts[i].parts.length; ++j)
 						max += parseFloat(extracts[i].parts[j].max_score);
-					return gardeStr(max);
+					return gradeStr(max);
 				}
 			return 0;
 		}
