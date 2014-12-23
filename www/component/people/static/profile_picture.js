@@ -1,4 +1,4 @@
-if (typeof require != 'undefined')
+if (typeof require == 'function')
 	require("progress_bar.js");
 
 function profile_picture(container, width, height, halign, valign) {

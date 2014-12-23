@@ -39,24 +39,22 @@ class storage extends Component {
 	}
 	
 	public static function reset_storage($domain) {
-		$path = realpath(dirname(__FILE__)."/../../data")."/".$domain;
+		$path = self::getDomainStoragePath($domain);
 		if (file_exists($path))
 			self::remove_directory($path);
-		if (!@mkdir($path)) {
+		if (!@mkdir($path,null,true)) {
 			sleep(1);
-			if (!@mkdir($path)) {
+			if (!@mkdir($path,null,true)) {
 				sleep(1);
-				if (!@mkdir($path)) {
+				if (!@mkdir($path,null,true)) {
 					sleep(1);
-					if (!mkdir($path)) {
-						PNApplication::error("Unable to create storage directory "+$path);
+					if (!file_exists($path) && !mkdir($path,null,true)) {
+						PNApplication::error("Unable to create storage directory ".$path);
 						return;
 					}
 				}
 			}
 		}
-		if (!mkdir($path."/storage"))
-			PNApplication::error("Unable to create storage directory "+$path);
 	}
 	private static function remove_directory($path) {
 		$dir = opendir($path);
@@ -72,8 +70,19 @@ class storage extends Component {
 		@rmdir($path);
 	}
 	
+	public static function getDomainStoragePath($domain) {
+		// In production, this is integrated in PNApplication.inc, so directory is different
+#DEV
+		$path = realpath(dirname(__FILE__)."/../../data");
+#END
+#PROD
+#		$path = realpath(dirname(__FILE__)."/../data");
+#END
+		return $path."/$domain/storage";
+	}
+	
 	public static function storage_path() {
-		return realpath(dirname(__FILE__)."/../../data/".PNApplication::$instance->current_domain."/storage");
+		return self::getDomainStoragePath(PNApplication::$instance->current_domain);
 	}
 	
 	public function remove_expired() {
@@ -84,7 +93,7 @@ class storage extends Component {
 	}
 	
 	public function cleanup_storage() {
-		$path = realpath(dirname(__FILE__)."/../../data")."/".PNApplication::$instance->local_domain."/storage";
+		$path = self::getDomainStoragePath(PNApplication::$instance->local_domain);
 		if (!file_exists($path)) return;
 		$this->cleanup_directory($path, 0, 1, false);
 	}
