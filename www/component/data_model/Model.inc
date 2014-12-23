@@ -279,6 +279,8 @@ class SubDataModel extends DataModel {
 				->addForeignKey("sm", $this->parent_table, true, false, true, false, false)
 				->setPrimary("root")
 				->allowReadAccess()
+				->addRemoveAccessFromForeignTable($root_table)
+				->addRemoveAccessFromForeignTable($this->parent_table)
 				;
 		else
 			$link_table = $this->parent_model->addTable("smlink_".$sub_model_table."_".$root_table)
@@ -287,6 +289,8 @@ class SubDataModel extends DataModel {
 				->setKey(array("root","sm"))
 				->addIndex("root")
 				->allowReadAccess()
+				->addRemoveAccessFromForeignTable($root_table)
+				->addRemoveAccessFromForeignTable($this->parent_table)
 				;
 		$fake_category = new datamodel\DataDisplayCategory("");
 		$display = new datamodel\TableDataDisplay("smlink_".$sub_model_table."_".$root_table, $fake_category);

@@ -17,11 +17,13 @@ class page_applicant_list extends SelectionPage {
 		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : array();
 		
 		$profile_page = null;
-		$can_create = true;
-		$can_assign_to_is = true;
-		$can_assign_to_exam = true;
-		$can_assign_to_interview = true;
-		$can_exclude = true;
+		$can_edit_applicants = PNApplication::$instance->user_management->has_right("edit_applicants");
+		$can_create = $can_edit_applicants;
+		$can_assign_to_is = $can_edit_applicants;
+		$can_assign_to_exam = $can_edit_applicants;
+		$can_assign_to_interview = $can_edit_applicants;
+		$can_exclude = $can_edit_applicants;
+		$can_remove = $can_edit_applicants;
 		$is_final = false;
 		$filters = "";
 		$forced_fields = array();
@@ -29,6 +31,7 @@ class page_applicant_list extends SelectionPage {
 			switch ($_GET["type"]) {
 				case "exam_passers":
 					$can_create = false;
+					$can_remove = false;
 					$can_assign_to_is = false;
 					$can_assign_to_exam = false;
 					$filters = "filters.push({category:'Selection',name:'Eligible for Interview',force:true,data:{values:[1]}});\n";
@@ -38,6 +41,7 @@ class page_applicant_list extends SelectionPage {
 					$can_assign_to_exam = false;
 					$can_assign_to_interview = false;
 					$can_create = false;
+					$can_remove = false;
 					$filters = "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
 					break;
 				case "si":
@@ -45,6 +49,7 @@ class page_applicant_list extends SelectionPage {
 					$can_assign_to_exam = false;
 					$can_assign_to_interview = false;
 					$can_create = false;
+					$can_remove = false;
 					$filters = "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
 					$profile_page = "Social Investigation";
 					break;
@@ -54,6 +59,7 @@ class page_applicant_list extends SelectionPage {
 					$can_assign_to_interview = false;
 					$can_exclude = false;
 					$can_create = false;
+					$can_remove = false;
 					$filters = "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
 					$filters .= "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['NOT_NULL']}});\n";
 					$filters .= "filters.push({category:'Selection',name:'Excluded',force:true,data:{values:[0]}});\n";
@@ -73,17 +79,27 @@ class page_applicant_list extends SelectionPage {
 			<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) {?>
 			<div class='page_footer' style="flex:none;">
 				<span id='nb_selected'>0 applicant selected</span>:
+				<?php
+				$nb_can_assign = 0;
+				if ($can_assign_to_is) $nb_can_assign++;
+				if ($can_assign_to_exam) $nb_can_assign++;
+				if ($can_assign_to_interview) $nb_can_assign++;
+				if ($nb_can_assign > 1) echo "Assign to ";
+				?>
 				<?php if ($can_assign_to_is) {?> 
-				<button class='action' id='button_assign_is' disabled='disabled' onclick='assignIS(this);'>Assign to Information Session</button>
+				<button class='action' id='button_assign_is' disabled='disabled' onclick='assignIS(this);'><?php if ($nb_can_assign == 1) echo "Assign to ";?>Information Session</button>
 				<?php }?>
 				<?php if ($can_assign_to_exam) {?> 
-				<button class='action' id='button_assign_exam_center' disabled='disabled' onclick='assignExamCenter(this);'>Assign to Exam Center</button>
+				<button class='action' id='button_assign_exam_center' disabled='disabled' onclick='assignExamCenter(this);'><?php if ($nb_can_assign == 1) echo "Assign to ";?>Exam Center</button>
 				<?php }?>
 				<?php if ($can_assign_to_interview) {?> 
-				<button class='action' id='button_assign_interview_center' disabled='disabled' onclick='assignInterviewCenter(this);'>Assign to Interview Center</button>
+				<button class='action' id='button_assign_interview_center' disabled='disabled' onclick='assignInterviewCenter(this);'><?php if ($nb_can_assign == 1) echo "Assign to ";?>Interview Center</button>
 				<?php }?>
 				<?php if ($can_exclude) { ?> 
 				<button class='action red' id='button_exclude' disabled='disabled' onclick="excludeStudents();">Exclude from the process</button>
+				<?php }?>
+				<?php if ($can_remove) { ?> 
+				<button class='action red' id='button_remove' disabled='disabled' onclick="removeStudents();">Definitely Remove</button>
 				<?php }?>
 				<?php if ($is_final) { ?>
 				<span style='white-space: nowrap'>
@@ -480,6 +496,9 @@ class page_applicant_list extends SelectionPage {
 			<?php if ($can_exclude) { ?>
 			document.getElementById('button_exclude').disabled = indexes.length > 0 ? "" : "disabled";
 			<?php } ?>
+			<?php if ($can_remove) { ?>
+			document.getElementById('button_remove').disabled = indexes.length > 0 ? "" : "disabled";
+			<?php } ?>
 			<?php if ($is_final) { ?>
 			document.getElementById('button_pn_selected').disabled = indexes.length > 0 ? "" : "disabled";
 			document.getElementById('button_pn_waiting_list').disabled = indexes.length > 0 ? "" : "disabled";
@@ -518,6 +537,22 @@ class page_applicant_list extends SelectionPage {
 			popupFrame(null, "Exclude applicants from the selection process", "/dynamic/selection/page/applicant/exclude?ondone=refreshList", {applicants:getSelectedApplicantsIds()}, null, null, function(frame,popup) {
 				frame.refreshList = reload_list;
 			});
+		}
+		function removeStudents() {
+			var applicants_ids = getSelectedApplicantsIds();
+			confirmDialog(
+				"You are requesting to definitely remove "+(applicants_ids.length > 1 ? applicants_ids.length+" applicants" : "an applicant")+" from the database.<br/>"+
+				"This must be done only if it was a mistake when creating "+(applicants_ids.length > 1 ? "it" : "them")+".<br/>"+
+				"Else you should use the functionality to exclude from the process.<br/>"+
+				"<br/>"+
+				"Do you confirm you want to definitely remove from the database ?",
+				function(yes) {
+					if (!yes) return;
+					service.json("selection","applicant/remove",{applicants:applicants_ids},function(res) {
+						if (res) reload_list();
+					});
+				}
+			);
 		}
 		function PNSelected() {
 			var locker = lock_screen();
