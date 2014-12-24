@@ -151,9 +151,10 @@ window.animation = {
 	 * @param {Element} element the element to make appearing
 	 * @param {Number} duration duration of the animation in milliseconds
 	 * @param {Function} end_handler if given, called at the end of the animation
+	 * @param {String} orientation 'top', 'bottom', 'center' (if not given, center will be used)
 	 * @returns {Animation} the created animation
 	 */
-	appear: function(element, duration, end_handler, vertically) {
+	appear: function(element, duration, end_handler, orientation) {
 		return animation.create(element, 0, 100, duration, function(value, element) {
 			element.style.visibility = 'visible';
 			if (value == 100) {
@@ -168,11 +169,20 @@ window.animation = {
 			// opacity
 			setOpacity(element,value/100);
 			// scale
-			if (vertically) {
+			switch (orientation) {
+			default:
+			case 'center':
+				element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";
+				break;
+			case 'top':
 				element.style.transform = "scaleY("+value/100+")";
 				element.style.transformOrigin = "0 0";
-			} else
-				element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";
+				break;
+			case 'bottom':
+				element.style.transform = "scaleY("+value/100+")";
+				element.style.transformOrigin = "0 100%";
+				break;
+			}
 		});
 	},
 	/**
@@ -180,9 +190,10 @@ window.animation = {
 	 * @param {Element} element the element to make disappearing
 	 * @param {Number} duration duration of the animation in milliseconds
 	 * @param {Function} end_handler if given, called at the end of the animation
+	 * @param {String} orientation 'top', 'bottom', 'center' (if not given, center will be used)
 	 * @returns {Animation} the created animation
 	 */
-	disappear: function(element, duration, end_handler, vertically) {
+	disappear: function(element, duration, end_handler, orientation) {
 		return animation.create(element, 100, 0, duration, function(value, element) {
 			if (value == 0) {
 				setOpacity(element, 0);
@@ -195,11 +206,19 @@ window.animation = {
 			// opacity
 			setOpacity(element,value/100);
 			// scale
-			if (vertically) {
+			switch (orientation) {
+			default:
+			case 'center':
+				element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";
+				break;
+			case 'top':
 				element.style.transform = "scaleY("+value/100+")";
 				element.style.transformOrigin = "0 0";
-			} else {
-				element.style.transform = "scaleX("+value/100+") scaleY("+value/100+")";				
+				break;
+			case 'bottom':
+				element.style.transform = "scaleY("+value/100+")";
+				element.style.transformOrigin = "0 100%";
+				break;
 			}
 		});
 	},
