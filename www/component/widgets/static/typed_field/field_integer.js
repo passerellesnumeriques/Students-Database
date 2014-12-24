@@ -6,6 +6,8 @@
 function field_integer(data,editable,config) {
 	if (typeof data == 'string') data = parseInt(data);
 	if (isNaN(data)) data = null;
+	if (config && typeof config.min == 'string') config.min = parseInt(config.min);
+	if (config && typeof config.max == 'string') config.max = parseInt(config.max);
 	typed_field.call(this, data, editable, config);
 }
 field_integer.prototype = new typed_field();
@@ -140,11 +142,15 @@ field_integer.prototype._create = function(data) {
 			if (data != prev) { t.setData(data); }
 		}
 		this.setMinimum = function(min) {
+			if (typeof min == 'string') min = parseInt(min);
+			if (isNaN(min)) min = null;
 			t.config.min = min === null ? undefined : min;
 			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.max < min) t.config.max = min;
 			t.setData(getValueFromInput());
 		};
 		this.setMaximum = function(max) {
+			if (typeof max == 'string') max = parseInt(max);
+			if (isNaN(max)) max = null;
 			t.config.max = max === null ? undefined : max;
 			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.min > max) t.config.min = max;
 			t.setData(getValueFromInput());
@@ -171,6 +177,20 @@ field_integer.prototype._create = function(data) {
 			if (this._data === null && this.config && !this.config.can_be_null) this.signal_error("Please enter a value");
 			else this.signal_error(null);
 		};
+		this.setMinimum = function(min) {
+			if (typeof min == 'string') min = parseInt(min);
+			if (isNaN(min)) min = null;
+			if (!this.config) this.config = {};
+			this.config.min = min;
+			this.setData(this._getEditedData());
+		};
+		this.setMaximum = function(max) {
+			if (typeof max == 'string') max = parseInt(max);
+			if (isNaN(max)) max = null;
+			if (!this.config) this.config = {};
+			this.config.max = max;
+			this.setData(this._getEditedData());
+		};
 		this._setData(data);
 	}
 };
@@ -181,11 +201,15 @@ field_integer.prototype.setLimits = function(min,max) {
 	this.setData(this._getEditedData());
 };
 field_integer.prototype.setMinimum = function(min) {
+	if (typeof min == 'string') min = parseInt(min);
+	if (isNaN(min)) min = null;
 	if (!this.config) this.config = {};
 	this.config.min = min;
 	this.setData(this._getEditedData());
 };
 field_integer.prototype.setMaximum = function(max) {
+	if (typeof max == 'string') max = parseInt(max);
+	if (isNaN(max)) max = null;
 	if (!this.config) this.config = {};
 	this.config.max = max;
 	this.setData(this._getEditedData());

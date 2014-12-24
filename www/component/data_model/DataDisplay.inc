@@ -915,7 +915,28 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		foreach ($steps as $step) {
 			$next = $this->nextTable($current_table, $step, $sub_model);
 			$current_table = $next[0];
-			$multiple |= $next[1]->multiple;
+			if ($next[1]->multiple) {
+				// the column indicates we can have multiple values
+				// check if we have a condition that make it not multiple anymore
+				if ($next[2] == null) {
+					// no condition => this is multiple
+					$multiple = true;
+				} else {
+					foreach ($next[2] as $col_cd=>$val_cd)
+						$col_condition = $col_cd;
+					$col_cd = $current_table->internalGetColumnFor($col_condition, $sub_model);
+					if ($col_cd->multiple) {
+						// the condition column is multiple
+						$key = $current_table->getKey();
+						if ($key <> null && count($key) == 2 && 
+							(($key[0] == $next[1]->name && $key[1] == $col_cd->name) ||
+							 ($key[0] == $col_cd->name && $key[1] == $next[1]->name))) {
+							// the key of the table is on the 2 columns, so it is unique !
+						} else
+							$multiple = true;
+					}
+				}
+			}
 		}
 		// take final column
 		$col = $current_table->internalGetColumnFor($final_column_name, $sub_model);
@@ -927,9 +948,17 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 */
 	private function nextTable($current_table, $step, $sub_model) {
 		$i = strpos($step, "(");
+		$condition = null;
 		if ($i !== false) {
-			// there is a condition => remove it
-			$step  = substr($step, 0, $i);
+			// there is a condition
+			$j = strrpos($step, ")");
+			$condition = substr($step, $i+1, $j-$i-1);
+			$step = substr($step, 0, $i);
+			$i = strpos($condition, "=");
+			$field_cd = trim(substr($condition,0,$i));
+			$field_val = trim(substr($condition,$i+1));
+			if ($field_val == "null") $field_val = null;
+			$condition = array($field_cd=>$field_val);
 		}
 		$i = strpos($step, ">");
 		if ($i !== false) {
@@ -937,11 +966,11 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			$table = \DataModel::get()->internalGetTable(substr($step, 0, $i));
 			$fk_name = substr($step,$i+1);
 			$fk = $table->internalGetColumnFor($fk_name, $sub_model);
-			return array($table, $fk);
+			return array($table, $fk, $condition);
 		}
 		// this is a normal join
 		$col = $current_table->internalGetColumnFor($step, $sub_model);
-		return array(\DataModel::get()->internalGetTable($col->foreign_table), $col);
+		return array(\DataModel::get()->internalGetTable($col->foreign_table), $col, $condition);
 	}
 	
 	public function getTypedField($sub_model) {
@@ -1099,7 +1128,30 @@ class ReadOnlyDataDisplay extends DataDisplay {
 				// reverse join
 				$ft = \DataModel::get()->getTable(substr($step,0,$i));
 				$col = $ft->getColumnFor(substr($step,$i+1), $path->sub_model);
+				
+				$is_multiple = false;
 				if ($col->multiple) {
+					if ($condition == null) {
+						// no condition => this is multiple
+						$is_multiple = true;
+					} else {
+						foreach ($condition as $col_cd=>$val_cd)
+							$col_condition = $col_cd;
+						$col_cd = $ft->internalGetColumnFor($col_condition, $path->sub_model);
+						if ($col_cd->multiple) {
+							// the condition column is multiple
+							$key = $ft->getKey();
+							if ($key <> null && count($key) == 2 &&
+								(($key[0] == $col->name && $key[1] == $col_cd->name) ||
+								 ($key[0] == $col_cd->name && $key[1] == $col->name))) {
+								// the key of the table is on the 2 columns, so it is unique !
+							} else
+								$is_multiple = true;
+						}
+					}
+				}				
+				
+				if ($is_multiple) {
 					// multiple: we cannot go through, and need a sub query
 					if ($multiple_sub_query == null) {
 						$multiple_start_alias = $q->generateFieldAlias();

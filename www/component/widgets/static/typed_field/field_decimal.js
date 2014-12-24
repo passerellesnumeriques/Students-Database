@@ -7,6 +7,8 @@ function field_decimal(data,editable,config) {
 	if (typeof data == 'string') data = parseFloat(data);
 	if (isNaN(data)) data = null;
 	if (config && !config.can_be_null && data == null) data = 0;
+	if (config && typeof config.min == 'string') config.min = parseFloat(config.min);
+	if (config && typeof config.max == 'string') config.max = parseFloat(config.max);
 	typed_field.call(this, data, editable, config);
 }
 field_decimal.prototype = new typed_field();
@@ -135,11 +137,15 @@ field_decimal.prototype._create = function(data) {
 			this.signal_error(this.error);
 		};
 		this.setMinimum = function(min) {
+			if (typeof min == 'string') min = parseFloat(min);
+			if (isNaN(min)) min = null;
 			t.config.min = min === null ? undefined : min;
 			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.max < min) t.config.max = min;
 			t.setData(getValueFromInput());
 		};
 		this.setMaximum = function(max) {
+			if (typeof max == 'string') max = parseFloat(max);
+			if (isNaN(max)) max = null;
 			t.config.max = max === null ? undefined : max;
 			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.min < max) t.config.min = max;
 			t.setData(getValueFromInput());
@@ -165,6 +171,20 @@ field_decimal.prototype._create = function(data) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};
+		this.setMinimum = function(min) {
+			if (typeof min == 'string') min = parseFloat(min);
+			if (isNaN(min)) min = null;
+			if (!this.config) this.config = {};
+			this.config.min = min;
+			this.setData(this._getEditedData());
+		};
+		this.setMaximum = function(max) {
+			if (typeof max == 'string') max = parseFloat(max);
+			if (isNaN(max)) max = null;
+			if (!this.config) this.config = {};
+			this.config.max = max;
+			this.setData(this._getEditedData());
+		};
 		this._setData(data);
 	}
 };
@@ -175,11 +195,15 @@ field_decimal.prototype.setLimits = function(min,max) {
 	this.setData(this._getEditedData());
 };
 field_decimal.prototype.setMinimum = function(min) {
+	if (typeof min == 'string') min = parseFloat(min);
+	if (isNaN(min)) min = null;
 	if (!this.config) this.config = {};
 	this.config.min = min;
 	this.setData(this._getEditedData());
 };
 field_decimal.prototype.setMaximum = function(max) {
+	if (typeof max == 'string') max = parseFloat(max);
+	if (isNaN(max)) max = null;
 	if (!this.config) this.config = {};
 	this.config.max = max;
 	this.setData(this._getEditedData());
