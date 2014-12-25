@@ -1756,6 +1756,17 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				break;
 			}
 		
+		// filter field
+		var classname, config;
+		if (typeof filter.sub_index != 'undefined' && filter.sub_index >= 0) {
+			classname = field.sub_data.filters[filter.sub_index].classname;
+			config = field.sub_data.filters[filter.sub_index].config;
+		} else {
+			classname = field.filter_classname;
+			config = field.filter_config;
+		}
+		var f = new window[classname](filter.data, config, !filter.force);
+		
 		// remove button
 		if (!filter.force && !simple) {
 			var remove = document.createElement("BUTTON");
@@ -1769,7 +1780,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			remove.onclick = function() {
 				t.removeFilter(filter);
 				container.removeChild(div);
-				t._loadData();
+				if (f.isActive())
+					t._loadData();
 				if (t._filters.length == 0)
 					container.innerHTML = "<center><i>No filter</i></center>";
 				layout.changed(container);
@@ -1795,17 +1807,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 			div_name.appendChild(document.createTextNode(field.name+(typeof filter.sub_index != 'undefined' && filter.sub_index >= 0 ? "/"+field.sub_data.names[filter.sub_index] : "")+" "));
 			div.appendChild(div_name);
 		}
-		
+
 		// filter
-		var classname, config;
-		if (typeof filter.sub_index != 'undefined' && filter.sub_index >= 0) {
-			classname = field.sub_data.filters[filter.sub_index].classname;
-			config = field.sub_data.filters[filter.sub_index].config;
-		} else {
-			classname = field.filter_classname;
-			config = field.filter_config;
-		}
-		var f = new window[classname](filter.data, config, !filter.force);
 		div.appendChild(f.getHTMLElement());
 		f.getHTMLElement().style.verticalAlign = "middle";
 		f.onchange.addListener(function (f) {
