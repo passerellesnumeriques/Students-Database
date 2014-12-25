@@ -6,7 +6,6 @@
 function field_decimal(data,editable,config) {
 	if (typeof data == 'string') data = parseFloat(data);
 	if (isNaN(data)) data = null;
-	if (config && !config.can_be_null && data == null) data = 0;
 	if (config && typeof config.min == 'string') config.min = parseFloat(config.min);
 	if (config && typeof config.max == 'string') config.max = parseFloat(config.max);
 	typed_field.call(this, data, editable, config);
@@ -75,15 +74,15 @@ field_decimal.prototype._create = function(data) {
 		};
 		var getValueFromInput = function() {
 			var value;
-			if (t.input.value.length == 0 && t.config.can_be_null) value = null;
+			if (t.input.value.length == 0) value = null;
 			else {
-				var i;
-				if (t.input.value.length == 0 && !t.config.can_be_null) i = t.config.min ? t.config.min : 0;
-				else i = parseFloat(t.input.value);
-				if (isNaN(i)) i = t.config.min ? t.config.min : 0;
-				if (typeof t.config.min != 'undefined' && i < t.config.min) i = t.config.min;
-				if (typeof t.config.max != 'undefined' && i > t.config.max) i = t.config.max;
-				value = i.toFixed(t.config.decimal_digits);
+				value = parseFloat(t.input.value);
+				if (isNaN(value)) value = null;
+				if (value !== null) {
+					if (typeof t.config.min != 'undefined' && value < t.config.min) value = t.config.min;
+					if (typeof t.config.max != 'undefined' && value > t.config.max) value = t.config.max;
+					value = value.toFixed(t.config.decimal_digits);
+				}
 			}
 			return value;
 		};
@@ -102,7 +101,6 @@ field_decimal.prototype._create = function(data) {
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
-			if (data === null && t.config && !t.config.can_be_null) data = 0;
 			if (data === null) t.input.value = "";
 			else t.input.value = data.toFixed(t.config.decimal_digits);
 			if (typeof t.input.autoresize != 'undefined') t.input.autoresize();
@@ -161,7 +159,6 @@ field_decimal.prototype._create = function(data) {
 			var prev = this.text.nodeValue;
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
-			if (data === null && this.config && !this.config.can_be_null) data = 0;
 			if (data === null) this.text.nodeValue = "";
 			else this.text.nodeValue = data.toFixed(this.config.decimal_digits);
 			if (this.text.nodeValue != prev) layout.changed(this.element);

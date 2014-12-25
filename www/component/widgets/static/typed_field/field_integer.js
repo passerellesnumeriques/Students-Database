@@ -78,13 +78,12 @@ field_integer.prototype._create = function(data) {
 			var value;
 			if (!t || !t.input || t.input.value.length == 0) value = null;
 			else {
-				var i = parseInt(t.input.value);
-				if (isNaN(i)) i = null;
+				value = parseInt(t.input.value);
+				if (isNaN(value)) value = null;
 				else {
-					if (typeof t.config.min != 'undefined' && i < t.config.min) i = t.config.min;
-					if (typeof t.config.max != 'undefined' && i > t.config.max) i = t.config.max;
+					if (typeof t.config.min != 'undefined' && value < t.config.min) value = t.config.min;
+					if (typeof t.config.max != 'undefined' && value > t.config.max) value = t.config.max;
 				}
-				value = i;
 			}
 			return value;
 		};
