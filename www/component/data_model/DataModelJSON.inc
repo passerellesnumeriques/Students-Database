@@ -1,9 +1,12 @@
 <?php 
+/**
+ * Functionality to generate a JSON structure of a DataModel
+ */
 class DataModelJSON {
 	
 	/**
 	 * Generate a model
-	 * @param DataModel $model
+	 * @param DataModel $model the Data Model
 	 * @return string the JSON structure of the data model
 	 */
 	public static function model($model) {

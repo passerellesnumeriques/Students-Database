@@ -1,7 +1,7 @@
 <?php 
 /* @var $model DataModel */
 
-$category = new datamodel\DataDisplayCategory("Personal Information", "/static/people/profile_16.png", "/dynamic/people/page/profile?plugin=people&people=%People.id%");
+$category = new datamodel\DataDisplayCategory("Personal Information", "/static/people/profile_16.png");
 $model->addDataCategory($category);
 
 $display = new datamodel\TableDataDisplay("People", $category);

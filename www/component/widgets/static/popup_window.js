@@ -18,13 +18,9 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.icon = icon;
 	t.title = title;
 	t.content = content;
-	/** Callback which will be called when the popup window is closed 
-	 * @member {function} popup_window#onclose 
-	 */
+	/** {Function} Callback which will be called when the popup window is closed */
 	t.onclose = null;
-	/** Indicate if the content should be kept (only hidden) when the window is closed
-	 * @member {boolean} popup_window#keep_content_on_close
-	 */
+	/** {Boolean} Indicate if the content should be kept (only hidden) when the window is closed */
 	t.keep_content_on_close = false;
 	t.buttons = [];
 	
@@ -177,7 +173,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	
 	/** Return true if the given button is disabled
 	 * @param {String} id of the button
-	 * @return {Boolean}
+	 * @returns {Boolean} true if the button is disabled
 	 */
 	t.getIsDisabled = function(id) {
 		for (var i = 0; i < t.buttons.length; ++i){

@@ -380,7 +380,7 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 		$this->restrict_types = $restrict_types_names;
 	}
 	
-	protected function get_possible_values($sub_model) {
+	protected function getPossibleValues($sub_model) {
 		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
 		if (!isset($this->possible_values[$sub_model])) {
 			$q = \SQLQuery::create()->select("Organization");
@@ -447,7 +447,7 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 		if ($sub_model <> "@link") {
 			$cfg = "{";
 			$cfg .= "list:[";
-			$list = $this->get_possible_values($sub_model);
+			$list = $this->getPossibleValues($sub_model);
 			$first = true;
 			foreach ($list as $org) {
 				if ($first) $first = false; else $cfg .= ",";
@@ -469,7 +469,7 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 		if ($sub_model <> "@link") {
 			$cfg = "{";
 			$cfg .= "list:[";
-			$list = $this->get_possible_values($sub_model);
+			$list = $this->getPossibleValues($sub_model);
 			$first = true;
 			foreach ($list as $org) {
 				if ($first) $first = false; else $cfg .= ",";
@@ -504,7 +504,7 @@ class OrganizationDataDisplay extends datamodel\ChoiceDataDisplay {
 	}
 	public function exportValue($value, $sub_model) {
 		if ($value == null || $value == "") return "";
-		$values = $this->get_possible_values($sub_model);
+		$values = $this->getPossibleValues($sub_model);
 		foreach ($values as $val) {
 			if ($value == $val["id"])
 				return $val["name"];
@@ -525,7 +525,7 @@ $display->addDataDisplay(new AddressDataDisplay("people"), "people");
 $display->addJoinFrom("people");
 $model->addTableDataDisplay($display);
 
-$org_category = new datamodel\DataDisplayCategory("Organization", "/static/contact/organization.png", "/dynamic/contact/page/organization_profile?organization=%Organization.id%");
+$org_category = new datamodel\DataDisplayCategory("Organization", "/static/contact/organization.png");
 $model->addDataCategory($org_category);
 $display = new datamodel\TableDataDisplay("OrganizationContact", $org_category);
 $display->addDataDisplay(new ContactDataDisplay("email", "organization"), "organization");

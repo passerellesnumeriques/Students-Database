@@ -49,7 +49,7 @@ function pictures_list(container) {
 	};
 	/** 
 	 * Set the pictures
-	 * @param {Array} lsit of pictures
+	 * @param {Array} pictures list of pictures
 	 */
 	this.setPictures = function(pictures) {
 		while (container.childNodes.length > 0) container.removeChild(container.childNodes[0]);

@@ -19,17 +19,37 @@ abstract class DataDisplay {
 	 */
 	private $category;
 	
+	/** Returns the name of the table on which this data is attached
+	 * @return string table name
+	 */
 	public function getTableName() { return $this->table->getName(); }
+	/** Returns the table on which this data is attached
+	 * @return \datamodel\Table the table
+	 */
 	public function getTable() { return $this->table; }
+	/** Returns the name of the category on which this data is attached
+	 * @return string category name
+	 */
 	public function getCategoryName() { return $this->category->getName(); }
+	/** Returns the category on which this data is attached
+	 * @return \datamodel\DataDisplayCategory category
+	 */
 	public function getCategory() { return $this->category; }
 
+	/** Set the table and category on which this data is attached. This is automatically called by TableDataDisplay
+	 * @param \datamodel\Table $table the table
+	 * @param \datamodel\DataDisplayCategory $category the category
+	 */
 	public function setTableAndCategory($table, $category) { $this->table = $table; $this->category = $category; }
 	
 	/** Get the string to display for this data
 	 * @return string the display name
 	 */
 	public abstract function getDisplayName();
+	/** Check if the current user can access this data
+	 * @param integer|null $sub_model sub model used, or null
+	 * @return boolean true if the current user can access
+	 */
 	public abstract function canAccess($sub_model);
 	/** Returns the list of columns' name this data represents (either a single column, or a group of columns displayed together
 	 * @return array of string
@@ -40,6 +60,10 @@ abstract class DataDisplay {
 	 * @return array (classname, config) classname: string containing the name of the JavaScript class implementing typed_field, config: string containing a JSON representation of the configuration of the typed_field
 	 */
 	public abstract function getTypedField($sub_model);
+	/** Returns the default horizontal alignment to display this data in a table
+	 * @param integer|null $sub_model the sub model used
+	 * @return string|null the horizontal alignment, or null if no default
+	 */
 	public function getHorizontalAlign($sub_model) { return null; }
 	/** Indicates if this data can be modified by the user
 	 * @return boolean true if this data is editable
@@ -73,8 +97,8 @@ abstract class DataDisplay {
 	 */
 	public function getSingleCell() { return null; }
 	
-	/**
-	 * @return SubDataDisplay
+	/** If this data can be split into sub-data, returns the sub-data information
+	 * @return SubDataDisplay the sub-data information
 	 */
 	public function getSubDataDisplay() { return null; }
 	
@@ -84,7 +108,12 @@ abstract class DataDisplay {
 	 * @return array("key"=&gt;key_alias,"data"=&gt;data_alias): if data is null or not specified, the function performSubRequest must be implemented
 	 */
 	public abstract function buildSQL(&$q, $path);
-	/** TODO doc: Return ["type"] = "where" or "having", ["condition"] = condition
+	/** Get the condition to be added to apply the given filter
+	 * @param \SQLQuery $q the query
+	 * @param \DataPath $path the path to reach this data
+	 * @param array $data_aliases array returned by the buildSQL method
+	 * @param array $filter the filter
+	 * @return array with 2 keys: <code>type</code>: either 'where' or 'having', <code>condition</code>: the SQL condition to add
 	 */
 	public abstract function getFilterCondition(&$q, $path, $data_aliases, $filter);
 	/** Perform any necessary sub-requests to retrieve the data, once the first one is already executed, and update the rows and aliases as needed so $rows[x][$sql_aliases["data"]] returns the value for row number x
@@ -108,25 +137,53 @@ abstract class DataDisplay {
 	public function getData($row, $resultFromBuildSQL) {
 		return @$row[$resultFromBuildSQL["data"]];
 	}
+	/** Given a table key, return the key to send. By default returns the same.
+	 * @param integer|array $key the key in the table
+	 * @return mixed the value to send as the key
+	 */
 	public function getKeyFromTableKey($key) { return $key; }
+	/**
+	 * Add a where condition to select only value corresponding to the key received
+	 * @param \SQLQueyr $q the original query
+	 * @param \datamodel\Table $table the table
+	 * @param mixed $key the key received
+	 */
 	public function selectTableKeyFromKey(&$q, $table, $key) { $q->whereKey($table, $key); }
 	
+	/** Returns a text corresponding to the value, to be used when exporting in an Excel file
+	 * @param mixed $value the value
+	 * @param integer|null $sub_model the sub model
+	 * @return string the exported value in a text form
+	 */
 	public function exportValue($value, $sub_model) {
 		if ($value == null) return "";
 		return $value;
 	}
+	/** Returns the number of elements to be exported for the given value
+	 * @param mixed $value the value
+	 * @param integer|null $sub_model the sub model
+	 * @return number number of elements. By default 1.
+	 */
 	public function getExportTimes($value, $sub_model) {
 		return 1;
 	}
+	/** In case several elements need to be exported, returns the nth value to export
+	 * @param mixed $value the value
+	 * @param integer|null $sub_model the sub model
+	 * @param integer $number nth
+	 * @return string value to export
+	 */
 	public function exportValueNumber($value, $sub_model, $number) {
 		return $this->exportValue($value, $sub_model);
 	}
 
 	/** Save a new value for this data. If it can be done together with other updates/insert, the array tables_fields is filled, else the operations are done directly.
 	 * @param number|array $key row key
-	 * @param unknown $value the new value, its type and content depends on the type of this data and its typed_field
+	 * @param mixed $value the new value, its type and content depends on the type of this data and its typed_field
 	 * @param number|null $sub_model sub model instance
 	 * @param TablesToUpdate $tables_fields list of values which should be updated/inserted
+	 * @param string $joining_key_for_new_data column used to join
+	 * @param integer|array $joining_key_value_for_new_data key used to join to this table, when creating a new data
 	 */
 	public abstract function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data);
 	
@@ -191,6 +248,14 @@ abstract class DataDisplay {
 		if ($cd == null) return null;
 		return array("type"=>"where","condition"=>$cd);
 	}
+	/**
+	 * Returns the SQL condition for the given filter
+	 * @param string $expression the SQL expression on which the filter apply
+	 * @param string $filter_type filter type: the default supported ones are filter_text, filter_enum, and filter_comparable
+	 * @param array $filter the filter
+	 * @param \SQLQuery $q the query
+	 * @return NULL|string the condition
+	 */
 	protected function getExpressionFilterCondition($expression, $filter_type, $filter, &$q) {
 		if ($filter == null) return null;
 		switch ($filter_type) {
@@ -240,20 +305,52 @@ abstract class DataDisplay {
 	
 }
 
+/**
+ * When a DataDisplay can be split into sub-data, this class gives information about the sub-data
+ */
 abstract class SubDataDisplay {
 	
+	/**
+	 * @var DataDisplay the data display
+	 */
 	protected $parent;
 	
+	/**
+	 * @param DataDisplay $parent the data display
+	 */
 	public function __construct($parent) {
 		$this->parent = $parent;
 	}
 	
+	/** Returns the names of the sub-data
+	 * @return string[] display names
+	 */
 	public abstract function getDisplayNames();
+	/** Indicates if a sub-data can be edited
+	 * @param integer $index index of the sub-data
+	 * @return boolean true if editable
+	 */
 	public abstract function isEditable($index);
+	/** Indicates if a sub-data can be edited when creating a new data
+	 * @param integer $index index of the sub-data
+	 * @return boolean true if editable
+	 */
 	public function isEditableForNew($index) { return $this->isEditable($index); }
-	public function exportValue($value, $sub_mode, $index) { return $value; }
+	/** Export the value for a sub-data
+	 * @param mixed $value the value, coming from buildSQL
+	 * @param integer|null $sub_model the sub model
+	 * @param integer $index index of the sub-data
+	 * @return string the text corresponding to the value
+	 */
+	public function exportValue($value, $sub_model, $index) { return $value; }
+	/** Export the value for a sub-data, when several parent data are contained into the value
+	 * @param mixed $value the value, coming from buildSQL
+	 * @param integer|null $sub_model the sub model
+	 * @param integer $index index of the sub-data
+	 * @param integer $number the parent data index in the value
+	 * @return string the text corresponding to the value
+	 */
 	public function exportValueNumber($value, $sub_model, $index, $number) { return $this->exportValue($value, $sub_model, $index); }
-	public function getExportNumberFormat() { return null; }
 	
 }
 
@@ -268,13 +365,17 @@ class SimpleDataDisplay extends DataDisplay {
 	protected $display_name;
 	/** @var boolean indicates if we can edit this column */
 	protected $readonly;
+	/** @var boolean indicates if we can edit this column when creating a new data */
 	protected $editable_for_new;
+	/** @var string either 'right','left' or 'center' */
 	protected $horiz_align;
 	
 	/**
 	 * @param string $column_name name of the column
 	 * @param string $display_name name to display
 	 * @param boolean $readonly indicates if we can edit this column
+	 * @param boolean $editable_for_new indicates if we can edit this column when creating a new data
+	 * @param string $horiz_align either 'right','left' or 'center'
 	 */
 	public function __construct($column_name, $display_name, $readonly = false, $editable_for_new = null, $horiz_align = null) {
 		$this->column_name = $column_name;
@@ -396,8 +497,11 @@ class ChoiceDataDisplay extends DataDisplay {
 	protected $foreign_column_name;
 	/** @var boolean indicates if this can be edited or not */
 	protected $editable;
+	/** @var boolean indicates if we can edit this column when creating a new data */
 	protected $editable_for_new;
+	/** @var string either 'right','left' or 'center' */
 	protected $horiz_align;
+	/** @var array associative array of column/value to filter */
 	protected $filter;
 	
 	/**
@@ -405,6 +509,9 @@ class ChoiceDataDisplay extends DataDisplay {
 	 * @param string $foreign_column_name name of the column in the foreign table to display
 	 * @param string $display_name name of this data
 	 * @param boolean $editable indicates if this can be edited or not
+	 * @param boolean $editable_for_new indicates if we can edit this column when creating a new data
+	 * @param string $horiz_align either 'right','left' or 'center'
+	 * @paramr array|null $filter associative array of column/value to filter
 	 */
 	public function __construct($foreign_key_name, $foreign_column_name, $display_name, $editable = true, $editable_for_new = null, $horiz_align = null, $filter = null) {
 		$this->display_name = $display_name;
@@ -427,8 +534,14 @@ class ChoiceDataDisplay extends DataDisplay {
 	}
 	public function getHandledColumns() { return array($this->foreign_key_name); }
 	
+	/** @var array Cache the possible values */
 	protected $possible_values = array();
-	protected function get_possible_values($sub_model) {
+	/**
+	 * Retrieve the list of possible values
+	 * @param integer|null $sub_model the sub model
+	 * @return array list of possible values 
+	 */
+	protected function getPossibleValues($sub_model) {
 		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
 		if (!isset($this->possible_values[$sub_model])) {
 			$t = \DataModel::get()->getTable($foreign_key->foreign_table);
@@ -452,7 +565,7 @@ class ChoiceDataDisplay extends DataDisplay {
 			$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
 			$cfg = "{";
 			$cfg .= "possible_values:[";
-			$res = $this->get_possible_values($sub_model);
+			$res = $this->getPossibleValues($sub_model);
 			$first = true;
 			foreach ($res as $row) {
 				if ($first) $first = false; else $cfg .= ",";
@@ -475,7 +588,7 @@ class ChoiceDataDisplay extends DataDisplay {
 			$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model);
 			$cfg = "{";
 			$cfg .= "possible_values:[";
-			$res = $this->get_possible_values($sub_model);
+			$res = $this->getPossibleValues($sub_model);
 			$first = true;
 			foreach ($res as $row) {
 				if ($first) $first = false; else $cfg .= ",";
@@ -508,7 +621,7 @@ class ChoiceDataDisplay extends DataDisplay {
 	
 	public function exportValue($value, $sub_model) {
 		if ($value == null || $value == "") return "";
-		$values = $this->get_possible_values($sub_model);
+		$values = $this->getPossibleValues($sub_model);
 		foreach ($values as $val) {
 			if ($value == $val["KEY"])
 				return $val["VALUE"];
@@ -619,8 +732,14 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	public function getHandledColumns() { return array(); } // not editing a specify column
 	
-	private $possible_values = array();
-	private function get_possible_values($sub_model) {
+	/** @var array Cache the possible values */
+	protected $possible_values = array();
+	/**
+	 * Retrieve the list of possible values
+	 * @param integer|null $sub_model the sub model
+	 * @return array list of possible values 
+	 */
+	private function getPossibleValues($sub_model) {
 		if (!isset($this->possible_values[$sub_model])) {
 			$foreign_table = $this->getTable()->getColumnFor($this->foreign_key_name, $sub_model)->foreign_table;
 			$foreign_table = \DataModel::get()->getTable($foreign_table);
@@ -640,7 +759,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 	
 	public function getTypedField($sub_model) {
 		if ($sub_model <> "@link") {
-			$list = $this->get_possible_values($sub_model);
+			$list = $this->getPossibleValues($sub_model);
 			$values = "[";
 			$first = true;
 			foreach ($list as $v) {
@@ -657,7 +776,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		if ($sub_model <> "@link") {
 			$cfg = "{";
 			$cfg .= "possible_values:[";
-			$res = $this->get_possible_values($sub_model);
+			$res = $this->getPossibleValues($sub_model);
 			$first = true;
 			foreach ($res as $row) {
 				if ($first) $first = false; else $cfg .= ",";
@@ -675,7 +794,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 	}
 	public function exportValue($value, $sub_model) {
 		if ($value == null || $value == "") return "";
-		$values = $this->get_possible_values($sub_model);
+		$values = $this->getPossibleValues($sub_model);
 		$list = array();
 		foreach ($values as $val) {
 			if (in_array($val["KEY"], $value))
@@ -851,8 +970,11 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	protected $display_name;
 	/** @var string path to reach the column to display */
 	protected $data_path;
+	/** @var string horizontal alignment */
 	protected $horiz_align;
+	/** @var string if specified, the filter will be an enum using the foreign key in the given path (which should be a sub-part of the data path) */
 	protected $filter_path;
+	/** @var string if specified, the typed field will be this one instead of the default one */
 	protected $override_typed_field;	
 	
 	/**
@@ -871,6 +993,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 * </ul>
 	 * @param string $horiz_align horizontal alignment
 	 * @param string $filter_path if specified, the filter will be an enum using the foreign key in the given path (which should be a sub-part of the data path)
+	 * @param string $override_typed_field if specified, the typed field will be this one instead of the default one
 	 */
 	public function __construct($display_name, $data_path, $horiz_align = "left", $filter_path = null, $override_typed_field = null) {
 		$this->display_name = $display_name;
@@ -901,6 +1024,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	
 	/**
 	 * Internal method to get the final column in the data model 
+	 * @param string $path the path
 	 * @param number|null $sub_model sub model instance
 	 * @return \datamodel\Column the final column
 	 */
@@ -945,6 +1069,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	/** Internal method to move to the next table on the data path
 	 * @param \datamodel\Table $current_table the current table
 	 * @param string $step how to reach the next table
+	 * @param integer|null $sub_model the sub model
 	 */
 	private function nextTable($current_table, $step, $sub_model) {
 		$i = strpos($step, "(");
@@ -994,8 +1119,14 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return false; // TODO
 	}
 
+	/** @var array Cache the possible values */
 	private $possible_values = array();
-	private function get_possible_values($sub_model) {
+	/**
+	 * Retrieve the list of possible values
+	 * @param integer|null $sub_model the sub model
+	 * @return array list of possible values 
+	 */
+	private function getPossibleValues($sub_model) {
 		if (!isset($this->possible_values[$sub_model])) {
 			// get the foreign key used for the enum
 			$col = $this->getColumn($this->filter_path, $sub_model);
@@ -1071,7 +1202,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			$foreign_key = $col[0];
 			$cfg = "{";
 			$cfg .= "possible_values:[";
-			$res = $this->get_possible_values($sub_model);
+			$res = $this->getPossibleValues($sub_model);
 			$first = true;
 			foreach ($res as $row) {
 				if ($first) $first = false; else $cfg .= ",";
@@ -1382,12 +1513,14 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	protected $data_path;
 	/** @var string column's name containing the foreign key */
 	protected $foreign_key_name;
+	/** @var string horizontal alignment */
 	protected $horiz_align;
 	
 	/**
 	 * @param string $display_name name of the datadisplay
 	 * @param string $foreign_key_name name of the foreign key in the root table
 	 * @param string $data_path first must be the foreign key and then all the columns name that we will browse through until the column to display. The names must be separated by a dot
+	 * @param string $horiz_align horizontal alignment
 	 */
 	public function __construct($display_name, $foreign_key_name, $data_path, $horiz_align = "left") {
 		$this->display_name = $display_name;
@@ -1567,12 +1700,23 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 	}
 }
 
+/**
+ * Use a SQL expression to calculate a number
+ */
 class CalculationDataDisplay extends DataDisplay {
 	
+	/** @var string the name to display */
 	private $display_name;
+	/** @var string the SQL expression to calculate */
 	private $expression;
+	/** @var string horizontal alignment */
 	private $horiz_align;
 	
+	/**
+	 * @param string $display_name the name to display
+	 * @param string $expression the SQL expression to calculate
+	 * @param string $horiz_align horizontal alignment
+	 */
 	public function __construct($display_name, $expression, $horiz_align = "center") {
 		$this->display_name = $display_name;
 		$this->expression = $expression;
@@ -1685,16 +1829,25 @@ class CalculationDataDisplay extends DataDisplay {
 	
 }
 
+/**
+ * Count the number of foreign keys linked to a data
+ */
 class CountLinksDataDisplay extends DataDisplay {
 	
 	/** @var string name of this data */
 	protected $display_name;
+	/** @var string table containing the foreign keys to count */
 	protected $table;
+	/** @var string name of the column of the foreign key */
 	protected $foreign_key;
+	/** @var string horizontal alignment */
 	protected $horiz_align;
 	
 	/**
 	 * @param string $display_name name of this data
+	 * @param string $table table containing the foreign keys to count
+	 * @param string $foreign_key name of the column of the foreign key
+	 * @param string $horiz_align horizontal alignment
 	 */
 	public function __construct($display_name, $table, $foreign_key, $horiz_align = "center") {
 		$this->display_name = $display_name;
@@ -1763,19 +1916,34 @@ class CountLinksDataDisplay extends DataDisplay {
 	
 }
 
+/**
+ * Count the number of data having a spcific value
+ */
 class CountDataValueDataDisplay extends DataDisplay {
 
 	/** @var string name of this data */
 	protected $display_name;
+	/** @var string column containing the value */
 	protected $column;
+	/** @var string the value */
 	protected $value;
+	/** @var string foreign table */
 	protected $table;
+	/** @var string foreign key */
 	protected $foreign_key;
+	/** @var boolean indicates if this is an integer */
 	protected $is_integer;
+	/** @var string horizontal alignment */
 	protected $horiz_align;
 
 	/**
 	 * @param string $display_name name of this data
+	 * @param string $column column containing the value
+	 * @param string $value the value
+	 * @param string $table foreign table
+	 * @param string $foreign_key foreign key
+	 * @param string $is_integer indicates if this is an integer
+	 * @param string $horiz_align horizontal alignment
 	 */
 	public function __construct($display_name, $column, $value, $table = null, $foreign_key = null, $is_integer = true, $horiz_align = "center") {
 		$this->display_name = $display_name;
@@ -1873,13 +2041,21 @@ class CountDataValueDataDisplay extends DataDisplay {
 
 }
 
+/**
+ * Display an age, using a column containing a date
+ */
 class AgeDataDisplay extends CalculationDataDisplay {
 	
+	/**
+	 * @param string $display_name name of this data
+	 * @param string $birthdate_column column containing the date
+	 */
 	public function __construct($display_name, $birthdate_column) {
 		$this->birthdate_column = $birthdate_column;
 		parent::__construct($display_name, "TIMESTAMPDIFF(YEAR,`$birthdate_column`,CURDATE())");
 	}
 	
+	/** @var string column containing the birth date */
 	private $birthdate_column;
 	
 	public function getTypedField($sub_model) {
