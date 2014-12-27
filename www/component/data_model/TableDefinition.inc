@@ -84,7 +84,8 @@ namespace datamodel {
 		/** @var boolean indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed */
 		private $is_root = false;
 
-		/** @var SubDataModel[] sub models for which this table is the key  */
+		/** @var SubDataModel[] sub models for which this table is the key 
+		 * @no_name_check */
 		public $_key_submodels = array();
 		
 		// events
@@ -115,6 +116,7 @@ namespace datamodel {
 
 		/** Indicates this table is the key for the given sub model
 		 * @param SubDataModel $sm the sub model
+		 * @no_name_check
 		 */
 		public function _key_for_submodel(&$sm) {
 			array_push($this->_key_submodels, $sm);
@@ -253,18 +255,19 @@ namespace datamodel {
 		 * @param array|null $sub_models sub models
 		 * @param boolean $include_customization if true and this table is customizable, the result will contain the customized columns
 		 * @return Column[] list of columns
+		 * @no_name_check
 		 */
 		private function _getColumns($sub_models, $include_customization = true) {
 			if ($this->customization_right == null || !$include_customization) return $this->columns;
 			if ($this->model instanceof \SubDataModel) {
 				$name = $this->getSQLName($sub_models);
 				if (!isset($this->customization[$name])) {
-					$this->customization[$name] = $this->load_customization($name);
+					$this->customization[$name] = $this->loadCustomization($name);
 				}
 				return array_merge($this->columns, $this->customization[$name]);
 			}
 			if (!isset($this->customization[$this->name])) {
-				$this->customization[$this->name] = $this->load_customization($this->name);
+				$this->customization[$this->name] = $this->loadCustomization($this->name);
 			}
 			return array_merge($this->columns, $this->customization[$this->name]);
 		}
@@ -277,7 +280,7 @@ namespace datamodel {
 				$name = $this->getSQLNameFor($sub_model);
 			else
 				$name = $this->name;
-			$this->customization[$name] = $this->load_customization($name);
+			$this->customization[$name] = $this->loadCustomization($name);
 		}
 		
 		/** Check the customization is loaded for the given sub model, if not it will be loaded
@@ -289,7 +292,7 @@ namespace datamodel {
 			else
 				$name = $this->name;
 			if (!isset($this->customization[$name]))
-				$this->customization[$name] = $this->load_customization($name);
+				$this->customization[$name] = $this->loadCustomization($name);
 		}
 		
 		/** Indicates if the table is a root table. If not, it means any row should be reachable from any root table, else it is a lost row which can never be used/removed
@@ -306,7 +309,9 @@ namespace datamodel {
 		public function isRoot() { return $this->is_root; }
 
 		/** Add a primary key (integer ID)
-		 *  @return \datamodel\Table
+		 * @param string $name name of the column
+		 * @param integer $size number of bits
+		 * @return \datamodel\Table this
 		 */
 		public function &addPrimaryKey($name, $size=32) {
 			$c = new PrimaryKey($this, $name, $size);
@@ -323,7 +328,8 @@ namespace datamodel {
 		 * @param boolean $remove_primary_when_foreign_removed indicates if the associated primary key should be removed when a row in this table is removed.
 		 * @param boolean $multiple indicates if several rows in this table can exist with the same foreign key (n to 1 relation)
 		 * @param boolean|null $can_be_null indicates if this foreign key can be null. If not specified (null) it will be considered that the foreign key can be null if $remove_foreign_when_primary_removed is set to false (example of overriding this info is when we have a foreign key pointing to the same table to create a tree, and the root level needs to be null).
-		 * @return \datamodel\Table
+		 * @param boolean $unique indicates if the column must contain only unique values
+		 * @return \datamodel\Table this
 		 */
 		public function &addForeignKey($name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null = null, $unique = false) {
 			$c = new ForeignKey($this, $name, $table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null, $unique);
@@ -356,7 +362,7 @@ namespace datamodel {
 
 		/**
 		 * Set a list of columns as the key of this table (values on those columns can identify uniquely a row)
-		 * @param string[] $columns
+		 * @param string[] $columns list of columns' names
 		 * @return Table this
 		 */
 		public function &setKey($columns) {
@@ -1058,7 +1064,7 @@ namespace datamodel {
 		 * @param string $table_name the SQL name
 		 * @return array list of customized columns
 		 */
-		private function load_customization($table_name) {
+		private function loadCustomization($table_name) {
 			$data_path = realpath(dirname(__FILE__)."/../../data/".\PNApplication::$instance->current_domain);
 			if (!file_exists($data_path."/custom_tables/$table_name"))
 				return array();
@@ -1104,9 +1110,9 @@ namespace datamodel {
 		 * @param string $sql_table_name SQL name of the table
 		 * @return string the SQL definition
 		 */
-		public function get_sql($db_system, $sql_table_name) {
+		public function getSQL($db_system, $sql_table_name) {
 			$sql = "`".$this->name."` ";
-			$sql .= $this->get_sql_type($db_system, $sql_table_name);
+			$sql .= $this->getSQLType($db_system, $sql_table_name);
 			if (!$this->can_be_null) $sql .= " NOT NULL";
 			return $sql;
 		}
@@ -1115,7 +1121,7 @@ namespace datamodel {
 		 * @param \DataBaseSystem $db_system database connection
 		 * @param string $sql_table_name SQL name of the table
 		 */
-		public abstract function get_sql_type($db_system, $sql_table_name);
+		public abstract function getSQLType($db_system, $sql_table_name);
 
 		/**
 		 * Validate a value before to insert or update in this column
@@ -1169,7 +1175,7 @@ namespace datamodel {
 			$this->max = $max;
 		}
 
-		public function get_sql_type($db_system, $sql_table_name) {
+		public function getSQLType($db_system, $sql_table_name) {
 			if ($this->size == 1)
 				return "BIT(1)";
 			if ($this->size <= 8)
@@ -1230,7 +1236,7 @@ namespace datamodel {
 			$this->max = $max;
 		}
 
-		public function get_sql_type($db_system, $sql_table_name) {
+		public function getSQLType($db_system, $sql_table_name) {
 			return "DECIMAL(".($this->integer_digits+$this->decimal_digits).",".$this->decimal_digits.")";
 		}
 
@@ -1299,7 +1305,7 @@ namespace datamodel {
 			$this->specific_lang = $specific_lang;
 		}
 
-		public function get_sql_type($db_system, $sql_table_name) {
+		public function getSQLType($db_system, $sql_table_name) {
 			/* TODO choose the type depending on max_length */
 			return "VARCHAR(".$this->max_length.")";
 		}
@@ -1349,7 +1355,7 @@ namespace datamodel {
 			$this->values = $values;
 		}
 
-		public function get_sql_type($db_system, $sql_table_name) {
+		public function getSQLType($db_system, $sql_table_name) {
 			$sql = "ENUM(";
 			$first = true;
 			foreach ($this->values as $v) {
@@ -1389,19 +1395,33 @@ namespace datamodel {
 	 */
 	class ColumnDate extends Column {
 
+		/** @var string minimum date */
 		public $minimum_date;
+		/** @var string maximum date */
 		public $maximum_date;
 
+		/**
+		 * @param Table $table the table this column belongs to
+		 * @param string $name name of this column
+		 * @param boolean $can_be_null true if this column accepts null values
+		 * @param boolean $unique true if values in this column are unique
+		 * @param string $minimum_date an SQL date, or the name of a date column in the same table, or null
+		 * @param string $maximum_date an SQL date, or the name of a date column in the same table, or null
+		 */
 		public function __construct(&$table, $name, $can_be_null = true, $unique = false, $minimum_date = null, $maximum_date = null) {
 			parent::__construct($table, $name, $can_be_null, $unique);
 			$this->minimum_date = $minimum_date;
 			$this->maximum_date = $maximum_date;
 		}
 
-		public function get_sql_type($db_system, $sql_table_name) {
+		public function getSQLType($db_system, $sql_table_name) {
 			return "DATE";
 		}
 		
+		/** Convert an SQL date into a Unix timestamp
+		 * @param string $sql_date SQL date
+		 * @return integer Unix timestamp
+		 */
 		public static function toTimestamp($sql_date) {
 			$s = explode("-", $sql_date);
 			$y = intval($s[0]);
@@ -1468,14 +1488,23 @@ namespace datamodel {
 		}
 	}
 
+	/**
+	 * Time column
+	 */
 	class ColumnTime extends Column {
 
+		/**
+		 * @param Table $table the table this column belongs to
+		 * @param string $name name of this column
+		 * @param boolean $can_be_null true if this column accepts null values
+		 * @param boolean $unique true if values in this column are unique
+		 */
 		public function __construct(&$table, $name, $can_be_null = true, $unique = false) {
 			parent::__construct($table, $name, $can_be_null, $unique);
 		}
 
 
-		public function get_sql_type($db_system, $sql_table_name) {
+		public function getSQLType($db_system, $sql_table_name) {
 			return "TIME";
 		}
 
@@ -1490,18 +1519,35 @@ namespace datamodel {
 		}
 	}
 
+	/**
+	 * Primary key, with AUTO_INCREMENT
+	 */
 	class PrimaryKey extends ColumnInteger {
 
+		/**
+		 * @param Table $table the table this column belongs to
+		 * @param string $name name of this column
+		 * @param integer $size number of bits
+		 */
 		public function __construct(&$table, $name, $size) {
 			parent::__construct($table, $name, $size, null, null, false, true);
 		}
 
-		public function get_sql_type($db_system, $sql_table_name) {
-			return parent::get_sql_type($db_system, $sql_table_name)." AUTO_INCREMENT";
+		public function getSQLType($db_system, $sql_table_name) {
+			return parent::getSQLType($db_system, $sql_table_name)." AUTO_INCREMENT";
 		}
 	}
-	
+
+	/**
+	 * Unix timestamp column
+	 */
 	class ColumnTimestamp extends ColumnInteger {
+		/**
+		 * @param Table $table the table this column belongs to
+		 * @param string $name name of this column
+		 * @param boolean $can_be_null true if this column accepts null values
+		 * @param boolean $unique true if values in this column are unique
+		 */
 		public function __construct(&$table, $name, $can_be_null = true, $unique = false){
 			parent::__construct($table, $name, 64, null, null, $can_be_null, $unique);
 		}
@@ -1512,13 +1558,30 @@ namespace datamodel {
 		}
 	}
 
+	/**
+	 * Foreign key
+	 */
 	class ForeignKey extends ColumnInteger {
 
+		/** @var string foreign table */
 		public $foreign_table;
+		/** @var boolean in case a foreign key points to a row which is removed, if this is true the row containing the foreign key will be removed at the same time, if false NULL will be set in the foreign key */
 		public $remove_foreign_when_primary_removed;
+		/** @var boolean if true, when a row of this table is removed, the row pointed by the foreign key will be removed at the same time */
 		public $remove_primary_when_foreign_removed;
+		/** @var boolean if true it means we can have several rows in this table pointing to the same primary key (having the same foreign key) */
 		public $multiple;
 
+		/**
+		 * @param Table $table the table this column belongs to
+		 * @param string $name name of this column
+		 * @param string $foreign_table name of the table this foreign key points to
+		 * @param boolean $remove_foreign_when_primary_removed in case a foreign key points to a row which is removed, if this is true the row containing the foreign key will be removed at the same time, if false NULL will be set in the foreign key
+		 * @param boolean $remove_primary_when_foreign_removed if true, when a row of this table is removed, the row pointed by the foreign key will be removed at the same time
+		 * @param boolean $multiple if true it means we can have several rows in this table pointing to the same primary key (having the same foreign key)
+		 * @param boolean $can_be_null true if this column accepts null values
+		 * @param boolean $unique true if values in this column are unique
+		 */
 		public function __construct(&$table, $name, $foreign_table, $remove_foreign_when_primary_removed, $remove_primary_when_foreign_removed, $multiple, $can_be_null, $unique) {
 			$this->foreign_table = $foreign_table;
 			$this->remove_foreign_when_primary_removed = $remove_foreign_when_primary_removed;

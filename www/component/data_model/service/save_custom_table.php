@@ -150,10 +150,10 @@ class service_save_custom_table extends Service {
 			if ($updated_col == null) throw new Exception("Internal error: Column ".$col["id"]." missing after loading customization");
 			if ($col["is_new"]) {
 				// this is a new column
-				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` ADD COLUMN ".$updated_col->get_sql(SQLQuery::getDataBaseAccessWithoutSecurity(), $sql_name));
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` ADD COLUMN ".$updated_col->getSQL(SQLQuery::getDataBaseAccessWithoutSecurity(), $sql_name));
 			} else {
 				// this is an update
-				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` MODIFY COLUMN ".$updated_col->get_sql(SQLQuery::getDataBaseAccessWithoutSecurity(), $sql_name));
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` MODIFY COLUMN ".$updated_col->getSQL(SQLQuery::getDataBaseAccessWithoutSecurity(), $sql_name));
 				// TODO check data with new constraints
 			}
 			// remove it from the list of previous columns, so it won't be removed at the end

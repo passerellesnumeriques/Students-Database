@@ -24,7 +24,7 @@ class DataBaseUtilities {
 		$first = true;
 		foreach ($columns as $col) {
 			if ($first) $first = false; else $sql .= ", ";
-			$sql .= $col->get_sql($db_system, $table->getName().($suffix <> null ? $suffix : ""));
+			$sql .= $col->getSQL($db_system, $table->getName().($suffix <> null ? $suffix : ""));
 		}
 		$pk = $table->getPrimaryKey();
 		if ($pk <> null)

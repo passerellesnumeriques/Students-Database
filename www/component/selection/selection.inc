@@ -400,7 +400,7 @@ class selection extends Component {
 					require_once("component/data_model/Model.inc");
 					$t = DataModel::get()->internalGetTable("Applicant");
 					$col = $t->internalGetColumnFor("applicant_id", $this->getCampaignId());
-					SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `Applicant_".$this->getCampaignId()."` CHANGE `applicant_id` ".$col->get_sql(SQLQuery::getDataBaseAccessWithoutSecurity(), "Applicant_".$this->getCampaignId()));
+					SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `Applicant_".$this->getCampaignId()."` CHANGE `applicant_id` ".$col->getSQL(SQLQuery::getDataBaseAccessWithoutSecurity(), "Applicant_".$this->getCampaignId()));
 				}
 			}
 			// apply maximum age

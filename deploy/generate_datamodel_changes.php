@@ -183,7 +183,7 @@ foreach ($indexes_removed_root as $table_name=>$changes) {
 			// remove auto_increment
 			fwrite($f, "\$table = DataModel::get()->internalGetTable(\"".$table_name."\");\n");
 			fwrite($f, "\$col = \$table->internalGetColumn(\"".$c["key"]."\");\n");
-			fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `$table_name` CHANGE COLUMN \".\$col->get_sql(\$db_system, \"$table_name\"));\n");
+			fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `$table_name` CHANGE COLUMN \".\$col->getSQL(\$db_system, \"$table_name\"));\n");
 		} else
 			fwrite($f, "\$db_system->execute(\"DROP INDEX `".$c["index_name"]."` ON `$table_name`\");\n");
 	}
@@ -198,7 +198,7 @@ foreach ($indexes_removed_sm as $parent_table=>$list) {
 				// remove auto_increment
 				fwrite($f, "\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
 				fwrite($f, "\$col = \$table->internalGetColumn(\"".$c["key"]."\");\n");
-				fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` CHANGE COLUMN \".\$col->get_sql(\$db_system, \"$table_name\"));\n");
+				fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` CHANGE COLUMN \".\$col->getSQL(\$db_system, \"$table_name\"));\n");
 			} else
 				fwrite($f, "\$db_system->execute(\"DROP INDEX `".$c["index_name"]."` ON `".$table_name."_\".\$sub_model.\"`\");\n");
 		}
@@ -211,7 +211,7 @@ foreach ($new_columns_root as $table_name=>$new_cols) {
 	foreach ($new_cols as $col) {
 		fwrite($f, "\$col = \$table->internalGetColumn(\"".$col["name"]."\");\n");
 		$sql = "ALTER TABLE `$table_name`";
-		$sql .= " ADD COLUMN \".\$col->get_sql(\$db_system, \"$table_name\").\"";
+		$sql .= " ADD COLUMN \".\$col->getSQL(\$db_system, \"$table_name\").\"";
 		if ($col["type"] == "PrimaryKey") $sql .= " PRIMARY KEY";
 		fwrite($f, "\$db_system->execute(\"$sql\");\n");
 	}
@@ -224,7 +224,7 @@ foreach ($new_columns_sm as $parent_table=>$new_columns) {
 		foreach ($new_cols as $col) {
 			fwrite($f, "\t\$col = \$table->internalGetColumn(\"".$col["name"]."\");\n");
 			$sql = "ALTER TABLE `".$table_name."_"."\".\$sub_model.\"`";
-			$sql .= " ADD COLUMN \".\$col->get_sql(\$db_system, \"$table_name\").\"";
+			$sql .= " ADD COLUMN \".\$col->getSQL(\$db_system, \"$table_name\").\"";
 			if ($col["type"] == "PrimaryKey") $sql .= " PRIMARY KEY";
 			fwrite($f, "\t\$db_system->execute(\"$sql\");\n");
 		}
@@ -249,7 +249,7 @@ foreach ($rename_columns_root as $table_name=>$renames) {
 	fwrite($f, "\$table = DataModel::get()->internalGetTable(\"".$table_name."\");\n");
 	foreach ($renames as $old_name=>$new_name) {
 		$sql = "ALTER TABLE `$table_name`";
-		$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->get_sql(\$db_system, \"$table_name\").\"";
+		$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->getSQL(\$db_system, \"$table_name\").\"";
 		fwrite($f, "\$db_system->execute(\"$sql\");\n");
 	}
 }
@@ -260,7 +260,7 @@ foreach ($rename_columns_sm as $parent_table=>$list) {
 		fwrite($f, "\t\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
 		foreach ($renames as $old_name=>$new_name) {
 			$sql = "ALTER TABLE `".$table_name."_\".\$sub_model.\"`";
-			$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->get_sql(\$db_system, \"".$table_name."_\".\$sub_model.\").\"";
+			$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model.\").\"";
 			fwrite($f, "\t\$db_system->execute(\"$sql\");\n");
 		}
 	}
@@ -272,7 +272,7 @@ foreach ($indexes_added_root as $table_name=>$changes) {
 		if ($c["index_name"] == "PRIMARY") {
 			// add auto_increment
 			//fwrite($f, "\$table = DataModel::get()->internalGetTable(\"".$table_name."\");\n");
-			//fwrite($f, "\$db_system->execute(\"ALTER TABLE `$table_name` CHANGE COLUMN \".\$table->internalGetColumn(\"".$c["key"]."\")->get_sql(\$db_system, \"$table_name\"));\n");
+			//fwrite($f, "\$db_system->execute(\"ALTER TABLE `$table_name` CHANGE COLUMN \".\$table->internalGetColumn(\"".$c["key"]."\")->getSQL(\$db_system, \"$table_name\"));\n");
 			// add index
 			//fwrite($f, "\$db_system->execute(\"ALTER TABLE `$table_name` ADD PRIMARY KEY (`".$c["key"]."`)\");\n");
 		} else if ($c["index_name"] == "table_key") {
@@ -304,7 +304,7 @@ foreach ($indexes_added_sm as $parent_table=>$list) {
 			if ($c["index_name"] == "PRIMARY") {
 				// add auto_increment
 				fwrite($f, "\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
-				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` CHANGE COLUMN \".]$table->internalGetColumn(\"".$c["key"]."\")->get_sql(\$db_system, \"".$table_name."_\".\$sub_model.\"));\n");
+				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` CHANGE COLUMN \".]$table->internalGetColumn(\"".$c["key"]."\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model.\"));\n");
 				// add index
 				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` ADD PRIMARY KEY (`".$c["key"]."`)\");\n");
 			} else if ($c["index_name"] == "table_key") {

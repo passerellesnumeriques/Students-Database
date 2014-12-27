@@ -7,7 +7,9 @@ class DataPathBuilder {
 	/**
 	 * Search paths from the given table
 	 * @param string $table_name the starting point of the search
-	 * @param array $sub_models sub models 
+	 * @param integer|null $sub_model sub model
+	 * @param boolean $go_to_submodels if true, we will try to go to every sub model
+	 * @param array $sub_models if specified, we will try to go only to the sub model instances given 
 	 * @return DataPath[] list of paths found
 	 */
 	public static function &searchFrom($table_name, $sub_model = null, $go_to_submodels = false, $sub_models = null) {
@@ -51,6 +53,7 @@ class DataPathBuilder {
 	 * @param string[] $done list of tables already analyzed 
 	 * @param DataPath[] $final_paths list of paths to a final data found
 	 * @param array $sub_models sub models
+	 * @param boolean $go_to_submodels if true, we will try to go to every sub model
 	 */
 	private static function searchFromPath(&$path, &$done, &$final_paths, $sub_models, $go_to_submodels) {
 		$multiple = 0;
@@ -80,6 +83,7 @@ class DataPathBuilder {
 	 * @param string[] $done list of tables already analyzed
 	 * @param DataPath[] $final_paths list of final paths already found
 	 * @param array $sub_models list of sub models selection
+	 * @param boolean $go_to_submodels if true, we will try to go to every sub model
 	 */
 	private static function addForeignKeys(&$path, &$done, &$final_paths, $sub_models, $go_to_submodels) {
 		foreach ($path->table->internalGetColumns($sub_models) as $col) {
@@ -125,6 +129,7 @@ class DataPathBuilder {
 	 * @param string[] $done list of tables already analyzed
 	 * @param DataPath[] $final_paths list of paths already found
 	 * @param array $sub_models selection of sub models
+	 * @param boolean $go_to_submodels if true, we will try to go to every sub model
 	 */
 	private static function addExternalForeignKeys(&$path, &$done, &$final_paths, $sub_models, $go_to_submodels) {
 		$model = DataModel::get();

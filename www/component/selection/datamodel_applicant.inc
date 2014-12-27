@@ -8,8 +8,8 @@ class ApplicantIDColumn extends datamodel\ColumnInteger {
 		parent::__construct($table, "applicant_id", 32, 0, null, false, true);
 	}
 	
-	public function get_sql_type($db_system, $sql_table_name) {
-		$type = parent::get_sql_type($db_system, $sql_table_name);
+	public function getSQLType($db_system, $sql_table_name) {
+		$type = parent::getSQLType($db_system, $sql_table_name);
 		$i = strpos($sql_table_name, "_");
 		$sub_model = substr($sql_table_name, $i+1);
 		$res = $db_system->execute("SELECT `value` FROM `SelectionCampaignConfig_$sub_model` WHERE `name`='generate_applicant_id'", false);

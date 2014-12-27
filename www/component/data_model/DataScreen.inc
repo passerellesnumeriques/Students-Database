@@ -1,40 +1,84 @@
 <?php 
 namespace datamodel {
 
+	/**
+	 * Data screens define how to display data from tables, as well as the creation of new data
+	 */
 	interface DataScreen {
+		/**
+		 * Get the tables handled by the screen
+		 * @return string[] list of tables
+		 */
 		public function getTables();
+		/**
+		 * Create new data
+		 * @param array $paths paths of the data to be created
+		 * @param boolean $multiple if true, several data are created at the same time
+		 */
 		public function createData($paths, $multiple);
 	}
 	
+	/**
+	 * Define a screen for a single data
+	 */
 	interface SimpleDataScreen extends DataScreen {
 		
+		/**
+		 * Get the icon
+		 * @return string the URL of the icon or null if no icon
+		 */
 		public function getIcon();
+		/**
+		 * Get the name of the section in which the screen will be displayed
+		 * @return string the name
+		 */
 		public function getName();
 		
+		/**
+		 * Generate the screen 
+		 * @param Page $page the page in which the screen is generated
+		 * @param DataPath[] $paths list of paths of the data to be displayed
+		 * @param DataValues $values values already set
+		 * @param DataValues $prefilled_values values to pre-fill
+		 * @param string $structure_name for new data, name of the JSON structure to be filled
+		 */
 		public function generate(&$page, $paths, $values, $prefilled_values, $structure_name);
 		/**
-		 * 
-		 * @param Page $page
-		 * @param DataPath[] $paths
-		 * @param DataValues $values
-		 * @param DataValues $prefilled_values
-		 * @param string|NULL $structure_name
+		 * Generate the end of the screen
+		 * @param Page $page the page
+		 * @param DataPath[] $paths the paths
+		 * @param DataValues $values values already set
+		 * @param DataValues $prefilled_values pre-filled values
+		 * @param string|NULL $structure_name name of the JSON structure for new data
 		 */
 		public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name);
 		
 	}
 	
+	/**
+	 * Define DataDisplay to be included when displaying several data at the same time
+	 *
+	 */
 	interface MultipleDataScreen extends DataScreen {
+		/**
+		 * Get the list of displayable data
+		 * @param string $come_from from where we come from
+		 * @param integer|null $sub_model sub model
+		 * @param boolean $for_new_data true if we are creating data, false if editing only
+		 */
 		public function getDataDisplay($come_from, $sub_model, $for_new_data);
 	}
 	
+	/**
+	 * Define a screen used when no DataScreen is defined on tables: show data in a table
+	 */
 	class GenericDataScreen implements DataScreen, SimpleDataScreen, MultipleDataScreen {
 	
-		/** @var \datamodel\TableDataDisplay $display */
+		/** @var \datamodel\TableDataDisplay $display provides the DataDisplay to be displayed */
 		protected $display;
 		
 		/**
-		 * @param \datamodel\TableDataDisplay $display
+		 * @param \datamodel\TableDataDisplay $display provides the DataDisplay to be displayed
 		 */
 		public function __construct($display) {
 			$this->display = $display;
@@ -62,16 +106,16 @@ namespace datamodel {
 		public function generateEndOfSection(&$page, $paths, $values, $prefilled_values, $structure_name) {}
 		
 		/**
-		 * 
-		 * @param Page $page
-		 * @param DataPath $path
-		 * @param \datamodel\DataDisplay[] $list
-		 * @param array $fixed_columns
-		 * @param DataValues $values
-		 * @param array $prefilled_values
-		 * @param string $structure_name
-		 * @param boolean $is_new
-		 * @return string
+		 * Generate the table, with one DataDisplay per row
+		 * @param Page $page the page
+		 * @param DataPath $path the path to reach the table
+		 * @param \datamodel\DataDisplay[] $list list of data to display
+		 * @param array $fixed_columns values which cannot be edited
+		 * @param DataValues $values values already set
+		 * @param array $prefilled_values values pre-filled
+		 * @param string $structure_name name of the JSON structure if we are creating new data
+		 * @param boolean $is_new true if we are creating new data
+		 * @return string the HTML
 		 */
 		protected function generateDataTable(&$page, $path, $list, $fixed_columns, $values, $prefilled_values, $structure_name, $is_new) {
 			if ($path->sub_model == "@link") return;
@@ -230,11 +274,12 @@ namespace datamodel {
 		}
 		
 		/** Optionally add some columns/info at the end of the row for a DataDisplay
-		 * @param \datamodel\DataDisplay $data
-		 * @param unknown $value
-		 * @param boolean $is_new
-		 * @param boolean $can_edit
-		 * @return string
+		 * @param \datamodel\DataDisplay $data the data
+		 * @param mixed $value the initial value
+		 * @param integer $sub_index if this is a data display having sub-data
+		 * @param boolean $is_new true if this is for a new data
+		 * @param boolean $can_edit true if this is editable
+		 * @return string the HTML
 		 */
 		protected function endDataRow($data, $value, $sub_index, $is_new, $can_edit) {
 			return "";
@@ -312,6 +357,13 @@ namespace datamodel {
 			return $key;
 		}
 		
+		/**
+		 * Create new data for data reachable from this table
+		 * @param DataPath[] $children the data reachable from this table
+		 * @param boolean $multiple true if the screen is for several data
+		 * @param \TablesToUpdate $to_update the values to insert/update in the database 
+		 * @param integer|null $parent_sub_model the sub model
+		 */
 		private function createChildrenData($children, $multiple, &$to_update, $parent_sub_model) {
 			// check DataScreen for children
 			foreach (\DataModel::get()->getDataScreens() as $screen) {
