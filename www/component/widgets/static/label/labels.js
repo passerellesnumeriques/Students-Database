@@ -2,13 +2,31 @@ if (typeof require != 'undefined') {
 	require("label.js");
 }
 
+/**
+ * List of labels
+ * @param {String} color CSS color of the labels
+ * @param {Array} list the labels: {id,name,editable,removable}
+ * @param {Function} onedit function to call when a label needs to be edited
+ * @param {Function} onremove function to call when a label is removed
+ * @param {Function} add_list_provider function called when the user wants to add a new label: it must return a list of elements which will be displayed in a context_menu
+ * @param {Function} onready function called when this widget is ready
+ */
 function labels(color, list, onedit, onremove, add_list_provider, onready) {
 	
+	/** DIV containing the labels */
 	this.element = document.createElement("DIV");
 	this.element.style.display = "inline-block";
+	/** List of labels */
 	this.list = [];
 	var t=this;
 	
+	/**
+	 * Add a label
+	 * @param {String} id identifier
+	 * @param {String} name text of the label
+	 * @param {Boolean} editable indicates if the label can be edited
+	 * @param {Boolean} removable indicates if the label can be removed
+	 */
 	this.addItem = function(id, name, editable, removable) {
 		var item = {id:id,name:name,editable:editable};
 		item.label = new label(name, color, onedit && editable ? function(l,onedited) {

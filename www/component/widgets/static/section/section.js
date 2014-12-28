@@ -130,6 +130,13 @@ function section(icon, title, content, collapsable, fill_height, css, collapsed)
 		this.footer.className = "footer";
 		layout.changed(this.element);
 	};
+	/**
+	 * Add a button in the footer
+	 * @param {String} icon URL of the icon
+	 * @param {String} text text
+	 * @param {String} css CSS class
+	 * @param {Function} onclick function to call when the button is clicked
+	 */
 	this.addButton = function(icon, text, css, onclick) {
 		var button = document.createElement("BUTTON");
 		button.className = css;

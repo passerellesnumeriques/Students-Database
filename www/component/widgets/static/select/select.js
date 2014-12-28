@@ -1,18 +1,34 @@
 if (typeof require != 'undefined')
 	require("context_menu.js");
 
+/**
+ * A control which looks like a SELECT, but in which we can put any HTML in every option
+ * @param {Element} container where to put the select
+ */
 function select(container) {
 	var t = this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	
+	/** List of options */
 	this.options = [];
+	/** {Function} if specified, called when the value changed */
 	this.onchange = null;
+	/** {Function} if specified, called just before the value change */
 	this.onbeforechange = null;
+	/** Current value */
 	this.value = null;
+	/** Maximum width of this control */
 	this._max_width = 0;
 	
+	/** Get the element of this select
+	 * @returns {Element} the element
+	 */
 	this.getHTMLElement = function() { return this._div; };
 	
+	/** Add an option
+	 * @param {String} value the value
+	 * @param {Element} html element to display
+	 */
 	this.add = function(value, html) {
 		var item = document.createElement("DIV");
 		item.innerHTML = html;
@@ -40,6 +56,9 @@ function select(container) {
 		},1);
 	};
 	
+	/** Set the selected item
+	 * @param {String} value value of the item to select
+	 */
 	this.select = function(value) {
 		// if (this.onbeforechange && !this.onbeforechange(...)) return;
 		// if(fire_onchange == null)
@@ -60,10 +79,14 @@ function select(container) {
 		} // else nothing to do
 	};
 	
+	/** Get the current value
+	 * @returns {String} the value
+	 */
 	this.getSelectedValue = function() {
 		return this.value;
 	};
 	
+	/** Initialize the control */
 	this._init = function() {
 		this._div = document.createElement("DIV");
 		this._div.style.display = 'inline-block';

@@ -291,7 +291,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		this._refreshTitle();
 	};
 	/** Remove an actino
-	 * @param {GridColumnActino} action the action to remove
+	 * @param {GridColumnAction} action the action to remove
 	 */
 	this.removeAction = function(action) {
 		this.actions.remove(action);
@@ -367,7 +367,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				t.filtered = false;
 				a.icon = url+"/filter.gif";
 				t._refreshTitle();
-				t.grid.apply_filters();
+				t.grid.applyFilters();
 			} else {
 				if (t.grid.table.childNodes.length == 0) return false;
 				require("context_menu.js", function() {
@@ -394,7 +394,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 						cb.checked = 'checked';
 						item.appendChild(cb);
 						checkboxes.push(cb);
-						t.grid._create_field(t, t.field_type, false, null, null, t.field_args, item, values[i], function(input) {
+						t.grid._createField(t, t.field_type, false, null, null, t.field_args, item, values[i], function(input) {
 							input.disabled = 'disabled';
 						});
 						item.style.paddingRight = "2px";
@@ -416,7 +416,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 							a.icon = url+"/filter.gif";
 							t._refreshTitle();
 						}
-						t.grid.apply_filters();
+						t.grid.applyFilters();
 					};
 					menu.showBelowElement(a.element);
 				});
@@ -646,7 +646,7 @@ function grid(element) {
 	window.to_cleanup.push(t);
 	/** Cleaning to avoid memory leaks */
 	t.cleanup = function() {
-		unlistenEvent(window,'keyup',t._key_listener);
+		unlistenEvent(window,'keyup',t._keyListener);
 		element = null;
 		t.element = null;
 		t.columns = null;
@@ -717,7 +717,9 @@ function grid(element) {
 			t.header_rows[0].childNodes[0].rowSpan++;
 		layout.changed(t.thead);
 	};
-	/** Internal function making a column container movable */
+	/** Internal function making a column container movable
+	 * @param {GridColumnContainer} container the column container
+	 */
 	t._columnContainerMovable = function(container) {
 		container.title_part.style.cursor = "move";
 		container.title_part.draggable = true;
@@ -864,7 +866,7 @@ function grid(element) {
 		col._refreshTitle();
 		if (!col._loaded) {
 			t._columns_loading++;
-			col.onloaded.addListener(function() { t._columns_loading--; t._check_loaded(); });
+			col.onloaded.addListener(function() { t._columns_loading--; t._checkLoaded(); });
 		}
 		// add cells
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -886,7 +888,7 @@ function grid(element) {
 					if (col.id == tr.row_data[k].col_id) { data = tr.row_data[k].data; if (typeof tr.row_data[k].original_data != 'undefined') original_data = tr.row_data[k].original_data; break; }
 				if (data) td.data_id = data.data_id;
 				td.style.textAlign = col.align;
-				t._create_cell(col, data, td, function(field, original_data){
+				t._createCell(col, data, td, function(field, original_data){
 					if (typeof original_data != 'undefined') field.originalData = original_data;
 					field.onfocus.addListener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
 				}, original_data);
@@ -963,19 +965,35 @@ function grid(element) {
 	 * @returns {Number} number of columns
 	 */
 	t.getNbColumns = function() { return t.columns.length; };
+	/** Get a column by its index
+	 * @param {Number} index index
+	 * @returns {GridColumn} the column
+	 */
 	t.getColumn = function(index) { return t.columns[index]; };
+	/** Get a column by its id
+	 * @param {String} id identifier
+	 * @returns {GridColumn} the column
+	 */
 	t.getColumnById = function(id) {
 		for (var i = 0; i < t.columns.length; ++i)
 			if (t.columns[i].id == id)
 				return t.columns[i];
 		return null;
 	};
+	/** Get a column by its attached data
+	 * @param {Object} data attached data to search
+	 * @returns {GridColumn} the column
+	 */
 	t.getColumnByAttachedData = function(data) {
 		for (var i = 0; i < t.columns.length; ++i)
 			if (t.columns[i].attached_data == data)
 				return t.columns[i];
 		return null;
 	};
+	/** Get a column container by its attached data
+	 * @param {Object} data attached data to search
+	 * @returns {GridColumnContainer} the column container
+	 */
 	t.getColumnContainerByAttachedData = function(data) {
 		for (var i = 0; i < t.columns.length; ++i)
 			if (t.columns[i].parent_column) {
@@ -984,18 +1002,35 @@ function grid(element) {
 			}
 		return null;
 	};
+	/** Internal function to handle recursivity
+	 * @param {GridColumnContainer} container parent container
+	 * @param {Object} data attached data to search
+	 * @returns {GridColumnContainer} the column container
+	 */
 	t._getColumnContainerByAttachedData = function(container, data) {
 		if (container.attached_data == data) return container;
 		if (!container.parent_column) return null;
 		return t._getColumnContainerByAttachedData(container.parent_column, data);
 	};
+	/** Get index of a column
+	 * @param {GridColumn} col the column
+	 * @returns {Number} the index
+	 */
 	t.getColumnIndex = function(col) { return t.columns.indexOf(col); };
+	/** Get index of a column
+	 * @param {String} col_id identifier of the column to search
+	 * @returns {Number} the index
+	 */
 	t.getColumnIndexById = function(col_id) {
 		for (var i = 0; i < t.columns.length; ++i)
 			if (t.columns[i].id == col_id)
 				return i;
 		return -1;
 	};
+	/** Get column container by its id
+	 * @param {String} id identifier of the container to search
+	 * @returns {GridColumnContainer} the container
+	 */
 	t.getColumnContainerById = function(id) {
 		for (var i = 0; i < t.columns.length; ++i)
 			if (t.columns[i].parent_column) {
@@ -1004,11 +1039,21 @@ function grid(element) {
 			}
 		return null;
 	};
+	/** Internal function to handle recursivity
+	 * @param {GridColumnContainer} container parent
+	 * @param {String} id identifier of the container to search
+	 * @returns {GridColumnContainer} the container
+	 */
 	t._getColumnContainerById = function(container, id) {
 		if (container.id == id) return container;
 		if (!container.parent_column) return null;
 		return t._getColumnContainerById(container.parent_column, id);
 	};
+	/** Remove a column
+	 * @param {Number} index index of the column to remove
+	 * @param {Boolean} keep_data if false, data corresponding to the removed column will be removed as well
+	 * @param {Boolean} keep_sub_column if true, sub columns won't be removed
+	 */
 	t.removeColumn = function(index, keep_data, keep_sub_column) {
 		var col = t.columns[index];
 		t.columns.splice(index,1);
@@ -1080,10 +1125,14 @@ function grid(element) {
 			}
 		}
 		if (!keep_data)
-			t.apply_filters();
+			t.applyFilters();
 		layout.changed(this.thead);
 		layout.changed(this.table);
 	};
+	/**
+	 * Refresh a column, by re-building all cells corresponding to it. May be used if the typed field of a column changed
+	 * @param {GridColumn} column the column to refresh
+	 */
 	t.rebuildColumn = function(column) {
 		column._refreshTitle();
 		var index = t.columns.indexOf(column);
@@ -1095,7 +1144,7 @@ function grid(element) {
 				var data = td.field.getCurrentData();
 				var original = td.field.originalData;
 				td.removeAllChildren();
-				t._create_cell(column, data, td, function(field){
+				t._createCell(column, data, td, function(field){
 					field.originalData = original;
 					field.onfocus.addListener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
 				});
@@ -1103,12 +1152,22 @@ function grid(element) {
 			}
 		}
 	};
+	/**
+	 * Move a column
+	 * @param {String} col_id identifier of the column to move
+	 * @param {GridColumn} before_col the column before which to move the column
+	 */
 	t.moveColumnBefore = function(col_id, before_col) {
 		if (before_col.id == col_id) return;
 		if (before_col instanceof GridColumnContainer)
 			before_col = before_col.getFinalColumns()[0];
 		t.moveColumn(col_id, t.getColumnIndex(before_col));
 	};
+	/**
+	 * Move a column
+	 * @param {String} col_id identifier of the column to move
+	 * @param {GridColumn} after_col the column after which to move the column
+	 */
 	t.moveColumnAfter = function(col_id, after_col) {
 		if (after_col.id == col_id) return;
 		if (after_col instanceof GridColumnContainer) {
@@ -1117,6 +1176,11 @@ function grid(element) {
 		}
 		t.moveColumn(col_id, t.getColumnIndex(after_col)+1);
 	};
+	/**
+	 * Move a column
+	 * @param {String} col_id identifier of the column to move
+	 * @param {Number} index position where to move it
+	 */
 	t.moveColumn = function(col_id, index) {
 		var prev_index = t.getColumnIndexById(col_id);
 		if (prev_index >= 0) {
@@ -1162,6 +1226,11 @@ function grid(element) {
 		t.on_column_moved.fire({column:container,index:index});
 	};
 	
+	/**
+	 * Make rows selectable or not
+	 * @param {Boolean} selectable true to be able to select row(s)
+	 * @param {Boolean} unique if true, only one row can be selected (using radio buttons)
+	 */
 	t.setSelectable = function(selectable, unique) {
 		if (!unique) unique = false;
 		if (t.selectable == selectable && t.selectable_unique == unique) return;
@@ -1201,6 +1270,9 @@ function grid(element) {
 		}
 		layout.changed(this.table);
 	};
+	/**
+	 * Select all rows
+	 */
 	t.selectAll = function() {
 		if (!t.selectable) return;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -1213,8 +1285,11 @@ function grid(element) {
 			cb.checked = 'checked';
 			cb.onchange();
 		}
-		t._selection_changed();
+		t._selectionChanged();
 	};
+	/**
+	 * Unselect any selected row
+	 */
 	t.unselectAll = function() {
 		if (!t.selectable) return;
 		var changed = false;
@@ -1230,14 +1305,20 @@ function grid(element) {
 			}
 		}
 		if (changed)
-			t._selection_changed();
+			t._selectionChanged();
 	};
-	t._selection_changed = function() {
+	/** Internal function called when selection changed */
+	t._selectionChanged = function() {
 		if (t.onselect) {
 			t.onselect(t.getSelectionByIndexes(), t.getSelectionByRowId());
 		}
 	};
+	/** {Function} if specified, called when the selection changed */
 	t.onselect = null;
+	/**
+	 * Get indexes of selected rows
+	 * @returns {Array} list of indexes
+	 */
 	t.getSelectionByIndexes = function() {
 		var selection = [];
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -1249,6 +1330,10 @@ function grid(element) {
 		}
 		return selection;
 	};
+	/**
+	 * Get id of selected rows
+	 * @returns {Array} list of id
+	 */
 	t.getSelectionByRowId = function() {
 		var selection = [];
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -1260,6 +1345,11 @@ function grid(element) {
 		}
 		return selection;
 	};
+	/**
+	 * Check if a row is selected
+	 * @param {Number} index index of the row to check
+	 * @returns {Boolean} true if  the row is selected
+	 */
 	t.isSelected = function(index) {
 		if (!t.selectable) return false;
 		var tr = t.table.childNodes[index];
@@ -1267,6 +1357,11 @@ function grid(element) {
 		var cb = td.childNodes[0];
 		return cb.checked;
 	};
+	/**
+	 * Select/Unselect a row
+	 * @param {Number} index index of the row
+	 * @param {Boolean} selected true to select, false to unselect
+	 */
 	t.selectByIndex = function(index, selected) {
 		if (!t.selectable) return;
 		if (t.selectable_unique && selected) {
@@ -1293,6 +1388,11 @@ function grid(element) {
 			}
 		}
 	};
+	/**
+	 * Disable/Enable a row
+	 * @param {Number} index index of the row
+	 * @param {Boolean} disabled true to disable, false to enable
+	 */
 	t.disableByIndex = function(index, disabled){
 		if(!t.selectable) return;
 		var tr = t.table.childNodes[index];
@@ -1300,6 +1400,11 @@ function grid(element) {
 		var cb = td.childNodes[0];
 		cb.disabled = disabled;
 	};
+	/**
+	 * Select/Unselect a row
+	 * @param {String} row_id identifier of the row
+	 * @param {Boolean} selected true to select, false to unselect
+	 */
 	t.selectByRowId = function(row_id, selected) {
 		if (!t.selectable) return;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -1325,6 +1430,9 @@ function grid(element) {
 		}
 	};
 	
+	/**
+	 * Make the content of the grid scrollable, but keep the header fixed at the top
+	 */
 	t.makeScrollable = function() {
 		var thead_knowledge = [];
 		var update = function() {
@@ -1476,8 +1584,8 @@ function grid(element) {
 
 	/**
 	 * Change the data in the grid.
-	 * data is an array, each element representing an entry/row.
-	 * Each entry is an object {row_id:xxx,row_data:[]} where the row_id can be used later to identify the row or to attach data to the row. 
+	 * @param {Array} data each element represent an entry/row.
+	 * Each entry is an object {row_id:xxx,row_data:[]} where the row_id can be used later to identify the row or to attach data to the row.
 	 * Each row_data element is an object {col_id:xxx,data_id:yyy,data:zzz} where the data is given to the typed field, col_id identifies the column and data_id can be used later to identify the data or to attach information to the data
 	 */
 	t.setData = function(data) {
@@ -1489,6 +1597,12 @@ function grid(element) {
 			t.addRow(data[i].row_id, data[i].row_data, data[i].classname);
 		}
 	};
+	/**
+	 * Add a row
+	 * @param {String} row_id identifier of the row
+	 * @param {Object} row_data data of the row: {col_id:xxx,data_id:yyy,data:zzz}
+	 * @param {String} classname if specified, gives a CSS class to the TR
+	 */
 	t.addRow = function(row_id, row_data, classname) {
 		var tr = document.createElement("TR");
 		if (classname) tr.className = classname;
@@ -1514,7 +1628,7 @@ function grid(element) {
 				addClassName(td, "last_in_container");
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
-				t._create_cell(t.columns[j], data.data, td, function(field,data){
+				t._createCell(t.columns[j], data.data, td, function(field,data){
 					field.onfocus.addListener(function() { t.onrowfocus.fire(tr); });
 					if (typeof data.data_display != 'undefined' && data.data_display)
 						field.setDataDisplay(data.data_display, data.data_id);
@@ -1555,6 +1669,9 @@ function grid(element) {
 		});
 		return tr;
 	};
+	/** Internal function to create the cell containing a checkbox or radio button
+	 * @returns {Element} the TD
+	 */
 	t._createSelectionTD = function() {
 		var td = document.createElement("TD");
 		var cb = document.createElement("INPUT");
@@ -1580,7 +1697,7 @@ function grid(element) {
 							t.onrowselectionchange(t.table.childNodes[i].row_id, false);
 					}
 			}
-			t._selection_changed();
+			t._selectionChanged();
 		};
 		td.onclick = function(ev) {
 			stopEventPropagation(ev, true);
@@ -1589,6 +1706,11 @@ function grid(element) {
 		return td;
 	};
 	
+	/**
+	 * A a row containing only a title, instead of cells
+	 * @param {String} title the title
+	 * @param {Object} style CSS styles to add to the TD containing the title
+	 */
 	t.addTitleRow = function(title, style) {
 		var tr = document.createElement("TR");
 		tr.title_row = true;
@@ -1608,56 +1730,100 @@ function grid(element) {
 		return tr;
 	};
 	
+	/** Get number of rows
+	 * @returns {Number} number of rows
+	 */
 	t.getNbRows = function() {
 		return t.table.childNodes.length;
 	};
+	/** Get a row
+	 * @param {Number} index index of the row
+	 * @returns {Element} the TR
+	 */
 	t.getRow = function(index) {
 		return t.table.childNodes[index];
 	};
+	/** Get the index of a row
+	 * @param {Element} row the TR
+	 * @returns {Number} its index
+	 */
 	t.getRowIndex = function(row) {
 		for (var i = 0; i < t.table.childNodes.length; ++i)
 			if (t.table.childNodes[i] == row) return i;
 		return -1;
 	};
+	/** Get a row
+	 * @param {String} id identifier of the row
+	 * @returns {Element} the TR
+	 */
 	t.getRowFromID = function(id) {
 		for (var i = 0; i < t.table.childNodes.length; ++i)
 			if (t.table.childNodes[i].row_id == id) return t.table.childNodes[i];
 		return null;
 	};
+	/** Get row index
+	 * @param {String} row_id identifier of the row to search
+	 * @returns {Number} its index
+	 */
 	t.getRowIndexById = function(row_id) {
 		for (var i = 0; i < t.table.childNodes.length; ++i)
 			if (t.table.childNodes[i].row_id == row_id) return i;
 		return -1;
 	};
+	/** Get identifier of a row
+	 * @param {Element} row the TR
+	 * @returns {String} its id
+	 */
 	t.getRowID = function(row) {
 		if (row == null) return null;
 		if (typeof row.row_id == 'undefined') return null;
 		return row.row_id;
 	};
+	/** Get identifier of a row
+	 * @param {Number} row_index index of the row
+	 * @returns {String} its identifier
+	 */
 	t.getRowIDFromIndex = function(row_index) {
 		return t.getRowID(t.getRow(row_index));
 	};
 	
+	/** Remove a row
+	 * @param {Number} index index of the row to remove
+	 */
 	t.removeRowIndex = function(index) {
 		t.table.removeChild(t.table.childNodes[index]);
 		layout.changed(this.table);
 	};
+	/** Remove a row
+	 * @param {Element} row the TR
+	 */
 	t.removeRow = function(row) {
 		t.table.removeChild(row);
 		layout.changed(this.table);
 	};
+	/** Remove all rows */
 	t.removeAllRows = function() {
 		while (t.table.childNodes.length > 0)
 			t.table.removeChild(t.table.childNodes[0]);
 		layout.changed(this.table);
 	};
 	
+	/** Get the element contained in the given cell
+	 * @param {Number} row row index
+	 * @param {Number} col column index
+	 * @returns {Element} the element in the cell
+	 */
 	t.getCellContent = function(row,col) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
 		var td = tr.childNodes[col];
 		return td.childNodes[0];
 	};
+	/** Get the typed field for the given cell
+	 * @param {Number} row_index index of the row
+	 * @param {Number} col_index index of the column
+	 * @returns {typed_field} the field
+	 */
 	t.getCellField = function(row_index,col_index) {
 		if (t.selectable) col_index++;
 		var tr = t.table.childNodes[row_index];
@@ -1666,25 +1832,50 @@ function grid(element) {
 		var td = tr.childNodes[col_index];
 		return td && td.field ? td.field : null;
 	};
+	/** Get the typed field for the given cell
+	 * @param {String} row_id id of the row
+	 * @param {String} col_id id of the column
+	 * @returns {typed_field} the field
+	 */
 	t.getCellFieldById = function(row_id,col_id) {
 		return t.getCellField(t.getRowIndexById(row_id), t.getColumnIndexById(col_id));	
 	};
+	/** Get the data of the given cell (data of its typed_field)
+	 * @param {String} row_id id of the row
+	 * @param {String} col_id id of the column
+	 * @returns {Object} the data
+	 */
 	t.getCellData = function(row_id, col_id) {
 		var f = t.getCellFieldById(row_id, col_id);
 		if (!f) return null;
 		return f.getCurrentData();
 	};
+	/** Set the data of the given cell (data of its typed_field)
+	 * @param {String} row_id id of the row
+	 * @param {String} col_id id of the column
+	 * @param {Object} data the data
+	 */
 	t.setCellData = function(row_id, col_id, data) {
 		var f = t.getCellFieldById(row_id, col_id);
 		if (!f) return;
 		f.setData(data);
 	};
+	/** Get data id of the given cell
+	 * @param {Number} row index of the row
+	 * @param {Number} col index of the column
+	 * @returns {String} data id
+	 */
 	t.getCellDataId = function(row,col) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
 		var td = tr.childNodes[col];
 		return td.data_id;
 	};
+	/** Set data id of the given cell
+	 * @param {Number} row index of the row
+	 * @param {Number} col index of the column
+	 * @param {String} data_id data id
+	 */
 	t.setCellDataId = function(row,col,data_id) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
@@ -1692,6 +1883,10 @@ function grid(element) {
 		td.data_id = data_id;
 	};
 	
+	/** Get the index of the row containing the given element
+	 * @param {Element} element the element to search
+	 * @returns {Number} index of the row containing it, or -1 if not found
+	 */
 	t.getContainingRowIndex = function(element) {
 		while (element && element != document.body) {
 			if (element.nodeName == "TD" && element.col_id) {
@@ -1703,6 +1898,10 @@ function grid(element) {
 		}
 		return -1;
 	};
+	/** Get the row containing the given element
+	 * @param {Element} element the element to search
+	 * @returns {Element} the TR
+	 */
 	t.getContainingRow = function(element) {
 		while (element && element != document.body) {
 			if (element.nodeName == "TD" && element.col_id) {
@@ -1714,6 +1913,10 @@ function grid(element) {
 		}
 		return null;
 	};
+	/** Get the id of the row and column containing the given element
+	 * @param {Element} element the element to search
+	 * @returns {Object} {col_id:xxx,row_id:yyy} or null if not found
+	 */
 	t.getContainingRowAndColIds = function(element) {
 		while (element && element != document.body) {
 			if (element.nodeName == "TD" && element.col_id) {
@@ -1728,6 +1931,9 @@ function grid(element) {
 		return null;
 	};
 	
+	/**
+	 * Reset everything in the grid: the data, rows, columns...
+	 */
 	t.reset = function() {
 		// remove data rows
 		t.table.removeAllChildren();
@@ -1742,19 +1948,24 @@ function grid(element) {
 		layout.changed(this.table);
 	};
 	
+	/** Show a loading screen on top of the grid */
 	t.startLoading = function() {
 		if (t._loading_hidder) return;
 		if (!t.table) return;
 		t._loading_hidder = new LoadingHidder(t.table);
 		t._loading_hidder.setContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading data...");
 	};
+	/** Remove the loading screen on top of the grid */
 	t.endLoading = function() {
 		if (!t._loading_hidder) return;
 		t._loading_hidder.remove();
 		t._loading_hidder = null;
 	};
 	
-	t.apply_filters = function() {
+	/**
+	 * Apply filters: show/hide rows. This cannot be used if an external filtering is used.
+	 */
+	t.applyFilters = function() {
 		var selection_changed = false;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var row = t.table.childNodes[i];
@@ -1785,9 +1996,15 @@ function grid(element) {
 			}
 		}
 		if (selection_changed)
-			t._selection_changed();
+			t._selectionChanged();
 	};
 	
+	/**
+	 * Print the content of the grid
+	 * @param {String} template name of the template to use
+	 * @param {Object} template_parameters parameters for the template
+	 * @param {Function} onprintready called when the print preview is ready
+	 */
 	t.print = function(template,template_parameters,onprintready) {
 		var container = document.createElement("DIV");
 		var table = document.createElement("TABLE");
@@ -1846,6 +2063,11 @@ function grid(element) {
 		printContent(container, onprintready, null, template, template_parameters);
 	};
 	
+	/**
+	 * Display the menu to select the columns to show
+	 * @param {Element} below_this_element the menu will be displayed below this element
+	 * @param {Function} onchange called when selection of columns changed
+	 */
 	t.showHideColumnsMenu = function(below_this_element, onchange) {
 		require("context_menu.js", function() {
 			var menu = new context_menu();
@@ -1854,6 +2076,13 @@ function grid(element) {
 			menu.showBelowElement(below_this_element);
 		});
 	};
+	/**
+	 * Internal function to build the menu to choose columns
+	 * @param {context_menu} menu the menu to fill
+	 * @param {GridColumn} col the column
+	 * @param {Number} indent indentation
+	 * @param {Function} onchange function to be called when selection change
+	 */
 	t._buildColumnsChooser = function(menu, col, indent, onchange) {
 		if (col.title == "") return;
 		var div = document.createElement("DIV");
@@ -1889,6 +2118,9 @@ function grid(element) {
 		};
 		return cb;
 	};
+	/**
+	 * Save the state of the grid: list of columns shown/hidden
+	 */
 	t.saveState = function() {
 		if (!window.localStorage || !window.JSON) return; // HTML5 not supported
 		var state = { hidden_columns: [] };
@@ -1901,6 +2133,9 @@ function grid(element) {
 		stored[location.pathname] = state;
 		window.localStorage.setItem("grid_state", JSON.stringify(stored));
 	};
+	/**
+	 * Load the state of the grid, previously saved
+	 */
 	t.loadState = function() {
 		if (!window.localStorage || !window.JSON) return; // HTML5 not supported
 		var stored = window.localStorage.getItem("grid_state");
@@ -1917,6 +2152,7 @@ function grid(element) {
 	};
 	
 	/* --- internal functions --- */
+	/** Create the grid */
 	t._createTable = function() {
 		t.grid_element = document.createElement("DIV");
 		var table = document.createElement('TABLE');
@@ -1935,9 +2171,12 @@ function grid(element) {
 		table.className = "grid";
 		this._table = table;
 		// listen to keys
-		listenEvent(window,'keyup',t._key_listener);
+		listenEvent(window,'keyup',t._keyListener);
 	};
-	t._key_listener = function(ev) {
+	/** Listen to keys pressed to navigate in the grid cells
+	 * @param {Event} ev the event
+	 */
+	t._keyListener = function(ev) {
 		var getCell = function(element) {
 			while (element && element != document.body) {
 				if (element.nodeName == 'TD' && element.field)
@@ -1979,10 +2218,18 @@ function grid(element) {
 		}
 		getCell = null;
 	};
-	t._create_cell = function(column, data, parent, ondone, ondone_param) {
+	/**
+	 * Create a cell
+	 * @param {GridColumn} column the column
+	 * @param {Object} data the data to give to the typed_field
+	 * @param {Element} parent the TD
+	 * @param {Function} ondone function to call when the cell is ready
+	 * @param {Object} ondone_param parameter to give to the ondone function
+	 */
+	t._createCell = function(column, data, parent, ondone, ondone_param) {
 		parent.style.display = column.hidden ? "none" : "";
 		t._cells_loading++;
-		t._create_field(column, column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
+		t._createField(column, column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
 			field.onchange.addListener(function() {
 				var tr = parent;
 				while (tr.nodeName != 'TR') tr = tr.parentNode;
@@ -1994,11 +2241,22 @@ function grid(element) {
 			field.grid_column_id = column.id;
 			if (ondone) ondone(field, ondone_param);
 			t._cells_loading--;
-			t._check_loaded();
+			t._checkLoaded();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
 		});
 	},
-	t._create_field = function(column, field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {
+	/** Create the typed_field in a cell
+	 * @param {GridColumn} column the column
+	 * @param {String} field_type class of the typed_field to instantiate
+	 * @param {Boolean} editable true to make the typed_field editable
+	 * @param {Function} onchanged function to be called when the value changed
+	 * @param {Function} onunchanged function to be called when the value comes back to its original value
+	 * @param {Object} field_args configuration of the typed_field
+	 * @param {Element} parent the container of the field
+	 * @param {Object} data data to give to the typed_field
+	 * @param {Function} ondone function called when the field has been created and ready
+	 */
+	t._createField = function(column, field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {
 		require([["typed_field.js",field_type+".js"]], function() {
 			layout.modifyDOM(function() {
 				var f = new window[field_type](data, editable, field_args);
@@ -2016,6 +2274,13 @@ function grid(element) {
 		});
 	};
 	
+	/**
+	 * Export data of the grid
+	 * @param {String} format format of the file to generate
+	 * @param {String} filename name of the file to generate
+	 * @param {String} sheetname of the file is an Excel file, this is the name of the sheet in the generated Excel file
+	 * @param {Array} excluded_columns list of columns' id to do not export
+	 */
 	t.exportData = function(format,filename,sheetname,excluded_columns) {
 		if (!excluded_columns) excluded_columns = [];
 		else for (var i = 0; i < excluded_columns.length; ++i) {
@@ -2102,10 +2367,14 @@ function grid(element) {
 		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
 	};
 
+	/** Number of columns still loading */
 	t._columns_loading = 0;
+	/** Number of cells still loading */
 	t._cells_loading = 0;
+	/** List of functions to call when everything is loaded and ready */
 	t._loaded_listeners = [];
-	t._check_loaded = function() {
+	/** Internal function called when something has been loaded, to check if everything is already loaded */
+	t._checkLoaded = function() {
 		if (t._columns_loading == 0 && t._cells_loading == 0) {
 			var list = t._loaded_listeners;
 			t._loaded_listeners = [];

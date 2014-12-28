@@ -89,7 +89,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 	};
 	
 	this._excelReady = function() {
-		t.splitter.show_right();
+		t.splitter.showRight();
 		t.excel_header.removeAllChildren();
 		t.excel_bar = new header_bar(t.excel_header, 'toolbar');
 		t.excel_bar.setTitle("/static/excel/excel_16.png", "Example Excel File");
@@ -202,7 +202,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 			container.style.height = "200px";
 			container.style.width = "500px";
 			t.splitter = new splitter_vertical(container, 0.5);
-			t.splitter.hide_right();
+			t.splitter.hideRight();
 			t.import_bar = new header_bar(t.import_header, 'toolbar');
 			t.import_bar.setTitle(theme.icons_16._import, "How to import data");
 

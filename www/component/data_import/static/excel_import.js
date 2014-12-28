@@ -9,7 +9,7 @@ function excel_import(popup, container, onready) {
 		t.frame_import.onload = function() {
 			t.frame_import.onload = null;
 			getIFrameWindow(t.frame_import).pnapplication.onclose.addListener(function() {
-				t.splitter.hide_left();
+				t.splitter.hideLeft();
 			});
 		};
 		postData(url, post_data, getIFrameWindow(t.frame_import));
@@ -759,7 +759,7 @@ function excel_import(popup, container, onready) {
 				t.uploadFile(ev);
 			});
 		} else {
-			t.splitter.show_left();
+			t.splitter.showLeft();
 			t.frame_excel.src = "about:blank";
 			t.frame_import.src = "about:blank";
 		}
