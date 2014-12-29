@@ -261,6 +261,9 @@ class selection extends Component {
 			return;
 		}
 		SQLQuery::create()->updateByKey("SelectionCampaign",$id,array("name"=>$name));
+		// update calendar name
+		$calendar_id = SQLQuery::create()->select("SelectionCampaign")->whereValue("SelectionCampaign", "id", $id)->field("calendar")->executeSingleValue();
+		PNApplication::$instance->calendar->renameCalendar($calendar_id, $name);
 	}
 	
 	public function freezeCampaign($reason) {

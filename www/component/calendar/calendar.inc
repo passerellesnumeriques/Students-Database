@@ -119,6 +119,10 @@ class calendar extends Component {
 		return true;
 	}
 	
+	public function renameCalendar($id, $name) {
+		SQLQuery::create()->bypassSecurity()->updateByKey("Calendar", $id, array("name"=>$name));
+	}
+	
 	/**
 	 * Check if the current user can read the calendar
 	 * @param number $calendar_id calendar id
