@@ -31,13 +31,13 @@ field_geographic_area.prototype._create = function(data) {
 		};
 		this._getEditedData = function() { return t._edited; };
 		this.validate = function() {
-			if (!this.config) this.signal_error(null);
-			else if (typeof this.config.can_be_null == 'undefined') this.signal_error(null);
-			else if (this.config.can_be_null) this.signal_error(null);
-			else if (this._edited == null) this.signal_error("Please choose a geographic area");
-			else this.signal_error(null);
+			if (!this.config) this.signalError(null);
+			else if (typeof this.config.can_be_null == 'undefined') this.signalError(null);
+			else if (this.config.can_be_null) this.signalError(null);
+			else if (this._edited == null) this.signalError("Please choose a geographic area");
+			else this.signalError(null);
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this._text.style.color = error ? "red" : "";
 		};

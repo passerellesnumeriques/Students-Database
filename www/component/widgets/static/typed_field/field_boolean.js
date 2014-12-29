@@ -1,4 +1,10 @@
 /* #depends[typed_field.js] */
+/**
+ * Boolean field: check box
+ * @param {Boolean} data initial value
+ * @param {Boolean} editable editable
+ * @param {Object} config not used
+ */
 function field_boolean(data,editable,config) {
 	if (data == null) data = false;
 	if (typeof data == 'string') data = (data == "true" || data == "1" || data.trim().toLowerCase() == "yes" || data.trim().toLowerCase() == "y");

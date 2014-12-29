@@ -57,7 +57,7 @@ field_text.prototype._create = function(data) {
 						err = "Must have at least "+t.config.min_length+" character"+(t.config.min_length>1?"s":"");
 				}
 			}
-			t.signal_error(err);
+			t.signalError(err);
 		};
 		input.onkeyup = function() { setTimeout(function() { t._datachange(); },1); };
 		input.onblur = function() { t._datachange(); };
@@ -86,7 +86,7 @@ field_text.prototype._create = function(data) {
 			else t.config.min_size = -1;
 		};
 		this.focus = function() { input.focus(); };
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			input.style.border = error ? "1px solid red" : "";
 			input.title = error ? error : "";
@@ -109,7 +109,7 @@ field_text.prototype._create = function(data) {
 			return data;
 		};
 		this._setData(data);
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};

@@ -127,6 +127,12 @@ function new_teacher() {
 <?php 
 	}
 	
+	/**
+	 * Filter people ids
+	 * @param integer[] $ids ids to exclude
+	 * @param array $peoples peoples
+	 * @return integer[] ids of peoples not in the ids list
+	 */
 	private function sortPeopleIds($ids, $peoples) {
 		$res = array();
 		foreach ($peoples as $p)
@@ -139,6 +145,8 @@ function new_teacher() {
 	 * @param array $teachers_ids list of teachers
 	 * @param array $teachers_dates dates of etachers
 	 * @param array $peoples teachers information
+	 * @param array $current_assignments current assignments
+	 * @param array $previous_assignments previous assignments
 	 */
 	private function buildTeachersList($teachers_ids, $teachers_dates, $peoples, $current_assignments, $previous_assignments) {
 		$teachers_ids = $this->sortPeopleIds($teachers_ids, $peoples);

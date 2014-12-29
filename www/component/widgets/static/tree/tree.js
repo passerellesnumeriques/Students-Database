@@ -11,6 +11,7 @@ function TreeColumn(title) {
  * @param {Array} cells list of TreeCell
  * @param {Boolean} expanded indicates if the item will be expanded or collapsed at the beginning
  * @param {Function} onselect callback when the item is selected, or null if the item is not selectable
+ * @param {Function} children_on_demand if specified, the children won't be filled at the beginning but only when the user expand the item. This function returns the list of children.
  */
 function TreeItem(cells, expanded, onselect, children_on_demand) {
 	if (typeof cells == 'string') cells = [new TreeCell(cells)];
@@ -41,7 +42,7 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 		this.right_td = document.createElement("TD");
 		this.right_td.appendChild(control);
 		this.tr.appendChild(this.right_td);
-		this.tree._refresh_heads();
+		this.tree._refreshHeads();
 		return this.right_td;
 	};
 	/** Set the callback when the item is selected, and marks the item as selectable
@@ -56,9 +57,9 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 	 */
 	this.addItem = function(item) {
 		item.parent = this;
-		if (this.tree) this.tree._create_item(item);
+		if (this.tree) this.tree._createItem(item);
 		this.children.push(item);
-		if (this.tree) this.tree._refresh_heads();
+		if (this.tree) this.tree._refreshHeads();
 	};
 	/** Insert a child item
 	 * @param {TreeItem} item the child to insert
@@ -70,9 +71,9 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 			return;
 		}
 		item.parent = this;
-		if (this.tree) this.tree._create_item(item, index);
+		if (this.tree) this.tree._createItem(item, index);
 		this.children.splice(index,0,item);
-		if (this.tree) this.tree._refresh_heads();
+		if (this.tree) this.tree._refreshHeads();
 	};
 	/** Remove a child item
 	 * @param {TreeItem} item the child to remove
@@ -81,7 +82,7 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 		this.children.remove(item);
 		if (this.tree) {
 			this.tree._removeItem(item);
-			this.tree._refresh_heads();
+			this.tree._refreshHeads();
 		}
 		item.parent = null;
 	};
@@ -106,7 +107,7 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 		this.expanded = true;
 		for (var i = 0; i < this.children.length; ++i)
 			this._show(this.children[i]);
-		this.tree._refresh_heads();
+		this.tree._refreshHeads();
 	};
 	/** Make the given item and all its children visible
 	 * @param {TreeItem} item the item to show
@@ -117,7 +118,7 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 		if (item.expanded) {
 			for (var i = 0; i < item.children.length; ++i)
 				this._show(item.children[i]);
-			this.tree._refresh_heads();
+			this.tree._refreshHeads();
 		}
 	};
 	/** Collapse this item */
@@ -126,7 +127,7 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 		this.expanded = false;
 		for (var i = 0; i < this.children.length; ++i)
 			this._hide(this.children[i]);
-		this.tree._refresh_heads();
+		this.tree._refreshHeads();
 	};
 	/** Hides the given item, and all its children
 	 * @param {TreeItem} item the item to hide
@@ -157,6 +158,7 @@ function TreeItem(cells, expanded, onselect, children_on_demand) {
 		for (var name in style) this.tr.style[name] = style[name];
 	};
 	
+	/** Cleaning to avoid memory leaks */
 	this.cleanup = function() {
 		if (this.children) for (var i = 0; i < this.children.length; ++i) this.children[i].cleanup();
 		this.children = null;
@@ -234,6 +236,7 @@ function TreeCell(html) {
 		t.element.appendChild(img);
 	};
 	
+	/** Cleaning to avoid memory leaks */
 	this.cleanup = function() {
 		this.element = null;
 		t = null;
@@ -245,19 +248,24 @@ function TreeCell(html) {
  */
 function tree(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
+	/** List of columns */
 	this.columns = [];
+	/** Indicates if a heade is displayed for the columns */
 	this.show_columns = false;
+	/** Root items */
 	this.items = [];
+	/** Root items */
 	this.children = this.items;
 	var url = getScriptPath("tree.js");
 	container.className = "tree";
 	var t=this;
 	
+	/** Specify a border between cells */
 	this.inner_cells_vertical_border = null;
-	
-	this._build_from_html = function() {
-		// TODO
-	};
+
+	/** Show/Hide columns headers
+	 * @param {Boolean} show true to show, false to hide
+	 */
 	this.setShowColumn = function(show) {
 		this.show_columns = show;
 		this.tr_columns.style.visibility = show ? 'visible' : 'hidden';
@@ -267,27 +275,40 @@ function tree(container) {
 			this.tr_columns.style.left = "-9000px";
 		}
 	};
+	/** Add a column
+	 * @param {Object} col {title:xxx}
+	 */
 	this.addColumn = function(col) {
 		this.columns.push(col);
 		this.tr_columns.appendChild(col.th = document.createElement("TH"));
 		col.th.innerHTML = col.title;
 	};
+	/** Add a root item
+	 * @param {TreeItem} item item to add
+	 */
 	this.addItem = function(item) {
 		item.parent = null;
-		this._create_item(item);
+		this._createItem(item);
 		this.items.push(item);
-		this._refresh_heads();
+		this._refreshHeads();
 	};
+	/** Insert a root item
+	 * @param {TreeItem} item the item
+	 * @param {Number} index position to insert
+	 */
 	this.insertItem = function(item, index) {
 		if (typeof index == 'undefined' || index >= this.items.length) {
 			this.addItem(item);
 			return;
 		}
 		item.parent = null;
-		this._create_item(item, index);
+		this._createItem(item, index);
 		this.items.splice(index,0,item);
-		this._refresh_heads();
+		this._refreshHeads();
 	};
+	/** Remove an item (not only from root level)
+	 * @param {TreeItem} item the item to remove
+	 */
 	this.removeItem = function(item) {
 		if (item.parent)
 			item.parent.removeItem(item);
@@ -295,12 +316,19 @@ function tree(container) {
 			this.items.remove(item);
 			this.children.remove(item);
 			this._removeItem(item);
-			this._refresh_heads();
+			this._refreshHeads();
 		}
 	};
+	/** Remove all items */
 	this.clearItems = function() {
 		while (this.items.length > 0) this.removeItem(this.items[0]);
 	};
+	/**
+	 * Add an item with only one cell, with a title
+	 * @param {Element} content the title/content of the header
+	 * @param {Boolean} collapsable indicates if it can be expanded/collapsed
+	 * @param {Number} index position to insert
+	 */
 	this.addHeader = function(content, collapsable, index) {
 		var container = document.createElement("DIV");
 		container.style.display = "inline-block";
@@ -312,6 +340,9 @@ function tree(container) {
 		this.insertItem(item, index);
 		return item;
 	};
+	/** Add a row with a header for each column (repeat the headers)
+	 * @param {TreeItem} parent parent item, or null
+	 */
 	this.addColumnsHeadersRow = function(parent) {
 		var cells = [];
 		for (var i = 0; i < this.columns.length; ++i) {
@@ -331,6 +362,9 @@ function tree(container) {
 		parent.addItem(item);
 		return item;
 	};
+	/** Internal function to remove an item
+	 * @param {TreeItem} item the item
+	 */
 	this._removeItem = function(item) {
 		try {
 			item.tr.removeAllChildren();
@@ -347,13 +381,24 @@ function tree(container) {
 		}
 		item.cleanup();
 	};
+	/** {TreeItem} Selected item */
 	this._selected_item = null;
+	/** Select an item
+	 * @param {TreeItem} item the item to select
+	 */
 	this.selectItem = function(item) {
 		item.makeVisible();
 		item.cells[0].element.onclick(createEvent("click",{}));
 	};
+	/** Get the selected item
+	 * @returns {TreeItem} the selected item or null
+	 */
 	this.getSelectedItem = function() { return this._selected_item; };
-	this._create_item = function(item, index) {
+	/** Internal function to insert an item in the tree
+	 * @param {TreeItem} item the item
+	 * @param {Number} index position to insert
+	 */
+	this._createItem = function(item, index) {
 		item.tree = this;
 		item.tr = document.createElement("TR");
 		item.tr.item = item;
@@ -430,42 +475,57 @@ function tree(container) {
 		}
 		if (typeof item.children != 'undefined')
 			for (var i = 0; i < item.children.length; ++i)
-				this._create_item(item.children[i]);
+				this._createItem(item.children[i]);
 	};
-	this._refresh_heads_activated = false;
-	this._refresh_heads = function() {
-		if (this._refresh_heads_activated) return;
-		this._refresh_heads_activated = true;
+	/** Indicates if the row heads will be refreshed */
+	this._refreshHeads_activated = false;
+	/** Request to refresh row heads */
+	this._refreshHeads = function() {
+		if (this._refreshHeads_activated) return;
+		this._refreshHeads_activated = true;
 		setTimeout(function() {
 			if (!t) return;
-			t._refresh_heads_activated = false;
-			t._refresh_heads_();
+			t._refreshHeads_activated = false;
+			t._refreshHeads2();
 		},10);
 	};
-	this._refresh_heads_ = function() {
+	/** Refresh row heads */
+	this._refreshHeads2 = function() {
 		if (!this.table) return;
 		if (!this.items) return;
 		for (var i = 0; i < this.items.length; ++i)
-			this._clean_heads(this.items[i]);
+			this._cleanHeads(this.items[i]);
 		for (var i = 0; i < t.items.length; ++i)
-			t._compute_heights(t.items[i]);
+			t._computeHeights(t.items[i]);
 		for (var i = 0; i < t.items.length; ++i)
-			t._refresh_head(t.items[i], [], i > 0, i < t.items.length-1);
+			t._refreshHead(t.items[i], [], i > 0, i < t.items.length-1);
 	};
-	this._clean_heads = function(item) {
+	/** Remove the row heads and its children
+	 * @param {TreeItem} item the item
+	 */
+	this._cleanHeads = function(item) {
 		item.head.style.height = "";
 		item.head.removeAllChildren();
 		if (item.expanded)
 			for (var i = 0; i < item.children.length; ++i)
-				this._clean_heads(item.children[i]);
+				this._cleanHeads(item.children[i]);
 	};
-	this._compute_heights = function(item) {
+	/** Calculate the height of an item and its children
+	 * @param {TreeItem} item the item
+	 */
+	this._computeHeights = function(item) {
 		item.head.computed_height = item.head.parentNode.clientHeight;
 		if (item.expanded)
 			for (var i = 0; i < item.children.length; ++i)
-				this._compute_heights(item.children[i]);
+				this._computeHeights(item.children[i]);
 	};
-	this._refresh_head = function(item, parents, has_before, has_after) {
+	/** Refresh the row head of an item
+	 * @param {TreeItem} item the item
+	 * @param {Array} parents ancestors in the tree
+	 * @param {Boolean} has_before indicates if a sibling is before this item
+	 * @param {Boolean} has_after indicates if a sibling is after this item
+	 */
+	this._refreshHead = function(item, parents, has_before, has_after) {
 		var doit = true;
 		if (item.head_already) {
 			if (item.head_parents.length == parents.length) {
@@ -601,11 +661,12 @@ function tree(container) {
 			for (var i = 0; i < parents.length; ++i) children_parents.push(parents[i]);
 			children_parents.push(has_after);
 			for (var i = 0; i < item.children.length; ++i) {
-				this._refresh_head(item.children[i], children_parents, true, i < item.children.length-1);
+				this._refreshHead(item.children[i], children_parents, true, i < item.children.length-1);
 			}
 		}
 	};
 
+	/** Initialize the tree */
 	this._create = function() {
 		container.appendChild(this.table = document.createElement("TABLE"));
 		this.table.style.borderCollapse = "collapse";
@@ -628,9 +689,8 @@ function tree(container) {
 	};
 	
 	this._create();
-	this._build_from_html();
 	layout.listenInnerElementsChanged(container, function() {
-		t._refresh_heads();
+		t._refreshHeads();
 	});
 }
 

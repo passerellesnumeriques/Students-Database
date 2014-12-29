@@ -110,14 +110,14 @@ field_integer.prototype._create = function(data) {
 			if (typeof t.input.autoresize != 'undefined') t.input.autoresize();
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			t.input.style.border = error ? "1px solid red" : "";
 		};
 		this.validate = function() {
 			var value = getValueFromInput();
-			if (value === null && t.config && !t.config.can_be_null) this.signal_error("Please enter a value");
-			else this.signal_error(null);
+			if (value === null && t.config && !t.config.can_be_null) this.signalError("Please enter a value");
+			else this.signalError(null);
 		};
 		this.onenter = function(listener) {
 			onkeyup.addListener(function(e) {
@@ -168,13 +168,13 @@ field_integer.prototype._create = function(data) {
 				this.text.nodeValue = data;
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};
 		this.validate = function() {
-			if (this._data === null && this.config && !this.config.can_be_null) this.signal_error("Please enter a value");
-			else this.signal_error(null);
+			if (this._data === null && this.config && !this.config.can_be_null) this.signalError("Please enter a value");
+			else this.signalError(null);
 		};
 		this.setMinimum = function(min) {
 			if (typeof min == 'string') min = parseInt(min);

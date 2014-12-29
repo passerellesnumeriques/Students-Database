@@ -7,7 +7,7 @@ class service_reset_storage extends Service {
 	public function outputDocumentation() {}
 	public function execute(&$component, $input) {
 		$domain = $input["domain"];
-		storage::reset_storage($domain);
+		storage::resetStorage($domain);
 		echo "true";
 	}
 	

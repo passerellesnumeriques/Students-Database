@@ -206,7 +206,7 @@ field_grade.prototype._create = function(data) {
 			return this.get_grade_from_system(value);
 		};
 
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			input.style.border = error ? "1px solid red" : "1px solid black";
 			input.title = error ? error : "";
@@ -217,9 +217,9 @@ field_grade.prototype._create = function(data) {
 		this.focus = function() { input.focus(); };
 		this.validate = function() {
 			var grade = this._getEditedData();
-			if (grade < 0) this.signal_error("Must be minimum "+this.get_value_from_system(0));
-			else if (grade > 100) this.signal_error("Must be maximum "+this.get_value_from_system(t.config.max));
-			else this.signal_error(null);
+			if (grade < 0) this.signalError("Must be minimum "+this.get_value_from_system(0));
+			else if (grade > 100) this.signalError("Must be maximum "+this.get_value_from_system(t.config.max));
+			else this.signalError(null);
 			this.element.style.backgroundColor =
 				grade == null ? "#C0C0C0" :
 				grade < t.config.passing*100/t.config.max ? "#FFA0A0" :

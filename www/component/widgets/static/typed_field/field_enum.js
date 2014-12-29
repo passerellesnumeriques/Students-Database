@@ -124,7 +124,7 @@ field_enum.prototype._create = function(data) {
 			if (!found) return this._data;
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			select.style.border = error ? "1px solid red" : "";
 			select.title = error ? error : "";
@@ -133,7 +133,7 @@ field_enum.prototype._create = function(data) {
 			var err = null;
 			if (!this.config.can_be_null && select.selectedIndex == 0)
 				err = "Please select a value";
-			this.signal_error(err);
+			this.signalError(err);
 		};
 		this._fillWidth = function(cache) {
 			// calculate the minimum width of the select, to be able to see it...
@@ -216,7 +216,7 @@ field_enum.prototype._create = function(data) {
 			this.text.nodeValue = this.get_text_from_data(data);
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};

@@ -120,6 +120,15 @@ class page_teacher_assignments extends Page {
 		echo "</div>";
 	}
 	
+	/**
+	 * Generate sections for periods
+	 * @param array $academic_periods academic periods
+	 * @param array $assigned assignments
+	 * @param array $assigned_groups assigned groups
+	 * @param array $groups groups details
+	 * @param array $group_types groups types
+	 * @param array $all_years academic years
+	 */
 	private function generatePeriods($academic_periods, $assigned, $assigned_groups, $groups, $group_types, $all_years) {
 		foreach ($academic_periods as $ap) {
 			$year = null;
@@ -131,6 +140,14 @@ class page_teacher_assignments extends Page {
 		}
 	}
 
+	/**
+	 * Generate the section for a period
+	 * @param array $academic_period academic period
+	 * @param array $assigned assignments
+	 * @param array $assigned_groups assigned groups
+	 * @param array $groups groups details
+	 * @param array $group_types groups types
+	 */
 	private function generatePeriod($academic_period, $assigned, $assigned_groups, $groups, $group_types) {
 		$list = array();
 		foreach ($assigned as $a) {

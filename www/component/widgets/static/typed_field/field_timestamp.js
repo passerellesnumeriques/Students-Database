@@ -84,7 +84,7 @@ field_timestamp.prototype._create = function(data) {
 			if (t.config && t.config.data_is_seconds) timestamp = Math.floor(timestamp/1000);
 			return timestamp;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.border = error ? "1px solid red" : "";
 		};
@@ -116,7 +116,7 @@ field_timestamp.prototype._create = function(data) {
 			return data;
 		};
 		this._setData(data);
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};

@@ -165,11 +165,11 @@ field_organization.prototype._create = function(data) {
 		};
 		this.validate = function() {
 			if (this.selected_id > 0 || this.config.can_be_null)
-				this.signal_error(null);
+				this.signalError(null);
 			else
-				this.signal_error("Please select an organization");
+				this.signalError("Please select an organization");
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.select.input.style.border = error ? "1px solid red" : "";
 			this.select.input.title = error ? error : "";

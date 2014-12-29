@@ -1,4 +1,7 @@
-<?php 
+<?php
+/**
+ * Component storing files
+ */ 
 class storage extends Component {
 	
 	public function getPluginImplementations() {
@@ -8,7 +11,12 @@ class storage extends Component {
 		);
 	}
 	
-	public function get_upload_error($file) {
+	/**
+	 * Get the error message for the given upload
+	 * @param array $file uploaded file
+	 * @return string error message
+	 */
+	public function getUploadError($file) {
 		$error = @$file['error'];
 		$msg = $error.": ";
 		switch ($error) {
@@ -38,10 +46,14 @@ class storage extends Component {
 		return $msg;
 	}
 	
-	public static function reset_storage($domain) {
+	/**
+	 * Remove all stored files on the file system
+	 * @param string $domain domain to reset
+	 */
+	public static function resetStorage($domain) {
 		$path = self::getDomainStoragePath($domain);
 		if (file_exists($path))
-			self::remove_directory($path);
+			self::removeDirectory($path);
 		if (!@mkdir($path,null,true)) {
 			sleep(1);
 			if (!@mkdir($path,null,true)) {
@@ -56,13 +68,17 @@ class storage extends Component {
 			}
 		}
 	}
-	private static function remove_directory($path) {
+	/**
+	 * Remove the given directory with its content
+	 * @param string $path directory to remove
+	 */
+	private static function removeDirectory($path) {
 		$dir = opendir($path);
 		while (($filename = readdir($dir)) <> null) {
 			if ($filename == ".") continue;
 			if ($filename == "..") continue;
 			if (is_dir($path."/".$filename))
-				self::remove_directory($path."/".$filename);
+				self::removeDirectory($path."/".$filename);
 			else
 				@unlink($path."/".$filename);
 		}
@@ -70,6 +86,11 @@ class storage extends Component {
 		@rmdir($path);
 	}
 	
+	/**
+	 * Return the location in the file system where files are stored for the given domain
+	 * @param string $domain the domain
+	 * @return string the path
+	 */
 	public static function getDomainStoragePath($domain) {
 		// In production, this is integrated in PNApplication.inc, so directory is different
 #DEV
@@ -81,23 +102,40 @@ class storage extends Component {
 		return $path."/$domain/storage";
 	}
 	
-	public static function storage_path() {
+	/**
+	 * Return the path for the current domain
+	 * @return string the path
+	 */
+	public static function storagePath() {
 		return self::getDomainStoragePath(PNApplication::$instance->current_domain);
 	}
 	
-	public function remove_expired() {
+	/**
+	 * Remove temporary files which already expired
+	 */
+	public function removeExpired() {
 		$rows = SQLQuery::create()->bypassSecurity()->select("Storage")->where("`expire` IS NOT NULL AND `expire` < ".time())->execute();
 		SQLQuery::create()->bypassSecurity()->removeRows("Storage", $rows);
 		foreach ($rows as $row)
 			@unlink($this->get_data_path($row["id"]));
 	}
 	
-	public function cleanup_storage() {
+	/**
+	 * Remove files which do not have any reference in the database anymore
+	 */
+	public function cleanupStorage() {
 		$path = self::getDomainStoragePath(PNApplication::$instance->local_domain);
 		if (!file_exists($path)) return;
-		$this->cleanup_directory($path, 0, 1, false);
+		$this->cleanupDirectory($path, 0, 1, false);
 	}
-	private function cleanup_directory($path, $current_id, $id_mul, $remove_if_empty) {
+	/**
+	 * Recursive function to remove unused files
+	 * @param string $path path
+	 * @param integer $current_id current id based on the path
+	 * @param integer $id_mul id multiplier for the path
+	 * @param boolean $remove_if_empty indicates if the directory should be removed if empty
+	 */
+	private function cleanupDirectory($path, $current_id, $id_mul, $remove_if_empty) {
 		$files = array();
 		$dir = opendir($path);
 		$ids_founds = array();
@@ -109,7 +147,7 @@ class storage extends Component {
 			if (!ctype_digit($filename)) {
 				// everything must be numbers
 				if (is_dir($path."/".$filename))
-					self::remove_directory($path."/".$filename);
+					self::removeDirectory($path."/".$filename);
 				else
 					@unlink($path."/".$filename);
 				continue;
@@ -119,10 +157,10 @@ class storage extends Component {
 			if (is_dir($path."/".$filename)) {
 				if ($id_mul >= 1000000) {
 					// we should not have a directory here !!
-					self::remove_directory($path."/".$filename);
+					self::removeDirectory($path."/".$filename);
 					continue;
 				}
-				$this->cleanup_directory($path."/".$filename, $id, $id_mul*100, true);
+				$this->cleanupDirectory($path."/".$filename, $id, $id_mul*100, true);
 				if (file_exists($path."/".$filename)) $has_files = true;
 			} else {
 				if ($id_mul <> 1000000)
@@ -156,6 +194,11 @@ class storage extends Component {
 			@rmdir($path);
 	}
 	
+	/**
+	 * Check the current user has the right to access to the given file
+	 * @param array $file file
+	 * @return boolean true if access is allowed
+	 */
 	public function canReadFile($file) {
 		if ($file["type"] == "temp") return true;
 		require_once("StoragePlugin.inc");
@@ -167,6 +210,11 @@ class storage extends Component {
 			}
 		return false;
 	}
+	/**
+	 * Check the current user has the right to modify the given file
+	 * @param array $file file
+	 * @return boolean true if access is allowed
+	 */
 	public function canWriteFile($file) {
 		if ($file["type"] == "temp") return true;
 		require_once("StoragePlugin.inc");
@@ -179,9 +227,16 @@ class storage extends Component {
 		return false;
 	}
 	
-	private function allocate_id($type, $mime = null, $expire = null) {
+	/**
+	 * Allocate a new ID for a new file, and store information in the database
+	 * @param string $type type of file (Plugin)
+	 * @param string $mime mime type of the file
+	 * @param integer|null $expire expiration timestamp, or null
+	 * @return NULL|integer new ID, or null in case of error
+	 */
+	private function allocateID($type, $mime = null, $expire = null) {
 #DEV
-		$this->remove_expired();
+		$this->removeExpired();
 #END
 		$q = "INSERT INTO `Storage` (`type`,`mime`,`expire`,`revision`) VALUE (";
 		$q .= "'".SQLQuery::escape($type)."',";
@@ -198,7 +253,7 @@ class storage extends Component {
 		$dir2 = ($id/100)%100;
 		$dir3 = ($id/10000)%100;
 		$filename = intval($id/1000000);
-		$path = storage::storage_path();
+		$path = storage::storagePath();
 		if (!file_exists($path."/".$dir1)) {
 			if (!mkdir($path."/".$dir1)) {
 				PNApplication::error("Unable to create directory ".$path."/".$dir1);
@@ -233,7 +288,7 @@ class storage extends Component {
 		return $id;
 	}
 	public function store_data($type, $data, $mime = null, $expire = null) {
-		$id = $this->allocate_id($type, $mime, $expire);
+		$id = $this->allocateID($type, $mime, $expire);
 		$path = $this->get_data_path($id);
 		$f = @fopen($path, "w");
 		if ($f == null) {
@@ -255,7 +310,7 @@ class storage extends Component {
 	}
 	
 	function get_data_path($id) {
-		return self::storage_path()."/".self::get_data_path_in_storage($id);
+		return self::storagePath()."/".self::get_data_path_in_storage($id);
 	}
 	
 	function new_revision($id) {
@@ -335,7 +390,7 @@ class storage extends Component {
 				foreach ($files['error'] as $file_id => $err) {
 					if ($err == UPLOAD_ERR_OK) {
 						$fn = $files['name'][$file_id];
-						$id = $this->allocate_id("temp", $files['type'][$file_id], time()+$expire_seconds);
+						$id = $this->allocateID("temp", $files['type'][$file_id], time()+$expire_seconds);
 						$path = $this->get_data_path($id);
 						if (!move_uploaded_file($files['tmp_name'][$file_id], $path)) {
 							PNApplication::error("Unable to create file ".$path);

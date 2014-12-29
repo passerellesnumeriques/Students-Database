@@ -1163,6 +1163,10 @@ class page_teachers_assignments extends Page {
 		foreach ($years as $y) if ($y["id"] == $id) return $y;
 	}
 	
+	/** Search the name of the specialization
+	 * @param integer $spe_id specialization id
+	 * @return string the name
+	 */
 	private function getSpecializationName($spe_id) {
 		global $specializations;
 		foreach ($specializations as $s) if ($s["id"] == $spe_id) return $s["name"];

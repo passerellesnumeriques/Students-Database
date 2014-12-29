@@ -1,7 +1,8 @@
 /* #depends[typed_field.js] */
 /** Date field: if editable, it will be a text input with a date picker, else only a simple text node
- * @constructor
- * @param config nothing for now
+ * @param {String} data the date
+ * @param {Boolean} editable editable
+ * @param {Object} config all parameters are optional: <ul><li>show_utc: if true, date will be considered as UTC, else as local</li><li>minimum: minimum date</li><li>maximum: maximum date</li></ul>
  */
 function field_date(data,editable,config) {
 	if (data != null && data.length == 0) data = null;
@@ -22,14 +23,14 @@ function field_date(data,editable,config) {
 	this.register_datamodel_datadisplay = function(data_display, data_key) {
 		this._register_datamodel_datadisplay(data_display, data_key);
 		if (data_display.cell)
-			this._register_cell(data_display.cell.table,data_display.cell.column,data_key);
+			this._registerCell(data_display.cell.table,data_display.cell.column,data_key);
 	};
 	this._register_datamodel_cell = this.register_datamodel_cell;
 	this.register_datamodel_cell = function(table, column, row_key) {
 		this._register_datamodel_cell(table,column,row_key);
-		this._register_cell(table,column,row_key);
+		this._registerCell(table,column,row_key);
 	};
-	this._register_cell = function(table, column, row_key) {
+	this._registerCell = function(table, column, row_key) {
 		if (t.config && t.config.minimum_cell)
 			setTimeout(function() {
 				var listener = function(value){
@@ -90,9 +91,9 @@ field_date.prototype.exportCell = function(cell) {
 field_date.prototype._create = function(data) {
 	this.validate = function() {
 		if (this.config && !this.config.can_be_null && this.getCurrentData() == null)
-			this.signal_error("Please select a valid date");
+			this.signalError("Please select a valid date");
 		else
-			this.signal_error(null);
+			this.signalError(null);
 	};
 
 	if (this.editable) {
@@ -100,9 +101,9 @@ field_date.prototype._create = function(data) {
 		this.element.style.whiteSpace = 'nowrap';
 
 		var t=this;
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
-			if (!t.select) { setTimeout(function(){t.signal_error(error);},10); return; }
+			if (!t.select) { setTimeout(function(){t.signalError(error);},10); return; }
 			t.select.select_year.style.border = error ? "1px solid red" : "";
 			t.select.select_month.style.border = error ? "1px solid red" : "";
 			t.select.select_day.style.border = error ? "1px solid red" : "";
@@ -189,12 +190,16 @@ field_date.prototype._create = function(data) {
 			return data;
 		};
 		this._setData(data);
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};
 	}
 };
+/** Set the minimum and maximum selectable dates
+ * @param {Date} min minimum date
+ * @param {Date} max maximum date
+ */
 field_date.prototype.setLimits = function(min,max) {
 	if (!this.config) this.config = {};
 	this.config.minimun = min;
@@ -206,6 +211,9 @@ field_date.prototype.setLimits = function(min,max) {
 	}
 	this.setData(this._getEditedData());
 };
+/** Set the minimum selectable date
+ * @param {Date} min minimum date
+ */
 field_date.prototype.setMinimum = function(min) {
 	if (!this.config) this.config = {};
 	this.config.minimun = min;
@@ -215,6 +223,9 @@ field_date.prototype.setMinimum = function(min) {
 	}
 	this.setData(this._getEditedData());
 };
+/** Set the maximum selectable date
+ * @param {Date} max maximum date
+ */
 field_date.prototype.setMaximum = function(max) {
 	if (!this.config) this.config = {};
 	this.config.maximum = max;

@@ -1,3 +1,3 @@
 <?php 
-PNApplication::$instance->storage->cleanup_storage();
+PNApplication::$instance->storage->cleanupStorage();
 ?>

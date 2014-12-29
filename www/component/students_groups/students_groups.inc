@@ -9,6 +9,11 @@ class students_groups extends Component {
 	public function getGroupType($group_type_id) {
 		return SQLQuery::create()->select("StudentsGroupType")->where("id", $group_type_id)->executeSingleRow();
 	}
+	/**
+	 * Retrieve a list of StudentsGroupType
+	 * @param integer[] $group_type_ids ids
+	 * @return array rows
+	 */
 	public function getGroupTypes($group_type_ids) {
 		return SQLQuery::create()->select("StudentsGroupType")->whereIn("StudentsGroupType","id",$group_type_ids)->execute();
 	}
@@ -24,6 +29,7 @@ class students_groups extends Component {
 	/**
 	 * Retrieve the StudentsGroup information from database
 	 * @param integer $group_id the requested group
+	 * @param boolean $join_group_type if true, a join to StudentsGroupType will be done and the field group_type_name added
 	 * @return array the row from the database
 	 */
 	public function getGroup($group_id, $join_group_type = false) {
@@ -35,10 +41,22 @@ class students_groups extends Component {
 				;
 		return $q->executeSingleRow();
 	}
+	/**
+	 * Retrieve a list of StudentsGroup
+	 * @param integer[] $groups_ids ids of the groups
+	 * @return array rows from database
+	 */
 	public function getGroupsById($groups_ids) {
 		return SQLQuery::create()->select("StudentsGroup")->whereIn("StudentsGroup","id",$groups_ids)->execute();
 	}
 	
+	/**
+	 * Get groups according to given parameters
+	 * @param integer|null $type_id filter on one type
+	 * @param integer|null $period_id filter on a specific period
+	 * @param integer|null|boolean $spe_id filter on a specific specialization 
+	 * @return array rows from database
+	 */
 	public function getGroups($type_id = null, $period_id = null, $spe_id = false) {
 		$q = SQLQuery::create()->select("StudentsGroup");
 		if ($type_id <> null) $q->whereValue("StudentsGroup","type",$type_id);
@@ -47,11 +65,22 @@ class students_groups extends Component {
 		return $q->execute();
 	}
 	
+	/**
+	 * Build a hierarchy of groups
+	 * @param array $groups groups' rows from database
+	 * @return array roots groups
+	 */
 	public function buildGroupTree($groups) {
 		$roots = array();
 		$this->buildGroupTreeLevel($roots, null, $groups);
 		return $roots;
 	}
+	/**
+	 * Put sub_groups in their parent
+	 * @param array $list list of groups to fill
+	 * @param integer $parent_id parent id
+	 * @param array $groups all remaining groups
+	 */
 	private function buildGroupTreeLevel(&$list, $parent_id, &$groups) {
 		for ($i = 0; $i < count($groups); $i++) {
 			if ($groups[$i]["parent"] <> $parent_id) continue;
@@ -66,11 +95,22 @@ class students_groups extends Component {
 				$this->buildGroupTreeLevel($list[$i]["sub_groups"], $list[$i]["id"], $groups);
 	}
 	
+	/**
+	 * Get the leaves of the groups tree
+	 * @param array $roots roots groups
+	 * @return array leaves
+	 */
 	public function getFinalGroupsFromTree($roots) {
 		$list = array();
 		foreach ($roots as $group) $this->buildFinalGroups($group, "", $list);
 		return $list;
 	}
+	/**
+	 * Build list of leaves
+	 * @param array $group group
+	 * @param string $path path
+	 * @param array $list list of remaining groups
+	 */
 	private function buildFinalGroups($group, $path, &$list) {
 		if (count($group["sub_groups"]) == 0) {
 			$group["path"] = $path;
@@ -83,20 +123,44 @@ class students_groups extends Component {
 			$this->buildFinalGroups($sg, $path, $list);
 	}
 	
+	/**
+	 * From a list of student, attach their respective group (join to StudentGroup)
+	 * @param SQLQuery $q the SELECT
+	 * @param string $from_table table containing a reference to a student's people
+	 * @param string $student_column foreign key to a people
+	 * @param boolean $join_group_info if true, a join to StudentsGroup will be added
+	 */
 	public function joinStudentToGroups(&$q, $from_table, $student_column, $join_group_info = false) {
 		$q->join($from_table, "StudentGroup", array($student_column=>"people"));
 		if ($join_group_info)
 			$q->join("StudentGroup", "StudentsGroup", array("group"=>"id"));
 	}
+	/**
+	 * Get a SELECT on StudentGroup for the specific group id
+	 * @param integer $group_id group id
+	 * @return SQLQuery the SELECT
+	 */
 	public function getStudentsQueryForGroup($group_id) {
 		return SQLQuery::create()->select("StudentGroup")->whereValue("StudentGroup","group",$group_id);
 	}
+	/**
+	 * Get a SELECT on StudentGroup for the specific groups
+	 * @param integer[] $groups_ids groups
+	 * @param boolean $distinct if true, only one entry per group, else a row for each student will be returned
+	 * @return SQLQuery the SELECT
+	 */
 	public function getStudentsQueryForGroups($groups_ids, $distinct = true) {
 		$q = SQLQuery::create()->select("StudentGroup")->whereIn("StudentGroup","group",$groups_ids);
 		if ($distinct) $q->distinct();
 		return $q;
 	}
 	
+	/**
+	 * Check if the given students are attached to the given groups
+	 * @param integer[] $students_ids students
+	 * @param integer[] $groups_ids groups
+	 * @return boolean true if all students are attached to one of the group, false if at least one student is not attached to any of the given groups
+	 */
 	public function areStudentsBelongingToGroups($students_ids, $groups_ids) {
 		$list = SQLQuery::create()->select("StudentGroup")
 			->whereIn("StudentGroup","people",$students_ids)
@@ -110,6 +174,12 @@ class students_groups extends Component {
 		return true;
 	}
 	
+	/**
+	 * Get the group of a student
+	 * @param integer $people_id student
+	 * @param integer[] $groups_ids groups to check
+	 * @return integer|null group id
+	 */
 	public function getStudentGroupsAmong($people_id, $groups_ids) {
 		return SQLQuery::create()
 			->select("StudentGroup")

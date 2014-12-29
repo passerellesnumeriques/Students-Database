@@ -133,11 +133,11 @@ field_parent.prototype._create = function(data) {
 						has_other = true;
 				}
 				if (input.value == "" && has_other)
-					this.signal_error("Cannot be empty");
+					this.signalError("Cannot be empty");
 				else
-					this.signal_error(null);
+					this.signalError(null);
 			};
-			this.signal_error = function(error) {
+			this.signalError = function(error) {
 				this.error = error;
 				input.style.border = error ? "1px solid red" : "";
 				input.title = error ? error : "";

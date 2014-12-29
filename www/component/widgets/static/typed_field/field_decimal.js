@@ -106,7 +106,7 @@ field_decimal.prototype._create = function(data) {
 			if (typeof t.input.autoresize != 'undefined') t.input.autoresize();
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			t.input.style.border = error ? "1px solid red" : "";
 			t.input.title = error ? error : "";
@@ -132,7 +132,7 @@ field_decimal.prototype._create = function(data) {
 				else if (typeof this.config.max != 'undefined' && val > this.config.max) this.error = "Must be maximum "+this.config.max.toFixed(t.config.decimal_digits);
 				else this.error = null;
 			}
-			this.signal_error(this.error);
+			this.signalError(this.error);
 		};
 		this.setMinimum = function(min) {
 			if (typeof min == 'string') min = parseFloat(min);
@@ -164,7 +164,7 @@ field_decimal.prototype._create = function(data) {
 			if (this.text.nodeValue != prev) layout.changed(this.element);
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};

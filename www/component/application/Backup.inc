@@ -128,7 +128,7 @@ class Backup {
 				$p = storage::get_data_path_in_storage($id);
 				$i = strrpos($p, "/");
 				mkdir($path."/storage/".substr($p,0,$i), null, true);
-				copy(storage::storage_path()."/".$p, $path."/storage/".$p);
+				copy(storage::storagePath()."/".$p, $path."/storage/".$p);
 			}
 			self::zipDirectory(realpath($path."/storage"), realpath($path)."/storage.zip", true);
 		}
