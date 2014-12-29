@@ -162,7 +162,7 @@ class service_interview_save_center extends Service {
 						array_push($event["attendees"], $a);
 					}
 				}
-				$event["app_link"] = "popup:/dynamic/selection/page/interview/center_profile?id=".$center_id;
+				$event["app_link"] = "popup:/dynamic/selection/page/interview/center_profile?id=".$center_id."&campaign=".$component->getCampaignId();
 				$event["app_link_name"] = "This event is an Interviews session: click to open the interview center";
 				if ($event["id"] < 0) {
 					// this is a new session

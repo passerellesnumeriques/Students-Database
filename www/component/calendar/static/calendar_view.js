@@ -164,8 +164,8 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 				t.header.appendChild(t.zoom_div);
 
 			t.updateHeader();
-			layout.listenElementSizeChanged(t.header, function() { t.updateHeader(); });
-			layout.listenInnerElementsChanged(t.header, function() { t.updateHeader(); });
+			layout.listenElementSizeChanged(t.header, function() { if (t) t.updateHeader(); });
+			layout.listenInnerElementsChanged(t.header, function() { if (t) t.updateHeader(); });
 			layout.changed(container);
 		});
 	};

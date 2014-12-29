@@ -496,6 +496,10 @@ class selection extends Component {
 		return $camps;
 	}
 	
+	public function getCampaignCalendar($campaign_id) {
+		return SQLQuery::create()->select("SelectionCampaign")->whereValue("SelectionCampaign","id",$campaign_id)->field("calendar")->executeSingleValue();
+	}
+	
 	/**
 	 * Update or create an InformationSession into the database
 	 * The rights must be checked before calling this method

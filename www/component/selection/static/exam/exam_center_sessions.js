@@ -40,7 +40,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			return;
 		}
 		tr.appendChild(th = document.createElement("TH"));
-		th.appendChild(document.createTextNode("Room<br/>Name"));
+		th.innerHTML = "Room<br/>Name";
 		tr.appendChild(th = document.createElement("TH"));
 		th.appendChild(document.createTextNode("Capacity"));
 		for (var i = 0; i < this.rooms.length; ++i)

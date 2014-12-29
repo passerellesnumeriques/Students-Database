@@ -8,7 +8,7 @@ class SelectionPartnersJSON {
 	 * @return string the JSON
 	 * @no_name_check
 	 */
-	public static function PartnersFromCenterID($center_type, $id) {
+	public static function PartnersFromCenterID($center_type, $id, $campaign_id) {
 		switch ($center_type) {
 			case "InformationSession": $join_key = "information_session"; break;
 			case "ExamCenter": $join_key = "exam_center"; break;
@@ -16,6 +16,7 @@ class SelectionPartnersJSON {
 		}
 		// get list of partners
 		$q = SQLQuery::create()
+			->selectSubModel("SelectionCampaign", $campaign_id)
 			->select($center_type."Partner")
 			->whereValue($center_type."Partner", $join_key, $id)
 			->field($center_type."Partner", $join_key, "partner_center_id")

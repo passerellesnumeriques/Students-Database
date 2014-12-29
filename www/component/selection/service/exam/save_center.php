@@ -200,7 +200,7 @@ class service_exam_save_center extends Service {
 						array_push($event["attendees"], $a);
 					}
 				}
-				$event["app_link"] = "popup:/dynamic/selection/page/exam/center_profile?id=".$center_id;
+				$event["app_link"] = "popup:/dynamic/selection/page/exam/center_profile?id=".$center_id."&campaign=".$component->getCampaignId();
 				$event["app_link_name"] = "This event is a Written Exam session: click to open the exam center";
 				if ($event["id"] < 0) {
 					// this is a new session

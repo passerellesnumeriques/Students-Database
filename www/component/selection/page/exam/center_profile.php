@@ -8,8 +8,11 @@ class page_exam_center_profile extends SelectionPage {
 		$id = @$_GET["id"];
 		$onsaved = @$_GET["onsaved"];
 		if ($id <> null && $id <= 0) $id = null;
+		$campaign_id = @$_GET["campaign"];
+		if ($campaign_id == null) $campaign_id = PNApplication::$instance->selection->getCampaignId();
 		if ($id <> null) {
 			$q = SQLQuery::create()
+				->selectSubModel("SelectionCampaign", $campaign_id)
 				->select("ExamCenter")
 				->whereValue("ExamCenter", "id", $id)
 				;
@@ -22,10 +25,11 @@ class page_exam_center_profile extends SelectionPage {
 			$center = null;
 		if (@$_GET["readonly"] == "true") $editable = false;
 		else $editable = $id == null || PNApplication::$instance->user_management->has_right("manage_exam_center");
+		if ($campaign_id <> PNApplication::$instance->selection->getCampaignId()) $editable = false;
 		$db_lock = null;
 		if ($editable && $id <> null) {
 			$locked_by = null;
-			$db_lock = $this->performRequiredLocks("ExamCenter",$id,null,$this->component->getCampaignID(), $locked_by);
+			$db_lock = $this->performRequiredLocks("ExamCenter",$id,null,$campaign_id, $locked_by);
 			//if db_lock = null => read only
 			if($db_lock == null){
 				$editable = false;
@@ -34,7 +38,7 @@ class page_exam_center_profile extends SelectionPage {
 		}
 		
 		$all_configs = include("component/selection/config.inc");
-		$calendar_id = PNApplication::$instance->selection->getCalendarId();
+		$calendar_id = PNApplication::$instance->selection->getCampaignCalendar($campaign_id);
 
 		require_once("component/selection/SelectionExamJSON.inc");
 		require_once("component/selection/SelectionApplicantJSON.inc");
@@ -42,16 +46,16 @@ class page_exam_center_profile extends SelectionPage {
 		require_once("component/calendar/CalendarJSON.inc");
 		require_once("component/people/PeopleJSON.inc");
 		if ($id <> null) {
-			$q = SQLQuery::create()->select("Applicant")->whereValue("Applicant","exam_center", $id);
+			$q = SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->select("Applicant")->whereValue("Applicant","exam_center", $id);
 			SelectionApplicantJSON::ApplicantSQL($q);
 			$applicants = $q->execute();
 			
-			$q = SQLQuery::create()->select("ExamCenterRoom")->whereValue("ExamCenterRoom", "exam_center", $id);
+			$q = SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->select("ExamCenterRoom")->whereValue("ExamCenterRoom", "exam_center", $id);
 			SelectionExamJSON::ExamCenterRoomSQL($q);
 			$rooms = $q->execute();
 			
-			$sessions_events_ids = SQLQuery::create()->select("ExamSession")->whereValue("ExamSession", "exam_center", $id)->field("event")->executeSingleField();
-			$sessions_events = CalendarJSON::getEventsFromDB($sessions_events_ids, PNApplication::$instance->selection->getCalendarId());
+			$sessions_events_ids = SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->select("ExamSession")->whereValue("ExamSession", "exam_center", $id)->field("event")->executeSingleField();
+			$sessions_events = CalendarJSON::getEventsFromDB($sessions_events_ids, $calendar_id);
 			
 			$peoples_ids = array();
 			foreach ($sessions_events as $ev)
@@ -60,13 +64,13 @@ class page_exam_center_profile extends SelectionPage {
 						array_push($peoples_ids, $a["people"]);
 			if (count($peoples_ids) > 0) {
 				$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true, false, true, true);
-				$can_do = SQLQuery::create()->select("StaffStatus")->whereIn("StaffStatus","people",$peoples_ids)->field("people")->field("exam")->execute();
+				$can_do = SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->select("StaffStatus")->whereIn("StaffStatus","people",$peoples_ids)->field("people")->field("exam")->execute();
 			} else {
 				$peoples = array();
 				$can_do = array();
 			}
 			
-			$linked_is_id = SQLQuery::create()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "exam_center", $id)->field("information_session")->executeSingleField();
+			$linked_is_id = SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "exam_center", $id)->field("information_session")->executeSingleField();
 		} else {
 			$applicants = array();
 			$rooms = array();
@@ -75,10 +79,10 @@ class page_exam_center_profile extends SelectionPage {
 			$can_do = array();
 			$linked_is_id = array();
 		}
-		$q = SQLQuery::create()->select("InformationSession");
+		$q = SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->select("InformationSession");
 		SelectionInformationSessionJSON::InformationSessionSQL($q);
 		$all_is = $q->execute();
-		$already_linked_is = SQLQuery::create()->select("ExamCenterInformationSession")->whereNotValue("ExamCenterInformationSession","exam_center",$id)->field("information_session")->executeSingleField();
+		$already_linked_is = SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->select("ExamCenterInformationSession")->whereNotValue("ExamCenterInformationSession","exam_center",$id)->field("information_session")->executeSingleField();
 		
 		$this->requireJavascript("section.js");
 		theme::css($this, "section.css");
@@ -100,7 +104,7 @@ class page_exam_center_profile extends SelectionPage {
 		<div id='section_center' title='Exam Center Information' collapsable='true' style='margin:10px;'>
 			<div>
 				<div style='display:inline-block;margin:10px;vertical-align:top;'>
-				<?php if ($this->component->getOneConfigAttributeValue("give_name_to_exam_center")) {
+				<?php if ($this->component->getOneConfigAttributeValue("give_name_to_exam_center", $campaign_id)) {
 					$this->requireJavascript("center_name.js");
 					?>
 					<div id='center_name_container'></div>
@@ -129,7 +133,7 @@ class page_exam_center_profile extends SelectionPage {
 				<div style='display:inline-block;margin:10px;vertical-align:top;' id='location_and_partners'>
 				<?php
 				require_once("component/selection/page/common_centers/location_and_partners.inc");
-				locationAndPartners($this, $id, "ExamCenter", $center <> null ? GeographyJSON::GeographicAreaText($center) : "null", $editable, true); 
+				locationAndPartners($this, $id, $campaign_id, "ExamCenter", $center <> null ? GeographyJSON::GeographicAreaText($center) : "null", $editable, true); 
 				?>
 				</div>
 			</div>
@@ -145,7 +149,7 @@ class page_exam_center_profile extends SelectionPage {
 				<?php echo CalendarJSON::JSONList($sessions_events); ?>,
 				<?php echo SelectionApplicantJSON::ApplicantsJSON($applicants); ?>,
 				window.linked_is,
-				<?php echo intval($this->component->getOneConfigAttributeValue("default_duration_exam_session"))*60;?>,
+				<?php echo intval($this->component->getOneConfigAttributeValue("default_duration_exam_session",$campaign_id))*60;?>,
 				<?php echo $calendar_id;?>,
 				[<?php 
 				$first = true;

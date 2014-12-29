@@ -15,6 +15,8 @@ class page_applicant_list extends SelectionPage {
 		$this->addStylesheet("/static/selection/applicant/applicant_list.css");
 		$container_id = $this->generateID();
 		$input = isset($_POST["input"]) ? json_decode($_POST["input"], true) : array();
+		$campaign_id = @$_GET["campaign"];
+		if ($campaign_id == null) $campaign_id = PNApplication::$instance->selection->getCampaignId();
 		
 		$profile_page = null;
 		$can_edit_applicants = PNApplication::$instance->user_management->has_right("edit_applicants");
@@ -126,7 +128,7 @@ class page_applicant_list extends SelectionPage {
 		function init_list() {
 			dl = new data_list(
 				'list_container',
-				'Applicant', <?php echo PNApplication::$instance->selection->getCampaignId();?>,
+				'Applicant', <?php echo $campaign_id;?>,
 				[
 					'Selection.ID',
 					'Personal Information.First Name',
