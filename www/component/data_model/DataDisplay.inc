@@ -1049,7 +1049,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 					foreach ($next[2] as $col_cd=>$val_cd)
 						$col_condition = $col_cd;
 					$col_cd = $current_table->internalGetColumnFor($col_condition, $sub_model);
-					if ($col_cd->multiple) {
+					if ($col_cd instanceof \datamodel\ForeignKey && $col_cd->multiple) {
 						// the condition column is multiple
 						$key = $current_table->getKey();
 						if ($key <> null && count($key) == 2 && 
@@ -1058,7 +1058,8 @@ class ReadOnlyDataDisplay extends DataDisplay {
 							// the key of the table is on the 2 columns, so it is unique !
 						} else
 							$multiple = true;
-					}
+					} else
+						$multiple = true;
 				}
 			}
 		}
@@ -1269,7 +1270,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 						foreach ($condition as $col_cd=>$val_cd)
 							$col_condition = $col_cd;
 						$col_cd = $ft->internalGetColumnFor($col_condition, $path->sub_model);
-						if ($col_cd->multiple) {
+						if ($col_cd instanceof \datamodel\ForeignKey && $col_cd->multiple) {
 							// the condition column is multiple
 							$key = $ft->getKey();
 							if ($key <> null && count($key) == 2 &&
@@ -1278,6 +1279,8 @@ class ReadOnlyDataDisplay extends DataDisplay {
 								// the key of the table is on the 2 columns, so it is unique !
 							} else
 								$is_multiple = true;
+						} else {
+							$is_multiple = true;
 						}
 					}
 				}				
