@@ -776,32 +776,39 @@ function grid(element) {
 		if (typeof index != 'undefined') {
 			// calculate the real index in the TR for the header
 			var matrix = [];
-			for (var i = 0; i <= level; ++i) matrix.push([]);
+			var matrix2 = [];
+			for (var i = 0; i <= level; ++i) {
+				var row = [];
+				for (var j = 0; j < t.columns.length; ++j) row.push(null);
+				matrix.push(row);
+				row = [];
+				for (var j = 0; j < t.columns.length; ++j) row.push(null);
+				matrix2.push(row);
+			}
 			for (var i = 0; i <= level; ++i) {
 				var tr = t.header_rows[i];
 				for (var j = 0; j < tr.childNodes.length; ++j) {
 					var th = tr.childNodes[j];
 					var cols = th.colSpan ? th.colSpan : 1;
 					var rows = th.rowSpan ? th.rowSpan : 1;
-					matrix[i].push(th);
+					var col;
+					for (col = 0; col < t.columns.length; ++col)
+						if (matrix2[i][col] == null) break;
+					matrix[i][col] = th;
 					for (var k = 0; k < rows && i+k<=level; k++)
-						for (var l = 0; l < cols; l++)
-							if (k!=0||l!=0) matrix[i+k].push(null);
+						for (var l = 0; l < cols; ++l)
+							matrix2[i+k][col+l] = th;
 				}
 			}
 			var real_index = index + (t.selectable ? 1 : 0);
-			if (real_index >= matrix[level].length)
+			var tr_index = 0;
+			var i;
+			for (i = real_index-1; i >= 0; i--)
+				if (matrix[level][i] != null) tr_index++;
+			if (tr_index < t.header_rows[level].childNodes.length)
+				t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[tr_index]);
+			else
 				t.header_rows[level].appendChild(container.th);
-			else {
-				var tr_index = 0;
-				var i;
-				for (i = real_index-1; i >= 0; i--)
-					if (matrix[level][i] != null) tr_index++;
-				if (tr_index < t.header_rows[level].childNodes.length)
-					t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[tr_index]);
-				else
-					t.header_rows[level].appendChild(container.th);
-			}
 		} else
 			t.header_rows[level].appendChild(container.th);
 		// continue insertion
