@@ -1,23 +1,41 @@
+/**
+ * This is an item used by autocomplete, and which must be given by the provider
+ * @param {Object} value the value
+ * @param {String} text text to display in the input when the item is selected
+ * @param {String|Element} html HTML to display in the menu
+ */
 function autocomplete_item(value, text, html) {
 	this.value = value;
 	this.text = text;
 	this.html = html;
 }
 
+/**
+ * Display an INPUT, and when the user is typing, a context_menu will be display to propose values to complete the input.
+ * @param {Element} container where to put the INPUT
+ * @param {Number} min_chars minimum number of characters before to propose the auto-complete menu
+ * @param {String} default_message text to display when the input is empty (placeholder)
+ * @param {Function} provider function providing possible values to auto-complete. The function takes 2 parameters: <ul><li>the text from the input</li><li>A function to be called when the possible values are ready, with the list of values as parameter</li></ul>
+ * @param {Function} onselectitem function called when the user select an item among the proposed values
+ */
 function autocomplete(container, min_chars, default_message, provider, onselectitem) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 
+	/** Get the current text in the INPUT
+	 * @returns {String} text
+	 */
 	this.getInputValue = function() {
 		return t.input.default_message ? "" : t.input.value;
 	};
 	
+	/** Reset the input (make it empty) */
 	this.reset = function() {
 		this.input.default_message = true;
 		this.input.value = default_message;
 		this.input.className = "informative_text";
 	};
-	
+	/** Creation of the input */
 	this._init = function() {
 		this.input = document.createElement('input');
 		this.input.type = 'text';
@@ -36,7 +54,7 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 				if (t.input.value == "") { 
 					t.input.value = default_message; t.input.className = "informative_text"; t.input.default_message = true; 
 					layout.changed(container);
-				}; 
+				};
 				t.menu.hide();// TODO we should not hide it here, as if we click on scrollbar it disappear
 			},100); 
 		};
@@ -54,11 +72,13 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 			else if (ev.isEnter) t.menu.select();
 			t.input.default_message = false;
 			if (t._provider_call) t._provider_recall = true;
-			else t._call_provider();
+			else t._callProvider();
 		};
 	};
-	
-	this._call_provider = function() {
+	/**
+	 * Internal function called when we need to display the menu
+	 */
+	this._callProvider = function() {
 		t._provider_call = true;
 		t._provider_recall = false;
 		setTimeout(function() {
@@ -77,7 +97,7 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 						t.menu.reset(items);
 						t._provider_call = false;
 						if (t._provider_recall)
-							t._call_provider();
+							t._callProvider();
 					});
 				} else {
 					t._provider_recall = false;
@@ -90,16 +110,22 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 	this._init();
 }
 
+/**
+ * Internal, used by autocomplete to display the menu with possible values, and handle arrow keys navigation
+ * @param {autocomplete} ac the autocomplete widget
+ * @param {Function} onselectitem function to call when an item is selected in the menu
+ */
 function autocomplete_menu(ac, onselectitem) {
 	require("animation.js");
 	theme.css("context_menu.css");
 	var t=this;
 	
+	/** DIV containing the menu */
 	this.div = ac.input.ownerDocument.createElement("DIV");
 	this.div.style.position = "absolute";
 	this.div.className = "context_menu";
 	this.div.style.zIndex = 100;
-	
+	/** Show a loading icon in the menu */
 	this.loading = function() {
 		this.highlighted = -1;
 		this.div.removeAllChildren();
@@ -111,6 +137,9 @@ function autocomplete_menu(ac, onselectitem) {
 		this.div.appendChild(img);
 		this.resize();
 	};
+	/** Reset the content of the menu
+	 * @param {Array} items list of autocomplete_item
+	 */
 	this.reset = function(items) {
 		this.highlighted = -1;
 		if (items.length == 0) {
@@ -132,7 +161,7 @@ function autocomplete_menu(ac, onselectitem) {
 			d.className = "context_menu_item";
 			d.onmouseover = function() { t.highlight(this.index); };
 			d.onclick = function(e) {
-				t.item_selected(this.item);
+				t.itemSelected(this.item);
 				stopEventPropagation(e);
 				return false;
 			};
@@ -144,7 +173,11 @@ function autocomplete_menu(ac, onselectitem) {
 		this.highlight(0);
 		this.resize();
 	};
+	/** Index of the highlighted item, when the user is using arrow keys to navigate */
 	this.highlighted = -1;
+	/** Highlight the given item
+	 * @param {Number} index index of the item to highlight
+	 */
 	this.highlight = function(index) {
 		if (this.highlighted != -1)
 			this.div.childNodes[this.highlighted].className = "context_menu_item";
@@ -152,22 +185,26 @@ function autocomplete_menu(ac, onselectitem) {
 			this.div.childNodes[index].className = "context_menu_item selected";
 		this.highlighted = index;
 	};
+	/** Called when the user press the down key */
 	this.down = function() {
 		if (this.highlighted == -1)
 			this.highlight(0);
 		else if (this.highlighted < this.div.childNodes.length-1)
 			this.highlight(this.highlighted+1);
 	};
+	/** Called when the user press the up key */
 	this.up = function() {
 		if (this.highlighted == -1)
 			this.highlight(0);
 		else if (this.highlighted > 0)
 			this.highlight(this.highlighted-1);
 	};
+	/** Called when the user press the enter key */
 	this.select = function() {
 		if (this.highlighted == -1) return;
-		this.item_selected(this.div.childNodes[this.highlighted].item);
+		this.itemSelected(this.div.childNodes[this.highlighted].item);
 	};
+	/** Hide the menu */
 	this.hide = function() {
 		if (typeof animation != 'undefined')
 			this.anim = animation.fadeOut(t.div,300,function() {
@@ -179,6 +216,7 @@ function autocomplete_menu(ac, onselectitem) {
 			t.div.style.top = "-10000px";
 		}
 	};
+	/** Resize the menu based on its content */
 	this.resize = function() {
 		this.div.style.visibility = "visible";
 		setOpacity(this.div, 1);
@@ -226,7 +264,10 @@ function autocomplete_menu(ac, onselectitem) {
 		if (this.div.parentNode != ac.input.ownerDocument.body)
 			ac.input.ownerDocument.body.appendChild(this.div);
 	};
-	this.item_selected = function(item) {
+	/** Called when an item is selected by the user
+	 * @param {autocomplete_item} item the selected item
+	 */
+	this.itemSelected = function(item) {
 		ac.input.value = item.text;
 		if (onselectitem) onselectitem(item);
 		this.hide();

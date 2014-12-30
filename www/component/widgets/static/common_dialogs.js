@@ -1,6 +1,6 @@
 /**
  * Display a popup with the given error message
- * @param {string} message error message
+ * @param {String} message error message
  */
 function errorDialog(message) {
 	require("popup_window.js",function() {
@@ -11,7 +11,7 @@ function errorDialog(message) {
 
 /**
  * Display a popup with the given error message
- * @param {HTMLElement} content error message
+ * @param {Element} content error message
  */
 function errorDialogHTML(content){
 	require("popup_window.js",function() {
@@ -24,8 +24,8 @@ function errorDialogHTML(content){
 }
 /**
  * Display a popup asking for confirmation (Yes and No buttons)
- * @param {string} message the message to display, asking confirmation
- * @param {function} handler called with true if the user answered Yes, or false if the user answered No or closed the window without answering
+ * @param {String} message the message to display, asking confirmation. It is HTML code.
+ * @param {Function} handler called with true if the user answered Yes, or false if the user answered No or closed the window without answering
  */
 function confirmDialog(message, handler) {
 	require("popup_window.js",function() {
@@ -46,6 +46,10 @@ function confirmDialog(message, handler) {
 	});
 }
 
+/**
+ * Display a popup with a message, and an information icon
+ * @param {String} message HTML code of the message
+ */
 function infoDialog(message) {
 	require("popup_window.js",function() {
 		var p = new popup_window("Information", theme.icons_16.info, "<div style='padding:5px'>"+message+"</div>");
@@ -53,6 +57,13 @@ function infoDialog(message) {
 	});
 }
 
+/**
+ * Display a popup, with a message, and a list of buttons corresponding to the possible choices.
+ * Note that the user can close the popup without doing any choice.
+ * @param {String} message HTML code of the message
+ * @param {Array} choices list of texts, each one being displayed in a button
+ * @param {Function} handler function called with the index of the selected button
+ */
 function choiceButtonsDialog(message, choices, handler) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
@@ -72,14 +83,14 @@ function choiceButtonsDialog(message, choices, handler) {
 
 /**
  * Ask the user to input a value in a popup window.
- * @param {string} icon url of the icon
- * @param {string} title title of the popup
- * @param {string} message message to display, describing the expected input
- * @param default_value
- * @param max_length maximum number of characters
- * @param validation_handler called each time the user change the value: if it returns null it means the value is correct, else it must return the error message describing why the input is not correct
- * @param ok_handler called when the user clicked on Ok or Cancel. If ok the value is given as parameter (and is already validated by the validation_handler), if cancel, null is given as parameter
- * @param oncancel (optional) called when the user clicks on cancel button
+ * @param {String} icon url of the icon
+ * @param {String} title title of the popup
+ * @param {String} message message to display, describing the expected input (HTML code)
+ * @param {String} default_value initial value in the input
+ * @param {Number} max_length maximum number of characters
+ * @param {Function} validation_handler called each time the user change the value: if it returns null it means the value is correct, else it must return the error message describing why the input is not correct
+ * @param {Function} ok_handler called when the user clicked on Ok or Cancel. If ok the value is given as parameter (and is already validated by the validation_handler), if cancel, null is given as parameter
+ * @param {Function} oncancel (optional) called when the user clicks on cancel button
  */
 function inputDialog(icon,title,message,default_value,max_length,validation_handler,ok_handler, oncancel) {
 	require("popup_window.js",function() {
@@ -156,7 +167,11 @@ function inputDialog(icon,title,message,default_value,max_length,validation_hand
 }
 
 /**
- * TODO: documentation
+ * Display a popup where the user can enter several texts.
+ * @param {String|null} icon URL of the icon of the popup
+ * @param {String} title title of the popup
+ * @param {Array} inputs list of {message,default_value,max_length,validation_handler}
+ * @param {Function} ok_handler function called when the user validates its input, with the list of texts as parameter
  */
 function multipleInputDialog(icon,title,inputs,ok_handler) {
 	require("popup_window.js",function() {
@@ -229,6 +244,16 @@ function multipleInputDialog(icon,title,inputs,ok_handler) {
 	});
 }
 
+/**
+ * Display a popup with a message and a SELECT for the user to select an option
+ * @param {String|null} icon URL of the icon to use for the popup
+ * @param {String} title title of the popup
+ * @param {String} message message to display before the SELECT (as HTML code)
+ * @param {String} default_value initial value, to pre-select an option
+ * @param {Array} possibilities list of options to propose in the select, each option being an array with 2 elements: the value, the text
+ * @param {Function} ok_handler called when the user click on OK
+ * @param {Function} oncancel called when the user cancels
+ */
 function selectDialog(icon,title,message,default_value,possibilities, ok_handler, oncancel) {
 	require("popup_window.js",function() {
 		var content = document.createElement("DIV");
@@ -266,7 +291,16 @@ function selectDialog(icon,title,message,default_value,possibilities, ok_handler
 	});
 }
 
-
+/**
+ * Display a popup with an IFRAME
+ * @param {String|null} icon URL of the icon to use in the popup
+ * @param {String} title title of the popup
+ * @param {String} url URL of the page to display in the frame
+ * @param {Object|null} post_data if specified, a form will be posted in the frame with this data
+ * @param {Number|null} percent_w if specified, percentage of the window width to be used by the popup
+ * @param {Number|null} percent_h if specified, percentage of the window height to be used by the popup
+ * @param {Function} onframecreated if given, this function is called when the IFRAME is ready and loaded, with 2 parameters: the IFRAME element, the popup_window
+ */
 function popupFrame(icon, title, url, post_data, percent_w, percent_h, onframecreated) {
 	require("popup_window.js", function() {
 		var p = new popup_window(title, icon, "");

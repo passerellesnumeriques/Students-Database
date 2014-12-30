@@ -185,12 +185,21 @@ field_decimal.prototype._create = function(data) {
 		this._setData(data);
 	}
 };
+/**
+ * Set minimum and maximum values
+ * @param {Number} min minimum value, or null
+ * @param {Number} max maximum value, or null
+ */
 field_decimal.prototype.setLimits = function(min,max) {
 	if (!this.config) this.config = {};
 	this.config.min = min;
 	this.config.max = max;
 	this.setData(this._getEditedData());
 };
+/**
+ * Set minimum value
+ * @param {Number} min minimum value, or null
+ */
 field_decimal.prototype.setMinimum = function(min) {
 	if (typeof min == 'string') min = parseFloat(min);
 	if (isNaN(min)) min = null;
@@ -198,6 +207,10 @@ field_decimal.prototype.setMinimum = function(min) {
 	this.config.min = min;
 	this.setData(this._getEditedData());
 };
+/**
+ * Set maximum value
+ * @param {Number} max maximum value, or null
+ */
 field_decimal.prototype.setMaximum = function(max) {
 	if (typeof max == 'string') max = parseFloat(max);
 	if (isNaN(max)) max = null;

@@ -1,4 +1,12 @@
 /* #depends[typed_filter.js] */
+/**
+ * Filter on a text. It will be display with an operator (contains, starts with...) and an input to enter text to search.
+ * The data is an object with 2 attributes:<ul>
+ * <li>type: the operator</li>
+ * <li>value: the text</li>
+ * </ul>
+ * Configuration is not used.
+ */
 function filter_text(data, config, editable) {
 	if (data == null) data = {type:'contains',value:''};
 	typed_filter.call(this, data, config, editable);

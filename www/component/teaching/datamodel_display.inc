@@ -97,8 +97,8 @@ function add_teacher_dates(dates, before_tr) {
 		cancel_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Cancel";
 		td.appendChild(cancel_button);
 		cancel_button.onclick = function() {
-			if (field_start) field_start.unregister_datamodel_cell();
-			if (field_end) field_end.unregister_datamodel_cell();
+			if (field_start) field_start.unregisterDataModelCell();
+			if (field_end) field_end.unregisterDataModelCell();
 			teacher_dates.remove(dates);
 			tr.parentNode.removeChild(tr);
 		};
@@ -120,8 +120,8 @@ function add_teacher_dates(dates, before_tr) {
 			service.json("data_model","save_entity",{table:"TeacherDates",sub_model:null,field_people:people_id,field_start:start,field_end:end},function(res) {
 				unlock_screen(locker);
 				if (res && res.key) {
-					field_start.unregister_datamodel_cell();
-					field_end.unregister_datamodel_cell();
+					field_start.unregisterDataModelCell();
+					field_end.unregisterDataModelCell();
 					dates.id = res.key;
 					dates.start = start;
 					dates.end = end;
@@ -149,8 +149,8 @@ function add_teacher_dates(dates, before_tr) {
 					}
 				}
 				var removed = function() {
-					if (field_start) field_start.unregister_datamodel_cell();
-					if (field_end) field_end.unregister_datamodel_cell();
+					if (field_start) field_start.unregisterDataModelCell();
+					if (field_end) field_end.unregisterDataModelCell();
 					teacher_dates.remove(dates);
 					tr.parentNode.removeChild(tr);
 				};

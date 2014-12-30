@@ -1,4 +1,16 @@
 /* #depends[typed_filter.js] */
+/**
+ * Filter when several data can be present.
+ * It will display a typed_filter, preceded by a choice: At least one, none, ...
+ * The data is an object with 2 attributes:<ul>
+ * <li>type: the choice</li>
+ * <li>element_data: the data is the typed_filter</li>
+ * </ul>
+ * Configuration must contain:<ul>
+ * <li>element_type: class name of the typed_filter to use</li>
+ * <li>element_cfg: configuration of the typed_filter</li>
+ * </ul>
+ */
 function filter_list(data, config, editable) {
 	if (!data) data = {type:">0",element_data:null};
 	typed_filter.call(this, data, config, editable);

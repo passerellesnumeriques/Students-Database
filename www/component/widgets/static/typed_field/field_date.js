@@ -19,17 +19,23 @@ function field_date(data,editable,config) {
 	typed_field.call(this, data, editable, config);
 	
 	var t=this;
-	this._register_datamodel_datadisplay = this.register_datamodel_datadisplay;
-	this.register_datamodel_datadisplay = function(data_display, data_key) {
-		this._register_datamodel_datadisplay(data_display, data_key);
+	this._registerDataModelDataDisplay = this.registerDataModelDataDisplay;
+	this.registerDataModelDataDisplay = function(data_display, data_key) {
+		this.registerDataModelDataDisplay(data_display, data_key);
 		if (data_display.cell)
 			this._registerCell(data_display.cell.table,data_display.cell.column,data_key);
 	};
-	this._register_datamodel_cell = this.register_datamodel_cell;
-	this.register_datamodel_cell = function(table, column, row_key) {
-		this._register_datamodel_cell(table,column,row_key);
+	this._registerDataModelCell = this.registerDataModelCell;
+	this.registerDataModelCell = function(table, column, row_key) {
+		this._registerDataModelCell(table,column,row_key);
 		this._registerCell(table,column,row_key);
 	};
+	/**
+	 * Register this field, so that we can handle minimum and maximum dates when fields are dependent on another field
+	 * @param {String} table table
+	 * @param {String} column column
+	 * @param {Number|Array} row_key key
+	 */
 	this._registerCell = function(table, column, row_key) {
 		if (t.config && t.config.minimum_cell)
 			setTimeout(function() {

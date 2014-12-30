@@ -304,7 +304,7 @@ window.datamodel = {
 				var field = new win[field_type](value,editable,field_cfg);
 				container.appendChild(field.getHTMLElement());
 				if (onchange) field.onchange.addListener(function(f) { onchange(f.getCurrentData()); });
-				field.register_datamodel_cell(table,column,row_key);
+				field.registerDataModelCell(table,column,row_key);
 				if (oncreated) oncreated(field);
 			}
 		});

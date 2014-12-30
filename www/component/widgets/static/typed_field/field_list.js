@@ -1,4 +1,9 @@
 /* #depends[typed_field.js] */
+/**
+ * A field containing a list of fields.
+ * Configuration must contain <code>element_type</code> which is the class of the typed_field to use in the list.
+ * The data is an array of data, each being given to a typed_field.
+ */
 function field_list(data,editable,config) {
 	require(config.element_type+".js");
 	typed_field.call(this, data, editable, config);

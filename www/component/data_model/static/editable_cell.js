@@ -36,7 +36,7 @@ function editable_cell(container, table, column, row_key, field_classname, field
 		},function(ef) {
 			t.editable_field = ef;
 			if (onchange) ef.field.onchange.addListener(function(f) { onchange(f.getCurrentData(), t); });
-			ef.field.register_datamodel_cell(table,column,row_key);
+			ef.field.registerDataModelCell(table,column,row_key);
 			if (onready) onready(t);
 		});
 	});

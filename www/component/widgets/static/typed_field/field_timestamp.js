@@ -1,6 +1,15 @@
 /* #depends[typed_field.js] */
 if (typeof require != 'undefined') require("input_utils.js");
 
+/**
+ * Display the date/time corresponding to the timestamp.
+ * Configuration can contain:<ul>
+ * <li>can_be_null</li>
+ * <li>minimum_date</li>
+ * <li>maximum_date</li>
+ * <li>show_time: if false, only a date is displayed</li>
+ * </ul>
+ */
 function field_timestamp(data,editable,config) {
 	typed_field.call(this, data, editable, config);
 }

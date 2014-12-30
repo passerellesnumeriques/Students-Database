@@ -1,3 +1,9 @@
+/**
+ * Boxes layout layouts DIV element so that it will optimize the space used.
+ * This is quite similar as having every DIV as inline-block, but the difference is boxes_layout will try to use remaining spaces so if the height of the DIV is different, we won't have big empty spaces
+ * @param {Element} container the container to layout
+ * @param {Number} space number of pixels between boxes
+ */
 function boxes_layout(container, space) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	container.style.position = "relative";

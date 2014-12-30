@@ -186,7 +186,9 @@ function check_js_ns(ns_path, ns, item, filename, path) {
 			check_js_ns(ns_path+name+".", elem, item, filename, path);
 		} else if (elem instanceof JSDoc_Function) {
 			if (elem.location.file != location) continue;
-			if (!elem.no_name_check) {
+			var i = filename.indexOf(".js");
+			var fname = filename.substring(0,i);
+			if (!elem.no_name_check && name != fname && !name.startsWith(fname)) {
 				if (name.charAt(0) == '_')
 					check_name_small_then_capital(name.substring(1), "Private Function "+ns_path+name, item);
 				else

@@ -1,4 +1,11 @@
 /* #depends[typed_filter.js] */
+/**
+ * Filter with a list of possible values.
+ * This will be displayed with a select, where the user can choose among the possible values.
+ * If can_be_null is specified, the 2 options 'blank' and 'not blank' will be added.
+ * Configuration must contain <code>possible_values</code>: an array of element, each element can be (1) a string, which will be displayed and used as key, (2) an array of 2 elements: the key and the string to display.
+ * Configuration can contain <code>can_be_null</code>
+ */
 function filter_enum(data, config, editable) {
 	if (data == null) data = {};
 	typed_filter.call(this, data, config, editable);

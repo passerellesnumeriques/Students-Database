@@ -42,6 +42,7 @@ function context_menu(menu) {
 			menu.childNodes[i].onclickset = true;
 		}
 	
+	/** Event fired when an element is clicked */
 	t.element_clicked = new Custom_Event();
 	
 	/** Append an item to the menu
@@ -75,6 +76,7 @@ function context_menu(menu) {
 	 * @param {String} icon url of the icon of the item
 	 * @param {String} text the text of the item
 	 * @param {Function} onclick called when the user click on the item
+	 * @param {Object} onclick_parameter if given, it will be passed as second parameter of the onclick function (first parameter being the click event)
 	 * @returns {Element} the html element corresponding to the item
 	 */
 	t.addIconItem = function(icon, text, onclick, onclick_parameter) {
@@ -93,6 +95,11 @@ function context_menu(menu) {
 		t.addItem(div);
 		return div;
 	};
+	/**
+	 * Append an item to the menu
+	 * @param {String|Element} html the HTML representing the item
+	 * @param {Function} onclick function to be called when the given item is clicked
+	 */
 	t.addHtmlItem = function(html, onclick) {
 		if (typeof html == 'string') {
 			var div = document.createElement("DIV");
@@ -124,6 +131,9 @@ function context_menu(menu) {
 		t.addItem(div);
 		return div;
 	};
+	/**
+	 * Append a separator (horizontal line)
+	 */
 	t.addSeparator = function() {
 		var sep = document.createElement("DIV");
 		sep.style.borderBottom = "1px solid black";
@@ -131,6 +141,12 @@ function context_menu(menu) {
 		sep.style.marginBottom = "3px";
 		t.addItem(sep);
 	};
+	/**
+	 * Add an item, which when clicked will display a sub-menu
+	 * @param {String|null} icon URL of the icon
+	 * @param {String} text the text
+	 * @param {Function} provider when the item is clicked, this function is called to get the content of the sub-menu. This function takes 2 parameters: <ul><li>a context_menu to be filled</li><li>A function to be called when the sub-menu is ready/filled and can be displayed</li></ul>
+	 */
 	t.addSubMenuItem = function(icon, text, provider) {
 		var div = document.createElement("DIV");
 		div._sub_menu = true;
@@ -167,7 +183,7 @@ function context_menu(menu) {
 		t.addItem(div, true);
 	};
 	/** Return the items contained in this menu
-	 * @returns the list of html elements contained in the menu
+	 * @returns {Array} the list of html elements contained in the menu
 	 */
 	t.getItems = function() { return menu.childNodes; };
 	/** Remove all items from this menu */
@@ -177,7 +193,9 @@ function context_menu(menu) {
 	};
 	
 	/** Display the menu below the given element
-	 * @param from the element below which the menu will be displayed
+	 * @param {Element} from the element below which the menu will be displayed
+	 * @param {Boolean} min_width_is_from if true, the context menu will have its minimum width set to the width of the from element
+	 * @param {Function} ondisplayed function to be called when the menu has been displayed
 	 */
 	t.showBelowElement = function(from, min_width_is_from, ondisplayed) {
 		window.top.require("position.js", function() {
@@ -188,16 +206,21 @@ function context_menu(menu) {
 		});
 	};
 	/** Display the menu above the given element
-	 * @param from the element above which the menu will be displayed
+	 * @param {Element} from the element above which the menu will be displayed
+	 * @param {Boolean} min_width_is_from if true, the context menu will have its minimum width set to the width of the from element
+	 * @param {Function} ondisplayed function to be called when the menu has been displayed
 	 */
-	t.showAboveElement = function(from, min_width_is_from) {
+	t.showAboveElement = function(from, min_width_is_from, ondisplayed) {
 		window.top.require("position.js", function() {
 			menu.style.visibility = "visible";
 			menu.style.display = "";
 			t.show_from = from;
-			window.top.positionAboveElement(menu, from, min_width_is_from, function(x,y) { t._shownAt(x,y,from); });
+			window.top.positionAboveElement(menu, from, min_width_is_from, function(x,y) { t._shownAt(x,y,from,ondisplayed); });
 		});
 	};
+	/** Display the menu at the right side of the given element
+	 * @param {Element} from the element
+	 */
 	t.showAtRightOfElement = function(from) {
 		window.top.require("position.js", function() {
 			menu.style.visibility = "visible";
@@ -207,6 +230,8 @@ function context_menu(menu) {
 		});
 	};
 	/** Display the menu at the given position (using absolute positioning)
+	 * @param {Number} x horizontal position
+	 * @param {Number} y vertical position
 	 */
 	t.showAt = function(x,y) {
 		menu.style.visibility = "visible";
@@ -216,15 +241,22 @@ function context_menu(menu) {
 		menu.style.left = x+"px";
 		t._showAt(x,y,null);
 	};
+	/** How the menu should appear, used for animation */
 	t._appear_orientation = 'center';
+	/** Internal function called when the position of the menu has been set
+	 * @param {Number} x horizontal position
+	 * @param {Number} y vertical position
+	 * @param {Element} from from which element the menu has been displayed
+	 * @param {Function} ondisplayed function to call when the menu has been displayed
+	 */
 	t._shownAt = function(x,y,from,ondisplayed) {
 		var e = from;
 		var from_inside_menu = false;
 		while (e && e != from.ownerDocument.body) { if (e.className == 'context_menu') { from_inside_menu = true; break; } e = e.parentNode; }
 		if (from_inside_menu) {
 			t.parent_menu = e.context_menu;
-			t.parent_menu_listener = t.parent_menu.hide_if_outside_menu;
-			t.parent_menu.hide_if_outside_menu = function(){};
+			t.parent_menu_listener = t.parent_menu.hideIfOutsideMenu;
+			t.parent_menu.hideIfOutsideMenu = function(){};
 		}
 		t.show_at = [x,y];
 //		for (var i = 0; i < document.body.childNodes.length; ++i)
@@ -235,7 +267,7 @@ function context_menu(menu) {
 		}
 		if (typeof window.top.animation != 'undefined')
 			menu.style.visibility = 'hidden';
-		window.top.pnapplication.onwindowclosed.addListener(t._window_close_listener);
+		window.top.pnapplication.onwindowclosed.addListener(t._windowCloseListener);
 		setTimeout(function() {
 			//listenEvent(window,'click',t._listener);
 			window.top.pnapplication.registerOnclick(window, t._listener);
@@ -252,11 +284,16 @@ function context_menu(menu) {
 		} else if (ondisplayed)
 			ondisplayed();
 	};
+	/** Keep track of the window in which the context menu is displayed */
 	t._this_win = window;
-	t._window_close_listener = function(c) {
+	/**
+	 * Function called when the window containing the menu is closed
+	 * @param {Object} c close information from pnapplication
+	 */
+	t._windowCloseListener = function(c) {
 		if (!t) return;
 		if (c.win != t._this_win) return;
-		c.top.pnapplication.onwindowclosed.removeListener(t._window_close_listener);
+		c.top.pnapplication.onwindowclosed.removeListener(t._windowCloseListener);
 		t._this_win = null;
 		c.top.document.body.removeChild(menu);
 	};
@@ -264,11 +301,11 @@ function context_menu(menu) {
 	 */
 	t.hide = function() {
 		if (!t) return;
-		window.top.pnapplication.onwindowclosed.removeListener(t._window_close_listener);
+		window.top.pnapplication.onwindowclosed.removeListener(t._windowCloseListener);
 		if (t.onclose) t.onclose();
 		if (t.parent_menu) {
 			setTimeout(function(){
-				t.parent_menu.hide_if_outside_menu = t.parent_menu_listener;
+				t.parent_menu.hideIfOutsideMenu = t.parent_menu_listener;
 			},1);
 		}
 		if (typeof window.top.animation != 'undefined') {
@@ -292,11 +329,21 @@ function context_menu(menu) {
 		if (window)
 			window.top.pnapplication.unregisterOnclick(t._listener);
 	};
+	/** Listen to mouse events to check when the user is clicking outside
+	 * @param {Event} ev the event
+	 * @param {Window} win the window in which the event occured
+	 * @param {Window} orig_win the window of the context menu
+	 */
 	t._listener = function(ev, win, orig_win) {
 		if (!t) return;
-		t.hide_if_outside_menu(ev, win, orig_win);
+		t.hideIfOutsideMenu(ev, win, orig_win);
 	};
-	t.hide_if_outside_menu = function(ev, win, orig_win) {
+	/** hide the menu if the click is outside the menu
+	 * @param {Event} ev the click event
+	 * @param {Window} win the window in which the user clicked
+	 * @param {Window} orig_win the window of the menu
+	 */
+	t.hideIfOutsideMenu = function(ev, win, orig_win) {
 		var is_inside = function(child,parent) {
 			// check if the target is inside
 			if (child) {
@@ -325,6 +372,7 @@ function context_menu(menu) {
 		t.hide();
 	};
 	
+	/** Resize the menu based on its content */
 	t.resize = function() {
 		if (menu.parentNode != window.top.document.body) return;
 		menu.style.top = "";
@@ -334,7 +382,7 @@ function context_menu(menu) {
 		else
 			t.showAt(t.show_at[0], t.show_at[1]);
 	};
-	
+	/** Close the menu. Alias of hide. */
 	t.close = function() { if(t) t.hide(); };
 	
 	menu.ondomremoved(function() {

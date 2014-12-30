@@ -28,7 +28,7 @@ function editable_datadisplay(container, data_display, come_from, key, sub_model
 				});
 			});
 			if (onchange) t.editable_field.field.onchange.addListener(onchange);
-			t.editable_field.field.register_datamodel_datadisplay(data_display, key);
+			t.editable_field.field.registerDataModelDataDisplay(data_display, key);
 		});
 	}
 	

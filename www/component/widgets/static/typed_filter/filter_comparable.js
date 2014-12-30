@@ -1,4 +1,16 @@
 /* #depends[typed_filter.js] */
+/**
+ * Define a filter on comparable values (integer, date...).
+ * It will display first a choice of operator (equals, less than, between...), then a typed_field to select a value.
+ * The data is an object with 2 attributes:<ul>
+ * <li>type: the operator</li>
+ * <li>value: the value</li>
+ * </ul>
+ * The configuration must contain:<ul>
+ * <li>value_field_classname: class of the typed_field to use for the value</li>
+ * <li>value_field_config: configuration of the typed_field</li>
+ * </ul>
+ */
 function filter_comparable(data, config, editable) {
 	if (data == null) data = {type:'equals',value:null};
 	if (!data.value_to) data.value_to = null;

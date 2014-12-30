@@ -1,11 +1,21 @@
 /* #depends[typed_field.js] */
+/**
+ * List of values, each value being a choice among possible values.
+ * If editable, the user can add and remove values.
+ * Configuration must contain <code>possible_values</code> which is an array, each element being a possible value. Each possible value is an array with 2 elements: first is the key, second is the text to display.
+ */
 function field_list_of_fixed_values(data,editable,config) {
 	if (data == null) data = [];
 	typed_field_multiple.call(this, data, editable, config);
 }
 field_list_of_fixed_values.prototype = new typed_field_multiple();
 field_list_of_fixed_values.prototype.constructor = field_list_of_fixed_values;		
-field_list_of_fixed_values.prototype.canBeNull = function() { return true; };		
+field_list_of_fixed_values.prototype.canBeNull = function() { return true; };
+/**
+ * Retrieve the text from a key
+ * @param {Object} key the key to search
+ * @returns {String} the text
+ */
 field_list_of_fixed_values.prototype._getValue = function(key) {
 	var value = null;
 	for (var j = 0; j < this.config.possible_values.length; ++j)

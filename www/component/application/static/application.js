@@ -129,7 +129,7 @@ function initPNApplication() {
 			/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
 			_onclick_listeners: [],
 			/** Register the given listener, which will be called when the user clicks somewhere in the application (not only on the window, but on all frames)
-			 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
+			 * @param {Window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
 			 * @param {Function} listener function to be called
 			 */
 			registerOnclick: function(from_window, listener) {

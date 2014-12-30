@@ -1,4 +1,8 @@
 /* #depends[typed_field.js] */
+/**
+ * Field containing HTML code.
+ * No configuration.
+ */
 function field_html(data,editable,config) {
 	typed_field.call(this, data, editable, config);
 }

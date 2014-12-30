@@ -54,7 +54,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		tr.appendChild(td = document.createElement("TD"));
 		var field_name = new field_text(room.name, can_edit, {can_be_null:false,max_length:20});
 		td.appendChild(field_name.getHTMLElement());
-		field_name.register_datamodel_cell("ExamCenterRoom", "name", room.id);
+		field_name.registerDataModelCell("ExamCenterRoom", "name", room.id);
 		field_name.onchange.addListener(function (f) {
 			room.name = f.getCurrentData();
 			window.pnapplication.dataUnsaved("ExamCenterRooms");
@@ -63,7 +63,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		tr.appendChild(td = document.createElement("TD"));
 		var field_capacity = new field_integer(room.capacity, can_edit, {can_be_null:false,min:1,max:999});
 		td.appendChild(field_capacity.getHTMLElement());
-		field_capacity.register_datamodel_cell("ExamCenterRoom", "capacity", room.id);
+		field_capacity.registerDataModelCell("ExamCenterRoom", "capacity", room.id);
 		field_capacity.t = this;
 		field_capacity.onchange.addListener(function(f) {
 			var new_cap = f.getCurrentData();
