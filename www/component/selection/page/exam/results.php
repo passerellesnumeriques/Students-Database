@@ -284,8 +284,7 @@ function launchExport(all) {
 	set_lock_screen_content_progress(locker, 100, "Generating Excel file...", null, function(span, pb, sub) {
 		service.json("application","create_temp_data",{value:'0'},function(res) {
 			var temp_data_id = res.id;
-			service.json("selection","exam/export_results",{progress_id:temp_data_id,all:all},function(res) {
-			});
+			postToDownload("/dynamic/selection/service/exam/export_results",{progress_id:temp_data_id,all:all},true);
 			var refresh = function() {
 				service.json("application","get_temp_data",{id:temp_data_id},function(res) {
 					if (res.value == 'done' || res.value === null || isNaN(parseInt(res.value))) {

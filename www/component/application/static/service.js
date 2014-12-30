@@ -245,8 +245,9 @@ function postFrame(url, data, frame) {
  * This will show a message to the user, and remove the frame automatically after 1 minute, to let the time to generate the file to download.
  * @param {String} url the URL where to post the data
  * @param {Object} data data to post
+ * @param {Boolean} do_not_show_info_message if true, the status info message won't be displayed
  */
-function postToDownload(url, data) {
+function postToDownload(url, data, do_not_show_info_message) {
 	var frame = document.createElement("IFRAME");
 	frame.style.position = "absolute";
 	frame.style.top = "-10000px";
@@ -264,7 +265,8 @@ function postToDownload(url, data) {
 	form.target = frame.name;
 	document.body.appendChild(form);
 	form.submit();
-	window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
+	if (!do_not_show_info_message)
+		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
 	setTimeout(function() {
 		if (window.closing || !document || !document.body) return;
 		document.body.removeChild(form);
