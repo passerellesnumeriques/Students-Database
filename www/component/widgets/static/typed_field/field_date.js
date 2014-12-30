@@ -19,13 +19,13 @@ function field_date(data,editable,config) {
 	typed_field.call(this, data, editable, config);
 	
 	var t=this;
-	this._registerDataModelDataDisplay = this.registerDataModelDataDisplay;
+	this._registerDataModelDataDisplay = typed_field.prototype.registerDataModelDataDisplay;
 	this.registerDataModelDataDisplay = function(data_display, data_key) {
-		this.registerDataModelDataDisplay(data_display, data_key);
+		this._registerDataModelDataDisplay(data_display, data_key);
 		if (data_display.cell)
 			this._registerCell(data_display.cell.table,data_display.cell.column,data_key);
 	};
-	this._registerDataModelCell = this.registerDataModelCell;
+	this._registerDataModelCell = typed_field.prototype.registerDataModelCell;
 	this.registerDataModelCell = function(table, column, row_key) {
 		this._registerDataModelCell(table,column,row_key);
 		this._registerCell(table,column,row_key);
