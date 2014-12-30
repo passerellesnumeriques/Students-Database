@@ -1,7 +1,7 @@
 <?php 
 require_once("component/selection/page/SelectionPage.inc");
 class page_exam_results extends SelectionPage {
-	public function getRequiredRights() { return array(); }
+	public function getRequiredRights() { return array("can_access_selection_data"); }
 	public function executeSelectionPage(){
 		theme::css($this, "section.css");
 		$this->requireJavascript("jquery.min.js");
@@ -27,11 +27,17 @@ class page_exam_results extends SelectionPage {
 <!-- main structure of the exam results page -->
 <div style="width:100%;height:100%;display:flex;flex-direction:column">
 	<div class="page_title" style="flex:none">
+		<div style='float:right;font-size:10pt;'>
 		<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
-		<button class='action red' style='float:right' onclick='resetAll();'>
+		<button class='action red' onclick='resetAll();'>
 			Reset all results
-		</button>
+		</button><br/>
 		<?php } ?>
+		<button class='action' onclick='exportResults(this);'>
+			<img src='/static/excel/excel_16.png'/>
+			Export results for analysis
+		</button>
+		</div>
 		<img src='/static/transcripts/transcript_32.png'/>
 		Written Exam Results
 	</div>
@@ -205,7 +211,7 @@ function updateApplicantsList() {
 		setTimeout(function() { updateApplicantsList(); },10);
 		return;
 	}
-	window.dl.resetFilters();
+	window.dl.resetFilters(true);
 	window.dl.addFilter({category:"Selection",name:"Exam Session",force:true,data:{values:[selected["session_id"]]}});
 	window.dl.addFilter({category:"Selection",name:"Exam Center Room",force:true,data:{values:[selected["room_id"]]}});
 	window.dl.reloadData();
@@ -270,6 +276,41 @@ function resetAll() {
 		});
 		p.addCancelButton();
 		p.show();
+	});
+}
+
+function launchExport(all) {
+	var locker = lock_screen();
+	set_lock_screen_content_progress(locker, 100, "Generating Excel file...", null, function(span, pb, sub) {
+		service.json("application","create_temp_data",{value:'0'},function(res) {
+			var temp_data_id = res.id;
+			service.json("selection","exam/export_results",{progress_id:temp_data_id,all:all},function(res) {
+			});
+			var refresh = function() {
+				service.json("application","get_temp_data",{id:temp_data_id},function(res) {
+					if (res.value == 'done' || res.value === null || isNaN(parseInt(res.value))) {
+						unlock_screen(locker);
+						return;
+					}
+					pb.setPosition(parseInt(res.value));
+					refresh();
+				});
+			};
+			refresh();
+		});
+	});
+}
+
+function exportResults(button) {
+	require("context_menu.js",function() {
+		var menu = new context_menu();
+		menu.addIconItem(null, "All results, including applicants who cheated or partially attended", function() {
+			launchExport(true);
+		});
+		menu.addIconItem(null, "Only results from applicants who fully attended and didn't cheat", function() {
+			launchExport(false);
+		});
+		menu.showBelowElement(button);
 	});
 }
 
