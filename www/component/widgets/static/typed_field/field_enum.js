@@ -166,8 +166,8 @@ field_enum.prototype._create = function(data) {
 						t.element.removeChild(o.sel);
 						t.element.style.width = "100%";
 						select.style.width = "100%";
-						select.style.minWidth = (o.w+27)+"px";
-						cache.w = o.w+27;
+						select.style.minWidth = (o.w)+"px";
+						cache.w = o.w;
 						for (var i = 0; i < cache.onavail.length; ++i)
 							cache.onavail[i]();
 						cache.onavail = null;
