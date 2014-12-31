@@ -633,11 +633,18 @@ function organization(container, org, existing_types, can_edit) {
 											var last_matching_division = -1;
 											for (var division_index = 0; division_index < country_data.length; division_index++) {
 												// get the sub areas containing the position
-												sub_areas = window.top.geography.searchAreasByCoordinates(country_data, division_index, a.lat, a.lng, parents_ids);
-												// add sub areas having no coordinates
-												for (var i = 0; i < country_data[division_index].areas.length; ++i)
-													if (!country_data[division_index].areas[i].north && (parents_ids == null || parents_ids.indexOf(country_data[division_index].areas[i].area_parent_id)>=0))
-														sub_areas.push(country_data[division_index].areas[i]);
+												var sub_areas = window.top.geography.searchAreasByCoordinates(country_data, division_index, a.lat, a.lng, parents_ids);
+												if (sub_areas.length == 0) {
+													// nothing match the coordinates, let's take all
+													for (var i = 0; i < country_data[division_index].areas.length; ++i)
+														if (parents_ids == null || parents_ids.indexOf(country_data[division_index].areas[i].area_parent_id)>=0)
+															sub_areas.push(country_data[division_index].areas[i]);
+												} else {
+													// add sub areas having no coordinates
+													for (var i = 0; i < country_data[division_index].areas.length; ++i)
+														if (!country_data[division_index].areas[i].north && (parents_ids == null || parents_ids.indexOf(country_data[division_index].areas[i].area_parent_id)>=0))
+															sub_areas.push(country_data[division_index].areas[i]);
+												}
 												// check if we have those sub areas in the components
 												var matching = [];
 												for (var i = components.length-1; i >= 0; --i) {

@@ -45,6 +45,9 @@ for ($i = 0; $i < count($divisions); $i++) {
 			$divisions[$i]["areas"][$j]["west"] = floatval($divisions[$i]["areas"][$j]["west"]);
 			$divisions[$i]["areas"][$j]["east"] = floatval($divisions[$i]["areas"][$j]["east"]);
 		}
+		$divisions[$i]["areas"][$j]["area_id"] = intval($divisions[$i]["areas"][$j]["area_id"]);
+		if ($divisions[$i]["areas"][$j]["area_parent_id"] <> null)
+			$divisions[$i]["areas"][$j]["area_parent_id"] = intval($divisions[$i]["areas"][$j]["area_parent_id"]);
 	}
 }
 echo json_encode($divisions);
