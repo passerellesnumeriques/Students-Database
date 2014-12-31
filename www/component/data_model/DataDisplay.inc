@@ -1039,8 +1039,8 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		foreach ($steps as $step) {
 			$next = $this->nextTable($current_table, $step, $sub_model);
 			$current_table = $next[0];
-			if ($next[1]->multiple) {
-				// the column indicates we can have multiple values
+			if ($next[3] && $next[1]->multiple) {
+				// the column indicates we can have multiple values, and we are on a reverse join
 				// check if we have a condition that make it not multiple anymore
 				if ($next[2] == null) {
 					// no condition => this is multiple
@@ -1092,11 +1092,11 @@ class ReadOnlyDataDisplay extends DataDisplay {
 			$table = \DataModel::get()->internalGetTable(substr($step, 0, $i));
 			$fk_name = substr($step,$i+1);
 			$fk = $table->internalGetColumnFor($fk_name, $sub_model);
-			return array($table, $fk, $condition);
+			return array($table, $fk, $condition, true);
 		}
 		// this is a normal join
 		$col = $current_table->internalGetColumnFor($step, $sub_model);
-		return array(\DataModel::get()->internalGetTable($col->foreign_table), $col, $condition);
+		return array(\DataModel::get()->internalGetTable($col->foreign_table), $col, $condition, false);
 	}
 	
 	public function getTypedField($sub_model) {
