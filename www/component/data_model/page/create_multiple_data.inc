@@ -100,8 +100,8 @@ function datachanged(field) {
 
 function addColumnActions(col) {
 	var needFieldInfo = function() {
-		if (typeof window[col.field_type].prototype.helpFillMultipleItems != 'undefined') {
-			var f = new window[col.field_type](col.attached_data.new_data,true,col.field_args);
+		var f = new window[col.field_type](col.attached_data.new_data,true,col.field_args);
+		if (typeof f.helpFillMultipleItems == 'function') {
 			var helper = f.helpFillMultipleItems();
 			col.addAction(new GridColumnAction('set_all',theme.icons_10.pen,function(ev,action,col) {
 				require("mini_popup.js",function() {
