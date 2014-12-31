@@ -350,10 +350,12 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 			table.appendChild(tbody);
 			var tr_title = document.createElement("TR"); tbody.appendChild(tr_title);
 			var td = document.createElement("TD"); tr_title.appendChild(td);
+			td.style.fontWeight = "bold";
 			td.appendChild(document.createTextNode(field.data.name));
 			for (var i = 0; i < field.data.sub_data.names.length; ++i) {
 				if (!field.data.sub_data.editable_for_new[i]) continue;
 				td = document.createElement("TD"); tr_title.appendChild(td);
+				td.style.textAlign = "center";
 				td.appendChild(document.createTextNode(field.data.sub_data.names[i]));
 			}
 			var rows = [];

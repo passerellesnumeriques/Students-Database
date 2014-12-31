@@ -21,6 +21,7 @@ field_addresses.prototype._create = function(data) {
 		else
 			this._createReadOnlyTogether(data);
 	} else {
+		this.element.style.height = "100%";
 		if (this.editable)
 			this.element.onclick = function(event) { stopEventPropagation(event); return false; };
 		if (this.config.sub_data_index == 0) {
@@ -135,7 +136,6 @@ field_addresses.prototype._createEditableAddressType = function(data) {
 				});
 			};
 		}
-		this.element.style.marginBottom = "13px"; // compensate the add button on other fields
 		return data;
 	};
 	this._setData(data);

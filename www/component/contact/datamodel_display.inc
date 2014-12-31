@@ -12,6 +12,8 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		parent::__construct($display_name, $joining_key_name, "contact", null);
 		$this->type = $type;
 	}
+	
+	public function getType() { return $this->type; }
 
 	public function getTypedField($sub_model) {
 		return array("field_contact_type","{type:'".$this->type."'}");
@@ -147,7 +149,27 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		return "";
 	}
 	
+	public function getSubDataDisplay() { return new ContactSubDataDisplay($this); }
+	
 }
+
+class ContactSubDataDisplay extends datamodel\SubDataDisplay {
+
+	public function getDisplayNames() {
+		return array("Type","Contact");
+	}
+
+	public function isEditable($index) { return true; }
+
+	public function exportValueNumber($value, $sub_model, $index, $number) {
+		$contact = $value->contacts[$number];
+		if ($index == 0)
+			return $contact->sub_type;
+		return $contact->contact;
+	}
+
+}
+
 
 class AddressDataDisplay extends datamodel\JoiningTableDataDisplay {
 
