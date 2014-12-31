@@ -4,6 +4,16 @@ if (typeof require != 'undefined') {
 if (typeof theme != 'undefined')
 	theme.css("frame_header.css");
 
+/**
+ * Used by frame_header to store information about an item of the menu
+ * @param {String} id identifier
+ * @param {String|null} icon URL of the icon
+ * @param {String} text text
+ * @param {String} link URL of the page
+ * @param {String} tooltip_content HTML code to display in a tooltip when the mouse is over the item
+ * @param {String} start_url helps to detect on which menu item the current page belongs to
+ * @param {Boolean} button_type if true, the item looks like a button
+ */
 function frame_header_menu_item(id, icon, text, link, tooltip_content, start_url, button_type) {
 	this.id = id;
 	this.link = document.createElement("A");
@@ -22,6 +32,15 @@ function frame_header_menu_item(id, icon, text, link, tooltip_content, start_url
 	tooltip(this.link, tooltip_content);
 }
 
+/**
+ * A Frame header is a header bar on top of an IFRAME, the header bar containing a menu to navigate among pages in the IFRAME.
+ * Optionnaly, a footer can be also displayed below the IFRAME.
+ * @param {Element} container where to put it
+ * @param {String} frame_name name to give to the IFRAME
+ * @param {Number} header_height height of the header bar
+ * @param {String} css class name
+ * @param {String} menu_valign how to align menu items (top,bottom,middle)
+ */
 function frame_header(container, frame_name, header_height, css, menu_valign) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (!css) css = "white";
@@ -31,6 +50,10 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 	var t=this;
 	t.container = container;
 	
+	/** Set an icon and a title in the header
+	 * @param {String|null} icon URL of the icon
+	 * @param {String} title text
+	 */
 	t.setTitle = function(icon, title) {
 		if (!icon && !title) {
 			if (t.header_title) {
@@ -62,6 +85,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			layout.changed(t.header);
 		}
 	};
+	/** Add a footer section below the IFRAME */
 	t.addFooter = function() {
 		if (t.footer) return t.footer;
 		t.footer = document.createElement("DIV");
@@ -71,7 +95,17 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		return t.footer;
 	};
 
+	/** List of items */
 	t._menu_items = [];
+	/** Add an item in the menu
+	 * @param {String} id identifier
+	 * @param {String|null} icon URL of the icon
+	 * @param {String} text text
+	 * @param {String} link URL of the page
+	 * @param {String} tooltip HTML code to display in a tooltip when the mouse is over the item
+	 * @param {String} start_url helps to detect on which menu item the current page belongs to
+	 * @param {Boolean} button_type if true, the item looks like a button
+	 */
 	t.addMenu = function(id, icon, text, link, tooltip, start_url, button_type) {
 		var item = new frame_header_menu_item(id, icon, text, link, tooltip, start_url, button_type);
 		item.link.target = t.frame.name;
@@ -84,7 +118,14 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		}
 		return item;
 	};
+	/** Get the list of items
+	 * @returns {Array} list of frame_header_menu_item
+	 */
 	t.getMenuItems = function() { return t._menu_items; };
+	/** Add a custom HTML element in the menu
+	 * @param {Element|String} control the element, or the HTML code, to add in the menu
+	 * @param {String|null} tooltip_content HTML code to display in a tooltip when the mouse is over the control
+	 */
 	t.addMenuControl = function(control, tooltip_content) {
 		if (typeof control == 'string') {
 			var div = document.createElement("DIV");
@@ -100,7 +141,11 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			t.header_menu.appendChild(control);
 		}
 	};
-	
+	/**
+	 * Add a custom HTML element on the left of the menu
+	 * @param {Element|String} control the element, or the HTML code, to add on the left
+	 * @param {String|null} tooltip_content HTML code to display in a tooltip when the mouse is over the control
+	 */
 	t.addLeftControl = function(control, tooltip_content) {
 		if (typeof control == 'string') {
 			var div = document.createElement("DIV");
@@ -127,6 +172,11 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		t.header_left.appendChild(control);
 		layout.changed(t.header);
 	};
+	/**
+	 * Add a custom HTML element on the right of the menu
+	 * @param {Element|String} control the element, or the HTML code, to add on the right
+	 * @param {String|null} tooltip_content HTML code to display in a tooltip when the mouse is over the control
+	 */
 	t.addRightControl = function(control, tooltip_content) {
 		if (typeof control == 'string') {
 			var div = document.createElement("DIV");
@@ -146,7 +196,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			t.header_right.insertBefore(control, t.header_right.childNodes[0]);
 		layout.changed(t.header);
 	};
-	
+	/** Remove content of the menu */
 	t.resetMenu = function() {
 		if (t.header_menu.widget)
 			t.header_menu.widget.removeAll();
@@ -155,6 +205,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			t.header_menu.removeAllChildren();
 		}
 	};
+	/** Remove controls on the left of the menu */
 	t.resetLeftControls = function() {
 		if (!t.header_left) return;
 		if (t.header_left._valign) t.header_left._valign.remove();
@@ -162,18 +213,21 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		t.header_left = null;
 		layout.changed(t.header);
 	};
+	/** Remove controls on the right of the menu */
 	t.resetRightControls = function() {
 		if (!t.header_right) return;
 		t.header.removeChild(t.header_right);
 		t.header_right = null;
 		layout.changed(t.header);
 	};
+	/** Remove content of the menu, as well as controls on its left and on its right */
 	t.resetHeader = function() {
 		t.resetLeftControls();
 		t.resetRightControls();
 		t.resetMenu();
 	};
 	
+	/** Creation of the screen */
 	t._init = function() {
 		container.style.display = "flex";
 		container.style.flexDirection = "column";
@@ -202,7 +256,7 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 		// frame
 		t.frame = document.createElement("IFRAME");
 		t.frame.style.flex = "1 1 auto";
-		t.frame.onload = function() { t.frame_load(); };
+		t.frame.onload = function() { t.frameLoaded(); };
 		if (!frame_name) frame_name = container.id+"_content"; 
 		t.frame.name = frame_name;
 		t.frame.id = frame_name;
@@ -241,10 +295,12 @@ function frame_header(container, frame_name, header_height, css, menu_valign) {
 			new horizontal_menu(t.header_menu, menu_valign);
 		});
 	};
-	t.frame_unload = function() {
+	/** Called when the frame is unloaded */
+	t.frameUnloaded = function() {
 	};
-	t.frame_load = function() {
-		listenEvent(getIFrameWindow(t.frame),'unload',function() { if(t) t.frame_unload(); });
+	/** Called when a page is loaded in the frame */
+	t.frameLoaded = function() {
+		listenEvent(getIFrameWindow(t.frame),'unload',function() { if(t) t.frameUnloaded(); });
 		var url = new URL(getIFrameWindow(t.frame).location.href);
 		for (var i = 0; i < t._menu_items.length; ++i) {
 			var item = t._menu_items[i];

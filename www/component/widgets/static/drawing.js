@@ -1,5 +1,6 @@
 /** Represents a 2D point
- * @constructor
+ * @param {Number} x horizontal position
+ * @param {Number} y vertical position
  */
 function Point2D(x,y) {
 	this.x = x;
@@ -26,14 +27,14 @@ function Point2D(x,y) {
 /**
  * Represent a 2D line
  * @constructor
- * @param {Point2D} pt1
- * @param {Point2D} pt2
+ * @param {Point2D} pt1 the starting point of the line
+ * @param {Point2D} pt2 the ending point of the line
  */
 function Line2D(pt1,pt2) {
 	this.pt1 = pt1;
 	this.pt2 = pt2;
 
-	/** @method Line2D#getEquation
+	/** Get the 3 components of the equation defining this line
 	 * @returns {Array} the 3 components of the equation defining this line
 	 */
 	this.getEquation = function() {
@@ -53,8 +54,8 @@ function Line2D(pt1,pt2) {
 		return equation;
 	};
 	/**
-	 * @method Line2D#getDistanceSquared
-	 * @param {Point2D} pt
+	 * Get the distance squared between the given point and this line
+	 * @param {Point2D} pt the point
 	 * @returns {Number} the square of the distance between this line and the given point
 	 */
 	this.getDistanceSquared = function(pt) {
@@ -66,8 +67,8 @@ function Line2D(pt1,pt2) {
 		  return pt.getDistanceSquared(new Point2D(this.pt1.x + t * (this.pt2.x - this.pt1.x), this.pt1.y + t * (this.pt2.y - this.pt1.y)));
 	};
 	/**
-	 * @method Line2D#getDistance
-	 * @param {Point2D} pt
+	 * Get the distance between this line and the given point
+	 * @param {Point2D} pt the point
 	 * @returns {Number} the distance between this line and the given point
 	 */
 	this.getDistance = function(pt) {
@@ -80,12 +81,13 @@ function Line2D(pt1,pt2) {
 	};
 }
 
-/** Drawing functionalities
- * @namespace
- */
+/** Drawing functionalities */
 drawing = {
+	/** No connector */
 	CONNECTOR_NONE: 0,
+	/** Arrow connector */
 	CONNECTOR_ARROW: 1,
+	/** Circle connector */
 	CONNECTOR_CIRCLE: 2,
 		
 	/** Draw a line on the given canvas between the 2 given points
@@ -94,7 +96,8 @@ drawing = {
 	 * @param {Point2D} to ending point
 	 * @param {Number} from_type type of connector for the starting point (one of the CONNECTOR_* constants)
 	 * @param {Number} to_type type of connector for the ending point (one of the CONNECTOR_* constants)
-	 * @param {String} style CSS style of the connector (accepted values are the ones of <a href='http://www.w3schools.com/tags/canvas_strokestyle.asp'>strokeStyle</a>) 
+	 * @param {String} color CSS color to use
+	 * @param {Number} width width of the line  
 	 */
 	connect: function(ctx, from, to, from_type, to_type, color, width) {
 		ctx.strokeStyle = color;
@@ -110,7 +113,9 @@ drawing = {
 	 * @param {Object} ctx the 2d context of the canvas to draw on
 	 * @param {Point2D} pt position of the connector
 	 * @param {Point2D} origin where the connection comes from to be able to orientate the drawing correctly
-	 * @param {String} style CSS style of the connector (accepted values are the ones of <a href='http://www.w3schools.com/tags/canvas_strokestyle.asp'>strokeStyle</a>) 
+	 * @param {Number} type type of connector: CONNECTOR_NONE, or CONNECTOR_ARROW, or CONNECTOR_CIRCLE
+	 * @param {String} color CSS color to use
+	 * @param {Number} width width of the lines when drawing 
 	 */
 	drawConnector: function(ctx, pt, origin, type, color, width) {
 		switch (type) {
@@ -144,7 +149,8 @@ drawing = {
 	 * @param {Element} to destination
 	 * @param {Number} from_type type of connector for the starting point (one of the CONNECTOR_* constants)
 	 * @param {Number} to_type type of connector for the ending point (one of the CONNECTOR_* constants)
-	 * @param {String} style CSS style of the connector (accepted values are the ones of <a href='http://www.w3schools.com/tags/canvas_strokestyle.asp'>strokeStyle</a>) 
+	 * @param {String} color CSS color
+	 * @param {Number} width width of lines 
 	 * @param {String} force 'horiz' to force connecting elements horizontally, or 'vert' to force vertical connection, or null to let decide 
 	 */
 	connectElements: function(from, to, from_type, to_type, color, width, force) {
@@ -239,112 +245,6 @@ drawing = {
 		layout.listenElementSizeChanged(parent,refresher);
 		layout.listenInnerElementsChanged(parent,refresher);
 		return canvas;
-	},
-		
-		
-	/**
-	 * Draw a line between two HTML elements: from the middle of the right edge of e1, to the middle of the left edge of e2.
-	 * It does not use HTML 5 canvas, but only a table, so it is compatible with any browser including old ones. 
-	 * @param e1
-	 * @param e2
-	 */
-	horizontal_connector: function(e1,e2) {
-		if (typeof e1 == 'string') e1 = document.getElementById(e1);
-		if (typeof e2 == 'string') e2 = document.getElementById(e2);
-		var parent = getAbsoluteParent(e1);
-		var conn = document.createElement("CANVAS");
-		conn.style.position = 'absolute';
-		parent.appendChild(conn);
-		var refresh = function() {
-			var x1 = absoluteLeft(e1, parent)+e1.offsetWidth;
-			var y1 = absoluteTop(e1, parent)+e1.offsetHeight/2;
-			var x2 = absoluteLeft(e2, parent);
-			var y2 = absoluteTop(e2, parent)+e2.offsetHeight/2;
-			var start_y = y1, end_y = y2;
-			if (y1 > y2) { var y = y1; y1 = y2; y2 = y; }
-			conn.style.top = y1+"px";
-			conn.style.left = x1+"px";
-			conn.style.width = (x2-x1+1)+"px";
-			conn.style.height = (y2-y1+1)+"px";
-			conn.width = (x2-x1+1);
-			conn.height = (y2-y1+1);
-			var ctx = conn.getContext("2d");
-			ctx.beginPath();
-			if (start_y < end_y) {
-				ctx.moveTo(0,0);
-				ctx.lineTo(x2-x1,y2-y1);
-			} else if (start_y == end_y) {
-				ctx.moveTo(0,0);
-				ctx.lineTo(x2-x1,0);
-			} else {
-				ctx.moveTo(0,y2-y1);
-				ctx.lineTo(x2-x1,0);
-			}
-			ctx.stroke();
-		};
-		refresh();
-		var refresh_timeout = null;
-		var refresher = function() {
-			if (refresh_timeout) return;
-			refresh_timeout = setTimeout(function() {
-				update();
-				refresh_timeout = null;
-			},1);
-		};
-		layout.listenElementSizeChanged(parent,refresher);
-		layout.listenInnerElementsChanged(parent,refresher);
 	}
-//	horizontal_connector: function(e1,e2) {
-//		if (typeof e1 == 'string') e1 = document.getElementById(e1);
-//		if (typeof e2 == 'string') e2 = document.getElementById(e2);
-//		var parent = getAbsoluteParent(e1);
-//		var conn = document.createElement("DIV");
-//		var table = document.createElement("TABLE"); conn.appendChild(table);
-//		table.style.borderCollapse = 'collapse';
-//		table.style.borderSpacing = "0px";
-//		table.appendChild(table = document.createElement("TBODY"));
-//		conn.style.position = 'absolute';
-//		parent.appendChild(conn);
-//		var refresh = function() {
-//			var x1 = absoluteLeft(e1, parent)+e1.offsetWidth;
-//			var y1 = absoluteTop(e1, parent)+e1.offsetHeight/2;
-//			var x2 = absoluteLeft(e2, parent);
-//			var y2 = absoluteTop(e2, parent)+e2.offsetHeight/2;
-//			var start_y = y1, end_y = y2;
-//			if (y1 > y2) { var y = y1; y1 = y2; y2 = y; }
-//			conn.style.top = y1+"px";
-//			conn.style.left = x1+"px";
-//			conn.style.width = (x2-x1+1)+"px";
-//			conn.style.height = (y2-y1+1)+"px";
-//			while (table.childNodes.length > 0) table.removeChild(table.childNodes[0]);
-//			var line = new Line2D(new Point2D(x1,start_y),new Point2D(x2,end_y));
-//			for (var y = 0; y < y2-y1+1; y++) {
-//				var tr = document.createElement("TR"); table.appendChild(tr);
-//				tr.style.height = "1px";
-//				for (var x = 0; x < x2-x1+1; x++) {
-//					var td = document.createElement("TD"); tr.appendChild(td);
-//					td.style.width = "1px";
-//					var dist = line.getDistance(new Point2D(x1+x,y1+y));
-//					td.style.padding = "0px";
-//					td.data = dist;
-//					var col = 256;
-//					if (dist < 0.25)
-//						col = 0;
-//					else if (dist < 1)
-//						col = Math.floor(255*(dist));
-//					if (col < 256)
-//						td.style.backgroundColor = "rgb("+col+","+col+","+col+")";
-//				}
-//			}
-//		};
-//		refresh();
-//		var refresh_timeout = null;
-//		layout.addHandler(parent,function() {
-//			if (refresh_timeout) return;
-//			refresh_timeout = setTimeout(function() {
-//				refresh();
-//				refresh_timeout = null;
-//			},1);
-//		});
-//	}
+		
 };

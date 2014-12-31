@@ -5,11 +5,21 @@ if (typeof require != 'undefined') {
 if (typeof theme != 'undefined')
 	theme.css("header_bar.css");
 
+/**
+ * Header bar with a title, and some controls
+ * @param {Element} container where to put it
+ * @param {String} style CSS class
+ */
 function header_bar(container, style) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	container.className = "header_bar"+(style ? "_"+style : "");
 	var t=this;
 	
+	/**
+	 * Set a title
+	 * @param {String|null} icon URL of the icon
+	 * @param {String} text text
+	 */
 	this.setTitle = function(icon, text) {
 		this.title.removeAllChildren();
 		if (icon) {
@@ -22,6 +32,10 @@ function header_bar(container, style) {
 		layout.changed(container);
 	};
 	
+	/**
+	 * Set a custom title
+	 * @param {String|Element} html HTML to use as title
+	 */
 	this.setTitleHTML = function(html) {
 		if (typeof html == 'string')
 			this.title.innerHTML = html;
@@ -32,6 +46,10 @@ function header_bar(container, style) {
 		layout.changed(container);
 	};
 	
+	/**
+	 * Add something in the header
+	 * @param {Element|String} html HTML to put in the header
+	 */
 	this.addMenuItem = function(html) {
 		if (!t.menu) { setTimeout(function(){t.addMenuItem(html);},10); return; }
 		if (typeof html == 'string') {
@@ -42,9 +60,15 @@ function header_bar(container, style) {
 		}
 		t.menu.addItem(html);
 	};
+	/**
+	 * Add a button in the menu
+	 * @param {String|null} icon URL of the icon
+	 * @param {String} text text of the button
+	 * @param {Function} onclick called when the button is clicked
+	 */
 	this.addMenuButton = function(icon, text, onclick) {
 		var button = document.createElement("BUTTON");
-		button.className = "button_verysoft";
+		button.className = "flat";
 		if (icon) {
 			var img = document.createElement("IMG");
 			img.src = icon;
@@ -55,11 +79,13 @@ function header_bar(container, style) {
 		button.onclick = onclick;
 		this.addMenuItem(button);
 	};
+	/** Remove everything in the menu */
 	this.resetMenu = function() {
 		if (t.menu)
 			t.menu.removeAll();
 	};
 	
+	/** Creation of the screen */
 	t._init = function() {
 		container.style.display = "flex";
 		container.style.flexDirection = "row";

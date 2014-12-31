@@ -1,8 +1,16 @@
+/**
+ * Display arrows on the left and right side if scrolling is available
+ * @param {Element} container the element to be scrolled
+ * @param {String} bgcolor background color
+ * @param {String} color foregroung color
+ * @param {Number} arrow_width width of the left and right arrows
+ */
 function horizontal_scrolling(container, bgcolor, color, arrow_width) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (!arrow_width) arrow_width = 7;
 	var t=this;
 
+	/** DIV used for the scrolling */ 
 	this.element = document.createElement("DIV");
 	while (container.childNodes.length > 0) this.element.appendChild(container.childNodes[0]);
 	
@@ -10,6 +18,7 @@ function horizontal_scrolling(container, bgcolor, color, arrow_width) {
 	container.style.flexDirection = "row";
 	container.style.position = "relative";
 	container.style.overflow = "hidden";
+	/** DIV containing the left arrow */
 	this.scroll_left = document.createElement("DIV");
 	this.scroll_left.style.display = "none";
 	this.scroll_left.style.flex = "none";
@@ -27,6 +36,7 @@ function horizontal_scrolling(container, bgcolor, color, arrow_width) {
 	this.element.style.zIndex = 0;
 	this.element.style.whiteSpace = "nowrap";
 	container.appendChild(this.element);
+	/** DIV containing the right arrow */
 	this.scroll_right = document.createElement("DIV");
 	this.scroll_right.style.display = "none";
 	this.scroll_right.style.flex = "none";
@@ -41,24 +51,31 @@ function horizontal_scrolling(container, bgcolor, color, arrow_width) {
 	this.scroll_right.style.right = "0px";
 	container.appendChild(this.scroll_right);
 	
+	/** DIV representing the left arrow */
 	this.arrow_left = document.createElement("DIV");
 	this.arrow_left.style.borderRight = arrow_width+"px solid "+color;
 	this.scroll_left.appendChild(this.arrow_left);
 
+	/** DIV representing the right arrow */
 	this.arrow_right = document.createElement("DIV");
 	this.arrow_right.style.borderLeft = arrow_width+"px solid "+color;
 	this.scroll_right.appendChild(this.arrow_right);
 	
+	/** Indicates if we are scrolling left or right */
 	this._scrolling_way = 0;
+	/** Interval used when an arrow is pressed */
 	this._scrolling_interval = null;
+	/** Called when an arrow is pressed */
 	this.startScrolling = function() {
 		this._scrolling_interval = setInterval(function() { t.doScrolling(); }, 10);
 	};
+	/** Called when an arrow is released */
 	this.stopScrolling = function() {
 		if (!this._scrolling_interval) return;
 		clearInterval(this._scrolling_interval);
 		this._scrolling_interval = null;
 	};
+	/** Scrolls while an arrow is pressed */
 	this.doScrolling = function() {
 		var scroll = t._scrolling_way;
 		if (t._scrolling_way < 0 && container.scrollLeft + scroll < 0)
@@ -93,6 +110,7 @@ function horizontal_scrolling(container, bgcolor, color, arrow_width) {
 		t.stopScrolling();
 	};
 	
+	/** Called by the layout */
 	this.layout = function() {
 		if (this.element.scrollWidth > this.element.clientWidth) {
 			// scrolling
