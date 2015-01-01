@@ -5,6 +5,10 @@ class page_popup_create_people_step_entry extends Page {
 	
 	public function execute() {
 		$input = json_decode($_POST["input"], true);
+
+		$root_table = @$input["root_table"];
+		if ($root_table == null) $root_table = "People";
+		$sub_model = @$input["sub_model"];
 		
 		if (isset($input["multiple"]) && $input["multiple"] == "true") {
 			require_once("component/data_model/page/create_multiple_data.inc");
@@ -14,10 +18,6 @@ class page_popup_create_people_step_entry extends Page {
 			$prefilled_data = $input["prefilled_data"];
 			$precreated = $input["precreated"];
 			
-			$root_table = @$input["root_table"];
-			if ($root_table == null) $root_table = "People";
-			$sub_model = @$input["sub_model"];
-				
 			createMultipleDataPage($this, $root_table, $sub_model, @$input["sub_models"], $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data, $precreated);
 			?>
 			<script type='text/javascript'>
@@ -144,7 +144,7 @@ class page_popup_create_people_step_entry extends Page {
 				}
 			}
 			
-			$structure_name = createDataPage($this, "People", null, @$input["sub_models"], $values, $prefilled_values);
+			$structure_name = createDataPage($this, $root_table, $sub_model, @$input["sub_models"], $values, $prefilled_values);
 			?>
 			<script type='text/javascript'>
 			var structure = <?php echo $structure_name;?>;

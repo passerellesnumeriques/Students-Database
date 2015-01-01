@@ -360,6 +360,10 @@ namespace datamodel {
 			if (count($children_after) > 0)
 				$this->createChildrenData($children_after, $multiple, $to_update, $path->sub_model);
 			
+			if ($key == null && $path->table->getPrimaryKey() <> null) {
+				$key = @$to_update->getValue($path->table->getName(), $path->sub_model, null, $path->table->getPrimaryKey()->name);
+			}
+			
 			return $key;
 		}
 		
