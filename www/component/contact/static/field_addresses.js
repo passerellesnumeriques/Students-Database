@@ -141,13 +141,14 @@ field_addresses.prototype._createEditableAddressType = function(data) {
 	this._setData(data);
 	
 	this.getNbData = function() {
-		return t._data.addresses.length;
+		return this._data.addresses.length;
 	};
 	this.resetData = function() {
-		t._data.addresses = [];
-		t.setData(t._data, true);
+		this._data.addresses = [];
+		t.setData(this._data, true);
 	};
 	this.addData = function(new_data) {
+		var t=this;
 		require("contact_objects.js", function() {
 			var address = new PostalAddress(-1, window.top.default_country_id, null, "", "", "", "", "", new_data);
 			t._data.addresses.push(address);
@@ -155,11 +156,11 @@ field_addresses.prototype._createEditableAddressType = function(data) {
 		});
 	};
 	this.getDataIndex = function(index) {
-		return t._data.addresses[index].address_type;
+		return this._data.addresses[index].address_type;
 	};
 	this.setDataIndex = function(index, new_data) {
-		t._data.addresses[index].address_type = new_data;
-		t.setData(t._data, true);
+		this._data.addresses[index].address_type = new_data;
+		this.setData(this._data, true);
 	};
 };
 /** create a read-only sub-field 'address type'

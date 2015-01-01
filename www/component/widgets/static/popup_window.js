@@ -105,7 +105,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param {String} html html to put inside the button 
 	 * @param {String} id id of the button, that can be used to refer it later on
 	 * @param {Function} onclick onclick event handler
-	 * @param {Object} onclick_param second parameter to give to onclick, the first one being the mouse event
+	 * @param {Object} onclick_param parameter to give to onclick
 	 */
 	t.addButton = function(html, id, onclick, onclick_param) {
 		var b = (t.popup ? t.popup.ownerDocument : document).createElement("BUTTON");
@@ -114,7 +114,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		else
 			b.appendChild(html);
 		b.id = id;
-		if (onclick_param)
+		if (typeof onclick_param != 'undefined')
 			b.onclick = function() { onclick(onclick_param); };
 		else
 			b.onclick = onclick;

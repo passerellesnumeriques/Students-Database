@@ -1978,7 +1978,7 @@ class SQLQuery {
 			} catch (Exception $ex) {
 				DataBaseLock::unlock($lock);
 				$name = $this->getColumnName($t, $field);
-				throw new Exception($name.": ".$ex->getMessage());
+				throw new Exception("Error in column $name of table ".$t->getName().": ".$ex->getMessage());
 			}
 		// check unicity and presence
 		foreach ($columns as $col) {

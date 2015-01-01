@@ -9,8 +9,11 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 	public function finalizeCreateData($key, $sub_model, &$table_fields, $come_from) {
 		// ensure to create ApplicantMoreInfo entry, even nothing is there yet
 		$cols = DataModel::get()->internalGetTable("ApplicantMoreInfo")->internalGetColumnsFor($sub_model);
-		if (count($cols) == 1)
-			$table_fields->addValue("ApplicantMoreInfo", $sub_model, $key, "people", $key);
+		if (count($cols) == 1) {
+			if ($key <> null) $k = $key;
+			else $k = $table_fields->getValue("Applicant", $sub_model, null, "people");
+			$table_fields->addValue("ApplicantMoreInfo", $sub_model, null, "people", $k);
+		}
 		// generate applicant ID if needed
 		if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id")) {
 			// put a zero so the AUTO_INCREMENT feature of the database will do it

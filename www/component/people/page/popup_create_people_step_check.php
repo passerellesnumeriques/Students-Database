@@ -6,6 +6,8 @@ class page_popup_create_people_step_check extends Page {
 	public function execute() {
 		$input = json_decode($_POST["input"], true);
 		$peoples = $input["peoples"];
+		$root_table = $input["root_table"];
+		$sub_model = $input["sub_model"];
 		$sub_models = @$input["sub_models"];
 		$multiple = isset($input["multiple"]);
 		$first_names = array();
@@ -119,6 +121,8 @@ class page_popup_create_people_step_check extends Page {
 			if (!popup.freezer) popup.freeze();
 			window.popup.removeButtons();
 			var data = {peoples:peoples};
+			data.root_table = <?php echo json_encode($root_table);?>;
+			data.sub_model = <?php echo json_encode($sub_model);?>;
 			data.sub_models = <?php echo json_encode($sub_models);?>;
 			<?php if ($multiple) echo "data.multiple = true;";?>
 			<?php 

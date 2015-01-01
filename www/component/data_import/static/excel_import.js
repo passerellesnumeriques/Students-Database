@@ -624,6 +624,7 @@ function excel_import(popup, container, onready) {
 				if (!found_values.contains(list[i].value))
 					found_values.push(list[i].value);
 			var div = document.createElement("DIV");
+			div.style.padding = "5px";
 			div.innerHTML = ""+found_values.length+" value(s) are ambiguous for field '"+grid.columns[col_index].title+"':";
 			var ul = document.createElement("UL");
 			div.appendChild(ul);

@@ -7,6 +7,8 @@ class page_popup_create_people_step_creation extends Page {
 		$input = json_decode($_POST["input"], true);
 		$peoples = $input["peoples"];
 		$sub_models = @$input["sub_models"];
+		$root_table = $input["root_table"];
+		$sub_model = $input["sub_model"];
 		$multiple = isset($input["multiple"]);
 		echo "<script type='text/javascript'>window.popup = window.parent.getPopupFromFrame(window);window.popup.disableClose();</script>";
 		if (count($peoples) == 0) {
@@ -85,7 +87,7 @@ function next(index, span, pb) {
 			msg += " ("+(index+1)+"/"+peoples.length+")";
 		span.removeAllChildren();
 		span.appendChild(document.createTextNode(msg));
-		var data = {root:"People",sub_model:null,sub_models:<?php echo json_encode($sub_models);?>,paths:p};
+		var data = {root:<?php echo json_encode($root_table);?>,sub_model:<?php echo json_encode($sub_model);?>,sub_models:<?php echo json_encode($sub_models);?>,paths:p};
 		<?php if ($multiple) echo "data.multiple = true;"; ?>
 		service.json("data_model","create_data",data,function(res) {
 			pb.addAmount(1);

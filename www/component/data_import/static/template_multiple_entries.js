@@ -46,6 +46,10 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 		var cfg = objectCopy(field.data.field_config,10);
 		if (typeof sub_index != 'undefined') cfg.sub_data_index = sub_index;
 		var f = new window[field.data.field_classname](objectCopy(field.data.new_data,10),true,cfg);
+		if (f instanceof typed_field_multiple) {
+			// multiple field, this is not what we want, so we will just let the user enter a text
+			f = new field_text(null,true,{});
+		}
 		var cont = document.createElement("DIV");
 		cont.style.display = "inline-block";
 		cont.appendChild(f.getHTMLElement());
@@ -573,7 +577,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 	this._init = function() {
 		require("typed_field.js");
 		var cats = [];
-		var js = [];
+		var js = ["field_text.js"];
 		for (var i = 0; i < fields.length; ++i) {
 			if (!cats.contains(fields[i].data.category))
 				cats.push(fields[i].data.category);

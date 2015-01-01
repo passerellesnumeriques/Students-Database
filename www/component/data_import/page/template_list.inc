@@ -126,6 +126,7 @@ function useTemplate(ev,id) {
 							w = getIFrameWindow(imp.frame_import);
 							var grid = w.grid;
 							var errors = [];
+							var fixed_values = [];
 							var next = function(i) {
 								if (i >= temp.to_import.length) {
 									if (errors.length == 1)
@@ -140,12 +141,35 @@ function useTemplate(ev,id) {
 										}
 										errorDialogHTML(div);
 									}
+									for (i = 0; i < fixed_values.length; ++i) {
+										var e = fixed_values[i];
+										var col_id = e.path+"#"+e.data;
+										if (typeof e.sub_index != 'undefined') col_id += "#"+e.sub_index;
+										var field_index = grid.getColumnIndexById(col_id);
+										var nb = grid.getNbRows()-1;
+										for (var row = 0; row < nb; ++row) {
+											var f = grid.getCellField(row, field_index);
+											if (typeof e.index != 'undefined') {
+												if (f.getNbData() > e.index)
+													f.setDataIndex(e.index, e.value, true);
+											} else
+												f.setData(e.value, true);
+										}
+									}
 									ondone();
 									return;
 								}
 								var e = temp.to_import[i];
+								var col_id = e.path+"#"+e.data;
+								if (typeof e.sub_index != 'undefined') col_id += "#"+e.sub_index;
+								var field_index = grid.getColumnIndexById(col_id);
+								if (field_index < 1) {
+									errors.push("Data "+e.data+" cannot be imported because we cannot find the corresponding column in the data to import");
+									setTimeout(function(){next(i+1);},1);
+									return;
+								}
 								if (typeof e.value != 'undefined') {
-									// TODO
+									fixed_values.push(e);
 									setTimeout(function(){next(i+1);},1);
 									return;
 								}
@@ -169,14 +193,6 @@ function useTemplate(ev,id) {
 									return;
 								}
 								var range = {start_col:e.column,end_col:e.column,start_row:e.row_start,end_row:sheet.rows.length-1};
-								var col_id = e.path+"#"+e.data;
-								if (typeof e.sub_index != 'undefined') col_id += "#"+e.sub_index;
-								var field_index = grid.getColumnIndexById(col_id);
-								if (field_index < 1) {
-									errors.push("Data "+e.data+" cannot be imported because we cannot find the corresponding column in the data to import");
-									setTimeout(function(){next(i+1);},1);
-									return;
-								}
 								var where;
 								if (typeof e.index != 'undefined') {
 									if (typeof e.sub_index != 'undefined') {

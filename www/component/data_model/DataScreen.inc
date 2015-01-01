@@ -324,7 +324,6 @@ namespace datamodel {
 				}
 				$data->saveData($key, $val, $path->sub_model, $to_update, $come_from, $join);
 			}
-			$this->display->finalizeCreateData($key, $path->sub_model, $to_update, $come_from);
 			
 			// check if we are on a table joining 2 tables => if we come from one side, we need first to create the other side so we can join
 			$children_before = array();
@@ -337,13 +336,20 @@ namespace datamodel {
 						array_push($children_after, $child);
 				}
 			} else {
-				foreach ($path->children as $child)
-					array_push($children_after, $child);
+				foreach ($path->children as $child) {
+					if (!$child->isReverse()) // the child is a direct join => we need to create it first
+						array_push($children_before, $child);
+					else
+						array_push($children_after, $child);
+				}
 			}
 
-			if (count($children_before) > 0)
+			if (count($children_before) > 0) {
 				$this->createChildrenData($children_before, $multiple, $to_update, $path->sub_model);
-			
+			}
+
+			$this->display->finalizeCreateData($key, $path->sub_model, $to_update, $come_from);
+
 			$keys = $to_update->execute(true);
 			if (isset($keys[$path->table->getName()][$path->sub_model][$key]))
 				$key = $keys[$path->table->getName()][$path->sub_model][$key];

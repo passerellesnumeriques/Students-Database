@@ -36,7 +36,7 @@ function field_contact_type(data,editable,config) {
 			div.appendChild(document.createTextNode("Contact Type: "));
 			helper.input = document.createElement("INPUT");
 			helper.input.size = 15;
-			helper.input.maxLength = 30;
+			helper.input.maxLength = 100;
 			div.appendChild(helper.input);
 			helper.input.onclick = function() {
 				require("contact_objects.js", function() {

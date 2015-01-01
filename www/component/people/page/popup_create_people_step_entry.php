@@ -91,6 +91,8 @@ class page_popup_create_people_step_entry extends Page {
 					}
 					popup.removeButtons();
 					var data = {peoples:peoples};
+					data.root_table = <?php echo json_encode($root_table);?>;
+					data.sub_model = <?php echo json_encode($sub_model);?>;
 					data.sub_models = <?php echo json_encode(@$input["sub_models"]);?>;
 					data.multiple = true;
 					<?php 
@@ -166,6 +168,8 @@ class page_popup_create_people_step_entry extends Page {
 				}
 				popup.removeButtons();
 				var data = {peoples:[people]};
+				data.root_table = <?php echo json_encode($root_table);?>;
+				data.sub_model = <?php echo json_encode($sub_model);?>;
 				data.sub_models = <?php echo json_encode(@$input["sub_models"]);?>;
 				<?php 
 				if (isset($input["ondone"])) echo "data.ondone = ".json_encode($input["ondone"]).";";
