@@ -20,7 +20,7 @@ Confirm password: <input type='password' name='password2'/>
 </form>
 </div>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.addOkCancelButtons(function() {
 	var form = document.forms['new_user'];
 	var type = getRadioValue(form,'type');

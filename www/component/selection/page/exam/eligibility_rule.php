@@ -135,7 +135,7 @@ foreach ($topics as $topic)
 new ValueRow();
 
 var changed = false;
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.onclose = function() {
 	if (changed) window.parent.location.reload();
 };

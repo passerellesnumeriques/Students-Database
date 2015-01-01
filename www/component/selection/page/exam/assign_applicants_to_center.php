@@ -76,7 +76,7 @@ class page_exam_assign_applicants_to_center extends SelectionPage {
 function assignApplicants() {
 	var center_id = document.getElementById('choice').value;
 	if (center_id == 0) { alert("Please select an exam center"); return; }
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze("Assigning applicant<?php if (count($applicants) > 1) echo "s"?>...");
 	var ids = <?php echo json_encode($applicants_ids);?>;
 	service.json("data_model","save_cells",{cells:[{table:'Applicant',sub_model:<?php echo $this->component->getCampaignId();?>,keys:ids,values:[{column:'exam_center',value:center_id}]}]},function(res) {
@@ -85,7 +85,7 @@ function assignApplicants() {
 	});
 }
 function unassignApplicants() {
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze("Unassigning applicant<?php if (count($applicants) > 1) echo "s"?>...");
 	var ids = <?php echo json_encode($applicants_ids);?>;
 	service.json("data_model","save_cells",{cells:[{table:'Applicant',sub_model:<?php echo $this->component->getCampaignId();?>,keys:ids,values:[{column:'exam_center',value:null}]}]},function(res) {

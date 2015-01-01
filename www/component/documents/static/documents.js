@@ -25,7 +25,7 @@ window.top.pndocuments = {
 				if (window.top.pndocuments.opener.version != window.top.pndocuments._opener_latest_version) {
 					window.top.pndocuments._connected_port = -1;
 					if (listener) listener(-1);
-					window.top.pndocuments.update_status = window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+					window.top.pndocuments.update_status = window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
 					return;
 				}
 				if (listener) setTimeout(function() {
@@ -55,7 +55,7 @@ window.top.pndocuments = {
 					if (window.top.pndocuments.opener.version != window.top.pndocuments._opener_latest_version) {
 						window.top.pndocuments._connected_port = -1;
 						if (listener) listener(-1);
-						window.top.pndocuments.update_status = window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
+						window.top.pndocuments.update_status = window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your version of PN Document Opener is outdated.<br/>Please <a href='#' onclick='window.top.pndocuments.updateOpener();'>update it</a>.",[{action:"close"}]));
 						return;
 					}
 					if (listener) setTimeout(function() {
@@ -100,7 +100,7 @@ window.top.pndocuments = {
 	opener: null,
 	_opener_script: null,
 	updateOpener: function() {
-		window.top.status_manager.remove_status(window.top.pndocuments.update_status);
+		window.top.status_manager.removeStatus(window.top.pndocuments.update_status);
 		window.top.pndocuments.opener.update(function() {
 			window.top.pndocuments.opener = null;
 			if (window.top.pndocuments._opener_script != null)
@@ -113,7 +113,7 @@ window.top.pndocuments = {
 							setTimeout(check, 2000);
 						return;
 					}
-					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"PN Document Opener successfully updated !",[{action:"close"}],10000));
+					window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"PN Document Opener successfully updated !",[{action:"close"}],10000));
 				});
 			};
 			setTimeout(check,2000);
@@ -153,7 +153,7 @@ window.top.pndocuments = {
 		};
 		upl.ondonefile = function(file, output, errors) {
 			if (output != "OK") {
-				window.top.status_manager.add_status(new window.top.StatusMessageError(null, output, 10000));
+				window.top.status_manager.addStatus(new window.top.StatusMessageError(null, output, 10000));
 				return;
 			}
 			service.json("documents","unlock?id="+doc.id,null,function(res){
@@ -185,7 +185,7 @@ window.top.pndocuments = {
 		window.top.document.body.appendChild(frame);
 		window.top.document.body.appendChild(form);
 		form.submit();
-		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The download will start soon...",[{action:"close"}],5000));
+		window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The download will start soon...",[{action:"close"}],5000));
 	},
 	open: function(document_id, version_id, storage_id, storage_revision, filename, readonly) {
 		var locker = lock_screen(null, "Opening document...");

@@ -103,7 +103,7 @@ function getAbsoluteParent(e) {
 }
 
 /** Get the coordinates of a frame relative to the top window
- * @param {window} frame the frame
+ * @param {Window} frame the frame
  * @returns {Object} contains x and y attributes
  */
 function getAbsoluteCoordinatesRelativeToWindowTop(frame) {

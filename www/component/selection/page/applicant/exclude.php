@@ -114,7 +114,7 @@ function exclude() {
 	var reason = document.getElementById('reason').value;
 	reason = reason.trim();
 	if (reason.length == 0) { alert("Please enter a reason"); return; }
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze("Excluding applicant<?php if (count($applicants) > 1) echo "s"?>...");
 	var ids = <?php echo json_encode($applicants_ids);?>;
 	service.json("data_model","save_cells",{

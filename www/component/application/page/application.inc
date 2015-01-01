@@ -111,7 +111,7 @@ if (!window.top.pingInterval) {
 					return false;
 				};
 				window.top.maintenance_coming_msg = new window.top.StatusMessage(window.top.Status_TYPE_WARNING,content,[{action:"close"}],10*60*1000);
-				window.top.status_manager.add_status(window.top.maintenance_coming_msg);
+				window.top.status_manager.addStatus(window.top.maintenance_coming_msg);
 				var update_timing = function() {
 					var span = window.top.document.getElementById('maintenance_timing');
 					if (!span) {
@@ -131,9 +131,9 @@ if (!window.top.pingInterval) {
 				};
 				update_timing();
 			} else if (!res.maintenance_coming && window.top.maintenance_coming_msg) {
-				window.top.status_manager.remove_status(window.top.maintenance_coming_msg);
+				window.top.status_manager.removeStatus(window.top.maintenance_coming_msg);
 				window.top.maintenance_coming_msg = null;
-				window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The maintenance has been cancelled. You won't be disconnected so you can continue to work...",[{action:"close"}],15*1000));
+				window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The maintenance has been cancelled. You won't be disconnected so you can continue to work...",[{action:"close"}],15*1000));
 			}
 		}, false, null, function() {
 			window.top.ping_time = -2;

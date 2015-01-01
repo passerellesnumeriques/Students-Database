@@ -88,7 +88,7 @@ function staff_info(&$page, $people_id, $container_id) {
 					popupFrame(null,"Remove Staff","/dynamic/people/page/remove_people_type?people="+t.people_id+"&type=staff&ontyperemoved=type_removed&onpeopleremoved=people_removed",null,null,null,function(frame,pop){
 						frame.people_removed = function() {
 							require("popup_window.js",function() {
-								get_popup_window_from_frame(window).close();
+								getPopupFromFrame(window).close();
 							});
 						};
 						frame.type_removed = function() { location.reload(); };

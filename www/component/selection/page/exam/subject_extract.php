@@ -80,7 +80,7 @@ class page_exam_subject_extract extends SelectionPage {
 		<script type='text/javascript'>
 		var extract_id = <?php echo $id;?>;
 		var extract_name = <?php echo json_encode($id > 0 ? $extract["name"] : "");?>;
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		<?php if ($edit) { ?>
 		var input_name = document.getElementById('extract_name');
 		input_name.onchange = function() {

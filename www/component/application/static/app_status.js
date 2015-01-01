@@ -44,11 +44,11 @@ function app_status(container) {
 		if (w.top.ping_time == -2) {
 			t._last_offline = true;
 			t.icon_offline.style.visibility = 'visible';
-			window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_ERROR_NOICON,"Sorry, we lost the connection to the server...",[],5000));
+			window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_ERROR_NOICON,"Sorry, we lost the connection to the server...",[],5000));
 		} else {
 			if (t._last_offline) {
 				t._last_offline = false;
-				window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"We're back! Connection to the server restored.",[],5000));
+				window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"We're back! Connection to the server restored.",[],5000));
 			}
 			if (w.top.ping_time == -1)
 				t.icon_online.style.visibility = 'visible';

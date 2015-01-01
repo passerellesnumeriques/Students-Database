@@ -234,7 +234,7 @@ function removeTeacher() {
 	popupFrame(null,"Remove Teacher","/dynamic/people/page/remove_people_type?people="+people_id+"&type=teacher&ontyperemoved=type_removed&onpeopleremoved=people_removed",null,null,null,function(frame,pop){
 		frame.people_removed = function() {
 			require("popup_window.js",function() {
-				get_popup_window_from_frame(window).close();
+				getPopupFromFrame(window).close();
 			});
 		};
 		frame.type_removed = function() { location.reload(); };

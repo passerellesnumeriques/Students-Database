@@ -167,7 +167,7 @@ class page_assign_groups extends Page {
 		<div id='top_container' style='display:flex;flex-direction:row;flex:1 1 auto;'></div> 
 		</div>
 		<script type='text/javascript'>
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
 		popup.disableButton('save');
 		popup.addCloseButton();

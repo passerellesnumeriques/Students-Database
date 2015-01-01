@@ -37,7 +37,6 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 	};
 	/** Creation of the input */
 	this._init = function() {
-		this.input = document.createElement('input');
 		this.input.type = 'text';
 		this.input.value = default_message;
 		this.input.className = "informative_text";
@@ -106,7 +105,9 @@ function autocomplete(container, min_chars, default_message, provider, onselecti
 			}
 		},10);
 	};
-	
+
+	/** The INPUT */
+	this.input = document.createElement('INPUT');
 	this._init();
 }
 

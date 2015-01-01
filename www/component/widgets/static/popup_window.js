@@ -9,7 +9,7 @@ if (typeof theme != 'undefined')
  * Create a popup
  * @param {String} title title of the window 
  * @param {String} icon path of the icon, or null
- * @param {String|HTMLElement} content content of the window: either an html element, or a string containing the html
+ * @param {String|Element} content content of the window: either an html element, or a string containing the html
  * @param {Boolean} hide_close_button if true, the close button at the top right corner won't be displayed
  */
 function popup_window(title,icon,content,hide_close_button) {
@@ -25,7 +25,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	t.buttons = [];
 	
 	/** Set (change) the content of the popup window
-	 * @param {String|HTMLElement} content content of the window: either an html element, or a string containing the html
+	 * @param {String|Element} content content of the window: either an html element, or a string containing the html
 	 */
 	t.setContent = function(content) { 
 		t.content = content;
@@ -42,6 +42,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	/** Set (change) the content of the popup window to be an IFRAME.
 	 * @param {String} url url to load in the frame
 	 * @param {Function} onload if specified, it is called when the frame is loaded
+	 * @param {Object} post_data if given, this data will be send using POST method to load the page
 	 * @returns {Element} the IFRAME element
 	 */
 	t.setContentFrame = function(url, onload, post_data) {
@@ -104,6 +105,7 @@ function popup_window(title,icon,content,hide_close_button) {
 	 * @param {String} html html to put inside the button 
 	 * @param {String} id id of the button, that can be used to refer it later on
 	 * @param {Function} onclick onclick event handler
+	 * @param {Object} onclick_param second parameter to give to onclick, the first one being the mouse event
 	 */
 	t.addButton = function(html, id, onclick, onclick_param) {
 		var b = (t.popup ? t.popup.ownerDocument : document).createElement("BUTTON");
@@ -127,6 +129,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			layout.changed(t.popup);
 		}
 	};
+	/** Remove everything from the footer */
 	t.removeButtons = function() {
 		t.buttons = [];
 		if (t.footer) {
@@ -137,6 +140,9 @@ function popup_window(title,icon,content,hide_close_button) {
 			layout.changed(t.popup);
 		}
 	};
+	/** Add a custom element in the footer
+	 * @param {Element} html the element to add in the footer
+	 */
 	t.addFooter = function(html) {
 		t.footer.appendChild(html);
 		t.footer.style.display = "";
@@ -146,6 +152,13 @@ function popup_window(title,icon,content,hide_close_button) {
 		layout.changed(t.content);
 		layout.changed(t.popup);
 	};
+	/** Add a button in the footer
+	 * @param {String|null} icon URL of the icon
+	 * @param {String} text text
+	 * @param {String} id identifier
+	 * @param {Function} onclick function to call when the button is clicked
+	 * @param {Object} onclick_param second parameter to give to onclick, the first one being the mouse event
+	 */
 	t.addIconTextButton = function(icon, text, id, onclick, onclick_param) {
 		var span = document.createElement("SPAN");
 		if (icon) {
@@ -204,24 +217,42 @@ function popup_window(title,icon,content,hide_close_button) {
 				break;
 			}
 	};
+	/** Add a Ok button
+	 * @param {Function} onok to call when button is pressed
+	 */
 	t.addOkButton = function(onok) {
 		t.addIconTextButton(theme.icons_16.ok, "Ok", 'ok', onok);
 		t.onEnter(onok);
 	};
+	/** Add a Finish button
+	 * @param {Function} onfinish to call when button is pressed
+	 */
 	t.addFinishButton = function(onfinish) {
 		t.addIconTextButton(theme.icons_16.ok, "Finish", 'finish', onfinish);
 	};
+	/** Add a Cancel button, which automatically close the popup
+	 * @param {Function} oncancel to call when button is pressed. If it returns false, the popup is not closed.
+	 */
 	t.addCancelButton = function(oncancel) {
 		t.addIconTextButton(theme.icons_16.cancel, "Cancel", 'cancel', function() { if (oncancel && !oncancel()) return; t.close(); });
 		t.onEscape(function() { if (oncancel && !oncancel()) return; t.close(); });
 	};
+	/** Add a Close button, which automatically close the popup
+	 * @param {Function} onclose to call when button is pressed
+	 */
 	t.addCloseButton = function(onclose) {
 		t.addIconTextButton(theme.icons_16.cancel, "Close", 'close', function() { if (onclose) onclose(); t.close(); });
 		t.onEscape(function() { if (onclose) onclose(); t.close(); });
 	};
+	/** Add a Save button
+	 * @param {Function} onsave to call when button is pressed
+	 */
 	t.addSaveButton = function(onsave) {
 		t.addIconTextButton(theme.icons_16.save, "Save", 'save', function() { if (onsave) onsave(); });
 	};
+	/** Add a Save button, which is automatically enabled/disabled based on pnapplication.hasDataUnsaved
+	 * @param {Function} onsave to call when button is pressed
+	 */
 	t.addFrameSaveButton = function(onsave) {
 		t.addSaveButton(onsave);
 		t.disableButton('save');
@@ -237,10 +268,16 @@ function popup_window(title,icon,content,hide_close_button) {
 		};
 		check_frame();
 	};
+	/** Add a Create button
+	 * @param {Function} onclick to call when button is pressed
+	 */
 	t.addCreateButton = function(onclick) {
 		t.addIconTextButton(theme.icons_16.ok, "Create", 'create', function() { onclick(); });
 		t.onEnter(onclick);
 	};
+	/** Add a Next button
+	 * @param {Function} onnext to call when button is pressed
+	 */
 	t.addNextButton = function(onnext) {
 		var span = document.createElement("SPAN");
 		span.appendChild(document.createTextNode("Next"));
@@ -251,6 +288,9 @@ function popup_window(title,icon,content,hide_close_button) {
 		span.appendChild(img);
 		t.addButton(span, "next", onnext);
 	};
+	/** Add a Continue button
+	 * @param {Function} oncontinue to call when button is pressed
+	 */
 	t.addContinueButton = function(oncontinue) {
 		var span = document.createElement("SPAN");
 		span.appendChild(document.createTextNode("Continue"));
@@ -269,12 +309,17 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addOkButton(onok);
 		t.addCancelButton(oncancel);
 	};
+	/** Add 2 buttons to the window: Finish and Cancel. When Cancel is pressed, the window is closed.
+	 * @param {Function} onfinish handler to be called when the Finish button is pressed. 
+	 * @param {Function} oncancel (optional) handler to be called when the Cancel button is pressed. 
+	 */
 	t.addFinishCancelButtons = function(onfinish, oncancel) {
 		t.addFinishButton(onfinish);
 		t.addCancelButton(oncancel);
 	};
 	/** Add 2 buttons to the window: Yes and No. When No is pressed, the window is closed.
 	 * @param {Function} onyes handler to be called when the Yes button is pressed. 
+	 * @param {Function} onno (optional) handler to be called when the No button is pressed. If it returns false, the popup is not closed. 
 	 */
 	t.addYesNoButtons = function(onyes,onno) {
 		t.addIconTextButton(theme.icons_16.yes, "Yes", 'yes', onyes);
@@ -282,7 +327,11 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.onEscape(function() { if (!onno || onno()) t.close(); });
 	};
 
+	/** List of listeners for the Enter key */
 	t._onenter_listeners = [];
+	/** Called when Enter key is pressed
+	 * @param {Event} ev event
+	 */
 	t._onEnterListener = function(ev) {
 		if (!t || !t.popup) return;
 		if (ev.target.nodeName == "TEXTAREA") return;
@@ -291,7 +340,11 @@ function popup_window(title,icon,content,hide_close_button) {
 			for (var i = 0; i < t._onenter_listeners.length; ++i)
 				t._onenter_listeners[i]();
 	};
+	/** List of registered windows for the Enter key (will be used for cleaning) */
 	t._onEnterListenerRegistrations = [];
+	/** Catch when the user press the Enter key
+	 * @param {Function} onenter to be called when Enter key is pressed
+	 */
 	t.onEnter = function(onenter) {
 		t._onenter_listeners.push(onenter);
 		if (t._onenter_listeners.length == 1) {
@@ -314,7 +367,11 @@ function popup_window(title,icon,content,hide_close_button) {
 			});
 		};
 	};
+	/** List of listeners for the Escape key */
 	t._onescape_listeners = [];
+	/** Called when Escape key is pressed
+	 * @param {Event} ev event
+	 */
 	t._onEscapeListener = function(ev) {
 		if (!t || !t.popup) return;
 		if (ev.target.nodeName == "TEXTAREA") return;
@@ -323,7 +380,11 @@ function popup_window(title,icon,content,hide_close_button) {
 			for (var i = 0; i < t._onescape_listeners.length; ++i)
 				t._onescape_listeners[i]();
 	};
+	/** List of registered windows for the Escape key (will be used for cleaning) */
 	t._onEscapeListenerRegistrations = [];
+	/** Catch when the user press the Escape key
+	 * @param {Function} onescape to be called when Escape key is pressed
+	 */
 	t.onEscape = function(onescape) {
 		t._onescape_listeners.push(onescape);
 		if (t._onescape_listeners.length == 1) {
@@ -347,16 +408,25 @@ function popup_window(title,icon,content,hide_close_button) {
 		};
 	};
 	
+	/** Check if the popup is displayed
+	 * @returns {Boolean} true if the popup is shown
+	 */
 	t.isShown = function() {
 		return t != null && t.popup != null;
 	};
 	
-	t._onwindow_closed_listener = function(){
+	/** Called when the window containing the popup is closed */
+	t._onwindowClosedListener = function(){
 		if (!t || !t.popup) return;
-		pnapplication.onclose.removeListener(t._onwindow_closed_listener);
+		pnapplication.onclose.removeListener(t._onwindowClosedListener);
 		t.close();
 	};
 	
+	/**
+	 * Display the popup, with a size expressed in percentage of the containing window
+	 * @param {Number} width percentage of the width of the window
+	 * @param {Number} height percentage of the height of the window
+	 */
 	t.showPercent = function(width, height) {
 		var win;
 		if (!t.popup)
@@ -371,7 +441,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (t.anim) win.animation.stop(t.anim);
 			t.anim = win.animation.appear(t.popup, 200);
 		}
-		pnapplication.onclose.addListener(t._onwindow_closed_listener);
+		pnapplication.onclose.addListener(t._onwindowClosedListener);
 	};
 	
 	/** Display the popup window */
@@ -429,21 +499,25 @@ function popup_window(title,icon,content,hide_close_button) {
 			if (t.anim) win.animation.stop(t.anim);
 			t.anim = win.animation.appear(t.popup, 200);
 		}
-		pnapplication.onclose.addListener(t._onwindow_closed_listener);
+		pnapplication.onclose.addListener(t._onwindowClosedListener);
 	};
 	
+	/** Keep how the popup is sized: 'fit' to fit the content, or 'fixed' */
 	t._size_type = "fit";
+	/** Set how the popup is sized: 'fit' to fit the content, or 'fixed'
+	 * @param {String} type size type
+	 */
 	t._setSizeType = function(type) {
 		t._size_type = type;
 		if (!t.popup) return;
 		if (t.content.nodeName == "IFRAME") {
-			layout.unlistenElementSizeChanged(t.content_container, t._layout_content);
+			layout.unlistenElementSizeChanged(t.content_container, t._layoutContent);
 			switch (t._size_type) {
 			case "fit":
 				t.content_container.style.overflow = "auto";
 				t.content_container.style.display = "";
 				layout.autoResizeIFrame(t.content, function() {
-					t._layout_content();
+					t._layoutContent();
 				});
 				// do not change frame size when the frame is moving to another page
 				listenEvent(t.content, 'unload', function() {
@@ -454,7 +528,7 @@ function popup_window(title,icon,content,hide_close_button) {
 						return !win._popup_frame_unloading && win._page_ready_step;
 					}, function() {
 						layout.autoResizeIFrame(t.content, function() {
-							t._layout_content();
+							t._layoutContent();
 						});
 					});
 				});
@@ -473,10 +547,10 @@ function popup_window(title,icon,content,hide_close_button) {
 			switch (t._size_type) {
 			case "fit":
 				t.content_container.style.overflow = "auto";
-				layout.listenElementSizeChanged(t.content_container, t._layout_content);
+				layout.listenElementSizeChanged(t.content_container, t._layoutContent);
 				break;
 			case "fixed":
-				layout.unlistenElementSizeChanged(t.content_container, t._layout_content);
+				layout.unlistenElementSizeChanged(t.content_container, t._layoutContent);
 				// handle bug of Chrome when content wants to take 100%
 				t.content_container.style.position = "relative";
 				t.content.style.position = "absolute";
@@ -484,7 +558,8 @@ function popup_window(title,icon,content,hide_close_button) {
 			}
 		}
 	};
-	t._layout_content = function() {
+	/** Called by the layout, to resize the popup based on its content */
+	t._layoutContent = function() {
 		if (!t || !t.popup) return;
 		if (t.content_container.style.overflow == "") return;
 		t.content_container.style.minWidth = "";
@@ -509,8 +584,9 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.content_container.style.overflow = "auto";
 	};
 	
+	/** Creation of the popup */
 	t._buildPopup = function() {
-		var parent_popup = get_popup_window_from_frame(window);
+		var parent_popup = getPopupFromFrame(window);
 		var win,doc;
 		if (!parent_popup || !parent_popup.popup) {
 			win = window;
@@ -616,7 +692,8 @@ function popup_window(title,icon,content,hide_close_button) {
 
 		return win;
 	};
-		
+	
+	/** Make the popup blinking for 500ms. */
 	t.blink = function() {
 		t.popup.className = "popup_window blink";
 		setTimeout(function() { if (t.popup) t.popup.className = "popup_window"; },100);
@@ -626,20 +703,25 @@ function popup_window(title,icon,content,hide_close_button) {
 		setTimeout(function() { if (t.popup) t.popup.className = "popup_window"; },500);
 	};
 	
+	/** Disable the top-right close button */
 	t.disableClose = function() {
 		t.close_button.disabled = "disabled";
 		t.close_button.onclick = function() {};
 	};
+	/** Enable the top-right close button */
 	t.enableClose = function() {
 		t.close_button.disabled = "";
 		t.close_button.onclick = function() { t.close(); };
 	};
 	
+	/** Freeze the popup: create a semi-transparent DIV over its content
+	 * @param {String|null} freeze_content HTML code of a message to display in the center 
+	 */
 	t.freeze = function(freeze_content) {
 		if (t.freezer) {
 			t.freezer.usage_counter++;
 			if (freeze_content)
-				t.set_freeze_content(freeze_content);
+				t.setFreezeContent(freeze_content);
 			return;
 		}
 		t.freezer = t.popup.ownerDocument.createElement("DIV");
@@ -664,7 +746,12 @@ function popup_window(title,icon,content,hide_close_button) {
 		}
 		t.disableClose();
 	};
-	t.freeze_progress = function(message, total, onready) {
+	/** Freeze the popup, and display a message with a progress bar
+	 * @param {String} message HTML code of the message
+	 * @param {Number} total total amount of work for the progress bar
+	 * @param {Function} onready called when the progress bar is ready. It takes 2 parameters: a SPAN containing the message, and a progress_bar
+	 */
+	t.freezeWithProgress = function(message, total, onready) {
 		theme.css("progress_bar.css"); // to make it available, even if we are starting a lot of AJAX requests
 		require("progress_bar.js", function() {
 			var div = document.createElement("DIV");
@@ -682,7 +769,12 @@ function popup_window(title,icon,content,hide_close_button) {
 			onready(span, pb);
 		});
 	};
-	t.freeze_progress_sub = function(message, total, onready) {
+	/** Freeze the popup, and display a message with a progress bar, and an additional sub-message below the progress bar
+	 * @param {String} message HTML code of the message
+	 * @param {Number} total total amount of work for the progress bar
+	 * @param {Function} onready called when the progress bar is ready. It takes 3 parameters: a SPAN containing the message, and a progress_bar, a DIV for the sub-messages
+	 */
+	t.freezeWithProgressAndSubMessage = function(message, total, onready) {
 		theme.css("progress_bar.css"); // to make it available, even if we are starting a lot of AJAX requests
 		require("progress_bar.js", function() {
 			var div = document.createElement("DIV");
@@ -702,13 +794,17 @@ function popup_window(title,icon,content,hide_close_button) {
 			onready(span, pb, sub);
 		});
 	};
-	t.set_freeze_content = function(content) {
+	/** Change the message when the popup is frozen
+	 * @param {String} content HTML code of the message
+	 */
+	t.setFreezeContent = function(content) {
 		if (!t.freezer) {
 			//window.console.warn("set freeze content on popup not frozen: "+content);
 			return;
 		}
 		set_lock_screen_content(t.freezer, content);
 	};
+	/** Unfreeze the popup */
 	t.unfreeze = function() {
 		if (!t.freezer) return;
 		if (--t.freezer.usage_counter > 0) return;
@@ -720,12 +816,15 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.freeze_button_status = null;
 		t.enableClose();
 	};
+	/** Check if the popup is currently frozen
+	 * @returns {Boolean} true if the popup is frozen
+	 */
 	t.isFrozen = function() {
 		return t.freezer != null;
 	};
 	
 	/** Close this popup window
-	 * @param {Boolean} keep_content_hidden
+	 * @param {Boolean} keep_content_hidden if true, instead of removing the popup, it will be hidden
 	 */
 	t.close = function(keep_content_hidden) {
 		if (!t || !t.popup) return;
@@ -740,12 +839,12 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (t.locker)
 			unlock_screen(t.locker);
 		else {
-			var parent_popup = get_popup_window_from_frame(window);
+			var parent_popup = getPopupFromFrame(window);
 			if(parent_popup && parent_popup.popup) parent_popup.unfreeze();
 		}
 		var popup = t.popup_container;
 		if (t.onclose) t.onclose();
-		layout.unlistenElementSizeChanged(t.content_container, t._layout_content);
+		layout.unlistenElementSizeChanged(t.content_container, t._layoutContent);
 		t.popup_container = null;
 		t.popup.data = null;
 		t.popup = null;
@@ -778,17 +877,20 @@ function popup_window(title,icon,content,hide_close_button) {
 		} else
 			do_close();
 	};
+	/** Close the popup. Alias of close. */
 	t.hide = function() { t.close(); };
 	
+	/** Hide the title bar */
 	t.hideTitleBar = function() {
 		t.header.style.display = "none";
 	};
 	
+	/** Cleaning to avoid memory leaks */
 	t.cleanup = function() {
 		if (!t) return;
 		window.to_cleanup.remove(this);
 		if (t.content_container)
-			layout.unlistenElementSizeChanged(t.content_container, t._layout_content);
+			layout.unlistenElementSizeChanged(t.content_container, t._layoutContent);
 		t._onenter_listeners = null;
 		for (var i = 0; i < t._onEnterListenerRegistrations.length; ++i)
 			unlistenEvent(t._onEnterListenerRegistrations[i],'keyup',t._onEnterListener);
@@ -820,23 +922,28 @@ function popup_window(title,icon,content,hide_close_button) {
 
 /**
  * Try to get the popup window containing the given element.
- * @param e the element contained in a popup
+ * @param {Element} e the element contained in a popup
  * @returns {popup_window} the popup window containing the given element
  */
-function get_popup_window_from_element(e) {
+function getPopupFromElement(e) {
 	while (e.parentNode != null && e.parentNode != e && e.parentNode != document.body && e.parentNode.className != 'popup_window') e = e.parentNode;
 	if (e.parentNode != null && e.parentNode.className == 'popup_window')
 		return e.parentNode.data;
 	return null;
 }
-function get_popup_window_from_frame(win) {
+/**
+ * Try to get the popup window containing the given window.
+ * @param {Window} win the window contained in a popup
+ * @returns {popup_window} the popup window containing the given window
+ */
+function getPopupFromFrame(win) {
 	if (!win) return null;
 	if (win.frameElement) {
-		if (win.parent.get_popup_window_from_element) {
-			var pop = win.parent.get_popup_window_from_element(win.frameElement);
+		if (win.parent.getPopupFromElement) {
+			var pop = win.parent.getPopupFromElement(win.frameElement);
 			if (pop != null) return pop;
 		}
-		return get_popup_window_from_frame(win.parent);
+		return getPopupFromFrame(win.parent);
 	}
 	return null;
 }

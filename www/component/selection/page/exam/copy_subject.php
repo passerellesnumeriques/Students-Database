@@ -43,7 +43,7 @@ class page_exam_copy_subject extends SelectionPage {
 ?>
 <script type='text/javascript'>
 function copySubject(subject_id, campaign_id) {
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze("Copying subject...");
 	service.json("selection","exam/copy_subject",{subject:subject_id,campaign:campaign_id},function(res) {
 		if (!res) popup.unfreeze();

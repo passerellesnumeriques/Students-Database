@@ -578,14 +578,14 @@ function LoadingFrame(frame_element) {
 //	if (load) {
 //		window.top._loading_application_nb++;
 //		if (window.top._loading_application_nb == 1)
-//			window.top.status_manager.add_status(window.top._loading_application_status);
+//			window.top.status_manager.addStatus(window.top._loading_application_status);
 //	}
 //	window._addJavascript_original(url, function() {
 //		if (onload) onload();
 //		if (load) {
 //			window.top._loading_application_nb--;
 //			if (window.top._loading_application_nb == 0)
-//				window.top.status_manager.remove_status(window.top._loading_application_status);
+//				window.top.status_manager.removeStatus(window.top._loading_application_status);
 //		}
 //	});
 //};

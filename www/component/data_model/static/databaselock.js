@@ -61,9 +61,9 @@ window.databaselock = {
 				if (windows[i].onuserinactive) {
 					// if there is a function handling it
 					windows[i].onuserinactive();
-				} else if (windows[i].frameElement && windows[i].parent.get_popup_window_from_element && windows[i].parent.get_popup_window_from_element(windows[i].frameElement)) {
+				} else if (windows[i].frameElement && windows[i].parent.getPopupFromElement && windows[i].parent.getPopupFromElement(windows[i].frameElement)) {
 					// if in popup, close it
-					windows[i].parent.get_popup_window_from_element(windows[i].frameElement).close();
+					windows[i].parent.getPopupFromElement(windows[i].frameElement).close();
 				} else {
 					need_redirection = true;
 					break;

@@ -50,7 +50,7 @@ foreach ($types as $type) {
 </form>
 </div>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 var data = {
 	fixed_columns: <?php echo isset($input["fixed_columns"]) ? json_encode($input["fixed_columns"]) : "[]";?>,
 	fixed_data: <?php echo isset($input["fixed_data"]) ? json_encode($input["fixed_data"]) : "[]";?>,

@@ -35,7 +35,7 @@ class page_remove_people_type extends Page {
 	</td>
 </tr></table>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.addYesNoButtons(function() {
 	popup.freeze("Removing <?php echo toHTML($people["first_name"]." ".$people["last_name"]);?> from the database...");
 	service.json("data_model","remove_row",{table:"People",row_key:<?php echo $people_id;?>},function(res) {
@@ -60,7 +60,7 @@ popup.addYesNoButtons(function() {
 	</td>
 </tr></table>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.addYesNoButtons(function() {
 	popup.freeze("Removing <?php echo toHTML($people["first_name"]." ".$people["last_name"]);?> from the database...");
 	service.json("people","remove_type",{people:<?php echo $people_id;?>,type:<?php echo json_encode($type_name);?>},function(res) {

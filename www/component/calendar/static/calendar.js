@@ -405,7 +405,7 @@ function Calendar(provider, name, color, show, icon) {
 	 */
 	this._refresh = function(ondone) {
 		var type = getObjectClassName(this);
-		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar._refresh not implemented: "+type));
+		window.top.status_manager.addStatus(new window.top.StatusMessageError(null, "Calendar._refresh not implemented: "+type));
 		if (ondone) ondone();
 	};
 	/** {Function} function called to save an event. If it is not defined, it means the calendar is read only. This function takes the event to save as parameter. */

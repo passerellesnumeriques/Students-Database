@@ -59,7 +59,7 @@ function save() {
 			values:[{column:'applicant_decision',value:'Declined'},{column:'applicant_not_coming_reason',value:reason}]
 		});
 	}
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze("Saving...");
 	service.json("data_model","save_cells",{cells:cells},function(res) {
 		<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();"?>

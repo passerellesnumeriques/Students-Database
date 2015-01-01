@@ -54,7 +54,7 @@ function linked_exam_centers(container, all_centers, already_linked_ids, linked_
 	};
 	
 	this.setHostFromExamCenter = function(center_id) {
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		popup.freeze("Loading Host information from Exam Center...");
 		service.json("selection","exam/get_host",{id:center_id},function(res) {
 			popup.unfreeze();
@@ -134,7 +134,7 @@ function linked_exam_centers(container, all_centers, already_linked_ids, linked_
 	this._loadApplicants = function(center_id, add_applicants) {
 		var ec = null;
 		for (var i = 0; i < all_centers.length; ++i) if (all_centers[i].id == center_id) { ec = all_centers[i]; break; }
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		if (add_applicants)
 			popup.freeze("Loading applicants from Exam Center "+ec.name+"...");
 		var t=this;

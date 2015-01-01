@@ -94,7 +94,7 @@ if (window == window.top && !window.top.geography) {
 			var t=this;
 			service.json("geography", "get_country_timestamp", {country_id:country_id}, function(timestamp) {
 				ajax.call("GET", "/static/geography/country_data.js.php?id="+country_id+"&ts="+timestamp, null, null, function(error) {
-					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_ERROR,error,[{action:"popup"},{action:"close"}],10000));
+					window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_ERROR,error,[{action:"popup"},{action:"close"}],10000));
 				}, function(xhr) {
 					var result = eval("("+xhr.responseText+")");
 					t._countries_data.push({id:country_id,data:result});

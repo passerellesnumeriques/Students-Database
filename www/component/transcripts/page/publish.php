@@ -29,7 +29,7 @@ class page_publish extends Page {
 	</div>
 </div>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.addOkCancelButtons(function() {
 	require("form.js",function() {
 		var data = {

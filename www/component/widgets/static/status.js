@@ -5,6 +5,12 @@ window.Status_TYPE_PROCESSING = 3;
 window.Status_TYPE_OK = 4;
 window.Status_TYPE_ERROR_NOICON = 5;
 
+/** Represents a status message
+ * @param {Number} type one of the Status_TYPE_xxx constant
+ * @param {String} message message
+ * @param {Array} actions list of possible actions
+ * @param {Number} timeout if specified, the message will automatically disappear after this amount of milliseconds
+ */
 function StatusMessage(type,message,actions,timeout) {
 	this.id = generateID();
 	this.type = type;
@@ -49,19 +55,29 @@ function StatusMessageError(err, message, timeout) {
 	}
 }
 
-
+/**
+ * Manages a list of status, and coordinate with the given UI implementation
+ */
 function StatusManager() {
+	/** List of status messages */
 	this.status = [];
-	this.status_id_counter = 0;
+	/** {Object} implementation of the UI to display status */
 	this.status_ui = null;
 	
-	this.add_status= function(status) {
+	/** Add a status to be displayed
+	 * @param {StatusMessage} status status
+	 * @returns {StatusMessage} the given status
+	 */
+	this.addStatus= function(status) {
 		this.status.push(status);
 		this.status_ui.update(this.status);
 		return status;
 	};
-	this.remove_status= function(status) {
-		if (typeof status == 'string' || typeof status == 'number') status = this.get_status(status);
+	/** Remove the given status
+	 * @param {StatusMessage} status the status to remove
+	 */
+	this.removeStatus= function(status) {
+		if (typeof status == 'string' || typeof status == 'number') status = this.getStatus(status);
 		if (status == null) return;
 		for (var i = 0; i < this.status.length; ++i)
 			if (this.status[i] == status) {
@@ -70,10 +86,17 @@ function StatusManager() {
 			}
 		this.status_ui.update(this.status);
 	};
-	this.update_status= function(status) {
-		this.status_ui.update_status(status);
+	/** Indicates a status has been changed and its display needs to be updated
+	 * @param {StatusMessage} status the status to update
+	 */
+	this.updateStatus= function(status) {
+		this.status_ui.updateStatus(status);
 	};
-	this.get_status= function(id) {
+	/** Retrieve a status using its id
+	 * @param {String} id identifier
+	 * @returns {StatusMessage} the status
+	 */
+	this.getStatus= function(id) {
 		for (var i = 0; i < this.status.length; ++i)
 			if (this.status[i].id == id)
 				return this.status[i];

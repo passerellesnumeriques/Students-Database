@@ -572,7 +572,7 @@ function saveRemoteAccess(domain) {
 	service.json("administration","save_remote_access",{domain:domain,url:url,password:password},function(res) {
 		unlock_screen(locker);
 		if (res && res.version) {
-			window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Successfully connected to "+domain+". It's version is "+res.version, [{action:"close"}], 5000));
+			window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Successfully connected to "+domain+". It's version is "+res.version, [{action:"close"}], 5000));
 		}
 	});
 }

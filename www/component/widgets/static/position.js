@@ -1,3 +1,10 @@
+/**
+ * Position an element below another
+ * @param {Element} to_position the element to position
+ * @param {Element} from_element the element from which to position
+ * @param {Boolean} min_width_is_from if true, to_position will have its minimum width set to the width of from_element
+ * @param {Function} ondone called when position is set with 2 parameters: x, y corresponding to the fixed position
+ */
 function positionBelowElement(to_position, from_element, min_width_is_from,ondone) {
 	to_position.style.position = "fixed";
 	to_position.style.top = "0px";
@@ -58,6 +65,13 @@ function positionBelowElement(to_position, from_element, min_width_is_from,ondon
 	window.top.listenEvent(window.top,'resize',listener);
 	to_position.ondomremoved(function() { window.top.unlistenEvent(window.top,'resize',listener); });
 }
+/**
+ * Position an element above another
+ * @param {Element} to_position the element to position
+ * @param {Element} from_element the element from which to position
+ * @param {Boolean} min_width_is_from if true, to_position will have its minimum width set to the width of from_element
+ * @param {Function} ondone called when position is set with 2 parameters: x, y corresponding to the fixed position
+ */
 function positionAboveElement(to_position, from_element, min_width_is_from, ondone) {
 	to_position.style.position = "fixed";
 	to_position.style.top = "0px";
@@ -118,6 +132,12 @@ function positionAboveElement(to_position, from_element, min_width_is_from, ondo
 	window.top.listenEvent(window.top,'resize',listener);
 	to_position.ondomremoved(function() { window.top.unlistenEvent(window.top,'resize',listener); });
 }
+/**
+ * Position an element at the right of another
+ * @param {Element} to_position the element to position
+ * @param {Element} from_element the element from which to position
+ * @param {Function} ondone called when position is set with 2 parameters: x, y corresponding to the fixed position
+ */
 function positionAtRightOfElement(to_position, from_element, ondone) {
 	to_position.style.position = "fixed";
 	to_position.style.top = "0px";

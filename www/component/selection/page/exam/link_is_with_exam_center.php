@@ -265,7 +265,7 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 		for (var i = 0; i < centers.length; ++i)
 			addCenter(centers[i]);
 
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		popup.addFrameSaveButton(function() {
 			var locker = lock_screen(null,"Saving links...");
 			service.json("selection","exam/link",{add:added_links,remove:removed_links},function(res) {

@@ -53,7 +53,7 @@ function exam_center_is(container, all_is, already_linked_ids, linked_is, can_ed
 	};
 	
 	this.setHostFromIS = function(is_id) {
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		popup.freeze("Loading Host information from Information Session...");
 		service.json("selection","is/get_host",{id:is_id},function(res) {
 			popup.unfreeze();
@@ -133,7 +133,7 @@ function exam_center_is(container, all_is, already_linked_ids, linked_is, can_ed
 	this._loadApplicants = function(is_id, add_applicants) {
 		var is = null;
 		for (var i = 0; i < all_is.length; ++i) if (all_is[i].id == is_id) { is = all_is[i]; break; }
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		if (add_applicants)
 			popup.freeze("Loading applicants from Information Session "+is.name+"...");
 		var t=this;

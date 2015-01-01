@@ -141,7 +141,7 @@ class page_exam_create_center_from_is extends SelectionPage {
 				var cb = document.getElementById('cb_is_'+all_is_ids[i]);
 				if (cb.checked) linked.push(all_is_ids[i]);
 			}
-			var popup = window.parent.get_popup_window_from_frame(window);
+			var popup = window.parent.getPopupFromFrame(window);
 			popup.showPercent(95,95);
 			postData("/dynamic/selection/page/exam/center_profile"<?php if (isset($_GET["onsaved"])) echo "+'?onsaved=".$_GET["onsaved"]."'";?>, {host_is:host_id,others_is:linked});
 		}

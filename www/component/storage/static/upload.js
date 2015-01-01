@@ -263,9 +263,9 @@ function upload(target, multiple, async) {
 				} else
 					output = xhr.responseText;
 				for (var j = 0; j < errors.length; ++j)
-					window.top.status_manager.add_status(new window.top.StatusMessageError(null, errors[j], 10000));
+					window.top.status_manager.addStatus(new window.top.StatusMessageError(null, errors[j], 10000));
 				for (var j = 0; j < warnings.length; ++j)
-					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING, warnings[j], [{action:"popup"},{action:"close"}],10000));
+					window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_WARNING, warnings[j], [{action:"popup"},{action:"close"}],10000));
 				received.push(output);
 				if (t.ondonefile) t.ondonefile(file, output, errors, warnings);
 				ondone();

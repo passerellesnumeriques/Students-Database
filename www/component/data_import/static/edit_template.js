@@ -1,7 +1,7 @@
 function edit_template(container, type_id, root_table, sub_model, known_columns, template, onready) {
 	if (typeof container == 'string') container = document.getElementById('container');
 	var t=this;
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	
 	this._startEdition = function(type) {
 		var win = getIFrameWindow(t.frame_excel);
@@ -106,7 +106,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 	this._startUpload = function(click_event) {
 		var pb = null;
 		t._upl.onstart = function(files, onready) {
-			popup.freeze_progress("Uploading file...", files[0].size, function(span, prog) {
+			popup.freezeWithProgress("Uploading file...", files[0].size, function(span, prog) {
 				pb = prog;
 				onready();
 			});
@@ -122,7 +122,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 				return;
 			}
 			pb.done();
-			popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
+			popup.setFreezeContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
 			t.frame_excel.onload = function() {
 				var check_view = function() {
 					var win = getIFrameWindow(t.frame_excel);
@@ -151,7 +151,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 						setTimeout(check_loaded, 100);
 						return;
 					}
-					popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
+					popup.setFreezeContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
 					check_view();
 				};
 				check_loaded();

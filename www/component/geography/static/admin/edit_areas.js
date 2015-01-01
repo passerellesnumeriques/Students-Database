@@ -355,7 +355,7 @@ function GeographicAreasTree(areas_section, country_id) {
 						names.push(name);
 					}
 					popup.unfreeze();
-					popup.freeze_progress("Creation of "+names.length+" Geographic Area(s)", names.length, function(span,pb) {
+					popup.freezeWithProgress("Creation of "+names.length+" Geographic Area(s)", names.length, function(span,pb) {
 						var done = 0;
 						for (var i = 0; i < names.length; ++i) {
 							var added = function() {

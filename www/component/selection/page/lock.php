@@ -26,7 +26,7 @@ function lockTravel() {
 	location.href = "lock_travel";
 }
 function lockDone() {
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze(null, "Locking selection campaign...");
 	service.json("selection","lock_campaign",{reason:'done'},function(res) {
 		if (!res) { popup.unfreeze(); return; }

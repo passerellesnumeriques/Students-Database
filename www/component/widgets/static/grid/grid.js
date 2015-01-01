@@ -2371,7 +2371,7 @@ function grid(element) {
 		document.body.appendChild(form);
 		form.submit();
 		t._download_frame = frame;
-		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
+		window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
 	};
 
 	/** Number of columns still loading */

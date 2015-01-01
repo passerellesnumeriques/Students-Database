@@ -424,7 +424,7 @@ setTimeout(function() {
 		try {
 			fct = eval("(function (){"+res.js+";this.jsdoc = jsdoc;})");
 		} catch (e) {
-			window.top.status_manager.add_status(new window.top.StatusMessageError(e,"Invalid output for get_js: "+res.js,10000));
+			window.top.status_manager.addStatus(new window.top.StatusMessageError(e,"Invalid output for get_js: "+res.js,10000));
 			checking_js--;
 			return;
 		}

@@ -36,7 +36,7 @@ class page_assign_specializations extends Page {
 		<div id='assign_container' style='width:100%;height:100%'>
 		</div>
 		<script type='text/javascript'>
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
 		popup.addCancelButton();
 		popup.disableButton('save');

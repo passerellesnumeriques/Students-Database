@@ -7,7 +7,7 @@ class page_popup_create_people extends Page {
 		if (isset($_GET["oncancel"])) {
 			?>
 			<script type='text/javascript'>
-			var popup = window.top.get_popup_window_from_frame(window);
+			var popup = window.top.getPopupFromFrame(window);
 			popup.onclose = function() {
 				window.frameElement.<?php echo $_GET["oncancel"];?>();
 			};

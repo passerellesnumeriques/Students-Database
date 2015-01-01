@@ -114,7 +114,7 @@ class page_popup_create_people_step_check extends Page {
 		}
 		echo "];\n";
 		?>
-		window.popup = window.parent.get_popup_window_from_frame(window);
+		window.popup = window.parent.getPopupFromFrame(window);
 		function send() {
 			if (!popup.freezer) popup.freeze();
 			window.popup.removeButtons();

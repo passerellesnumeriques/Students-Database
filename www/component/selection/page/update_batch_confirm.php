@@ -89,7 +89,7 @@ class page_update_batch_confirm extends SelectionPage {
 		echo "</div>";
 ?>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.removeButtons();
 popup.addYesNoButtons(function() {
 	window.frameElement.confirmed();

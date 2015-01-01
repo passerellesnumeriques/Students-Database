@@ -101,7 +101,7 @@ class page_people_new_type extends Page {
 		echo "</div>";
 ?>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 function save() {
 	popup.freeze("Setting "+<?php echo json_encode($people["first_name"]);?>+" "+<?php echo json_encode($people["last_name"]);?>+" as <?php echo $type->getName()?>");
 	var data = [];

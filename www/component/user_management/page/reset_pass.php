@@ -26,7 +26,7 @@ class page_reset_pass extends Page {
 	</tr>
 </table>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.addOkCancelButtons(function() {
 	var new_pass = document.getElementById('new_pass').value;
 	var confirm = document.getElementById('confirm').value;

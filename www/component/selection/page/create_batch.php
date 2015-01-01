@@ -52,7 +52,7 @@ Please ask a staff (i.e. Training manager) to create it.</i>
 </div>
 <script type='text/javascript'>
 function launchUpdate(batch_id) {
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze("Updating batch of students...");
 	service.json("data_model","save_cell",{table:'SelectionCampaign',column:'batch',row_key:<?php echo $this->component->getCampaignId();?>,value:batch_id,lock:null},function(res) {
 		if (!res) { popup.unfreeze(); return; }

@@ -27,7 +27,7 @@ function locationAndPartners(&$page, $id, $campaign_id, $center_type, $geographi
 	>
 	</div>
 	<script type='text/javascript'>
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	var section_location = sectionFromHTML('section_location');
 	var section_partners = sectionFromHTML('section_partners');
 	var center_id = <?php echo json_encode($id);?>;

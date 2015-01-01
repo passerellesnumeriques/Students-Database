@@ -14,7 +14,7 @@ class page_unlock extends SelectionPage {
 </div>
 <script type='text/javascript'>
 function unlock() {
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze(null, "Unlocking selection campaign...");
 	service.json("selection","unlock_campaign",{},function(res) {
 		if (!res) { popup.unfreeze(); return; }
@@ -24,7 +24,7 @@ function unlock() {
 	});
 }
 function closePopup() {
-	window.parent.get_popup_window_from_frame(window).close();
+	window.parent.getPopupFromFrame(window).close();
 }
 </script>
 <?php 						
@@ -60,7 +60,7 @@ if ($user_id <> PNApplication::$instance->user_management->user_id) {
 </div>
 <script type='text/javascript'>
 function unlock() {
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze(null, "Unlocking selection campaign...");
 	service.json("selection","unlock_campaign",{},function(res) {
 		if (!res) { popup.unfreeze(); return; }

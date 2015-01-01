@@ -84,7 +84,7 @@ class page_edit_batch extends Page {
 	</tr>
 </table>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_element(window.frameElement);
+var popup = window.parent.getPopupFromElement(window.frameElement);
 popup.addIconTextButton(theme.build_icon("/static/calendar/calendar_16.png",theme.icons_10.add), "Add Period", "add_period", function() { addPeriod(); });
 popup.addIconTextButton("/static/curriculum/curriculum_16.png", "Edit Specializations", "spe", editSpecializations);
 popup.addFrameSaveButton(save);

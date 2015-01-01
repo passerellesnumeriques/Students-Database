@@ -26,7 +26,7 @@ class page_applicant_popup_import extends SelectionPage {
 	</div>
 </div>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 window.top.require("popup_window.js");
 window.top.require("excel_import.js");
 function manualImport(ev) {

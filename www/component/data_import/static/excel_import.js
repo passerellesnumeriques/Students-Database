@@ -22,7 +22,7 @@ function excel_import(popup, container, onready) {
 		t.frame_excel.src = "/dynamic/data_import/page/excel_upload?button=_upload";
 		var pb = null;
 		t._upl.onstart = function(files, onready) {
-			popup.freeze_progress("Uploading file...", files[0].size, function(span, prog) {
+			popup.freezeWithProgress("Uploading file...", files[0].size, function(span, prog) {
 				pb = prog;
 				onready();
 			});
@@ -38,12 +38,12 @@ function excel_import(popup, container, onready) {
 				return;
 			}
 			pb.done();
-			popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading Excel page...");
+			popup.setFreezeContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading Excel page...");
 			// TODO extend expiration time of temporary storage
 			waitFrameContentReady(t.frame_excel, function(win) {
 				return win._page_ready && win.is_excel_upload_button;
 			}, function(win) {
-				popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
+				popup.setFreezeContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
 				t.frame_excel.onload = function() {
 					var check_view = function() {
 						var win = getIFrameWindow(t.frame_excel);
@@ -73,7 +73,7 @@ function excel_import(popup, container, onready) {
 							setTimeout(check_loaded, 100);
 							return;
 						}
-						popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
+						popup.setFreezeContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
 						check_view();
 					};
 					check_loaded();
@@ -352,7 +352,7 @@ function excel_import(popup, container, onready) {
 				alert('Please select where to add/set values');
 				return;
 			}
-			p.freeze_progress("Importing data...",100,function(span,pb) {
+			p.freezeWithProgress("Importing data...",100,function(span,pb) {
 				t._importData(sheet, range, index, t._where_selected, function() {
 					p.close();
 				},function(pos,total) {

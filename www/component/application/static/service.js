@@ -22,7 +22,7 @@ window.service = {
 			function(result){
 				if (result && result.warnings)
 					for (var i = 0; i < result.warnings.length; ++i)
-						window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,result.warnings[i],[{action:"popup"},{action:"close"}],5000));
+						window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,result.warnings[i],[{action:"popup"},{action:"close"}],5000));
 				handler(result ? result.result : null);
 			},
 			foreground,
@@ -32,13 +32,13 @@ window.service = {
 						if (error == "Connection error") {
 							var now = new Date().getTime();
 							if (now-service._last_connection_error > 30000) {
-								window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_ERROR_NOICON,error,[],5000));
+								window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_ERROR_NOICON,error,[],5000));
 								service._last_connection_error = now;
 							}
 						} else
-							window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+							window.top.status_manager.addStatus(new window.top.StatusMessageError(null,error,10000));
 					} else for (var i = 0; i < error.length; ++i)
-						window.top.status_manager.add_status(new window.top.StatusMessageError(null,error[i],10000));
+						window.top.status_manager.addStatus(new window.top.StatusMessageError(null,error[i],10000));
 				}
 				if (onerror) onerror(error, input);
 			},
@@ -77,7 +77,7 @@ window.service = {
 			},
 			foreground,
 			function(error){
-				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+				window.top.status_manager.addStatus(new window.top.StatusMessageError(null,error,10000));
 			},
 			progress_handler
 		);
@@ -104,7 +104,7 @@ window.service = {
 				if (error_handler)
 					error_handler(error);
 				else
-					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+					window.top.status_manager.addStatus(new window.top.StatusMessageError(null,error,10000));
 				handler(null);
 			},
 			function(xhr){
@@ -266,7 +266,7 @@ function postToDownload(url, data, do_not_show_info_message) {
 	document.body.appendChild(form);
 	form.submit();
 	if (!do_not_show_info_message)
-		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
+		window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
 	setTimeout(function() {
 		if (window.closing || !document || !document.body) return;
 		document.body.removeChild(form);

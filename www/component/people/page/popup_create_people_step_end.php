@@ -45,7 +45,7 @@ class page_popup_create_people_step_end extends Page {
 			// final call, we are done: just call the handler ondone if needed, and close the popup
 ?>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.onclose = null;
 <?php if ($ondone <> null) echo "window.frameElement.".$ondone."(".json_encode($peoples).");"?>
 popup.close();
@@ -65,7 +65,7 @@ popup.close();
 		}
 ?>
 <script type='text/javascript'>
-window.popup = window.parent.get_popup_window_from_frame(window);
+window.popup = window.parent.getPopupFromFrame(window);
 window.stepDone = function() {
 	window.popup.removeButtons();
 	postData(location.href,{step:<?php echo $step+1;?>,steps:<?php echo json_encode($steps); if ($ondone <> null) echo ",ondone:".json_encode($ondone).",peoples:".json_encode($peoples);?>},window);

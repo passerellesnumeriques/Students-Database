@@ -104,7 +104,7 @@ class page_edit_academic_year extends Page {
 	</tbody></table>
 </div>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 
 var year_object = <?php echo json_encode($year);?>;
 

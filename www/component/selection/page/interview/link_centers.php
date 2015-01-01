@@ -255,7 +255,7 @@ class page_interview_link_centers extends SelectionPage {
 		for (var i = 0; i < interview_centers.length; ++i)
 			addInterviewCenter(interview_centers[i]);
 
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		popup.addFrameSaveButton(function() {
 			var locker = lock_screen(null,"Saving links...");
 			service.json("selection","interview/link",{add:added_links,remove:removed_links},function(res) {

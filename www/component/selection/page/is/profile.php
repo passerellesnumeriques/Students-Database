@@ -150,7 +150,7 @@ class page_is_profile extends SelectionPage {
 		</div>
 		</div>
 		<script type='text/javascript'>
-		var is_popup = window.parent.get_popup_window_from_frame(window);
+		var is_popup = window.parent.getPopupFromFrame(window);
 		var is_id = <?php echo $id <> null ? $id : -1;?>;
 
 		function save_is() {
@@ -197,7 +197,7 @@ class page_is_profile extends SelectionPage {
 					is_popup.unfreeze();
 					errorDialog("An error occured, your informations were not saved");
 				} else {
-					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Information session successfuly saved!", [{action:"close"}], 5000));
+					window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Information session successfuly saved!", [{action:"close"}], 5000));
 					// Update the data on the page (some ids have been generated)
 					if (is_id == -1) {
 						// first save

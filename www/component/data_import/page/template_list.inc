@@ -120,7 +120,7 @@ function useTemplate(ev,id) {
 				if (temp.type == "multiple")
 					imp._prepareExcel = function(ondone) {
 						waitFrameContentReady(this.frame_import, function(win) { return typeof win.grid != 'undefined'; }, function() {
-							p.set_freeze_content("Importing data using template...");
+							p.setFreezeContent("Importing data using template...");
 							var w = getIFrameWindow(imp.frame_excel);
 							var xl = w.excel;
 							w = getIFrameWindow(imp.frame_import);
@@ -189,7 +189,7 @@ function useTemplate(ev,id) {
 								} else {
 									where = {type:'reset',row:0};
 								}
-								p.set_freeze_content("Importing data <b>"+e.data+"</b> using the template...");
+								p.setFreezeContent("Importing data <b>"+e.data+"</b> using the template...");
 								setTimeout(function(){
 									if (imp.frame_import) {
 										var w = getIFrameWindow(imp.frame_import);

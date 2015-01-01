@@ -22,7 +22,7 @@ class page_trip_trip extends SelectionPage {
 ?>
 <table class='trip_table'><tbody><tr><td id='trip_container'></td></tr></tbody></table>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 var can_edit = <?php echo json_encode($can_edit); ?>;
 var country_data;
 <?php

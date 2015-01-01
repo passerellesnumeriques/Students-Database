@@ -169,7 +169,7 @@ class page_exam_center_profile extends SelectionPage {
 		</div>
 		</div>
 		<script type='text/javascript'>
-		var center_popup = window.parent.get_popup_window_from_frame(window);
+		var center_popup = window.parent.getPopupFromFrame(window);
 		var center_id = <?php echo $id <> null ? $id : -1;?>;
 		var section_center = sectionFromHTML('section_center');
 		var section_planning = sectionFromHTML('section_planning');
@@ -276,7 +276,7 @@ class page_exam_center_profile extends SelectionPage {
 							errorDialog("An error occured, this center was not removed properly");
 							return;
 						}
-						window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Exam center succesfully removed!", [{action:"close"}], 5000));
+						window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Exam center succesfully removed!", [{action:"close"}], 5000));
 						window.pnapplication.cancelDataUnsaved();
 						<?php if ($onsaved <> null) echo "window.frameElement.".$onsaved."();"?>
 						center_popup.close();

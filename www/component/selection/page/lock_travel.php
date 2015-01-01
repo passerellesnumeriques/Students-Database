@@ -14,7 +14,7 @@ class page_lock_travel extends SelectionPage {
 	Are you the one who will use the software during the travel ?
 </div>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 var content = document.getElementById('content');
 var server_version = <?php echo json_encode($pn_app_version);?>;
 

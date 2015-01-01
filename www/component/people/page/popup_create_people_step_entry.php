@@ -30,7 +30,7 @@ class page_popup_create_people_step_entry extends Page {
 			?>];
 			var win = window;
 			win.popup_there = function() {
-				var popup = window.top.get_popup_window_from_frame(win);
+				var popup = window.top.getPopupFromFrame(win);
 				popup.addNextButton(function() {
 					popup.freeze("We are checking if the new people are already in the database...");
 					var peoples = [];
@@ -146,7 +146,7 @@ class page_popup_create_people_step_entry extends Page {
 			?>
 			<script type='text/javascript'>
 			var structure = <?php echo $structure_name;?>;
-			var popup = window.parent.get_popup_window_from_frame(window);
+			var popup = window.parent.getPopupFromFrame(window);
 			popup.addNextButton(function() {
 				popup.freeze("We are checking if the new people are already in the database...");
 				var people = [];

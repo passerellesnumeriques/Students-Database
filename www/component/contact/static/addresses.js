@@ -89,7 +89,6 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	
 	/** Add a new address
 	 * @param {PostalAddress} address the new postal address
-	 * @param {Boolean} is_new if true, the popup dialog to edit the address will be automatically displayed
 	 */
 	this.addAddress = function(address) {
 		t._createAddressRow(address);

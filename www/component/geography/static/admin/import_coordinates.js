@@ -1190,7 +1190,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 		var todo = areas.length*((use_google ? 1 : 0)+(use_geonames ? 1 : 0));
 		var done = 0;
 		theme.css("progress_bar.css");
-		popup.freeze_progress("Importing information...", todo, function(span,pb){
+		popup.freezeWithProgress("Importing information...", todo, function(span,pb){
 			var check_finish = function() {
 				pb.addAmount(1);
 				if (++done == todo)
@@ -1262,7 +1262,7 @@ function import_division_level_coordinates(popup, country, country_data, divisio
 		auto(true,true);
 	};
 	button_auto4.onclick = function() {
-		popup.freeze_progress("Saving coordinates from gadm.org...", areas.length, function(span,pb){
+		popup.freezeWithProgress("Saving coordinates from gadm.org...", areas.length, function(span,pb){
 			var check_finish = function() {
 				pb.addAmount(1);
 				if (pb.position == pb.total) {

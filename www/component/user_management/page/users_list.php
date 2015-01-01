@@ -73,14 +73,14 @@ function init_users_list() {
 						p.close();
 						if (roles_id.length == 0) return;
 						var status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING, "Assigning roles...");
-						window.top.status_manager.add_status(status);
+						window.top.status_manager.addStatus(status);
 						list.grid.startLoading();
 						var users = [];
 						var sel = list.grid.getSelectionByRowId();
 						for (var i = 0; i < sel.length; ++i)
 							users.push(list.getTableKeyForRow("Users", sel[i]));
 						service.json("user_management","assign_roles",{users:users,roles:roles_id},function(result){
-							window.top.status_manager.remove_status(status);
+							window.top.status_manager.removeStatus(status);
 							list.grid.endLoading();
 							if (result)
 								list.reloadData();
@@ -116,14 +116,14 @@ function init_users_list() {
 						p.close();
 						if (roles_id.length == 0) return;
 						var status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING, "Unassigning roles...");
-						window.top.status_manager.add_status(status);
+						window.top.status_manager.addStatus(status);
 						list.grid.startLoading();
 						var users = [];
 						var sel = list.grid.getSelectionByRowId();
 						for (var i = 0; i < sel.length; ++i)
 							users.push(list.getTableKeyForRow("Users", sel[i]));
 						service.json("user_management","unassign_roles",{users:users,roles:roles_id},function(result){
-							window.top.status_manager.remove_status(status);
+							window.top.status_manager.removeStatus(status);
 							list.grid.endLoading();
 							if (result)
 								list.reloadData();
