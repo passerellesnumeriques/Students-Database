@@ -316,11 +316,13 @@ class DataBaseLock {
 		$sql = "INSERT INTO DataLocks".
 			" (`timestamp`,`locker_domain`,`locker_username`,`table`,`row_key`,`column`)".
 			" VALUES ";
-		$first = true;
+		$nb = 0;
+		$query = "";
+		$ids = array();
 		foreach ($row_keys as $row_key) {
 			$row_key = self::normalizeKey($row_key);
-			if ($first) $first = false; else $sql .= ",";
-			$sql .= "(".
+			if ($nb > 0) $query .= ",";
+			$query .= "(".
 				time().
 				",'".$db->escapeString(PNApplication::$instance->user_management->domain)."'".
 				",'".$db->escapeString(PNApplication::$instance->user_management->username)."'".
@@ -328,18 +330,36 @@ class DataBaseLock {
 				",'".$db->escapeString(json_encode($row_key))."'".
 				",NULL".
 				")";
+			$nb++;
+			if ($nb == 250) {
+				$db->execute($sql.$query);
+				$id = $db->getInsertID();
+				if ($id <> 0) {
+					$nb_rows = $db->affectedRows();
+					if ($nb_rows == $nb) {
+						$res = $db->execute("SELECT LAST_INSERT_ID()");
+						$row = $db->nextRow($res);
+						$id = $row["LAST_INSERT_ID()"];
+						for ($i = 0; $i < $nb_rows; $i++)
+							array_push($ids, $id+$i);
+					}
+				}
+				$query = "";
+				$nb = 0;
+			}
 		}
-		$db->execute($sql);
-		$id = $db->getInsertID();
-		$ids = array();
-		if ($id <> 0) {
-			$nb_rows = $db->affectedRows();
-			if ($nb_rows == count($row_keys)) {
-				$res = $db->execute("SELECT LAST_INSERT_ID()");
-				$row = $db->nextRow($res);
-				$id = $row["LAST_INSERT_ID()"];
-				for ($i = 0; $i < $nb_rows; $i++)
-					array_push($ids, $id+$i);
+		if ($nb > 0) {
+			$db->execute($sql.$query);
+			$id = $db->getInsertID();
+			if ($id <> 0) {
+				$nb_rows = $db->affectedRows();
+				if ($nb_rows == $nb) {
+					$res = $db->execute("SELECT LAST_INSERT_ID()");
+					$row = $db->nextRow($res);
+					$id = $row["LAST_INSERT_ID()"];
+					for ($i = 0; $i < $nb_rows; $i++)
+						array_push($ids, $id+$i);
+				}
 			}
 		}
 		$lock_user = DataBaseLock::areRowsLocked($table, $row_keys, $ids);
