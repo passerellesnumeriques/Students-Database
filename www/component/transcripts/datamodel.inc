@@ -258,7 +258,7 @@ $model->addTable("PublishedTranscriptStudentGeneralComment")
 
 $model->addTable("PublishedTranscriptSubject")
 	->addForeignKey("transcript","PublishedTranscript", true, false, true, false, false)
-	->addForeignKey("subject", "CurriculumSubject", true, false, false, false, true)
+	->addForeignKey("subject", "CurriculumSubject", true, false, true, false, false)
 	->setKey(array("transcript","subject"))
 	->addDecimal("max_grade",3,2,0,100,false,false)
 	->addDecimal("passing_grade",3,2,0,100,false,false)

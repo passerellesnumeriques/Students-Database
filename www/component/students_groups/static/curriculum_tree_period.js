@@ -37,11 +37,15 @@ function CurriculumTreeNode_BatchPeriod(parent, period) {
 				}
 				for (var i = 0; i < spes.length; ++i)
 					new CurriculumTreeNode_Specialization(t, spes[i]);
+				buildGroupsTree(this, period, null);
 			});
-		} else for (var i = 0; i < spes.length; ++i)
-			new CurriculumTreeNode_Specialization(this, spes[i]);
-	}
-	buildGroupsTree(this, period, null);
+		} else {
+			for (var i = 0; i < spes.length; ++i)
+				new CurriculumTreeNode_Specialization(this, spes[i]);
+			buildGroupsTree(this, period, null);
+		}
+	} else
+		buildGroupsTree(this, period, null);
 }
 CurriculumTreeNode_BatchPeriod.prototype = new CurriculumTreeNode;
 CurriculumTreeNode_BatchPeriod.prototype.constructor = CurriculumTreeNode_BatchPeriod;
