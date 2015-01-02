@@ -1,4 +1,4 @@
-/**
+/** Exam subject
  * @param {Number} id exam subject ID
  * @param {String} name exam subject name
  * @param {Number} max_score exam subject score
@@ -13,7 +13,7 @@ function ExamSubject (id, name, max_score, parts, versions){
 	this.versions = versions;
 }
 
-/**
+/** Part in an exam subject
  * @param {Number} id exam subject part ID
  * @param {Number} index exam subject part index within subject
  * @param {String} name exam subject part name
@@ -28,12 +28,12 @@ function ExamSubjectPart(id, index, name, max_score, questions){
 	this.questions = questions;
 }
 
-/**
+/** Question in an exam subject
  * @param {Number} id question ID
  * @param {Number} index question index within the part
  * @param {Number} max_score question score
  * @param {String} type question type (i.e mcq_single" or "mcq_multi" or "number" or "text)
- * @param {String} type_config 
+ * @param {String} type_config configuration depending on the type
  */
 function ExamSubjectQuestion(id, index, max_score, type, type_config){
 	this.id = id;
@@ -45,7 +45,7 @@ function ExamSubjectQuestion(id, index, max_score, type, type_config){
 
 /**
  * get grid widget field type
- * @param {ExamSubjectQuestion} question
+ * @param {ExamSubjectQuestion} question the question
  * @returns {String} field type of grid widget
  */
 function questionGridFieldType(question)
@@ -61,7 +61,7 @@ function questionGridFieldType(question)
 
 /**
  * get grid widget field args
- * @param {ExamSubjectQuestion} question 
+ * @param {ExamSubjectQuestion} question the question
  * @returns {Object} field args of grid widget
  */
 function questionGridFieldArgs(question){

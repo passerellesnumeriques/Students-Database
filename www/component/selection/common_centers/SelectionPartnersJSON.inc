@@ -1,10 +1,14 @@
-<?php 
+<?php
+/**
+ * Provides JSON structures for centers location and partners
+ */ 
 class SelectionPartnersJSON {
 
 	/**
 	 * Return the JSON structure of the partners for the given center
 	 * @param string $center_type 'InformationSession', 'ExamCenter' or 'InterviewCenter'
 	 * @param integer $id center id
+	 * @param integer $campaign_id campaign
 	 * @return string the JSON
 	 * @no_name_check
 	 */
@@ -99,6 +103,7 @@ class SelectionPartnersJSON {
 	 * @param array $contact_points list of contact points for all organizations
 	 * @param array $selected_contact_points list of selected contact points
 	 * @return string the JSON
+	 * @no_name_check
 	 */
 	public static function PartnersJSON($partners, $contacts, $addresses, $contact_points, $selected_contact_points) {
 		$s = "[";
@@ -127,6 +132,7 @@ class SelectionPartnersJSON {
 	 * @param array $contact_points OrganizationContactPoint rows
 	 * @param integer[] $selected_contact_points id of the selected contact points 
 	 * @return string the JSON
+	 * @no_name_check
 	 */
 	public static function PartnerJSON($partner, $contacts, $addresses, $contact_points, $selected_contact_points) {
 		require_once("component/contact/ContactJSON.inc");

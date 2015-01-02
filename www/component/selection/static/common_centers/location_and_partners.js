@@ -1,3 +1,14 @@
+/**
+ * Screen to display the location of a center, with hosting partner, and a list of other partners
+ * @param {popup_window} popup the popup in which we are
+ * @param {section} section_location section where to put the location and hosting partner
+ * @param {section} section_other_partners section where to put the list of other partners
+ * @param {String} center_type InformationSession, ExamCenter or InterviewCenter
+ * @param {Number} center_id id of the center
+ * @param {GeographicAreaText} geographic_area_text geographic information
+ * @param {Array} partners list of partners
+ * @param {Boolean} editable indicates if the user can modify information
+ */
 function location_and_partners(popup, section_location, section_other_partners, center_type, center_id, geographic_area_text, partners, editable) {
 	
 	this.center_id = center_id;
@@ -6,6 +17,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	
 	// Functionalities
 	
+	/** Get the hosting partner
+	 * @returns {SelectionPartner} the hosting partner, or null
+	 */
 	this.getHostPartner = function() {
 		for (var i = 0; i < this.partners.length; ++i) {
 			if (!this.partners[i].host) continue;
@@ -13,6 +27,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		}
 		return null;
 	};
+	/** Get the address hosting the event
+	 * @returns {PostalAddress} address or null
+	 */
 	this.getHostAddress = function() {
 		var host = this.getHostPartner();
 		if (host != null) {
@@ -22,6 +39,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		}
 		return null;
 	};
+	/** Set the hosting partner
+	 * @param {SelectionPartner} host the new hosting partner
+	 */
 	this.setHostPartner = function(host) {
 		// unselect previous host
 		for (var i = 0; i < this.partners.length; ++i)
@@ -59,6 +79,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		this._refreshMap();
 	};
 	
+	/** Open a popup to select the location, and optionnaly the hosting partner */
 	this.dialogSelectLocation = function() {
 		var t=this;
 		var win=window;
@@ -207,8 +228,11 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		}
 		layout.changed(section_location.element);
 	};
+	/** {GoogleMap} the map */
 	this._map = null;
+	/** {Object} marker on the map */
 	this._marker = null;
+	/** Refresh the map with current location */
 	this._refreshMap = function() {
 		var address = this.getHostAddress();
 		if (address == null && this.geographic_area_text == null) {
@@ -263,6 +287,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			}
 		}
 	};
+	/** Refresh hosting partner */
 	this._refreshHost = function() {
 		this._host_container.removeAllChildren();
 		var host = this.getHostPartner();
@@ -282,7 +307,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		//th.style.color = "#606060";
 		th.style.textDecoration = "underline";
 		th.appendChild(document.createTextNode("Contact Points"));
-		new partnerRow(table, host, editable, function(org) {
+		new PartnerRow(table, host, editable, function(org) {
 			// remove any non-valid contact point
 			for (var i = 0; i < host.selected_contact_points_id.length; ++i) {
 				var found = false;
@@ -302,7 +327,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	};
 	
 	// Other Partners
-	
+	/** Create list of partners */
 	this._initPartners = function() {
 		// table of partners
 		this._partners_table = document.createElement("TABLE");
@@ -373,7 +398,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		
 		this._refreshPartners();
 	};
-	
+	/** Refresh list of partners */
 	this._refreshPartners = function() {
 		this._partners_table.removeAllChildren();
 		if (this.partners.length == 0 || (this.partners.length == 1) && this.partners[0].host) {
@@ -388,7 +413,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		th.appendChild(document.createTextNode("Contact Point(s)"));
 		for (var i = 0; i < this.partners.length; ++i) {
 			if (this.partners[i].host) continue;
-			new partnerRow(this._partners_table, this.partners[i], editable, function(org, partner) {
+			new PartnerRow(this._partners_table, this.partners[i], editable, function(org, partner) {
 				// remove any non-valid contact point
 				for (var i = 0; i < partner.selected_contact_points_id.length; ++i) {
 					var found = false;
@@ -413,10 +438,18 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	this._initPartners();
 }
 
-function partnerRow(table, partner, editable, onchange) {
+/**
+ * Display a partner in a table
+ * @param {Element} table the table
+ * @param {SelectionPartner} partner the partner
+ * @param {Boolean} editable indicates if this can be modified by the user
+ * @param {Function} onchange called when something has been modified
+ */
+function PartnerRow(table, partner, editable, onchange) {
 	var tr = document.createElement("TR");
 	tr.className = "selection_partner_row";
 	table.appendChild(tr);
+	/** Refresh with current information */
 	this._refresh = function() {
 		tr.removeAllChildren();
 		var td;

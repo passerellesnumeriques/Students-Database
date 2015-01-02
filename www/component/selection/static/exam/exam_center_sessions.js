@@ -3,6 +3,19 @@ if (typeof require != 'undefined') {
 	require(["event_date_time_duration.js","popup_window.js","calendar_objects.js"]);
 }
 
+/**
+ * Screen for the sessions in an exam center, where we can assign applicants, and screen for the list of available rooms
+ * @param {Element} container where to create the screen for the sessions
+ * @param {Element} rooms_container where to create the list of available rooms
+ * @param {Array} rooms list of existing rooms
+ * @param {Array} sessions list of existing sessions
+ * @param {Array} applicants list of applicants assigned to this exam center
+ * @param {exam_center_is} linked_is screen of the linked information sessions
+ * @param {String} default_duration default duration of an exam session
+ * @param {Number} calendar_id calendar of the selection campaign
+ * @param {Array} peoples to use with a who_container
+ * @param {Boolean} can_edit indicates if information can be modified by the user
+ */
 function exam_center_sessions(container, rooms_container, rooms, sessions, applicants, linked_is, default_duration, calendar_id, peoples, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (typeof rooms_container == 'string') rooms_container = document.getElementById(rooms_container);
@@ -20,6 +33,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	
 	/* ----- Rooms ----- */
 	
+	/** Create a new room */
 	this.newRoom = function() {
 		var r = new ExamCenterRoom(-1, this._new_room_id_counter--, "", 10);
 		this.rooms.push(r);
@@ -30,6 +44,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			this._sessions_sections[i].refresh();
 		window.pnapplication.dataUnsaved("ExamCenterRooms");
 	};
+	/** Refresh the list of rooms */
 	this._refreshRooms = function() {
 		this._table_rooms.removeAllChildren();
 		var tr, th;
@@ -47,6 +62,9 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			this._createRoomRow(this.rooms[i]);
 		layout.changed(this._table_rooms);
 	};
+	/** Create the row for a room
+	 * @param {ExamCenterRoom} room the room
+	 */
 	this._createRoomRow = function(room) {
 		var tr, td;
 		this._table_rooms.appendChild(tr = document.createElement("TR"));
@@ -131,6 +149,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	
 	/* ----- Sessions ----- */
 	
+	/** Create a new exam session */
 	this.newSession = function() {
 		var t=this;
 		require(["event_date_time_duration.js","popup_window.js","calendar_objects.js"], function() {
@@ -168,18 +187,30 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			popup.show();
 		});
 	};
+	/** List of sessions */
 	this._sessions_sections = [];
+	/** Get a session
+	 * @param {Number} id session id
+	 * @returns {CalendarEvent} session
+	 */
 	this.getSession = function(id) {
 		for (var i = 0; i < this.sessions.length; ++i)
 			if (this.sessions[i].id == id)
 				return this.sessions[i];
 		return null;
 	};
+	/** Create a session
+	 * @param {CalendarEvent} event the session
+	 * @param {Array} peoples for the who_container
+	 */
 	this._createSession = function(event, peoples) {
 		this._sessions_sections.push(new ExamSessionSection(this._sessions_container, event, peoples, this, can_edit));
 		this._span_nb_sessions.innerHTML = this.sessions.length;
 		layout.changed(this._sessions_container);
 	};
+	/** Remove a session
+	 * @param {CalendarEvent} event the session
+	 */
 	this._removeSession = function(event) {
 		this.sessions.remove(event);
 		for (var i = 0; i < this._sessions_sections.length; ++i) {
@@ -199,6 +230,10 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		layout.changed(this._sessions_container);
 		window.pnapplication.dataUnsaved("ExamCenterSessions");
 	};
+	/** Get the session section
+	 * @param {Number} session_id id
+	 * @returns {ExamSessionSection} the section
+	 */
 	this._getSessionSection = function(session_id) {
 		for (var i = 0; i < this._sessions_sections.length; ++i)
 			if (this._sessions_sections[i].event.id == session_id) 
@@ -210,12 +245,21 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	
 	/* ----- Applicants ----- */
 	
+	/** Get an applicant object
+	 * @param {Number} people_id id
+	 * @returns {Applicant} the applicant
+	 */
 	this.getApplicant = function(people_id) {
 		for (var i = 0; i < this.applicants.length; ++i)
 			if (this.applicants[i].people.id == people_id)
 				return this.applicants[i];
 		return null;
 	};
+	/** Get the list of applicants assigned to the given session and room
+	 * @param {Number} session_id session
+	 * @param {Number} room_id room
+	 * @returns {Array} list of assigned applicants
+	 */
 	this.getApplicantsAssignedTo = function(session_id, room_id) {
 		var list = [];
 		for (var i = 0; i < this.applicants.length; ++i)
@@ -223,6 +267,10 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 				list.push(this.applicants[i]);
 		return list;
 	};
+	/** Automatically assign the given applicant
+	 * @param {Applicant} applicant applicant to assign
+	 * @returns {Boolean} true if the applicant has been assigned, false if there is no more available slot
+	 */
 	this._assignAuto = function(applicant) {
 		var max_slots = 0;
 		var max_room = null;
@@ -244,6 +292,12 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		if (max_slots == 0) return false;
 		return this._assignTo(applicant, max_session, max_room, true);
 	};
+	/** Assign an applicant
+	 * @param {Applicant} applicant the applicant to assign
+	 * @param {CalendarEvent} session session
+	 * @param {ExamCenterRoom} room room
+	 * @param {Boolean} already_confirmed_for_past_session if false and the session is in the past, a confirmation will be asked to the user before to really assign the applicant
+	 */
 	this._assignTo = function(applicant, session, room, already_confirmed_for_past_session) {
 		var s = this._getSessionSection(session.id);
 		var r = s.getRoomSection(room.id);
@@ -264,6 +318,13 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		window.pnapplication.dataUnsaved("ExamCenterApplicants");
 		return true;
 	};
+	/** Unassign an applicant
+	 * @param {Applicant} applicant the applicant to unassign
+	 * @param {ExamSessionSection} session_section section of the session
+	 * @param {RoomSection} room_section section of the room
+	 * @param {Function} ondone called when the unassignment has been done
+	 * @param {Boolean} already_confirmed_for_past_session if false and the session is in the past, a confirmation will be asked to the user before to really unassign the applicant
+	 */
 	this._unassign = function(applicant, session_section, room_section, ondone, already_confirmed_for_past_session) {
 		if (!already_confirmed_for_past_session && session_section.event.start.getTime() < new Date().getTime()) {
 			var t=this;
@@ -280,6 +341,11 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		if (ondone) ondone();
 		window.pnapplication.dataUnsaved("ExamCenterApplicants");
 	};
+	/** Move an applicant to the given session and room
+	 * @param {Number} people_id applicant
+	 * @param {ExamSessionSection} session_section session
+	 * @param {RoomSection} room_section room
+	 */
 	this._moveApplicant = function(people_id, session_section, room_section) {
 		var applicant = null;
 		for (var i = 0; i < this.applicants.length; ++i)
@@ -303,6 +369,9 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 				alert("No more seat available in this room: the applicant is now in the list of applicants without schedule");
 		});
 	};
+	/** Remove an applicant from the exam center
+	 * @param {Applicant} applicant the applicant
+	 */
 	this.removeApplicantFromCenter = function(applicant) {
 		this.applicants.remove(applicant);
 		if (applicant.exam_session_id == null) {
@@ -322,11 +391,13 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	
 	/* ----- Initialization of the screen ----- */
 	
+	/** Creation of the screen */
 	this._init = function() {
 		this._initHeader();
 		this._initRooms();
 		this._initSessions();
 	};
+	/** Creation of the header on top of the sessions and applicants lists */
 	this._initHeader = function() {
 		// header
 		this._header = document.createElement("DIV");
@@ -351,6 +422,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			button_new_session.onclick = function() { this.t.newSession(); };
 		}
 	};
+	/** Creation of the sessions */
 	this._initSessions = function() {
 		// split into 2 horizontal elements: (1) the non-assigned applicants, (2) scheduled sessions
 		this._horiz_div = document.createElement("DIV");
@@ -477,6 +549,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			}
 		});
 	};
+	/** Creation of the rooms */
 	this._initRooms = function() {
 		this._table_rooms = document.createElement("TABLE");
 		this._table_rooms.className = "grid";
@@ -492,6 +565,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		}
 		this._refreshRooms();
 	};
+	/** Creation of the list of applicants not yet assigned to a session */
 	this._initNotAssignedList = function() {
 		var list = [];
 		for (var i = 0; i < this.applicants.length; ++i)
@@ -618,15 +692,29 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	this._init();
 }
 
+/** Section containing an exam session
+ * @param {Element} container where to create the section
+ * @param {CalendarEvent} event the session
+ * @param {Array} peoples list of peoples for the who_container
+ * @param {exam_center_sessions} sessions screen managing it
+ * @param {Boolean} can_edit indicates if information can be modified
+ */
 function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 	this.event = event;
 	this.sessions = sessions;
+	/** Get the section of a room
+	 * @param {Number} room_id id
+	 * @returns {RoomSection} the section
+	 */
 	this.getRoomSection = function(room_id) {
 		for (var i = 0; i < this._rooms.length; ++i)
 			if (this._rooms[i].room.id == room_id)
 				return this._rooms[i];
 		return null;
 	};
+	/** Remove a room
+	 * @param {ExamCenterRoom} room the room to remove
+	 */
 	this.removeRoom = function(room) {
 		for (var i = 0; i < this._rooms.length; ++i) {
 			if (this._rooms[i].room.id == room.id) {
@@ -644,6 +732,9 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		}
 		this.refreshNbApplicants();
 	};
+	/** Called when the capacity of a room has been modified
+	 * @param {ExamCenterRoom} room the room
+	 */
 	this.roomCapacityChanged = function(room) {
 		var r = this.getRoomSection(room.id);
 		while (r.applicants_list.getList().length > room.capacity) {
@@ -655,6 +746,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		}
 		this.refreshNbApplicants();
 	};
+	/** Called when the user is asking to reschedule a session */ 
 	this.reschedule = function () {
 		var t=this;
 		require(["event_date_time_duration.js","popup_window.js","calendar_objects.js"], function() {
@@ -690,6 +782,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 			popup.show();
 		});
 	};
+	/** Creation of the screen */
 	this._init = function() {
 		var title = document.createElement("SPAN");
 		title.appendChild(document.createTextNode("Session on "));
@@ -777,7 +870,9 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		
 		this.refresh();
 	};
+	/** List of room sections */
 	this._rooms = [];
+	/** Refresh the screen */
 	this.refresh = function() {
 		this.span_date.innerHTML = getDateString(event.start,true);
 		this.span_start_time.innerHTML = getTimeString(event.start,true);
@@ -798,6 +893,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		this.refreshNbApplicants();
 		layout.changed(this.session_section.element);
 	};
+	/** Refresh the number of applicants in the header */
 	this.refreshNbApplicants = function() {
 		var total_applicants = 0;
 		for (var i = 0; i < sessions.applicants.length; ++i) {
@@ -810,9 +906,16 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 	this._init();
 }
 
+/** Section corresponding of a room in an exam session
+ * @param {Element} container where to create the screen
+ * @param {ExamCenterRoom} room the room
+ * @param {ExamSessionSection} session_section section of the session in which this section is
+ * @param {Boolean} can_edit indicates if the user can modify something
+ */
 function RoomSection(container, room, session_section, can_edit) {
 	this.room = room;
 	this.session_section = session_section;
+	/** Creation of the screen */
 	this._init = function() {
 		var title = document.createElement("SPAN");
 		title.appendChild(document.createTextNode("Room "));
@@ -905,18 +1008,26 @@ function RoomSection(container, room, session_section, can_edit) {
 	this._init();
 }
 
+/**
+ * Header of a list of applicants in the exam center sessions screen
+ * @param {applicant_data_grid} data_grid the list of applicants
+ */
 function ApplicantsListHeader(data_grid) {
+	/** DIV of the header */
 	this.header = document.createElement("DIV");
 	data_grid.container.insertBefore(this.header, data_grid.grid.grid_element);
 	this.header.className = "header_bar_menubar_style";
 	this.header.style.padding = "3px 5px 3px 5px";
 	this.header.style.height = "22px";
+	/** SPAN containing the number of selected applicants */
 	this.nb_selected_span = document.createElement("SPAN");
 	this.nb_selected_span.innerHTML = "0/0";
 	this.header.appendChild(this.nb_selected_span);
 	this.header.appendChild(document.createTextNode(" selected "));
 
+	/** Buttons of actions we can do on the selected applicants */
 	this._selection_buttons = [];
+	/** Refresh information */
 	this.refresh = function() {
 		var sel = data_grid.getSelection();
 		this.nb_selected_span.innerHTML = sel.length + "/" + data_grid.getList().length;
@@ -924,6 +1035,12 @@ function ApplicantsListHeader(data_grid) {
 			this._selection_buttons[i].disabled = sel.length > 0 ? "" : "disabled";
 		layout.changed(this.header);
 	};
+	/** Add an action we can do with selected applicants
+	 * @param {String} html HTML code
+	 * @param {String} css CSS class of the button
+	 * @param {String} tooltip tooltip text
+	 * @param {Function} onclick called when the button is clicked
+	 */
 	this.addSelectionAction = function(html, css, tooltip, onclick) {
 		var button = document.createElement("BUTTON");
 		button.className = css;

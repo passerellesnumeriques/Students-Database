@@ -2,8 +2,8 @@
  * Create a popup window for selecting an area and a partner having an address in the selected area
  * The popup is made of two parts: the left one containing a geographic area selection (the user has no choice about the country, it is automatically the domain one)
  * The right one is made of a select_area_and_matching_organizations object, updated everytime the geographic area is updated
- * @param {Number | NULL} geographic_area the ID of the preselected geographic area, if any
- * @param {SelectionPartner|NULL} host the hosting partner, if any
+ * @param {Number|null} geographic_area the ID of the preselected geographic area, if any
+ * @param {SelectionPartner|null} host the hosting partner, if any
  * @param {Function} onclose function called when the popup is closed, with this object as parameter
  * @param {String} warning_html message displayed at the top of the popup content while no host is selected
  * @param {String} ok_html message displayed at the top of the popup content when a host is selected
@@ -48,8 +48,9 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 			t._refreshMap();
 		});
 	};
-	
+	/** Marker on the map of the host */
 	t._host_marker = null;
+	/** Refresh the map */
 	t._refreshMap = function() {
 		if (!t._map) return; // map not yet ready
 		if (!t._country_id) return; // not yet initialized
@@ -293,7 +294,7 @@ function popup_select_area_and_partner(geographic_area, host, onclose, warning_h
 	t._shown = false;//Attribute set as true when the right part of the table is displayed
 	/**
 	 * Hide or show the TD element containing the select_area_and_matching_organizations object
-	 * @param {Number | NULL} area_id the ID of the area selected in the left TD. If null, the right TD element is hidden, else it is shown 
+	 * @param {Number|null} area_id the ID of the area selected in the left TD. If null, the right TD element is hidden, else it is shown 
 	 */
 	t._refreshTDPartners = function(area_id){
 		if(area_id != null){

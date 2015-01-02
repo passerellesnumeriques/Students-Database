@@ -1,3 +1,9 @@
+/**
+ * Show a menu to select on which information session to assign a list of applicants
+ * @param {Element} button button below which to display the menu
+ * @param {Array} applicants_ids list of applicants to assign
+ * @param {Function} onchanged called when assignment has been done
+ */
 function assign_is(button, applicants_ids, onchanged) {
 	var lock = lock_screen(null, "Loading Information Sessions...");
 	service.json("selection","is/list",{},function(list) {

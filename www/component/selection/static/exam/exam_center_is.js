@@ -1,13 +1,26 @@
+/**
+ * Section displaying the list of information session linked to an exam center
+ * @param {Element|String} container where to create the screen
+ * @param {Array} all_is list of all existing information sessions
+ * @param {Array} already_linked_ids list of information sessions which are already linked to another exam center
+ * @param {Array} linked_is list of information sessions linked to this exam center
+ * @param {Boolean} can_edit indicates if the user can modify something
+ */
 function exam_center_is(container, all_is, already_linked_ids, linked_is, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	
+	/** List of linked information sessions */
 	this.linked_ids = [];
 	for (var i = 0; i < linked_is.length; ++i) this.linked_ids.push(parseInt(linked_is[i]));
+	/** List of information sessions already linked to another exam center */
 	this.already_linked_ids = [];
 	for (var i = 0; i < already_linked_ids.length; ++i) this.already_linked_ids.push(parseInt(already_linked_ids[i]));
+	/** Event fired when applicants are assigned to the exam center due to a new linked information session */
 	this.onapplicantsadded = new Custom_Event();
+	/** Event fired when applicants are unassigned from the exam center due to a unlinked information session */
 	this.onapplicantsremoved = new Custom_Event();
 	
+	/** Creation of the screen */
 	this._init = function() {
 		this._table = document.createElement("TABLE");
 		this._section = new section("/static/selection/is/is_16.png", "Information Sessions Linked", this._table, false, false, 'soft');
@@ -44,14 +57,18 @@ function exam_center_is(container, all_is, already_linked_ids, linked_is, can_ed
 		
 		this.refresh();
 	};
-	
+	/** Link a new information session
+	 * @param {Number} is_id information session id
+	 */
 	this.linkIS = function(is_id) {
 		this.linked_ids.push(is_id);
 		this._addISRow(is_id,true);
 		getWindowFromElement(this._table).pnapplication.dataUnsaved("ExamCenterInformationSession");
 		layout.changed(this._table);
 	};
-	
+	/** Set hosting partner of the exam center from the given information session
+	 * @param {Number} is_id information session id
+	 */
 	this.setHostFromIS = function(is_id) {
 		var popup = window.parent.getPopupFromFrame(window);
 		popup.freeze("Loading Host information from Information Session...");
@@ -61,14 +78,17 @@ function exam_center_is(container, all_is, already_linked_ids, linked_is, can_ed
 			window.center_location.setHostPartner(res);
 		});
 	};
-	
+	/** Refresh the screen */
 	this.refresh = function() {
 		this._table.removeAllChildren();
 		for (var i = 0; i < this.linked_ids.length; ++i)
 			this._addISRow(this.linked_ids[i]);
 		layout.changed(this._table);
 	};
-	
+	/** Display a row with an information session
+	 * @param {Number} is_id information session id
+	 * @param {Boolean} is_new indicates if this is a newly linked IS, so that we need to load the list of applicants
+	 */
 	this._addISRow = function(is_id,is_new) {
 		var is = null;
 		for (var i = 0; i < all_is.length; ++i) if (all_is[i].id == is_id) { is = all_is[i]; break; }
@@ -129,7 +149,10 @@ function exam_center_is(container, all_is, already_linked_ids, linked_is, can_ed
 		
 		this._loadApplicants(is_id, is_new);
 	};
-	
+	/** Load applicants from an information session
+	 * @param {Number} is_id information session id
+	 * @param {Boolean} add_applicants indicates if the loaded applicants should be assigned to the center
+	 */
 	this._loadApplicants = function(is_id, add_applicants) {
 		var is = null;
 		for (var i = 0; i < all_is.length; ++i) if (all_is[i].id == is_id) { is = all_is[i]; break; }
