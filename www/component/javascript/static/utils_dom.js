@@ -194,23 +194,28 @@ function getStyleSizes(element, style_knowledge) {
 		s.paddingBottom = _stylePadding(ss.paddingBottom);
 		s.paddingLeft = _stylePadding(ss.paddingLeft);
 		s.paddingRight = _stylePadding(ss.paddingRight);
-		// we compute the border, as follow, because using the style may be wrong in case we have a border-collapse
-		var w = element.offsetWidth; // excluding margin
-		w -= element.clientWidth; // remove content width + the padding => remaining is border
-		if (s.borderLeftWidth+s.borderRightWidth != w) {
-			s.borderLeftWidth = w-s.borderRightWidth;
-			if (s.borderLeftWidth < 0) {
-				s.borderRightWidth += s.borderLeftWidth;
-				s.borderLeftWidth = 0;
+		s.display = ss.display;
+		if (ss.display == "table-cell") {
+			// we compute the border, as follow, because using the style may be wrong in case we have a border-collapse
+			var w = element.offsetWidth; // excluding margin
+			w -= element.clientWidth; // remove content width + the padding => remaining is border
+			if (s.borderLeftWidth+s.borderRightWidth != w) {
+				s.borderLeftWidth = w-s.borderRightWidth;
+				if (s.borderLeftWidth < 0) {
+					if (element.nextSibling)
+						s.borderRightWidth += s.borderLeftWidth;
+					s.borderLeftWidth = 0;
+				}
 			}
-		}
-		w = element.offsetHeight; // excluding margin
-		w -= element.clientHeight; // remove content width + the padding => remaining is border
-		if (s.borderTopWidth+s.borderBottomWidth != w) {
-			s.borderTopWidth = w-s.borderBottomWidth;
-			if (s.borderTopWidth < 0) {
-				s.borderBottomWidth += s.borderTopWidth;
-				s.borderYopWidth = 0;
+			w = element.offsetHeight; // excluding margin
+			w -= element.clientHeight; // remove content width + the padding => remaining is border
+			if (s.borderTopWidth+s.borderBottomWidth != w) {
+				s.borderTopWidth = w-s.borderBottomWidth;
+				if (s.borderTopWidth < 0) {
+					if (element.parentNode.nextSibling)
+						s.borderBottomWidth += s.borderTopWidth;
+					s.borderYopWidth = 0;
+				}
 			}
 		}
 	}
@@ -224,7 +229,9 @@ function setWidth(element, width, style_knowledge) {
 	var s = getStyleSizes(element, style_knowledge);
 	// we compute the border, as follow, because using the style may be wrong in case we have a border-collapse
 	var w = width;
-	w -= s.borderLeftWidth + s.borderRightWidth;
+	w -= s.borderLeftWidth;
+	if (s.display != "table-cell" || element.nextSibling)
+		w -= s.borderRightWidth;
 	w -= s.marginLeft + s.marginRight;
 	w -= s.paddingLeft + s.paddingRight;
 	element.style.width = w+"px";

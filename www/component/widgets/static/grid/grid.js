@@ -840,7 +840,7 @@ function grid(element) {
 		if (typeof index == 'undefined') {
 			t.columns.push(col);
 			t.colgroup.appendChild(col.col);
-			col.th.rowSpan = t.header_rows.length-level+1;
+			col.th.rowSpan = t.header_rows.length-level;
 			t.header_rows[level].appendChild(col.th);
 		} else {
 			t.columns.splice(index,0,col);
@@ -1483,7 +1483,14 @@ function grid(element) {
 			// fix the size of the container
 			var container_width = getWidth(t.element.parentNode, knowledge);
 			var total_width = getWidth(t.element, knowledge);
+			var diff_width = 0;
+			if (t.columns.length > 0) {
+				var s = getStyleSizes(t.columns[t.columns.length-1].th, []);
+				if (s.borderRightWidth > 0)
+					diff_width += s.borderRightWidth; // adjust with last border
+			}
 			setWidth(t.element, total_width-1, knowledge);
+			t.grid_element.style.paddingRight = (diff_width)+"px";
 			if (t.element.parentNode.clientWidth != container_width) {
 				// the container is expanding with us ! typically this may be done by the flex box model
 				// let's fix temporarly the container !
@@ -1495,9 +1502,6 @@ function grid(element) {
 				t.element.parentNode.style.minWidth = t.element.parentNode.style.width;
 				t.element.parentNode.style.maxWidth = t.element.parentNode.style.width;
 			}
-			// take header info
-			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));
-			var head_width = t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1);
 			// take the width of each th
 			if (t.selectable)
 				t.thead.childNodes[0].childNodes[0]._width = getWidth(t.thead.childNodes[0].childNodes[0], knowledge);
@@ -1552,14 +1556,17 @@ function grid(element) {
 			t.element.style.position = "relative";
 			t.grid_element.style.overflow = "auto";
 			if (t.element.style.height) t.grid_element.style.maxHeight = t.element.style.height;
+			t.thead.style.overflow = "hidden";
 			t.thead.style.position = "absolute";
+			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));
+			var head_width = t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1);
 			t.thead.style.top = "0px";
 			t.thead.style.left = head_scroll+"px";
-			t.thead.style.overflow = "hidden";
-			setWidth(t.thead, head_width, thead_knowledge); 
+			setWidth(t.thead, head_width, thead_knowledge);
 			var head_height = t.thead.offsetHeight;
 			t.element.style.paddingTop = (head_height-1)+"px";
 			//t.table.parentNode.style.marginRight = "1px";
+			setWidth(t.element, total_width, knowledge);
 			layout.changed(t.element);
 		};
 		t.element.style.display = "flex";
