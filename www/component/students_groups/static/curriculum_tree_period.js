@@ -13,13 +13,33 @@ function CurriculumTreeNode_BatchPeriod(parent, period) {
 	CurriculumTreeNode.call(this, parent, "period"+period.id, parseSQLDate(this.academic.end).getTime() > now && parseSQLDate(this.academic.start).getTime() < now);
 	this.item.cells[0].addStyle({color: parseSQLDate(this.academic.end).getTime() < now ? "#4040A0" : parseSQLDate(this.academic.start).getTime() > now ? "#A04040" : "#40A040"});
 	if (period.available_specializations.length > 0) {
+		var spes = [];
 		for (var i = 0; i < period.available_specializations.length; ++i) {
 			var spe_id = period.available_specializations[i];
 			var spe = null;
 			for (var j = 0; j < specializations.length; ++j)
 				if (specializations[j].id == spe_id) { spe = specializations[j]; break; }
-			new CurriculumTreeNode_Specialization(this, spe);
+			if (spe == null) { spes = null; break; }
+			spes.push(spe);
 		}
+		if (spes === null) {
+			// seems to have been modified, we need to refresh from back-end
+			var t=this;
+			service.json("curriculum","get_specializations",null,function(res) {
+				specializations = res;
+				spes = [];
+				for (var i = 0; i < period.available_specializations.length; ++i) {
+					var spe_id = period.available_specializations[i];
+					var spe = null;
+					for (var j = 0; j < specializations.length; ++j)
+						if (specializations[j].id == spe_id) { spe = specializations[j]; break; }
+					spes.push(spe);
+				}
+				for (var i = 0; i < spes.length; ++i)
+					new CurriculumTreeNode_Specialization(t, spes[i]);
+			});
+		} else for (var i = 0; i < spes.length; ++i)
+			new CurriculumTreeNode_Specialization(this, spes[i]);
 	}
 	buildGroupsTree(this, period, null);
 }

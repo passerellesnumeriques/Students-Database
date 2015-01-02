@@ -2167,6 +2167,11 @@ class SQLQuery {
 						array_push($keys_to_lock, $key_to_lock);
 					}
 				}
+				if (count($rows) == 0) {
+					// nothing to be removed!
+					unset($to_remove[$table_name]);
+					continue;
+				}
 				if (count($keys_to_lock) > 0) {
 					$locked_by = null;
 					$locks_ids = DataBaseLock::lockRows($table_name, $keys_to_lock, $locked_by, $this->bypass_security || ($dm_table->canRemoveFromForeignTable($to_remove_in_table["come_from"])));

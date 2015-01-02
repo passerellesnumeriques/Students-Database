@@ -11,6 +11,7 @@ $model->addTable("CurriculumSubjectGrading")
 	->addInsertAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 $model->addTable("CurriculumSubjectEvaluationType")
@@ -23,6 +24,16 @@ $model->addTable("CurriculumSubjectEvaluationType")
 	->addInsertAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) {
+		$q = PNApplication::$instance->curriculum->getSubjectQuery($row["subject"]);
+		PNApplication::$instance->curriculum->joinBatchPeriod($q, "CurriculumSubject", "period");
+		PNApplication::$instance->curriculum->joinBatch($q, "BatchPeriod", "batch");
+		$q->field("CurriculumSubject","name","subject_name");
+		$q->field("BatchPeriod","name","period_name");
+		$q->field("StudentBatch","name","batch_name");
+		$r = $q->executeSingleRow();
+		return "Evaluations and grades for subject ".toHTML($r["subject_name"])." in ".toHTML($r["period_name"])." of batch ".toHTML($r["batch_name"]);
+	})
 	;
 
 $model->addTable("CurriculumSubjectEvaluation")
@@ -37,6 +48,7 @@ $model->addTable("CurriculumSubjectEvaluation")
 	->addInsertAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 $model->addTable("StudentSubjectEvaluationTypeGrade")
@@ -49,6 +61,7 @@ $model->addTable("StudentSubjectEvaluationTypeGrade")
 	->addInsertAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 $model->addTable("StudentSubjectEvaluationGrade")
@@ -61,6 +74,7 @@ $model->addTable("StudentSubjectEvaluationGrade")
 	->addInsertAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 $model->addTable("StudentSubjectGrade")
@@ -74,6 +88,17 @@ $model->addTable("StudentSubjectGrade")
 	->addInsertAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_students_grades", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) {
+		$q = PNApplication::$instance->curriculum->getSubjectQuery($row["subject"]);
+		PNApplication::$instance->curriculum->joinBatchPeriod($q, "CurriculumSubject", "period");
+		PNApplication::$instance->curriculum->joinBatch($q, "BatchPeriod", "batch");
+		$q->field("CurriculumSubject","name","subject_name");
+		$q->field("BatchPeriod","name","period_name");
+		$q->field("StudentBatch","name","batch_name");
+		$r = $q->executeSingleRow();
+		$p = PNApplication::$instance->people->getPeople($row["people"], true);
+		return "Grade of student ".toHTML($p["first_name"]." ".$p["last_name"])." for subject ".toHTML($r["subject_name"])." in ".toHTML($r["period_name"])." of batch ".toHTML($r["batch_name"]);
+	})
 	;
 
 $model->addTable("StudentTranscriptGeneralComment")
@@ -129,6 +154,7 @@ $model->addTable("TranscriptConfig")
 	->addWriteAccess("edit_transcripts_design", true)
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 $model->addTable("TranscriptSubjects")
@@ -140,6 +166,7 @@ $model->addTable("TranscriptSubjects")
 	->addWriteAccess("edit_transcripts_design", true)
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 $model->addTable("PublishedTranscript")
@@ -192,6 +219,7 @@ $model->addTable("PublishedTranscript")
 				PNApplication::$instance->news->post("students", "transcripts", array("batch".$batch["id"],"period".$period["id"]), "activity", "Transcript published for Batch ".toHTML($batch["name"]).", period ".toHTML($period["name"]));
 			} catch (Exception $e) { PNApplication::error($e); }
 	})
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 $model->addTable("PublishedTranscriptStudentSubjectGrade")
@@ -209,6 +237,7 @@ $model->addTable("PublishedTranscriptStudentSubjectGrade")
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 $model->addTable("PublishedTranscriptStudentGeneralComment")
@@ -224,6 +253,7 @@ $model->addTable("PublishedTranscriptStudentGeneralComment")
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 $model->addTable("PublishedTranscriptSubject")
@@ -237,6 +267,7 @@ $model->addTable("PublishedTranscriptSubject")
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 	
 $model->addTable("PublishedTranscriptEvaluationType")
@@ -250,6 +281,7 @@ $model->addTable("PublishedTranscriptEvaluationType")
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 	
 $model->addTable("PublishedTranscriptEvaluation")
@@ -264,6 +296,7 @@ $model->addTable("PublishedTranscriptEvaluation")
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 	
 $model->addTable("PublishedTranscriptStudentEvaluationTypeGrade")
@@ -276,6 +309,7 @@ $model->addTable("PublishedTranscriptStudentEvaluationTypeGrade")
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 	
 $model->addTable("PublishedTranscriptStudentEvaluationGrade")
@@ -288,6 +322,7 @@ $model->addTable("PublishedTranscriptStudentEvaluationGrade")
 	->addInsertAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_transcripts_design", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 	
 $model->internalGetTable("BatchPeriodSpecialization")

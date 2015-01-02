@@ -137,6 +137,8 @@ $model->addTable("BatchPeriodSpecialization")
 	->setKey(array("period","specialization"))
 	->addReadAccess("consult_curriculum", true)
 	->addReadAccessFromForeignTable("BatchPeriod")
+	->addRemoveAccessFromForeignTable("BatchPeriod")
+	->addRemoveAccessFromForeignTable("Specialization")
 	->setRowDescriptionProvider(function($row) {
 		$spe_name = SQLQuery::create()->select("Specialization")->whereValue("Specialization","id",$row["specialization"])->field("name")->executeSingleValue();
 		$period = SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod","id",$row["period"])->executeSingleRow();

@@ -8,6 +8,16 @@ $model->addTable("SubjectTeaching")
 	->addWriteAccess("edit_curriculum", true)
 	//->addInsertAccess("edit_curriculum", true) insert must be done through functionality, to avoid having an empty group
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) {
+		$q = PNApplication::$instance->curriculum->getSubjectQuery($row["subject"]);
+		PNApplication::$instance->curriculum->joinBatchPeriod($q, "CurriculumSubject", "period");
+		PNApplication::$instance->curriculum->joinBatch($q, "BatchPeriod", "batch");
+		$q->field("CurriculumSubject","name","subject_name");
+		$q->field("BatchPeriod","name","period_name");
+		$q->field("StudentBatch","name","batch_name");
+		$r = $q->executeSingleRow();
+		return "Groups and assigned teachers for subject ".toHTML($r["subject_name"])." in ".toHTML($r["period_name"])." of batch ".toHTML($r["batch_name"]);
+	})
 	;
 $model->internalGetTable("CurriculumSubject")->addReadAccessFromForeignTable("SubjectTeaching");
 $model->addTable("SubjectTeachingGroups")
@@ -19,6 +29,7 @@ $model->addTable("SubjectTeachingGroups")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	;
 
 /* Teachers */
@@ -85,6 +96,7 @@ $model->addTable("TeacherAssignment")
 	->addWriteAccess("edit_curriculum", true)
 	->addInsertAccess("edit_curriculum", true)
 	->addRemoveAccess("edit_curriculum", true)
+	->setRowDescriptionProvider(function($row) { return ""; })
 	// TODO news
 	;
 ?>

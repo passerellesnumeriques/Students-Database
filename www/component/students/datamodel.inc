@@ -40,6 +40,10 @@ $model->addTable("Student")
 			}
 		}
 	})
+	->setRowDescriptionProvider(function($row) {
+		$p = PNApplication::$instance->people->getPeople($row["people"], true);
+		return "Student ".toHTML($p["first_name"]." ".$p["last_name"]);
+	})
 	;
 
 // allow a student to access to its batch
