@@ -2320,15 +2320,10 @@ function grid(element) {
 				else {
 					if (th.rowSpan && th.rowSpan > 1) cell.rowSpan = th.rowSpan;
 					if (th.colSpan && th.colSpan > 1) cell.colSpan = th.colSpan;
-					if (th.col && th.col.text_title)
+					if (th.col.text_title)
 						cell.value = th.col.text_title;
-					else {
-						if (th.col.span_actions)
-							th.removeChild(th.col.span_actions);
-						cell.value = th.innerHTML;
-						if (th.col.span_actions)
-							th.appendChild(th.col.span_actions);
-					}
+					else
+						cell.value = th.col.title;
 					cell.style = {fontWeight:'bold',textAlign:'center'};
 				}
 				row.push(cell);
