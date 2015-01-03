@@ -30,7 +30,7 @@ class page_teachers extends Page {
 				array_push($past_teachers_ids, $people_id);
 		}
 		$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true, true);
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+		$can_edit = PNApplication::$instance->user_management->hasRight("edit_curriculum");
 
 		if (count($current_teachers_ids) > 0) {
 			$current_period = PNApplication::$instance->curriculum->getCurrentAcademicPeriod();
@@ -178,9 +178,9 @@ foreach ($teachers_ids as $people_id) {
 	echo "<td style='padding-left:10px;white-space:nowrap'>";
 	if ($last_date <> null) {
 		echo "Started on ";
-		datamodel_cell_here($this, PNApplication::$instance->user_management->has_right("edit_curriculum"), "TeacherDates", "start", $last_date["id"], $last_date["start"], null);
+		datamodel_cell_here($this, PNApplication::$instance->user_management->hasRight("edit_curriculum"), "TeacherDates", "start", $last_date["id"], $last_date["start"], null);
 		echo "<br/>Until ";
-		datamodel_cell_here($this, PNApplication::$instance->user_management->has_right("edit_curriculum"), "TeacherDates", "end", $last_date["id"], $last_date["end"], null);
+		datamodel_cell_here($this, PNApplication::$instance->user_management->hasRight("edit_curriculum"), "TeacherDates", "end", $last_date["id"], $last_date["end"], null);
 	}
 	echo "</td>";
 	if ($current_assignments !== null) {

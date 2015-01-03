@@ -17,7 +17,7 @@ class service_create_role extends Service {
 ?>return the id of the new role on success.<?php 
 	}
 	public function execute(&$component, $input) {
-		$id = $component->create_role($input["name"]);
+		$id = $component->createRole($input["name"]);
 		echo $id <> null ? "{id:".$id."}" : "false";
 	}
 }

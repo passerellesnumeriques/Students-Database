@@ -79,7 +79,7 @@ abstract class Component {
 				$allowed = true;
 				foreach ($list as $right) {
 					if (is_string($right)) {
-						if (!PNApplication::$instance->user_management->has_right($right)) { $allowed = false; break; }
+						if (!PNApplication::$instance->user_management->hasRight($right)) { $allowed = false; break; }
 					} else
 						if (!call_user_func($right)) { $allowed = false; break; }
 				}
@@ -199,7 +199,7 @@ abstract class Component {
 				$allowed = true;
 				foreach ($list as $right) {
 					if (is_string($right)) {
-						if (!PNApplication::$instance->user_management->has_right($right)) { $allowed = false; break; }
+						if (!PNApplication::$instance->user_management->hasRight($right)) { $allowed = false; break; }
 					} else
 						if (!call_user_func($right)) { $allowed = false; break; }
 				}

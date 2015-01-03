@@ -16,7 +16,7 @@ class page_selection_main_page extends SelectionPage {
 		$this->addJavascript("/static/widgets/section/section.js");
 		$this->addJavascript("/static/news/news.js");
 		
-		if (PNApplication::$instance->user_management->has_right("manage_selection_campaign"))
+		if (PNApplication::$instance->user_management->hasRight("manage_selection_campaign"))
 			$this->onload("sectionFromHTML('section_preparation');");
 		$this->onload("sectionFromHTML('section_status_is');");
 		$this->onload("sectionFromHTML('section_status_exam_center');");
@@ -33,7 +33,7 @@ class page_selection_main_page extends SelectionPage {
 				<div style="display:flex;flex-direction:column;">
 					<div id='steps_header' style='flex:none;' icon='/static/selection/dashboard_steps.png' title='Selection Steps'></div>
 					<div style="overflow:auto;flex:1 1 auto">
-						<?php if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {?>
+						<?php if (PNApplication::$instance->user_management->hasRight("manage_selection_campaign")) {?>
 						<div id='section_preparation' title="Selection Process Preparation" collapsable="true" style="width: 95%; margin-left: 10px; margin-top: 15px;">
 							<div style='padding:3px;'>
 								1- <a href='config/manage' class='black_link'> Configure how this selection process will work</a><br/>

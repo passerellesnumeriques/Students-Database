@@ -20,7 +20,7 @@ class UserDataScreen extends datamodel\GenericDataScreen {
 		if ($values->hasColumnValue("UserPeople","people")) {
 			// not new
 			$people_id = $values->getColumnValue("UserPeople","people");
-			if (PNApplication::$instance->user_management->has_right("manage_users") || $people_id == PNApplication::$instance->user_management->people_id) {
+			if (PNApplication::$instance->user_management->hasRight("manage_users") || $people_id == PNApplication::$instance->user_management->people_id) {
 				// can edit or himself
 				$user_id = $values->getColumnValue("UserPeople","user");
 				$user = SQLQuery::create()->bypassSecurity()->select("Users")->whereValue("Users","id",$user_id)->executeSingleRow();

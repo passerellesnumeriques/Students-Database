@@ -9,7 +9,7 @@ class page_create_batch extends SelectionPage {
 		$future_batches = PNApplication::$instance->curriculum->getFutureBatches(true);
 		$current_batches = PNApplication::$instance->curriculum->getCurrentBatches(true, true);
 		$old_batches = PNApplication::$instance->curriculum->getAlumniBatches(true);
-		$can_create = PNApplication::$instance->user_management->has_right("edit_curriculum");
+		$can_create = PNApplication::$instance->user_management->hasRight("edit_curriculum");
 ?>
 <div style='background-color:white;padding:10px'>
 <?php if (count($future_batches) > 0) { ?>

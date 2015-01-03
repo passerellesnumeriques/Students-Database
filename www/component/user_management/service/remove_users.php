@@ -3,9 +3,9 @@ class service_remove_users extends Service {
 	
 	public function getRequiredRights() { return array("manage_users"); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Remove users from the software"; }
+	public function inputDocumentation() { echo "<code>users</code>: list of users' id"; }
+	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
 		$users_ids = $input["users"];

@@ -6,7 +6,7 @@ class page_academic_calendar extends Page {
 	public function execute() {
 		$this->requireJavascript("tree.js");
 		require_once("component/curriculum/CurriculumJSON.inc");
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+		$can_edit = PNApplication::$instance->user_management->hasRight("edit_curriculum");
 ?>
 <div id='top_container' class="page_container" style="width:100%;height:100%;display:flex;flex-direction:column;">
 	<div class="page_title" style="flex:none;">

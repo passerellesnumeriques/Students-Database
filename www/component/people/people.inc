@@ -215,7 +215,7 @@ class people extends Component {
 	}
 	
 	public function canRead($people_id) {
-		if (PNApplication::$instance->user_management->has_right("see_anybody")) return true;
+		if (PNApplication::$instance->user_management->hasRight("see_anybody")) return true;
 		if ($people_id == PNApplication::$instance->user_management->people_id) return true;
 		$p = $this->getPeople($people_id);
 		return $p <> null;
@@ -225,7 +225,7 @@ class people extends Component {
 #		$row = $q = SQLQuery::create()->bypassSecurity()->select("People")->whereValue("People","id",$people_id)->where("`types` LIKE '%/applicant/%'")->executeSingleRow();
 #		return $row <> null;
 #END
-		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return true;
+		if (PNApplication::$instance->user_management->hasRight("edit_anybody")) return true;
 		$q = SQLQuery::create();
 		$table_alias = $q->generateTableAlias();
 		$q->select(array("People"=>$table_alias));

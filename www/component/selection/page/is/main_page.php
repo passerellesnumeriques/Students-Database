@@ -6,7 +6,7 @@ class page_is_main_page extends SelectionPage {
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("initISList();");
-		$can_create_session = PNApplication::$instance->user_management->has_right("manage_information_session",true);
+		$can_create_session = PNApplication::$instance->user_management->hasRight("manage_information_session",true);
 		$this->requireJavascript("section.js");
 		$this->onload("sectionFromHTML('status_section');");
 		$this->onload("loadISStatus();");

@@ -50,10 +50,10 @@ class service_save_user_rights extends Service {
 				PNApplication::error("unknown right ".$name);
 				return;
 			}
-			$rights[$name] = $all_rights[$name]->parse_value($value);
+			$rights[$name] = $all_rights[$name]->parseValue($value);
 		}
 		
-		$component->assign_user_rights($user_id, $rights);
+		$component->assignUserRights($user_id, $rights);
 		echo "true";
 	}		
 }

@@ -28,7 +28,7 @@ class page_subject_grades extends Page {
 				$spe_id = null;
 			}
 			$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id, $spe_id);
-			if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+			if (!PNApplication::$instance->user_management->hasRight("consult_students_grades")) {
 				$subjects_ids = array();
 				foreach ($subjects as $s) array_push($subjects_ids, $s["id"]);
 				$subjects_ids = PNApplication::$instance->teaching->filterAssignedSubjects($subjects_ids, PNApplication::$instance->user_management->people_id);
@@ -110,7 +110,7 @@ class page_subject_grades extends Page {
 		
 		// check access
 		$iam_assigned = null;
-		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+		if (!PNApplication::$instance->user_management->hasRight("consult_students_grades")) {
 			$iam_assigned = $grouping_id <> null ? 
 				PNApplication::$instance->teaching->isAssignedToSubjectTeaching(PNApplication::$instance->user_management->people_id, $grouping_id) :
 				PNApplication::$instance->teaching->isAssignedToSubject(PNApplication::$instance->user_management->people_id, $subject_id, $group_id);
@@ -150,7 +150,7 @@ class page_subject_grades extends Page {
 		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
 		
 		$edit = false;
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");
+		$can_edit = PNApplication::$instance->user_management->hasRight("edit_students_grades");
 		if (!$can_edit) {
 			if ($iam_assigned == null) 
 				$iam_assigned = $grouping_id <> null ? 
@@ -231,7 +231,7 @@ class page_subject_grades extends Page {
 		
 		// get all subjects and groups available to switch
 		$subjects = PNApplication::$instance->curriculum->getSubjects($batch["id"], $period["id"], $spe <> null ? $spe["id"] : null);
-		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+		if (!PNApplication::$instance->user_management->hasRight("consult_students_grades")) {
 			$subjects_ids = array();
 			foreach ($subjects as $s) array_push($subjects_ids, $s["id"]);
 			$subjects_ids = PNApplication::$instance->teaching->filterAssignedSubjects($subjects_ids, PNApplication::$instance->user_management->people_id);

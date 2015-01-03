@@ -32,7 +32,7 @@ class service_save_role_rights extends Service {
 			$rights[$name] = $value;
 		}
 
-		if ($component->set_role_rights($role_id, $rights))
+		if ($component->setRoleRights($role_id, $rights))
 			echo "true";
 		else
 			echo "false";

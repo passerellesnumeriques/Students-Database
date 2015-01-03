@@ -17,7 +17,7 @@ class service_remove_role extends Service {
 ?>return true on success.<?php 
 	}
 	public function execute(&$component, $input) {
-		if ($component->remove_role($input["id"]))
+		if ($component->removeRole($input["id"]))
 			echo "true";
 		else
 			echo "false";

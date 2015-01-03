@@ -18,7 +18,7 @@ class AlumniApplicationSection implements ApplicationSectionPlugin {
 #SELECTION_TRAVEL
 #return false;
 #END
-		return PNApplication::$instance->user_management->has_right("consult_alumni_info");
+		return PNApplication::$instance->user_management->hasRight("consult_alumni_info");
 	}
 	
 }

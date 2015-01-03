@@ -683,10 +683,10 @@ namespace datamodel {
 			if (count($this->read_access_filters) > 0) return true;
 			if (count($this->read_access_from_foreign_table) > 0) return true;
 			foreach ($this->read_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+				if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return true;
 			foreach ($this->read_column_access_rights as $colname=>$list)
 				foreach ($list as $r)
-					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;			
+					if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return true;			
 			return false;
 		}
 		/** Return the list of tables from which we can automatically grant read access when doing a join
@@ -707,10 +707,10 @@ namespace datamodel {
 		public function hasReadRights(){
 			if ($this->read_access_rights === null) return true;
 			foreach ($this->read_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+				if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return true;
 			foreach ($this->read_column_access_rights as $colname=>$list)
 				foreach ($list as $r)
-					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+					if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return true;
 			return false;
 		}
 		/** Check if the current user has necessary rights to read the given column
@@ -721,11 +721,11 @@ namespace datamodel {
 			if ($this->read_access_rights === null) return true;
 			if (count($this->read_access_from_foreign_table) > 0) return true;
 			foreach ($this->read_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+				if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return true;
 			if (count($this->read_column_access_rights) > 0) {
 				if (isset($this->read_column_access_rights[$column_name])) {
 					foreach ($this->read_column_access_rights[$column_name] as $r)
-						if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+						if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return true;
 					return false;
 				}
 			}
@@ -738,7 +738,7 @@ namespace datamodel {
 		public function filterReadAccess(&$q, $table_alias) {
 			if ($this->read_access_rights === null) return;
 			foreach ($this->read_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return; // full access
+				if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return; // full access
 			$where = $q->saveWhere();
 			foreach ($this->read_access_filters as $filter)
 				$filter($q, $table_alias);
@@ -796,7 +796,7 @@ namespace datamodel {
 		 */
 		public function canModifyEverything() {
 			foreach ($this->write_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return true;
+				if (\PNApplication::$instance->user_management->hasRight($r[0], $r[1])) return true;
 			return false;
 		}
 		/** Check if the current user can modify the given column
@@ -807,7 +807,7 @@ namespace datamodel {
 			if ($this->canModifyEverything()) return true;
 			if (isset($this->write_column_access_rights[$column_name])) {
 				foreach ($this->write_column_access_rights[$column_name] as $r)
-					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+					if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return true;
 				return false;
 			}
 			return true;
@@ -818,7 +818,7 @@ namespace datamodel {
 		public function canModifyAColumn() {
 			foreach ($this->write_column_access_rights as $column_name=>$rights) {
 				foreach ($rights as $r)
-					if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+					if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return true;
 			}
 			return false;
 		}
@@ -838,7 +838,7 @@ namespace datamodel {
 		 */
 		public function prepareSelectToDetermineWriteAccess(&$q, $table_alias) {
 			foreach ($this->write_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return false; // full access
+				if (\PNApplication::$instance->user_management->hasRight($r[0], $r[1])) return false; // full access
 			foreach ($this->write_access_filters as $f) {
 				$prepare = $f[0];
 				$prepare($q, $table_alias);
@@ -851,7 +851,7 @@ namespace datamodel {
 		 */
 		public function filterWriteAccess($rows) {
 			foreach ($this->write_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return $rows; // full access
+				if (\PNApplication::$instance->user_management->hasRight($r[0], $r[1])) return $rows; // full access
 			foreach ($this->write_access_filters as $f) {
 				$filter = $f[1];
 				$rows = $filter($rows);
@@ -888,7 +888,7 @@ namespace datamodel {
 		 */
 		public function canInsertAny() {
 			foreach ($this->add_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0],$r[1])) return true;
+				if (\PNApplication::$instance->user_management->hasRight($r[0],$r[1])) return true;
 			return false;
 		}
 		/** Ask if the given values can be inserted by the user
@@ -955,7 +955,7 @@ namespace datamodel {
 		 */
 		public function canRemoveAny() {
 			foreach ($this->remove_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return true;
+				if (\PNApplication::$instance->user_management->hasRight($r[0], $r[1])) return true;
 			return false;
 		}
 		/** Check if the current user MAY remove some rows in this table, meaning either the user can remove any row, or filters exist which may grant access to the user
@@ -973,7 +973,7 @@ namespace datamodel {
 		 */
 		public function prepareSelectToDetermineRemoveAccess(&$q, $table_alias, &$locks) {
 			foreach ($this->remove_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return false; // full access
+				if (\PNApplication::$instance->user_management->hasRight($r[0], $r[1])) return false; // full access
 			foreach ($this->remove_access_filters as $f) {
 				$prepare = $f[0];
 				$prepare($q, $table_alias, $locks);
@@ -986,7 +986,7 @@ namespace datamodel {
 		 */
 		public function filterRemoveAccess($rows) {
 			foreach ($this->remove_access_rights as $r)
-				if (\PNApplication::$instance->user_management->has_right($r[0], $r[1])) return $rows; // full access
+				if (\PNApplication::$instance->user_management->hasRight($r[0], $r[1])) return $rows; // full access
 			foreach ($this->remove_access_filters as $f) {
 				$filter = $f[1];
 				$rows = $filter($rows);

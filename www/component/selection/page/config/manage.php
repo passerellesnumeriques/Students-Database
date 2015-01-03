@@ -7,7 +7,7 @@
 		require_once("component/data_model/Model.inc");
 		$table = DataModel::get()->getTable("SelectionCampaignConfig");		$locked_by = null;
 		$lock_id = $this->performRequiredLocks("SelectionCampaignConfig",null,null,PNApplication::$instance->selection->getCampaignId(), $locked_by);
-				$can_manage = PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);		$editable = $can_manage && $lock_id <> null;		/* Get all the possible configs */
+				$can_manage = PNApplication::$instance->user_management->hasRight("manage_selection_campaign",true);		$editable = $can_manage && $lock_id <> null;		/* Get all the possible configs */
 		$all_configs = include("component/selection/config.inc");
 		/* Get the current config */
 		$config = PNApplication::$instance->selection->getConfig();

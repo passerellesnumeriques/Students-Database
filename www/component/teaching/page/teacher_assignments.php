@@ -5,7 +5,7 @@ class page_teacher_assignments extends Page {
 	
 	public function execute() {
 		$people_id = $_GET["people"];
-		if (!PNApplication::$instance->user_management->has_right("consult_curriculum")) {
+		if (!PNApplication::$instance->user_management->hasRight("consult_curriculum")) {
 			if (!in_array("teacher", PNApplication::$instance->user_management->people_types) ||
 				$people_id <> PNApplication::$instance->user_management->people_id) {
 				PNApplication::error("Access denied");
@@ -158,7 +158,7 @@ class page_teacher_assignments extends Page {
 			echo "<i>No subject assigned during this period</i>";
 		} else {
 			$can_go_to_grades = false;
-			if (PNApplication::$instance->user_management->has_right("consult_students_grades"))
+			if (PNApplication::$instance->user_management->hasRight("consult_students_grades"))
 				$can_go_to_grades = true;
 			else if ($_GET["people"] == PNApplication::$instance->user_management->people_id)
 				$can_go_to_grades = true;

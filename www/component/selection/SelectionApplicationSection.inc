@@ -15,7 +15,7 @@ class SelectionApplicationSection implements ApplicationSectionPlugin {
 #SELECTION_TRAVEL
 #return true;
 #END
-		return PNApplication::$instance->user_management->has_right("can_access_selection_data");
+		return PNApplication::$instance->user_management->hasRight("can_access_selection_data");
 	}
 	
 }

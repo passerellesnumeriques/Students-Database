@@ -13,13 +13,13 @@ class ApplicantPeopleTypePlugin implements PeopleTypePlugin {
 	public function getTables() { return array("Applicant"); }
 	
 	public function canRead() {
-		return PNApplication::$instance->user_management->has_right("see_applicant_info");
+		return PNApplication::$instance->user_management->hasRight("see_applicant_info");
 	}
 	public function canWrite() {
-		return PNApplication::$instance->user_management->has_right("edit_applicants");
+		return PNApplication::$instance->user_management->hasRight("edit_applicants");
 	}
 	public function canRemove() {
-		return PNApplication::$instance->user_management->has_right("edit_applicants");
+		return PNApplication::$instance->user_management->hasRight("edit_applicants");
 	}
 	
 	public function getPeopleRowDescription($people) {

@@ -9,7 +9,7 @@ class page_reset_pass extends Page {
 		$input = array();
 		if (isset($_POST["input"])) $input = json_decode($_POST["input"],true);
 		if ($domain <> PNApplication::$instance->local_domain || $username <> PNApplication::$instance->user_management->username || PNApplication::$instance->user_management->domain <> PNApplication::$instance->local_domain) {
-			if (!PNApplication::$instance->user_management->has_right("manage_users")) {
+			if (!PNApplication::$instance->user_management->hasRight("manage_users")) {
 				PNApplication::error("Access denied");
 				return;
 			}

@@ -27,7 +27,7 @@ class StudentDataScreen extends datamodel\GenericDataScreen {
 		if (!in_array("student", $people_types)) return;
 		
 		parent::generate($page, $paths, $values, $prefilled_values, $structure_name);
-		if ($values->hasColumnValue("Student","people") && PNApplication::$instance->user_management->has_right("manage_batches")) {
+		if ($values->hasColumnValue("Student","people") && PNApplication::$instance->user_management->hasRight("manage_batches")) {
 			// not new and can edit
 			// => exclude button
 			$batch = PNApplication::$instance->curriculum->getBatch($values->getColumnValue("Student","batch"));

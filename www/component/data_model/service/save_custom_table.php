@@ -20,7 +20,7 @@ class service_save_custom_table extends Service {
 				return;
 			}
 		}
-		if (!PNApplication::$instance->user_management->has_right($table->getCustomizationRight())) {
+		if (!PNApplication::$instance->user_management->hasRight($table->getCustomizationRight())) {
 			PNApplication::error("You are not allowed to edit those information");
 			return;
 		}

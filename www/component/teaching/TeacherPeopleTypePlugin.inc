@@ -14,13 +14,13 @@ class TeacherPeopleTypePlugin implements PeopleTypePlugin {
 	public function getTables() { return array("TeacherDates"); }
 	
 	public function canRead() {
-		return PNApplication::$instance->user_management->has_right("consult_curriculum");
+		return PNApplication::$instance->user_management->hasRight("consult_curriculum");
 	}
 	public function canWrite() {
-		return PNApplication::$instance->user_management->has_right("edit_curriculum");
+		return PNApplication::$instance->user_management->hasRight("edit_curriculum");
 	}
 	public function canRemove() {
-		return PNApplication::$instance->user_management->has_right("edit_curriculum");
+		return PNApplication::$instance->user_management->hasRight("edit_curriculum");
 	}
 	
 	public function getPeopleRowDescription($people) {

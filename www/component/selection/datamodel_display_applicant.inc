@@ -99,7 +99,7 @@ class ApplicantID_DataDisplay extends datamodel\SimpleDataDisplay {
 class ApplicantExclusionReason extends datamodel\DataDisplay {
 
 	public function getDisplayName() { return "Exclusion Reason"; }
-	public function canAccess($sub_model) { return PNApplication::$instance->user_management->has_right("see_applicant_info"); }
+	public function canAccess($sub_model) { return PNApplication::$instance->user_management->hasRight("see_applicant_info"); }
 	public function getHandledColumns() { return array("automatic_exclusion_step","automatic_exclusion_reason","custom_exclusion"); }
 	public function getTypedField($sub_model) { return array("field_text","{}"); }
 	public function getHorizontalAlign($sub_model) { return "left"; }
@@ -221,21 +221,21 @@ class ApplicantDataScreen extends datamodel\GenericDataScreen {
 		$html = "";
 		switch ($data->getDisplayName()) {
 			case "Information Session":
-				if (PNApplication::$instance->user_management->has_right("edit_applicants") && !$is_new) {
+				if (PNApplication::$instance->user_management->hasRight("edit_applicants") && !$is_new) {
 					$html .= "<td>";
 					$html .= "<button class='flat small' title='Change Information Session' onclick='changeIS(this);return false;'><img src='".theme::make_icon("/static/selection/is/is_16.png", theme::$icons_10["_import"])."'/></button>";
 					$html .= "</td>";
 				}
 				break;
 			case "Exam Center":
-				if (PNApplication::$instance->user_management->has_right("edit_applicants") && !$is_new) {
+				if (PNApplication::$instance->user_management->hasRight("edit_applicants") && !$is_new) {
 					$html .= "<td>";
 					$html .= "<button class='flat small' title='Change Exam Center' onclick='changeExamCenter(this);return false;'><img src='".theme::make_icon("/static/selection/exam/exam_center_16.png", theme::$icons_10["_import"])."'/></button>";
 					$html .= "</td>";
 				}
 				break;
 			case "Interview Center":
-				if (PNApplication::$instance->user_management->has_right("edit_applicants") && !$is_new) {
+				if (PNApplication::$instance->user_management->hasRight("edit_applicants") && !$is_new) {
 					$html .= "<td>";
 					$html .= "<button class='flat small' title='Change Interview Center' onclick='changeInterviewCenter(this);return false;'><img src='".theme::make_icon("/static/selection/exam/exam_center_16.png", theme::$icons_10["_import"])."'/></button>";
 					$html .= "</td>";

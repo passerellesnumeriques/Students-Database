@@ -66,12 +66,12 @@ class page_role_rights extends Page {
 			$res = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where("role",$role_id)->execute();
 			if (!is_array($res)) $res = array();
 			$final = array();
-			foreach ($res as $r) $final[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
+			foreach ($res as $r) $final[$r["right"]] = $all_rights[$r["right"]]->parseValue($r["value"]);
 			// add implications
-			PNApplication::$instance->user_management->compute_rights_implications($final);
+			PNApplication::$instance->user_management->computeRightsImplications($final);
 		} else {
 			$final = array();
-			foreach ($all_rights as $name=>$r) $final[$name] = $r->get_highest_value();
+			foreach ($all_rights as $name=>$r) $final[$name] = $r->getHighestValue();
 		}
 		
 		/** Generate a field according to the type of the right: for example, a checkbox for a boolean right */

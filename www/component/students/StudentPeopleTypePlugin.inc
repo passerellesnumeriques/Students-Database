@@ -12,9 +12,9 @@ class StudentPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getTables() { return array("Student"); }
 	
-	public function canRead() { return PNApplication::$instance->user_management->has_right("consult_students_list"); }
-	public function canWrite() { return PNApplication::$instance->user_management->has_right("manage_batches"); }
-	public function canRemove() { return PNApplication::$instance->user_management->has_right("manage_batches"); }
+	public function canRead() { return PNApplication::$instance->user_management->hasRight("consult_students_list"); }
+	public function canWrite() { return PNApplication::$instance->user_management->hasRight("manage_batches"); }
+	public function canRemove() { return PNApplication::$instance->user_management->hasRight("manage_batches"); }
 	
 	public function getPeopleRowDescription($people) {
 		$q = SQLQuery::create()->bypassSecurity()

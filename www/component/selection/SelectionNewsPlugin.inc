@@ -15,9 +15,9 @@ class SelectionSection implements NewsSection {
 	public function getDisplayName() { return "Selection"; }
 	public function getIcon() { return "/static/selection/selection_32.png"; }
 	public function getAccessRight() {
-		if (PNApplication::$instance->components["user_management"]->has_right("manage_selection_campaign",true))
+		if (PNApplication::$instance->components["user_management"]->hasRight("manage_selection_campaign",true))
 			return 2;
-		if (PNApplication::$instance->components["user_management"]->has_right("can_access_selection_data",true))
+		if (PNApplication::$instance->components["user_management"]->hasRight("can_access_selection_data",true))
 			return 1;
 		return 0;
 	}

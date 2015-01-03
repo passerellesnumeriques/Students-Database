@@ -13,7 +13,7 @@ class service_menu extends Service {
 		$id = $component->getCampaignId();
 		$campaign = null;
 		if ($id <> null) foreach ($campaigns as $c) if ($c["id"] == $id) { $campaign = $c; break; }
-		$can_manage = PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
+		$can_manage = PNApplication::$instance->user_management->hasRight("manage_selection_campaign",true);
 ?>
 <div style="padding-left:5px;text-align:center;margin-bottom:5px;">
 Selection Campaign:<br/>
@@ -88,7 +88,7 @@ if ($can_manage) { ?>
 #SELECTION_TRAVEL
 #if (false) {
 #END 
-if (PNApplication::$instance->user_management->has_right("edit_applicants")) {
+if (PNApplication::$instance->user_management->hasRight("edit_applicants")) {
 ?>
 <a class='application_left_menu_item' href='/dynamic/data_model/page/edit_customizable_table?table=ApplicantMoreInfo'>
 	<img src='/static/people/profile_white.png'/>

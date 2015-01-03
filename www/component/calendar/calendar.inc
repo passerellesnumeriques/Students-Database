@@ -20,12 +20,12 @@ class calendar extends Component {
 	 */
 	public function createSharedCalendar($calendar_name, $calendar_color, $calendar_icon, $readable_rights, $writable_rights, $internal_data = null) {
 		foreach ($readable_rights as $name=>$value)
-			if (!PNApplication::$instance->user_management->has_right($name, $value)) {
+			if (!PNApplication::$instance->user_management->hasRight($name, $value)) {
 				PNApplication::error("You cannot create a calendar with right ".$name." because you don't have this right");
 				return false;
 			}
 		foreach ($writable_rights as $name=>$value)
-			if (!PNApplication::$instance->user_management->has_right($name, $value)) {
+			if (!PNApplication::$instance->user_management->hasRight($name, $value)) {
 				PNApplication::error("You cannot create a calendar with right ".$name." because you don't have this right");
 				return false;
 			}
@@ -133,7 +133,7 @@ class calendar extends Component {
 		if ($r <> null) return true;
 		$rights = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->where("calendar", $calendar_id)->execute();
 		foreach ($rights as $r)
-			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
+			if (PNApplication::$instance->user_management->hasRight($r["right_name"], $r["right_value"]))
 				return true;
 		return false;
 	}
@@ -148,7 +148,7 @@ class calendar extends Component {
 		if ($r <> null) return true;
 		$rights = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->where("calendar", $calendar_id)->where("writable",true)->execute();
 		foreach ($rights as $r)
-			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
+			if (PNApplication::$instance->user_management->hasRight($r["right_name"], $r["right_value"]))
 				return true;
 		return false;
 	}
@@ -165,7 +165,7 @@ class calendar extends Component {
 		$res = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->execute();
 		foreach ($res as $r) {
 			if (in_array($r["calendar"], $ids)) continue;
-			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
+			if (PNApplication::$instance->user_management->hasRight($r["right_name"], $r["right_value"]))
 				array_push($ids, $r["calendar"]);
 		}
 		return $ids;
@@ -183,7 +183,7 @@ class calendar extends Component {
 		$res = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->where("writable",true)->execute();
 		foreach ($res as $r) {
 			if (in_array($r["calendar"], $ids)) continue;
-			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
+			if (PNApplication::$instance->user_management->hasRight($r["right_name"], $r["right_value"]))
 				array_push($ids, $r["calendar"]);
 		}
 		return $ids;

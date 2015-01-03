@@ -140,7 +140,7 @@ class page_students_grades extends Page {
 	</div>
 	<div style='flex:1 1 100%;overflow:auto' id='grades_container'>
 	</div>
-	<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) { ?>
+	<?php if (PNApplication::$instance->user_management->hasRight("edit_students_grades")) { ?>
 	<div class='page_footer' style='flex:none;'>
 		<button id='button_import_general_appreciation' style='display:none' class='action' onclick="importGeneralAppreciation(event);"><img src='<?php echo theme::$icons_16["_import"];?>'/> Import Appreciations</button>
 		<button id='button_edit_general_appreciation' class='action' onclick="editGeneralAppreciation(this);"><img src='<?php echo theme::$icons_16["edit"];?>'/> Edit General Appreciations</button>
@@ -157,7 +157,7 @@ if (PNApplication::$instance->help->isShown("students_grades")) {
 	echo "click on ";
 	PNApplication::$instance->help->spanArrow($this, "the subject name", ".grid thead .subject_column_title", "horiz");
 	echo ".<br/>";
-	if (PNApplication::$instance->user_management->has_right("edit_students_grades")) {
+	if (PNApplication::$instance->user_management->hasRight("edit_students_grades")) {
 		echo "<br/>In this screen, you can also ";
 		PNApplication::$instance->help->spanArrow($this, "edit the general appreciation", "#button_edit_general_appreciation", "horiz");
 		echo "<br/>of each student which can be included later in the transcripts.<br/>";

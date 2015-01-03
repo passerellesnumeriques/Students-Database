@@ -11,7 +11,7 @@ class page_exam_subjects extends SelectionPage {
 		$q = SQLQuery::create()->select("ExamSubject");
 		SelectionExamJSON::ExamSubjectSQL($q);
 		$subjects = $q->execute();
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_exam_subject");
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_exam_subject");
 		?>
 		<div style='width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column'>
 			<div class='page_title' style='flex:none;padding:3px 10px'>

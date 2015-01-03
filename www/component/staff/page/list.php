@@ -8,7 +8,7 @@ class page_list extends Page {
 		
 		$departments = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_staff", true);
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_staff", true);
 ?>
 <div id='list_container' style='width:100%;height:100%'>
 </div>

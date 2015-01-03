@@ -29,7 +29,7 @@ class page_is_profile extends SelectionPage {
 		} else
 			$session = null;
 		if (@$_GET["readonly"] == "true") $editable = false;
-		else $editable = $id == null || PNApplication::$instance->user_management->has_right("manage_information_session");
+		else $editable = $id == null || PNApplication::$instance->user_management->hasRight("manage_information_session");
 		if ($campaign_id <> PNApplication::$instance->selection->getCampaignId()) $editable = false;
 		$db_lock = null;
 		if ($editable && $id <> null) {

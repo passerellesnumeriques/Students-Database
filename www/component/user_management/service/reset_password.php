@@ -3,9 +3,18 @@ class service_reset_password extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Change password for a user"; }
+	public function inputDocumentation() {
+?>
+<ul>
+<li><code>username</code>: user to change</li>
+<li><code>password</code>: new password</li>
+<li><code>domain</code>: optional, if not set the local domain is used</li>
+<li><code>token</code>: optional, token from authentication system of the domain.</li>
+</ul>
+<?php
+	}
+	public function outputDocumentation() { echo "true on success"; }
 	
 	/**
 	 * @param $component user_management
@@ -18,7 +27,7 @@ class service_reset_password extends Service {
 		
 		if ($component->isInternalUser($domain, $username)) {
 			if ($username <> $component->username || $component->domain <> PNApplication::$instance->local_domain) {
-				if (!$component->has_right("manage_users")) {
+				if (!$component->hasRight("manage_users")) {
 					PNApplication::error("Access denied");
 					return;
 				}

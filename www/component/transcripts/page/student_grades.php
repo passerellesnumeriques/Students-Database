@@ -13,7 +13,7 @@ class page_student_grades extends Page {
 		}
 		
 		$people_id = $_GET["people"];
-		$can_see_grades = PNApplication::$instance->user_management->has_right("consult_students_grades");
+		$can_see_grades = PNApplication::$instance->user_management->hasRight("consult_students_grades");
 		if (!$can_see_grades && $people_id != PNApplication::$instance->user_management->people_id) {
 			PNApplication::error("Access denied");
 			return;

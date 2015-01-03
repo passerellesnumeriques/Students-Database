@@ -24,7 +24,7 @@ class service_assign_roles extends Service {
 		$users = $input["users"];
 		$roles = $input["roles"];
 
-		if (!$component->assign_roles($users, $roles))
+		if (!$component->assignRoles($users, $roles))
 			echo "false";
 		else
 			echo "true";

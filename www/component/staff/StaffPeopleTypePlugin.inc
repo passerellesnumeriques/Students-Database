@@ -12,9 +12,9 @@ class StaffPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getTables() { return array("Staff","StaffPosition"); }
 	
-	public function canRead() { return PNApplication::$instance->user_management->has_right("consult_staff_list"); }
-	public function canWrite() { return PNApplication::$instance->user_management->has_right("manage_staff"); }
-	public function canRemove() { return PNApplication::$instance->user_management->has_right("manage_staff"); }
+	public function canRead() { return PNApplication::$instance->user_management->hasRight("consult_staff_list"); }
+	public function canWrite() { return PNApplication::$instance->user_management->hasRight("manage_staff"); }
+	public function canRemove() { return PNApplication::$instance->user_management->hasRight("manage_staff"); }
 	
 	public function getPeopleRowDescription($people) {
 		return "PN Staff";

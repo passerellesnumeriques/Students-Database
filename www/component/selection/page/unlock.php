@@ -35,7 +35,7 @@ function closePopup() {
 ?>
 <div style='background-color:white;padding:10px'>
 <?php 
-$people_id = PNApplication::$instance->user_management->get_people_from_user($user_id);
+$people_id = PNApplication::$instance->user_management->getPeopleFromUser($user_id);
 $people = PNApplication::$instance->people->getPeople($people_id, true);
 $name = toHTML($people["first_name"]." ".$people["last_name"]);
 if ($user_id <> PNApplication::$instance->user_management->user_id) {

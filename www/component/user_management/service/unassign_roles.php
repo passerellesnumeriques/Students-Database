@@ -21,7 +21,7 @@ class service_unassign_roles extends Service {
 		$users = $input["users"];
 		$roles = $input["roles"];
 		
-		if (!$component->unassign_roles($users, $roles))
+		if (!$component->unassignRoles($users, $roles))
 			echo "false";
 		else
 			echo "true";
