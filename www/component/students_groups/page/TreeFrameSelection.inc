@@ -24,7 +24,7 @@ class TreeFrameSelection {
 	}
 	
 	public static function isSingleBatch() {
-		return count(self::getBatchesIds());
+		return count(self::getBatchesIds()) == 1;
 	}
 	public static function isAllBatches() {
 		return @$_GET["batches"] == null && @$_GET["batch"] == null;

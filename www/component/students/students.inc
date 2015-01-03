@@ -147,6 +147,10 @@ class students extends Component {
 		return $q->execute();
 	}
 	
+	public function getStudentsIdsForBatch($batch_id) {
+		return SQLQuery::create()->select("Student")->whereValue("Student","batch",$batch_id)->field("people")->executeSingleField();
+	}
+	
 	public function removeStudents($peoples_ids, $bypass_security = false) {
 		PNApplication::$instance->people->removePeoplesType($peoples_ids, "student", $bypass_security);
 	}

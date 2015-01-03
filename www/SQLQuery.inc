@@ -1218,6 +1218,7 @@ class SQLQuery {
 	 * @return array the row
 	 */
 	public function executeSingleRow() {
+		$this->limit(0, 1);
 		$sql = $this->generate();
 		$res = SQLQuery::db()->execute($sql);
 		if ($res === FALSE) return null;

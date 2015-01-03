@@ -109,9 +109,9 @@ function inputAutoresize(input, min_size) {
 		window._input_autoresize_updater.update(input);
 	};
 	input.inputAutoresize_prev_onkeydown = input.onkeydown;
-	input.onkeydown = function(e) { if (this.inputAutoresize_prev_onkeydown) this.inputAutoresize_prev_onkeydown(e); if (update) update(); };
+	input.onkeydown = function(e) { var res = true; if (this.inputAutoresize_prev_onkeydown) res = this.inputAutoresize_prev_onkeydown(e); if (update) update(); return res; };
 	input.inputAutoresize_prev_onkeyup = input.onkeyup;
-	input.onkeyup = function(e) { if (this.inputAutoresize_prev_onkeyup) this.inputAutoresize_prev_onkeyup(e); if (update) update(); };
+	input.onkeyup = function(e) { var res = true; if (this.inputAutoresize_prev_onkeyup) res = this.inputAutoresize_prev_onkeyup(e); if (update) update(); return res; };
 	input.inputAutoresize_prev_oninput = input.oninput;
 	input.oninput = function(e) { if (this.inputAutoresize_prev_oninput) this.inputAutoresize_prev_oninput(e); if (update) update(); };
 	input.inputAutoresize_prev_onpropertychange = input.onpropertychange;

@@ -6,6 +6,7 @@ $conf = array(
 			"pn_area_id"=>43283, // Phnom Penh
 			"pn_area_division"=>0
 		),
+		"timezone"=>"Asia/Phnom_Penh",
 		"curriculum"=>array(
 			"preset_periods"=>array(
 				array(
@@ -37,6 +38,7 @@ $conf = array(
 			"pn_area_id"=>11690, // Cebu City
 			"pn_area_division"=>1
 		),
+		"timezone"=>"Asia/Manila",
 		"curriculum"=>array(
 			"preset_periods"=>array(
 				array(
@@ -71,6 +73,7 @@ $conf = array(
 		"geography"=>array(
 			"country_code"=>"vn"
 		),
+		"timezone"=>"Asia/Ho_Chi_Minh",
 		"curriculum"=>array(
 			"preset_periods"=>array(
 				array(

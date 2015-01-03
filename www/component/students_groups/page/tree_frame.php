@@ -162,20 +162,16 @@ var group_types = <?php echo StudentsGroupsJSON::GroupsTypesJSON($groups_types);
 var group_type_id = <?php echo $group_type;?>;
 
 var frame = document.getElementById('students_groups_tree_frame');
-var frame_parameters = "";
+var frame_parameters = {};
 
 function selectPage(url) {
-	frame.src = url+"?"+frame_parameters;
+	var u = new URL(url);
+	for (var name in frame_parameters) u.params[name] = frame_parameters[name];
+	frame.src = u.toString();
 }
 function nodeSelected(node) {
 	setCookie("students_groups_tree_node", node.tag, 30*24*60, new URL(location.href).path);
-	var params = node.getURLParameters();
-	frame_parameters = "";
-	var first = true;
-	for (var name in params) {
-		if (first) first = false; else frame_parameters += "&";
-		frame_parameters += name+"="+encodeURIComponent(params[name]);
-	}
+	frame_parameters = node.getURLParameters();
 	window.onhashchange();
 }
 function getSelectedNodeTag() {
@@ -330,14 +326,22 @@ listenEvent(frame,'load',function() {
 	if (!win || !win.location) return;
 	if (win.location.href == "about:blank") return;
 	var url = new URL(win.location.href);
-	location.hash = "#"+url.path;
+	var hash = "#"+url.path;
+	var params = "";
+	for (var name in url.params) {
+		if (typeof frame_parameters[name] != 'undefined') continue;
+		if (params.length > 0) params += "&";
+		params += encodeURIComponent(name)+"="+encodeURIComponent(url.params[name]);
+	}
+	if (params.length > 0) hash += encodeURIComponent("?"+params);
+	location.hash = hash;
 });
 
 
 window.onhashchange = function() {
 	var hash = location.hash;
 	if (hash.length < 2) hash = "/dynamic/students/page/list"; else hash = hash.substring(1);
-	selectPage(hash);
+	selectPage(urldecode(hash));
 };
 
 window.top.require("datamodel.js", function() {
