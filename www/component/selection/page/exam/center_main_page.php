@@ -17,7 +17,7 @@ class page_exam_center_main_page extends SelectionPage {
 		$this->onload("sectionFromHTML('exam_status_section');");
 		$this->onload("loadExamCenterStatus();");
 		
-		$can_create = PNApplication::$instance->user_management->has_right("manage_exam_center",true);
+		$can_create = PNApplication::$instance->user_management->hasRight("manage_exam_center",true);
 		?>
 		<div style="display:flex;flex-direction:row">
 			<div style ="display:inline-block;padding:5px;flex:none">

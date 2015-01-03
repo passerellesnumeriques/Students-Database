@@ -7,7 +7,7 @@ class page_trip_trip extends SelectionPage {
 	public function executeSelectionPage() {
 		$trip_id = @$input["id"];
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_trips");
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_trips");
 
 		$this->addStylesheet("/static/selection/trip/trip.css");
 		$this->requireJavascript("mini_popup.js");

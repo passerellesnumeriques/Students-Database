@@ -4,7 +4,7 @@ class page_curriculum extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		if (!PNApplication::$instance->user_management->has_right("consult_curriculum")) {
+		if (!PNApplication::$instance->user_management->hasRight("consult_curriculum")) {
 			if (!in_array("student",PNApplication::$instance->user_management->people_types)) {
 				PNApplication::error("Access denied");
 				return;
@@ -50,7 +50,7 @@ class page_curriculum extends Page {
 		$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id);
 		$specializations = PNApplication::$instance->curriculum->getSpecializations();
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+		$can_edit = PNApplication::$instance->user_management->hasRight("edit_curriculum");
 		
 		$editing = false;
 		if ($can_edit) {

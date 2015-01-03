@@ -4,7 +4,7 @@ class RolesFunctionalities extends TestFunctionalitiesScenario {
 	public function getName() { return "Roles"; }
 	
 	public function getCoveredFunctions() {
-		return array("has_right", "compute_rights_implications", "assign_roles", "unassign_roles", "create_role", "remove_role", "set_role_rights");
+		return array("hasRight", "computeRightsImplications", "assign_roles", "unassign_roles", "create_role", "remove_role", "set_role_rights");
 	}
 	
 	public function getUsers() {
@@ -308,7 +308,7 @@ class RolesFunctionalities_Test_Role1 extends TestFunctionalitiesStep {
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","user_role1","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (PNApplication::$instance->user_management->has_right("consult_user_list"))
+		if (PNApplication::$instance->user_management->hasRight("consult_user_list"))
 			return "Has right";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -319,9 +319,9 @@ class RolesFunctionalities_Test_Role2 extends TestFunctionalitiesStep {
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","user_role2","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (!PNApplication::$instance->user_management->has_right("consult_user_list"))
+		if (!PNApplication::$instance->user_management->hasRight("consult_user_list"))
 			return "Has not right 1";
-		if (PNApplication::$instance->user_management->has_right("consult_user_rights"))
+		if (PNApplication::$instance->user_management->hasRight("consult_user_rights"))
 			return "Has right 2";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -332,11 +332,11 @@ class RolesFunctionalities_Test_Role3 extends TestFunctionalitiesStep {
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","user_role3","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (!PNApplication::$instance->user_management->has_right("consult_user_roles"))
+		if (!PNApplication::$instance->user_management->hasRight("consult_user_roles"))
 			return "Has not right 1";
-		if (!PNApplication::$instance->user_management->has_right("consult_user_rights"))
+		if (!PNApplication::$instance->user_management->hasRight("consult_user_rights"))
 			return "Has not right 2";
-		if (PNApplication::$instance->user_management->has_right("consult_user_list"))
+		if (PNApplication::$instance->user_management->hasRight("consult_user_list"))
 			return "Has right 3";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -347,7 +347,7 @@ class RolesFunctionalities_Test_Role2Plus extends TestFunctionalitiesStep {
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","user_role2_plus","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (!PNApplication::$instance->user_management->has_right("consult_user_list"))
+		if (!PNApplication::$instance->user_management->hasRight("consult_user_list"))
 			return "Has not the right";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -358,11 +358,11 @@ class RolesFunctionalities_Test_Role2_3 extends TestFunctionalitiesStep {
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","user_role2_3","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (!PNApplication::$instance->user_management->has_right("consult_user_list"))
+		if (!PNApplication::$instance->user_management->hasRight("consult_user_list"))
 			return "Has not right 1";
-		if (!PNApplication::$instance->user_management->has_right("consult_user_rights"))
+		if (!PNApplication::$instance->user_management->hasRight("consult_user_rights"))
 			return "Has not right 2";
-		if (!PNApplication::$instance->user_management->has_right("consult_user_roles"))
+		if (!PNApplication::$instance->user_management->hasRight("consult_user_roles"))
 			return "Has not right 3";
 		PNApplication::$instance->user_management->logout();
 		return null;

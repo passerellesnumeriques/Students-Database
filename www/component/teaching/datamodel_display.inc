@@ -22,7 +22,7 @@ class TeacherDataScreen implements datamodel\SimpleDataScreen {
 		$can_edit = true;
 		if ($people_id <> -1) {
 			$dates = SQLQuery::create()->select("TeacherDates")->whereValue("TeacherDates", "people", $people_id)->orderBy("TeacherDates", "start")->execute();
-			$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+			$can_edit = PNApplication::$instance->user_management->hasRight("edit_curriculum");
 			$q = SQLQuery::create()
 				->select("TeacherAssignment")
 				->whereValue("TeacherAssignment","people",$people_id)
@@ -50,7 +50,7 @@ class TeacherDataScreen implements datamodel\SimpleDataScreen {
 <?php } ?>
 <script type='text/javascript'>
 var people_id = <?php echo $people_id;?>;
-var can_edit_teacher_dates = <?php echo $people_id == -1 || PNApplication::$instance->user_management->has_right("edit_curriculum") ? "true" : "false"; ?>;
+var can_edit_teacher_dates = <?php echo $people_id == -1 || PNApplication::$instance->user_management->hasRight("edit_curriculum") ? "true" : "false"; ?>;
 var teacher_dates_id_counter = -1;
 var teacher_dates = [<?php
 	if ($people_id <> -1) {

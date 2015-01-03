@@ -7,7 +7,7 @@ class page_list extends Page {
 		$this->requireJavascript("data_list.js");
 		require_once("component/students_groups/page/TreeFrameSelection.inc");
 		$groups_ids = TreeFrameSelection::getGroupsIdsFromParentGroup();
-		$can_manage = PNApplication::$instance->user_management->has_right("manage_batches");
+		$can_manage = PNApplication::$instance->user_management->hasRight("manage_batches");
 ?>
 <div id='list_container' style='width:100%;height:100%'>
 </div>

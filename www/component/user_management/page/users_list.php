@@ -10,7 +10,7 @@ class page_users_list extends Page {
 ?>
 <div style='width:100%;height:100%;overflow:hidden;position:absolute;top:0px;left:0px;display:flex;flex-direction:column;'>
 	<div id='users_list' style='flex:1 1 auto;'></div>
-	<?php if (PNApplication::$instance->user_management->has_right("manage_users")) {?>
+	<?php if (PNApplication::$instance->user_management->hasRight("manage_users")) {?>
 	<div class='page_footer' style='flex:none'>
 		<button class='action' onclick='synchUsers();'><img src='<?php echo theme::$icons_16["_import"];?>'/> Synchronize Users</button>
 		<button class='action green' onclick='newUser();'><img src='<?php echo theme::make_icon("/static/user_management/user_16.png",theme::$icons_10["add"]);?>'/> New User</button>
@@ -29,7 +29,7 @@ function init_users_list() {
 		function (list) {
 			window.list = list;
 			list.grid.makeScrollable();
-			<?php if (PNApplication::$instance->user_management->has_right("assign_role")) {?>
+			<?php if (PNApplication::$instance->user_management->hasRight("assign_role")) {?>
 			var roles = [<?php
 			$roles = SQLQuery::create()->select("Role")->execute();
 			$first = true;

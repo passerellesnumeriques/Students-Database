@@ -4,7 +4,7 @@ class UserRights extends TestFunctionalitiesScenario {
 	public function getName() { return "User's rights"; }
 	
 	public function getCoveredFunctions() {
-		return array("has_right", "compute_rights_implications");
+		return array("hasRight", "computeRightsImplications");
 	}
 	
 	public function getUsers() {
@@ -33,7 +33,7 @@ class UserRights_TestNoRight extends TestFunctionalitiesStep {
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","no_right","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (PNApplication::$instance->user_management->has_right("consult_user_list"))
+		if (PNApplication::$instance->user_management->hasRight("consult_user_list"))
 			return "The user has the right to consult user list";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -45,9 +45,9 @@ class UserRights_TestOneRight extends TestFunctionalitiesStep {
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","user_consult_user_list","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (!PNApplication::$instance->user_management->has_right("consult_user_list"))
+		if (!PNApplication::$instance->user_management->hasRight("consult_user_list"))
 			return "The user hasn't the right to consult user list";
-		if (PNApplication::$instance->user_management->has_right("manage_users"))
+		if (PNApplication::$instance->user_management->hasRight("manage_users"))
 			return "The user has the right to manage the users";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -59,9 +59,9 @@ class UserRights_TestRightPlusImplication extends TestFunctionalitiesStep {
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","user_manage_users","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (!PNApplication::$instance->user_management->has_right("consult_user_list"))
+		if (!PNApplication::$instance->user_management->hasRight("consult_user_list"))
 			return "The user hasn't the right to consult user list";
-		if (!PNApplication::$instance->user_management->has_right("manage_users"))
+		if (!PNApplication::$instance->user_management->hasRight("manage_users"))
 			return "The user hasn't the right to manage the users";
 		PNApplication::$instance->user_management->logout();
 		return null;
@@ -74,7 +74,7 @@ class UserRights_TestNonExistingRight extends TestFunctionalitiesStep {
 		$err = PNApplication::$instance->user_management->login("Test","user_manage_users","");
 		if ($err <> null) return "Cannot login: ".$err;
 		if (PNApplication::hasErrors()) return "Errors before checking the right";
-		PNApplication::$instance->user_management->has_right("toto");
+		PNApplication::$instance->user_management->hasRight("toto");
 		if (!PNApplication::hasErrors())
 			return "No error when checking a non-existing right";
 		PNApplication::clearErrors();
@@ -88,17 +88,17 @@ class UserRights_TestRightPlusMultipleImplications extends TestFunctionalitiesSt
 	public function run(&$scenario_data) {
 		$err = PNApplication::$instance->user_management->login("Test","user_manage_selection","");
 		if ($err <> null) return "Cannot login: ".$err;
-		if (!PNApplication::$instance->user_management->has_right("manage_selection_campaign"))
+		if (!PNApplication::$instance->user_management->hasRight("manage_selection_campaign"))
 			return "The user hasn't the right manage_selection_campaign";
-		if (!PNApplication::$instance->user_management->has_right("manage_information_session"))
+		if (!PNApplication::$instance->user_management->hasRight("manage_information_session"))
 			return "The user hasn't the right manage_information_session";
-		if (!PNApplication::$instance->user_management->has_right("edit_information_session"))
+		if (!PNApplication::$instance->user_management->hasRight("edit_information_session"))
 			return "The user hasn't the right edit_information_session";
-		if (!PNApplication::$instance->user_management->has_right("can_access_selection_data"))
+		if (!PNApplication::$instance->user_management->hasRight("can_access_selection_data"))
 			return "The user hasn't the right can_access_selection_data";
-		if (!PNApplication::$instance->user_management->has_right("see_information_session_details"))
+		if (!PNApplication::$instance->user_management->hasRight("see_information_session_details"))
 			return "The user hasn't the right see_information_session_details";
-		if (PNApplication::$instance->user_management->has_right("consult_user_list"))
+		if (PNApplication::$instance->user_management->hasRight("consult_user_list"))
 			return "The user has the right consult_user_list";
 		PNApplication::$instance->user_management->logout();
 		return null;

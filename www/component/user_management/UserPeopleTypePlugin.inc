@@ -12,9 +12,9 @@ class UserPeopleTypePlugin implements PeopleTypePlugin {
 	
 	public function getTables() { return array("Users"); }
 	
-	public function canRead() { return PNApplication::$instance->user_management->has_right("consult_user_list"); }
-	public function canWrite() { return PNApplication::$instance->user_management->has_right("manage_users"); }
-	public function canRemove() { return PNApplication::$instance->user_management->has_right("manage_users"); }
+	public function canRead() { return PNApplication::$instance->user_management->hasRight("consult_user_list"); }
+	public function canWrite() { return PNApplication::$instance->user_management->hasRight("manage_users"); }
+	public function canRemove() { return PNApplication::$instance->user_management->hasRight("manage_users"); }
 	
 	public function getPeopleRowDescription($people) {
 		return null; // TODO

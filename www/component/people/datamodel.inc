@@ -42,7 +42,7 @@ $model->addTable("People")
 		return $s;
 	})
 	->addReadFilter(function(&$q, $table_alias) {
-		if (PNApplication::$instance->user_management->has_right("see_anybody")) return;
+		if (PNApplication::$instance->user_management->hasRight("see_anybody")) return;
 		// allow to read user own info
 		$w = "(`".$table_alias."`.`id`='".PNApplication::$instance->user_management->people_id."')";
 		// restrict by type of people
@@ -68,7 +68,7 @@ $model->addTable("People")
 #		$q->where("(`".$table_alias."`.`types` LIKE '%/applicant/%')"); // can only modify applicants
 #		return;
 #END
-		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return;
+		if (PNApplication::$instance->user_management->hasRight("edit_anybody")) return;
 		// restrict by type of people
 		$types = array();
 		require_once("PeopleTypePlugin.inc");
@@ -96,10 +96,10 @@ $model->addTable("People")
 		return $rows;
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks) {
-		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return;
+		if (PNApplication::$instance->user_management->hasRight("edit_anybody")) return;
 		$q->field($table_alias, "types", "people_types");
 	},function($rows) {
-		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return $rows;
+		if (PNApplication::$instance->user_management->hasRight("edit_anybody")) return $rows;
 		$final = array();
 		require_once("PeopleTypePlugin.inc");
 		foreach ($rows as $row) {

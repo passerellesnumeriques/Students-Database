@@ -1,12 +1,12 @@
 <?php
 // User roles
-$selection_staff_role_id = PNApplication::$instance->user_management->create_role("Selection Staff", true, true);
+$selection_staff_role_id = PNApplication::$instance->user_management->createRole("Selection Staff", true, true);
 $staff_role_id = PNApplication::$instance->user_management->getRolesIdsFromNames(array("Staff"), true);
 $staff_role_id = $staff_role_id[0];
 
 // assign rights to roles
-PNApplication::$instance->user_management->add_role_rights($staff_role_id, array("can_access_selection_data"=>true), true);
-PNApplication::$instance->user_management->add_role_rights($selection_staff_role_id, array(
+PNApplication::$instance->user_management->addRoleRights($staff_role_id, array("can_access_selection_data"=>true), true);
+PNApplication::$instance->user_management->addRoleRights($selection_staff_role_id, array(
 	"see_information_session"=>true,
 	"see_exam_subject"=>true,
 	"see_exam_center"=>true,

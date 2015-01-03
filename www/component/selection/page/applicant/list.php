@@ -19,7 +19,7 @@ class page_applicant_list extends SelectionPage {
 		if ($campaign_id == null) $campaign_id = PNApplication::$instance->selection->getCampaignId();
 		
 		$profile_page = null;
-		$can_edit_applicants = PNApplication::$instance->user_management->has_right("edit_applicants");
+		$can_edit_applicants = PNApplication::$instance->user_management->hasRight("edit_applicants");
 		$can_create = $can_edit_applicants;
 		$can_assign_to_is = $can_edit_applicants;
 		$can_assign_to_exam = $can_edit_applicants;
@@ -78,7 +78,7 @@ class page_applicant_list extends SelectionPage {
 		?>
 		<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
 			<div id='list_container' style="flex:1 1 auto"></div>
-			<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) {?>
+			<?php if (PNApplication::$instance->user_management->hasRight("edit_applicants")) {?>
 			<div class='page_footer' style="flex:none;">
 				<span id='nb_selected'>0 applicant selected</span>:
 				<?php
@@ -175,7 +175,7 @@ class page_applicant_list extends SelectionPage {
 					};
 					list.addTitle("/static/selection/applicant/applicants_16.png", <?php if (isset($input["title"])) echo json_encode($input["title"]); else echo "'Applicants'";?>);
 
-					<?php if (PNApplication::$instance->user_management->has_right("edit_applicants") && $can_create) {?>
+					<?php if (PNApplication::$instance->user_management->hasRight("edit_applicants") && $can_create) {?>
 					var create_applicant = document.createElement("BUTTON");
 					create_applicant.className = "flat";
 					create_applicant.innerHTML = "<img src='"+theme.build_icon("/static/selection/applicant/applicant_16.png",theme.icons_10.add)+"' style='vertical-align:bottom'/> Create Applicant";
@@ -203,7 +203,7 @@ class page_applicant_list extends SelectionPage {
 					list.addHeader(import_applicants);
 					<?php } ?>
 
-					<?php if ($is_final && PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {
+					<?php if ($is_final && PNApplication::$instance->user_management->hasRight("manage_selection_campaign")) {
 						if ($batch_id <> null) {?>
 						var update_batch = document.createElement("BUTTON");
 						update_batch.className = "flat";
@@ -249,7 +249,7 @@ class page_applicant_list extends SelectionPage {
 						<?php }
 					} ?>
 
-					<?php if (PNApplication::$instance->user_management->has_right("edit_applicants")) { ?>
+					<?php if (PNApplication::$instance->user_management->hasRight("edit_applicants")) { ?>
 					list.grid.setSelectable(true);
 					list.grid.onselect = selectionChanged;
 					<?php } ?>

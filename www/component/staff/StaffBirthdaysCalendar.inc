@@ -9,7 +9,7 @@ class StaffBirthdaysCalendar implements CustomCalendarPlugin {
 	public function canAccess() {
 		if (in_array("staff",PNApplication::$instance->user_management->people_types))
 			return true;
-		if (PNApplication::$instance->user_management->has_right("consult_staff_list"))
+		if (PNApplication::$instance->user_management->hasRight("consult_staff_list"))
 			return true;
 		return false;
 	}

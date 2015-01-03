@@ -124,7 +124,7 @@ class selection extends Component {
 		$fields = array();
 		$all_configs = include("config.inc");
 		//check the rights
-		if(!PNApplication::$instance->user_management->has_right("manage_selection_campaign",true)){
+		if(!PNApplication::$instance->user_management->hasRight("manage_selection_campaign",true)){
 			PNApplication::error("You are not allowed to manage the selection campaigns");
 			return;
 		}
@@ -199,7 +199,7 @@ class selection extends Component {
 #return;
 #END
 		//check the rights
-		if(!PNApplication::$instance->user_management->has_right("manage_selection_campaign",true)){
+		if(!PNApplication::$instance->user_management->hasRight("manage_selection_campaign",true)){
 			PNApplication::error("You are not allowed to manage the selection campaigns");
 			return;
 		}
@@ -256,7 +256,7 @@ class selection extends Component {
 #return;
 #END
 		//check the rights
-		if(!PNApplication::$instance->user_management->has_right("manage_selection_campaign",true)){
+		if(!PNApplication::$instance->user_management->hasRight("manage_selection_campaign",true)){
 			PNApplication::error("You are not allowed to manage the selection campaigns");
 			return;
 		}
@@ -622,7 +622,7 @@ class selection extends Component {
 	 */
 	public function removeIS($id){
 		// check the rights
-		if(!PNApplication::$instance->user_management->has_right("manage_information_session",true)){
+		if(!PNApplication::$instance->user_management->hasRight("manage_information_session",true)){
 			PNApplication::error("You are not allowed to remove any information session");
 			return;
 		}
@@ -652,7 +652,7 @@ class selection extends Component {
 	}
 	
 	public function canEditExamSubjects() {
-		if (!PNApplication::$instance->user_management->has_right("manage_exam_subject")) return false;
+		if (!PNApplication::$instance->user_management->hasRight("manage_exam_subject")) return false;
 		if ($this->hasExamResults()) return false;
 		return true;
 	}
@@ -665,7 +665,7 @@ class selection extends Component {
 	}
 		
 	public function canEditInterviewCriteria() {
-		if (!PNApplication::$instance->user_management->has_right("manage_interview_criteria")) return false;
+		if (!PNApplication::$instance->user_management->hasRight("manage_interview_criteria")) return false;
 		if ($this->hasInterviewResults()) return false;
 		return true;
 	}
@@ -871,7 +871,7 @@ class selection extends Component {
 	 */
 	public function removeExamCenter($id){
 		//Check the right from steps and user management
-		if (!PNApplication::$instance->user_management->has_right("manage_exam_center")) {
+		if (!PNApplication::$instance->user_management->hasRight("manage_exam_center")) {
 			PNApplication::error("You are not allowed to remove this Exam Center");
 			return false;
 		}
@@ -916,7 +916,7 @@ class selection extends Component {
 
 	public function removeInterviewCenter($id){
 		//Check the right from steps and user management
-		if (!PNApplication::$instance->user_management->has_right("manage_interview_center")) {
+		if (!PNApplication::$instance->user_management->hasRight("manage_interview_center")) {
 			PNApplication::error("You are not allowed to remove this Interview Center");
 			return false;
 		}

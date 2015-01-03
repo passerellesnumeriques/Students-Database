@@ -8,7 +8,7 @@ function staff_info(&$page, $people_id, $container_id) {
 	
 	$table = DataModel::get()->getTable("StaffPosition");
 	
-	$can_edit = $people_id == -1 || PNApplication::$instance->user_management->has_right("manage_staff");
+	$can_edit = $people_id == -1 || PNApplication::$instance->user_management->hasRight("manage_staff");
 	
 	require_once("component/data_model/page/utils.inc");
 	

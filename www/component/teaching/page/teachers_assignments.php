@@ -18,7 +18,7 @@ class page_teachers_assignments extends Page {
 		$years = PNApplication::$instance->curriculum->getAcademicYears();
 		$periods = PNApplication::$instance->curriculum->getAcademicPeriods();
 
-		$can_edit = isset($_GET["edit"]) && PNApplication::$instance->user_management->has_right("edit_curriculum");
+		$can_edit = isset($_GET["edit"]) && PNApplication::$instance->user_management->hasRight("edit_curriculum");
 		
 		$locked_by = null;
 		if ($can_edit) {
@@ -53,7 +53,7 @@ class page_teachers_assignments extends Page {
 			<img src='/static/teaching/teacher_assign_32.png'/>
 			Teachers Assignments
 			<?php 
-			if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
+			if (PNApplication::$instance->user_management->hasRight("edit_curriculum")) {
 				if ($can_edit) {
 					echo "<button onclick=\"var u = new window.URL(location.href);delete u.params.edit;location.href=u.toString();\" class='action'><img src='".theme::$icons_16["no_edit"]."'/>Stop Editing</button>";
 				} else {
@@ -243,7 +243,7 @@ class page_teachers_assignments extends Page {
 				echo "<br/>";
 				echo "On the right side is the list of available teachers during this academic period.";
 				echo "<br/>";
-				if (PNApplication::$instance->user_management->has_right("edit_curriculum")) {
+				if (PNApplication::$instance->user_management->hasRight("edit_curriculum")) {
 					echo "<br/>To modify teachers' assignments, you need first to click on the ";
 					PNApplication::$instance->help->spanArrow($this, "edit button", "#edit_teachers_assignments_button");
 					echo " (try now to see<br/>";
@@ -1126,7 +1126,7 @@ class page_teachers_assignments extends Page {
 		?>
 		var teachers_table = new TeachersTable('<?php echo $teachers_table_id;?>');
 
-		<?php if (PNApplication::$instance->user_management->has_right("edit_curriculum")) { ?>
+		<?php if (PNApplication::$instance->user_management->hasRight("edit_curriculum")) { ?>
 		var add_teacher_button = document.createElement("BUTTON");
 		add_teacher_button.className = "flat icon";
 		add_teacher_button.innerHTML = "<img src='"+theme.build_icon("/static/teaching/teacher_16.png",theme.icons_10.add)+"'/>";

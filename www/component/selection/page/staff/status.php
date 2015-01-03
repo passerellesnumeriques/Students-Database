@@ -25,7 +25,7 @@ class page_staff_status extends SelectionPage {
 			if($r["si"] == 1) array_push($can_do[$r["people"]], "si");
 		}
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_staff_status");
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_staff_status");
 		
 		theme::css($this, "grid.css");
 		$this->requireJavascript("profile_picture.js");

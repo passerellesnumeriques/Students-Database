@@ -14,7 +14,7 @@ class service_travel_init_synch extends Service {
 			return;
 		}
 		if ($row["user"] <> PNApplication::$instance->user_management->user_id) {
-			$people_id = PNApplication::$instance->user_management->get_people_from_user($row["user"]);
+			$people_id = PNApplication::$instance->user_management->getPeopleFromUser($row["user"]);
 			$people = PNApplication::$instance->people->getPeople($people_id, true);
 			PNApplication::error("This is ".$people["first_name"]." ".$people["last_name"]." who is travelling. Only ".($people["sex"] == "M" ? "him" : "her")." can synchronize the database");
 			return;

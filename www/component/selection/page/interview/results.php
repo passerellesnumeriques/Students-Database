@@ -11,7 +11,7 @@ class page_interview_results extends SelectionPage {
 ?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;'>
 	<div class='page_title' style='flex:none;'>
-		<?php if (PNApplication::$instance->user_management->has_right("edit_interview_results")) { ?>
+		<?php if (PNApplication::$instance->user_management->hasRight("edit_interview_results")) { ?>
 		<button class='action red' style='float:right' onclick='resetAll();'>
 			Reset all results
 		</button>
@@ -106,7 +106,7 @@ class page_interview_results extends SelectionPage {
 			</div>
 		</div>
 	</div>
-	<?php if (PNApplication::$instance->user_management->has_right("edit_interview_results")) { ?>
+	<?php if (PNApplication::$instance->user_management->hasRight("edit_interview_results")) { ?>
 	<div class="page_footer" style="flex:none">
 		<button id="edit_results_button" class="action" disabled="disabled" onclick="editResults();">Edit Results</button>
 		<button id="remove_results_button" class="action red" disabled="disabled" onclick="resetSession();">Reset results</button>
@@ -146,7 +146,7 @@ function selectSession(row, session_id) {
 	window.dl.resetFilters(true, [{category:"Selection",name:"Interview Session",force:true,data:{values:[session_id]}}]);
 	window.dl.reloadData();
 	document.getElementById('session_applicants_list').style.display = "";
-	<?php if (PNApplication::$instance->user_management->has_right("edit_interview_results")) { ?>
+	<?php if (PNApplication::$instance->user_management->hasRight("edit_interview_results")) { ?>
 	document.getElementById('edit_results_button').disabled = "";
 	document.getElementById('remove_results_button').disabled = "";
 	<?php } ?>

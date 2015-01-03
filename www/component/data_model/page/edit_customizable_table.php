@@ -16,7 +16,7 @@ class page_edit_customizable_table extends Page {
 				return;
 			}
 		}
-		if (!PNApplication::$instance->user_management->has_right($table->getCustomizationRight())) {
+		if (!PNApplication::$instance->user_management->hasRight($table->getCustomizationRight())) {
 			PNApplication::error("You are not allowed to edit those information");
 			return;
 		}

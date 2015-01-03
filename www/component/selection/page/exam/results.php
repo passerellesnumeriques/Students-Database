@@ -28,7 +28,7 @@ class page_exam_results extends SelectionPage {
 <div style="width:100%;height:100%;display:flex;flex-direction:column">
 	<div class="page_title" style="flex:none">
 		<div style='float:right;font-size:10pt;'>
-		<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
+		<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
 		<button class='action red' onclick='resetAll();'>
 			Reset all results
 		</button><br/>
@@ -135,7 +135,7 @@ class page_exam_results extends SelectionPage {
 			</div>
 		</div>
 	</div>
-	<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
+	<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
 	<div class="page_footer" style="flex:none">
 		<button id="edit_results_button" class="action" disabled="disabled" onclick="editResults();">Edit Results</button>
 		<button id="remove_results_button" class="action red" disabled="disabled" onclick="resetSession();">Reset results</button>
@@ -198,7 +198,7 @@ function initResults(){
 		updateApplicantsList();
 
 		document.getElementById("session_applicants_list").style.display = selected["session_id"] != null ? "" : "none";
-		<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
+		<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
 		document.getElementById('edit_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
 		document.getElementById('remove_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
 		<?php } ?>

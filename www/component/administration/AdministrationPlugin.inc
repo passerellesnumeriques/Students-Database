@@ -104,7 +104,7 @@ class ApplicationAdministrationPlugin implements AdministrationPlugin {
 					"/static/application/logo_16.png",
 					"/static/application/logo_32.png",
 					"Manage the application, deploy new version...",
-					function() { return PNApplication::$instance->user_management->has_right("manage_application"); },
+					function() { return PNApplication::$instance->user_management->hasRight("manage_application"); },
 					function() {
 						$s = "";
 						$last_cron = PNApplication::$instance->cron->getLastCronExecution();

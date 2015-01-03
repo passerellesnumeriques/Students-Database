@@ -43,7 +43,7 @@ class page_trip_list extends SelectionPage {
 		</table>
 		<?php } ?>
 	</div>
-	<?php if (PNApplication::$instance->user_management->has_right("manage_trips")) { ?>
+	<?php if (PNApplication::$instance->user_management->hasRight("manage_trips")) { ?>
 	<div class='page_footer' style='flex:none;'>
 		<button class='action green' onclick='newTrip();'>
 			<img src='<?php echo theme::make_icon("/static/selection/trip/bus_black_16.png",theme::$icons_10["add"]);?>'/>

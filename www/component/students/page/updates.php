@@ -70,7 +70,7 @@ class page_updates extends Page {
 			$tags .= "]";
 		} else {
 			$tags = "null";
-			if (PNApplication::$instance->user_management->has_right("consult_students_list"))
+			if (PNApplication::$instance->user_management->hasRight("consult_students_list"))
 				$title = "for All Students";
 			else
 				$title = "";

@@ -9,17 +9,17 @@ require_once("component/documents/DocumentsPlugin.inc");
 	public function getType() { return "curriculum"; }
 	public function maxVersions() { return 1; }
 	public function canRead($key, $sub_model) {
-		if (PNApplication::$instance->user_management->has_right("consult_curriculum"))
+		if (PNApplication::$instance->user_management->hasRight("consult_curriculum"))
 			return true;
 		return false;
 	}
 	public function canWrite($key, $sub_model) {
-		if (PNApplication::$instance->user_management->has_right("edit_curriculum"))
+		if (PNApplication::$instance->user_management->hasRight("edit_curriculum"))
 			return true;
 		return false;
 	}
 	public function canAddAndRemove($key, $sub_model) {
-		if (PNApplication::$instance->user_management->has_right("edit_curriculum"))
+		if (PNApplication::$instance->user_management->hasRight("edit_curriculum"))
 			return true;
 		return false;
 	}

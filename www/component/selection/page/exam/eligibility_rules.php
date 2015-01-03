@@ -50,7 +50,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 		$rules_applicants_ids = SQLQuery::create()->select("Applicant")->whereNotNull("Applicant","exam_passer")->whereValue("Applicant","exam_attendance","Yes")->field("Applicant","people")->executeSingleField();
 		$root_rules = $this->buildRulesTree($rules, null, $all_applicants_info["nb_results_entered"], $rules_applicants_ids);
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_exam_rules");
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_exam_rules");
 		
 		$this->requireJavascript("drawing.js");
 		$script = "";

@@ -6,7 +6,7 @@ theme::css($this, "application.css");
 window.top.username = <?php echo json_encode(PNApplication::$instance->user_management->username); ?>;
 window.top.user_id = <?php echo PNApplication::$instance->user_management->user_id; ?>;
 window.top.my_people = <?php
-$people_id = PNApplication::$instance->user_management->get_people_from_user(PNApplication::$instance->user_management->user_id);
+$people_id = PNApplication::$instance->user_management->getPeopleFromUser(PNApplication::$instance->user_management->user_id);
 require_once("component/people/PeopleJSON.inc");
 echo PeopleJSON::PeopleFromID($people_id);
 ?>;

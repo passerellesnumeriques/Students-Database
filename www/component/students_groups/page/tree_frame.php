@@ -35,7 +35,7 @@ class page_tree_frame extends Page {
 		$groups_types = $q->execute();
 		$group_type = isset($_COOKIE["students_groups_type"]) ? $_COOKIE["students_groups_type"] : 1;
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_batches");
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_batches");
 ?>
 <style type="text/css">
 #students_groups_tree_container {

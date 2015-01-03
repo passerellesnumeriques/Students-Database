@@ -50,7 +50,7 @@ $model->addTable("UserRole")
 #!SELECTION_TRAVEL
 	->addInsertAccess("assign_role",true)
 	->addRemoveFilter(function(&$q,$table_alias,&$locks){
-		if (!PNApplication::$instance->user_management->has_right("assign_role")) {
+		if (!PNApplication::$instance->user_management->hasRight("assign_role")) {
 			$q->where("FALSE");
 			return;
 		}

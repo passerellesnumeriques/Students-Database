@@ -16,7 +16,7 @@ class service_save_subject_evaluations extends Service {
 	
 	public function execute(&$component, $input) {
 		// check access
-		if (!PNApplication::$instance->user_management->has_right("edit_students_grades")) {
+		if (!PNApplication::$instance->user_management->hasRight("edit_students_grades")) {
 			if (!PNApplication::$instance->teaching->isAssignedToSubject(PNApplication::$instance->user_management->people_id, $input["subject_id"])) {
 				PNApplication::error("Access denied");
 				return;

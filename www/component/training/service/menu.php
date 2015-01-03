@@ -11,7 +11,7 @@ class service_menu extends Service {
 	public function execute(&$component, $input) {
 		//$current_batches = PNApplication::$instance->curriculum->getCurrentBatches();
 ?>
-<?php if (PNApplication::$instance->user_management->has_right("consult_students_list")) { ?>
+<?php if (PNApplication::$instance->user_management->hasRight("consult_students_list")) { ?>
 <a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/students/page/updates'>
 	<img src='/static/news/news_white.png'/>
 	Updates
@@ -44,7 +44,7 @@ foreach ($current_batches as $b) {
 } 
 */
 ?>
-<?php if (PNApplication::$instance->user_management->has_right("consult_curriculum")) { ?>
+<?php if (PNApplication::$instance->user_management->hasRight("consult_curriculum")) { ?>
 <a class='application_left_menu_item' href='/dynamic/curriculum/page/academic_calendar'>
 	<img src='/static/calendar/calendar_white.png'/>
 	Years and Periods
@@ -83,7 +83,7 @@ foreach ($current_batches as $b) {
 	My Subjects
 </a>
 <?php } ?>
-<?php if (PNApplication::$instance->user_management->has_right("consult_students_grades")) { ?>
+<?php if (PNApplication::$instance->user_management->hasRight("consult_students_grades")) { ?>
 <a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/transcripts/page/students_grades'>
 	<img src='/static/transcripts/grades_white.png'/>
 	Grades
@@ -92,7 +92,7 @@ foreach ($current_batches as $b) {
 	<img src='/static/curriculum/curriculum_white.png'/>
 	By subject
 </a>
-<?php if (PNApplication::$instance->user_management->has_right("edit_transcripts_design")) { ?>
+<?php if (PNApplication::$instance->user_management->hasRight("edit_transcripts_design")) { ?>
 <a class='application_left_menu_item' style='padding-left:20px' href='/dynamic/students_groups/page/tree_frame?section=training#/dynamic/transcripts/page/configure_transcripts'>
 	<img src='<?php echo theme::$icons_16["config_white"];?>'/>
 	Design transcripts
@@ -116,7 +116,7 @@ if (in_array("student",PNApplication::$instance->user_management->people_types))
 </a>
 <?php } ?>
 <?php } ?>
-<?php if (PNApplication::$instance->user_management->has_right("consult_students_list")) { ?>
+<?php if (PNApplication::$instance->user_management->hasRight("consult_students_list")) { ?>
 <div class="application_left_menu_separator"></div>
 <div id="search_student_container" style="width:100%;padding:2px 5px 2px 5px;"></div>
 <script type='text/javascript'>

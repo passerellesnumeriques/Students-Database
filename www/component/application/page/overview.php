@@ -138,7 +138,7 @@ if ($google_account == null || $google_account["google_login"] == null) {
 <?php 
 }
 }
-if (PNApplication::$instance->user_management->has_right("manage_application")) {
+if (PNApplication::$instance->user_management->hasRight("manage_application")) {
 global $pn_app_version;
 ?>
 <div style='flex:none;display:none;padding:5px 10px;' id='new_version_available'>

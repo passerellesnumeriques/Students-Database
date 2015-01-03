@@ -15,7 +15,7 @@ class page_si_applicant extends Page {
 		$calendar_id = $campaign["calendar"];
 		
 		if ($campaign_id == PNApplication::$instance->selection->getCampaignId()) {
-			$can_edit = PNApplication::$instance->user_management->has_right("edit_social_investigation");
+			$can_edit = PNApplication::$instance->user_management->hasRight("edit_social_investigation");
 			$edit = $can_edit && @$_GET["edit"] == "true";
 		} else
 			$can_edit = false; 

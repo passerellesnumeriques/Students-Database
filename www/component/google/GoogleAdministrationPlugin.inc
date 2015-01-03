@@ -13,7 +13,7 @@ class GoogleAdministrationPlugin implements AdministrationPlugin {
 				"/static/google/google.png",
 				"/static/google/google_32.png",
 				"Administration of Google Services",
-				function() { return PNApplication::$instance->user_management->has_right("admin_google"); },
+				function() { return PNApplication::$instance->user_management->hasRight("admin_google"); },
 				function() {
 					if (!PNApplication::$instance->google->isInstalled())
 						return "<img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> Google is not configured.<br/>";

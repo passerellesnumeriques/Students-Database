@@ -1,3 +1,3 @@
 <?php
-PNApplication::$instance->user_management->create_role("Teacher", true, true); 
+PNApplication::$instance->user_management->createRole("Teacher", true, true); 
 ?>

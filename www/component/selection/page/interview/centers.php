@@ -12,7 +12,7 @@ class page_interview_centers extends SelectionPage {
 		$this->onload("sectionFromHTML('interview_status_section');");
 		$this->onload("loadInterviewCenterStatus();");
 		
-		$can_create = PNApplication::$instance->user_management->has_right("manage_interview_center",true);
+		$can_create = PNApplication::$instance->user_management->hasRight("manage_interview_center",true);
 		?>
 		<div style="display:flex;flex-direction:row">
 			<div style ="display:inline-block;padding:5px;flex:none">

@@ -15,7 +15,7 @@ class InternshipApplicationSection implements ApplicationSectionPlugin {
 #SELECTION_TRAVEL
 #return false;
 #END
-		return PNApplication::$instance->user_management->has_right("consult_students_list");
+		return PNApplication::$instance->user_management->hasRight("consult_students_list");
 	}
 	
 }

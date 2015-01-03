@@ -49,7 +49,7 @@ class page_interview_criteria extends SelectionPage {
 			<div id='page_content' style="padding:10px;overflow:hidden;flex:1 1 auto">
 				<?php if ($locked_by <> null) {
 					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot edit because this is currently edited by ".toHTML($locked_by)."</div>";
-				} else if (!$can_edit && PNApplication::$instance->user_management->has_right("manage_interview_criteria")) {
+				} else if (!$can_edit && PNApplication::$instance->user_management->hasRight("manage_interview_criteria")) {
 					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot edit because some results have been already entered.</div>";
 				} ?>
 				<div 

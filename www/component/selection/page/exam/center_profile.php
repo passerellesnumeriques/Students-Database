@@ -24,7 +24,7 @@ class page_exam_center_profile extends SelectionPage {
 		} else
 			$center = null;
 		if (@$_GET["readonly"] == "true") $editable = false;
-		else $editable = $id == null || PNApplication::$instance->user_management->has_right("manage_exam_center");
+		else $editable = $id == null || PNApplication::$instance->user_management->hasRight("manage_exam_center");
 		if ($campaign_id <> PNApplication::$instance->selection->getCampaignId()) $editable = false;
 		$db_lock = null;
 		if ($editable && $id <> null) {
