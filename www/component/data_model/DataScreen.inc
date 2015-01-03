@@ -95,11 +95,12 @@ namespace datamodel {
 		
 		public function generate(&$page, $paths, $values, $prefilled_values, $structure_name) {
 			$path = $paths[0];
-			$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
+			$from = $path instanceof \DataPath_Join && $path->isReverse() ? $path->foreign_key->name : null;
 			//var_dump($values);
 			//$key_value = getKeyValue($path->table, $values);
 			$is_new = $structure_name <> null;
 			$fixed_columns = array_merge($values->getColumns($path->table->getName()));
+			//echo "<div>Generate Screen for table ".$path->table->getName().", coming from ".$from.", with path ".toHTML($path->getString())."</div>";
 			echo $this->generateDataTable($page, $path, $this->display->getDataDisplay($from, $path->sub_model), $fixed_columns, $values, $prefilled_values, $structure_name, $is_new);
 		}
 		
@@ -118,6 +119,7 @@ namespace datamodel {
 		 * @return string the HTML
 		 */
 		protected function generateDataTable(&$page, $path, $list, $fixed_columns, $values, $prefilled_values, $structure_name, $is_new) {
+			//echo "<div>Table ".$path->table->getName().": ".count($list)." data</div>";
 			if ($path->sub_model == "@link") return;
 			$script = "";
 			$html = "<table class='data_screen'><tbody>";
@@ -138,6 +140,7 @@ namespace datamodel {
 				}
 			}
 			foreach ($list as $data) {
+				//echo "<div>Table ".$path->table->getName()." Data ".$data->getDisplayName()."</div>";
 				if (!$data->canAccess($path->sub_model)) return;
 				$can_edit = $is_new ? $data->isEditableForNewData() : ($data->isEditable() && !$readonly);
 				if ($is_new && !$can_edit && !$values->hasDataValue($path->table->getName(), $data)) continue;
@@ -210,7 +213,7 @@ namespace datamodel {
 							if ($structure_name <> null && $first_sub_index)
 								$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",sub_index:$sub_index,field:field,data:new_data,getValue:function(){return this.field.getCurrentData();},validate:function(){ var fields = window.top.sub_field_registry.getFields(window,this.data);for (var i = 0; i < fields.length; ++i) if (fields[i].error) return fields[i].error; return null; }});\n";
 						} else if ($can_edit) {
-							$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
+							$from = $path instanceof \DataPath_Join && $path->isReverse() ? $path->foreign_key->name : null;
 							$page->addJavascript("/static/data_model/datadisplay.js");
 							$page->addJavascript("/static/data_model/editable_field.js");
 							$page->addJavascript("/static/data_model/editable_datadisplay.js");
@@ -234,7 +237,7 @@ namespace datamodel {
 						if ($structure_name <> null)
 							$script .= "path.data.push({name:".json_encode($data->getDisplayName()).",sub_index:-1,field:field,getValue:function(){return this.field.getCurrentData();},validate:function(){ return this.field.error; }});\n";
 					} else if ($can_edit) {
-						$from = $path instanceof DataPath_Join && $path->isReverse() ? $path->foreign_key_name : null;
+						$from = $path instanceof \DataPath_Join && $path->isReverse() ? $path->foreign_key->name : null;
 						$page->addJavascript("/static/data_model/datadisplay.js");
 						$page->addJavascript("/static/data_model/editable_field.js");
 						$page->addJavascript("/static/data_model/editable_datadisplay.js");
@@ -407,7 +410,7 @@ namespace datamodel {
 			// create data for remaining children
 			foreach ($children as $child) {
 				$come_from = null;
-				if ($child instanceof DataPath_Join) {
+				if ($child instanceof \DataPath_Join) {
 					if ($child->isReverse()) {
 						$come_from = $child->foreign_key->name;
 					} else {

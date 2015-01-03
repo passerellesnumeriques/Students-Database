@@ -159,6 +159,7 @@ field_decimal.prototype._create = function(data) {
 			var prev = this.text.nodeValue;
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
+			if (data === null && !this.config.can_be_null) data = 0; // for read-only, we replace by 0
 			if (data === null) this.text.nodeValue = "";
 			else this.text.nodeValue = data.toFixed(this.config.decimal_digits);
 			if (this.text.nodeValue != prev) layout.changed(this.element);

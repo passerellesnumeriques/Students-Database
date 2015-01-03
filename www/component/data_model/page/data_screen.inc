@@ -263,7 +263,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 				$key_value = getKeyValue($path->table, $values);
 			else
 				$key_value = null;
-			//echo "<br/>Key for ".$child->table->getName()." (".$path->table->getName()."): ".var_export($key_value,true)."<br/>";
+			//echo "<div>Key for ".$child->table->getName()." (".$path->table->getName()."): ".var_export($key_value,true)."</div>";
 			if ($key_value <> null) {
 				//if ($child->unique) {
 					if ($child->isReverse()) {
