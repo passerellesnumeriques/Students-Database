@@ -39,7 +39,8 @@ class service_menu extends Service {
 $general_regular_payments = PNApplication::$instance->finance->getGeneralRegularPayments();
 foreach ($general_regular_payments as $p) {
 	?>
-	<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=education#/dynamic/finance/page/general_payment_overview%3Fid%3D<?php echo $p["id"];?>' style='padding-left:20px'>
+	<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=education#/dynamic/finance/page/general_payment_overview%3Fid%3D<?php echo $p["id"];?>' style='padding-left:12px'>
+		<img src='<?php echo theme::$icons_10["arrow_right_white"];?>' style='vertical-align:middle;'/>
 		<?php echo toHTML($p["name"]);?>
 	</a>
 	<?php

@@ -107,7 +107,7 @@ class page_general_payment_overview extends Page {
 			$descr = PNApplication::$instance->getDomainDescriptor();
 			date_default_timezone_set($descr["timezone"]);
 			$dates = array();
-			echo "<table class='grid'>";
+			echo "<table class='grid selected_hover'>";
 			echo "<thead>";
 			echo "<tr>";
 				echo "<th>Student</th>";
@@ -139,7 +139,7 @@ class page_general_payment_overview extends Page {
 			echo "</thead><tbody>";
 			foreach ($students as $s) {
 				echo "<tr>";
-				echo "<td>".toHTML($s["last_name"]." ".$s["first_name"])."</td>";
+				echo "<td style='white-space:nowrap;'>".toHTML($s["last_name"]." ".$s["first_name"])."</td>";
 				foreach ($dates as $d) {
 					$schedule = null;
 					foreach ($s["schedules"] as $sched)
@@ -151,13 +151,13 @@ class page_general_payment_overview extends Page {
 						foreach ($payments as $p) $paid += floatval($p["amount"]);
 						$balance = $paid+floatval($schedule["amount"]);
 						if ($balance == 0)
-							echo "<td style='text-align:center;background-color:".($d < time() ? "#60FF60" : "#A0FFA0").";'>Paid</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#60FF60" : "#A0FFA0").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' ouclick='cellClicked(this);'>Paid</td>";
 						else if ($balance == $schedule["amount"])
-							echo "<td style='text-align:center;background-color:".($d < time() ? "#FF0000" : "#FF8080").";'>$balance</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#FF0000" : "#FF8080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' ouclick='cellClicked(this);'>$balance</td>";
 						else if ($balance < 0)
-							echo "<td style='text-align:center;background-color:".($d < time() ? "#FF9040" : "#FFB080").";'>$balance</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#FF9040" : "#FFB080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' ouclick='cellClicked(this);'>$balance</td>";
 						else
-							echo "<td style='text-align:center;background-color:#0080FF;'>$balance</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:#0080FF;'>$balance</td>";
 					} else {
 						echo "<td style='text-align:center;background-color:#A0A0A0;'>N/A</td>";
 					}
@@ -173,6 +173,40 @@ class page_general_payment_overview extends Page {
 <script type='text/javascript'>
 var batches = <?php echo json_encode($batches);?>;
 var freq = "<?php echo $payment["frequency"];?>";
+
+var selected_td = null;
+var selected_th = null;
+
+function removeSelectedCell() {
+	if (selected_td == null) return;
+	selected_td.style.color = "";
+	selected_th.style.backgroundColor = "";
+	selected_td = null;
+	selected_th = null;
+}
+function mouseOverCell(td) {
+	removeSelectedCell();
+	var col_index = 0;
+	var e = td;
+	while (e.previousSibling) { col_index++; e = e.previousSibling; }
+	var tr = td.parentNode;
+	var tbody = tr.parentNode;
+	var table = tbody.parentNode;
+	var thead = table.childNodes[0];
+	tr = thead.childNodes[0];
+	var th = tr.childNodes[col_index];
+	th.style.backgroundColor = "#FFC080";
+	td.style.color = "#FFE0C0";
+	selected_td = td;
+	selected_th = th;
+}
+function mouseOutCell(td) {
+	removeSelectedCell();
+}
+function cellClicked(td) {
+	// TODO
+}
+
 function configurePaymentForBatch(batch_id) {
 	require(["popup_window.js","start_end_dates.js",["typed_field.js","field_decimal.js"]],function() {
 		var content = document.createElement("DIV");

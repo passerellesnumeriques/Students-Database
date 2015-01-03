@@ -80,6 +80,7 @@ theme::$icons_10 = array(
 	"arrow_down_black" => "/static/theme/default/icons_10/arrow_down_black.gif",
 	"arrow_left_black" => "/static/theme/default/icons_10/arrow_left_black.gif",
 	"arrow_right_black" => "/static/theme/default/icons_10/arrow_right_black.gif",
+	"arrow_right_white" => "/static/theme/default/icons_10/arrow_right_white.gif",
 	"arrow_up_black" => "/static/theme/default/icons_10/arrow_up_black.gif",
 	"bullet_black" =>	"/static/theme/default/icons_10/bullet_black.png",
 	"close" => 			"/static/theme/default/icons_10/close.png",
