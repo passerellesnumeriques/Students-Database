@@ -684,6 +684,8 @@ function popup_window(title,icon,content,hide_close_button) {
 		else {
 			t.content_container.appendChild(t.content);
 			t.content.style.visibility = 'visible';
+			t.content.style.display = 'block';
+			t.content.style.position = 'static';
 		}
 		if (t.content.nodeName == "IFRAME" && t.content._post_data) {
 			postData(t.content._post_url, t.content._post_data, getIFrameWindow(t.content));
@@ -853,6 +855,7 @@ function popup_window(title,icon,content,hide_close_button) {
 				t.content.parentNode.removeChild(t.content);
 				t.content.style.position = 'absolute';
 				t.content.style.visibility = 'hidden';
+				t.content.style.display = "none";
 				t.content.style.top = '-10000px';
 				t.content.ownerDocument.body.appendChild(t.content);
 			}

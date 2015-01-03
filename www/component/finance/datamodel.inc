@@ -32,4 +32,14 @@ $model->addTable("ScheduledPaymentDateOperation")
 	->setKey(array("schedule","operation"))
 	;
 
+$model->addTable("FinanceRegularPayment")
+	->addPrimaryKey("id")
+	->addString("name",30,1,false,true)
+	->addEnum("frequency",array("Daily","Weekly","Monthly","Yearly"),false,false)
+	->addReadAccess("consult_student_finance", true)
+	->addWriteAccess("manage_finance", true)
+	->addInsertAccess("manage_finance", true)
+	->addRemoveAccess("manage_finance", true)
+	;
+
 ?>

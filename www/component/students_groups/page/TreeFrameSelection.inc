@@ -26,11 +26,30 @@ class TreeFrameSelection {
 	public static function isSingleBatch() {
 		return count(self::getBatchesIds());
 	}
+	public static function isAllBatches() {
+		return @$_GET["batches"] == null && @$_GET["batch"] == null;
+	}
+	public static function isCurrentBatches() {
+		return @$_GET["batches"] == "current";
+	}
+	public static function isAlumniBatches() {
+		return @$_GET["batches"] == "alumni";
+	}
 	
 	public static function getBatchId() {
 		$ids = self::getBatchesIds();
 		if (count($ids) == 1) return $ids[0];
 		return null;
+	}
+	
+	private static $batch = null;
+	public static function getBatchName() {
+		if (self::$batch == null) {
+			$id = self::getBatchId();
+			if ($id == null) return null;
+			self::$batch = PNApplication::$instance->curriculum->getBatch($id);
+		}
+		return self::$batch["name"];
 	}
 	
 	public static function getPeriodId() {

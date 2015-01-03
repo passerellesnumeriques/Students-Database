@@ -30,10 +30,22 @@ class service_menu extends Service {
 	<img src='/static/application/overview_white.png'/>
     Housing
 </a>
-<a class='application_left_menu_item'>
+<?php if (PNApplication::$instance->user_management->hasRight("consult_student_finance")) { ?>
+<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=education#/dynamic/finance/page/dashboard'>
 	<img src='/static/finance/finance_white.png'/>
     Finance
 </a>
+<?php 
+$general_regular_payments = PNApplication::$instance->finance->getGeneralRegularPayments();
+foreach ($general_regular_payments as $p) {
+	?>
+	<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=education#/dynamic/finance/page/general_payment_overview?id=<?php echo $p["id"];?>' style='padding-left:20px'>
+		<?php echo toHTML($p["name"]);?>
+	</a>
+	<?php
+}
+?>
+<?php } ?>
 <div class="application_left_menu_separator"></div>
 <div id="search_student_container" style="width:100%;padding:2px 5px 2px 5px;"></div>
 <script type='text/javascript'>

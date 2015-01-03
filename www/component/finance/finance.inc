@@ -6,5 +6,9 @@ class finance extends Component {
 			new StudentFinanceProfilePage()
 		);
 	}
+	
+	public function getGeneralRegularPayments() {
+		return SQLQuery::create()->select("FinanceRegularPayment")->execute();
+	}
 }
 ?>
