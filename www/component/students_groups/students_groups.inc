@@ -1,4 +1,7 @@
-<?php 
+<?php
+/**
+ * Manage groups of students (classes...)
+ */ 
 class students_groups extends Component {
 	
 	/**
@@ -189,7 +192,15 @@ class students_groups extends Component {
 			->executeSingleField();
 	}
 	
-	public function assign_student_to_group($student_people_id, $group_type_id, $group_id, $period_id) {
+	/**
+	 * Assign a student to a group
+	 * @param integer $student_people_id student
+	 * @param integer $group_type_id group type
+	 * @param integer $group_id group
+	 * @param integer $period_id period
+	 * @return boolean true on success
+	 */
+	public function assignStudentToGroup($student_people_id, $group_type_id, $group_id, $period_id) {
 		// check the group exists
 		if ($group_id <> null) {
 			$group = $this->getGroup($group_id);
@@ -221,6 +232,13 @@ class students_groups extends Component {
 		return true;
 	}
 	
+	/**
+	 * Get the group of a student
+	 * @param integer $people_id student
+	 * @param integer $period_id period
+	 * @param integer $group_type_id group type
+	 * @return array row of the group
+	 */
 	public function getStudentGroup($people_id, $period_id, $group_type_id) {
 		return SQLQuery::create()
 			->select("StudentGroup")
@@ -233,6 +251,13 @@ class students_groups extends Component {
 			;
 	}
 	
+	/**
+	 * Get the list of students for the given period (students assigned to at least one group)
+	 * @param integer $period_id period
+	 * @param integer|boolean|null $spe_id if false no filter on specialization, else only groups from the given specialization are checked 
+	 * @param boolean $bypass_security avoid security checks
+	 * @return integer[] students ids
+	 */
 	public function getStudentsForPeriod($period_id, $spe_id = false, $bypass_security = false) {
 		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentsGroup")->whereValue("StudentsGroup","period",$period_id);
 		if ($spe_id !== false) $q->whereValue("StudentsGroup","specialization",$spe_id);
@@ -241,6 +266,11 @@ class students_groups extends Component {
 		return SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentGroup")->whereIn("StudentGroup","group",$groups_ids)->field("StudentGroup","people")->distinct()->executeSingleField();
 	}
 	
+	/**
+	 * Get the specialization of the student based on its group (check if the student belongs to a specialized group)
+	 * @param integer $people_id student
+	 * @return integer|null specialization id
+	 */
 	public function getStudentGroupSpecialization($people_id) {
 		return SQLQuery::create()->select("StudentGroup")
 			->whereValue("StudentGroup","people",$people_id)

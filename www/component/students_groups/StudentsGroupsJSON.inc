@@ -1,6 +1,14 @@
-<?php 
+<?php
+/**
+ * Generate JSON structures for students groups
+ */ 
 class StudentsGroupsJSON {
 	
+	/**
+	 * Add fields group_type_id, group_type_name, group_type_specialization_dependent, group_type_builtin, group_type_sub_groups
+	 * @param SQLQuery $q the SELECT
+	 * @no_name_check
+	 */
 	public static function GroupTypeSQL(&$q) {
 		$q->field("StudentsGroupType","id","group_type_id");
 		$q->field("StudentsGroupType","name","group_type_name");
@@ -9,6 +17,12 @@ class StudentsGroupsJSON {
 		$q->field("StudentsGroupType","sub_groups","group_type_sub_groups");
 	}
 	
+	/**
+	 * Generate the JSON structure of a group type
+	 * @param array $row row from database
+	 * @return string JSON structure
+	 * @no_name_check
+	 */
 	public static function GroupTypeJSON($row) {
 		$s = "{";
 		$s .= "id:".$row["group_type_id"];
@@ -20,6 +34,12 @@ class StudentsGroupsJSON {
 		return $s;
 	}
 	
+	/**
+	 * Generate a JSON array of group type structures
+	 * @param array $rows rows from database
+	 * @return string JSON
+	 * @no_name_check
+	 */
 	public static function GroupsTypesJSON($rows) {
 		$s = "[";
 		for ($i = 0; $i < count($rows); $i++) {
@@ -30,24 +50,47 @@ class StudentsGroupsJSON {
 		return $s;
 	}
 	
+	/**
+	 * Retrieve the given group type and generate the JSON structure
+	 * @param integer $id group type id
+	 * @return string JSON
+	 * @no_name_check
+	 */
 	public static function getGroupTypeById($id) {
 		$q = SQLQuery::create()->select("StudentsGroupType")->whereValue("StudentsGroupType","id",$id);
 		self::GroupTypeSQL($q);
 		return self::GroupTypeJSON($q->executeSingleRow());
 	}
 	
+	/**
+	 * Retrieve the list of existing group types and generate the JSON array
+	 * @return string JSON
+	 * @no_name_check
+	 */
 	public static function getGroupsTypes() {
 		$q = SQLQuery::create()->select("StudentsGroupType");
 		self::GroupTypeSQL($q);
 		return self::GroupsTypesJSON($q->execute());
 	}
 	
+	/**
+	 * Retrieve the groups, by group type, for the given periods, and generate a JSON structure
+	 * @param integer[]|null $periods_ids list of periods, or null for all periods
+	 * @return string JSON
+	 * @no_name_check
+	 */
 	public static function GroupsTypesStructurePerPeriod($periods_ids = null) {
 		$q = SQLQuery::create()->select("StudentsGroup");
 		if ($periods_ids <> null) $q->whereIn("StudentsGroup", "period", $periods_ids);
 		$groups = $q->execute();
 		return self::GroupsTypesStructurePerPeriodFromGroups($groups);
 	}
+	/**
+	 * Genreate the JSON structure containing the given groups, organized by period, specialization, and group type 
+	 * @param array $groups list of groups
+	 * @return string JSON
+	 * @no_name_check
+	 */
 	public static function GroupsTypesStructurePerPeriodFromGroups($groups) {
 		$s = "[";
 		$first_period = true;
@@ -97,6 +140,13 @@ class StudentsGroupsJSON {
 		return $s;
 	}
 	
+	/**
+	 * Given a list of groups, generate a JSON structure of groups with their children
+	 * @param array $groups flat list of groups
+	 * @param integer $parent_id parent id of the structure to generate (null for the root, then called recursively)
+	 * @return string JSON
+	 * @no_name_check
+	 */
 	private static function GroupsHierarchy($groups, $parent_id) {
 		if (!isset($groups[$parent_id])) return "[]";
 		$s = "[";

@@ -1,4 +1,7 @@
-<?php 
+<?php
+/**
+ * Component handling information of teachers and assigned groups
+ */ 
 class teaching extends Component {
 
 	public function getPluginImplementations() {
@@ -10,6 +13,12 @@ class teaching extends Component {
 		);
 	}
 	
+	/**
+	 * Get the subjects assigned to the given teacher among the ones given
+	 * @param integer[] $subjects_ids subjects to filter
+	 * @param integer $people_id teacher
+	 * @return integer[] assigned subjects id
+	 */
 	public function filterAssignedSubjects($subjects_ids, $people_id) {
 		return SQLQuery::create()
 			->select("SubjectTeaching")
@@ -21,6 +30,12 @@ class teaching extends Component {
 			->executeSingleField();
 	}
 	
+	/**
+	 * Check if a teacher is assigned to given groups
+	 * @param integer $people_id teacher
+	 * @param integer $grouping_id SubjectTeaching id representing the groups
+	 * @return boolean true if the given teacher is assigned to the given grouping
+	 */
 	public function isAssignedToSubjectTeaching($people_id, $grouping_id) {
 		return SQLQuery::create()->select("TeacherAssignment")
 			->whereValue("TeacherAssignment","people",$people_id)
@@ -30,6 +45,13 @@ class teaching extends Component {
 			<> null;
 	}
 
+	/**
+	 * Check if a teacher is assigned to the given subject, and optionnally to a specific group
+	 * @param integer $people_id teacher
+	 * @param integer $subject_id subject
+	 * @param integer|null $group_id group
+	 * @return boolean true if the teacher is assigned
+	 */
 	public function isAssignedToSubject($people_id, $subject_id, $group_id = null) {
 		$q = SQLQuery::create()
 			->select("SubjectTeaching")
@@ -41,6 +63,13 @@ class teaching extends Component {
 		return $q->executeSingleRow() <> null;
 	}
 	
+	/**
+	 * Check if the given teacher is assigned to the given subject with the given students
+	 * @param integer $people_id teacher
+	 * @param integer $subject_id subject
+	 * @param integer[] $students_ids students
+	 * @return boolean true if assigned
+	 */
 	public function isAssignedToSubjectAndStudents($people_id, $subject_id, $students_ids) {
 		$groups_ids = SQLQuery::create()
 			->select("SubjectTeaching")
@@ -54,6 +83,13 @@ class teaching extends Component {
 		return PNApplication::$instance->students_groups->areStudentsBelongingToGroups($students_ids, $groups_ids);
 	}
 	
+	/**
+	 * Get the teachers' assignments for the given grouping
+	 * @param integer $grouping_id SubjectTeaching
+	 * @param boolean $include_people_info if true, a join to the table People will be done
+	 * @param boolean $bypass_security avoid security checks
+	 * @return array rows of TeacherAssignment, optionnally joined to People
+	 */
 	public function getTeachersAssignedForGrouping($grouping_id, $include_people_info = true, $bypass_security = false) {
 		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("TeacherAssignment")->whereValue("TeacherAssignment","subject_teaching",$grouping_id);
 		if ($include_people_info) {
@@ -63,6 +99,12 @@ class teaching extends Component {
 		return $q->execute();
 	}
 	
+	/**
+	 * Get the groups assigned to the given teacher for the given subject
+	 * @param integer $teacher_id teacher
+	 * @param integer $subject_id subject
+	 * @return integer[] groups' ids
+	 */
 	public function getAssignedGroups($teacher_id, $subject_id) {
 		return SQLQuery::create()
 			->select("TeacherAssignment")
@@ -74,6 +116,12 @@ class teaching extends Component {
 			->executeSingleField();
 	}
 	
+	/**
+	 * Get the groupings (SubjectTeaching) for the given subject
+	 * @param integer $subject_id subject
+	 * @param boolean $bypass_security avoid security checks
+	 * @return integer[] groupings ids
+	 */
 	public function getGroupingsForSubject($subject_id, $bypass_security = false) {
 		return SQLQuery::create()
 			->bypassSecurity($bypass_security)
@@ -83,6 +131,12 @@ class teaching extends Component {
 			->executeSingleField();
 	}
 	
+	/**
+	 * Get all the groups for the given subject 
+	 * @param integer $subject_id subject
+	 * @param boolean $bypass_security avoid security checks
+	 * @return integer[] groups' ids
+	 */
 	public function getGroupsForSubject($subject_id, $bypass_security = false) {
 		return SQLQuery::create()
 			->bypassSecurity($bypass_security)
@@ -93,6 +147,12 @@ class teaching extends Component {
 			->executeSingleField();
 	}
 	
+	/**
+	 * Get the groups in a grouping
+	 * @param integer $subject_teaching_id grouping
+	 * @param boolean $bypass_security avoid security checks
+	 * @return integer[] groups' ids
+	 */
 	public function getGroups($subject_teaching_id, $bypass_security = false) {
 		return SQLQuery::create()
 			->bypassSecurity($bypass_security)
@@ -102,6 +162,13 @@ class teaching extends Component {
 			->executeSingleField();
 	}
 	
+	/**
+	 * Get the grouping in which the given group belongs for the given subject
+	 * @param integer $subject_id subject
+	 * @param integer $group_id group
+	 * @param boolean $bypass_security avoid security checks
+	 * @return integer grouping id (SubjectTeaching)
+	 */
 	public function getGroupingIdFromGroup($subject_id, $group_id, $bypass_security = false) {
 		return SQLQuery::create()
 			->bypassSecurity($bypass_security)
@@ -113,6 +180,12 @@ class teaching extends Component {
 			->executeSingleValue();
 	}
 	
+	/**
+	 * Get the grouping of a student for a subject
+	 * @param integer $people_id student
+	 * @param integer $subject_id subject
+	 * @return array group_type (row from StudentsGroupType), group (the group the student belongs to), groups_together (list of other groups)
+	 */
 	public function getStudentGroupingInfoForSubject($people_id, $subject_id) {
 		// get list of groupings for this subject
 		$groupings = SQLQuery::create()->bypassSecurity(PNApplication::$instance->user_management->people_id == $people_id)->select("SubjectTeaching")->whereValue("SubjectTeaching","subject",$subject_id)->field("id")->executeSingleField();

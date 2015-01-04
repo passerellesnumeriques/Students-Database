@@ -8,7 +8,7 @@ class service_assign_specialization extends Service {
 	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
-		$component->assign_student_to_specialization($input["student"], $input["specialization"]);
+		$component->assignStudentToSpecialization($input["student"], $input["specialization"]);
 		if (!PNApplication::hasErrors())
 			echo "true";
 	}

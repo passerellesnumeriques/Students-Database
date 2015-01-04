@@ -8,6 +8,7 @@ function CurriculumTreeNode_Root() {
 	this.item.node = this;
 	new CurriculumTreeNode_AllStudents(this);
 	window.to_cleanup.push(this);
+	/** Cleaning to avoid memory leaks */
 	this.cleanup = function() {
 		this.item.node = null;
 		this.item = null;
