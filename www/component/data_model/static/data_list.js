@@ -1811,7 +1811,10 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		// filter
 		div.appendChild(f.getHTMLElement());
 		f.getHTMLElement().style.verticalAlign = "middle";
+		var last_active = f.isActive();
 		f.onchange.addListener(function (f) {
+			if (!f.isActive() && !last_active) return;
+			last_active = f.isActive();
 			filter.data = f.getData();
 			t._loadData();
 		});
