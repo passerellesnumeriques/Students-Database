@@ -21,8 +21,48 @@ class page_student_payment extends Page {
 				->whereValue("FinanceOperation","people",$people_id)
 				->whereValue("FinanceOperation","date",$date)
 				->executeSingleRow();
-			if ($due_operation <> null)
+			if ($due_operation <> null) {
 				$default_amount = -floatval($due_operation["amount"]);
+				$payments = SQLQuery::create()
+					->select("ScheduledPaymentDateOperation")
+					->whereValue("ScheduledPaymentDateOperation","schedule",$due_operation["due_operation"])
+					->join("ScheduledPaymentDateOperation","FinanceOperation",array("operation"=>"id"))
+					->execute();
+				if (count($payments) > 0) {
+					$due_date_ts = datamodel\ColumnDate::toTimestamp($due_operation["date"]);
+					echo "<div class='page_section_title'>".toHTML($regular_payment["name"])." of ";
+					echo toHTML($people["first_name"]." ".$people["last_name"]);
+					echo " for ";
+					switch ($regular_payment["frequency"]) {
+						case "Daily":
+						case "Weekly":
+							echo date("d M Y", $due_date_ts);
+							break;
+						case "Monthly":
+							echo date("F Y", $due_date_ts);
+							break;
+						case "Yearly":
+							echo date("Y", $due_date_ts);
+							break;
+					}
+					echo "</div>";
+					echo "<div style='padding:3px 5px;'>";
+					$balance = floatval($due_operation["amount"]);
+					foreach ($payments as $payment) {
+						echo $payment["amount"]." paid on ".date("d M Y", datamodel\ColumnDate::toTimestamp($payment["date"]))."<br/>";
+						$balance += floatval($payment["amount"]);
+					}
+					echo "Remaining balance: ";
+					echo "<span style='color:";
+					if ($balance < 0) echo "red";
+					else if ($balance == 0) echo "black";
+					else echo "green";
+					echo "'>$balance</span>";
+					echo "</div>";
+					echo "<hr/>";
+					$title = "Create New Payment";
+				}
+			}
 			$due = SQLQuery::create()
 				->select("ScheduledPaymentDate")
 				->whereValue("ScheduledPaymentDate", "regular_payment", $regular_payment_id)
