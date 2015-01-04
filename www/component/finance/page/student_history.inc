@@ -12,10 +12,19 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 				"total"=>$ids[$payment["operation"]]["amount"]
 			);
 		else {
-			array_push($payments[$payment["schedule"]]["payments"], $payment);
+			array_push($payments[$payment["schedule"]]["payments"], $payment["operation"]);
 			$payments[$payment["schedule"]]["total"] += $ids[$payment["operation"]]["amount"];
 		}
 	}
+	$list = SQLQuery::create()->select("ScheduledPaymentDate")->whereIn("ScheduledPaymentDate","due_operation",array_keys($ids))->execute();
+	$regular_payments_ids = array();
+	foreach ($list as $e)
+		if ($e["regular_payment"] <> null) {
+			if (!in_array($e["regular_payment"], $regular_payments_ids)) array_push($regular_payments_ids, $e["regular_payment"]);
+			$ids[$e["due_operation"]]["regular_payment"] = $e["regular_payment"];
+		}
+	if (count($regular_payments_ids) > 0)
+		$regular_payments = SQLQuery::create()->select("FinanceRegularPayment")->whereIn("FinanceRegularPayment","id",$regular_payments_ids)->execute();
 	
 	theme::css($page, "grid.css");
 	echo "<div style='border:1px solid black;display:inline-block;margin:3px;box-shadow:2px 2px 2px 0px #808080;'>";
@@ -49,17 +58,21 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 		echo "<td>";
 		if ($op["amount"] < 0) {
 			// this is an amount due
+			$link = "/dynamic/finance/page/student_payment?student=".$student_id."&ondone=refresh";
+			$regular_payment = @$ids[$op["id"]]["regular_payment"];
+			if ($regular_payments <> null) $link .= "&regular_payment=".$regular_payment."&selected_date=".$op["date"];
+			$onclick = "onclick=\"window.top.popupFrame('/static/finance/finance_16.png','Student Payment','$link',null,null,null,function(frame,popup){frame.refresh=function(){location.reload();};});\"";
 			if (!isset($payments[$op["id"]]))
-				echo "<span style='color:red'>Not yet paid</span>";
+				echo "<a style='color:red' class='black_link' href='#' $onclick>Not yet paid</a>";
 			else {
 				$descr = "";
 				foreach ($payments[$op["id"]]["payments"] as $payment_id)
-					$descr .= $ids[$payment_id]["amount"]." paid on ".date("d M Y",datamodel\ColumnDate::toTimestamp($ids[$payment_id]["date"]));
+					$descr .= $ids[$payment_id]["amount"]." paid on ".date("d M Y",datamodel\ColumnDate::toTimestamp($ids[$payment_id]["date"]))."\r\n";
 				$paid = $payments[$op["id"]]["total"];
 				if ($paid == -$op["amount"]) {
 					echo "<span title='$descr' style='color:green'><img src='".theme::$icons_10["ok"]."' style='vertical-align:top;margin-top:1px;margin-right:2px;'/>Paid</span>";
 				} else {
-					echo "<span title='$descr' style='color:darkorange'>".$paid." paid, remaining = ".(-$op["amount"]-$paid)."</span>";
+					echo "<a title='$descr' style='color:darkorange' class='black_link' href='#' $onclick>".$paid." paid, remaining = ".(-$op["amount"]-$paid)."</a>";
 				}
 			}
 		} else {

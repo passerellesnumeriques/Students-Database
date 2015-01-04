@@ -143,8 +143,8 @@ class page_student_payment extends Page {
 					if ($p["schedule"] == $due["due_operation"])
 						$paid += floatval($p["amount"]);
 				$due_amount = -floatval($due["amount"]);
-				if ($paid == $due_amount) continue; // already paid
-				$payment_amount = $amount > $due_amount ? $due_amount : $amount;
+				if ($paid >= $due_amount) continue; // already paid
+				$payment_amount = $amount > $due_amount-$paid ? $due_amount-$paid : $amount;
 				$descr = $regular_payment["name"]." of ";
 				switch ($regular_payment["frequency"]) {
 					case "Daily":
