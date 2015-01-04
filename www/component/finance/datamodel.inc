@@ -44,6 +44,8 @@ $model->addTable("ScheduledPaymentDateOperation")
 	->addForeignKey("operation", "FinanceOperation", true, false, true,false,false)
 	->setKey(array("schedule","operation"))
 	->addReadAccess("consult_student_finance", true)
+	->addInsertAccess("edit_student_finance", true)
+	->addRemoveAccess("edit_student_finance", true)
 	;
 
 ?>

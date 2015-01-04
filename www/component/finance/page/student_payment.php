@@ -137,6 +137,30 @@ class page_student_payment extends Page {
 			if ($amount > 0) {
 				echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> Warning: Remaining amount of $amount cannot be assigned to a ".toHTML($regular_payment["name"])." and will be ignored.</div>";
 			}
+			?>
+			<button class='action' onclick='createPayments();'>Confirm</button>
+			<script type='text/javascript'>
+			function createPayments() {
+				var data = {
+					student: <?php echo $people_id;?>,
+					date: <?php echo json_encode($_GET["payment_date"]);?>,
+					operations:[]
+				};
+				<?php
+				foreach ($operations as $op) {
+					echo "data.operations.push({amount:".$op["amount"].",schedule:".$op["schedule"]["due_operation"]."});\n";
+				}
+				?>
+				var popup = window.parent.getPopupFromFrame(window);
+				popup.freeze("Creation of payments...");
+				service.json("finance","student_payment",data,function(res) {
+					if (!res) { popup.unfreeze(); return; }
+					<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();";?>
+					popup.close();
+				});
+			}
+			</script>
+			<?php 
 		}
 		echo "</div>";
 		echo "</div>";

@@ -147,6 +147,7 @@ class page_general_payment_overview extends Page {
 					$schedule = null;
 					foreach ($s["schedules"] as $sched)
 						if ($sched["date"] == $d) { $schedule = $sched; break; }
+					$ts = datamodel\ColumnDate::toTimestamp($d);
 					if ($schedule <> null) {
 						$payments = @$payments_done[$schedule["due_operation"]];
 						if ($payments == null) $payments = array();
@@ -154,11 +155,11 @@ class page_general_payment_overview extends Page {
 						foreach ($payments as $p) $paid += floatval($p["amount"]);
 						$balance = $paid+floatval($schedule["amount"]);
 						if ($balance == 0)
-							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#60FF60" : "#A0FFA0").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>Paid</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:".($ts < time() ? "#60FF60" : "#A0FFA0").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>Paid</td>";
 						else if ($balance == $schedule["amount"])
-							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#FF0000" : "#FF8080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>$balance</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:".($ts < time() ? "#FF0000" : "#FF8080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>$balance</td>";
 						else if ($balance < 0)
-							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#FF9040" : "#FFB080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>$balance</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:".($ts < time() ? "#FF9040" : "#FFB080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>$balance</td>";
 						else
 							echo "<td style='cursor:pointer;text-align:center;background-color:#0080FF;'>$balance</td>";
 					} else {
@@ -218,7 +219,11 @@ function cellClicked(td) {
 	tr = thead.childNodes[0];
 	var th = tr.childNodes[col_index];
 	var date = th.getAttribute("date");
-	popupFrame("/static/finance/finance_16.png","Student Payment","/dynamic/finance/page/student_payment?student="+student_id+"&regular_payment=<?php echo $payment_id;?>&selected_date="+date);
+	popupFrame("/static/finance/finance_16.png","Student Payment","/dynamic/finance/page/student_payment?student="+student_id+"&regular_payment=<?php echo $payment_id;?>&selected_date="+date+"&ondone=paid",null,null,null,function(frame,popup) {
+		frame.paid = function() {
+			location.reload();
+		};
+	});
 }
 
 function configurePaymentForBatch(batch_id) {
