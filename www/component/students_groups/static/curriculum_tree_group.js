@@ -1,5 +1,11 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * Build the groups nodes
+ * @param {CurriculumTreeNode} parent parent node
+ * @param {BatchPeriod} period period
+ * @param {Specialization} spe specialization or null
+ */
 function buildGroupsTree(parent, period, spe) {
 	var spe_list = [];
 	for (var i = 0; i < groups.length; ++i)
@@ -87,6 +93,10 @@ CurriculumTreeNode_Group.prototype.createInfo = function() {
 	}
 	return div;
 };
+/**
+ * Retrieve the ancestor node being a specialization
+ * @returns {CurriculumTreeNode_Specialization} the node, or null
+ */
 CurriculumTreeNode_Group.prototype.getSpecializationNode = function() {
 	var p = this.parent;
 	do {
@@ -96,6 +106,10 @@ CurriculumTreeNode_Group.prototype.getSpecializationNode = function() {
 	} while (p != null);
 	return null;
 };
+/**
+ * Retrieve the ancestor node being a period
+ * @returns {CurriculumTreeNode_BatchPeriod} the node, or null
+ */
 CurriculumTreeNode_Group.prototype.getPeriodNode = function() {
 	var p = this.parent;
 	while (!(p instanceof CurriculumTreeNode_BatchPeriod)) p = p.parent;
@@ -114,6 +128,12 @@ CurriculumTreeNode_Group.prototype.getURLParameters = function() {
 	return params;
 };
 
+/**
+ * Search the node corresponding to the given group
+ * @param {CurriculumTreeNode} node the node to search in
+ * @param {Number} group_id the group to search
+ * @returns {CurriculumTreeNode_Group} the node of the group, or null if not found
+ */
 function searchGroupNode(node, group_id) {
 	for (var i = 0; i < node.item.children.length; ++i) {
 		var n = node.item.children[i].node;

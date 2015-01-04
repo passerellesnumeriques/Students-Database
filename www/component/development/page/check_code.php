@@ -419,13 +419,14 @@ setTimeout(function() {
 	// load javascript
 	checking_js++;
 	service.json("documentation","get_js",{},function(res){
-		if (res == null) { checking_js--; return; }
+		if (res == null) { checking_js--; check_end(); return; }
 		var fct;
 		try {
 			fct = eval("(function (){"+res.js+";this.jsdoc = jsdoc;})");
 		} catch (e) {
 			window.top.status_manager.addStatus(new window.top.StatusMessageError(e,"Invalid output for get_js: "+res.js,10000));
 			checking_js--;
+			check_end();
 			return;
 		}
 		for (var i = 0; i < res.out.length; ++i) {
@@ -459,9 +460,10 @@ setTimeout(function() {
 			var i;
 			for (i = start; i < start+50 && i < js_todo.length; ++i)
 				js_todo[i]();
-			if (i == js_todo.length)
+			if (i == js_todo.length) {
 				checking_js--;
-			else setTimeout(function() {
+				check_end();
+			} else setTimeout(function() {
 				next_js_todos(i);
 			}, 50);
 		};

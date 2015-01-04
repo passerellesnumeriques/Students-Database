@@ -8,7 +8,7 @@ class service_assign_group extends Service {
 	public function outputDocumentation() { echo "true on success"; }
 	
 	public function execute(&$component, $input) {
-		$component->assign_student_to_group($input["student"], $input["group_type"], $input["group"], $input["period"]);
+		$component->assignStudentToGroup($input["student"], $input["group_type"], $input["group"], $input["period"]);
 		if (!PNApplication::hasErrors())
 			echo "true";
 	}

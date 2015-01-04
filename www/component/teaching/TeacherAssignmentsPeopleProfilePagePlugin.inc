@@ -1,5 +1,8 @@
 <?php 
 require_once("component/people/PeopleProfilePagePlugin.inc");
+/**
+ * Add the page 'Assigned Subjects' to the profile of a teacher
+ */
 class TeacherAssignmentsPeopleProfilePagePlugin implements PeopleProfilePagePlugin {
 	
 	public function isValidFor($people_id, $types) { return in_array("teacher", $types); }
