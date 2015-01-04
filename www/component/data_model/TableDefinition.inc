@@ -1433,6 +1433,17 @@ namespace datamodel {
 			date_default_timezone_set($tz);
 			return $ts;
 		}
+		public static function splitDate($sql_date) {
+			$s = explode("-", $sql_date);
+			return array(
+				"year"=>intval($s[0]),
+				"mon"=>intval($s[1]),
+				"mday"=>intval($s[2])
+			);
+		}
+		public static function toSQLDate($date) {
+			return str_pad($date["year"], 4, "0", STR_PAD_LEFT)."-".str_pad($date["mon"], 2, "0", STR_PAD_LEFT)."-".str_pad($date["mday"], 2, "0", STR_PAD_LEFT);
+		}
 
 		public function validate($value) {
 			if ($value === "") $value = null;

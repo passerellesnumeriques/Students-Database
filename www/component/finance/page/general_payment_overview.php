@@ -101,11 +101,10 @@ class page_general_payment_overview extends Page {
 						}
 				}
 				array_push($student["schedules"], $schedule);
-				if ($start == null || $start > $schedule["date"]) $start = $schedule["date"];
-				if ($end == null || $end < $schedule["date"]) $end = $schedule["date"];
+				$date = datamodel\ColumnDate::toTimestamp($schedule["date"]);
+				if ($start == null || $start > $date) $start = $date;
+				if ($end == null || $end < $date) $end = $date;
 			}
-			$descr = PNApplication::$instance->getDomainDescriptor();
-			date_default_timezone_set($descr["timezone"]);
 			$dates = array();
 			echo "<table class='grid selected_hover'>";
 			echo "<thead>";
@@ -113,32 +112,36 @@ class page_general_payment_overview extends Page {
 				echo "<th>Student</th>";
 				$d = $start;
 				while ($d <= $end) {
-					array_push($dates, $d);
+					$date = getdate($d);
+					$sql_date = datamodel\ColumnDate::toSQLDate($date);
+					array_push($dates, $sql_date);
+					echo "<th date='$sql_date'>";
 					switch ($payment["frequency"]) {
 						case "Daily":
-							echo "<th>".date("d M Y", $d)."</th>";
+							echo date("d M Y", $d);
 							$d += 24*60*60;
 							break;
 						case "Weekly":
-							echo "<th>".date("d M Y", $d)."</th>";
+							echo date("d M Y", $d);
 							$d += 7*24*60*60;
 							break;
 						case "Monthly":
-							echo "<th>".date("M Y", $d)."</th>";
+							echo date("M Y", $d);
 							$dd = getdate($d);
 							$d = mktime(0,0,0,$dd["mon"]+1,1,$dd["year"]);
 							break;
 						case "Yearly":
 							$dd = getdate($d);
-							echo "<th>".$dd["year"]."</th>";
+							echo $dd["year"];
 							$d = mktime(0,0,0,$dd["mon"],1,$dd["year"]+1);
 							break;
 					}
+					echo "</th>";
 				}
 			echo "</tr>";
 			echo "</thead><tbody>";
 			foreach ($students as $s) {
-				echo "<tr>";
+				echo "<tr student_id='".$s["people_id"]."'>";
 				echo "<td style='white-space:nowrap;'>".toHTML($s["last_name"]." ".$s["first_name"])."</td>";
 				foreach ($dates as $d) {
 					$schedule = null;
@@ -151,11 +154,11 @@ class page_general_payment_overview extends Page {
 						foreach ($payments as $p) $paid += floatval($p["amount"]);
 						$balance = $paid+floatval($schedule["amount"]);
 						if ($balance == 0)
-							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#60FF60" : "#A0FFA0").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' ouclick='cellClicked(this);'>Paid</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#60FF60" : "#A0FFA0").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>Paid</td>";
 						else if ($balance == $schedule["amount"])
-							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#FF0000" : "#FF8080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' ouclick='cellClicked(this);'>$balance</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#FF0000" : "#FF8080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>$balance</td>";
 						else if ($balance < 0)
-							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#FF9040" : "#FFB080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' ouclick='cellClicked(this);'>$balance</td>";
+							echo "<td style='cursor:pointer;text-align:center;background-color:".($d < time() ? "#FF9040" : "#FFB080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>$balance</td>";
 						else
 							echo "<td style='cursor:pointer;text-align:center;background-color:#0080FF;'>$balance</td>";
 					} else {
@@ -204,7 +207,18 @@ function mouseOutCell(td) {
 	removeSelectedCell();
 }
 function cellClicked(td) {
-	// TODO
+	var tr = td.parentNode;
+	var student_id = tr.getAttribute("student_id");
+	var col_index = 0;
+	var e = td;
+	while (e.previousSibling) { col_index++; e = e.previousSibling; }
+	var tbody = tr.parentNode;
+	var table = tbody.parentNode;
+	var thead = table.childNodes[0];
+	tr = thead.childNodes[0];
+	var th = tr.childNodes[col_index];
+	var date = th.getAttribute("date");
+	popupFrame("/static/finance/finance_16.png","Student Payment","/dynamic/finance/page/student_payment?student="+student_id+"&regular_payment=<?php echo $payment_id;?>&selected_date="+date);
 }
 
 function configurePaymentForBatch(batch_id) {
@@ -252,7 +266,7 @@ function configurePaymentForBatch(batch_id) {
 		var popup = new popup_window("Configure payment",null,content);
 		popup.addOkCancelButtons(function() {
 			popup.freeze("Creating payments...");
-			service.json("finance","create_batch_regular_payment",{batch:batch_id,payment:<?php echo $payment_id;?>,start:start.getDate().getTime()/1000,end:end.getDate().getTime()/1000,amount:amount.getCurrentData()},function(res) {
+			service.json("finance","create_batch_regular_payment",{batch:batch_id,payment:<?php echo $payment_id;?>,start:dateToSQL(start.getDate()),end:dateToSQL(end.getDate()),amount:amount.getCurrentData()},function(res) {
 				if(!res) {
 					popup.unfreeze();
 					return;

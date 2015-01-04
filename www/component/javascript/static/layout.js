@@ -364,7 +364,7 @@ window.layout = {
 			frame.style.width = Math.floor(win_container.getWindowWidth()*0.95)+"px";
 			frame.style.height = Math.floor(win_container.getWindowHeight()*0.95)+"px";
 			var size = layout.computeContentSize(win.document.body);
-			frame.style.width = size.x+"px";
+			frame.style.width = (size.x+1)+"px";
 			frame.style.height = size.y+"px";
 			frame.style.position = "static";
 			// check if supposed to be height 100%

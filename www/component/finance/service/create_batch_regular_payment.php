@@ -12,27 +12,22 @@ class service_create_batch_regular_payment extends Service {
 		
 		$payment_id = $input["payment"];
 		$batch_id = $input["batch"];
-		$start_ts = intval($input["start"]);
-		$end_ts = intval($input["end"]);
+		$start = datamodel\ColumnDate::splitDate($input["start"]);
+		$end = datamodel\ColumnDate::splitDate($input["end"]);
 		$amount = floatval($input["amount"]);
 		
 		SQLQuery::startTransaction();
 		
 		$payment = SQLQuery::create()->select("FinanceRegularPayment")->whereValue("FinanceRegularPayment","id",$payment_id)->executeSingleRow();
 		$batch = PNApplication::$instance->curriculum->getBatch($batch_id);
-		$start = getdate($start_ts);
-		$end = getdate($end_ts);
-		$batch_start = getdate(datamodel\ColumnDate::toTimestamp($batch["start_date"]));
-		$batch_end = getdate(datamodel\ColumnDate::toTimestamp($batch["end_date"]));
+		$batch_start = datamodel\ColumnDate::splitDate($batch["start_date"]);
+		//$batch_end = datamodel\ColumnDate::splitDate($batch["end_date"]);
 		
 		$students_ids = PNApplication::$instance->students->getStudentsIdsForBatch($batch_id);
 		if (count($students_ids) == 0) {
 			PNApplication::error("There is no student in this batch!");
 			return;
 		}
-		
-		$descr = PNApplication::$instance->getDomainDescriptor();
-		date_default_timezone_set($descr["timezone"]);
 		
 		$year = $start["year"];
 		$month = $start["mon"];
@@ -51,13 +46,12 @@ class service_create_batch_regular_payment extends Service {
 			$year = $d["year"];
 		}
 		do {
-			$timestamp = mktime(0,0,0,$month,$day,$year);
 			$payments = array();
 			foreach ($students_ids as $people_id)
 				array_push($payments, array(
 					"people"=>$people_id,
 					"amount"=>-$amount,
-					"date"=>$timestamp
+					"date"=>$year."-".$month."-".$day
 				));
 			$payments_ids = SQLQuery::create()->insertMultiple("FinanceOperation", $payments);
 			$schedules = array();
