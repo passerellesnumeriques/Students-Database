@@ -145,31 +145,32 @@ class page_student_payment extends Page {
 				$due_amount = -floatval($due["amount"]);
 				if ($paid == $due_amount) continue; // already paid
 				$payment_amount = $amount > $due_amount ? $due_amount : $amount;
+				$descr = $regular_payment["name"]." of ";
+				switch ($regular_payment["frequency"]) {
+					case "Daily":
+					case "Weekly":
+						$descr .= date("d M Y", datamodel\ColumnDate::toTimestamp($due["date"]));
+						break;
+					case "Monthly":
+						$descr .= date("F Y", datamodel\ColumnDate::toTimestamp($due["date"]));
+						break;
+					case "Yearly":
+						$d = datamodel\ColumnDate::splitDate($due["date"]);
+						$descr .= $d["year"];
+						break;
+				}
 				array_push($operations, array(
 					"schedule"=>$due,
 					"amount"=>$payment_amount,
-					"remaining"=>$due_amount-$paid-$payment_amount
+					"remaining"=>$due_amount-$paid-$payment_amount,
+					"description"=>$descr
 				));
 				$amount -= $payment_amount;
 				if ($amount == 0) break;
 			}
 			echo "The following payments will be registered:<ul>";
 			foreach ($operations as $op) {
-				echo "<li>";
-				echo toHTML($regular_payment["name"])." of ";
-				switch ($regular_payment["frequency"]) {
-					case "Daily":
-					case "Weekly":
-						echo date("d M Y", datamodel\ColumnDate::toTimestamp($op["schedule"]["date"]));
-						break;
-					case "Monthly":
-						echo date("F Y", datamodel\ColumnDate::toTimestamp($op["schedule"]["date"]));
-						break;
-					case "Yearly":
-						$d = datamodel\ColumnDate::splitDate($op["schedule"]["date"]);
-						echo $d["year"];
-						break;
-				}
+				echo "<li>".toHTML($op["description"]);
 				echo ": ".$op["amount"]." paid, remaining = ".$op["remaining"];
 				echo "</li>";
 			}
@@ -188,7 +189,7 @@ class page_student_payment extends Page {
 				};
 				<?php
 				foreach ($operations as $op) {
-					echo "data.operations.push({amount:".$op["amount"].",schedule:".$op["schedule"]["due_operation"]."});\n";
+					echo "data.operations.push({amount:".$op["amount"].",schedule:".$op["schedule"]["due_operation"].",description:".json_encode($op["description"])."});\n";
 				}
 				?>
 				var popup = window.parent.getPopupFromFrame(window);

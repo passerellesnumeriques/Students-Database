@@ -47,11 +47,25 @@ class service_create_batch_regular_payment extends Service {
 		}
 		do {
 			$payments = array();
+			$descr = $payment["name"]." of ";
+			switch ($payment["frequency"]) {
+				case "Daily":
+				case "Weekly":
+					$descr .= date("d M Y", mktime(0,0,0,$month,$day,$year));
+					break;
+				case "Monthly":
+					$descr .= date("F Y", mktime(0,0,0,$month,$day,$year));
+					break;
+				case "Yearly":
+					$descr .= $year;
+					break;
+			}
 			foreach ($students_ids as $people_id)
 				array_push($payments, array(
 					"people"=>$people_id,
 					"amount"=>-$amount,
-					"date"=>$year."-".$month."-".$day
+					"date"=>$year."-".$month."-".$day,
+					"description"=>$descr
 				));
 			$payments_ids = SQLQuery::create()->insertMultiple("FinanceOperation", $payments);
 			$schedules = array();

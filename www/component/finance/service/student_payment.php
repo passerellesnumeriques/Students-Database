@@ -13,10 +13,12 @@ class service_student_payment extends Service {
 		SQLQuery::startTransaction();
 		foreach ($input["operations"] as $op) {
 			$amount = $op["amount"];
+			$description = $op["description"];
 			$op_id = SQLQuery::create()->insert("FinanceOperation", array(
 				"people"=>$people_id,
 				"date"=>$date,
-				"amount"=>$amount
+				"amount"=>$amount,
+				"description"=>$description
 			));
 			if ($op_id == null) return;
 			if (isset($op["schedule"])) {
