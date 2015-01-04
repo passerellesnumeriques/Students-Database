@@ -1,5 +1,6 @@
 <?php 
 function studentFinanceOperationsHistory(&$page, $student_id) {
+	$can_edit = PNApplication::$instance->user_management->hasRight("edit_student_finance");
 	$operations = SQLQuery::create()->select("FinanceOperation")->whereValue("FinanceOperation","people",$student_id)->orderBy("FinanceOperation","date")->execute();
 	$ids = array();
 	foreach ($operations as $op) $ids[$op["id"]] = $op;
@@ -34,6 +35,8 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 	echo "<table class='grid'>";
 	echo "<thead>";
 	echo "<tr>";
+	if ($can_edit)
+		echo "<th></th>";
 	echo "<th>Date</th>";
 	echo "<th>Amount</th>";
 	echo "<th>Description</th>";
@@ -47,9 +50,15 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 		$ts = datamodel\ColumnDate::toTimestamp($op["date"]);
 		if ($ts > $now && !$last_future) {
 			$last_future = true;
-			echo "<tr><td colspan=4 style='text-align:center;font-weight:bold;font-style:italic;background-color:#D0D0D0;'>Future operations</td></tr>";
+			echo "<tr><td colspan=5 style='text-align:center;font-weight:bold;font-style:italic;background-color:#D0D0D0;'>Future operations</td></tr>";
 		}
 		echo "<tr>";
+		echo "<td>";
+		if ($can_edit) {
+			echo "<button class='flat small_icon' title='Remove this operation' onclick='removeOperation(".$op["id"].");'><img src='".theme::$icons_10["remove"]."'/></button>";
+			echo "<button class='flat small_icon' title='Edit this operation' onclick='editOperation(".$op["id"].");'><img src='".theme::$icons_10["edit"]."'/></button>";
+		}
+		echo "</td>";
 		echo "<td>".$op["date"]."</td>";
 		echo "<td style='text-align:right;color:";
 		if ($op["amount"] < 0) echo "red"; else if ($op["amount"] > 0) echo "green"; else echo "black";
@@ -61,7 +70,10 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 			$link = "/dynamic/finance/page/student_payment?student=".$student_id."&ondone=refresh";
 			$regular_payment = @$ids[$op["id"]]["regular_payment"];
 			if ($regular_payments <> null) $link .= "&regular_payment=".$regular_payment."&selected_date=".$op["date"];
-			$onclick = "onclick=\"window.top.popupFrame('/static/finance/finance_16.png','Student Payment','$link',null,null,null,function(frame,popup){frame.refresh=function(){location.reload();};});\"";
+			if ($can_edit)
+				$onclick = "onclick=\"window.top.popupFrame('/static/finance/finance_16.png','Student Payment','$link',null,null,null,function(frame,popup){frame.refresh=function(){location.reload();};});return false;\"";
+			else
+				$onclick = "onclick='return false;'";
 			if (!isset($payments[$op["id"]]))
 				echo "<a style='color:red' class='black_link' href='#' $onclick>Not yet paid</a>";
 			else {
@@ -83,6 +95,16 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 	}
 	echo "</tbody>";
 	echo "</table>";
+?>
+<script type='text/javascript'>
+function editOperation(id) {
+	window.top.popupFrame("/static/finance/finance_16.png","Edit Operation","/dynamic/finance/page/edit_operation?id="+id+"&onsave=saved",null,null,null,function(frame,pop){frame.saved=function(){location.reload();};});
+}
+function removeOperation(id) {
+	// TODO
+}
+</script>
+<?php 
 	echo "</div>";
 }
 ?>
