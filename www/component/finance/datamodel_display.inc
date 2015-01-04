@@ -26,7 +26,7 @@ class BalanceDataDisplay extends DataDisplay {
 	}
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) {
-		return array("field_decimal","{can_be_null:false}");
+		return array("field_decimal","{can_be_null:false,negative_red:true,positive_green:true}");
 	}
 	public function getHorizontalAlign($sub_model) { return "right"; }
 	public function isEditable() { return false; }
@@ -55,8 +55,8 @@ class BalanceDataDisplay extends DataDisplay {
 			$people_key = "id";
 		$sub_q->where("`$table_alias`.`people`=`$people_table`.`$people_key`");
 		switch ($this->type) {
-			case "current": $sub_q->where("`$table_alias`.`date` <= UNIX_TIMESTAMP()"); break;
-			case "upcoming": $sub_q->where("`$table_alias`.`date` > UNIX_TIMESTAMP()"); break;
+			case "current": $sub_q->where("`$table_alias`.`date` <= CURRENT_DATE()"); break;
+			case "upcoming": $sub_q->where("`$table_alias`.`date` > CURRENT_DATE()"); break;
 			case "final": break;
 		}
 		$alias = $q->generateFieldAlias();

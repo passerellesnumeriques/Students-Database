@@ -1,7 +1,7 @@
 /* #depends[typed_field.js] */
 /** Decimal field: if editable, it will be a text input, else only a simple text node
  * @constructor
- * @param config must contain: <code>integer_digits</code>: digits before the decimal part, <code>decimal_digits</code> ; can contain: <code>min</code>, <code>max</code>, <code>can_be_null</code>
+ * @param config must contain: <code>integer_digits</code>: digits before the decimal part, <code>decimal_digits</code> ; can contain: <code>min</code>, <code>max</code>, <code>can_be_null</code> ; when read-only, can contain <code>negative_red</code> and <code>positive_green</code>
  */
 function field_decimal(data,editable,config) {
 	if (typeof data == 'string') data = parseFloat(data);
@@ -162,12 +162,15 @@ field_decimal.prototype._create = function(data) {
 			if (data === null && !this.config.can_be_null) data = 0; // for read-only, we replace by 0
 			if (data === null) this.text.nodeValue = "";
 			else this.text.nodeValue = data.toFixed(this.config.decimal_digits);
+			if (data < 0 && this.config.negative_red) this.element.style.color = "red";
+			else if (data > 0 && this.config.positive_green) this.element.style.color = "green";
+			else this.element.style.color = "black";
 			if (this.text.nodeValue != prev) layout.changed(this.element);
 			return data;
 		};
 		this.signalError = function(error) {
 			this.error = error;
-			this.element.style.color = error ? "red" : "";
+			this.element.style.backgroundColor = error ? "red" : "";
 		};
 		this.setMinimum = function(min) {
 			if (typeof min == 'string') min = parseFloat(min);

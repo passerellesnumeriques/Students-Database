@@ -48,6 +48,8 @@ class page_general_payment_overview extends Page {
 				$q = PNApplication::$instance->students->getStudentsQueryForBatches(array($batch["id"]));
 				PNApplication::$instance->people->joinPeople($q, "Student", "people", false);
 			}
+			$q->orderBy("People","last_name");
+			$q->orderBy("People","first_name");
 			$students = $q->execute();
 			if (count($students) == 0) {
 				echo "<i>No student in this batch</i>";

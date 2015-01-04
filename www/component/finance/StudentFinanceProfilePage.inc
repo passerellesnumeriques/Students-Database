@@ -3,6 +3,7 @@ require_once("component/people/PeopleProfilePagePlugin.inc");
 class StudentFinanceProfilePage implements PeopleProfilePagePlugin {
 	
 	public function isValidFor($people_id, $types) {
+		if (!PNApplication::$instance->user_management->hasRight("consult_student_finance")) return false;
 		return in_array("student", $types);
 	}
 	public function getPriority() { return 30; }
