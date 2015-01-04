@@ -32,6 +32,7 @@ function filter_text(data, config, editable) {
 		t.onchange.fire(t);
 	};
 	input.onchange = function() {
+		if (data.value == input.value) return;
 		data.value = input.value;
 		t.onchange.fire(t);
 	};
