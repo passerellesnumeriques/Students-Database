@@ -376,9 +376,9 @@ function GeographicAreasTree(areas_section, country_id) {
 	this._dialogRemoveArea = function(division_index, area_index) {
 		confirmDialog("Are you sure you want to remove this area ?<br/><b>Note: all its sub-areas will be also removed.</b>", function(yes) {
 			if (!yes) return;
-			var lock = lock_screen(null, "Removing area...");
+			var lock = lockScreen(null, "Removing area...");
 			service.json("data_model","remove_row",{table:"GeographicArea", row_key:t.country_data[division_index].areas[area_index].area_id}, function(res){
-				if(!res) { unlock_screen(lock); return; }
+				if(!res) { unlockScreen(lock); return; }
 				// remove in country_data
 				var area_id = t.country_data[division_index].areas[area_index].area_id;
 				t.country_data[division_index].areas.splice(area_index,1);
@@ -401,7 +401,7 @@ function GeographicAreasTree(areas_section, country_id) {
 				}
 				// reset the tree as all indexes changed
 				t.reset();
-				unlock_screen(lock);
+				unlockScreen(lock);
 			});
 		});
 	};
@@ -435,15 +435,15 @@ function GeographicAreasTree(areas_section, country_id) {
 	this.checkCoordinates = function() {
 		if (t.country_data.length == 0) return;
 		if (!t.country.north) return;
-		var locker = lock_screen();
+		var locker = lockScreen();
 		var total = 1;
 		for (var i = 0; i < t.country_data.length-1; ++i) total += t.country_data[i].areas.length;
-		set_lock_screen_content_progress(locker, total, "Checking coordinates...", null, function(span,pb,sub) {
+		setLockScreenContentProgress(locker, total, "Checking coordinates...", null, function(span,pb,sub) {
 			t._checkCoordinates(undefined, t.country, t.country_data[0].areas, function() {
 				pb.addAmount(1);
 				var next_division = function(division_index) {
 					if (division_index >= t.country_data.length-1) {
-						unlock_screen(locker);
+						unlockScreen(locker);
 						return;
 					}
 					var area_index = 0;

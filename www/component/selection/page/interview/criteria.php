@@ -164,9 +164,9 @@ class page_interview_criteria extends SelectionPage {
 				if (score == null) { alert("Please specify a score for each criterion"); return; }
 				criteria.push({id:tr.criterion_id,name:name,max_score:score});
 			}
-			var locker = lock_screen(null, "Saving interview criteria...");
+			var locker = lockScreen(null, "Saving interview criteria...");
 			service.json("selection","interview/save_criteria",{criteria:criteria},function(res) {
-				if (!res) { unlock_screen(locker); return; }
+				if (!res) { unlockScreen(locker); return; }
 				pnapplication.cancelDataUnsaved();
 				location.reload();
 			});
@@ -286,7 +286,7 @@ class page_interview_criteria extends SelectionPage {
 				remove.onclick = function(ev) {
 					confirmDialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
 						if (!yes) return;
-						lock_screen();
+						lockScreen();
 						service.json("selection","interview/remove_eligibility_rule",{id:rule.id},function(res){
 							window.location.reload();
 						});

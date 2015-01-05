@@ -95,9 +95,9 @@ function fishing(container, info, applicant_id, can_edit) {
 		}
 	};
 	this.save = function(ondone) {
-		var locker = lock_screen(null,"Saving Fishing Information...");
+		var locker = lockScreen(null,"Saving Fishing Information...");
 		service.json("selection","si/save_fishing",{applicant:applicant_id,fishing:this.info},function(res) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			ondone();
 		});
 	};

@@ -1063,10 +1063,10 @@ function newEvaluation(button) {
 function save() {
 	if (field_max_grade.error != null) { alert("Please enter a valid maximum grade"); return; }
 	if (field_passing_grade.error != null) { alert("Please enter a valid passing grade"); return; }
-	var locker = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving...");
+	var locker = lockScreen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving...");
 	var save_final_grades = function() {
 		if (!pnapplication.hasDataUnsavedStartingWith("final_grade_student_")) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			return;
 		}
 		var data = {subject_id:subject_id,students:[]};
@@ -1080,7 +1080,7 @@ function save() {
 					pnapplication.dataSaved("final_grade_student_"+final_grades[i].id);
 				pnapplication.cancelDataUnsaved();
 			}
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	};
 	var save_evaluations_grades = function() {
@@ -1101,7 +1101,7 @@ function save() {
 						pnapplication.dataSaved("student_"+data.students[i].people+"_grade_"+data.students[i].grades[j].evaluation);
 			}
 			pnapplication.cancelDataUnsaved();
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	};
 	var save_evaluations = function() {
@@ -1125,7 +1125,7 @@ function save() {
 			data.types.push(type);
 		}
 		service.json("transcripts","save_subject_evaluations",data,function(res) {
-			if (!res) { unlock_screen(locker); return; }
+			if (!res) { unlockScreen(locker); return; }
 			pnapplication.dataSaved("evaluations_types");
 			pnapplication.dataSaved("evaluations");
 			// update ids of evaluation types
@@ -1177,7 +1177,7 @@ function save() {
 				data.students.push({people:final_grades[i].id,comment:final_grades[i].comment});
 		service.json("transcripts","save_subject_comments",data,function(res) {
 			if (!res) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 				return;
 			}
 			pnapplication.dataSavedStartingWith("comment_student_");
@@ -1188,7 +1188,7 @@ function save() {
 		if (pnapplication.isDataUnsaved("subject_max_grade") || pnapplication.isDataUnsaved("subject_passing_grade") || pnapplication.isDataUnsaved("only_final")) {
 			service.json("transcripts","save_subject_grading_info",{id:subject_id,only_final_grade:only_final,max_grade:field_max_grade.getCurrentData(),passing_grade:field_passing_grade.getCurrentData()},function(res) {
 				if (!res) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 					return;
 				}
 				pnapplication.dataSaved("subject_max_grade");

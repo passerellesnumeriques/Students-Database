@@ -418,14 +418,14 @@ class page_edit_customizable_table extends Page {
 					fields.push(field);
 					trs.push(tr);
 				}
-				var locker = lock_screen(null, "Saving...");
+				var locker = lockScreen(null, "Saving...");
 				service.json("data_model","save_custom_table",{table:<?php echo json_encode($table_name);?>,sub_model:<?php echo json_encode($sub_model);?>,columns:fields,lock_id:<?php echo $lock_id;?>},function(res) {
 					if (res) {
 						// update columns' names
 						for (var i = 0; i < trs.length; ++i)
 							trs[i].col_id = res[i];
 					}
-					unlock_screen(locker);
+					unlockScreen(locker);
 				});
 			}
 

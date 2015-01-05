@@ -1389,7 +1389,7 @@ function importScanner(ev) {
 function save() {
 	var applicants_to_save = [];
 	var saveResults = function() {
-		var locker = lock_screen(null, "Saving results and applying eligibility rules...");
+		var locker = lockScreen(null, "Saving results and applying eligibility rules...");
 		var data = {applicants:[],session:<?php echo $session_id;?>,room:<?php echo $room_id;?>,lock:<?php echo $lock_id;?>};
 		for (var i = 0; i < applicants_to_save.length; ++i) {
 			if (applicants_to_save[i].exam_attendance == null) continue;
@@ -1432,7 +1432,7 @@ function save() {
 			}
 		}
 		service.json("selection","exam/save_results",data,function(res) {
-			if (res === null || res === false) { unlock_screen(locker); return; }
+			if (res === null || res === false) { unlockScreen(locker); return; }
 			var e = document.getElementById('header');
 			e.removeAllChildren();
 			e.className = "page_section_title";
@@ -1462,7 +1462,7 @@ function save() {
 				}
 			}
 			e.innerHTML = s;
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	};
 	var checkExamVersion = function() {

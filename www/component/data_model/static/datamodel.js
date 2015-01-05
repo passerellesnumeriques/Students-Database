@@ -336,9 +336,9 @@ window.datamodel = {
 			});
 			popup.show();
 		};
-		var locker = lock_screen();
+		var locker = lockScreen();
 		service.customOutput("data_model","get_remove_confirmation_content",{table:table,row_key:row_key},function(html) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			content_html = html;
 			ready();
 		});

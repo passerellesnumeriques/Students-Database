@@ -347,9 +347,9 @@ function newGroup(parent_node) {
 function removeGroup(group_node) {
 	confirmDialog("Are you sure you want to remove the "+getSelectedGroupType().name+" '"+group_node.group.name+"' ?",function(yes){
 		if (!yes) return;
-		var lock = lock_screen();
+		var lock = lockScreen();
 		service.json("data_model","remove_row",{table:"StudentsGroup",row_key:group_node.group.id},function(res){
-			unlock_screen(lock);
+			unlockScreen(lock);
 			if (!res) return;
 			if (group_node.parent instanceof CurriculumTreeNode_Group) {
 				group_node.parent.group.sub_groups.removeUnique(group_node.group);

@@ -267,9 +267,9 @@ class page_exam_link_is_with_exam_center extends SelectionPage {
 
 		var popup = window.parent.getPopupFromFrame(window);
 		popup.addFrameSaveButton(function() {
-			var locker = lock_screen(null,"Saving links...");
+			var locker = lockScreen(null,"Saving links...");
 			service.json("selection","exam/link",{add:added_links,remove:removed_links},function(res) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 				if (res) {
 					window.pnapplication.dataSaved("LinkedISWithExamCenters");
 					<?php if (isset($_GET["onsaved"])) echo "window.frameElement.".$_GET["onsaved"]."();"?>

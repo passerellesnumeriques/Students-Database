@@ -257,9 +257,9 @@ class page_interview_link_centers extends SelectionPage {
 
 		var popup = window.parent.getPopupFromFrame(window);
 		popup.addFrameSaveButton(function() {
-			var locker = lock_screen(null,"Saving links...");
+			var locker = lockScreen(null,"Saving links...");
 			service.json("selection","interview/link",{add:added_links,remove:removed_links},function(res) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 				if (res) {
 					window.pnapplication.dataSaved("LinkedExamWithInterviewCenters");
 					<?php if (isset($_GET["onsaved"])) echo "window.frameElement.".$_GET["onsaved"]."();"?>

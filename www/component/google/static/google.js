@@ -97,8 +97,8 @@ if (window == window.top && !window.top.google) {
 		
 		connectAccount: function(onconnected) {
 			if (!window.top.google.api_loaded) {
-				var locker = lock_screen(null, "Connecting to Google...");
-				window.top.google._api_loaded_event.addListener(function() { unlock_screen(locker); window.top.google.connectAccount(); });
+				var locker = lockScreen(null, "Connecting to Google...");
+				window.top.google._api_loaded_event.addListener(function() { unlockScreen(locker); window.top.google.connectAccount(); });
 				return;
 			}
 			inputDialog("/static/google/google.png","Connect to your Google Account","Please enter your PN email address","",200,function(value){

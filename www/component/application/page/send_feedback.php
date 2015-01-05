@@ -116,7 +116,7 @@ function validateForm() {
 
 function sendFeedback() {
 	var frame = document.getElementById('_ticket_post_');
-	var lock = lock_screen(null, "Sending your feedback...");
+	var lock = lockScreen(null, "Sending your feedback...");
 	var is_sent = false;
 	var sent = function() {
 		is_sent = true;

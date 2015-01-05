@@ -100,7 +100,7 @@ function si_visits(section, events, calendar_id, applicant_id, known_peoples, ca
 			t.createEvent(ev);
 		};
 		this.save = function(ondone) {
-			var locker = lock_screen(null, "Saving Visits Schedules...");
+			var locker = lockScreen(null, "Saving Visits Schedules...");
 			for (var i = 0; i < this.events.length; ++i) {
 				this.events[i].attendees = [];
 				for (var j = 0; j < this.whos[i].peoples.length; ++j) {
@@ -117,7 +117,7 @@ function si_visits(section, events, calendar_id, applicant_id, known_peoples, ca
 					for (var i = 0; i < res.length; ++i)
 						for (var j = 0; j < t.events.length; ++j)
 							if (t.events[j].id == res[i].given_id) { t.events[j].id = res[i].new_id; break; }
-				unlock_screen(locker);
+				unlockScreen(locker);
 				ondone();
 			});
 		};

@@ -235,9 +235,9 @@ function editResults() {
 }
 
 function serviceReset(session_id, reset_attendance) {
-	var locker = lock_screen(null,"Removing results of applicants...");
+	var locker = lockScreen(null,"Removing results of applicants...");
 	service.json("selection","exam/reset_results",{session:session_id, attendance:reset_attendance},function(res) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		location.reload();
 	});
 }
@@ -280,15 +280,15 @@ function resetAll() {
 }
 
 function launchExport(all) {
-	var locker = lock_screen();
-	set_lock_screen_content_progress(locker, 100, "Generating Excel file...", null, function(span, pb, sub) {
+	var locker = lockScreen();
+	setLockScreenContentProgress(locker, 100, "Generating Excel file...", null, function(span, pb, sub) {
 		service.json("application","create_temp_data",{value:'0'},function(res) {
 			var temp_data_id = res.id;
 			postToDownload("/dynamic/selection/service/exam/export_results",{progress_id:temp_data_id,all:all},true);
 			var refresh = function() {
 				service.json("application","get_temp_data",{id:temp_data_id},function(res) {
 					if (res.value == 'done' || res.value === null || isNaN(parseInt(res.value))) {
-						unlock_screen(locker);
+						unlockScreen(locker);
 						return;
 					}
 					pb.setPosition(parseInt(res.value));

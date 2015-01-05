@@ -378,11 +378,11 @@ function setDisplayCoef(display) {
 }
 var general_appreciation_lock_id = null;
 function editGeneralAppreciation(button) {
-	var locker = lock_screen();
+	var locker = lockScreen();
 	service.json("data_model","lock_table",{table:"StudentTranscriptGeneralComment",get_locker:true},function(res) {
-		if (!res) { unlock_screen(locker); return; }
+		if (!res) { unlockScreen(locker); return; }
 		if (res.locker) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			errorDialog(res.locker+" is already editing general appreciations, you cannot edit at the same time.");
 			return;
 		}
@@ -394,7 +394,7 @@ function editGeneralAppreciation(button) {
 		col.toggleEditable();
 		pnapplication.dataUnsaved('general_appreciation');
 		document.getElementById('button_import_general_appreciation').style.display = '';
-		unlock_screen(locker);
+		unlockScreen(locker);
 	});
 }
 function importGeneralAppreciation(event) {
@@ -424,14 +424,14 @@ function importGeneralAppreciation(event) {
 setTimeout(function(){if(!window.closing)require(["import_with_match.js","upload.js"]);},2000);
 
 function saveGeneralAppreciation(button) {
-	var locker = lock_screen(null, "Saving general appreciations...");
+	var locker = lockScreen(null, "Saving general appreciations...");
 	var comments = [];
 	for (var i = 0; i < students.length; ++i) {
 		var cell = grades_grid.grid.getCellFieldById(students[i].id, 'student_comment');
 		comments.push({people:students[i].id,comment:cell.getCurrentData()});
 	}
 	service.json("transcripts","save_general_comments",{period:<?php echo $period_id;?>,students:comments},function(res) {
-		if (!res) { unlock_screen(locker); return; }
+		if (!res) { unlockScreen(locker); return; }
 		databaselock.unlock(general_appreciation_lock_id, function(res) {
 			general_appreciation_lock_id = null;
 			button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit General Appreciations";
@@ -440,7 +440,7 @@ function saveGeneralAppreciation(button) {
 			col.toggleEditable();
 			pnapplication.dataSaved('general_appreciation');
 			document.getElementById('button_import_general_appreciation').style.display = 'none';
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	});
 }

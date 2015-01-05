@@ -64,9 +64,9 @@ class page_synch_google extends Page {
 ?>
 <script type='text/javascript'>
 function addPNEMail(email,staff_id,div_id) {
-	var locker = lock_screen(null,"Adding EMail "+email+"...");
+	var locker = lockScreen(null,"Adding EMail "+email+"...");
 	service.json("contact","add_contact",{owner_type:'people',owner_id:staff_id,contact:{type:'email',sub_type:'PN',contact:email}},function(res) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		if (res) {
 			var div = document.getElementById(div_id);
 			div.parentNode.removeChild(div);

@@ -30,9 +30,9 @@ function objectCopy(o, recursive_depth) {
 }
 /**
  * Copy the given value
- * @param {any} value the value to copy
+ * @param {Object|Number|String|Array} value the value to copy
  * @param {Number} obj_depth maximum depth in objects to copy
- * @returns {any} the copy
+ * @returns {Object|Number|String|Array} the copy
  */
 function valueCopy(value, obj_depth) {
 	if (value == null) return null;
@@ -53,11 +53,24 @@ function valueCopy(value, obj_depth) {
 	return value;
 }
 
+/**
+ * Merge 2 objects: put each value of add into o
+ * @param {Object} o object
+ * @param {Object} add object to add into o
+ * @returns {Object} o
+ */
 function objectMerge(o, add) {
 	for (var name in add) o[name] = add[name];
 	return o;
 }
 
+/**
+ * Check if 2 objects are the same
+ * @param {Object} o1 object 1
+ * @param {Object} o2 object 2
+ * @param {Array} done internally used to avoid infinite recursivity
+ * @returns {Boolean} true if they are the same
+ */
 function objectEquals(o1, o2, done) {
 	if (typeof o1 != typeof o2) return false;
 	if (typeof o1 != 'object') return o1 == o2;
@@ -87,6 +100,13 @@ function objectEquals(o1, o2, done) {
 	}
 	return true;
 }
+/**
+ * Check if 2 arrays are the same
+ * @param {Array} a1 array 1
+ * @param {Array} a2 array 2
+ * @param {Array} done internally used to avoid infinite recursivity
+ * @returns {Boolean} true if they are the same
+ */
 function arrayEquals(a1, a2, done) {
 	if (a1.length != a2.length) return false;
 	for (var i = 0; i < a1.length; ++i)
@@ -94,6 +114,12 @@ function arrayEquals(a1, a2, done) {
 	return true;
 }
 
+/**
+ * 2 arrays are equivalent if they contain the same elements but not necessarily in the same order
+ * @param {Array} a1 array 1
+ * @param {Array} a2 array 2
+ * @returns {Boolean} true if they are equivalent
+ */
 function arrayEquivalent(a1, a2) {
 	if (a1 == null) a1 = [];
 	if (a2 == null) a2 = [];
@@ -113,7 +139,12 @@ function arrayEquivalent(a1, a2) {
 	}
 	return true;
 }
-
+/**
+ * Duplicates an array
+ * @param {Array} a the array to duplicate
+ * @param {Function} to_copy if specified, the function is used to make a copy of an element.
+ * @returns {Array} the duplicate
+ */
 function arrayCopy(a, to_copy) {
 	var c = [];
 	for (var i = 0; i < a.length; ++i)
@@ -121,14 +152,20 @@ function arrayCopy(a, to_copy) {
 	return c;
 }
 
-function debug_object_to_string(o, indent) {
+/**
+ * Can be used to display the content of an object
+ * @param {Object} o object
+ * @param {Number} indent current indentation, used with recursivity
+ * @returns {String} the string
+ */
+function debugObjectToString(o, indent) {
 	if (!indent) indent = "";
 	if (typeof o == 'object') {
 		if (o instanceof Date)
 			return o.toString();
 		var s = "{\r\n";
 		for (var name in o) {
-			s += indent+"    "+name+":"+debug_object_to_string(o[name], indent+"    ")+",\r\n";
+			s += indent+"    "+name+":"+debugObjectToString(o[name], indent+"    ")+",\r\n";
 		}
 		s += "}";
 		return s;

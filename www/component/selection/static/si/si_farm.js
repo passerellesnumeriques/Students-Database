@@ -276,14 +276,14 @@ function farm(container, info, productions, applicant_id, can_edit) {
 		}
 	};
 	this.save = function(ondone) {
-		var locker = lock_screen(null,"Saving Farm...");
+		var locker = lockScreen(null,"Saving Farm...");
 		service.json("selection","si/save_farm",{applicant:applicant_id,farm:this.info,productions:this.productions},function(res) {
 			if (res && res.length > 0) {
 				for (var i = 0; i < res.length; ++i)
 					for (var j = 0; j < t.productions.length; ++j)
 						if (t.productions[j].id == res[i].given_id) { t.productions[j].id = res[i].new_id; break; }
 			}
-			unlock_screen(locker);
+			unlockScreen(locker);
 			ondone();
 		});
 	};

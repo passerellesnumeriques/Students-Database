@@ -346,7 +346,7 @@ build_tree(tr, files, "<?php echo $sub_path;?>");
 function check_end() {
 	if (todo.length == 0 && in_progress == 0 && checking_js == 0) {
 		var time = new Date().getTime() - window._start_check_code;
-		unlock_screen(locker);
+		unlockScreen(locker);
 		var item = new TreeItem(""+problems_counter+" problem(s) in "+Math.floor(time/1000)+"s.");
 		tr.insertItem(item, 0);
 		for (var i = 0; i < having_problems.length; ++i) {
@@ -371,7 +371,7 @@ var in_progress = 0;
 var total_todo = 0;
 function next_todo() {
 	var pc = Math.floor((total_todo-todo.length-in_progress)*100/total_todo);
-	set_lock_screen_content(locker, "Checking code... ("+pc+"%, "+problems_counter+" problem(s) found)");
+	setLockScreenContent(locker, "Checking code... ("+pc+"%, "+problems_counter+" problem(s) found)");
 	if (todo.length == 0) {
 		check_end();
 		return;
@@ -415,7 +415,7 @@ var locker;
 setTimeout(function() {
 	window._start_check_code = new Date().getTime();
 	total_todo = todo.length;
-	locker = lock_screen(null, "Checking code...");
+	locker = lockScreen(null, "Checking code...");
 	// load javascript
 	checking_js++;
 	service.json("documentation","get_js",{},function(res){

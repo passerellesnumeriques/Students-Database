@@ -153,7 +153,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 			popupFrame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?id='+extract_id);
 		}
 		function removeExtract(extract_id) {
-			lock_screen();
+			lockScreen();
 			service.json("selection","exam/remove_subject_extract",{id:extract_id},function(res) {
 				location.reload();
 			});
@@ -305,7 +305,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				remove.onclick = function(ev) {
 					confirmDialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
 						if (!yes) return;
-						lock_screen();
+						lockScreen();
 						service.json("selection","exam/remove_eligibility_rule",{id:rule.id},function(res){
 							window.location.reload();
 						});

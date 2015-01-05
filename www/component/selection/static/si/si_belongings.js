@@ -34,14 +34,14 @@ function belongings(section, list, applicant_id, can_edit) {
 		};
 		for (var i = 0; i < list.length; ++i) this.createRow(list[i]);
 		this.save = function(ondone) {
-			var locker = lock_screen(null, "Saving Belongings...");
+			var locker = lockScreen(null, "Saving Belongings...");
 			service.json("selection","si/save_belongings",{applicant:applicant_id,belongings:t.list},function(res) {
 				if (res) {
 					for (var i = 0; i < res.length; ++i)
 						for (var j = 0; j < t.list.length; ++j)
 							if (res[i].given_id == t.list[j].id) { t.list[j].id = res[i].new_id; break; }
 				}
-				unlock_screen(locker);
+				unlockScreen(locker);
 				ondone();
 			});
 		};

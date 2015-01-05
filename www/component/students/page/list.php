@@ -108,21 +108,21 @@ new data_list(
 			if (!sel || sel.length == 0) return;
 			confirmDialog("Are you sure you want to remove those students ?<br/><br/><img src='"+theme.icons_16.warning+"' style='vertical-align:bottom;'/> All information related to those students will be removed from the database!<br/><br/><b>If a student is out of PN, please use the <i>Exclude student</i> functionality on his/her profile page, but do not remove all its information from the database.</b>", function(yes) {
 				if (yes) {
-					var lock_div = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Blocking students from being modified by another user...");
+					var lock_div = lockScreen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Blocking students from being modified by another user...");
 					// get people ids
 					var ids = [];
 					for (var i = 0; i < sel.length; ++i)
 						ids.push(list.getTableKeyForRow("People", sel[i]));
 					// first lock all those students
 					service.json("data_model","lock_rows",{table:"People",row_keys:ids},function(locks_people) {
-						if (!locks_people) { unlock_screen(lock_div); return; }
+						if (!locks_people) { unlockScreen(lock_div); return; }
 						for (var i = 0; i < locks_people.length; ++i)
 							databaselock.addLock(locks_people[i]);
 						service.json("data_model","lock_rows",{table:"Student",row_keys:ids},function(locks_student) {
 							if (!locks_student) { 
 								for (var i = 0; i < locks_people.length; ++i)
 									databaselock.removeLock(locks_people[i]);
-								unlock_screen(lock_div); 
+								unlockScreen(lock_div); 
 								return; 
 							}
 							var next = function(pos) {
@@ -143,7 +143,7 @@ new data_list(
 								});
 															
 							};
-							unlock_screen(lock_div);
+							unlockScreen(lock_div);
 							next(0);
 						});
 					});

@@ -212,9 +212,9 @@ class page_applicant_list extends SelectionPage {
 						update_batch.onclick = function() {
 							popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch=<?php echo $batch_id;?>", null, null, null, function(frame,popup) {
 								frame.confirmed = function() {
-									var locker = lock_screen(null, "Updating batch of students...");
+									var locker = lockScreen(null, "Updating batch of students...");
 									service.json("selection","update_batch",{batch:<?php echo $batch_id;?>},function(res) {
-										unlock_screen(locker);
+										unlockScreen(locker);
 									});
 								};
 							});
@@ -557,7 +557,7 @@ class page_applicant_list extends SelectionPage {
 			);
 		}
 		function PNSelected() {
-			var locker = lock_screen();
+			var locker = lockScreen();
 			service.json("data_model","save_cells",{cells:[{
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
@@ -565,11 +565,11 @@ class page_applicant_list extends SelectionPage {
 				values: [{column:'final_decision',value:'Selected'}]
 			}]},function(res) {
 				reload_list();
-				unlock_screen(locker);
+				unlockScreen(locker);
 			});
 		}
 		function PNWaitingList() {
-			var locker = lock_screen();
+			var locker = lockScreen();
 			service.json("data_model","save_cells",{cells:[{
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
@@ -577,11 +577,11 @@ class page_applicant_list extends SelectionPage {
 				values: [{column:'final_decision',value:'Waiting List'}]
 			}]},function(res) {
 				reload_list();
-				unlock_screen(locker);
+				unlockScreen(locker);
 			});
 		}
 		function PNNo() {
-			var locker = lock_screen();
+			var locker = lockScreen();
 			service.json("data_model","save_cells",{cells:[{
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
@@ -589,11 +589,11 @@ class page_applicant_list extends SelectionPage {
 				values: [{column:'final_decision',value:'Rejected'}]
 			}]},function(res) {
 				reload_list();
-				unlock_screen(locker);
+				unlockScreen(locker);
 			});
 		}
 		function PNRemove() {
-			var locker = lock_screen();
+			var locker = lockScreen();
 			service.json("data_model","save_cells",{cells:[{
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
@@ -601,11 +601,11 @@ class page_applicant_list extends SelectionPage {
 				values: [{column:'final_decision',value:null}]
 			}]},function(res) {
 				reload_list();
-				unlock_screen(locker);
+				unlockScreen(locker);
 			});
 		}
 		function ApplicantYes() {
-			var locker = lock_screen();
+			var locker = lockScreen();
 			service.json("data_model","save_cells",{cells:[{
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
@@ -613,7 +613,7 @@ class page_applicant_list extends SelectionPage {
 				values: [{column:'applicant_decision',value:'Will come'}]
 			}]},function(res) {
 				reload_list();
-				unlock_screen(locker);
+				unlockScreen(locker);
 			});
 		}
 		function ApplicantNo() {
@@ -622,7 +622,7 @@ class page_applicant_list extends SelectionPage {
 			});
 		}
 		function ApplicantRemove() {
-			var locker = lock_screen();
+			var locker = lockScreen();
 			service.json("data_model","save_cells",{cells:[{
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
@@ -630,7 +630,7 @@ class page_applicant_list extends SelectionPage {
 				values: [{column:'applicant_decision',value:null},{column:'applicant_not_coming_reason',value:null}]
 			}]},function(res) {
 				reload_list();
-				unlock_screen(locker);
+				unlockScreen(locker);
 			});
 		}
 		</script>

@@ -1957,8 +1957,8 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 		case 'pdf': format_name = "PDF"; break;
 		case 'csv': format_name = "CSV"; break;
 		}
-		var locker = lock_screen();
-		set_lock_screen_content_progress(locker, 100, "Generating your "+format_name+" file...", null, function(span, pb, sub) {
+		var locker = lockScreen();
+		setLockScreenContentProgress(locker, 100, "Generating your "+format_name+" file...", null, function(span, pb, sub) {
 			service.json("application","create_temp_data",{value:'0'},function(res) {
 				var temp_data_id = res.id;
 				var fields = [];
@@ -2018,7 +2018,7 @@ function data_list(container, root_table, sub_model, initial_data_shown, filters
 				var refresh = function() {
 					service.json("application","get_temp_data",{id:temp_data_id},function(res) {
 						if (res.value == 'done' || res.value === null || isNaN(parseInt(res.value))) {
-							unlock_screen(locker);
+							unlockScreen(locker);
 							return;
 						}
 						pb.setPosition(parseInt(res.value));

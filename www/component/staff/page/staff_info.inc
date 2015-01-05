@@ -128,9 +128,9 @@ function staff_info(&$page, $people_id, $container_id) {
 						data.key = position.id;
 						data.lock = -1;
 					};
-					var locker = lock_screen(null, "Saving new staff position...");
+					var locker = lockScreen(null, "Saving new staff position...");
 					service.json("data_model","save_entity",data,function(res){
-						unlock_screen(locker);
+						unlockScreen(locker);
 						if (res && res.key && position.id == -1) position.id = res.key;
 					});
 				};

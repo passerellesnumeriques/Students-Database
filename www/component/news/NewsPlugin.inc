@@ -1,4 +1,7 @@
-<?php 
+<?php
+/**
+ * Interface to implement to add new sections for the news messages
+ */ 
 interface NewsPlugin {
 	
 	/** List of supported sections
@@ -8,6 +11,9 @@ interface NewsPlugin {
 	
 }
 
+/**
+ * Declares a possible section for the news messages
+ */
 interface NewsSection {
 	
 	/**
@@ -46,6 +52,9 @@ interface NewsSection {
 
 }
 
+/**
+ * Declare a category for the news messages
+ */
 interface NewsCategory {
 	
 	/**

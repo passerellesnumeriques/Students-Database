@@ -173,7 +173,7 @@ function save() {
 		}
 		s['comment'] = comments[id];
 	}
-	var locker = lock_screen(null, "Saving Staff Status...");
+	var locker = lockScreen(null, "Saving Staff Status...");
 	service.json("selection","staff/set_status",{staffs:staffs},function(res) {
 		if (res) {
 			pnapplication.dataSaved('staff_status');
@@ -181,7 +181,7 @@ function save() {
 			changes = {};
 			comments = {};
 		}
-		unlock_screen(locker);
+		unlockScreen(locker);
 	});
 }
 function importFromOtherCampaign(button) {
@@ -195,9 +195,9 @@ function importFromOtherCampaign(button) {
 	<?php }?>
 }
 function importFrom(id) {
-	var locker = lock_screen();
+	var locker = lockScreen();
 	service.json("selection","staff/import_status",{from:id},function(res) {
-		unlock_screen();
+		unlockScreen();
 		if (!res) return;
 		location.reload();
 	});

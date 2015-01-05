@@ -98,9 +98,9 @@ class page_departments extends Page {
 			var field_roles = new field_list_of_fixed_values(list,true,{possible_values:possible_values});
 			td.appendChild(field_roles.getHTMLElement());
 			field_roles.onchange.addListener(function() {
-				var locker = lock_screen(null, "Saving roles...");
+				var locker = lockScreen(null, "Saving roles...");
 				service.json("staff", "save_department_roles", {department:department.id, roles:field_roles.getCurrentData()}, function(res) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 				});
 			});
 			tr.appendChild(td);

@@ -591,7 +591,7 @@ function popup_window(title,icon,content,hide_close_button) {
 		if (!parent_popup || !parent_popup.popup) {
 			win = window;
 			doc = document;
-			t.locker = lock_screen(function() {
+			t.locker = lockScreen(function() {
 				t.blink();
 			});
 		} else {
@@ -739,7 +739,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			return false;
 		};
 		if (freeze_content)
-			set_lock_screen_content(t.freezer, freeze_content);
+			setLockScreenContent(t.freezer, freeze_content);
 		t.content_container.style.position = "relative";
 		t.content_container.appendChild(t.freezer);
 		for (var i = 0; i < t.buttons.length; ++i) {
@@ -804,7 +804,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			//window.console.warn("set freeze content on popup not frozen: "+content);
 			return;
 		}
-		set_lock_screen_content(t.freezer, content);
+		setLockScreenContent(t.freezer, content);
 	};
 	/** Unfreeze the popup */
 	t.unfreeze = function() {
@@ -839,7 +839,7 @@ function popup_window(title,icon,content,hide_close_button) {
 			}
 		}
 		if (t.locker)
-			unlock_screen(t.locker);
+			unlockScreen(t.locker);
 		else {
 			var parent_popup = getPopupFromFrame(window);
 			if(parent_popup && parent_popup.popup) parent_popup.unfreeze();

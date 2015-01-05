@@ -294,10 +294,10 @@ function refreshTranscript() {
 		return;
 	}
 	print_button.disabled = "";
-	var locker = lock_screen(null, "Reloading transcript");
+	var locker = lockScreen(null, "Reloading transcript");
 	service.html("transcripts","generate_transcript",{id:selected_transcript,student:selected_student},document.getElementById('transcript'),function() {
 		makePageLayout(document.getElementById('transcript'));
-		unlock_screen(locker);
+		unlockScreen(locker);
 	});
 }
 refreshTranscript();
@@ -314,15 +314,15 @@ function printAll() {
 	container.style.overflow = "hidden";
 	document.body.appendChild(container);
 	var nb = students_ids.length;
-	var locker = lock_screen(null, "Generating transcripts...");
-	set_lock_screen_content_progress(locker, nb, "Generating transcripts...", false, function(span,pb){
+	var locker = lockScreen(null, "Generating transcripts...");
+	setLockScreenContentProgress(locker, nb, "Generating transcripts...", false, function(span,pb){
 		var checkEnd = function() {
 			if (--nb > 0) return;
-			set_lock_screen_content(locker, "Preparation of pages for printing...");
+			setLockScreenContent(locker, "Preparation of pages for printing...");
 			setTimeout(function() {
 				printContent(container,function() {
 					container.parentNode.removeChild(container);
-					unlock_screen(locker);
+					unlockScreen(locker);
 				});
 			},10);
 		};

@@ -188,14 +188,14 @@ window.top.pndocuments = {
 		window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The download will start soon...",[{action:"close"}],5000));
 	},
 	open: function(document_id, version_id, storage_id, storage_revision, filename, readonly) {
-		var locker = lock_screen(null, "Opening document...");
+		var locker = lockScreen(null, "Opening document...");
 		window.top.pndocuments.connect(function(port) {
 			if (port == -1) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 				errorDialog("You need the software <b>PN Document Opener</b> to open or edit files.<br/>You can download this software <a href='http://sourceforge.net/projects/studentsdatabase/files/installPNDocumentOpener.exe/download' target='_blank'>here</a><br/><br/>If you already installed it, please launch it.<br/><br/>Without this software, you can still download and upload files.");
 				return;
 			}
-			unlock_screen(locker);
+			unlockScreen(locker);
 			window.top.pndocuments.opener.openDocument(document_id, version_id, storage_id, storage_revision, filename, readonly);
 		});
 	}

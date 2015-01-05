@@ -66,10 +66,10 @@ class page_set_geography_area extends Page {
 		// show message while loading data
 		?>
 		<script type='text/javascript'>
-		var loading_lock = lock_screen(null, "Loading Geographic Information...");
+		var loading_lock = lockScreen(null, "Loading Geographic Information...");
 		window.top.require("geography.js", function() {
 			window.top.geography.getCountryData(country_id, function(data) {
-				unlock_screen(loading_lock);
+				unlockScreen(loading_lock);
 			});
 		});
 		</script>
