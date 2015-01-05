@@ -165,7 +165,7 @@ class page_general_payment_overview extends Page {
 						else
 							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#0080FF;'>$balance</td>";
 					} else {
-						echo "<td style='padding:1px;text-align:center;'><div style='background-color:#A0A0A0;'>N/A</div></td>";
+						echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#A0A0A0;'>N/A</div></td>";
 					}
 				}
 				echo "</tr>";
@@ -210,28 +210,36 @@ function mouseOutCell(td) {
 	removeSelectedCell();
 }
 function cellClicked(td) {
-	//var tr = td.parentNode;
-	//var student_id = tr.getAttribute("student_id");
-	//var col_index = 0;
-	//var e = td;
-	//while (e.previousSibling) { col_index++; e = e.previousSibling; }
-	//var tbody = tr.parentNode;
-	//var table = tbody.parentNode;
-	//var thead = table.childNodes[0];
-	//tr = thead.childNodes[0];
-	//var th = tr.childNodes[col_index];
-	//var date = th.getAttribute("date");
-	//popupFrame("/static/finance/finance_16.png","Finance","/dynamic/finance/page/operation?student="+student_id+"&regular_payment=<?php echo $payment_id;?>&selected_date="+date+"&ondone=paid",null,null,null,function(frame,popup) {
-	//	frame.paid = function() {
-	//		location.reload();
-	//	};
-	//});
-	var op_id = td.getAttribute("op");
-	window.top.popupFrame("/static/finance/finance_16.png","Finance","/dynamic/finance/page/operation?id="+op_id+"&onchange=paid",null,null,null,function(frame,popup) {
-		frame.paid = function() {
-			location.reload();
-		};
-	});
+	if (td.hasAttribute("op")) {
+		var op_id = td.getAttribute("op");
+		window.top.popupFrame("/static/finance/finance_16.png","Finance","/dynamic/finance/page/operation?id="+op_id+"&onchange=paid",null,null,null,function(frame,popup) {
+			frame.paid = function() {
+				location.reload();
+			};
+		});
+	} else {
+		var tr = td.parentNode;
+		var student_id = tr.getAttribute("student_id");
+		var col_index = 0;
+		var e = td;
+		while (e.previousSibling) { col_index++; e = e.previousSibling; }
+		var tbody = tr.parentNode;
+		var table = tbody.parentNode;
+		var thead = table.childNodes[0];
+		tr = thead.childNodes[0];
+		var th = tr.childNodes[col_index];
+		var date = th.getAttribute("date");
+		inputDialog("/static/finance/finance_16.png","Create "+<?php echo json_encode($payment["name"]);?>+" on "+date,"Amount","",30,function(text) {
+			var amount = parseFloat(text.trim());
+			if (amount <= 0 || isNaN(amount)) return "Invalid amount";
+			return null;
+		},function(text) {
+			var amount = parseFloat(text.trim());
+			service.json("finance","new_scheduled_payment",{student:student_id,regular_payment:<?php echo $payment_id;?>,date:date,amount:amount},function(res) {
+				if (res) location.reload();
+			});
+		});
+	}
 }
 
 function configurePaymentForBatch(batch_id) {
