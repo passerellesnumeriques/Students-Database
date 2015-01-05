@@ -13,6 +13,10 @@ class page_general_payment_overview extends Page {
 ?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column;'>
 	<div class='page_title' style='flex:none'>
+		<?php
+		if (TreeFrameSelection::isSingleBatch() && $can_manage)
+			echo "<button class='action red' style='float:right' onclick='removeForBatch(".TreeFrameSelection::getBatchId().");'><img src='".theme::$icons_16["remove_white"]."'/> Remove</button>"; 
+		?>
 		<img src='/static/finance/finance_32.png'/>
 		<?php echo toHTML($payment["name"])?>
 		<div style='display:inline-block;font-size:12pt;margin-left:10px;font-style:italic'>
@@ -31,9 +35,6 @@ class page_general_payment_overview extends Page {
 		$batches_ids = TreeFrameSelection::getBatchesIds();
 		$batches = PNApplication::$instance->curriculum->getBatches($batches_ids);
 		foreach ($batches as $batch) {
-			if (!TreeFrameSelection::isSingleBatch()) {
-				echo "<div class='page_section_title'>Batch ".toHTML($batch["name"])."</div>";
-			}
 			$group_id = TreeFrameSelection::getGroupId();
 			$period_id = TreeFrameSelection::getPeriodId();
 			if ($group_id <> null) {
@@ -51,20 +52,30 @@ class page_general_payment_overview extends Page {
 			$q->orderBy("People","last_name");
 			$q->orderBy("People","first_name");
 			$students = $q->execute();
+			if (count($students) > 0) {
+				$students_ids = array();
+				foreach ($students as $s) array_push($students_ids, $s["people_id"]);
+				$schedules = SQLQuery::create()
+					->select("ScheduledPaymentDate")
+					->whereValue("ScheduledPaymentDate","regular_payment",$payment_id)
+					->join("ScheduledPaymentDate","FinanceOperation",array("due_operation"=>"id"), "due")
+					->whereIn("due","people",$students_ids)
+					->orderBy("due","people")
+					->orderBy("due","date")
+					->execute();
+			} else
+				$schedules = array();
+			if (!TreeFrameSelection::isSingleBatch()) {
+				echo "<div class='page_section_title'>";
+				echo "Batch ".toHTML($batch["name"]);
+				if (count($schedules) > 0 && $can_manage)
+					echo "<button class='action red' style='float:right' onclick='removeForBatch(".$batch["id"].");'><img src='".theme::$icons_16["remove_white"]."'/> Remove</button>";
+				echo "</div>";
+			}
 			if (count($students) == 0) {
 				echo "<i>No student in this batch</i>";
 				continue;
 			}
-			$students_ids = array();
-			foreach ($students as $s) array_push($students_ids, $s["people_id"]);
-			$schedules = SQLQuery::create()
-				->select("ScheduledPaymentDate")
-				->whereValue("ScheduledPaymentDate","regular_payment",$payment_id)
-				->join("ScheduledPaymentDate","FinanceOperation",array("due_operation"=>"id"), "due")
-				->whereIn("due","people",$students_ids)
-				->orderBy("due","people")
-				->orderBy("due","date")
-				->execute();
 			if (count($schedules) == 0) {
 				echo "<i>This payment is not configured for this batch</i><br/>";
 				if ($can_manage) {
@@ -297,6 +308,19 @@ function configurePaymentForBatch(batch_id) {
 			});
 		});
 		popup.show();
+	});
+}
+
+function removeForBatch(batch_id) {
+	var batch = null;
+	for (var i = 0; i < batches.length; ++i) if (batches[i].id == batch_id) { batch = batches[i]; break; }
+	confirmDialog("Are you sure you want to remove <?php echo $payment["name"];?> for Batch "+batch.name+" ?<br/><b>All payments already registered will be removed</b>",function(yes) {
+		if (!yes) return;
+		var locker = lockScreen(null,"Removing <?php echo $payment["name"];?> for Batch "+batch.name);
+		service.json("finance","remove_batch_regular_payment",{payment:<?php echo $payment_id?>,batch:batch_id},function(res) {
+			if (!res) unlockScreen(locker);
+			else location.reload();
+		});
 	});
 }
 </script>

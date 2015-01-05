@@ -42,7 +42,7 @@ $model->addTable("ScheduledPaymentDate")
 
 $model->addTable("PaymentOperation")
 	->addForeignKey("due_operation","FinanceOperation",true,false,true,false,false)
-	->addForeignKey("payment_operation", "FinanceOperation", true, false, true,false,true)
+	->addForeignKey("payment_operation", "FinanceOperation", true, true, true,false,true)
 	->setPrimary("payment_operation")
 	->addIndex("due_operation")
 	->addReadAccess("consult_student_finance", true)

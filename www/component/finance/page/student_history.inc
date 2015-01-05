@@ -1,31 +1,32 @@
 <?php 
 function studentFinanceOperationsHistory(&$page, $student_id) {
 	$operations = SQLQuery::create()->select("FinanceOperation")->whereValue("FinanceOperation","people",$student_id)->orderBy("FinanceOperation","date")->execute();
-	$ids = array();
-	foreach ($operations as $op) $ids[$op["id"]] = $op;
-	$list = SQLQuery::create()->select("PaymentOperation")->whereIn("PaymentOperation","due_operation",array_keys($ids))->execute();
-	$payments = array();
-	foreach ($list as $payment) {
-		if (!isset($payments[$payment["due_operation"]]))
-			$payments[$payment["due_operation"]] = array(
-				"payments"=>array($payment["payment_operation"]),
-				"total"=>$ids[$payment["payment_operation"]]["amount"]
-			);
-		else {
-			array_push($payments[$payment["due_operation"]]["payments"], $payment["payment_operation"]);
-			$payments[$payment["due_operation"]]["total"] += $ids[$payment["payment_operation"]]["amount"];
+	if (count($operations) > 0) {
+		$ids = array();
+		foreach ($operations as $op) $ids[$op["id"]] = $op;
+		$list = SQLQuery::create()->select("PaymentOperation")->whereIn("PaymentOperation","due_operation",array_keys($ids))->execute();
+		$payments = array();
+		foreach ($list as $payment) {
+			if (!isset($payments[$payment["due_operation"]]))
+				$payments[$payment["due_operation"]] = array(
+					"payments"=>array($payment["payment_operation"]),
+					"total"=>$ids[$payment["payment_operation"]]["amount"]
+				);
+			else {
+				array_push($payments[$payment["due_operation"]]["payments"], $payment["payment_operation"]);
+				$payments[$payment["due_operation"]]["total"] += $ids[$payment["payment_operation"]]["amount"];
+			}
 		}
-	}
-	$list = SQLQuery::create()->select("ScheduledPaymentDate")->whereIn("ScheduledPaymentDate","due_operation",array_keys($ids))->execute();
-	$regular_payments_ids = array();
-	foreach ($list as $e)
-		if ($e["regular_payment"] <> null) {
-			if (!in_array($e["regular_payment"], $regular_payments_ids)) array_push($regular_payments_ids, $e["regular_payment"]);
-			$ids[$e["due_operation"]]["regular_payment"] = $e["regular_payment"];
-		}
-	if (count($regular_payments_ids) > 0)
-		$regular_payments = SQLQuery::create()->select("FinanceRegularPayment")->whereIn("FinanceRegularPayment","id",$regular_payments_ids)->execute();
-	
+		$list = SQLQuery::create()->select("ScheduledPaymentDate")->whereIn("ScheduledPaymentDate","due_operation",array_keys($ids))->execute();
+		$regular_payments_ids = array();
+		foreach ($list as $e)
+			if ($e["regular_payment"] <> null) {
+				if (!in_array($e["regular_payment"], $regular_payments_ids)) array_push($regular_payments_ids, $e["regular_payment"]);
+				$ids[$e["due_operation"]]["regular_payment"] = $e["regular_payment"];
+			}
+		if (count($regular_payments_ids) > 0)
+			$regular_payments = SQLQuery::create()->select("FinanceRegularPayment")->whereIn("FinanceRegularPayment","id",$regular_payments_ids)->execute();
+	}	
 	theme::css($page, "grid.css");
 	echo "<div style='border:1px solid black;display:inline-block;margin:3px;box-shadow:2px 2px 2px 0px #808080;'>";
 	echo "<div style='background-color:white;padding:1px 3px;border-bottom:1px solid #808080;font-weight:bold;color:#3030A0;'>";
