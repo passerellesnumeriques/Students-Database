@@ -75,16 +75,16 @@ class page_general_payment_overview extends Page {
 			$due_operations = array();
 			foreach ($schedules as $s) array_push($due_operations, $s["due_operation"]);
 			$list = SQLQuery::create()
-				->select("ScheduledPaymentDateOperation")
-				->whereIn("ScheduledPaymentDateOperation","schedule", $due_operations)
-				->orderBy("ScheduledPaymentDateOperation","schedule")
-				->join("ScheduledPaymentDateOperation","FinanceOperation",array("operation"=>"id"))
+				->select("PaymentOperation")
+				->whereIn("PaymentOperation","due_operation", $due_operations)
+				->orderBy("PaymentOperation","due_operation")
+				->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"))
 				->execute();
 			$payments_done = array();
 			$op_id = null;
 			foreach ($list as $done) {
-				if ($done["schedule"] <> $op_id) {
-					$op_id = $done["schedule"];
+				if ($done["due_operation"] <> $op_id) {
+					$op_id = $done["due_operation"];
 					$payments_done[$op_id] = array($done);
 				} else
 					array_push($payments_done[$op_id], $done);
@@ -157,15 +157,15 @@ class page_general_payment_overview extends Page {
 						foreach ($payments as $p) $paid += floatval($p["amount"]);
 						$balance = $paid+floatval($schedule["amount"]);
 						if ($balance == 0)
-							echo "<td style='cursor:pointer;text-align:center;background-color:".($ts < time() ? "#60FF60" : "#A0FFA0").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>Paid</td>";
+							echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#60FF60" : "#A0FFA0").";'>Paid</div></td>";
 						else if ($balance == $schedule["amount"])
-							echo "<td style='cursor:pointer;text-align:center;background-color:".($ts < time() ? "#FF0000" : "#FF8080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>$balance</td>";
+							echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF0000" : "#FF8080").";'>$balance</div></td>";
 						else if ($balance < 0)
-							echo "<td style='cursor:pointer;text-align:center;background-color:".($ts < time() ? "#FF9040" : "#FFB080").";' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'>$balance</td>";
+							echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF9040" : "#FFB080").";'>$balance</div></td>";
 						else
-							echo "<td style='cursor:pointer;text-align:center;background-color:#0080FF;'>$balance</td>";
+							echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#0080FF;'>$balance</td>";
 					} else {
-						echo "<td style='text-align:center;background-color:#A0A0A0;'>N/A</td>";
+						echo "<td style='padding:1px;text-align:center;'><div style='background-color:#A0A0A0;'>N/A</div></td>";
 					}
 				}
 				echo "</tr>";

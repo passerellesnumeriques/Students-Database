@@ -13,7 +13,6 @@ class page_student_payment extends Page {
 			$regular_payment_id = $_GET["regular_payment"];
 			$date = $_GET["selected_date"];
 			$regular_payment = SQLQuery::create()->select("FinanceRegularPayment")->whereValue("FinanceRegularPayment","id",$regular_payment_id)->executeSingleRow();
-			$title = "Payment of ".toHTML($people["first_name"]." ".$people["last_name"])." for ".toHTML($regular_payment["name"]);
 			$due_operation = SQLQuery::create()
 				->select("ScheduledPaymentDate")
 				->whereValue("ScheduledPaymentDate", "regular_payment", $regular_payment_id)
@@ -21,47 +20,55 @@ class page_student_payment extends Page {
 				->whereValue("FinanceOperation","people",$people_id)
 				->whereValue("FinanceOperation","date",$date)
 				->executeSingleRow();
-			if ($due_operation <> null) {
+			$due_date_ts = datamodel\ColumnDate::toTimestamp($date);
+			switch ($regular_payment["frequency"]) {
+				case "Daily":
+				case "Weekly":
+					$date_str = date("d M Y", $due_date_ts);
+					break;
+				case "Monthly":
+					$date_str = date("F Y", $due_date_ts);
+					break;
+				case "Yearly":
+					$date_str = date("Y", $due_date_ts);
+					break;
+			}
+			echo "<div class='page_section_title'>".toHTML($regular_payment["name"])." of ";
+			echo toHTML($people["first_name"]." ".$people["last_name"]);
+			echo " for $date_str";
+			echo "</div>";
+			if ($due_operation == null) {
+				// TODO this has been cancelled...
+			} else {
 				$default_amount = -floatval($due_operation["amount"]);
 				$payments = SQLQuery::create()
-					->select("ScheduledPaymentDateOperation")
-					->whereValue("ScheduledPaymentDateOperation","schedule",$due_operation["due_operation"])
-					->join("ScheduledPaymentDateOperation","FinanceOperation",array("operation"=>"id"))
+					->select("PaymentOperation")
+					->whereValue("PaymentOperation","due_operation",$due_operation["due_operation"])
+					->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"))
 					->execute();
+				echo "<div style='padding:3px 5px;'>";
+				$balance = floatval($due_operation["amount"]);
 				if (count($payments) > 0) {
-					$due_date_ts = datamodel\ColumnDate::toTimestamp($due_operation["date"]);
-					echo "<div class='page_section_title'>".toHTML($regular_payment["name"])." of ";
-					echo toHTML($people["first_name"]." ".$people["last_name"]);
-					echo " for ";
-					switch ($regular_payment["frequency"]) {
-						case "Daily":
-						case "Weekly":
-							echo date("d M Y", $due_date_ts);
-							break;
-						case "Monthly":
-							echo date("F Y", $due_date_ts);
-							break;
-						case "Yearly":
-							echo date("Y", $due_date_ts);
-							break;
-					}
-					echo "</div>";
-					echo "<div style='padding:3px 5px;'>";
-					$balance = floatval($due_operation["amount"]);
 					foreach ($payments as $payment) {
 						echo $payment["amount"]." paid on ".date("d M Y", datamodel\ColumnDate::toTimestamp($payment["date"]))."<br/>";
 						$balance += floatval($payment["amount"]);
 					}
-					echo "Remaining balance: ";
-					echo "<span style='color:";
-					if ($balance < 0) echo "red";
-					else if ($balance == 0) echo "black";
-					else echo "green";
-					echo "'>$balance</span>";
-					echo "</div>";
-					echo "<hr/>";
-					$title = "Create New Payment";
 				}
+				echo "Remaining balance: ";
+				echo "<span style='color:";
+				if ($balance < 0) echo "red";
+				else if ($balance == 0) echo "black";
+				else echo "green";
+				echo "'>$balance</span>";
+				echo "<div>";
+				if (count($payments) > 0) {
+					echo "<button class='action'>Cancel remaining balance</button>";
+				} else {
+					echo "<button class='action' onclick='cancelDueOperation(".$due_operation["due_operation"].")'>Cancel ".toHTML($regular_payment["name"]." of ".$date_str." for ".$people["first_name"]." ".$people["last_name"])."</button>";
+				}
+				echo "</div>";
+				echo "</div>";
+				echo "<hr/>";
 			}
 			$due = SQLQuery::create()
 				->select("ScheduledPaymentDate")
@@ -77,18 +84,25 @@ class page_student_payment extends Page {
 				$paid = SQLQuery::create()
 					->select("ScheduledPaymentDate")
 					->whereValue("ScheduledPaymentDate", "regular_payment", $regular_payment_id)
-					->join("ScheduledPaymentDate","ScheduledPaymentDateOperation",array("due_operation"=>"schedule"))
-					->join("ScheduledPaymentDateOperation","FinanceOperation",array("operation"=>"id"))
+					->join("ScheduledPaymentDate","PaymentOperation",array("due_operation"=>"due_operation"))
+					->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"))
 					->whereValue("FinanceOperation","people",$people_id)
 					->expression("SUM(`FinanceOperation`.`amount`)", "paid")
 					->executeSingleValue();
 				if ($paid == null) $paid = 0; else $paid = floatval($paid);
 			}
-				
+			
 		} else {
 			// TODO
 		}
-		echo "<div class='page_section_title'>$title</div>";
+		?>
+		<script type='text/javascript'>
+		function cancelDueOperation(id) {
+			location.href = "/dynamic/finance/page/cancel_due_operation?id="+id<?php if (isset($_GET["ondone"])) echo "+'&ondone=".$_GET["ondone"]."'";?>;
+		}
+		</script>
+		<?php 
+		echo "<div class='page_section_title'>Create New Payment</div>";
 		echo "<div style='padding:5px'>";
 		if (!isset($_GET["amount"])) {
 			if (isset($current_due_amount)) {
@@ -131,16 +145,16 @@ class page_student_payment extends Page {
 				if ($op["date"] == $date) $selected_due = $op;
 			}
 			$payments_done = SQLQuery::create()
-				->select("ScheduledPaymentDateOperation")
-				->whereIn("ScheduledPaymentDateOperation","schedule",$due_operations_ids)
-				->join("ScheduledPaymentDateOperation","FinanceOperation",array("operation"=>"id"))
+				->select("PaymentOperation")
+				->whereIn("PaymentOperation","due_operation",$due_operations_ids)
+				->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"))
 				->execute();
 			$amount = floatval($_GET["amount"]);
 			$operations = array();
 			foreach ($due_operations as $due) {
 				$paid = 0;
 				foreach ($payments_done as $p)
-					if ($p["schedule"] == $due["due_operation"])
+					if ($p["due_operation"] == $due["due_operation"])
 						$paid += floatval($p["amount"]);
 				$due_amount = -floatval($due["amount"]);
 				if ($paid >= $due_amount) continue; // already paid

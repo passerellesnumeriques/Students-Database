@@ -22,9 +22,9 @@ class service_student_payment extends Service {
 			));
 			if ($op_id == null) return;
 			if (isset($op["schedule"])) {
-				SQLQuery::create()->insert("ScheduledPaymentDateOperation", array(
-					"schedule"=>$op["schedule"],
-					"operation"=>$op_id
+				SQLQuery::create()->insert("PaymentOperation", array(
+					"due_operation"=>$op["schedule"],
+					"payment_operation"=>$op_id
 				));
 			}
 		}

@@ -12,26 +12,26 @@ class service_save_operation extends Service {
 		$min = null;
 		$max = null;
 		$payment_of = SQLQuery::create()
-			->select("ScheduledPaymentDateOperation")
-			->whereValue("ScheduledPaymentDateOperation","operation",$op_id)
-			->join("ScheduledPaymentDateOperation","FinanceOperation",array("schedule"=>"id"))
+			->select("PaymentOperation")
+			->whereValue("PaymentOperation","payment_operation",$op_id)
+			->join("PaymentOperation","FinanceOperation",array("due_operation"=>"id"))
 			->executeSingleRow();
 		if ($payment_of <> null) {
 			$min = 0;
 			$other_payments = SQLQuery::create()
-				->select("ScheduledPaymentDateOperation")
-				->whereValue("ScheduledPaymentDateOperation","schedule",$payment_of["schedule"])
-				->whereNotValue("ScheduledPaymentDateOperation","operation",$op_id)
-				->join("ScheduledPaymentDateOperation","FinanceOperation",array("operation"=>"id"))
+				->select("PaymentOperation")
+				->whereValue("PaymentOperation","due_operation",$payment_of["due_operation"])
+				->whereNotValue("PaymentOperation","payment_operation",$op_id)
+				->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"))
 				->execute();
 			$other_amount = 0;
 			foreach ($other_payments as $p) $other_amount += floatval($p["amount"]);
 			$max = -floatval($payment_of["amount"])-$other_amount;
 		} else {
 			$payments = SQLQuery::create()
-				->select("ScheduledPaymentDateOperation")
-				->whereValue("ScheduledPaymentDateOperation","schedule",$op_id)
-				->join("ScheduledPaymentDateOperation","FinanceOperation",array("operation"=>"id"))
+				->select("PaymentOperation")
+				->whereValue("PaymentOperation","due_operation",$op_id)
+				->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"))
 				->execute();
 			$paid = 0;
 			foreach ($payments as $p) $paid += floatval($p["amount"]);
