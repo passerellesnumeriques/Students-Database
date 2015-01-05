@@ -30,8 +30,14 @@ class page_general_payment_overview extends Page {
 			?>
 		</div>
 	</div>
+	<div style='flex:none;background-color:#FFFFE0;border-bottom:1px solid #808080;font-size:8pt;'>
+		<input type='checkbox' style='vertical-align:middle;margin-top:2px;' onchange="showOnlyLate(this.checked);"/>
+		Show only students who are late in their payment
+	</div>
 	<div style='flex: 1 1 100%;overflow:auto;background-color:white'>
 		<?php 
+		$late_students = array();
+		$tables_ids = array();
 		$batches_ids = TreeFrameSelection::getBatchesIds();
 		$batches = PNApplication::$instance->curriculum->getBatches($batches_ids);
 		foreach ($batches as $batch) {
@@ -119,7 +125,9 @@ class page_general_payment_overview extends Page {
 				if ($end == null || $end < $date) $end = $date;
 			}
 			$dates = array();
-			echo "<table class='grid selected_hover'>";
+			$table_id = $this->generateID();
+			array_push($tables_ids, $table_id);
+			echo "<table class='grid selected_hover' id='$table_id'>";
 			echo "<thead>";
 			echo "<tr>";
 				echo "<th>Student</th>";
@@ -156,6 +164,7 @@ class page_general_payment_overview extends Page {
 			foreach ($students as $s) {
 				echo "<tr student_id='".$s["people_id"]."'>";
 				echo "<td style='white-space:nowrap;'>".toHTML($s["last_name"]." ".$s["first_name"])."</td>";
+				$late = false;
 				foreach ($dates as $d) {
 					$schedule = null;
 					foreach ($s["schedules"] as $sched)
@@ -175,10 +184,12 @@ class page_general_payment_overview extends Page {
 							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF9040" : "#FFB080").";'>$balance</div></td>";
 						else
 							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#0080FF;'>$balance</td>";
+						if ($balance < 0 && $ts < time()) $late = true;
 					} else {
 						echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#A0A0A0;'>N/A</div></td>";
 					}
 				}
+				if ($late) array_push($late_students, $s["people_id"]);
 				echo "</tr>";
 			}
 			echo "</tbody>";
@@ -190,6 +201,8 @@ class page_general_payment_overview extends Page {
 <script type='text/javascript'>
 var batches = <?php echo json_encode($batches);?>;
 var freq = "<?php echo $payment["frequency"];?>";
+var late_students = <?php echo json_encode($late_students);?>;
+var tables_ids = <?php echo json_encode($tables_ids);?>;
 
 var selected_td = null;
 var selected_th = null;
@@ -322,6 +335,25 @@ function removeForBatch(batch_id) {
 			else location.reload();
 		});
 	});
+}
+
+function showOnlyLate(filter) {
+	for (var i = 0; i < tables_ids.length; ++i) {
+		var table = document.getElementById(tables_ids[i]);
+		var tbody = table.childNodes[1];
+		for (var j = 0; j < tbody.childNodes.length; ++j) {
+			var tr = tbody.childNodes[j];
+			if (!tr.hasAttribute("student_id")) continue;
+			if (!filter) tr.style.display = "";
+			else {
+				var student_id = tr.getAttribute("student_id");
+				if (late_students.indexOf(student_id) >= 0)
+					tr.style.display = "";
+				else
+					tr.style.display = "none";
+			}
+		}
+	}
 }
 </script>
 <?php 
