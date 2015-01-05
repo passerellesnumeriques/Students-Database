@@ -62,7 +62,8 @@ class page_student_payment extends Page {
 				echo "'>$balance</span>";
 				echo "<div>";
 				if (count($payments) > 0) {
-					echo "<button class='action'>Cancel remaining balance</button>";
+					if ($balance <> 0)
+						echo "<button class='action' onclick='setOperationAmount(".$due_operation["due_operation"].",".floatval($due_operation["amount"]).",".(floatval($due_operation["amount"])-$balance).");'>Cancel remaining balance</button>";
 				} else {
 					echo "<button class='action' onclick='cancelDueOperation(".$due_operation["due_operation"].")'>Cancel ".toHTML($regular_payment["name"]." of ".$date_str." for ".$people["first_name"]." ".$people["last_name"])."</button>";
 				}
@@ -99,6 +100,19 @@ class page_student_payment extends Page {
 		<script type='text/javascript'>
 		function cancelDueOperation(id) {
 			location.href = "/dynamic/finance/page/cancel_due_operation?id="+id<?php if (isset($_GET["ondone"])) echo "+'&ondone=".$_GET["ondone"]."'";?>;
+		}
+		function setOperationAmount(id, prev_amount, new_amount) {
+			confirmDialog("Are you sure you want to change the amount from "+prev_amount+" to "+new_amount+" ?",function(yes) {
+				if (!yes) return;
+				var popup = window.parent.getPopupFromFrame(window);
+				popup.freeze("Modification of the operation...");
+				service.json("finance","save_operation",{id:id,amount:new_amount},function(res) {
+					popup.unfreeze();
+					if (!res) return;
+					<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();";?>
+					location.reload();
+				});
+			});
 		}
 		</script>
 		<?php 

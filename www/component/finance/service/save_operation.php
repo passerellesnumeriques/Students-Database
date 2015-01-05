@@ -37,20 +37,22 @@ class service_save_operation extends Service {
 			foreach ($payments as $p) $paid += floatval($p["amount"]);
 			$max = -$paid;
 		}
-		$amount = floatval($input["amount"]);
-		if ($min !== null && $amount < $min) {
-			PNApplication::error("Invalid amount: this operation cannot be less than $min");
-			return;
+		$update = array();
+		if (isset($input["amount"])) {
+			$amount = floatval($input["amount"]);
+			if ($min !== null && $amount < $min) {
+				PNApplication::error("Invalid amount: this operation cannot be less than $min");
+				return;
+			}
+			if ($max !== null && $amount > $max) {
+				PNApplication::error("Invalid amount: this operation cannot be more than $max");
+				return;
+			}
+			$update["amount"] = $amount;
 		}
-		if ($max !== null && $amount > $max) {
-			PNApplication::error("Invalid amount: this operation cannot be more than $max");
-			return;
-		}
-		SQLQuery::create()->updateByKey("FinanceOperation", $op_id, array(
-			"amount"=>$amount,
-			"date"=>$input["date"],
-			"description"=>$input["description"]
-		));
+		if (isset($input["date"])) $update["date"] = $input["date"];
+		if (isset($input["description"])) $update["description"] = $input["description"];
+		SQLQuery::create()->updateByKey("FinanceOperation", $op_id, $update);
 		if (!PNApplication::hasErrors()) echo "true";
 	}
 	
