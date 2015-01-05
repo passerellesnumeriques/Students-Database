@@ -157,13 +157,13 @@ class page_general_payment_overview extends Page {
 						foreach ($payments as $p) $paid += floatval($p["amount"]);
 						$balance = $paid+floatval($schedule["amount"]);
 						if ($balance == 0)
-							echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#60FF60" : "#A0FFA0").";'>Paid</div></td>";
+							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#60FF60" : "#A0FFA0").";'>Paid</div></td>";
 						else if ($balance == $schedule["amount"])
-							echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF0000" : "#FF8080").";'>$balance</div></td>";
+							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF0000" : "#FF8080").";'>$balance</div></td>";
 						else if ($balance < 0)
-							echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF9040" : "#FFB080").";'>$balance</div></td>";
+							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF9040" : "#FFB080").";'>$balance</div></td>";
 						else
-							echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#0080FF;'>$balance</td>";
+							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#0080FF;'>$balance</td>";
 					} else {
 						echo "<td style='padding:1px;text-align:center;'><div style='background-color:#A0A0A0;'>N/A</div></td>";
 					}
@@ -210,18 +210,24 @@ function mouseOutCell(td) {
 	removeSelectedCell();
 }
 function cellClicked(td) {
-	var tr = td.parentNode;
-	var student_id = tr.getAttribute("student_id");
-	var col_index = 0;
-	var e = td;
-	while (e.previousSibling) { col_index++; e = e.previousSibling; }
-	var tbody = tr.parentNode;
-	var table = tbody.parentNode;
-	var thead = table.childNodes[0];
-	tr = thead.childNodes[0];
-	var th = tr.childNodes[col_index];
-	var date = th.getAttribute("date");
-	popupFrame("/static/finance/finance_16.png","Student Payment","/dynamic/finance/page/student_payment?student="+student_id+"&regular_payment=<?php echo $payment_id;?>&selected_date="+date+"&ondone=paid",null,null,null,function(frame,popup) {
+	//var tr = td.parentNode;
+	//var student_id = tr.getAttribute("student_id");
+	//var col_index = 0;
+	//var e = td;
+	//while (e.previousSibling) { col_index++; e = e.previousSibling; }
+	//var tbody = tr.parentNode;
+	//var table = tbody.parentNode;
+	//var thead = table.childNodes[0];
+	//tr = thead.childNodes[0];
+	//var th = tr.childNodes[col_index];
+	//var date = th.getAttribute("date");
+	//popupFrame("/static/finance/finance_16.png","Finance","/dynamic/finance/page/operation?student="+student_id+"&regular_payment=<?php echo $payment_id;?>&selected_date="+date+"&ondone=paid",null,null,null,function(frame,popup) {
+	//	frame.paid = function() {
+	//		location.reload();
+	//	};
+	//});
+	var op_id = td.getAttribute("op");
+	window.top.popupFrame("/static/finance/finance_16.png","Finance","/dynamic/finance/page/operation?id="+op_id+"&onchange=paid",null,null,null,function(frame,popup) {
 		frame.paid = function() {
 			location.reload();
 		};

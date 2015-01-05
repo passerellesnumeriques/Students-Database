@@ -326,6 +326,37 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.addIconTextButton(theme.icons_16.no, "No", 'no', function() { if (!onno || onno()) t.close(); });
 		t.onEscape(function() { if (!onno || onno()) t.close(); });
 	};
+	
+	/** Change the title of the popup
+	 * @param {String|null} icon URL of the icon
+	 * @param {String} title new title
+	 */
+	t.setTitle = function(icon, title) {
+		this.icon = icon;
+		this.title = title;
+		if (!this.popup_container) return; // not yet created
+		if (this.icon_container && !icon) {
+			this.header.removeChild(this.icon_container);
+			this.icon_container = null;
+			this.icon_img = null;
+		} else if (this.icon_container && icon) {
+			this.icon_img.src = icon;
+		} else if (!this.icon_container && icon) {
+			t.icon_container = doc.createElement("DIV");
+			t.icon_container.style.flex = "none";
+			t.icon_container.style.display = "flex";
+			t.icon_container.style.flexDirection = "column";
+			t.icon_container.style.justifyContent = "center";
+			t.icon_container.style.paddingLeft = "2px";
+			t.icon_img = doc.createElement("IMG");
+			t.icon_img.src = t.icon;
+			t.icon_img.style.flex = "none";
+			t.icon_container.appendChild(t.icon_img);
+			t.header.appendChild(t.icon_container);
+		}
+		this.title_container.childNodes[0].nodeValue = title;
+		layout.changed(this.header);
+	};
 
 	/** List of listeners for the Enter key */
 	t._onenter_listeners = [];

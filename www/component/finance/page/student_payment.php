@@ -6,71 +6,13 @@ class page_student_payment extends Page {
 	public function execute() {
 		$people_id = $_GET["student"];
 		$people = PNApplication::$instance->people->getPeople($people_id);
-		$default_amount = "";
-		echo "<div style='background-color:white;'>";
+		echo "<div style='background-color:white;padding:5px;'>";
+		$default_amount = isset($_GET["amount"]) ? $_GET["amount"] : "";
 		if (isset($_GET["regular_payment"])) {
 			// case of regular payment
 			$regular_payment_id = $_GET["regular_payment"];
-			$date = $_GET["selected_date"];
 			$regular_payment = SQLQuery::create()->select("FinanceRegularPayment")->whereValue("FinanceRegularPayment","id",$regular_payment_id)->executeSingleRow();
-			$due_operation = SQLQuery::create()
-				->select("ScheduledPaymentDate")
-				->whereValue("ScheduledPaymentDate", "regular_payment", $regular_payment_id)
-				->join("ScheduledPaymentDate","FinanceOperation",array("due_operation"=>"id"))
-				->whereValue("FinanceOperation","people",$people_id)
-				->whereValue("FinanceOperation","date",$date)
-				->executeSingleRow();
-			$due_date_ts = datamodel\ColumnDate::toTimestamp($date);
-			switch ($regular_payment["frequency"]) {
-				case "Daily":
-				case "Weekly":
-					$date_str = date("d M Y", $due_date_ts);
-					break;
-				case "Monthly":
-					$date_str = date("F Y", $due_date_ts);
-					break;
-				case "Yearly":
-					$date_str = date("Y", $due_date_ts);
-					break;
-			}
-			echo "<div class='page_section_title'>".toHTML($regular_payment["name"])." of ";
-			echo toHTML($people["first_name"]." ".$people["last_name"]);
-			echo " for $date_str";
-			echo "</div>";
-			if ($due_operation == null) {
-				// TODO this has been cancelled...
-			} else {
-				$default_amount = -floatval($due_operation["amount"]);
-				$payments = SQLQuery::create()
-					->select("PaymentOperation")
-					->whereValue("PaymentOperation","due_operation",$due_operation["due_operation"])
-					->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"))
-					->execute();
-				echo "<div style='padding:3px 5px;'>";
-				$balance = floatval($due_operation["amount"]);
-				if (count($payments) > 0) {
-					foreach ($payments as $payment) {
-						echo $payment["amount"]." paid on ".date("d M Y", datamodel\ColumnDate::toTimestamp($payment["date"]))."<br/>";
-						$balance += floatval($payment["amount"]);
-					}
-				}
-				echo "Remaining balance: ";
-				echo "<span style='color:";
-				if ($balance < 0) echo "red";
-				else if ($balance == 0) echo "black";
-				else echo "green";
-				echo "'>$balance</span>";
-				echo "<div>";
-				if (count($payments) > 0) {
-					if ($balance <> 0)
-						echo "<button class='action' onclick='setOperationAmount(".$due_operation["due_operation"].",".floatval($due_operation["amount"]).",".(floatval($due_operation["amount"])-$balance).");'>Cancel remaining balance</button>";
-				} else {
-					echo "<button class='action' onclick='cancelDueOperation(".$due_operation["due_operation"].")'>Cancel ".toHTML($regular_payment["name"]." of ".$date_str." for ".$people["first_name"]." ".$people["last_name"])."</button>";
-				}
-				echo "</div>";
-				echo "</div>";
-				echo "<hr/>";
-			}
+			$this->setPopupTitle($regular_payment["name"]." of ".$people["first_name"]." ".$people["last_name"]);
 			$due = SQLQuery::create()
 				->select("ScheduledPaymentDate")
 				->whereValue("ScheduledPaymentDate", "regular_payment", $regular_payment_id)
@@ -92,33 +34,10 @@ class page_student_payment extends Page {
 					->executeSingleValue();
 				if ($paid == null) $paid = 0; else $paid = floatval($paid);
 			}
-			
 		} else {
 			// TODO
 		}
-		?>
-		<script type='text/javascript'>
-		function cancelDueOperation(id) {
-			location.href = "/dynamic/finance/page/cancel_due_operation?id="+id<?php if (isset($_GET["ondone"])) echo "+'&ondone=".$_GET["ondone"]."'";?>;
-		}
-		function setOperationAmount(id, prev_amount, new_amount) {
-			confirmDialog("Are you sure you want to change the amount from "+prev_amount+" to "+new_amount+" ?",function(yes) {
-				if (!yes) return;
-				var popup = window.parent.getPopupFromFrame(window);
-				popup.freeze("Modification of the operation...");
-				service.json("finance","save_operation",{id:id,amount:new_amount},function(res) {
-					popup.unfreeze();
-					if (!res) return;
-					<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();";?>
-					location.reload();
-				});
-			});
-		}
-		</script>
-		<?php 
-		echo "<div class='page_section_title'>Create New Payment</div>";
-		echo "<div style='padding:5px'>";
-		if (!isset($_GET["amount"])) {
+		if (!isset($_GET["payment_date"])) {
 			if (isset($current_due_amount)) {
 				$balance = $paid-$current_due_amount;
 				echo "Current situation:<ul><li>Due: ".$current_due_amount."</li><li>Paid: ".$paid."</li><li>= <span style='color:".($balance < 0 ? "red" : ($balance == 0 ? "black" : "green"))."'>$balance</span></ul>";
@@ -128,7 +47,7 @@ class page_student_payment extends Page {
 			}
 			$today = datamodel\ColumnDate::toSQLDate(getdate());
 			echo "<form method='GET' name='payment_spec'>";
-			foreach ($_GET as $name=>$value) echo "<input type='hidden' name='$name' value='$value'/>";
+			foreach ($_GET as $name=>$value) if ($name <> "amount") echo "<input type='hidden' name='$name' value='$value'/>";
 			echo "<table>";
 			echo "<tr><td>Amount paid</td><td><input name='amount' type='number' value='$default_amount'/></td></tr>";
 			echo "<tr><td>Date of payment</td><td><input name='payment_date' type='date' value='$today'/></td></tr>";
@@ -153,10 +72,8 @@ class page_student_payment extends Page {
 				return;
 			}
 			$due_operations_ids = array();
-			$selected_due = null;
 			foreach ($due_operations as $op) {
 				array_push($due_operations_ids, $op["due_operation"]);
-				if ($op["date"] == $date) $selected_due = $op;
 			}
 			$payments_done = SQLQuery::create()
 				->select("PaymentOperation")
@@ -235,5 +152,13 @@ class page_student_payment extends Page {
 		echo "</div>";
 	}
 	
+	private function setPopupTitle($title) {
+?>
+<script type='text/javascript'>
+window.parent.getPopupFromFrame(window).setTitle("/static/finance/finance_16.png",<?php echo json_encode($title);?>);
+</script>
+<?php 
+	}
+		
 }
 ?>

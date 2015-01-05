@@ -1,20 +1,19 @@
 <?php 
 function studentFinanceOperationsHistory(&$page, $student_id) {
-	$can_edit = PNApplication::$instance->user_management->hasRight("edit_student_finance");
 	$operations = SQLQuery::create()->select("FinanceOperation")->whereValue("FinanceOperation","people",$student_id)->orderBy("FinanceOperation","date")->execute();
 	$ids = array();
 	foreach ($operations as $op) $ids[$op["id"]] = $op;
-	$list = SQLQuery::create()->select("ScheduledPaymentDateOperation")->whereIn("ScheduledPaymentDateOperation","schedule",array_keys($ids))->execute();
+	$list = SQLQuery::create()->select("PaymentOperation")->whereIn("PaymentOperation","due_operation",array_keys($ids))->execute();
 	$payments = array();
 	foreach ($list as $payment) {
-		if (!isset($payments[$payment["schedule"]]))
-			$payments[$payment["schedule"]] = array(
-				"payments"=>array($payment["operation"]),
-				"total"=>$ids[$payment["operation"]]["amount"]
+		if (!isset($payments[$payment["due_operation"]]))
+			$payments[$payment["due_operation"]] = array(
+				"payments"=>array($payment["payment_operation"]),
+				"total"=>$ids[$payment["payment_operation"]]["amount"]
 			);
 		else {
-			array_push($payments[$payment["schedule"]]["payments"], $payment["operation"]);
-			$payments[$payment["schedule"]]["total"] += $ids[$payment["operation"]]["amount"];
+			array_push($payments[$payment["due_operation"]]["payments"], $payment["payment_operation"]);
+			$payments[$payment["due_operation"]]["total"] += $ids[$payment["payment_operation"]]["amount"];
 		}
 	}
 	$list = SQLQuery::create()->select("ScheduledPaymentDate")->whereIn("ScheduledPaymentDate","due_operation",array_keys($ids))->execute();
@@ -32,11 +31,9 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 	echo "<div style='background-color:white;padding:1px 3px;border-bottom:1px solid #808080;font-weight:bold;color:#3030A0;'>";
 	echo "Finance Operations History";
 	echo "</div>";
-	echo "<table class='grid'>";
+	echo "<table class='grid selected_hover'>";
 	echo "<thead>";
 	echo "<tr>";
-	if ($can_edit)
-		echo "<th></th>";
 	echo "<th>Date</th>";
 	echo "<th>Amount</th>";
 	echo "<th>Description</th>";
@@ -50,15 +47,9 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 		$ts = datamodel\ColumnDate::toTimestamp($op["date"]);
 		if ($ts > $now && !$last_future) {
 			$last_future = true;
-			echo "<tr><td colspan=5 style='text-align:center;font-weight:bold;font-style:italic;background-color:#D0D0D0;'>Future operations</td></tr>";
+			echo "<tr><td colspan=4 style='text-align:center;font-weight:bold;font-style:italic;background-color:#D0D0D0;'>Future operations</td></tr>";
 		}
-		echo "<tr>";
-		echo "<td>";
-		if ($can_edit) {
-			echo "<button class='flat small_icon' title='Remove this operation' onclick='removeOperation(".$op["id"].");'><img src='".theme::$icons_10["remove"]."'/></button>";
-			echo "<button class='flat small_icon' title='Edit this operation' onclick='editOperation(".$op["id"].");'><img src='".theme::$icons_10["edit"]."'/></button>";
-		}
-		echo "</td>";
+		echo "<tr style='cursor:pointer' onclick='openOperation(".$op["id"].");'>";
 		echo "<td>".$op["date"]."</td>";
 		echo "<td style='text-align:right;color:";
 		if ($op["amount"] < 0) echo "red"; else if ($op["amount"] > 0) echo "green"; else echo "black";
@@ -67,15 +58,8 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 		echo "<td>";
 		if ($op["amount"] < 0) {
 			// this is an amount due
-			$link = "/dynamic/finance/page/student_payment?student=".$student_id."&ondone=refresh";
-			$regular_payment = @$ids[$op["id"]]["regular_payment"];
-			if ($regular_payments <> null) $link .= "&regular_payment=".$regular_payment."&selected_date=".$op["date"];
-			if ($can_edit)
-				$onclick = "onclick=\"window.top.popupFrame('/static/finance/finance_16.png','Student Payment','$link',null,null,null,function(frame,popup){frame.refresh=function(){location.reload();};});return false;\"";
-			else
-				$onclick = "onclick='return false;'";
 			if (!isset($payments[$op["id"]]))
-				echo "<a style='color:red' class='black_link' href='#' $onclick>Not yet paid</a>";
+				echo "<span style='color:red'>Not yet paid</span>";
 			else {
 				$descr = "";
 				foreach ($payments[$op["id"]]["payments"] as $payment_id)
@@ -84,7 +68,7 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 				if ($paid == -$op["amount"]) {
 					echo "<span title='$descr' style='color:green'><img src='".theme::$icons_10["ok"]."' style='vertical-align:top;margin-top:1px;margin-right:2px;'/>Paid</span>";
 				} else {
-					echo "<a title='$descr' style='color:darkorange' class='black_link' href='#' $onclick>".$paid." paid, remaining = ".(-$op["amount"]-$paid)."</a>";
+					echo "<span title='$descr' style='color:darkorange'>".$paid." paid, remaining = ".(-$op["amount"]-$paid)."</span>";
 				}
 			}
 		} else {
@@ -97,11 +81,8 @@ function studentFinanceOperationsHistory(&$page, $student_id) {
 	echo "</table>";
 ?>
 <script type='text/javascript'>
-function editOperation(id) {
-	window.top.popupFrame("/static/finance/finance_16.png","Edit Operation","/dynamic/finance/page/edit_operation?id="+id+"&onsave=saved",null,null,null,function(frame,pop){frame.saved=function(){location.reload();};});
-}
-function removeOperation(id) {
-	// TODO
+function openOperation(id) {
+	window.top.popupFrame("/static/finance/finance_16.png","Operation","/dynamic/finance/page/operation?id="+id+"&onchange=saved",null,null,null,function(frame,pop){frame.saved=function(){location.reload();};});
 }
 </script>
 <?php 
