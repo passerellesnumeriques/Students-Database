@@ -74,7 +74,13 @@ class page_operation extends Page {
 	}
 	
 	private function paymentOperation($op, $people) {
-		
+		$payment_of = SQLQuery::create()->select("PaymentOperation")->whereValue("PaymentOperation","payment_operation",$op["id"])->join("PaymentOperation","FinanceOperation",array("due_operation"=>"id"))->executeSingleRow();
+		$this->setPopupTitle("Payment Of ".$payment_of["description"]);
+		echo "<table>";
+		echo "<tr><td>Date:</td><td>".date("d M Y", datamodel\ColumnDate::toTimestamp($op["date"]))."</td></tr>";
+		echo "<tr><td>Amount:</td><td>".$op["amount"]."</td></tr>";
+		echo "</table>";
+		echo "<button class='action red' onclick=\"confirmDialog('Are you sure you want to remove this operation ?',function(yes){if(!yes)return;service.json('finance','remove_operation',{id:".$op["id"]."},function(res){if(!res)return;".(isset($_GET["onchange"]) ? "window.frameElement.".$_GET["onchange"]."();" : "")."window.parent.getPopupFromFrame(window).close();});});\">Remove this payment</button>";
 	}
 	
 	private function setPopupTitle($title) {
