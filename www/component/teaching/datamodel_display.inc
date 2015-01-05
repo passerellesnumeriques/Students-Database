@@ -116,9 +116,9 @@ function add_teacher_dates(dates, before_tr) {
 			d.end = end;
 			a.push(d);
 			if (!validateAssignments(a)) return;
-			var locker = lock_screen(null,"Saving new dates...");
+			var locker = lockScreen(null,"Saving new dates...");
 			service.json("data_model","save_entity",{table:"TeacherDates",sub_model:null,field_people:people_id,field_start:start,field_end:end},function(res) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 				if (res && res.key) {
 					field_start.unregisterDataModelCell();
 					field_end.unregisterDataModelCell();
@@ -159,9 +159,9 @@ function add_teacher_dates(dates, before_tr) {
 					var a = valueCopy(teacher_dates,0);
 					a.remove(dates);
 					if (!validateAssignments(a)) return;
-					var locker = lock_screen(null,"Removing dates...");
+					var locker = lockScreen(null,"Removing dates...");
 					service.json("data_model","remove_row",{table:"TeacherDates",row_key:dates.id},function(res) {
-						unlock_screen(locker);
+						unlockScreen(locker);
 						if (res) removed();
 					});
 				}

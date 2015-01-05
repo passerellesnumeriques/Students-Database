@@ -86,14 +86,14 @@ function si_help_incomes(section, list, applicant_id, can_edit) {
 	this._initTable();
 	if (can_edit)
 		this.save = function(ondone) {
-			var locker = lock_screen(null, "Saving Helping NGO and Sponsorships...");
+			var locker = lockScreen(null, "Saving Helping NGO and Sponsorships...");
 			service.json("selection","si/save_help_incomes",{applicant:applicant_id,list:list},function(res) {
 				if (res) {
 					for (var i = 0; i < res.length; ++i)
 						for (var j = 0; j < list.length; ++j)
 							if (res[i].given_id == list[j].id) { list[j].id = res[i].new_id; break; }
 				}
-				unlock_screen(locker);
+				unlockScreen(locker);
 				ondone();
 			});
 		};

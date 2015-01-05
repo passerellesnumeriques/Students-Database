@@ -212,9 +212,9 @@ function save() {
 	}
 	var doit = function() {
 		if (data.length == 0) { errorDialog("Nothing to save !"); return; }
-		var locker = lock_screen(null, "Saving results, and applying eligibility rules...");
+		var locker = lockScreen(null, "Saving results, and applying eligibility rules...");
 		service.json("selection","interview/save_results",{session:<?php echo $_GET["session"];?>,applicants:data},function(res) {
-			if (res === null || res === false) { unlock_screen(locker); return; }
+			if (res === null || res === false) { unlockScreen(locker); return; }
 			var e = document.getElementById('footer');
 			e.parentNode.removeChild(e);
 			e = document.getElementById('grid_container');
@@ -240,7 +240,7 @@ function save() {
 				s += "</ul>All others have been exluded from the Selection Process.";
 			}
 			div.innerHTML = s;
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	};
 	if (error.length == 0) doit();

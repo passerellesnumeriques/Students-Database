@@ -143,9 +143,9 @@ function init_users_list() {
 					var sel = list.grid.getSelectionByRowId();
 					for (var i = 0; i < sel.length; ++i)
 						users.push(list.getTableKeyForRow("Users", sel[i]));
-					var locker = lock_screen(null, "Removing "+users.length+" user"+(users.length>1?"s":""));
+					var locker = lockScreen(null, "Removing "+users.length+" user"+(users.length>1?"s":""));
 					service.json("user_management","remove_users",{users:users},function(res) {
-						unlock_screen(locker);
+						unlockScreen(locker);
 						list.reloadData();
 					});
 				});

@@ -14,9 +14,9 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 		var parent = null;
 		if (this.country_data.length > 0)
 			parent = this.country_data[this.country_data.length-1].division_id;
-		var lock = lock_screen(null, "Adding new division...");
+		var lock = lockScreen(null, "Adding new division...");
 		service.json("data_model","save_entity", {table:"CountryDivision", field_name:name, field_parent:parent, field_country:country_id}, function(res){
-			unlock_screen(lock);
+			unlockScreen(lock);
 			if(!res) return;
 			var div = {division_id:res.key, division_name:name, areas:[]};
 			t.country_data.push(div);
@@ -33,9 +33,9 @@ function EditCountryDivisionsControl(divisions_section, country_id) {
 		
 		confirmDialog("Are you sure you want to delete this division?<br/><b>Note: All geographic areas of this division will bre removed.</b>", function(yes) {
 			if (!yes) return;
-			var lock = lock_screen(null, "Removing division...");
+			var lock = lockScreen(null, "Removing division...");
 			service.json("data_model","remove_row",{table:"CountryDivision", row_key:division_id}, function(res){
-				unlock_screen(lock);
+				unlockScreen(lock);
 				if(!res) return;
 				t._table.removeChild(t._table.childNodes[index]);
 				t.country_data.splice(index,1);

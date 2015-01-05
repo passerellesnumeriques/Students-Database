@@ -80,9 +80,9 @@ function new_role() {
 		},function(name) {
 			if (!name) return;
 			name = name.trim();
-			var lock = lock_screen(null, "Creating role "+name);
+			var lock = lockScreen(null, "Creating role "+name);
 			service.json("user_management","create_role",{name:name},function(result){
-				unlock_screen(lock);
+				unlockScreen(lock);
 				if (result && result.id)
 					location.href = '/dynamic/user_management/page/role_rights?role='+result.id;
 			});

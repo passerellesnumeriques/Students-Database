@@ -140,9 +140,9 @@ class page_exam_subjects extends SelectionPage {
 					confirmDialog("Are you sure you want to remove this exam ?",
 						function(answer){
 							if(!answer) return;
-							var locker = lock_screen(null,"Removing subject...");
+							var locker = lockScreen(null,"Removing subject...");
 							service.json("selection","exam/remove_subject",{id:subject.id},function(res){
-								unlock_screen(locker);
+								unlockScreen(locker);
 								if(!res)
 									errorDialog("An error occured");
 								else {
@@ -205,9 +205,9 @@ class page_exam_subjects extends SelectionPage {
 			win.pnapplication.autoDisableSaveButton(save_button);
 			win.pnapplication.autoDisableSaveButton(cancel_button);
 			save_button.onclick = function() {
-				var locker = lock_screen(null, "Saving subject...");
+				var locker = lockScreen(null, "Saving subject...");
 				win.save(function(subj) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 					if (subj == null) return; // error case
 					if (subject == null) {
 						// new subject

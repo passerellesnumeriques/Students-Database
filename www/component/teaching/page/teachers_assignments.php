@@ -717,9 +717,9 @@ class page_teachers_assignments extends Page {
 							menu.addTitleItem(null, "Assign Teacher");
 							for (var i = 0; i < teachers.length; ++i)
 								menu.addIconItem(null, teachers[i].last_name+" "+teachers[i].first_name, function(ev,teacher_id) {
-									var lock = lock_screen();
+									var lock = lockScreen();
 									service.json("teaching","assign_teacher",{people_id:teacher_id,subject_teaching_id:grouping.teaching_id},function(res) {
-										unlock_screen(lock);
+										unlockScreen(lock);
 										if (!res) return;
 										grouping.teachers.push({people_id:teacher_id,hours:null,hours_type:null});
 										t.update();
@@ -816,13 +816,13 @@ class page_teachers_assignments extends Page {
 								var popup = new popup_window("Teaching hours",null,content);
 								popup.addOkCancelButtons(function() {
 									if (field.hasError()) { alert("Please enter a valid number of hours"); return; }
-									var lock = lock_screen();
+									var lock = lockScreen();
 									tt.assignment.hours = field.getCurrentData();
 									tt.assignment.hours_type = select.value;
 									service.json("teaching","assign_teacher",{people_id:tt.assignment.people_id,subject_teaching_id:grouping.teaching_id,hours:field.getCurrentData(),hours_type:select.value},function(res) {
 										updateTeacherRow(tt.assignment.people_id);
 										tt.t.update();
-										unlock_screen(lock);
+										unlockScreen(lock);
 										popup.close();
 									});
 								});
@@ -837,10 +837,10 @@ class page_teachers_assignments extends Page {
 						td.appendChild(unassign);
 						unassign.t=this;
 						unassign.onclick = function() {
-							var lock = lock_screen();
+							var lock = lockScreen();
 							var tt=this;
 							service.json("teaching","unassign_teacher",{people_id:tt.assignment.people_id,subject_teaching_id:grouping.teaching_id},function(res) {
-								unlock_screen(lock);
+								unlockScreen(lock);
 								if (!res) return;
 								grouping.teachers.removeUnique(tt.assignment);
 								updateTeacherRow(tt.assignment.people_id);
@@ -883,11 +883,11 @@ class page_teachers_assignments extends Page {
 									for (var j = 0; j < grouping.teachers.length; ++j) if (grouping.teachers[j].people_id == teachers[i].id) { found = true; break; }
 									if (found) continue;
 									menu.addIconItem(null, teachers[i].last_name+" "+teachers[i].first_name, function(ev,teacher_id) {
-										var lock = lock_screen();
+										var lock = lockScreen();
 										var hours = remaining_period;
 										if (subject.hours_type == "Per week") hours /= nb_weeks;
 										service.json("teaching","assign_teacher",{people_id:teacher_id,subject_teaching_id:grouping.teaching_id,hours:hours,hours_type:subject.hours_type},function(res) {
-											unlock_screen(lock);
+											unlockScreen(lock);
 											if (!res) return;
 											grouping.teachers.push({people_id:teacher_id,hours:hours,hours_type:subject.hours_type});
 											tt.update();
@@ -932,7 +932,7 @@ class page_teachers_assignments extends Page {
 					this.style.outline = "";
 					var teacher_id = event.dataTransfer.getData("teacher");
 					for (var i = 0; i < grouping.teachers.length; ++i) if (grouping.teachers[i].people_id == teacher_id) return; // same teacher
-					var lock = lock_screen();
+					var lock = lockScreen();
 					var remaining_hours_period = subject.hours;
 					if (subject.hours_type == "Per week")
 						remaining_hours_period *= nb_weeks;
@@ -963,7 +963,7 @@ class page_teachers_assignments extends Page {
 								grouping.teachers.push(assignment);
 							t.update();
 							updateTeacherRow(teacher_id);
-							unlock_screen(lock);
+							unlockScreen(lock);
 						});
 					};					
 					if (grouping.teachers.length > 0 && remaining_hours_period == 0) {
@@ -980,7 +980,7 @@ class page_teachers_assignments extends Page {
 						for (var i = 0; i < grouping.teachers.length; ++i)
 							service.json("teaching","unassign_teacher",{people_id:grouping.teachers[i].people_id,subject_teaching_id:grouping.teaching_id},function(res) {
 								if (!res) {
-									unlock_screen(lock);
+									unlockScreen(lock);
 									return;
 								}
 								done();
@@ -992,10 +992,10 @@ class page_teachers_assignments extends Page {
 			};
 
 			this.removeGrouping = function(grouping) {
-				var lock = lock_screen();
+				var lock = lockScreen();
 				var t=this;
 				service.json("data_model","remove_row",{table:"SubjectTeaching",row_key:grouping.teaching_id},function(res) {
-					unlock_screen(lock);
+					unlockScreen(lock);
 					if (!res) return;
 					t.groupings.removeUnique(grouping);
 					t.update();
@@ -1005,10 +1005,10 @@ class page_teachers_assignments extends Page {
 			};
 
 			this.createGroupingFromGroups = function(groups_ids) {
-				var lock = lock_screen();
+				var lock = lockScreen();
 				var t=this;
 				service.json("teaching","create_teaching_group",{subject:subject.id,groups:groups_ids},function(res) {
-					unlock_screen(lock);
+					unlockScreen(lock);
 					if (!res) return;
 					var grouping = {
 						teaching_id: res.id,
@@ -1021,10 +1021,10 @@ class page_teachers_assignments extends Page {
 			};
 
 			this.setGroupingGroups = function(grouping, groups_ids) {
-				var lock = lock_screen();
+				var lock = lockScreen();
 				var t=this;
 				service.json("teaching","update_teaching_groups",{subject_teaching:grouping.teaching_id,groups:groups_ids},function(res) {
-					unlock_screen(lock);
+					unlockScreen(lock);
 					if (!res) return;
 					grouping.groups = groups_ids;
 					t.update();

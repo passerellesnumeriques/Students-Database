@@ -188,9 +188,9 @@ function decisionChanged(new_value) {
 	new_decision = new_value;
 }
 function saveDecision() {
-	var locker = lock_screen(null, "Saving comittee decision...");
+	var locker = lockScreen(null, "Saving comittee decision...");
 	service.json("selection","si/save_grade",{applicant:<?php echo $people_id;?>,grade:new_decision},function(res) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		if (res) {
 			original_decision = new_decision;
 			decisionChanged(new_decision);
@@ -265,15 +265,15 @@ function save() {
 									health.save(function() {
 										expenses.save(function() {
 											var comment = document.getElementById('global_comment').value;
-											var locker = lock_screen(null, "Saving Global Comment...");
+											var locker = lockScreen(null, "Saving Global Comment...");
 											if (has_global_comment) {
 												service.json("data_model","save_cell",{table:'SIGlobalComment',column:'comment',value:comment,row_key:<?php echo $people_id;?>,sub_model:<?php echo $this->component->getCampaignId();?>,lock:null},function(res) {
-													unlock_screen(locker);
+													unlockScreen(locker);
 												});
 											} else {
 												service.json("data_model","add_row",{table:'SIGlobalComment',columns:{applicant:<?php echo $people_id;?>,comment:comment},sub_model:<?php echo $this->component->getCampaignId();?>},function(res) {
 													if (res) has_global_comment = true;
-													unlock_screen(locker);
+													unlockScreen(locker);
 												});
 											}
 										});

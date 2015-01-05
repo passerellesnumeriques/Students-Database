@@ -168,9 +168,9 @@ function editResults() {
 function resetSession() {
 	confirmDialog("Are you sure you want to remove all interview results and attendance for this interview session ?",function(yes) {
 		if (!yes) return;
-		var locker = lock_screen(null,"Removing results of applicants...");
+		var locker = lockScreen(null,"Removing results of applicants...");
 		service.json("selection","interview/reset_results",{session:selected_session_id},function(res) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			location.reload();
 		});
 	});
@@ -179,9 +179,9 @@ function resetSession() {
 function resetAll() {
 	confirmDialog("Are you sure you want to remove all interview results and attendance for all applicants ?",function(yes) {
 		if (!yes) return;
-		var locker = lock_screen(null,"Removing results of applicants...");
+		var locker = lockScreen(null,"Removing results of applicants...");
 		service.json("selection","interview/reset_results",{session:null},function(res) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			location.reload();
 		});
 	});

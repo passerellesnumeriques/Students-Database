@@ -21,9 +21,9 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 	 * @param {Function} ondone called when the save is done and successfull
 	 */
 	this.save = function(ondone) {
-		var locker = lock_screen(null,"Saving Family Information...");
+		var locker = lockScreen(null,"Saving Family Information...");
 		service.json("family","save_family",{family:this.family,members:this.members},function(res) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			if (res) {
 				t.family = res.family;
 				t.members = res.members;

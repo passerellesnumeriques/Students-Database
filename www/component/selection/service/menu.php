@@ -210,9 +210,9 @@ function createCampaign() {
 		},
 		function(text){
 			if(!text) return;
-			var div_locker = window.top.lock_screen(null,"Creation of the new selection campaign...");
+			var div_locker = window.top.lockScreen(null,"Creation of the new selection campaign...");
 			service.json("selection","create_campaign",{name:text.trim()},function(res){
-				unlock_screen(div_locker);
+				unlockScreen(div_locker);
 				if(!res) return;
 				refreshCampaigns();
 			});
@@ -244,9 +244,9 @@ function renameCampaign() {
 		function(text){
 			if (!text) return;
 			if (text.trim().toLowerCase() == current_campaign_name.trim().toLowerCase()) return;
-			var div_locker = lock_screen();
+			var div_locker = lockScreen();
 			service.json("selection","set_campaign_name",{id:<?php echo $id;?>, name:text.trim()},function(res){
-				unlock_screen(div_locker);
+				unlockScreen(div_locker);
 				if(!res) return;
 				refreshCampaigns();
 			});
@@ -256,9 +256,9 @@ function renameCampaign() {
 function removeCampaign() {
 	confirmDialog("Are you sure you want to remove this campaign?<br/><i><b>All the related data will be removed</i></b>",function(res){
 		if(!res) return;
-		var div_locker = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing Selection Campaign and every applicant of it...");
+		var div_locker = lockScreen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Removing Selection Campaign and every applicant of it...");
 		service.json("selection","remove_campaign",{id:<?php echo $id;?>},function(res){
-			unlock_screen(div_locker);
+			unlockScreen(div_locker);
 			if(!res) return;
 			refreshCampaigns();
 		});

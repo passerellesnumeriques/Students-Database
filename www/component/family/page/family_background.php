@@ -77,11 +77,11 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 					remove_family.disabled = "disabled";
 				sec.addToolBottom(remove_family);
 				cancel_edit.onclick = function() {
-					var locker = lock_screen();
+					var locker = lockScreen();
 					databaselock.unlock(lock_id,function() {
 						pnapplication.dataSaved(content.id);
 						manageFamily(sec,content,family_family,family_members,people_id,can_edit);
-						unlock_screen(locker);
+						unlockScreen(locker);
 					});
 				};
 				save_button.onclick = function() {
@@ -110,24 +110,24 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 				remove_family.onclick = function() {
 					confirmDialog("Are you sure you want to remove all information about this family ?",function(yes) {
 						if (!yes) return;
-						var locker = lock_screen(null,"Removing family information...");
+						var locker = lockScreen(null,"Removing family information...");
 						service.json("family","remove_family",{id:family_family.id},function(res) {
-							unlock_screen(locker);
+							unlockScreen(locker);
 							if (!res) return;
 							manageFamily(sec,content,{id:-1},[],people_id,can_edit);
 						});
 					});
 				};
 			};
-			var locker = lock_screen();
+			var locker = lockScreen();
 			if (family.id > 0) {
 				service.json("data_model","lock_row",{table:"Family",row_key:family.id},function(res) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 					if (res && res.lock) edit_mode(res.lock);
 				});
 			} else {
 				service.json("data_model","lock_row",{table:"People",row_key:people_id},function(res) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 					if (res && res.lock) edit_mode(res.lock);
 				});
 			}

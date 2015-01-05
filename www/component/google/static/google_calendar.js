@@ -195,7 +195,7 @@ function GoogleCalendar(id, name, color, show, writable) {
 						var s = "Error parsing Google event from calendar "+t.name+":\r\n";
 						s += err+"\r\n";
 						s += "Details of the event returned from Google:\r\n";
-						s += debug_object_to_string(gev);
+						s += debugObjectToString(gev);
 						for (var n in ev) ev[n] = null;
 						ev = null;
 						continue;

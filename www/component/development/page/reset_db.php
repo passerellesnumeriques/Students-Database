@@ -62,9 +62,9 @@ function show_backups(list) {
 		link._version = list[i].version;
 		link._time = list[i].time;
 		link.onclick = function() {
-			var locker = lock_screen(null, "Recovering data from backup...");
+			var locker = lockScreen(null, "Recovering data from backup...");
 			service.json("development","recover",{version:this._version,time:this._time},function(res) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 			});
 			return false;
 		};
@@ -76,12 +76,12 @@ function show_backups(list) {
 	container.appendChild(link);
 	link.onclick = function() {
 		var link = this;
-		var locker = lock_screen(null, "Inserting test data");
+		var locker = lockScreen(null, "Inserting test data");
 		service.json("development","test_data",{domain:<?php echo json_encode(PNApplication::$instance->local_domain);?>,password:""},function(res) {
 			link.parentNode.insertBefore(document.createTextNode("Test data inserted"), link);
 			link.parentNode.removeChild(link);
 			link.onclick = function() { return false; };
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 		return false;
 	};

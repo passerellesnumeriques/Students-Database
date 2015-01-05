@@ -218,7 +218,7 @@ function um_rights_remove(name, was_set) {
 	if (!was_set) pnapplication.dataSaved('add_right_'+name); else pnapplication.dataUnsaved('add_right_'+name);
 }
 function um_rights_save() {
-	var locker = lock_screen(null, "<img src='"+theme.icons_16.save+"'/>Saving...");
+	var locker = lockScreen(null, "<img src='"+theme.icons_16.save+"'/>Saving...");
 	var form = document.forms["um_rights"];
 	data = {lock:<?php echo $lock_id;?>,user:<?php echo $user_id;?>};
 	for (var i = 0; i < form.elements.length; ++i) {
@@ -235,7 +235,7 @@ function um_rights_save() {
 		data[right] = value;
 	}
 	service.json("user_management","save_user_rights", data, function(result) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		if (result != null) {
 			pnapplication.cancelDataUnsaved();
 			location.reload();

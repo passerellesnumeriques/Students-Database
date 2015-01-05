@@ -66,22 +66,22 @@ class page_assign_specializations extends Page {
 			<?php foreach ($students as $s) echo "assign.addElement(".PeopleJSON::People($s).",".json_encode($s["specialization"]).",".(in_array($s["student_people"],$students_group_spe) ? "false" : "true").");\n";?>
 		});
 		function save() {
-			var lock = lock_screen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving specializations...");
+			var lock = lockScreen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving specializations...");
 			var peoples = assign.getChanges();
 			var next = function(index) {
 				if (index == peoples.length) {
 					assign.changesSaved();
 					<?php if (isset($_GET["onsave"])) echo "window.frameElement.".$_GET["onsave"]."();"?>
-					unlock_screen(lock);
+					unlockScreen(lock);
 					return;
 				}
 				var original = peoples[index].original;
 				var current = peoples[index].current;
 				var people = peoples[index].element;
 				if (current == null)
-					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Unassigning specialization from "+people.first_name.toHTML()+" "+people.last_name.toHTML());
+					setLockScreenContent(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Unassigning specialization from "+people.first_name.toHTML()+" "+people.last_name.toHTML());
 				else
-					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Assigning specialization "+getSpecializationName(current).toHTML()+" to "+people.first_name.toHTML()+" "+people.last_name.toHTML());
+					setLockScreenContent(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Assigning specialization "+getSpecializationName(current).toHTML()+" to "+people.first_name.toHTML()+" "+people.last_name.toHTML());
 				service.json("students", "assign_specialization", {student:people.id,specialization:current}, function(res) {
 					next(index+1);
 				});

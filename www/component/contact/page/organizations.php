@@ -143,9 +143,9 @@ class page_organizations extends Page {
 				var ids = [];
 				for (var i = 0; i < sel.length; ++i)
 					ids.push(dl.getTableKeyForRow("Organization", sel[i]));
-				var locker = lock_screen();
+				var locker = lockScreen();
 				service.json("data_model","save_cells",{cells:[{table:'Organization',keys:ids,values:[{column:'obsolete',value:1}]}]},function(res){
-					unlock_screen(locker);
+					unlockScreen(locker);
 					dl.reloadData();
 				});
 			});

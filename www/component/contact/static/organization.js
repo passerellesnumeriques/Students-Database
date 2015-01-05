@@ -573,9 +573,9 @@ function organization(container, org, existing_types, can_edit) {
 							window.top.geography.getCountry(window.top.default_country_id, function(){});
 							window.top.geography.getCountryData(window.top.default_country_id, function(){});
 							require("contact_objects.js");
-							var locker = lock_screen(null, "Importing data from Google...");
+							var locker = lockScreen(null, "Importing data from Google...");
 							getGooglePlaceDetails(this._google_ref, function(place,error) {
-								if (place == null) { unlock_screen(locker); return; }
+								if (place == null) { unlockScreen(locker); return; }
 								require("contact_objects.js", function() {
 									// add phone
 									if (place.formatted_phone_number && place.formatted_phone_number.length > 0) {
@@ -605,7 +605,7 @@ function organization(container, org, existing_types, can_edit) {
 									window.top.geography.getCountry(window.top.default_country_id, function(country){
 										window.top.geography.getCountryData(window.top.default_country_id, function(country_data){
 											var the_end = function() {
-												unlock_screen(locker);
+												unlockScreen(locker);
 												layout.changed(container);
 											};
 											

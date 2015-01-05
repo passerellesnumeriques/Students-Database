@@ -559,10 +559,10 @@ function editSpecializations() {
 					return null;
 				},function(name,p) {
 					if (!name) return;
-					var ls = lock_screen(null, "Creation of the new specialization...");
+					var ls = lockScreen(null, "Creation of the new specialization...");
 					name = name.trim();
 					service.json("data_model","save_entity",{table:"Specialization",field_name:name},function(res) {
-						unlock_screen(ls);
+						unlockScreen(ls);
 						if (res && res.key) {
 							var new_spe = new Specialization(res.key, name);
 							specializations.push(new_spe);
@@ -600,7 +600,7 @@ function save() {
 		alert("Please enter a name for this batch");
 		return;
 	}
-	var ls = lock_screen(null, "Saving Batch...");
+	var ls = lockScreen(null, "Saving Batch...");
 	var data = new Object();
 	if (batch_id) data.id = batch_id;
 	data.name = batch_name.trim();
@@ -613,8 +613,8 @@ function save() {
 		p.id = periods[i].id;
 		p.name = periods[i].name;
 		p.academic_period = periods[i].academic_period;
-		if (p.name.length == 0) { unlock_screen(ls); alert("Please specify a name for the period number "+(i+1)); return; }
-		if (p.academic_period == 0) { unlock_screen(ls); alert("Please specify an academic year and period for period "+p.name); return; }
+		if (p.name.length == 0) { unlockScreen(ls); alert("Please specify a name for the period number "+(i+1)); return; }
+		if (p.academic_period == 0) { unlockScreen(ls); alert("Please specify an academic year and period for period "+p.name); return; }
 		data.periods.push(p);
 	}
 	data.periods_specializations = [];
@@ -628,7 +628,7 @@ function save() {
 		}
 	}
 	service.json("curriculum", "save_batch", data, function(res) {
-		unlock_screen(ls);
+		unlockScreen(ls);
 		if (!res) return;
 		pnapplication.dataSaved('Batch');
 		if (input_batch_name.cellSaved) input_batch_name.cellSaved();

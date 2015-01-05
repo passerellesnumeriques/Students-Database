@@ -42,10 +42,10 @@ function houses(section, houses, applicant_id, can_edit) {
 			layout.changed(section.content);
 		};
 		this.save = function(ondone) {
-			var locker = lock_screen(null, "Saving Houses Information...");
+			var locker = lockScreen(null, "Saving Houses Information...");
 			var t=this;
 			service.json("selection","si/save_houses",{houses:this.houses,applicant:applicant_id},function(res) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 				if (res) {
 					for (var i = 0; i < t.houses.length; ++i)
 						t.houses[i].id = res[i];

@@ -266,10 +266,10 @@ function TripNode(area) {
 				var menu = new context_menu();
 				menu.addTitleItem(null, "What will you do in "+t.header.childNodes[0].nodeValue+" ?");
 				menu.addIconItem("/static/selection/is/is_16.png", "An Information Session", function() {
-					var locker = lock_screen(null, "Loading Information Sessions List...");
+					var locker = lockScreen(null, "Loading Information Sessions List...");
 					// TODO max date, according to people
 					service.json("selection","is/search",{min_date:dateToSQL(t.getMinimumEndingDate()),max_date:null,area_id:t.area.area_id}, function(res) {
-						unlock_screen(locker);
+						unlockScreen(locker);
 						menu = new context_menu();
 						menu.addTitleItem("/static/selection/is/is_16.png","Which Information Session are you going to conduct here ?");
 						if (res.length == 0)

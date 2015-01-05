@@ -351,9 +351,9 @@ function domainConnectionMenu(button) {
 	});
 }
 function connectToDomain(domain) {
-	var locker = lock_screen(null, "Connection to domain "+domain+"...");
+	var locker = lockScreen(null, "Connection to domain "+domain+"...");
 	service.json("application","set_domain",{domain:domain},function(res) {
-		if (!res) { unlock_screen(locker); return; };
+		if (!res) { unlockScreen(locker); return; };
 		window.top.location.reload();
 	});
 }

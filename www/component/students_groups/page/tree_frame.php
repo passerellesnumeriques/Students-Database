@@ -231,9 +231,9 @@ function editGroupType() {
 		if (!name) return;
 		name = name.trim();
 		if (name == gt.name) return;
-		var locker = lock_screen(null,"Renaming group type...");
+		var locker = lockScreen(null,"Renaming group type...");
 		service.json("data_model","save_entity",{table:"StudentsGroupType",sub_model:null,key:gt.id,lock:-1,field_name:name},function(res) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			if (!res) return;
 			gt.name = name;
 			var select = document.getElementById('select_group_type');
@@ -247,7 +247,7 @@ function editGroupType() {
 	});
 }
 function removeGroupType() {
-	var locker = lock_screen();
+	var locker = lockScreen();
 	require("popup_window.js");
 	var content = document.createElement("DIV");
 	content.style.padding = "10px";
@@ -262,7 +262,7 @@ function removeGroupType() {
 					p.close();
 				});
 			});
-			unlock_screen(locker);
+			unlockScreen(locker);
 			p.show();
 		});
 	});

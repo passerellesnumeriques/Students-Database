@@ -159,7 +159,7 @@ function getTableRows(table) {
 /** Get sizes from computed style
  * @param {Element} element the element
  * @param {Array} style_knowledge cached values of style about element
- * @returns {Object} sizes
+ * @returns {Array} sizes
  */
 function getStyleSizes(element, style_knowledge) {
 	if (element.nodeType != 1) {
@@ -223,6 +223,12 @@ function getStyleSizes(element, style_knowledge) {
 	return s;
 }
 
+/**
+ * Set the width of an element, taking into account borders, margins and paddings 
+ * @param {Element} element the element
+ * @param {Number} width width
+ * @param {Array} style_knowledge cache of computed styles, to improve performance
+ */
 function setWidth(element, width, style_knowledge) {
 	var win = getWindowFromElement(element);
 	if (win != window) { win.setWidth(element, width, style_knowledge); return; }
@@ -236,6 +242,12 @@ function setWidth(element, width, style_knowledge) {
 	w -= s.paddingLeft + s.paddingRight;
 	element.style.width = w+"px";
 }
+/**
+ * Set the height of an element, taking into account borders, margins and paddings 
+ * @param {Element} element the element
+ * @param {Number} height height
+ * @param {Array} style_knowledge cache of computed styles, to improve performance
+ */
 function setHeight(element, height, style_knowledge) {
 	var win = getWindowFromElement(element);
 	if (win != window) { win.setHeight(element, height, style_knowledge); return; }
@@ -246,21 +258,47 @@ function setHeight(element, height, style_knowledge) {
 	h -= s.paddingTop + s.paddingBottom;
 	element.style.height = h+"px";
 }
+/**
+ * Get the width of an element, taking into account borders, margins and paddings 
+ * @param {Element} element the element
+ * @param {Array} style_knowledge cache of computed styles, to improve performance
+ * @returns {Number} width
+ */
 function getWidth(element, style_knowledge) {
 	var win = getWindowFromElement(element);
 	if (win != window) return win.getWidth(element, style_knowledge);
 	var s = getStyleSizes(element, style_knowledge);
 	return element.offsetWidth + s.marginLeft + s.marginRight;
 }
+/**
+ * Get the height of an element, taking into account borders, margins and paddings 
+ * @param {Element} element the element
+ * @param {Array} style_knowledge cache of computed styles, to improve performance
+ * @returns {Number} height
+ */
 function getHeight(element, style_knowledge) {
 	var win = getWindowFromElement(element);
 	if (win != window) return win.getHeight(element, style_knowledge);
 	var s = getStyleSizes(element, style_knowledge);
 	return element.offsetHeight + s.marginTop + s.marginBottom;
 }
+/**
+ * Get the position on the window, which can be used for a fixed position
+ * @param {Element} elem element
+ * @param {Boolean} only_in_window if true, returns the position in the window, else in the top window
+ * @returns {Object} x,y
+ */
 function getFixedPosition(elem,only_in_window) {
 	return _getFixedPosition(window,elem,only_in_window);
 }
+/**
+ * Internal function for recursivity among windows
+ * @param {Window} win window
+ * @param {Element} elem element
+ * @param {Boolean} only_in_window only in the given window
+ * @returns {Object} x,y
+ * @no_doc
+ */
 function _getFixedPosition(win,elem,only_in_window) {
 	var x = elem.offsetLeft;
 	var y = elem.offsetTop;
@@ -298,6 +336,13 @@ function _getFixedPosition(win,elem,only_in_window) {
 	}
 	return {x:x,y:y};
 }
+/**
+ * Internal method used to determine a border width from a CSS value
+ * @param {String} t border style
+ * @param {String} s border width
+ * @returns {Number} width
+ * @no_doc
+ */
 function _styleBorderValue(t, s) {
 	if (s.length == 0) return 0;
 	if (t == "none") return 0;
@@ -305,19 +350,43 @@ function _styleBorderValue(t, s) {
 	if (s == "thick") return 6;
 	return parseInt(s);
 }
+/**
+ * Internal method used to determine a margin size from a CSS value
+ * @param {String} s margin value
+ * @returns {Number} size
+ * @no_doc
+ */
 function _styleMargin(s) {
 	if (s.length == 0) return 0;
 	if (s == "auto") return 0;
 	return parseInt(s);
 }
+/**
+ * Internal method used to determine a padding size from a CSS value
+ * @param {String} s padding value
+ * @returns {Number} size
+ * @no_doc
+ */
 function _stylePadding(s) {
 	if (s.length == 0) return 0;
 	return parseInt(s);
 }
 
+/**
+ * Search a frame having the given name
+ * @param {String} name frame to search
+ * @returns {Element} the IFRAME element
+ */
 function findFrame(name) {
 	return _findFrame(window.top, name);
 }
+/**
+ * Internal method used to recurse on windows
+ * @param {Window} win window
+ * @param {String} name frame to search
+ * @returns {Element} IFRAME
+ * @no_doc
+ */
 function _findFrame(win, name) {
 	for (var i = 0; i < win.frames.length; ++i) {
 		var f = win.frames[i];
