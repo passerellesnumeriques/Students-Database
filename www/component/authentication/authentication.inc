@@ -32,6 +32,10 @@ class authentication extends Component {
 				return new FakeAuthenticationSystem();
 		}
 	}
+	
+	public function initRequest() {
+		Component::allowServiceWithoutLogin("authentication", "auth");
+	}
 
 }
 ?>
