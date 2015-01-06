@@ -2087,7 +2087,91 @@ function grid(element) {
 				}
 			}
 		}
-		printContent(container, onprintready, null, template, template_parameters);
+		printContent(container, function(content, header) {
+			var table = content.childNodes[0];
+			if (table.offsetWidth * 2 + 50 < content.offsetWidth) {
+				var div = document.createElement("DIV");
+				header.appendChild(div);
+				header.style.height = "40px";
+				var cb = document.createElement("INPUT");
+				cb.type = "checkbox";
+				div.appendChild(cb);
+				div.appendChild(document.createTextNode("Split the table horizontally"));
+				cb.onchange = function() {
+					var thead = table.childNodes[0];
+					var tbody = thead.nextSibling;
+					if (this.checked) {
+						// duplicate headers
+						var rows = [];
+						for (var i = 0; i < thead.childNodes.length; ++i) {
+							rows.push([]);
+							for (var j = 0; j < thead.childNodes[i].childNodes.length; ++j) {
+								var th = document.createElement("TH");
+								th._outerHTML = thead.childNodes[i].childNodes[j].outerHTML;
+								rows[i].push(th);
+							}
+						}
+						// add a separator
+						var th = document.createElement("TH");
+						th._isPrintSeparator = true;
+						th.rowSpan = thead.childNodes.length;
+						var div = document.createElement("DIV");
+						div.style.width = "25px";
+						div.style.minWidth = "25px";
+						th.appendChild(div);
+						thead.childNodes[0].appendChild(th);
+						// add duplicates
+						for (var i = 0; i < rows.length; ++i)
+							for (var j = 0; j < rows[i].length; ++j) {
+								var th = thead.childNodes[i].appendChild(rows[i][j]);
+								th.outerHTML = th._outerHTML;
+								th = thead.childNodes[i].lastChild;
+								th._isPrintDuplicate = true;
+							}
+						// move rows
+						var row = Math.floor(tbody.childNodes.length/2);
+						if ((tbody.childNodes.length%2)==1) row++;
+						for (var i = 0; tbody.childNodes.length > row; ++i) {
+							var tr = tbody.removeChild(tbody.childNodes[row]);
+							var sep = document.createElement("TD");
+							sep._isPrintSeparator = true;
+							var div = document.createElement("DIV");
+							div.style.width = "25px";
+							div.style.minWidth = "25px";
+							sep.appendChild(div);
+							tbody.childNodes[i].appendChild(sep);
+							while (tr.childNodes.length > 0)
+								tbody.childNodes[i].appendChild(tr.childNodes[0]);
+						}
+					} else {
+						// remove duplicate headers and separator
+						for (var i = 0; i < thead.childNodes.length; ++i)
+							for (var j = 0; j < thead.childNodes[i].childNodes.length; ++j) {
+								var th = thead.childNodes[i].childNodes[j];
+								if (th._isPrintSeparator || th._isPrintDuplicate) {
+									thead.childNodes[i].removeChild(thead.childNodes[i].childNodes[j]);
+									j--;
+								}
+							}
+						// move back rows
+						for (var i = 0; i < tbody.childNodes.length; ++i) {
+							for (var j = 0; j < tbody.childNodes[i].childNodes.length; ++j) {
+								if (tbody.childNodes[i].childNodes[j]._isPrintSeparator) {
+									// remove separator
+									tbody.childNodes[i].removeChild(tbody.childNodes[i].childNodes[j]);
+									// create new row
+									var tr = document.createElement("TR");
+									while (j < tbody.childNodes[i].childNodes.length)
+										tr.appendChild(tbody.childNodes[i].childNodes[j]);
+									tbody.appendChild(tr);
+								}
+							}
+						}
+					}
+				};
+			}
+			if (onprintready) onprintready();
+		}, null, template, template_parameters);
 	};
 	
 	/**

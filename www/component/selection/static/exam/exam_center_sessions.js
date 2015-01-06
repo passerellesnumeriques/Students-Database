@@ -950,7 +950,16 @@ function RoomSection(container, room, session_section, can_edit) {
 		print.innerHTML = "<img src='"+theme.icons_16.print+"'/>";
 		print.onclick = function() {
 			t.applicants_list.hideActions();
-			t.applicants_list.grid.print("pn_document",{titles:["Written Exam"],sub_titles:[getDateString(session_section.event.start),"Room "+room.name,"Applicants List"],content_style:"display:flex;flex-direction:column;align-items:center;"},function() {
+			var params = {
+				titles:["Written Exam"],
+				sub_titles:[],
+				content_style:"display:flex;flex-direction:column;align-items:center;"
+			};
+			var host = window.center_location.getHostPartner();
+			if (host) params.titles[0] += " - "+host.organization.name;
+			params.sub_titles.push(window.center_location.geographic_area_text.text+" - "+getDateString(session_section.event.start));
+			params.sub_titles.push("Applicants List - Room "+room.name);
+			t.applicants_list.grid.print("pn_document",params,function() {
 				t.applicants_list.showActions();
 			});
 		};
