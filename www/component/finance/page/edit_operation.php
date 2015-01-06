@@ -45,7 +45,13 @@ class page_edit_operation extends Page {
 <table>
 	<tr>
 		<td>Date</td>
-		<td><input name='date' type='date' <?php if ($schedule <> null) echo "disabled='disabled' ";?> original='<?php echo $op["date"];?>' value='<?php echo $op["date"];?>' onchange="if (this.value == this.getAttribute('original')) pnapplication.dataSaved('date'); else pnapplication.dataUnsaved('date');"/></td>
+		<?php 
+		$id = $this->generateID();
+		echo "<td id='$id'></td>";
+		$this->requireJavascript("typed_field.js");
+		$this->requireJavascript("field_date.js");
+		$this->onload("window.op_date = new field_date(".json_encode($op["date"]).",".($schedule <> null ? "false" : "true").",{can_be_null:false});document.getElementById('$id').appendChild(window.op_date.getHTMLElement());initDate();");
+		?>
 	</tr>
 	<tr>
 		<td>Amount</td>
@@ -134,6 +140,11 @@ if ($payment_of <> null) {
 }
 ?>
 <script type='text/javascript'>
+function initDate() {
+	window.op_date.ondatachanged.addListener(function() { pnapplication.dataUnsaved('date'); });
+	window.op_date.ondataunchanged.addListener(function() { pnapplication.dataSaved('date'); });
+}
+
 var popup = window.parent.getPopupFromFrame(window);
 popup.removeButtons();
 popup.addFrameSaveButton(function() {
@@ -142,11 +153,11 @@ popup.addFrameSaveButton(function() {
 	var descr = form.elements['description'].value;
 	if (typeof form.elements['add_descr'] != 'undefined' && form.elements['add_descr'].value.trim().length > 0)
 		descr += ", "+form.elements['add_descr'].value.trim();
-	service.json("finance","save_operation",{id:<?php echo $op["id"];?>,date:form.elements['date'].value,amount:form.elements['amount'].value,description:descr},function(res) {
+	service.json("finance","save_operation",{id:<?php echo $op["id"];?>,date:window.op_date.getCurrentData(),amount:form.elements['amount'].value,description:descr},function(res) {
 		popup.unfreeze();
 		if (!res) return;
 		<?php if (isset($_GET["onsave"])) echo "window.frameElement.".$_GET["onsave"]."();"?>
-		form.elements['date'].setAttribute("original", form.elements['date'].value);
+		window.op_date.setOriginalData(window.op_date.getCurrentData());
 		form.elements['amount'].setAttribute("original", form.elements['amount'].value);
 		form.elements['description'].setAttribute("original", form.elements['description'].value);
 		if (typeof form.elements['add_descr'] != 'undefined')

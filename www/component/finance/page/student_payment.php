@@ -83,7 +83,7 @@ class page_student_payment extends Page {
 							if ($p["regular_payment"] == $rp["id"])
 								$total += -(floatval($p["to_pay"])+floatval($p["total_paid"]));
 						echo $total;
-						echo " <button class='action' onclick=\"location.href='?student=".$people_id."&regular_payment=".$rp["id"]."';\">Pay</button>";
+						echo " <button class='action' onclick=\"location.href='?student=".$people_id."&regular_payment=".$rp["id"].(isset($_GET["ondone"]) ? "&ondone=".$_GET["ondone"] : "")."';\">Pay</button>";
 						echo "</li>";
 					}
 				}
@@ -108,7 +108,7 @@ class page_student_payment extends Page {
 							if ($p["regular_payment"] == $rp["id"])
 								$total += -(floatval($p["to_pay"])+floatval($p["total_paid"]));
 						echo $total;
-						echo " <button class='action' onclick=\"location.href='?student=".$people_id."&regular_payment=".$rp["id"]."';\">Pay</button>";
+						echo " <button class='action' onclick=\"location.href='?student=".$people_id."&regular_payment=".$rp["id"].(isset($_GET["ondone"]) ? "&ondone=".$_GET["ondone"] : "")."';\">Pay</button>";
 						echo "</li>";
 					}
 				}
@@ -125,16 +125,19 @@ class page_student_payment extends Page {
 				echo "Maximum payment = ".($current_due_amount+$future_due_amount-$paid)."<br/>";
 				echo "<hr/>";
 			}
-			$today = datamodel\ColumnDate::toSQLDate(getdate());
 			echo "<form method='GET' name='payment_spec'>";
 			foreach ($_GET as $name=>$value) if ($name <> "amount") echo "<input type='hidden' name='$name' value='$value'/>";
 			echo "<table>";
 			echo "<tr><td>Amount paid</td><td><input name='amount' type='number' value='$default_amount'/></td></tr>";
-			echo "<tr><td>Date of payment</td><td><input name='payment_date' type='date' value='$today'/></td></tr>";
+			$date_id = $this->generateID();
+			echo "<tr><td>Date of payment<input type='hidden' name='payment_date' value=''/></td><td id='$date_id'></td></tr>";
+			$this->requireJavascript("typed_field.js");
+			$this->requireJavascript("field_date.js");
+			$this->onload("window.payment_date = new field_date('".datamodel\ColumnDate::toSQLDate(getdate())."',true,{can_be_null:false});document.getElementById('$date_id').appendChild(window.payment_date.getHTMLElement());");
 			echo "<tr><td>Comment</td><td><input name='comment' type='text' size=30/></td></tr>";
 			echo "</table>";
 			echo "</form>";
-			echo "<button class='action' onclick=\"document.forms['payment_spec'].submit();\">Continue <img src='".theme::$icons_16["right"]."'/></button>";
+			echo "<button class='action' onclick=\"if (window.payment_date.getCurrentData() == null) {alert('Please select a date');return;} var form = document.forms['payment_spec']; form.elements['payment_date'].value = window.payment_date.getCurrentData(); form.submit();\">Continue <img src='".theme::$icons_16["right"]."'/></button>";
 			echo "</div>";
 			echo "</div>";
 			return;
