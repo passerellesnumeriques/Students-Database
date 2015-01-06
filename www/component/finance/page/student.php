@@ -19,8 +19,18 @@ class page_student extends Page {
 	</div>
 	<?php if ($can_edit) { ?>
 	<div class='page_footer' style='flex:none'>
-		<button class='action'>Loan money to the student</button>
+		<button class='action' onclick='newPayment();'>New Payment</button>
+		<button class='action'>Create Loan</button>
 	</div>
+	<script type='text/javascript'>
+	function newPayment() {
+		popupFrame("/static/finance/finance_16.png","New Payment","/dynamic/finance/page/student_payment?ondone=payment_done&student=<?php echo $_GET["people"];?>",null,null,null,function(frame,popup) {
+			frame.payment_done = function() {
+				location.reload();
+			};
+		});
+	}
+	</script>
 	<?php } ?>
 </div>
 <?php 

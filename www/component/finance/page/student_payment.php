@@ -37,7 +37,85 @@ class page_student_payment extends Page {
 				if ($paid == null) $paid = 0; else $paid = floatval($paid);
 			}
 		} else {
-			// TODO
+			// nothing specified, the user needs to choose what is the payment for
+			$to_pay = SQLQuery::create()->select(array("FinanceOperation"=>"due"))
+				->whereValue("due","people",$people_id)
+				->where("`due`.`amount` < 0")
+				->join("due","PaymentOperation",array("id"=>"due_operation"))
+				->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"), "paid")
+				->groupBy("due","id")
+				->field("due","amount","to_pay")
+				->expression("SUM(`paid`.`amount`)", "total_paid")
+				->having("(`to_pay`+`total_paid`) < 0 OR `total_paid` IS NULL")
+				->field("due","id","due_operation")
+				->field("due","date","due_date")
+				->join("due","ScheduledPaymentDate",array("id"=>"due_operation"))
+				->field("ScheduledPaymentDate","regular_payment")
+				->execute();
+			if (count($to_pay) == 0) {
+				echo "This student already paid everything.";
+				echo "</div>";
+				return;
+			}
+			$past = array();
+			$future = array();
+			$now = time();
+			foreach ($to_pay as $p)
+				if (datamodel\ColumnDate::toTimestamp($p["due_date"]) <= $now)
+					array_push($past, $p);
+				else
+					array_push($future, $p);
+			echo "<div class='page_section_title'>Late payments</div>";
+			if (count($past) == 0) {
+				echo "This student is up to date with payments";
+			} else {
+				echo "<ul>";
+				$regular_payments_ids = array();
+				foreach ($past as $p) if ($p["regular_payment"] <> null && !in_array($p["regular_payment"], $regular_payments_ids)) array_push($regular_payments_ids, $p["regular_payment"]);
+				if (count($regular_payments_ids) > 0) {
+					$regular_payments = SQLQuery::create()->select("FinanceRegularPayment")->whereIn("FinanceRegularPayment","id",$regular_payments_ids)->execute();
+					foreach ($regular_payments as $rp) {
+						echo "<li>";
+						echo toHTML($rp["name"]);
+						echo ": Current amount due: ";
+						$total = 0;
+						foreach ($past as $p)
+							if ($p["regular_payment"] == $rp["id"])
+								$total += -(floatval($p["to_pay"])+floatval($p["total_paid"]));
+						echo $total;
+						echo " <button class='action' onclick=\"location.href='?student=".$people_id."&regular_payment=".$rp["id"]."';\">Pay</button>";
+						echo "</li>";
+					}
+				}
+				// TODO
+				echo "</ul>";
+			}
+			echo "<div class='page_section_title'>Future payments</div>";
+			if (count($future) == 0) {
+				echo "There is no future payment to do for this student";
+			} else {
+				echo "<ul>";
+				$regular_payments_ids = array();
+				foreach ($future as $p) if ($p["regular_payment"] <> null && !in_array($p["regular_payment"], $regular_payments_ids)) array_push($regular_payments_ids, $p["regular_payment"]);
+				if (count($regular_payments_ids) > 0) {
+					$regular_payments = SQLQuery::create()->select("FinanceRegularPayment")->whereIn("FinanceRegularPayment","id",$regular_payments_ids)->execute();
+					foreach ($regular_payments as $rp) {
+						echo "<li>";
+						echo toHTML($rp["name"]);
+						echo ": Future amount due: ";
+						$total = 0;
+						foreach ($future as $p)
+							if ($p["regular_payment"] == $rp["id"])
+								$total += -(floatval($p["to_pay"])+floatval($p["total_paid"]));
+						echo $total;
+						echo " <button class='action' onclick=\"location.href='?student=".$people_id."&regular_payment=".$rp["id"]."';\">Pay</button>";
+						echo "</li>";
+					}
+				}
+				// TODO
+				echo "</ul>";
+			}
+			return;
 		}
 		if (!isset($_GET["payment_date"])) {
 			if (isset($current_due_amount)) {

@@ -158,12 +158,17 @@ class people extends Component {
 		if ($bypass_security) $q->bypassSecurity();
 		return $q->execute();
 	}
-	public function getPeoplesSQLQuery($peoples_ids,$include_picture_revision=false) {
+	public function getPeoplesSQLQuery($peoples_ids,$include_picture_revision=false,$json_format=false) {
 		if (count($peoples_ids) == 0) return array();
 		$q = SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids);
 		if ($include_picture_revision) {
 			PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
-			$q->fieldsOfTable("People");
+			if (!$json_format)
+				$q->fieldsOfTable("People");
+		}
+		if ($json_format) {
+			require_once 'component/people/PeopleJSON.inc';
+			PeopleJSON::PeopleSQL($q, false);
 		}
 		return $q;
 	}

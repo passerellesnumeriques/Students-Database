@@ -49,8 +49,8 @@ class page_general_payment_overview extends Page {
 			} else if ($period_id <> null) {
 				$spe_id = TreeFrameSelection::getSpecializationId();
 				if ($spe_id == null) $spe_id = false;
-				$q = PNApplication::$instance->students_groups->getStudentsForPeriod($period_id, $spe_id);
-				PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
+				$students_ids = PNApplication::$instance->students_groups->getStudentsForPeriod($period_id, $spe_id);
+				$q = PNApplication::$instance->people->getPeoplesSQLQuery($students_ids,false,true);
 			} else {
 				$q = PNApplication::$instance->students->getStudentsQueryForBatches(array($batch["id"]));
 				PNApplication::$instance->people->joinPeople($q, "Student", "people", false);
@@ -167,8 +167,9 @@ class page_general_payment_overview extends Page {
 				$late = false;
 				foreach ($dates as $d) {
 					$schedule = null;
-					foreach ($s["schedules"] as $sched)
-						if ($sched["date"] == $d) { $schedule = $sched; break; }
+					if (isset($s["schedules"]))
+						foreach ($s["schedules"] as $sched)
+							if ($sched["date"] == $d) { $schedule = $sched; break; }
 					$ts = datamodel\ColumnDate::toTimestamp($d);
 					if ($schedule <> null) {
 						$payments = @$payments_done[$schedule["due_operation"]];
