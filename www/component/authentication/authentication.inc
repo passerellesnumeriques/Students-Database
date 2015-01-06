@@ -11,6 +11,15 @@ class authentication extends Component {
 	 * @not_tested
 	 */
 	public function getAuthenticationSystem($domain) {
+		if ($domain <> PNApplication::$instance->local_domain) {
+			// not local, let's check if we can contact remotely
+			if (file_exists("conf/$domain.remote")) {
+				$remote_access = include("conf/$domain.remote");
+				$url = $remote_access['url'];
+				require_once("RemoteSMSAuthenticationSystem.inc");
+				return new RemoteSMSAuthenticationSystem($domain, $url);
+			}
+		}
 		switch ($domain) {
 			case "PNP":
 				require_once("PNPAuthenticationSystem.inc");
