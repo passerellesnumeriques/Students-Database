@@ -316,7 +316,10 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			var t=this;
 			require([["typed_field.js",field_type+".js"]], function() {
 				if (!window[field_type].prototype.compare) return;
-				t.addSorting(window[field_type].prototype.compare);
+				var f = new window[field_type](null,false,t.field_args);
+				t.addSorting(function(v1,v2) {
+					return f.compare(v1,v2);
+				});
 			});
 			return;
 		}
@@ -348,9 +351,17 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	 * @param {Boolean} asc true for ascending order, or false for descending order
 	 */
 	this.sort = function(asc) {
+		// cancel sorting of other columns
+		for (var i = 0; i < this.grid.columns.length; ++i) {
+			var col = this.grid.columns[i];
+			if (col == this) continue;
+			if (col.sort_order)
+				col.sort_order = 3;
+		}
 		if (!this.sort_function && !this.sort_handler) {
 			var t=this;
-			setTimeout(function(){t.sort(asc);},25);
+			this.sort_order = asc ? 1 : 2;
+			setTimeout(function(){if (t.sort_order==3) return; t.sort(asc);},25);
 			return;
 		};
 		this._onsort(asc ? 1 : 2);
@@ -585,7 +596,9 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	 */
 	this._onsort = function(sort_order) {
 		var t=this;
+		t.sort_order = sort_order;
 		this.grid.onallrowsready(function() {
+			if (t.sort_order == 3) return; // has been cancelled
 			// cancel sorting of other columns
 			for (var i = 0; i < t.grid.columns.length; ++i) {
 				var col = t.grid.columns[i];

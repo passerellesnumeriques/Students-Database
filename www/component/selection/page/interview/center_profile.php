@@ -97,6 +97,8 @@ class page_interview_center_profile extends SelectionPage {
 		$this->requireJavascript("calendar_objects.js");
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_integer.js");
+		$this->requireJavascript("field_text.js");
+		$this->requireJavascript("field_time.js");
 		?>
 		<table><tr><td valign=top>
 		<div id='section_center' title='Interview Center Information' collapsable='true' style='margin:10px;'>

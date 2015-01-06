@@ -472,6 +472,15 @@ custom_data_grid.prototype = {
 		var col = this.grid.getColumnById("#actions");
 		if (col) col.hide(false);
 	},
+	refreshColumnData: function(column_id) {
+		var col = this.getColumnById(column_id);
+		for (var i = 0; i < this.list.length; ++i) {
+			var row_id = this.id_getter(this.list[i]);
+			var field = this.grid.getCellFieldById(row_id, column_id);
+			if (field)
+				field.setData(col.data_getter(this.list[i], col.data_getter_param));
+		}
+	},
 	/** List of supported drops */
 	_supported_drops: [],
 	/** Add the capacity to accept dropped objects
