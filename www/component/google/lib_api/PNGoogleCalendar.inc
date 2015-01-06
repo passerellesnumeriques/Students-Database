@@ -164,7 +164,6 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 		}
 		SQLQuery::create()->bypassSecurity()->removeKeys("PNGoogleCalendar", $to_remove);
 		// 3-share
-		// 3.1 normal calendars
 		foreach ($pn_google as $cal) {
 			$users_ids = PNApplication::$instance->calendar->getUsersWhoCanReadCalendar($cal["pn_id"]);
 			if ($users_ids == null) continue; // an error occured
@@ -177,8 +176,22 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 			foreach ($emails as $email) {
 				$found = false;
 				foreach ($acls as $acl) if ($acl->getRole() == "reader" && $acl->getScope()->getType() == "user" && $acl->getScope()->getValue() == $email) { $found = true; break; }
-				if (!$found)
-					$this->addAcl($cal["google_id"], "reader", "user", $email);
+				if (!$found) {
+					// user doesn't have it, but may be he removed it, let's check if we already share it
+					$already_shared = SQLQuery::create()->bypassSecurity()
+						->select("GoogleCalendarShared")
+						->whereValue("GoogleCalendarShared", "google_calendar_id", $cal["google_id"])
+						->whereValue("GoogleCalendarShared", "email", $email)
+						->executeSingleRow();
+					if ($already_shared == null) {
+						try {
+							$this->addAcl($cal["google_id"], "reader", "user", $email);
+							SQLQuery::create()->bypassSecurity()->insert("GoogleCalendarShared",array("google_calendar_id"=>$cal["google_id"],"email"=>$email));
+						} catch (Exception $e) {
+							PNApplication::error("Error sharing google calendar to ".$email);
+						}
+					}
+				}
 			}
 			// remove
 			foreach ($acls as $acl) {

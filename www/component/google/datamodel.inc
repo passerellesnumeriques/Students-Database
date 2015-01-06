@@ -19,4 +19,10 @@ $model->addTable("GoogleCalendarSynchro")
 	->setPrimary("google_id")
 	;
 
+$model->addTable("GoogleCalendarShared")
+	->addString("google_calendar_id", 255, 0, false, false)
+	->addString("email", 255, 0, false, false)
+	->setKey(array("google_calendar_id","email"))
+	;
+
 ?>
