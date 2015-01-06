@@ -446,6 +446,20 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.span_nb_slots.innerHTML = nb_slots;
 		this.span_nb_applicants.innerHTML = nb_applicants;
 		this.span_nb_applicants.style.color = nb_applicants > nb_slots ? "red" : (nb_applicants == nb_slots ? "black" : "green");
+		var interview_time = session.event.start.getHours()*60+session.event.start.getMinutes();
+		var count_parallel = 0;
+		for (var i = 0; i < nb_applicants; i++) {
+			if (nb_applicants > nb_slots) {
+				this.applicants_list.list[i].interview_time = null;
+				continue;
+			}
+			this.applicants_list.list[i].interview_time = interview_time;
+			if (++count_parallel == nb_done) {
+				count_parallel = 0;
+				interview_time += session.every_minutes;
+			}
+		}
+		this.applicants_list.refreshColumnData("interview_time");
 		layout.changed(this.header);
 		layout.changed(this.span_date);
 	};
@@ -540,6 +554,13 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		this.header.appendChild(this.span_nb_applicants);
 		
 		this.applicants_list = new applicant_data_grid(content, function(obj) { return obj; },true);
+		var col = new GridColumn("interview_time", "Time", null, "right", "field_time", false, null, null, {can_be_null:true});
+		col.addSorting();
+		this.applicants_list.addColumn(new CustomDataGridColumn(col, function(obj) {
+			var val = obj.interview_time;
+			if (typeof val == 'undefined') val = null;
+			return val;
+		},true));
 		this.applicants_list.addDragSupport("applicant", function(obj) { return obj.people.id; });
 		this.applicants_list.addPeopleProfileAction();
 		this.applicants_list.object_added.addListener(function(){t.refresh();});
@@ -616,7 +637,12 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		print.innerHTML = "<img src='"+theme.icons_16.print+"'/>";
 		print.onclick = function() {
 			t.applicants_list.hideActions();
-			t.applicants_list.grid.print("pn_document",{titles:["Interviews"],sub_titles:[getDateString(session.event.start),"Applicants List"],content_style:"display:flex;flex-direction:column;align-items:center;"},function() {
+			var params = {titles:["Interviews"],sub_titles:[],content_style:"display:flex;flex-direction:column;align-items:center;"};
+			var host = window.center_location.getHostPartner();
+			if (host) params.titles[0] += " - "+host.organization.name;
+			params.sub_titles.push(window.center_location.geographic_area_text.text+" - "+getDateString(session.event.start));
+			params.sub_titles.push("Applicants List");
+			t.applicants_list.grid.print("pn_document",params,function() {
 				t.applicants_list.showActions();
 			});
 		};
@@ -626,8 +652,8 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		for (var i = 0; i < interview_sessions.applicants.length; ++i)
 			if (interview_sessions.applicants[i].interview_session_id == session.event.id)
 				this.applicants_list.addApplicant(interview_sessions.applicants[i]);
-		
 		this.refresh();
+		col.sort(true);
 	};
 	this._init();
 }

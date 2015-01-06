@@ -14,6 +14,7 @@ class page_users_list extends Page {
 	<div class='page_footer' style='flex:none'>
 		<button class='action' onclick='synchUsers();'><img src='<?php echo theme::$icons_16["_import"];?>'/> Synchronize Users</button>
 		<button class='action green' onclick='newUser();'><img src='<?php echo theme::make_icon("/static/user_management/user_16.png",theme::$icons_10["add"]);?>'/> New User</button>
+		<button class='action' onclick='importUsersFromDomain(this);'>Import users from another domain</button>
 	</div>
 	<?php }?>
 </div>
@@ -169,7 +170,12 @@ function init_users_list() {
 
 			list.makeRowsClickable(function(row){
 				if (typeof row.row_id == 'undefined') return;
-				window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
+				var people_id = list.getTableKeyForRow("People",row.row_id);
+				if (!people_id) {
+					infoDialog("This user is from another domain. Connect to its domain to open its profile.");
+					return;
+				}
+				window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+people_id,null,95,95);
 			});
 		}
 	);
@@ -181,6 +187,23 @@ function synchUsers() {
 }
 function newUser() {
 	popupFrame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/user_management/page/new_user",null,null,null,function(frame,popup) {
+		popup.onclose = function() { window.list.reloadData(); };
+	});
+}
+function importUsersFromDomain(button) {
+	require("context_menu.js",function() {
+		var menu = new context_menu();
+		<?php 
+		foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
+			if ($domain == PNApplication::$instance->current_domain) continue;
+			echo "menu.addIconItem(null,".json_encode($domain).",function() { importUsersFrom(".json_encode($domain)."); });";
+		}
+		?>
+		menu.showAboveElement(button);
+	});
+}
+function importUsersFrom(domain) {
+	popupFrame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"Import Users","/dynamic/user_management/page/import_users_from_domain?domain="+domain,null,null,null,function(frame,popup) {
 		popup.onclose = function() { window.list.reloadData(); };
 	});
 }

@@ -114,7 +114,7 @@ window.setPrintContent = function(container, onready) {
 	win.document.documentElement.style.backgroundColor = "white";
 	win.document.body.style.backgroundColor = "white";
 	win.document.body.style.WebkitPrintColorAdjust = "exact";
-	if (onready) onready();
+	if (onready) onready(content, document.getElementById('header'));
 };
 </script>
 <?php 
