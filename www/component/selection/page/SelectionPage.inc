@@ -6,9 +6,6 @@
 abstract class SelectionPage extends Page{
 	//we don't define getRequiredRights this way we will be obliged to define it in SelectionPage instances
 	final public function execute(){
-#CHANNEL_STABLE
-#echo "Selection is still under development. This section is disabled for production."; return;
-#END
 		$this->addJavascript("/static/selection/selection_utils.js");
 		theme::css($this, "selection.css");
 		$id = PNApplication::$instance->components["selection"]->getCampaignId();
