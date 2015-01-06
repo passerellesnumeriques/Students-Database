@@ -12,6 +12,7 @@ if (typeof require != 'undefined') {
  * @param {Boolean} can_edit indicates if the user can edit an existing contact
  * @param {Boolean} can_add indicates if the user can add a new contact to the list, attached to the owner
  * @param {Boolean} can_remove indicates if the user can remove an existing contact
+ * @param {Boolean} small if true we will use icons of 10x10 instead of 16x16, to take less space
  * @param {Function} ontypechanged called when the sub_type of a contact is changed
  * @param {Function} onready called when the UI control is ready
  */
@@ -62,7 +63,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 * Add a contact
 	 * @param {Contact} contact the contact to add
 	 */
-	this.addContact = function(contact) {
+	this._createContactRow = function(contact) {
 		var tr = document.createElement("tr");
 		tr.contact = contact;
 		var td_category = document.createElement("td");
@@ -79,6 +80,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		tr.appendChild(td_category);
 		tr.appendChild(td_data);
 		this.tbody.appendChild(tr);
+		layout.changed(this.tbody);
 		var edit = null;
 		if (owner_id == null || owner_id < 0) {
 			// new
@@ -108,7 +110,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 					return text;
 				}
 				else{
-					error_dialog("You must enter at least one visible character");
+					errorDialog("You must enter at least one visible character");
 					return this.contact;
 				}
 			};
@@ -127,12 +129,12 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	};
 	
 	/**
-	 * Creates the input_dialog displayed when clicking on the add contact button
+	 * Creates the inputDialog displayed when clicking on the add contact button
 	 * The input the dialog will check that the given data is visible
-	 * The input_dialog created will call the createContact method
+	 * The inputDialog created will call the createContact method
 	 */
 	this.dialogAddContact = function (){
-		input_dialog(theme.icons_16.question,
+		inputDialog(theme.icons_16.question,
 			"Add a new "+contact_type_name,
 			"Enter the new "+contact_type_name,
 			"",
@@ -143,7 +145,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 			},
 			function(text){
 				require("contact_objects.js",function(){
-					if(text) t.createContact(new Contact(-1, contact_type, "Professional", text));
+					if(text) t.createContact(new Contact(-1, contact_type, "?", text));
 				});
 			}
 		);
@@ -163,7 +165,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 				contact.id = res.id;
 				contacts[l] = contact;
 				/*Update the table*/
-				t.addContact(contacts[l]);
+				t._createContactRow(contacts[l]);
 				t.onchange.fire(t);
 			});
 		} else {
@@ -172,7 +174,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 			contact.id = -1;
 			contacts[l] = contact;
 			/*Update the table*/
-			t.addContact(contacts[l]);
+			t._createContactRow(contacts[l]);
 			t.onchange.fire(t);
 		}
 	};
@@ -196,7 +198,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 		remove_button.onclick = function(ev){
 			if (edit)
 				edit.editable_field.unedit();
-			confirm_dialog("Are you sure you want to remove this "+contact_type_name+"?", function(text){if(text) t.removeContact(contact);});
+			confirmDialog("Are you sure you want to remove this "+contact_type_name+"?", function(text){if(text) t.removeContact(contact);});
 			stopEventPropagation(ev);
 			return false;
 		};
@@ -217,6 +219,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 				contacts.remove(contact);
 				t.onchange.fire(t);
 				setTimeout(function(){if (ontypechanged) ontypechanged();},1);
+				layout.changed(t.tbody);
 			});
 		} else {
 			for (var i = 0; i < t.tbody.childNodes.length; ++i)
@@ -225,6 +228,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 			contacts.remove(contact);
 			t.onchange.fire(t);
 			setTimeout(function(){if (ontypechanged) ontypechanged();},1);
+			layout.changed(t.tbody);
 		}
 	};
 	
@@ -235,6 +239,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 */
 	this._createCategoryField = function (container,contact){
 		this.context = null;
+		container.style.whiteSpace = "nowrap";
 		container.innerHTML = contact.sub_type;
 		if(can_edit){
 			container.style.cursor = "pointer";
@@ -249,52 +254,11 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	 * @param {Contact} contact the associated contact
 	 */
 	this._showCategoryContextMenu = function(container,contact){
-		require('context_menu.js',function(){
-			if (t.context) t.context.hide();
-			t.context = new context_menu();
-			t.context.onclose = function() {t.context = null;};
-			t._addCategoryContextMenuItem(container, "Personal", contact);
-			t._addCategoryContextMenuItem(container, "Professional", contact);
-			t._addCategoryContextMenuItem(container, "Other", contact);
-			
-			t.context.showBelowElement(container);
+		require('contact_objects.js',function(){
+			showContactTypeMenu(container,contact.type,contact.sub_type,true,function(new_type) {
+				t._saveSubType(contact, new_type, container);
+			});
 		});
-	};
-	
-	/**
-	 * Add an item to the category context_menu
-	 * @param {Element} container the one which contains the category field
-	 * @param {String} data the value of the item
-	 * @param {Contact} contact the associated contact
-	 */
-	this._addCategoryContextMenuItem = function(container, data, contact){
-		var item = document.createElement('div');
-		item.innerHTML = data;
-		
-		if(contact.sub_type == data) item.style.fontWeight ='bold';
-		if(data == "Other"){
-			var input = document.createElement("INPUT");
-			input.type = 'text';
-			input.maxLength = 10;
-			input.size = 10;
-			item.appendChild(input);
-			t.context.onclose = function(){
-				if(input.value.checkVisible()){
-					t._saveSubType(contact, input.value.uniformFirstLetterCapitalized(),container);
-				}
-			};
-			input.onkeypress = function(e){var ev = getCompatibleKeyEvent(e);
-									if(ev.isEnter) t.context.hide();
-								};
-		}
-		else{
-			item.onclick = function(){
-				t._saveSubType(contact,data,container);
-			};
-		}
-		item.className = 'context_menu_item';
-		t.context.addItem(item);
-		if(data == "Custom") item.onclick = null;
 	};
 	
 	/**
@@ -324,7 +288,7 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	
 	require('editable_cell.js',function(){
 		for (var i = 0; i < contacts.length; ++i)
-			t.addContact(contacts[i]);
+			t._createContactRow(contacts[i]);
 		if (onready) onready(t);
 	});
 }

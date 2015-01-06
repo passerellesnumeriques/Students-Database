@@ -10,8 +10,10 @@ $model->addTable("Users")
 	->addIndex("domain","username")
 	->setRoot()
 	->allowReadAccess() // everybody need to be able to know who says what.. so need to access the list of users
+#!SELECTION_TRAVEL
 	->addInsertAccess("manage_users", true)
 	->addRemoveAccess("manage_users", true)
+#END
 	;
 $model->addTable("InternalUser")
 	->addString("username", 100,1, false, true)
@@ -45,9 +47,10 @@ $model->addTable("UserRole")
 	->setKey(array("user","role"))
 	->addIndex("user")
 	->addReadAccess("consult_user_roles",true)
+#!SELECTION_TRAVEL
 	->addInsertAccess("assign_role",true)
 	->addRemoveFilter(function(&$q,$table_alias,&$locks){
-		if (!PNApplication::$instance->user_management->has_right("assign_role")) {
+		if (!PNApplication::$instance->user_management->hasRight("assign_role")) {
 			$q->where("FALSE");
 			return;
 		}
@@ -77,6 +80,7 @@ $model->addTable("UserRole")
 		}
 		return $res;
 	})
+#END
 	;
 $model->addTable("RoleRights")
 	->addForeignKey("role", "Role", true, false, true)
@@ -96,8 +100,10 @@ $model->addTable("UserPeople")
 	->allowReadAccess()
 	->addInsertAccess("manage_users", true)
 	->addRemoveAccess("manage_users", true)
-	->onInsert(function($fields_values, $id, $sub_model_instance) {
-		PNApplication::$instance->user_management->assignDefaultRoles($fields_values["user"], $fields_values["people"]);
+	->onInsert(function($inserted) {
+		// TODO improve
+		foreach ($inserted as $row)
+			PNApplication::$instance->user_management->assignDefaultRoles($row["fields_values"]["user"], $row["fields_values"]["people"]);
 	})
 	;
 ?>

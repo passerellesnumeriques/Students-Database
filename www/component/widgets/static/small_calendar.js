@@ -1,19 +1,34 @@
 if (typeof theme != 'undefined')
 	theme.css("small_calendar.css");
 
+/**
+ * Display one month in a small calendar. Typically used inside a date_picker.
+ * @param {Date} minimum minimum selectable date
+ * @param {Date} maximum maximum selectable date
+ */
 function small_calendar(minimum, maximum) {
 	if (minimum) minimum.setHours(0,0,0,0);
 	if (maximum) maximum.setHours(0,0,0,0);
 	var t = this;
 	
+	/** Table containing the days */
 	t.table = document.createElement("TABLE");
 	t.table.className = 'small_calendar';
 	t.table.appendChild(t.tbody = document.createElement("TBODY"));
 	
 	var days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 	
+	/** Returns the element of this calendar
+	 * @returns {Element} the element
+	 */
 	t.getElement = function() { return t.table; };
+	/** Returns the currently selected date
+	 * @returns {Date} current date
+	 */
 	t.getDate = function() { return t.date; };
+	/** Set the selected date
+	 * @param {Date} date date to select
+	 */
 	t.setDate = function(date) {
 		date.setHours(0,0,0,0);
 		if (t.date && t.date.getFullYear() == date.getFullYear() && t.date.getMonth() == date.getMonth() && t.date.getDate() == date.getDate()) return;

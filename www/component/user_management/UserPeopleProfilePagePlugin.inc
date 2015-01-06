@@ -4,7 +4,7 @@ class UserPeopleProfilePagePlugin implements PeopleProfilePagePlugin {
 	
 	public function isValidFor($people_id, $types) {
 		return 
-			PNApplication::$instance->user_management->has_right("consult_user_rights") &&
+			PNApplication::$instance->user_management->hasRight("consult_user_rights") &&
 			PNApplication::$instance->user_management->isPeopleUser($people_id);
 	}
 	public function getPriority() { return 1000; }
@@ -12,7 +12,7 @@ class UserPeopleProfilePagePlugin implements PeopleProfilePagePlugin {
 	public function getName() { return "User Rights"; }
 	public function getTooltip() { return "What this person can access on the application"; }
 	public function getURL($people_id) {
-		$user = PNApplication::$instance->user_management->get_user_from_people($people_id); 
+		$user = PNApplication::$instance->user_management->getUserFromPeople($people_id); 
 		return "/dynamic/user_management/page/user_rights?user=".$user; 
 	}
 	

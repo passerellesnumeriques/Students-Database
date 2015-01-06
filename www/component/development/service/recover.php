@@ -11,7 +11,7 @@ class service_recover extends Service {
 			else $path = "data/backups";
 			Backup::recoverBackup($input["time"], $input["version"], $path);
 		} else
-			Backup::importBackup($input["time"], $input["version"], $input["datamodel_version"]);
+			Backup::importBackup($input["time"], $input["version"], $input["datamodel_version"], PNApplication::$instance->local_domain);
 		echo "true";
 	}
 }

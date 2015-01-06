@@ -1,0 +1,7 @@
+table.grid>tbody>tr.excluded_applicant {
+	background-color: #FFD0D0;
+}
+table.grid>tbody>tr.excluded_applicant.selected {
+	background-color: #FFD0D0;
+    background: linear-gradient(to bottom, #FFD0D0 0%, #F0A080 100%);
+}

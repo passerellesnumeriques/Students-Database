@@ -45,6 +45,7 @@ class ContactJSON {
 	/**
 	 * Generate a JSON PostalAddress object 
 	 * @param array $row the row corresponding to the postal address
+	 * @param array $geo_text pre-fetched information from geography to create the text describing the area, or null to make the database request
 	 * @return string the PostalAddress object in JSON
 	 * @no_name_check
 	 */
@@ -67,6 +68,13 @@ class ContactJSON {
 			;
 	}
 	
+	/**
+	 * Generate a JSON array containing PostalAddress objects
+	 * @param array $rows the postal addresses
+	 * @param array $texts if information are already pre-fetched for geographic area information, or null to make the request
+	 * @return string the JSON array
+	 * @no_name_check
+	 */
 	public static function PostalAddresses($rows, $texts = null) {
 		if (count($rows) == 0) return "[]";
 		if ($texts == null)
@@ -137,6 +145,11 @@ class ContactJSON {
 			;
 	}
 
+	/** Generate a JSON array for the given contacts
+	 * @param array $rows the contacts
+	 * @return string the JSON array
+	 * @no_name_check
+	 */
 	public static function Contacts($rows) {
 		$s = "[";
 		$first = true;
@@ -148,6 +161,11 @@ class ContactJSON {
 		return $s;
 	}
 	
+	/** retrieve information from database and generate the JSON structure of the organization
+	 * @param integer $id the organization id
+	 * @return string the JSON
+	 * @no_name_check
+	 */
 	public static function OrganizationFromID($id) {
 		$q = SQLQuery::create()->select("Organization")->whereValue("Organization","id",$id);
 		self::OrganizationSQL($q);
@@ -165,6 +183,11 @@ class ContactJSON {
 		return self::OrganizationJSON($org, $types_ids, $contacts, $addresses, $contact_points);
 	}
 	
+	/** List of organizations
+	 * @param integer[] $ids organizations ids
+	 * @return string the JSON array
+	 * @no_name_check
+	 */
 	public static function OrganizationsFromIDs($ids) {
 		$q = SQLQuery::create()->select("Organization")->whereIn("Organization","id",$ids);
 		self::OrganizationSQL($q);
@@ -202,13 +225,33 @@ class ContactJSON {
 		return $s;
 	}
 	
-	public static function OrganizationSQL(&$q) {
-		$alias = $q->getTableAlias("Organization");
-		$q->field($alias, "id", "organization_id");
-		$q->field($alias, "name", "organization_name");
-		$q->field($alias, "creator", "organization_creator");
+	/** Prepare the SQLQuery to retrieve fields about the organization
+	 * @param SQLQuery $q the query
+	 * @param string $alias if specified, this is the Organization table alias, and every field will be prefixed with this alias and an underscore
+	 * @no_name_check
+	 */
+	public static function OrganizationSQL(&$q, $alias = null) {
+		if ($alias == null) {
+			$alias = $q->getTableAlias("Organization");
+			$q->field($alias, "id", "organization_id");
+			$q->field($alias, "name", "organization_name");
+			$q->field($alias, "creator", "organization_creator");
+		} else {
+			$q->field($alias, "id", $alias."_id");
+			$q->field($alias, "name", $alias."_name");
+			$q->field($alias, "creator", $alias."_creator");
+		}
 	}
 	
+	/** Generate a full JSON structure for an organization
+	 * @param array $org the organization
+	 * @param integer[] $types_ids types of the organization
+	 * @param array $contacts the contacts
+	 * @param array $addresses the postal addresses
+	 * @param array $contact_points the contact points
+	 * @return string the JSON
+	 * @no_name_check
+	 */
 	public static function OrganizationJSON($org, $types_ids, $contacts, $addresses, $contact_points) {
 		$s = "{";
 		$s .= "id:".$org["organization_id"];
@@ -244,6 +287,12 @@ class ContactJSON {
 		return $s;
 	}
 	
+	/**
+	 * Generate the JSON structure containing the contact points of the given organization
+	 * @param integer $organization_id organization
+	 * @return string the JSON
+	 * @no_name_check
+	 */
 	public static function OrganizationContactsPointsFromDB($organization_id) {
 		$q = SQLQuery::create()
 			->select("ContactPoint")
@@ -253,6 +302,11 @@ class ContactJSON {
 		return self::OrganizationContactPoints($q->execute());
 	}
 	
+	/**
+	 * Prepare the query to select fields: contact_point_organization_id, contact_point_designation, and fields from the people
+	 * @param SQLQuery $q the query
+	 * @no_name_check
+	 */
 	public static function OrganizationContactPointSQL(&$q) {
 		$alias = $q->getTableAlias("ContactPoint");
 		$q->field($alias, "organization", "contact_point_organization_id");
@@ -262,6 +316,11 @@ class ContactJSON {
 		PeopleJSON::PeopleSQL($q);
 	}
 	
+	/** Generate the JSON for the given contact point
+	 * @param array $row the contact point
+	 * @return string the JSON
+	 * @no_name_check
+	 */
 	public static function OrganizationContactPoint($row) {
 		require_once("component/people/PeopleJSON.inc");
 		return "{".
@@ -271,6 +330,11 @@ class ContactJSON {
 			"}";
 	}
 	
+	/** Generate the JSON for the given contact points
+	 * @param array $rows the contact points
+	 * @return string the JSON
+	 * @no_name_check
+	 */
 	public static function OrganizationContactPoints($rows) {
 		$s = "[";
 		$first = true;
@@ -289,6 +353,7 @@ class ContactJSON {
 	 * @param array $json the JSON structure
 	 * @param string $field_name the name of the foreignkey linked to the entity (for instance "information_session")
 	 * @return array containing two fields => values arrays:<ul><li>[0]: fields => values for Partner table</li><li>[1]: fields => values for ContactPoint table</li></ul>
+	 * @no_name_check
 	 */
 	public static function PartnersAndContactPoints2DB($json, $field_name){
 		$rows_partner = array();

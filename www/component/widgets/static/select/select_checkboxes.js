@@ -1,16 +1,31 @@
 if (typeof require != 'undefined')
 	require("context_menu.js");
 
+/**
+ * A control which looks like a SELECT, but providing the possibility to select several items, using checkboxes
+ * @param {Element} container where to put the select
+ */
 function select_checkboxes(container) {
 	var t = this;
 	if (typeof container == 'string') container = document.getElementById(container);
 	
+	/** List of options */
 	this.options = [];
+	/** {Function} if specified, called when the selection changed */
 	this.onchange = null;
+	/** Maximum width of this control */
 	this._max_width = 0;
 	
+	/** Get the element representing this select
+	 * @returns {Element} the element
+	 */
 	this.getHTMLElement = function() { return this._div; };
 	
+	/** Add an option
+	 * @param {String} value the value
+	 * @param {Element} html the element to display
+	 * @param {Boolean} selected indicates if this option is already selected
+	 */
 	this.add = function(value, html, selected) {
 		var item = document.createElement("DIV");
 		var cb = document.createElement("INPUT"); cb.type = 'checkbox';
@@ -45,12 +60,16 @@ function select_checkboxes(container) {
 		},1);
 	};
 	
+	/** Disable this select */
 	this.disable = function() {
 		this._htmlContainer.style.backgroundColor = '#D0D0D0';
 		this._htmlContainer.style.color = '#606060';
 		this._div.onclick = null;
 	};
 	
+	/** Get the selected values
+	 * @returns {Array} list of values
+	 */
 	this.getSelection = function() {
 		var selection = [];
 		for (var i = 0; i < this.options.length; ++i)
@@ -58,21 +77,27 @@ function select_checkboxes(container) {
 		return selection;
 	};
 	
+	/** Set the selected values
+	 * @param {Array} values the selected values
+	 */
 	this.setSelection = function(values) {
 		for (var i = 0; i < this.options.length; ++i)
 			this.options[i].checkbox.checked = values.contains(this.options[i].value) ? "checked" : "";
 		this._selectionChanged();
 	};
 	
+	/** Select all options */
 	this.selectAll = function() {
 		var values = [];
 		for (var i = 0; i < this.options.length; ++i) values.push(this.options[i].value);
 		this.setSelection(values);
 	};
+	/** Unselect all options */
 	this.unselectAll = function() {
 		this.setSelection([]);
 	};
 	
+	/** Internal function called when the selection changed */
 	this._selectionChanged = function() {
 		var values = [];
 		for (var i = 0; i < this.options.length; ++i)
@@ -89,10 +114,12 @@ function select_checkboxes(container) {
 		if (this.onchange) this.onchange(this);
 	};
 	
+	/** Give the focus to this select */
 	this.focus = function () {
 		this._div.onclick();
 	};
 	
+	/** Initialize this control */
 	this._init = function() {
 		this._div = document.createElement("DIV");
 		this._div.style.display = 'inline-block';
@@ -108,7 +135,7 @@ function select_checkboxes(container) {
 		this._button.style.height = "100%";
 		this._button.style.border = "1px solid #808080";
 		this._button.style.padding = "0px";
-		this._button.innerHTML = "<table style='height:100%;border-collapse:collapse;border-spacing:0'><tr><td valign=middle align=center style='padding:0px'><img src='"+get_script_path("select_checkboxes.js")+"button.gif'/></td></tr></table>";
+		this._button.innerHTML = "<table style='height:100%;border-collapse:collapse;border-spacing:0'><tr><td valign=middle align=center style='padding:0px'><img src='"+getScriptPath("select_checkboxes.js")+"button.gif'/></td></tr></table>";
 		setBackgroundGradient(this._button, "vertical", [{pos:0,color:"#FFFFFF"},{pos:33,color:"#FFFFFF"},{pos:100,color:"#A0A0A0"}]);
 		container.appendChild(this._div);
 		this._div.style.cursor = "pointer";

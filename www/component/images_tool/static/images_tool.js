@@ -61,11 +61,11 @@ function images_tool() {
 	this.addTool = function(id, onready) {
 		for (var i = 0; i < this._tools.length; ++i)
 			if (this._tools[i].id == id) {
-				if (onready) this._tools[i].onready.add_listener(onready);
+				if (onready) this._tools[i].onready.addListener(onready);
 				return;
 			}
 		var tool = {id:id,tool:null,onready:new Custom_Event()};
-		if (onready) tool.onready.add_listener(onready);
+		if (onready) tool.onready.addListener(onready);
 		this._tools.push(tool);
 		require("images_tool_"+id+".js", function() {
 			if (!t) return;
@@ -112,7 +112,7 @@ function images_tool() {
 			var tool = this._tools[i];
 			if (tool.tool) continue;
 			ready_count++;
-			tool.onready.add_listener(ready);
+			tool.onready.addListener(ready);
 		}
 		if (this._use_popup) {
 			if (this._use_popup_on_top)

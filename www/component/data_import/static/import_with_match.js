@@ -12,7 +12,7 @@ import_with_match_provider.prototype = {
 };
 
 function import_with_match_provider_data_list(data_list) {
-	this.addDataChangedListener = function(listener) { data_list.ondataloaded.add_listener(listener); };
+	this.addDataChangedListener = function(listener) { data_list.ondataloaded.addListener(listener); };
 	this.getColumnsCanBeMatched = this.getColumnsCanBeImported = function() {
 		var cols = [];
 		for (var i = 0; i < data_list.show_fields.length; ++i) {
@@ -42,10 +42,10 @@ import_with_match_provider_data_list.prototype.constructor = import_with_match_p
 
 function import_with_match_provider_custom_data_grid(custom_grid) {
 	this.addDataChangedListener = function(listener) {
-		custom_grid.object_added.add_listener(listener);
-		custom_grid.object_removed.add_listener(listener);
-		custom_grid.column_shown.add_listener(listener);
-		custom_grid.column_hidden.add_listener(listener);
+		custom_grid.object_added.addListener(listener);
+		custom_grid.object_removed.addListener(listener);
+		custom_grid.column_shown.addListener(listener);
+		custom_grid.column_hidden.addListener(listener);
 	};
 	this.getColumnsCanBeMatched = this.getColumnsCanBeImported = function() {
 		var cols = [];
@@ -64,17 +64,17 @@ function import_with_match(provider, ev, show_after_grid) {
 	var t=this;
 	
 	this.uploadFile = function(ev) {
-		var locker = lock_screen(null,"Initializing...");
+		var locker = lockScreen(null,"Initializing...");
 		t.excel_frame.src = "/dynamic/data_import/page/excel_upload?button=_upload";
 		require("upload.js", function() {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			var pb = null;
 			var upl = createUploadTempFile(false, true);
 			upl.onstart = function(files, onready) {
-				locker = lock_screen(null,"Uploading file...");
+				locker = lockScreen(null,"Uploading file...");
 				t.import_wizard.removeAllChildren();
 				layout.changed(t.import_wizard);
-				set_lock_screen_content_progress(locker, files[0].size, "Uploading file...", false, function(span,prog) {
+				setLockScreenContentProgress(locker, files[0].size, "Uploading file...", false, function(span,prog) {
 					pb = prog;
 					onready();
 				});
@@ -88,32 +88,32 @@ function import_with_match(provider, ev, show_after_grid) {
 					pb.error();
 					pb = null;
 					upl = null;
-					unlock_screen(locker);
+					unlockScreen(locker);
 					return;
 				}
 				pb.done();
 				pb = null;
 				upl = null;
-				set_lock_screen_content(locker, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading Excel page...");
+				setLockScreenContent(locker, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading Excel page...");
 				// TODO extend expiration time of temporary storage
 				waitFrameContentReady(t.excel_frame, function(win) {
 					return win._page_ready && win.is_excel_upload_button;
 				}, function(win) {
-					set_lock_screen_content(locker, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
+					setLockScreenContent(locker, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
 					t.excel_frame.onload = function() {
 						var check_view = function() {
 							var win = getIFrameWindow(t.excel_frame);
 							if (!win.excel || !win.excel.tabs) {
 								if (win.page_errors && !win.excel_uploaded) {
 									t.excel_frame.onload = null;
-									unlock_screen(locker);
+									unlockScreen(locker);
 									return;
 								}
 								setTimeout(check_view, 100);
 								return;
 							}
 							t._prepareExcel();
-							unlock_screen(locker);
+							unlockScreen(locker);
 							t.excel_frame.onload = null;
 						};
 						var check_loaded = function() {
@@ -123,7 +123,7 @@ function import_with_match(provider, ev, show_after_grid) {
 								return;
 							}
 							if (win.page_errors && !win.excel_uploaded) {
-								unlock_screen(locker);
+								unlockScreen(locker);
 								t.excel_frame.onload = null;
 								return;
 							}
@@ -131,7 +131,7 @@ function import_with_match(provider, ev, show_after_grid) {
 								setTimeout(check_loaded, 100);
 								return;
 							}
-							set_lock_screen_content(locker, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
+							setLockScreenContent(locker, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
 							check_view();
 						};
 						check_loaded();
@@ -145,7 +145,7 @@ function import_with_match(provider, ev, show_after_grid) {
 	
 	this._prepareExcel = function() {
 		var win = getIFrameWindow(t.excel_frame);
-		win.excel.onactivesheetchanged.add_listener(function() {
+		win.excel.onactivesheetchanged.addListener(function() {
 			t._importWizardMatch();
 		});
 		provider.addDataChangedListener(function() {
@@ -185,7 +185,7 @@ function import_with_match(provider, ev, show_after_grid) {
 			span.appendChild(document.createTextNode("How many rows to skip at the beginning (before the data to match/import) ? "));
 			t._header_rows = new field_integer(0,true,{min:0,max:win.excel.getActiveSheet().rows.length});
 			span.appendChild(t._header_rows.getHTMLElement());
-			t._header_rows.onchange.add_listener(function() {
+			t._header_rows.onchange.addListener(function() {
 				if (t._matching.length > 0)
 					t._performMatching();
 			});

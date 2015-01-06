@@ -1,3 +1,3 @@
 <?php 
-PNApplication::$instance->storage->remove_expired();
+PNApplication::$instance->storage->removeExpired();
 ?>

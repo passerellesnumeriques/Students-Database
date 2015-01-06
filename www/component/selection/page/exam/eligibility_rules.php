@@ -50,7 +50,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 		$rules_applicants_ids = SQLQuery::create()->select("Applicant")->whereNotNull("Applicant","exam_passer")->whereValue("Applicant","exam_attendance","Yes")->field("Applicant","people")->executeSingleField();
 		$root_rules = $this->buildRulesTree($rules, null, $all_applicants_info["nb_results_entered"], $rules_applicants_ids);
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_exam_rules");
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_exam_rules");
 		
 		$this->requireJavascript("drawing.js");
 		$script = "";
@@ -61,9 +61,17 @@ class page_exam_eligibility_rules extends SelectionPage {
 			</div>
 			<?php 
 			if ($can_edit) {
-				if (!PNApplication::$instance->selection->canEditExamSubjects()) {
-					$can_edit = false;
-					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot modify rules because some results are already entered for some applicants.</div>";
+				if (PNApplication::$instance->selection->hasExamResults()) {
+					if (@$_GET["force_edit"] <> "true") {
+						$can_edit = false;
+						if (PNApplication::$instance->selection->hasInterviewResults()) {
+							echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot modify rules because some results are already entered for some applicants, and some applicants even have their interview results.</div>";
+						} else {
+							echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot modify rules because some results are already entered for some applicants. <button class='action red' id='button_force_edit' onclick='forceEdit();'>Force editing rules</button></div>";
+						}
+					} else {
+						echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> You are currently editing rules, while you already entered results for some applicants. Every change on the rules will force to re-apply those rules on every applicant having its results, meaning some who are currently passing may be excluded due to failure, and some who are currently excluded may come back on the process if they are passing with the new rules.</div>";
+					}
 				}
 			} 
 			?>
@@ -76,7 +84,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 					<?php foreach ($subjects as $subject) { ?>
 					<div style='display:inline-block;position:relative;vertical-align:top;'>
 						<div style='display:inline-block;text-align:center;margin:10px;vertical-align:top'>
-							<div id='subject_<?php echo $subject["id"];?>' style="border:1px solid rgba(0,0,0,0);border-radius:5px;padding:5px;cursor:pointer" onmouseover="this.style.border='1px solid #F0D080';" onmouseout="this.style.border='1px solid rgba(0,0,0,0)';" onclick="popup_frame('/static/selection/exam/exam_subject_16.png', 'Exam Subject', '/dynamic/selection/page/exam/subject?id=<?php echo $subject["id"];?>&readonly=true');">
+							<div id='subject_<?php echo $subject["id"];?>' style="border:1px solid rgba(0,0,0,0);border-radius:5px;padding:5px;cursor:pointer" onmouseover="this.style.border='1px solid #F0D080';" onmouseout="this.style.border='1px solid rgba(0,0,0,0)';" onclick="popupFrame('/static/selection/exam/exam_subject_16.png', 'Exam Subject', '/dynamic/selection/page/exam/subject?id=<?php echo $subject["id"];?>&readonly=true');">
 								<img src='/static/selection/exam/exam_subject_48.png'/><br/>
 								<span style='font-size:12pt;font-weight:bold'><?php echo toHTML($subject["name"]);?></span><br/>
 								<span style='font-size:9pt;'><?php echo number_format($subject["max_score"],2);?> pt(s)</span><br/>
@@ -125,6 +133,12 @@ class page_exam_eligibility_rules extends SelectionPage {
 		var subjects_section = sectionFromHTML('subjects_section');
 		var rules_section = sectionFromHTML('rules_section');
 
+		var button_force_edit = document.getElementById('button_force_edit');
+		if (button_force_edit) tooltip(button_force_edit, "If you edit the eligibility rules, they will be re-applied, meaning some applicants who are currently marked as passers may be excluded, and some applicants currently excluded may become passers");
+		function forceEdit() {
+			location.href = '?force_edit=true';
+		}
+		
 		<?php echo $script;?>
 
 		var root_rules = <?php echo json_encode($root_rules);?>;
@@ -133,13 +147,13 @@ class page_exam_eligibility_rules extends SelectionPage {
 		var can_edit = <?php echo json_encode($can_edit);?>;
 		
 		function extractSubject(subject_id) {
-			popup_frame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?subject='+subject_id);
+			popupFrame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?subject='+subject_id);
 		}
 		function editExtract(extract_id) {
-			popup_frame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?id='+extract_id);
+			popupFrame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?id='+extract_id);
 		}
 		function removeExtract(extract_id) {
-			lock_screen();
+			lockScreen();
 			service.json("selection","exam/remove_subject_extract",{id:extract_id},function(res) {
 				location.reload();
 			});
@@ -191,14 +205,15 @@ class page_exam_eligibility_rules extends SelectionPage {
 				next.title = "Add a new rule";
 				next.style.position = "absolute";
 				next.style.right = "0px";
-				next.style.top = "19px";
+				next.style.top = "50%";
+				next.style.marginTop = "-5px";
 				setOpacity(next, 0.6);
 				next.style.cursor = "pointer";
 				next.onmouseover = function() { setOpacity(this,1); };
 				next.onmouseout = function() { setOpacity(this,0.6); };
 				node.appendChild(next);
 				next.onclick = function() {
-					popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
 				};
 			}
 			container.appendChild(node);
@@ -236,7 +251,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 					var max = 0;
 					for (var j = 0; j < extracts[i].parts.length; ++j)
 						max += parseFloat(extracts[i].parts[j].max_score);
-					return gardeStr(max);
+					return gradeStr(max);
 				}
 			return 0;
 		}
@@ -273,7 +288,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				node.onmouseout = function() { this.style.border = "1px solid #000000"; this.style.boxShadow = ""; };
 				node.title = "Click to edit this rule";
 				node.onclick = function() {
-					popup_frame(null,"Edit Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?id="+rule.id);
+					popupFrame(null,"Edit Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?id="+rule.id);
 				};
 			}
 			node_container.appendChild(node);
@@ -288,9 +303,9 @@ class page_exam_eligibility_rules extends SelectionPage {
 				remove.onmouseover = function() { setOpacity(this,1); };
 				remove.onmouseout = function() { setOpacity(this,0.6); };
 				remove.onclick = function(ev) {
-					confirm_dialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
+					confirmDialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
 						if (!yes) return;
-						lock_screen();
+						lockScreen();
 						service.json("selection","exam/remove_eligibility_rule",{id:rule.id},function(res){
 							window.location.reload();
 						});
@@ -309,7 +324,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				add_child.onmouseover = function() { setOpacity(this,1); };
 				add_child.onmouseout = function() { setOpacity(this,0.6); };
 				add_child.onclick = function(ev) {
-					popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?parent="+rule.id);
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?parent="+rule.id);
 					stopEventPropagation(ev);
 					return false;
 				};
@@ -414,6 +429,14 @@ class page_exam_eligibility_rules extends SelectionPage {
 		<?php 
 	}
 	
+	/**
+	 * Build the graph/tree of eligibility rules
+	 * @param array $rules lsit of existing rules
+	 * @param integer $parent_id id of the rule from which we want the children
+	 * @param integer $total_applicants total number of applicants
+	 * @param integer $applicants_from_parent applicants still present in the parent
+	 * @return array children rules
+	 */
 	private function buildRulesTree(&$rules, $parent_id, $total_applicants, $applicants_from_parent) {
 		$children = array();
 		foreach ($rules as $rule) {

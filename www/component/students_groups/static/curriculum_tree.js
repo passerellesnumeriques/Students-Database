@@ -101,12 +101,14 @@ CurriculumTreeNode.prototype = {
 	getURLParameters: function () {
 		return {group_type:group_type_id};
 	},
+	/** Refresh the list of groups: remove groups nodes, and re-create them based on the current list */
 	refreshGroups: function() {
 		this.removeGroupsNodes();
 		for (var i = 0; i < this.item.children.length; ++i)
 			this.item.children[i].node.refreshGroups();
 		this.createGroupsNodes();
 	},
+	/** Remove groups nodes */
 	removeGroupsNodes: function() {
 		for (var i = 0; i < this.item.children.length; ++i) {
 			if (this.item.children[i].node instanceof CurriculumTreeNode_Group) {
@@ -115,5 +117,6 @@ CurriculumTreeNode.prototype = {
 			}
 		}
 	},
+	/** Create groups nodes */
 	createGroupsNodes: function() {}
 };

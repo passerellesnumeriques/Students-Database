@@ -60,10 +60,10 @@
 	background-color: white;
 	height: 3px;
 }
-.section:not(.sub):not(.soft)>.header button {
+.section:not(.sub):not(.soft)>.header button:not(.transparent) {
 	background: linear-gradient(to bottom, #ffffff 0%, #d0d0d0 100%);
 }
-.section:not(.sub):not(.soft)>.header button:hover {
+.section:not(.sub):not(.soft)>.header button:hover:not(.transparent) {
 	background: #ffffff;
     box-shadow: 1px 1px 1px rgba(255,255,255,0.3);
 }

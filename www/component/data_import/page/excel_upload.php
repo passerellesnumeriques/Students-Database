@@ -26,7 +26,7 @@ class page_excel_upload extends Page {
 			$path = PNApplication::$instance->storage->get_data_path($_GET["id"]);
 		} else if (!isset($_FILES["excel"]) || $_FILES["excel"]['error'] <> UPLOAD_ERR_OK) {
 			echo "<script type='text/javascript'>window.page_errors=true;</script>";
-			PNApplication::error("Error uploading file (".(isset($_FILES["excel"]) ? PNApplication::$instance->storage->get_upload_error($_FILES["excel"]) : "no file received").").");
+			PNApplication::error("Error uploading file (".(isset($_FILES["excel"]) ? PNApplication::$instance->storage->getUploadError($_FILES["excel"]) : "no file received").").");
 			return;
 		} else
 			$path = $_FILES["excel"]['tmp_name'];

@@ -27,15 +27,19 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 	t.save_button = null;
 	/** {Element} the cancel edit when in editable mode */
 	t.unedit_button = null;
+	/** {Element} the add button when in editable mode with createValue available */
+	t.create_value_button = null;
 	/** {Array} list of locks when in editable mode */
 	t.locks = null;
 	/** indicates if we are currently in editabled mode */
 	t.editable = true;
+	/** Indicates if we should fill the width of the container */
 	t._fill_container = false;
-	
+	/** Ask to fill the width of the container */
 	t.fillContainer = function() {
 		t._fill_container = true;
 		t.field.getHTMLElement().style.width = "100%";
+		t.field.getHTMLElement().style.minHeight = "14px";
 		//t.field.getHTMLElement().style.height = "100%";
 	};
 
@@ -53,6 +57,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		}
 		if (t.save_button) { container.removeChild(t.save_button); t.save_button = null; }
 		if (t.unedit_button) { container.removeChild(t.unedit_button); t.unedit_button = null; }
+		if (t.create_value_button) { container.removeChild(t.create_value_button); t.create_value_button = null; }
 		var config_field = function() {
 			if (t.editable) {
 				t.field.getHTMLElement().title = "Click to edit";
@@ -75,7 +80,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 					t.field = new window[field_classname](data,false,field_arguments);
 					container.appendChild(t.field.getHTMLElement());
 					//t.field.getHTMLElement().style.verticalAlign = "top";
-					t.field.onchange.add_listener(function() {
+					t.field.onchange.addListener(function() {
 						t._changed();
 					});
 					if (t._fill_container)
@@ -124,17 +129,33 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 			t.save_button.src = theme.icons_16.save;
 			t.save_button.style.verticalAlign = 'top';
 			t.save_button.style.cursor = 'pointer';
+			t.save_button.onload = function() { layout.changed(this); };
 			t.save_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.save(); stopEventPropagation(ev); return false; };
 			container.insertBefore(t.save_button, t.field.getHTMLElement().nextSibling);
 			t.unedit_button = document.createElement("IMG");
 			t.unedit_button.src = theme.icons_16.no_edit;
 			t.unedit_button.style.verticalAlign = 'top';
 			t.unedit_button.style.cursor = 'pointer';
+			t.unedit_button.onload = function() { layout.changed(this); };
 			t.unedit_button.onclick = function(ev) { t.field.getHTMLElement().onclick = prev_click; t.unedit(); stopEventPropagation(ev); return false; };
 			container.insertBefore(t.unedit_button, t.save_button.nextSibling);
 			t.unedit_button.ondomremoved(function() {
 				if (t.save_button) t.unedit();
 			});
+			if (typeof t.field.createValue == 'function') {
+				t.create_value_button = document.createElement("BUTTON");
+				t.create_value_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+				t.create_value_button.title = "Create a new one";
+				t.create_value_button.className = "flat small_icon";
+				t.create_value_button.verticalAlign = 'middle';
+				t.create_value_button.onload = function() { layout.changed(this); };
+				t.create_value_button.onclick = function(ev) {
+					t.field.createValue();
+					stopEventPropagation(ev);
+					return false;
+				};
+				container.insertBefore(t.create_value_button, t.unedit_button.nextSibling);
+			}
 			layout.changed(container);
 		});
 	};
@@ -181,7 +202,7 @@ function editable_field(container, field_classname, field_arguments, data, lock_
 		t.unedit();
 	};
 	
-	window.pnapplication.onclose.add_listener(function() {
+	window.pnapplication.onclose.addListener(function() {
 		if (!t) return;
 		if (t.save_button) t.unedit();
 	});

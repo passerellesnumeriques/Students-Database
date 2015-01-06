@@ -7,8 +7,8 @@ $model->addTable("People")
 	->addString("first_name", 100, 1, false, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter(trim($s)); })
 	->addString("middle_name", 100, 1, true, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter(trim($s)); })
 	->addString("last_name", 100, 1, false, false, function($s) { return $s === null ? null : capitalizeWordsFirstLetter(trim($s)); })
-	->addString("khmer_first_name", 100, 1, true)
-	->addString("khmer_last_name", 100, 1, true)
+	->addString("khmer_first_name", 100, 1, true, false, null, "kh")
+	->addString("khmer_last_name", 100, 1, true, false, null, "kh")
 	->addEnum("sex", array("M","F"), false)
 	->addDate("birth", true)
 	->addString("types", 1024, 0, false, false)
@@ -42,7 +42,7 @@ $model->addTable("People")
 		return $s;
 	})
 	->addReadFilter(function(&$q, $table_alias) {
-		if (PNApplication::$instance->user_management->has_right("see_anybody")) return;
+		if (PNApplication::$instance->user_management->hasRight("see_anybody")) return;
 		// allow to read user own info
 		$w = "(`".$table_alias."`.`id`='".PNApplication::$instance->user_management->people_id."')";
 		// restrict by type of people
@@ -64,7 +64,11 @@ $model->addTable("People")
 		$q->where("(".$w.")");
 	})
 	->addWriteFilter(function(&$q, $table_alias) {
-		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return;
+#SELECTION_TRAVEL
+#		$q->where("(`".$table_alias."`.`types` LIKE '%/applicant/%')"); // can only modify applicants
+#		return;
+#END
+		if (PNApplication::$instance->user_management->hasRight("edit_anybody")) return;
 		// restrict by type of people
 		$types = array();
 		require_once("PeopleTypePlugin.inc");
@@ -92,10 +96,10 @@ $model->addTable("People")
 		return $rows;
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks) {
-		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return;
+		if (PNApplication::$instance->user_management->hasRight("edit_anybody")) return;
 		$q->field($table_alias, "types", "people_types");
 	},function($rows) {
-		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return $rows;
+		if (PNApplication::$instance->user_management->hasRight("edit_anybody")) return $rows;
 		$final = array();
 		require_once("PeopleTypePlugin.inc");
 		foreach ($rows as $row) {

@@ -3,6 +3,7 @@
  * @param {DataDisplay} data_display the data
  * @param {String} come_from to column from which we come to access to the table containing the data (to use the right DataDisplayHandler)
  * @param {Number} key the key identifying the row in the table
+ * @param {Number} sub_model sub model or null
  * @param {Object} data the initial value
  * @param {Function} onchange (optional) called when the user is editing the value
  * @constructor
@@ -26,8 +27,8 @@ function editable_datadisplay(container, data_display, come_from, key, sub_model
 					handler(data);
 				});
 			});
-			if (onchange) t.editable_field.field.onchange.add_listener(onchange);
-			t.editable_field.field.register_datamodel_datadisplay(data_display, key);
+			if (onchange) t.editable_field.field.onchange.addListener(onchange);
+			t.editable_field.field.registerDataModelDataDisplay(data_display, key);
 		});
 	}
 	

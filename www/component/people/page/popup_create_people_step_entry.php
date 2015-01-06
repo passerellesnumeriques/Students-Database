@@ -5,6 +5,10 @@ class page_popup_create_people_step_entry extends Page {
 	
 	public function execute() {
 		$input = json_decode($_POST["input"], true);
+
+		$root_table = @$input["root_table"];
+		if ($root_table == null) $root_table = "People";
+		$sub_model = @$input["sub_model"];
 		
 		if (isset($input["multiple"]) && $input["multiple"] == "true") {
 			require_once("component/data_model/page/create_multiple_data.inc");
@@ -14,10 +18,6 @@ class page_popup_create_people_step_entry extends Page {
 			$prefilled_data = $input["prefilled_data"];
 			$precreated = $input["precreated"];
 			
-			$root_table = @$input["root_table"];
-			if ($root_table == null) $root_table = "People";
-			$sub_model = @$input["sub_model"];
-				
 			createMultipleDataPage($this, $root_table, $sub_model, @$input["sub_models"], $fixed_columns, $fixed_data, $prefilled_columns, $prefilled_data, $precreated);
 			?>
 			<script type='text/javascript'>
@@ -30,7 +30,7 @@ class page_popup_create_people_step_entry extends Page {
 			?>];
 			var win = window;
 			win.popup_there = function() {
-				var popup = window.top.get_popup_window_from_frame(win);
+				var popup = window.top.getPopupFromFrame(win);
 				popup.addNextButton(function() {
 					popup.freeze("We are checking if the new people are already in the database...");
 					var peoples = [];
@@ -91,6 +91,8 @@ class page_popup_create_people_step_entry extends Page {
 					}
 					popup.removeButtons();
 					var data = {peoples:peoples};
+					data.root_table = <?php echo json_encode($root_table);?>;
+					data.sub_model = <?php echo json_encode($sub_model);?>;
 					data.sub_models = <?php echo json_encode(@$input["sub_models"]);?>;
 					data.multiple = true;
 					<?php 
@@ -100,7 +102,7 @@ class page_popup_create_people_step_entry extends Page {
 					postData("popup_create_people_step_check", data, window);
 				});
 				popup.addCancelButton(function () {
-					confirm_dialog("Cancel creation ?",function(yes){
+					confirmDialog("Cancel creation ?",function(yes){
 						if (yes) {
 							<?php if (isset($input["oncancel"])) echo "window.frameElement.".$input["oncancel"]."();"; ?>
 							popup.onclose = null;
@@ -142,11 +144,11 @@ class page_popup_create_people_step_entry extends Page {
 				}
 			}
 			
-			$structure_name = createDataPage($this, "People", null, @$input["sub_models"], $values, $prefilled_values);
+			$structure_name = createDataPage($this, $root_table, $sub_model, @$input["sub_models"], $values, $prefilled_values);
 			?>
 			<script type='text/javascript'>
 			var structure = <?php echo $structure_name;?>;
-			var popup = window.parent.get_popup_window_from_frame(window);
+			var popup = window.parent.getPopupFromFrame(window);
 			popup.addNextButton(function() {
 				popup.freeze("We are checking if the new people are already in the database...");
 				var people = [];
@@ -166,6 +168,8 @@ class page_popup_create_people_step_entry extends Page {
 				}
 				popup.removeButtons();
 				var data = {peoples:[people]};
+				data.root_table = <?php echo json_encode($root_table);?>;
+				data.sub_model = <?php echo json_encode($sub_model);?>;
 				data.sub_models = <?php echo json_encode(@$input["sub_models"]);?>;
 				<?php 
 				if (isset($input["ondone"])) echo "data.ondone = ".json_encode($input["ondone"]).";";

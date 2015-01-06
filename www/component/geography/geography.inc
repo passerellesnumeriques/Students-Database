@@ -33,9 +33,11 @@ class geography extends Component {
 	public function getPluginImplementations() {
 		require_once("GeographyAdministrationPlugin.inc");
 		require_once("GeographicAreaSearchPlugin.inc");
+		require_once("GeographicAreaType.inc");
 		return array(
 			new GeographyAdministrationPlugin(),
-			new GeographicAreaSearchPlugin()
+			new GeographicAreaSearchPlugin(),
+			new GeographicAreaType()
 		);
 	}
 	

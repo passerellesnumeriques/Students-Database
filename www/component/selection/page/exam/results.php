@@ -1,7 +1,7 @@
 <?php 
 require_once("component/selection/page/SelectionPage.inc");
 class page_exam_results extends SelectionPage {
-	public function getRequiredRights() { return array(); }
+	public function getRequiredRights() { return array("can_access_selection_data"); }
 	public function executeSelectionPage(){
 		theme::css($this, "section.css");
 		$this->requireJavascript("jquery.min.js");
@@ -27,11 +27,17 @@ class page_exam_results extends SelectionPage {
 <!-- main structure of the exam results page -->
 <div style="width:100%;height:100%;display:flex;flex-direction:column">
 	<div class="page_title" style="flex:none">
-		<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
-		<button class='action red' style='float:right' onclick='resetAll();'>
+		<div style='float:right;font-size:10pt;'>
+		<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
+		<button class='action red' onclick='resetAll();'>
 			Reset all results
-		</button>
+		</button><br/>
 		<?php } ?>
+		<button class='action' onclick='exportResults(this);'>
+			<img src='/static/excel/excel_16.png'/>
+			Export results for analysis
+		</button>
+		</div>
 		<img src='/static/transcripts/transcript_32.png'/>
 		Written Exam Results
 	</div>
@@ -54,6 +60,7 @@ class page_exam_results extends SelectionPage {
 						->join("ExamSession","Applicant",array("event"=>"exam_session"))
 						->field("ExamSession","event","session_id")
 						->join("Applicant","ExamCenterRoom",array("exam_center_room"=>"id"))
+						->whereNotNull("ExamCenterRoom", "id")
 						->expression("SUM(case when `Applicant_$campaign_id`.`exam_attendance` IS NOT NULL then 1 else 0 end)", "nb_attendance_set")
 						->expression("SUM(case when `Applicant_$campaign_id`.`exam_attendance` = 'Yes' then 1 else 0 end)", "nb_attendees")
 						->expression("SUM(case when `Applicant_$campaign_id`.`exam_passer` IS NOT NULL AND `Applicant_$campaign_id`.`exam_attendance` = 'Yes' then 1 else 0 end)", "nb_results_entered")
@@ -128,7 +135,7 @@ class page_exam_results extends SelectionPage {
 			</div>
 		</div>
 	</div>
-	<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
+	<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
 	<div class="page_footer" style="flex:none">
 		<button id="edit_results_button" class="action" disabled="disabled" onclick="editResults();">Edit Results</button>
 		<button id="remove_results_button" class="action red" disabled="disabled" onclick="resetSession();">Reset results</button>
@@ -191,7 +198,7 @@ function initResults(){
 		updateApplicantsList();
 
 		document.getElementById("session_applicants_list").style.display = selected["session_id"] != null ? "" : "none";
-		<?php if (PNApplication::$instance->user_management->has_right("edit_exam_results")) { ?>
+		<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
 		document.getElementById('edit_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
 		document.getElementById('remove_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
 		<?php } ?>
@@ -204,7 +211,7 @@ function updateApplicantsList() {
 		setTimeout(function() { updateApplicantsList(); },10);
 		return;
 	}
-	window.dl.resetFilters();
+	window.dl.resetFilters(true);
 	window.dl.addFilter({category:"Selection",name:"Exam Session",force:true,data:{values:[selected["session_id"]]}});
 	window.dl.addFilter({category:"Selection",name:"Exam Center Room",force:true,data:{values:[selected["room_id"]]}});
 	window.dl.reloadData();
@@ -214,21 +221,23 @@ function editResults() {
 	/* Check if an exam session row is selected */ 
 	if(selected["session_id"] != null) {
 		/* open a new window pop up for results edition */
-		window.top.popup_frame(
+		window.top.popupFrame(
 			"/static/transcripts/grades_16.png",
 			"Exam Session Results",
 			"/dynamic/selection/page/exam/edit_results?session="+selected["session_id"]+"&room="+selected["room_id"],
 			null,
 			95, 95,
-			function(frame, pop) {}
+			function(frame, pop) {
+				pop.onclose = function() { location.reload(); };
+			}
 		);
 	}
 }
 
 function serviceReset(session_id, reset_attendance) {
-	var locker = lock_screen(null,"Removing results of applicants...");
+	var locker = lockScreen(null,"Removing results of applicants...");
 	service.json("selection","exam/reset_results",{session:session_id, attendance:reset_attendance},function(res) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		location.reload();
 	});
 }
@@ -267,6 +276,40 @@ function resetAll() {
 		});
 		p.addCancelButton();
 		p.show();
+	});
+}
+
+function launchExport(all) {
+	var locker = lockScreen();
+	setLockScreenContentProgress(locker, 100, "Generating Excel file...", null, function(span, pb, sub) {
+		service.json("application","create_temp_data",{value:'0'},function(res) {
+			var temp_data_id = res.id;
+			postToDownload("/dynamic/selection/service/exam/export_results",{progress_id:temp_data_id,all:all},true);
+			var refresh = function() {
+				service.json("application","get_temp_data",{id:temp_data_id},function(res) {
+					if (res.value == 'done' || res.value === null || isNaN(parseInt(res.value))) {
+						unlockScreen(locker);
+						return;
+					}
+					pb.setPosition(parseInt(res.value));
+					refresh();
+				});
+			};
+			refresh();
+		});
+	});
+}
+
+function exportResults(button) {
+	require("context_menu.js",function() {
+		var menu = new context_menu();
+		menu.addIconItem(null, "All results, including applicants who cheated or partially attended", function() {
+			launchExport(true);
+		});
+		menu.addIconItem(null, "Only results from applicants who fully attended and didn't cheat", function() {
+			launchExport(false);
+		});
+		menu.showBelowElement(button);
 	});
 }
 

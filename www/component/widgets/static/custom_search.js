@@ -1,17 +1,29 @@
+/**
+ * Custom search displays an input to search, and let the given provider do appropriate actions while the user is typing.
+ * @param {Element} container where to put the input
+ * @param {Number} min_chars minimum number of characters before to do something
+ * @param {String} default_message text displayed when the input is empty (placeholder)
+ * @param {Function} provider function called when the user is typing. It takes 2 parameters: the text, and a function to call when it has been processed and can be called again.
+ */
 function custom_search(container, min_chars, default_message, provider) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 
+	/** Get the text in the input
+	 * @returns {String} the text
+	 */
 	this.getInputValue = function() {
 		return t.input.default_message ? "" : t.input.value;
 	};
 	
+	/** Reset the input */
 	this.reset = function() {
 		this.input.default_message = true;
 		this.input.value = default_message;
 		this.input.className = "informative_text";
 	};
 	
+	/** Creation of the input */
 	this._init = function() {
 		this.input = document.createElement('input');
 		this.input.type = 'text';
@@ -47,7 +59,7 @@ function custom_search(container, min_chars, default_message, provider) {
 		this.input.onkeyup = function(e){
 			t.input.default_message = false;
 			if (t._provider_call) t._provider_recall = true;
-			else t._call_provider();
+			else t._callProvider();
 		};
 		
 		this.input.ondomremoved(function() {
@@ -57,7 +69,8 @@ function custom_search(container, min_chars, default_message, provider) {
 		});
 	};
 	
-	this._call_provider = function() {
+	/** Call the provider */
+	this._callProvider = function() {
 		t._provider_call = true;
 		t._provider_recall = false;
 		setTimeout(function() {
@@ -74,7 +87,7 @@ function custom_search(container, min_chars, default_message, provider) {
 					provider(t.input.value, function() {
 						t._provider_call = false;
 						if (t._provider_recall)
-							t._call_provider();
+							t._callProvider();
 					});
 				} else {
 					t._provider_recall = false;

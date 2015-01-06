@@ -21,7 +21,8 @@ class service_add_organization extends Service {
 		// create Organization
 		$org = array(
 			"name"=>$input["name"],
-			"creator"=>$input["creator"]
+			"creator"=>$input["creator"],
+			"obsolete"=>false
 		);
 		try {
 			$org_id = SQLQuery::create()->insert("Organization", $org);

@@ -8,7 +8,7 @@ class page_user_rights extends Page {
 $user_id = $_GET["user"];
 
 // check the current user has the right to edit
-$can_edit = PNApplication::$instance->user_management->has_right("edit_user_rights");
+$can_edit = PNApplication::$instance->user_management->hasRight("edit_user_rights");
 
 // if the user can edit, we need to lock the data, so another user will not modify the data at the same time
 $locked = null;
@@ -80,14 +80,14 @@ foreach (PNApplication::$instance->components as $component) {
 $rights = SQLQuery::create()->select("UserRights")->field("right")->field("value")->where("user",$user_id)->execute();
 if (!is_array($rights)) $rights = array();
 $user_rights = array();
-foreach ($rights as $r) $user_rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
+foreach ($rights as $r) $user_rights[$r["right"]] = $all_rights[$r["right"]]->parseValue($r["value"]);
 // get rights for each role
 $role_rights = array();
 foreach ($roles as $role) {
 	$rights = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where("role", $role["role"])->execute();
 	if (!is_array($rights)) $rights = array();
 	$a = array();
-	foreach ($rights as $r) $a[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
+	foreach ($rights as $r) $a[$r["right"]] = $all_rights[$r["right"]]->parseValue($r["value"]);
 	array_push($role_rights, $a);
 }
 // compute final for user
@@ -100,9 +100,9 @@ foreach ($role_rights as $rights)
 		if (!isset($final[$name]))
 			$final[$name] = $value;
 		else
-			$final[$name] = $all_rights[$name]->get_higher_value($value, $final[$name]);
+			$final[$name] = $all_rights[$name]->getHigherValue($value, $final[$name]);
 // 3- from implications
-PNApplication::$instance->user_management->compute_rights_implications($final, $all_rights);
+PNApplication::$instance->user_management->computeRightsImplications($final, $all_rights);
 
 /** Generate a field according to the type of the right: for example, a checkbox for a boolean right */
 function generate_right($prefix, $right, $value, $readonly = true, $visible = true) {
@@ -137,7 +137,7 @@ foreach ($categories as $cat_name=>$rights) {
 		generate_right("final_", $r, @$final[$r->name]);
 		echo "</td>";
 		echo "<td>";
-		if (isset($user_rights[$r->name]) || !isset($final[$r->name]) || !$r->is_highest($final[$r->name])) {
+		if (isset($user_rights[$r->name]) || !isset($final[$r->name]) || !$r->isHighest($final[$r->name])) {
 			generate_right("user_", $r, isset($user_rights[$r->name]) ? $user_rights[$r->name] : @$final[$r->name], !$can_edit, isset($user_rights[$r->name]));
 			if ($can_edit) {
 				echo "<img src='".theme::$icons_16["remove"]."' id='remove_".$r->name."' onclick=\"um_rights_remove('".$r->name."',".(isset($user_rights[$r->name])?"true":"false").");\" style='".(isset($user_rights[$r->name]) ? "visibility:visible;position:static" : "visibility:hidden;position:absolute")."'/>";
@@ -218,7 +218,7 @@ function um_rights_remove(name, was_set) {
 	if (!was_set) pnapplication.dataSaved('add_right_'+name); else pnapplication.dataUnsaved('add_right_'+name);
 }
 function um_rights_save() {
-	var locker = lock_screen(null, "<img src='"+theme.icons_16.save+"'/>Saving...");
+	var locker = lockScreen(null, "<img src='"+theme.icons_16.save+"'/>Saving...");
 	var form = document.forms["um_rights"];
 	data = {lock:<?php echo $lock_id;?>,user:<?php echo $user_id;?>};
 	for (var i = 0; i < form.elements.length; ++i) {
@@ -235,7 +235,7 @@ function um_rights_save() {
 		data[right] = value;
 	}
 	service.json("user_management","save_user_rights", data, function(result) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		if (result != null) {
 			pnapplication.cancelDataUnsaved();
 			location.reload();

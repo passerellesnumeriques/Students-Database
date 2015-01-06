@@ -35,12 +35,12 @@ function editable_cell(container, table, column, row_key, field_classname, field
 			});
 		},function(ef) {
 			t.editable_field = ef;
-			if (onchange) ef.field.onchange.add_listener(function(f) { onchange(f.getCurrentData(), t); });
-			ef.field.register_datamodel_cell(table,column,row_key);
+			if (onchange) ef.field.onchange.addListener(function(f) { onchange(f.getCurrentData(), t); });
+			ef.field.registerDataModelCell(table,column,row_key);
 			if (onready) onready(t);
 		});
 	});
-	
+	/** Ask to make the field fill its container width */
 	t.fillContainer = function() {
 		t.editable_field.fillContainer();
 	};

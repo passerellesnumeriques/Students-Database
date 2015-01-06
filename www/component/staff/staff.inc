@@ -42,6 +42,8 @@ class staff extends Component {
 		$q = SQLQuery::create()->select("StaffPosition")->whereNull("StaffPosition", "end");
 		if ($include_people_info)
 			PNApplication::$instance->people->joinPeople($q, "StaffPosition", "people", $include_people_picture_info);
+		else
+			$q->field("StaffPosition","people","people_id");
 		if ($include_department_name) {
 			$q->join("StaffPosition", "PNDepartment", array("department"=>"id"));
 			$q->field("PNDepartment","name","staff_department");

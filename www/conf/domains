@@ -2,7 +2,9 @@
 $conf = array(
 	"PNC" => array(
 		"geography"=>array(
-			"country_code"=>"kh"
+			"country_code"=>"kh",
+			"pn_area_id"=>43283, // Phnom Penh
+			"pn_area_division"=>0
 		),
 		"curriculum"=>array(
 			"preset_periods"=>array(

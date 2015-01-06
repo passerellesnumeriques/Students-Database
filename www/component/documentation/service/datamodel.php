@@ -45,8 +45,8 @@ class service_datamodel extends Service {
 	}
 	
 	private function load_model() {
-		require_once("component/data_model/Model.inc");
-		$model = new DataModel();
+		require_once("component/documentation/DocumentationDataModel.inc");
+		$model = new DocumentationDataModel();
 		$done = array();
 		foreach (PNApplication::$instance->components as $c)
 			$this->load_component_datamodel($c, $done, $model);

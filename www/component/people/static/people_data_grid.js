@@ -49,7 +49,7 @@ people_data_grid.prototype.addPeopleProfileAction = function() {
 		button.title = "Open profile";
 		button.innerHTML = "<img src='/static/people/profile_16.png'/>";
 		button.onclick = function() {
-			window.top.popup_frame('/static/people/profile_16.png', "Profile", "/dynamic/people/page/profile?people="+t.people_getter(obj).id, null, 95, 95);
+			window.top.popupFrame('/static/people/profile_16.png', "Profile", "/dynamic/people/page/profile?people="+t.people_getter(obj).id, null, 95, 95);
 			return false;
 		};
 		button.tabIndex = -1;

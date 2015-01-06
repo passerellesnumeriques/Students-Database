@@ -5,6 +5,12 @@ if (typeof require != 'undefined') {
 	theme.css("grid.css");
 }
 
+/** Represents an action that can be done on a column
+ * @param {String} id identifier of the action
+ * @param {String} icon URL of the icon to display in the header of the column
+ * @param {Function} onclick function called when the user clicks on the icon
+ * @param {String} tooltip explaination of the action
+ */
 function GridColumnAction(id,icon,onclick,tooltip) {
 	this.id = id;
 	this.icon = icon;
@@ -12,30 +18,47 @@ function GridColumnAction(id,icon,onclick,tooltip) {
 	this.tooltip = tooltip;
 }
 
+/**
+ * Column containing sub-columns (in other words, a TH with a colspan)
+ * @param {Element|String} title the title to put in the TH
+ * @param {Array} sub_columns columns under this container, which may be containers or final columns
+ * @param {Object} attached_data if ever you want to attach some info to this column container
+ */
 function GridColumnContainer(title, sub_columns, attached_data) {
+	this.id = generateID();
 	this.title = title;
+	/** {String} If set, this is the title but only with text (no icon...) */
 	this.text_title = null;
 	this.sub_columns = sub_columns;
 	this.attached_data = attached_data;
+	/** The TH */
 	this.th = document.createElement("TH");
 	this.th.className = "container";
 	if (title instanceof Element)
-		this.th.appendChild(title);
-	else
-		this.th.innerHTML = title;
+		this.title_part = title;
+	else {
+		this.title_part = document.createElement("SPAN");
+		this.title_part.innerHTML = title;
+	}
+	this.th.appendChild(this.title_part);
 	this.th.col = this;
 	window.to_cleanup.push(this);
+	/** Clean to avoid memory leaks */
 	this.cleanup = function() {
 		this.th.col = null;
 		this.th = null;
 		this.attached_data = null;
 		this.sub_columns = null;
+		for (var i = 0; i < this.actions.length; ++i) this.actions[i].element = null;
+		this.actions = null;
 	};
+	/** Refresh the number of levels under this container */
 	this._updateLevels = function() {
 		this.nb_columns = 0;
 		this.levels = 2;
 		for (var i = 0; i < this.sub_columns.length; ++i) {
 			this.sub_columns[i].parent_column = this;
+			if (this.sub_columns[i].isHidden()) continue;
 			if (this.sub_columns[i] instanceof GridColumn) {
 				this.nb_columns++;
 				continue;
@@ -44,13 +67,18 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 			this.nb_columns += sub_columns[i].nb_columns;
 		}
 		this.th.colSpan = this.nb_columns;
+		this.th.style.display = this.nb_columns == 0 ? "none" : "";
 		if (this.parent_column) this.parent_column._updateLevels();
 	};
+	/** Called by the grid, to increase the number of rows taken by this container and its sub-columns */
 	this.increaseRowSpan = function() {
 		for (var i = 0; i < this.sub_columns.length; ++i)
 			this.sub_columns[i].increaseRowSpan();
 	};
 	this._updateLevels();
+	/** Get the number of final columns
+	 * @returns {Number} the number
+	 */
 	this.getNbFinalColumns = function() {
 		var nb = 0;
 		for (var i = 0; i < this.sub_columns.length; ++i) {
@@ -61,6 +89,9 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		}
 		return nb;
 	};
+	/** Retrieve all final columns from this container
+	 * @returns {Array} list of final columns
+	 */
 	this.getFinalColumns = function() {
 		var list = [];
 		for (var i = 0; i < this.sub_columns.length; ++i) {
@@ -72,6 +103,10 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		}
 		return list;
 	};
+	/** Add a column, or a container, under this container
+	 * @param {GridColumn|GridColumnContainer} col the column to add
+	 * @param {Number} index if specified, the column will be inserted at the specified index
+	 */
 	this.addSubColumn = function(col, index) {
 		if (typeof index == 'undefined' || index >= this.sub_columns.length)
 			this.sub_columns.push(col);
@@ -80,8 +115,78 @@ function GridColumnContainer(title, sub_columns, attached_data) {
 		this._updateLevels();
 		this.grid._subColumnAdded(this, col);
 	};
+	/** Returns true if this column is currently hidden
+	 * @returns {Boolean} true if hidden
+	 */
+	this.isHidden = function() {
+		for (var i = 0; i < this.sub_columns.length; ++i)
+			if (!this.sub_columns[i].isHidden()) return false;
+		return true;
+	};
+	/** Returns true if this column can be hidden
+	 * @returns {Boolean} true if can be hidden
+	 */
+	this.canBeHidden = function() {
+		for (var i = 0; i < this.sub_columns.length; ++i)
+			if (!this.sub_columns[i].canBeHidden()) return false;
+		return true;
+	};
+	/** List of actions available on this container */
+	this.actions = [];
+	/** Add an action
+	 * @param {GridColumnAction} action the action to add
+	 */
+	this.addAction = function(action) {
+		this.actions.push(action);
+		var t=this;
+		var img = document.createElement("IMG");
+		img.src = action.icon;
+		img.style.verticalAlign = "middle";
+		img.style.cursor = "pointer";
+		if (action.tooltip) tooltip(img, action.tooltip);
+		img.onclick = function(ev) {
+			action.onclick(ev, action, t);
+		};
+		img.style.marginLeft = "1px";
+		img.style.marginRight = "1px";
+		setOpacity(img, 0.65);
+		listenEvent(img, 'mouseover', function() { setOpacity(img, 1); });
+		listenEvent(img, 'mouseout', function() { setOpacity(img, 0.65); });
+		action.element = img;
+		this.th.appendChild(img);
+		img.ondomremoved(function(img) { action.element = null; img = null; action = null; t = null; });
+	};
+	/** Remove the given action
+	 * @param {GridColumnAction} action the action to remove
+	 */
+	this.removeAction = function(action) {
+		this.actions.remove(action);
+		this.th.removeChild(action.element);
+	};
+	/** Get an action by its ID
+	 * @param {String} id the id of the action to search
+	 * @returns {GridColumnAction} the action, or null if not found
+	 */
+	this.getAction = function(id) {
+		for (var i = 0; i < this.actions.length; ++i)
+			if (this.actions[i].id == id) return this.actions[i];
+		return null;
+	};
 }
 
+/**
+ * A column in a grid
+ * @param {String} id identifier
+ * @param {String|Element} title the title to put in the header of the column
+ * @param {Number} width if specified, fixed width of the column
+ * @param {String} align one of 'right','left', or 'center'. If not specified, 'left' will be used.
+ * @param {String} field_type class name of the typed_field
+ * @param {Boolean} editable indicates if we can edit data in this column
+ * @param {Function} onchanged if specified, this function will be registered on every typed_field created for each row
+ * @param {Function} onunchanged if specified, this function will be registered on every typed_field created for each row
+ * @param {Object} field_args configuration of the typed_field
+ * @param {Object} attached_data if ever you want to attach some info to this column
+ */
 function GridColumn(id, title, width, align, field_type, editable, onchanged, onunchanged, field_args, attached_data) {
 	// check parameters
 	if (!id) id = generateID();
@@ -90,25 +195,32 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 	// put values in the object
 	this.id = id;
 	this.title = title;
+	/** {String} If set, this is the title but only with text (no icon...) */
 	this.text_title = null;
 	this.width = width;
 	this.align = align ? align : "left";
 	this.field_type = field_type;
+	/** Indicates if the javascript for the given typed_field has been already loaded */
 	this._loaded = false;
+	/** Event fired when the javascript for the given typed_field has been loaded, meaning we are ready to display data in this column */
 	this.onloaded = new Custom_Event();
 	this.editable = editable;
 	this.onchanged = onchanged;
 	this.onunchanged = onunchanged;
 	this.field_args = field_args;
 	this.attached_data = attached_data;
+	/** Indicates if the column is currently hidden */
+	this.hidden = false;
 	var t=this;
 	require([["typed_field.js",field_type+".js"]], function() { t._loaded = true; t.onloaded.fire(); });
 	// init
+	/** The TH */
 	this.th = document.createElement('TH');
 	this.th.rowSpan = 1;
 	this.th.col = this;
 	this.th.className = "final";
 	window.to_cleanup.push(this);
+	/** Cleaning to avoid memory leaks */
 	this.cleanup = function() {
 		if (!this.th) return;
 		this.th.col = null;
@@ -126,17 +238,22 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		this.span_actions = null;
 		window.to_cleanup.remove(this);
 	};
+	/** The COL element */
 	this.col = document.createElement('COL');
 	if (this.width) {
 		this.col.style.width = this.width+"px";
 		this.col.style.minWidth = this.width+"px";
 	}
+	/** Event fired when the user click on the column */
 	this.onclick = new Custom_Event();
+	/** List of actions available on this column */
 	this.actions = [];
 	
+	/** Called by the grid to increase the number of rows taken by the TH of this column */
 	this.increaseRowSpan = function() {
 		this.th.rowSpan++;
 	};
+	/** Switch all fields of this column between read-only and editable */
 	this.toggleEditable = function() {
 		this.editable = !this.editable;
 		var index = this.grid.columns.indexOf(this);
@@ -148,9 +265,11 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			if (td.field)
 				td.field.setEditable(this.editable);
 		}
-		this._refresh_title();
+		this._refreshTitle();
 	};
-	
+	/** Change the identifier of this column
+	 * @param {String} id the new identifier
+	 */
 	this.setId = function(id) {
 		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
 			var tr = this.grid.table.childNodes[i];
@@ -164,27 +283,43 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		}
 		this.id = id;
 	};
-	
+	/** Add an action
+	 * @param {GridColumnAction} action the action to add
+	 */
 	this.addAction = function(action) {
 		this.actions.push(action);
-		this._refresh_title();
+		this._refreshTitle();
 	};
+	/** Remove an actino
+	 * @param {GridColumnAction} action the action to remove
+	 */
 	this.removeAction = function(action) {
 		this.actions.remove(action);
-		this._refresh_title();
+		this._refreshTitle();
 	};
+	/** Search an action using its ID
+	 * @param {String} id the identifier of the action to search
+	 * @returns {GridColumnAction} the action, or null if not found
+	 */
 	this.getAction = function(id) {
 		for (var i = 0; i < this.actions.length; ++i)
 			if (this.actions[i].id == id) return this.actions[i];
 		return null;
 	};
 
+	/**
+	 * Add sorting capability to this column
+	 * @param {Function} sort_function if specified, function to compare 2 values. If not specified, the function compare from the typed_field will be used, if available.
+	 */
 	this.addSorting = function(sort_function) {
 		if (!sort_function) {
 			var t=this;
 			require([["typed_field.js",field_type+".js"]], function() {
 				if (!window[field_type].prototype.compare) return;
-				t.addSorting(window[field_type].prototype.compare);
+				var f = new window[field_type](null,false,t.field_args);
+				t.addSorting(function(v1,v2) {
+					return f.compare(v1,v2);
+				});
 			});
 			return;
 		}
@@ -192,40 +327,58 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 			this.sort_order = 3; // not sorted
 		this.sort_function = sort_function;
 		var t=this;
-		this.onclick.add_listener(function(){
+		this.onclick.addListener(function(){
 			var new_sort = t.sort_order == 1 ? 2 : 1;
 			t._onsort(new_sort);
 		});
-		this._refresh_title();
+		this._refreshTitle();
 	};
+	/**
+	 * Add sorting capability, but which cannot be handled directly using the values.
+	 * Example: if we use paging, meaning for exemple we display only 100 rows on 500. In this case we cannot sort ourself, because we don't have all the data to do it.
+	 * @param {Function} handler function called when sorting is requested on this column
+	 */
 	this.addExternalSorting = function(handler) {
 		if (!this.sort_order)
 			this.sort_order = 3; // not sorted
 		this.sort_handler = handler;
-		this.onclick.add_listener(function(){
+		this.onclick.addListener(function(){
 			var new_sort = t.sort_order == 1 ? 2 : 1;
 			t._onsort(new_sort);
 		});
 	};
+	/** Ask to sort data using this column
+	 * @param {Boolean} asc true for ascending order, or false for descending order
+	 */
 	this.sort = function(asc) {
+		// cancel sorting of other columns
+		for (var i = 0; i < this.grid.columns.length; ++i) {
+			var col = this.grid.columns[i];
+			if (col == this) continue;
+			if (col.sort_order)
+				col.sort_order = 3;
+		}
 		if (!this.sort_function && !this.sort_handler) {
 			var t=this;
-			setTimeout(function(){t.sort(asc);},25);
+			this.sort_order = asc ? 1 : 2;
+			setTimeout(function(){if (t.sort_order==3) return; t.sort(asc);},25);
 			return;
 		};
 		this._onsort(asc ? 1 : 2);
 	};
-	
+	/**
+	 * Add filtering capability to this column. The function applyFilters on the grid will be used.
+	 */
 	this.addFiltering = function() {
-		var url = get_script_path("grid.js");
+		var url = getScriptPath("grid.js");
 		var t=this;
 		var a = new GridColumnAction('filter', url+"/filter.gif",function(ev,a,col){
 			stopEventPropagation(ev);
 			if (t.filtered) {
 				t.filtered = false;
 				a.icon = url+"/filter.gif";
-				t._refresh_title();
-				t.grid.apply_filters();
+				t._refreshTitle();
+				t.grid.applyFilters();
 			} else {
 				if (t.grid.table.childNodes.length == 0) return false;
 				require("context_menu.js", function() {
@@ -252,7 +405,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 						cb.checked = 'checked';
 						item.appendChild(cb);
 						checkboxes.push(cb);
-						t.grid._create_field(t, t.field_type, false, null, null, t.field_args, item, values[i], function(input) {
+						t.grid._createField(t, t.field_type, false, null, null, t.field_args, item, values[i], function(input) {
 							input.disabled = 'disabled';
 						});
 						item.style.paddingRight = "2px";
@@ -263,7 +416,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 					menu.onclose = function() {
 						t.filtered = true;
 						a.icon = url+"/remove_filter.gif";
-						t._refresh_title();
+						t._refreshTitle();
 						t.filter_values = [];
 						for (var i = 0; i < checkboxes.length; ++i)
 							if (checkboxes[i].checked)
@@ -272,9 +425,9 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 							t.filter_values = null;
 							t.filtered = false;
 							a.icon = url+"/filter.gif";
-							t._refresh_title();
+							t._refreshTitle();
 						}
-						t.grid.apply_filters();
+						t.grid.applyFilters();
 					};
 					menu.showBelowElement(a.element);
 				});
@@ -283,16 +436,98 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		});
 		this.addAction(a);
 	};
-	
-	this._refresh_title = function() {
-		var url = get_script_path("grid.js");
+	/** Return true if this column is hidden
+	 * @returns {Boolean} true if hidden
+	 */
+	this.isHidden = function() { return this.hidden; };
+	/** Return true if this column can be hidden
+	 * @returns {Boolean} true if can be hidden
+	 */
+	this.canBeHidden = function() {
+		var f = new window[field_type](null,true,field_args);
+		return f.canBeNull();
+	};
+	/** Hide/Show this column
+	 * @param {Boolean} hidden true to hide, false to show
+	 */
+	this.hide = function(hidden) {
+		if (hidden == this.hidden) return;
+		this.hidden = hidden;
+		this.th.style.display = hidden ? "none" : "";
+		// hide td for each row
+		var index = this.grid.columns.indexOf(this);
+		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
+			var tr = this.grid.table.childNodes[i];
+			tr.childNodes[index].style.display = hidden ? "none" : "";
+		}
+		// refresh container if needed
+		if (this.parent_column) this.parent_column._updateLevels();
+		layout.changed(this.th.parentNode); // parent node, because if hidden layout will ignore this event
+	};
+	/** Internal function to create the content of the column header with title, actions... */
+	this._refreshTitle = function() {
+		var url = getScriptPath("grid.js");
 		var t=this;
 		this.th.removeAllChildren();
 		this.th.style.textAlign = this.align;
-		if (title instanceof Element)
-			this.th.appendChild(title);
-		else
-			this.th.innerHTML = title;
+		var title_part;
+		if (title instanceof Element) title_part = title;
+		else {
+			title_part = document.createElement("SPAN");
+			title_part.innerHTML = title;
+		}
+		this.th.appendChild(title_part);
+		if (this.grid && this.grid.columns_movable && !this.parent_column) {
+			title_part.style.cursor = "move";
+			title_part.draggable = true;
+			title_part.ondragstart = function(event) {
+				event.dataTransfer.setData('grid_column_'+t.grid.grid_id,t.id);
+				event.dataTransfer.effectAllowed = 'move';
+				return true;
+			};
+			var over = function(event) {
+				if (!event.dataTransfer.types.contains("grid_column_"+t.grid.grid_id)) return false;
+				var x = event.clientX-t.th.offsetLeft;
+				var w = t.th.offsetWidth;
+				if (x < w/2) {
+					// insert before
+					t.th.style.borderLeft = "2px dotted #808080";
+					t.th.style.borderRight = "";
+				} else {
+					// insert after
+					t.th.style.borderRight = "2px dotted #808080";
+					t.th.style.borderLeft = "";
+				}
+				event.dataTransfer.dropEffect = "move";
+				event.preventDefault();
+				return true;
+			};
+			this.th.ondragenter = over;
+			this.th.ondragover = over;
+			this.th.ondragleave = function() {
+				t.th.style.borderLeft = "";
+				t.th.style.borderRight = "";
+			};
+			this.th.ondrop = function(event) {
+				t.th.style.borderLeft = "";
+				t.th.style.borderRight = "";
+				var col_id = event.dataTransfer.getData("grid_column_"+t.grid.grid_id);
+				var x = event.clientX-t.th.offsetLeft;
+				var w = t.th.offsetWidth;
+				if (x < w/2) {
+					t.grid.moveColumnBefore(col_id, t);
+				} else {
+					t.grid.moveColumnAfter(col_id, t);
+				}
+			};
+		} else {
+			title_part.style.cursor = "";
+			title_part.draggable = false;
+			title_part.ondragstart = null;
+			this.th.ondragenter = null;
+			this.th.ondragover = null;
+			this.th.ondragleave = null;
+		}
 		this.span_actions = document.createElement("DIV");
 		this.span_actions.style.whiteSpace = 'nowrap';
 		//if (this.align == "right")
@@ -356,16 +591,21 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		}
 		layout.changed(this.th);
 	};
+	/** Internal function called when sort is requested
+	 * @param {Number} sort_order how to sort
+	 */
 	this._onsort = function(sort_order) {
 		var t=this;
+		t.sort_order = sort_order;
 		this.grid.onallrowsready(function() {
+			if (t.sort_order == 3) return; // has been cancelled
 			// cancel sorting of other columns
 			for (var i = 0; i < t.grid.columns.length; ++i) {
 				var col = t.grid.columns[i];
 				if (col == t) continue;
 				if (col.sort_order) {
 					col.sort_order = 3;
-					col._refresh_title();
+					col._refreshTitle();
 				}
 			}
 			if (t.sort_function) {
@@ -394,17 +634,32 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 				t.sort_handler(sort_order);
 			
 			t.sort_order = sort_order;
-			t._refresh_title();
+			t._refreshTitle();
 		});
 	};
 }
 
+/**
+ * A grid is basically a table, with columns and rows.
+ * Then it add different functionalities around it like moving/showing/hidding columns,
+ * make row clickable, selectable, edit the data inside, make the table scrollable without moving the headers...
+ * Its specificity is for each column, it use a specific typed_field. In other words,
+ * each column is 'typed' and can contain only one type of data (text, integer, date...).
+ * Then, each cell will contain an instance of a typed_field, which will be used to display a data,
+ * to switch between editable and read-only...
+ * Two additional layers are typically used instead of using directly a grid:<ul>
+ * <li>data_list: given a database table, it will be able to retrieve all the columns we can display, to retrieve the data from the backend, to add paging and sorting capabilities...</li>
+ * <li>custom_data_grid: at the opposite of the data_list, which retrieve dynamically what it can display and the data to display from the back-end, the custom_data_grid do not make any call to the back-end, and is used to display a list of data, each of them being represented by a JavaScript object, and being able to extract from this object the data for each column.</li> 
+ * </ul>
+ * @param {Element} element where the table will be created
+ */
 function grid(element) {
 	if (typeof element == 'string') element = document.getElementById(element);
 	var t = this;
 	window.to_cleanup.push(t);
+	/** Cleaning to avoid memory leaks */
 	t.cleanup = function() {
-		unlistenEvent(window,'keyup',t._key_listener);
+		unlistenEvent(window,'keyup',t._keyListener);
 		element = null;
 		t.element = null;
 		t.columns = null;
@@ -415,15 +670,30 @@ function grid(element) {
 		t.colgroup = null;
 		t = null;
 	};
+	/** Generate an ID for this grid */
+	t.grid_id = generateID();
 	t.element = element;
+	/** List of columns */
 	t.columns = [];
+	/** Indicates if each row can be selected or not */
 	t.selectable = false;
+	/** If selectable, indicates if only one row can be selected at a time, or several */
 	t.selectable_unique = false;
-	t.url = get_script_path("grid.js");
+	/** Indicates if the user can move columns */
+	t.columns_movable = false;
+	/** Event fired when a column has been moved by the user */
+	t.on_column_moved = new Custom_Event();
+	/** URL of this JavaScript */
+	t.url = getScriptPath("grid.js");
+	/** {Function} If given, called when selection changed */
 	t.onrowselectionchange = null;
+	/** Event fired when a cell is created */
 	t.oncellcreated = new Custom_Event();
+	/** Event fired when a row receive the focus */
 	t.onrowfocus = new Custom_Event();
-	
+	/** Request to be called when everything is ready and displayed in all rows and columns
+	 * @param {Function} listener the function to be called
+	 */
 	t.onallrowsready = function(listener) {
 		if (t._columns_loading == 0 && t._cells_loading == 0) {
 			listener();
@@ -431,6 +701,10 @@ function grid(element) {
 		}
 		t._loaded_listeners.push(listener);
 	};
+	/** Add a column container
+	 * @param {GridColumnContainer} column_container the container to add
+	 * @param {Number} index if given, the container will be inserted at the given index
+	 */
 	t.addColumnContainer = function(column_container, index) {
 		// if more levels, we add new rows in the header
 		while (t.header_rows.length < column_container.levels)
@@ -439,7 +713,10 @@ function grid(element) {
 		if (column_container.levels < t.header_rows.length)
 			column_container.th.rowSpan = t.header_rows.length-column_container.levels+1;
 		t._addColumnContainer(column_container, 0, index);
+		// handle movable columns
+		if (this.columns_movable) this._columnContainerMovable(column_container);
 	};
+	/** Internal function when an addition row is needed in the headers */
 	t._addHeaderLevel = function() {
 		// new level needed
 		// apppend a TR
@@ -453,38 +730,98 @@ function grid(element) {
 			t.header_rows[0].childNodes[0].rowSpan++;
 		layout.changed(t.thead);
 	};
+	/** Internal function making a column container movable
+	 * @param {GridColumnContainer} container the column container
+	 */
+	t._columnContainerMovable = function(container) {
+		container.title_part.style.cursor = "move";
+		container.title_part.draggable = true;
+		container.title_part.ondragstart = function(event) {
+			event.dataTransfer.setData('grid_column_'+t.grid_id,container.id);
+			event.dataTransfer.effectAllowed = 'move';
+			return true;
+		};
+		var over = function(event) {
+			if (!event.dataTransfer.types.contains("grid_column_"+t.grid_id)) return false;
+			var x = event.clientX-container.th.offsetLeft;
+			var w = container.th.offsetWidth;
+			if (x < w/2) {
+				// insert before
+				container.th.style.borderLeft = "2px dotted #808080";
+				container.th.style.borderRight = "";
+			} else {
+				// insert after
+				container.th.style.borderRight = "2px dotted #808080";
+				container.th.style.borderLeft = "";
+			}
+			event.dataTransfer.dropEffect = "move";
+			event.preventDefault();
+			return true;
+		};
+		var leave = function() {
+			container.th.style.borderLeft = "";
+			container.th.style.borderRight = "";
+		};
+		var drop = function(event) {
+			leave();
+			var col_id = event.dataTransfer.getData("grid_column_"+t.grid_id);
+			var x = event.clientX-container.th.offsetLeft;
+			var w = container.th.offsetWidth;
+			if (x < w/2) {
+				t.moveColumnBefore(col_id, container);
+			} else {
+				t.moveColumnAfter(col_id, container);
+			}
+		};
+		container.th.ondragenter = over;
+		container.th.ondragover = over;
+		container.th.ondragleave = leave;
+		container.th.ondrop = drop;
+	};
+	/** Internal function adding a column container
+	 * @param {GridColumnContainer} container the column container to add
+	 * @param {Number} level the row in the header where it should be inserted
+	 * @param {Number} index the index in the columns where to insert the container
+	 */
 	t._addColumnContainer = function(container, level, index) {
 		container.grid = this;
 		// insert the container TH
 		if (typeof index != 'undefined') {
 			// calculate the real index in the TR for the header
 			var matrix = [];
-			for (var i = 0; i <= level; ++i) matrix.push([]);
+			var matrix2 = [];
+			for (var i = 0; i <= level; ++i) {
+				var row = [];
+				for (var j = 0; j < t.columns.length; ++j) row.push(null);
+				matrix.push(row);
+				row = [];
+				for (var j = 0; j < t.columns.length; ++j) row.push(null);
+				matrix2.push(row);
+			}
 			for (var i = 0; i <= level; ++i) {
 				var tr = t.header_rows[i];
 				for (var j = 0; j < tr.childNodes.length; ++j) {
 					var th = tr.childNodes[j];
 					var cols = th.colSpan ? th.colSpan : 1;
 					var rows = th.rowSpan ? th.rowSpan : 1;
-					matrix[i].push(th);
+					var col;
+					for (col = 0; col < t.columns.length; ++col)
+						if (matrix2[i][col] == null) break;
+					matrix[i][col] = th;
 					for (var k = 0; k < rows && i+k<=level; k++)
-						for (var l = 0; l < cols; l++)
-							if (k!=0||l!=0) matrix[i+k].push(null);
+						for (var l = 0; l < cols; ++l)
+							matrix2[i+k][col+l] = th;
 				}
 			}
 			var real_index = index + (t.selectable ? 1 : 0);
-			if (real_index >= matrix[level].length)
+			var tr_index = 0;
+			var i;
+			for (i = real_index-1; i >= 0; i--)
+				if (matrix[level][i] != null) tr_index++;
+			if (tr_index < t.header_rows[level].childNodes.length)
+				t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[tr_index]);
+			else
 				t.header_rows[level].appendChild(container.th);
-			else {
-				var tr_index = 0;
-				var i;
-				for (i = index; i > 0; i--)
-					if (matrix[level][i] != null) tr_index++;
-				if (tr_index < t.header_rows[level].childNodes.length)
-					t.header_rows[level].insertBefore(container.th, t.header_rows[level].childNodes[tr_index]);
-				else
-					t.header_rows[level].appendChild(container.th);
-			}
 		} else
 			t.header_rows[level].appendChild(container.th);
 		// continue insertion
@@ -500,6 +837,11 @@ function grid(element) {
 		layout.changed(this.table);
 		return index;
 	};
+	/** Internal function to add a final column
+	 * @param {GridColumn} col the column to add
+	 * @param {Number} level the row in the headers where the column header should be inserted
+	 * @param {Number} index at which index in the columns to insert this new column
+	 */
 	t._addFinalColumn = function(col, level, index) {
 		if (typeof index != 'undefined') {
 			if (index < 0) index = undefined;
@@ -511,7 +853,7 @@ function grid(element) {
 		if (typeof index == 'undefined') {
 			t.columns.push(col);
 			t.colgroup.appendChild(col.col);
-			col.th.rowSpan = t.header_rows.length-level+1;
+			col.th.rowSpan = t.header_rows.length-level;
 			t.header_rows[level].appendChild(col.th);
 		} else {
 			t.columns.splice(index,0,col);
@@ -539,10 +881,12 @@ function grid(element) {
 				}
 			}
 		}
-		col._refresh_title();
+		if (t._columns_movable)
+			col._makeMoveable();
+		col._refreshTitle();
 		if (!col._loaded) {
 			t._columns_loading++;
-			col.onloaded.add_listener(function() { t._columns_loading--; t._check_loaded(); });
+			col.onloaded.addListener(function() { t._columns_loading--; t._checkLoaded(); });
 		}
 		// add cells
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -558,12 +902,16 @@ function grid(element) {
 				else
 					tr.insertBefore(td, tr.childNodes[col_index]);
 				var data = null;
+				var original_data = undefined;
 				if (tr.row_data)
 				for (var k = 0; k < tr.row_data.length; ++k)
-					if (col.id == tr.row_data[k].col_id) { data = tr.row_data[k].data; break; }
-				t._create_cell(col, data, td, function(field){
-					field.onfocus.add_listener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
-				});
+					if (col.id == tr.row_data[k].col_id) { data = tr.row_data[k].data; if (typeof tr.row_data[k].original_data != 'undefined') original_data = tr.row_data[k].original_data; break; }
+				if (data) td.data_id = data.data_id;
+				td.style.textAlign = col.align;
+				t._createCell(col, data, td, function(field, original_data){
+					if (typeof original_data != 'undefined') field.originalData = original_data;
+					field.onfocus.addListener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
+				}, original_data);
 				td.ondomremoved(function(td) { td.field = null; });
 			}
 		}
@@ -586,6 +934,10 @@ function grid(element) {
 		layout.changed(this.thead);
 		layout.changed(this.table);
 	};
+	/** Internal function called when a sub column has been added into a container
+	 * @param {GridColumnContainer} container the container
+	 * @param {GridColumn|GridColumnContainer} col what has been added in the container
+	 */
 	t._subColumnAdded = function(container, col) {
 		// get the top level
 		var top_container = container;
@@ -621,25 +973,47 @@ function grid(element) {
 			t._addColumnContainer(col, level+1, first_index+list.indexOf(sub_list[0]));
 		}
 	};
-	
+	/** Add a column
+	 * @param {GridColumn} column the column to add
+	 * @param {Number} index if given, the column will be inserted at the given index
+	 */
 	t.addColumn = function(column, index) {
 		column.th.rowSpan = t.header_rows.length;
 		t._addFinalColumn(column,0, index);
 	};
+	/** Returns the number of final columns
+	 * @returns {Number} number of columns
+	 */
 	t.getNbColumns = function() { return t.columns.length; };
+	/** Get a column by its index
+	 * @param {Number} index index
+	 * @returns {GridColumn} the column
+	 */
 	t.getColumn = function(index) { return t.columns[index]; };
+	/** Get a column by its id
+	 * @param {String} id identifier
+	 * @returns {GridColumn} the column
+	 */
 	t.getColumnById = function(id) {
 		for (var i = 0; i < t.columns.length; ++i)
 			if (t.columns[i].id == id)
 				return t.columns[i];
 		return null;
 	};
+	/** Get a column by its attached data
+	 * @param {Object} data attached data to search
+	 * @returns {GridColumn} the column
+	 */
 	t.getColumnByAttachedData = function(data) {
 		for (var i = 0; i < t.columns.length; ++i)
 			if (t.columns[i].attached_data == data)
 				return t.columns[i];
 		return null;
 	};
+	/** Get a column container by its attached data
+	 * @param {Object} data attached data to search
+	 * @returns {GridColumnContainer} the column container
+	 */
 	t.getColumnContainerByAttachedData = function(data) {
 		for (var i = 0; i < t.columns.length; ++i)
 			if (t.columns[i].parent_column) {
@@ -648,19 +1022,59 @@ function grid(element) {
 			}
 		return null;
 	};
+	/** Internal function to handle recursivity
+	 * @param {GridColumnContainer} container parent container
+	 * @param {Object} data attached data to search
+	 * @returns {GridColumnContainer} the column container
+	 */
 	t._getColumnContainerByAttachedData = function(container, data) {
 		if (container.attached_data == data) return container;
 		if (!container.parent_column) return null;
 		return t._getColumnContainerByAttachedData(container.parent_column, data);
 	};
+	/** Get index of a column
+	 * @param {GridColumn} col the column
+	 * @returns {Number} the index
+	 */
 	t.getColumnIndex = function(col) { return t.columns.indexOf(col); };
+	/** Get index of a column
+	 * @param {String} col_id identifier of the column to search
+	 * @returns {Number} the index
+	 */
 	t.getColumnIndexById = function(col_id) {
 		for (var i = 0; i < t.columns.length; ++i)
 			if (t.columns[i].id == col_id)
 				return i;
 		return -1;
 	};
-	t.removeColumn = function(index) {
+	/** Get column container by its id
+	 * @param {String} id identifier of the container to search
+	 * @returns {GridColumnContainer} the container
+	 */
+	t.getColumnContainerById = function(id) {
+		for (var i = 0; i < t.columns.length; ++i)
+			if (t.columns[i].parent_column) {
+				var c = t._getColumnContainerById(t.columns[i].parent_column, id);
+				if (c) return c;
+			}
+		return null;
+	};
+	/** Internal function to handle recursivity
+	 * @param {GridColumnContainer} container parent
+	 * @param {String} id identifier of the container to search
+	 * @returns {GridColumnContainer} the container
+	 */
+	t._getColumnContainerById = function(container, id) {
+		if (container.id == id) return container;
+		if (!container.parent_column) return null;
+		return t._getColumnContainerById(container.parent_column, id);
+	};
+	/** Remove a column
+	 * @param {Number} index index of the column to remove
+	 * @param {Boolean} keep_data if false, data corresponding to the removed column will be removed as well
+	 * @param {Boolean} keep_sub_column if true, sub columns won't be removed
+	 */
+	t.removeColumn = function(index, keep_data, keep_sub_column) {
 		var col = t.columns[index];
 		t.columns.splice(index,1);
 		t.colgroup.removeChild(col.col);
@@ -671,7 +1085,7 @@ function grid(element) {
 				row.childNodes[0].colSpan--;
 			else
 				row.removeChild(row.childNodes[td_index]);
-			if (row.row_data)
+			if (row.row_data && !keep_data)
 				for (var j = 0; j < row.row_data.length; ++j)
 					if (row.row_data[j].col_id == col.id) {
 						row.row_data.splice(j,1);
@@ -691,7 +1105,7 @@ function grid(element) {
 			var p = col.parent_column;
 			var c = col;
 			while (p) {
-				p.sub_columns.remove(c);
+				if (!keep_sub_column) p.sub_columns.remove(c);
 				c.th.parentNode.removeChild(c.th);
 				if (p.sub_columns.length > 0) {
 					// still something
@@ -730,12 +1144,17 @@ function grid(element) {
 				c = p;
 			}
 		}
-		t.apply_filters();
+		if (!keep_data)
+			t.applyFilters();
 		layout.changed(this.thead);
 		layout.changed(this.table);
 	};
+	/**
+	 * Refresh a column, by re-building all cells corresponding to it. May be used if the typed field of a column changed
+	 * @param {GridColumn} column the column to refresh
+	 */
 	t.rebuildColumn = function(column) {
-		column._refresh_title();
+		column._refreshTitle();
 		var index = t.columns.indexOf(column);
 		if (t.selectable) index++;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -743,15 +1162,95 @@ function grid(element) {
 			var td = row.childNodes[index];
 			if (td.field) {
 				var data = td.field.getCurrentData();
+				var original = td.field.originalData;
 				td.removeAllChildren();
-				t._create_cell(column, data, td, function(field){
-					field.onfocus.add_listener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
+				t._createCell(column, data, td, function(field){
+					field.originalData = original;
+					field.onfocus.addListener(function() { t.onrowfocus.fire(field.getHTMLElement().parentNode.parentNode); });
 				});
 				td.style.textAlign = column.align;
 			}
 		}
 	};
+	/**
+	 * Move a column
+	 * @param {String} col_id identifier of the column to move
+	 * @param {GridColumn} before_col the column before which to move the column
+	 */
+	t.moveColumnBefore = function(col_id, before_col) {
+		if (before_col.id == col_id) return;
+		if (before_col instanceof GridColumnContainer)
+			before_col = before_col.getFinalColumns()[0];
+		t.moveColumn(col_id, t.getColumnIndex(before_col));
+	};
+	/**
+	 * Move a column
+	 * @param {String} col_id identifier of the column to move
+	 * @param {GridColumn} after_col the column after which to move the column
+	 */
+	t.moveColumnAfter = function(col_id, after_col) {
+		if (after_col.id == col_id) return;
+		if (after_col instanceof GridColumnContainer) {
+			var finals = after_col.getFinalColumns();
+			after_col = finals[finals.length-1];
+		}
+		t.moveColumn(col_id, t.getColumnIndex(after_col)+1);
+	};
+	/**
+	 * Move a column
+	 * @param {String} col_id identifier of the column to move
+	 * @param {Number} index position where to move it
+	 */
+	t.moveColumn = function(col_id, index) {
+		var prev_index = t.getColumnIndexById(col_id);
+		if (prev_index >= 0) {
+			// this is a final column
+			var col = t.getColumnById(col_id);
+			t.removeColumn(prev_index, true);
+			t.addColumn(col, index-(index > prev_index ? 1 : 0));
+			t.on_column_moved.fire({column:col,index:index});
+			return;
+		}
+		// this is a container
+		var container = t.getColumnContainerById(col_id);
+		// keep hierarchy
+		var getHierarchy = function(container) {
+			var res = [];
+			for (var i = 0; i < container.sub_columns.length; ++i)
+				if (container.sub_columns[i] instanceof GridColumnContainer)
+					res.push({container:container.sub_columns[i],hierarchy:getHierarchy(container.sub_columns[i])});
+				else
+					res.push(container.sub_columns[i]);
+			return res;
+		};
+		var hierarchy = getHierarchy(container);
+		// remove columns
+		var finals = container.getFinalColumns();
+		prev_index = t.getColumnIndex(finals[0]);
+		for (var i = 0; i < finals.length; ++i)
+			t.removeColumn(prev_index, true);
+		// put back hierarchy
+		var putBack = function(container, hier) {
+			for (var i = 0; i < hier.length; ++i)
+				if (hier[i] instanceof GridColumn)
+					container.sub_columns.push(hier[i]);
+				else {
+					putBack(hier[i].container, hier[i].hierarchy);
+					container.sub_columns.push(hier[i].container);
+				}
+			container._updateLevels();
+		};
+		putBack(container, hierarchy);
+		// add the container at its new position
+		t.addColumnContainer(container, index-(index > prev_index ? finals.length : 0));
+		t.on_column_moved.fire({column:container,index:index});
+	};
 	
+	/**
+	 * Make rows selectable or not
+	 * @param {Boolean} selectable true to be able to select row(s)
+	 * @param {Boolean} unique if true, only one row can be selected (using radio buttons)
+	 */
 	t.setSelectable = function(selectable, unique) {
 		if (!unique) unique = false;
 		if (t.selectable == selectable && t.selectable_unique == unique) return;
@@ -775,8 +1274,9 @@ function grid(element) {
 				th.appendChild(cb);
 			}
 			var col = document.createElement('COL');
-			//col.width = 20;
+			col.width = 20;
 			col.style.width ='20px';
+			col.style.maxWidth ='20px';
 			if (t.header_rows[0].childNodes.length == 0) {
 				t.header_rows[0].appendChild(th);
 				t.colgroup.appendChild(col);
@@ -790,6 +1290,9 @@ function grid(element) {
 		}
 		layout.changed(this.table);
 	};
+	/**
+	 * Select all rows
+	 */
 	t.selectAll = function() {
 		if (!t.selectable) return;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -802,26 +1305,40 @@ function grid(element) {
 			cb.checked = 'checked';
 			cb.onchange();
 		}
-		t._selection_changed();
+		t._selectionChanged();
 	};
+	/**
+	 * Unselect any selected row
+	 */
 	t.unselectAll = function() {
 		if (!t.selectable) return;
+		var changed = false;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var tr = t.table.childNodes[i];
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
 			if (cb.disabled) continue; //do not unselect if the checkbox is disabled
-			cb.checked = '';
-			if (cb.onchange) cb.onchange();
+			if (cb.checked) {
+				changed = true;
+				cb.checked = '';
+				if (cb.onchange) cb.onchange();
+			}
 		}
-		t._selection_changed();
+		if (changed)
+			t._selectionChanged();
 	};
-	t._selection_changed = function() {
+	/** Internal function called when selection changed */
+	t._selectionChanged = function() {
 		if (t.onselect) {
 			t.onselect(t.getSelectionByIndexes(), t.getSelectionByRowId());
 		}
 	};
+	/** {Function} if specified, called when the selection changed */
 	t.onselect = null;
+	/**
+	 * Get indexes of selected rows
+	 * @returns {Array} list of indexes
+	 */
 	t.getSelectionByIndexes = function() {
 		var selection = [];
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -833,6 +1350,10 @@ function grid(element) {
 		}
 		return selection;
 	};
+	/**
+	 * Get id of selected rows
+	 * @returns {Array} list of id
+	 */
 	t.getSelectionByRowId = function() {
 		var selection = [];
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -844,6 +1365,11 @@ function grid(element) {
 		}
 		return selection;
 	};
+	/**
+	 * Check if a row is selected
+	 * @param {Number} index index of the row to check
+	 * @returns {Boolean} true if  the row is selected
+	 */
 	t.isSelected = function(index) {
 		if (!t.selectable) return false;
 		var tr = t.table.childNodes[index];
@@ -851,6 +1377,11 @@ function grid(element) {
 		var cb = td.childNodes[0];
 		return cb.checked;
 	};
+	/**
+	 * Select/Unselect a row
+	 * @param {Number} index index of the row
+	 * @param {Boolean} selected true to select, false to unselect
+	 */
 	t.selectByIndex = function(index, selected) {
 		if (!t.selectable) return;
 		if (t.selectable_unique && selected) {
@@ -858,11 +1389,11 @@ function grid(element) {
 				var tr = t.table.childNodes[i];
 				var td = tr.childNodes[0];
 				var cb = td.childNodes[0];
-				if ((tr.className == 'selected') != (i==index)) {
+				if (hasClassName(tr, 'selected') != (i==index)) {
 					if (t.onrowselectionchange)
 						t.onrowselectionchange(tr.row_id, i==index);
 					cb.checked = i==index ? 'checked' : '';
-					tr.className = i==index ? "selected" : "";
+					if (i == index) addClassName(tr, "selected"); else removeClassName(tr, "selected");
 				}
 			}
 		} else {
@@ -871,12 +1402,17 @@ function grid(element) {
 			var cb = td.childNodes[0];
 			if (cb.checked != selected) {
 				cb.checked = selected ? 'checked' : '';
-				tr.className = selected ? "selected" : "";
+				if (selected) addClassName(tr, "selected"); else removeClassName(tr, "selected");
 				if (t.onrowselectionchange)
 					t.onrowselectionchange(tr.row_id, selected);
 			}
 		}
 	};
+	/**
+	 * Disable/Enable a row
+	 * @param {Number} index index of the row
+	 * @param {Boolean} disabled true to disable, false to enable
+	 */
 	t.disableByIndex = function(index, disabled){
 		if(!t.selectable) return;
 		var tr = t.table.childNodes[index];
@@ -884,6 +1420,11 @@ function grid(element) {
 		var cb = td.childNodes[0];
 		cb.disabled = disabled;
 	};
+	/**
+	 * Select/Unselect a row
+	 * @param {String} row_id identifier of the row
+	 * @param {Boolean} selected true to select, false to unselect
+	 */
 	t.selectByRowId = function(row_id, selected) {
 		if (!t.selectable) return;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -892,16 +1433,16 @@ function grid(element) {
 			var td = tr.childNodes[0];
 			var cb = td.childNodes[0];
 			if (t.selectable_unique && tr.row_id != row_id) {
-				if (tr.className == 'selected') {
+				if (hasClassName(tr,'selected')) {
 					cb.checked = "";
-					tr.className = "";
+					removeClassName(tr, "selected");
 					if (t.onrowselectionchange)
 						t.onrowselectionchange(tr.row_id, false);
 				}
 			} else {
 				if (cb.checked != selected) {
 					cb.checked = selected ? 'checked' : '';
-					tr.className = selected ? "selected" : "";
+					if (selected) addClassName(tr, "selected"); else removeClassName(tr, "selected");
 					if (t.onrowselectionchange)
 						t.onrowselectionchange(tr.row_id, selected);
 				}
@@ -909,6 +1450,9 @@ function grid(element) {
 		}
 	};
 	
+	/**
+	 * Make the content of the grid scrollable, but keep the header fixed at the top
+	 */
 	t.makeScrollable = function() {
 		var thead_knowledge = [];
 		var update = function() {
@@ -952,7 +1496,14 @@ function grid(element) {
 			// fix the size of the container
 			var container_width = getWidth(t.element.parentNode, knowledge);
 			var total_width = getWidth(t.element, knowledge);
+			var diff_width = 0;
+			if (t.columns.length > 0) {
+				var s = getStyleSizes(t.columns[t.columns.length-1].th, []);
+				if (s.borderRightWidth > 0)
+					diff_width += s.borderRightWidth; // adjust with last border
+			}
 			setWidth(t.element, total_width-1, knowledge);
+			t.grid_element.style.paddingRight = (diff_width)+"px";
 			if (t.element.parentNode.clientWidth != container_width) {
 				// the container is expanding with us ! typically this may be done by the flex box model
 				// let's fix temporarly the container !
@@ -964,15 +1515,11 @@ function grid(element) {
 				t.element.parentNode.style.minWidth = t.element.parentNode.style.width;
 				t.element.parentNode.style.maxWidth = t.element.parentNode.style.width;
 			}
-			// take header info
-			var head_height = t.thead.offsetHeight;
-			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));
-			var head_width = t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1);
 			// take the width of each th
 			if (t.selectable)
 				t.thead.childNodes[0].childNodes[0]._width = getWidth(t.thead.childNodes[0].childNodes[0], knowledge);
 			for (var i = 0; i < t.columns.length; ++i)
-				t.columns[i].th._width = getWidth(t.columns[i].th, knowledge);
+				t.columns[i].th._width = t.columns[i].isHidden() ? 0 : getWidth(t.columns[i].th, knowledge);
 			//setWidth(t.element, total_width, knowledge);
 			// take the width of each column
 			var widths = [];
@@ -1008,6 +1555,7 @@ function grid(element) {
 				t.colgroup.childNodes[i].style.minWidth = widths[i]+"px";
 				var td = document.createElement("TD");
 				td.style.padding = "0px";
+				if (widths[i] == 0) td.style.display = "none";
 				var div = document.createElement("DIV");
 				td.appendChild(div);
 				tr.appendChild(td);
@@ -1018,16 +1566,20 @@ function grid(element) {
 			}
 			tr.style.height = "0px";
 			// put the thead as relative
-			t.element.style.paddingTop = head_height+"px";
 			t.element.style.position = "relative";
 			t.grid_element.style.overflow = "auto";
 			if (t.element.style.height) t.grid_element.style.maxHeight = t.element.style.height;
+			t.thead.style.overflow = "hidden";
 			t.thead.style.position = "absolute";
+			var head_scroll = (-t.grid_element.scrollLeft+(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1));
+			var head_width = t.grid_element.clientWidth+t.grid_element.scrollLeft-(t.grid_element.scrollWidth > t.grid_element.clientWidth ? 0 : 1);
 			t.thead.style.top = "0px";
 			t.thead.style.left = head_scroll+"px";
-			t.thead.style.overflow = "hidden";
-			setWidth(t.thead, head_width, thead_knowledge); 
+			setWidth(t.thead, head_width, thead_knowledge);
+			var head_height = t.thead.offsetHeight;
+			t.element.style.paddingTop = (head_height-1)+"px";
 			//t.table.parentNode.style.marginRight = "1px";
+			setWidth(t.element, total_width, knowledge);
 			layout.changed(t.element);
 		};
 		t.element.style.display = "flex";
@@ -1059,8 +1611,8 @@ function grid(element) {
 
 	/**
 	 * Change the data in the grid.
-	 * data is an array, each element representing an entry/row.
-	 * Each entry is an object {row_id:xxx,row_data:[]} where the row_id can be used later to identify the row or to attach data to the row. 
+	 * @param {Array} data each element represent an entry/row.
+	 * Each entry is an object {row_id:xxx,row_data:[]} where the row_id can be used later to identify the row or to attach data to the row.
 	 * Each row_data element is an object {col_id:xxx,data_id:yyy,data:zzz} where the data is given to the typed field, col_id identifies the column and data_id can be used later to identify the data or to attach information to the data
 	 */
 	t.setData = function(data) {
@@ -1069,11 +1621,18 @@ function grid(element) {
 		while (t.table.childNodes.length > 0) t.table.removeChild(t.table.childNodes[0]);
 		// create rows
 		for (var i = 0; i < data.length; ++i) {
-			t.addRow(data[i].row_id, data[i].row_data);
+			t.addRow(data[i].row_id, data[i].row_data, data[i].classname);
 		}
 	};
-	t.addRow = function(row_id, row_data) {
+	/**
+	 * Add a row
+	 * @param {String} row_id identifier of the row
+	 * @param {Object} row_data data of the row: {col_id:xxx,data_id:yyy,data:zzz}
+	 * @param {String} classname if specified, gives a CSS class to the TR
+	 */
+	t.addRow = function(row_id, row_data, classname) {
 		var tr = document.createElement("TR");
+		if (classname) tr.className = classname;
 		var click_listener = function() { t.onrowfocus.fire(tr); };
 		listenEvent(tr, 'click', click_listener);
 		tr.row_id = row_id;
@@ -1096,8 +1655,8 @@ function grid(element) {
 				addClassName(td, "last_in_container");
 			td.style.textAlign = t.columns[j].align;
 			if (typeof data.data != 'undefined')
-				t._create_cell(t.columns[j], data.data, td, function(field,data){
-					field.onfocus.add_listener(function() { t.onrowfocus.fire(tr); });
+				t._createCell(t.columns[j], data.data, td, function(field,data){
+					field.onfocus.addListener(function() { t.onrowfocus.fire(tr); });
 					if (typeof data.data_display != 'undefined' && data.data_display)
 						field.setDataDisplay(data.data_display, data.data_id);
 				},data);
@@ -1137,6 +1696,9 @@ function grid(element) {
 		});
 		return tr;
 	};
+	/** Internal function to create the cell containing a checkbox or radio button
+	 * @returns {Element} the TD
+	 */
 	t._createSelectionTD = function() {
 		var td = document.createElement("TD");
 		var cb = document.createElement("INPUT");
@@ -1151,18 +1713,18 @@ function grid(element) {
 		cb.style.verticalAlign = "middle";
 		cb.onchange = function(ev) {
 			var tr = this.parentNode.parentNode;
-			tr.className = this.checked ? "selected" : "";
+			if (this.checked) addClassName(tr, "selected"); else removeClassName(tr, "selected");
 			if (t.onrowselectionchange)
 				t.onrowselectionchange(tr.row_id, this.checked);
 			if (t.selectable_unique && this.checked) {
 				for (var i = 0; i < t.table.childNodes.length; ++i)
-					if (tr != t.table.childNodes[i] && t.table.childNodes[i].className == "selected") {
-						t.table.childNodes[i].className = "";
+					if (tr != t.table.childNodes[i] && hasClassName(t.table.childNodes[i], "selected")) {
+						removeClassName(t.table.childNodes[i], "selected");
 						if (t.onrowselectionchange)
 							t.onrowselectionchange(t.table.childNodes[i].row_id, false);
 					}
 			}
-			t._selection_changed();
+			t._selectionChanged();
 		};
 		td.onclick = function(ev) {
 			stopEventPropagation(ev, true);
@@ -1171,6 +1733,11 @@ function grid(element) {
 		return td;
 	};
 	
+	/**
+	 * A a row containing only a title, instead of cells
+	 * @param {String} title the title
+	 * @param {Object} style CSS styles to add to the TD containing the title
+	 */
 	t.addTitleRow = function(title, style) {
 		var tr = document.createElement("TR");
 		tr.title_row = true;
@@ -1190,56 +1757,100 @@ function grid(element) {
 		return tr;
 	};
 	
+	/** Get number of rows
+	 * @returns {Number} number of rows
+	 */
 	t.getNbRows = function() {
 		return t.table.childNodes.length;
 	};
+	/** Get a row
+	 * @param {Number} index index of the row
+	 * @returns {Element} the TR
+	 */
 	t.getRow = function(index) {
 		return t.table.childNodes[index];
 	};
+	/** Get the index of a row
+	 * @param {Element} row the TR
+	 * @returns {Number} its index
+	 */
 	t.getRowIndex = function(row) {
 		for (var i = 0; i < t.table.childNodes.length; ++i)
 			if (t.table.childNodes[i] == row) return i;
 		return -1;
 	};
+	/** Get a row
+	 * @param {String} id identifier of the row
+	 * @returns {Element} the TR
+	 */
 	t.getRowFromID = function(id) {
 		for (var i = 0; i < t.table.childNodes.length; ++i)
 			if (t.table.childNodes[i].row_id == id) return t.table.childNodes[i];
 		return null;
 	};
+	/** Get row index
+	 * @param {String} row_id identifier of the row to search
+	 * @returns {Number} its index
+	 */
 	t.getRowIndexById = function(row_id) {
 		for (var i = 0; i < t.table.childNodes.length; ++i)
 			if (t.table.childNodes[i].row_id == row_id) return i;
 		return -1;
 	};
+	/** Get identifier of a row
+	 * @param {Element} row the TR
+	 * @returns {String} its id
+	 */
 	t.getRowID = function(row) {
 		if (row == null) return null;
 		if (typeof row.row_id == 'undefined') return null;
 		return row.row_id;
 	};
+	/** Get identifier of a row
+	 * @param {Number} row_index index of the row
+	 * @returns {String} its identifier
+	 */
 	t.getRowIDFromIndex = function(row_index) {
 		return t.getRowID(t.getRow(row_index));
 	};
 	
+	/** Remove a row
+	 * @param {Number} index index of the row to remove
+	 */
 	t.removeRowIndex = function(index) {
 		t.table.removeChild(t.table.childNodes[index]);
 		layout.changed(this.table);
 	};
+	/** Remove a row
+	 * @param {Element} row the TR
+	 */
 	t.removeRow = function(row) {
 		t.table.removeChild(row);
 		layout.changed(this.table);
 	};
+	/** Remove all rows */
 	t.removeAllRows = function() {
 		while (t.table.childNodes.length > 0)
 			t.table.removeChild(t.table.childNodes[0]);
 		layout.changed(this.table);
 	};
 	
+	/** Get the element contained in the given cell
+	 * @param {Number} row row index
+	 * @param {Number} col column index
+	 * @returns {Element} the element in the cell
+	 */
 	t.getCellContent = function(row,col) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
 		var td = tr.childNodes[col];
 		return td.childNodes[0];
 	};
+	/** Get the typed field for the given cell
+	 * @param {Number} row_index index of the row
+	 * @param {Number} col_index index of the column
+	 * @returns {typed_field} the field
+	 */
 	t.getCellField = function(row_index,col_index) {
 		if (t.selectable) col_index++;
 		var tr = t.table.childNodes[row_index];
@@ -1248,25 +1859,50 @@ function grid(element) {
 		var td = tr.childNodes[col_index];
 		return td && td.field ? td.field : null;
 	};
+	/** Get the typed field for the given cell
+	 * @param {String} row_id id of the row
+	 * @param {String} col_id id of the column
+	 * @returns {typed_field} the field
+	 */
 	t.getCellFieldById = function(row_id,col_id) {
 		return t.getCellField(t.getRowIndexById(row_id), t.getColumnIndexById(col_id));	
 	};
+	/** Get the data of the given cell (data of its typed_field)
+	 * @param {String} row_id id of the row
+	 * @param {String} col_id id of the column
+	 * @returns {Object} the data
+	 */
 	t.getCellData = function(row_id, col_id) {
 		var f = t.getCellFieldById(row_id, col_id);
 		if (!f) return null;
 		return f.getCurrentData();
 	};
+	/** Set the data of the given cell (data of its typed_field)
+	 * @param {String} row_id id of the row
+	 * @param {String} col_id id of the column
+	 * @param {Object} data the data
+	 */
 	t.setCellData = function(row_id, col_id, data) {
 		var f = t.getCellFieldById(row_id, col_id);
 		if (!f) return;
 		f.setData(data);
 	};
+	/** Get data id of the given cell
+	 * @param {Number} row index of the row
+	 * @param {Number} col index of the column
+	 * @returns {String} data id
+	 */
 	t.getCellDataId = function(row,col) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
 		var td = tr.childNodes[col];
 		return td.data_id;
 	};
+	/** Set data id of the given cell
+	 * @param {Number} row index of the row
+	 * @param {Number} col index of the column
+	 * @param {String} data_id data id
+	 */
 	t.setCellDataId = function(row,col,data_id) {
 		if (t.selectable) col++;
 		var tr = t.table.childNodes[row];
@@ -1274,6 +1910,10 @@ function grid(element) {
 		td.data_id = data_id;
 	};
 	
+	/** Get the index of the row containing the given element
+	 * @param {Element} element the element to search
+	 * @returns {Number} index of the row containing it, or -1 if not found
+	 */
 	t.getContainingRowIndex = function(element) {
 		while (element && element != document.body) {
 			if (element.nodeName == "TD" && element.col_id) {
@@ -1285,6 +1925,10 @@ function grid(element) {
 		}
 		return -1;
 	};
+	/** Get the row containing the given element
+	 * @param {Element} element the element to search
+	 * @returns {Element} the TR
+	 */
 	t.getContainingRow = function(element) {
 		while (element && element != document.body) {
 			if (element.nodeName == "TD" && element.col_id) {
@@ -1296,6 +1940,10 @@ function grid(element) {
 		}
 		return null;
 	};
+	/** Get the id of the row and column containing the given element
+	 * @param {Element} element the element to search
+	 * @returns {Object} {col_id:xxx,row_id:yyy} or null if not found
+	 */
 	t.getContainingRowAndColIds = function(element) {
 		while (element && element != document.body) {
 			if (element.nodeName == "TD" && element.col_id) {
@@ -1310,6 +1958,9 @@ function grid(element) {
 		return null;
 	};
 	
+	/**
+	 * Reset everything in the grid: the data, rows, columns...
+	 */
 	t.reset = function() {
 		// remove data rows
 		t.table.removeAllChildren();
@@ -1324,19 +1975,24 @@ function grid(element) {
 		layout.changed(this.table);
 	};
 	
+	/** Show a loading screen on top of the grid */
 	t.startLoading = function() {
 		if (t._loading_hidder) return;
 		if (!t.table) return;
 		t._loading_hidder = new LoadingHidder(t.table);
 		t._loading_hidder.setContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Loading data...");
 	};
+	/** Remove the loading screen on top of the grid */
 	t.endLoading = function() {
 		if (!t._loading_hidder) return;
 		t._loading_hidder.remove();
 		t._loading_hidder = null;
 	};
 	
-	t.apply_filters = function() {
+	/**
+	 * Apply filters: show/hide rows. This cannot be used if an external filtering is used.
+	 */
+	t.applyFilters = function() {
 		var selection_changed = false;
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
 			var row = t.table.childNodes[i];
@@ -1367,10 +2023,16 @@ function grid(element) {
 			}
 		}
 		if (selection_changed)
-			t._selection_changed();
+			t._selectionChanged();
 	};
 	
-	t.print = function() {
+	/**
+	 * Print the content of the grid
+	 * @param {String} template name of the template to use
+	 * @param {Object} template_parameters parameters for the template
+	 * @param {Function} onprintready called when the print preview is ready
+	 */
+	t.print = function(template,template_parameters,onprintready) {
 		var container = document.createElement("DIV");
 		var table = document.createElement("TABLE");
 		table.className = "grid";
@@ -1386,13 +2048,17 @@ function grid(element) {
 				tr.appendChild(td = document.createElement("TH"));
 				td.colSpan = th.colSpan;
 				td.rowSpan = th.rowSpan;
-				if (th.col.text_title)
-					td.appendChild(document.createTextNode(th.col.text_title));
-				else if (th.col.title instanceof Element)
-					td.innerHTML = th.col.title.outerHTML;
-				else
-					td.innerHTML = th.col.title;
-				td.style.textAlign = th.style.textAlign;
+				if (th.col.isHidden())
+					td.style.display = "none";
+				else {
+					if (th.col.text_title)
+						td.appendChild(document.createTextNode(th.col.text_title));
+					else if (th.col.title instanceof Element)
+						td.innerHTML = th.col.title.outerHTML;
+					else
+						td.innerHTML = th.col.title;
+					td.style.textAlign = th.style.textAlign;
+				}
 			}
 		}
 		var tbody = document.createElement("TBODY");
@@ -1406,12 +2072,14 @@ function grid(element) {
 				var cell = ttr.childNodes[j];
 				tr.appendChild(td = document.createElement("TD"));
 				td.className = cell.className;
+				var col = t.getColumnById(cell.col_id);
+				if (col && col.isHidden())
+					td.style.display = "none";
 				if (!cell.field) {
 					td.innerHTML = cell.innerHTML;
 					if (cell.style && cell.style.textAlign)
 						td.style.textAlign = cell.style.textAlign;
 				} else if (cell.col_id) {
-					var col = t.getColumnById(cell.col_id);
 					var f = new window[col.field_type](cell.field.getCurrentData(),false,col.field_args);
 					td.appendChild(f.getHTMLElement());
 					td.style.textAlign = col.align;
@@ -1419,10 +2087,183 @@ function grid(element) {
 				}
 			}
 		}
-		printContent(container);
+		printContent(container, function(content, header) {
+			var table = content.childNodes[0];
+			if (table.offsetWidth * 2 + 50 < content.offsetWidth) {
+				var div = document.createElement("DIV");
+				header.appendChild(div);
+				header.style.height = "40px";
+				var cb = document.createElement("INPUT");
+				cb.type = "checkbox";
+				div.appendChild(cb);
+				div.appendChild(document.createTextNode("Split the table horizontally"));
+				cb.onchange = function() {
+					var thead = table.childNodes[0];
+					var tbody = thead.nextSibling;
+					if (this.checked) {
+						// duplicate headers
+						var rows = [];
+						for (var i = 0; i < thead.childNodes.length; ++i) {
+							rows.push([]);
+							for (var j = 0; j < thead.childNodes[i].childNodes.length; ++j) {
+								var th = document.createElement("TH");
+								th._outerHTML = thead.childNodes[i].childNodes[j].outerHTML;
+								rows[i].push(th);
+							}
+						}
+						// add a separator
+						var th = document.createElement("TH");
+						th._isPrintSeparator = true;
+						th.rowSpan = thead.childNodes.length;
+						var div = document.createElement("DIV");
+						div.style.width = "25px";
+						div.style.minWidth = "25px";
+						th.appendChild(div);
+						thead.childNodes[0].appendChild(th);
+						// add duplicates
+						for (var i = 0; i < rows.length; ++i)
+							for (var j = 0; j < rows[i].length; ++j) {
+								var th = thead.childNodes[i].appendChild(rows[i][j]);
+								th.outerHTML = th._outerHTML;
+								th = thead.childNodes[i].lastChild;
+								th._isPrintDuplicate = true;
+							}
+						// move rows
+						var row = Math.floor(tbody.childNodes.length/2);
+						if ((tbody.childNodes.length%2)==1) row++;
+						for (var i = 0; tbody.childNodes.length > row; ++i) {
+							var tr = tbody.removeChild(tbody.childNodes[row]);
+							var sep = document.createElement("TD");
+							sep._isPrintSeparator = true;
+							var div = document.createElement("DIV");
+							div.style.width = "25px";
+							div.style.minWidth = "25px";
+							sep.appendChild(div);
+							tbody.childNodes[i].appendChild(sep);
+							while (tr.childNodes.length > 0)
+								tbody.childNodes[i].appendChild(tr.childNodes[0]);
+						}
+					} else {
+						// remove duplicate headers and separator
+						for (var i = 0; i < thead.childNodes.length; ++i)
+							for (var j = 0; j < thead.childNodes[i].childNodes.length; ++j) {
+								var th = thead.childNodes[i].childNodes[j];
+								if (th._isPrintSeparator || th._isPrintDuplicate) {
+									thead.childNodes[i].removeChild(thead.childNodes[i].childNodes[j]);
+									j--;
+								}
+							}
+						// move back rows
+						for (var i = 0; i < tbody.childNodes.length; ++i) {
+							for (var j = 0; j < tbody.childNodes[i].childNodes.length; ++j) {
+								if (tbody.childNodes[i].childNodes[j]._isPrintSeparator) {
+									// remove separator
+									tbody.childNodes[i].removeChild(tbody.childNodes[i].childNodes[j]);
+									// create new row
+									var tr = document.createElement("TR");
+									while (j < tbody.childNodes[i].childNodes.length)
+										tr.appendChild(tbody.childNodes[i].childNodes[j]);
+									tbody.appendChild(tr);
+								}
+							}
+						}
+					}
+				};
+			}
+			if (onprintready) onprintready();
+		}, null, template, template_parameters);
+	};
+	
+	/**
+	 * Display the menu to select the columns to show
+	 * @param {Element} below_this_element the menu will be displayed below this element
+	 * @param {Function} onchange called when selection of columns changed
+	 */
+	t.showHideColumnsMenu = function(below_this_element, onchange) {
+		require("context_menu.js", function() {
+			var menu = new context_menu();
+			for (var i = 0; i < t.header_rows[0].childNodes.length; ++i)
+				t._buildColumnsChooser(menu, t.header_rows[0].childNodes[i].col, 0, onchange);
+			menu.showBelowElement(below_this_element);
+		});
+	};
+	/**
+	 * Internal function to build the menu to choose columns
+	 * @param {context_menu} menu the menu to fill
+	 * @param {GridColumn} col the column
+	 * @param {Number} indent indentation
+	 * @param {Function} onchange function to be called when selection change
+	 */
+	t._buildColumnsChooser = function(menu, col, indent, onchange) {
+		if (col.title == "") return;
+		var div = document.createElement("DIV");
+		div.style.fontSize = "9pt";
+		div.style.marginLeft = indent+'px';
+		var cb = document.createElement("INPUT");
+		cb.type = 'checkbox';
+		cb.style.verticalAlign = "middle";
+		cb.style.marginRight = "3px";
+		cb.checked = col.isHidden() ? "" : "checked";
+		cb.disabled = col.canBeHidden() ? "" : "disabled";
+		div.appendChild(cb);
+		div.appendChild(document.createTextNode(col.text_title ? col.text_title : col.title));
+		menu.addItem(div, true);
+		var sub_cb = [];
+		if (col instanceof GridColumnContainer) {
+			for (var i = 0; i < col.sub_columns.length; ++i)
+				sub_cb.push(t._buildColumnsChooser(menu, col.sub_columns[i], indent + 20, onchange));
+		}
+		cb.onchange = function(ev,recurs) {
+			if (col instanceof GridColumnContainer) {
+				for (var i = 0; i < sub_cb.length; ++i) {
+					sub_cb[i].checked = this.checked ? "checked" : "";
+					sub_cb[i].onchange(ev,true);
+				}
+			} else {
+				if (this.checked)
+					col.hide(false);
+				else
+					col.hide(true);
+			}
+			if (!recurs && onchange) onchange();
+		};
+		return cb;
+	};
+	/**
+	 * Save the state of the grid: list of columns shown/hidden
+	 */
+	t.saveState = function() {
+		if (!window.localStorage || !window.JSON) return; // HTML5 not supported
+		var state = { hidden_columns: [] };
+		for (var i = 0; i < this.columns.length; ++i)
+			if (this.columns[i].isHidden())
+				state.hidden_columns.push(this.columns[i].id);
+		var stored = window.localStorage.getItem("grid_state");
+		if (!stored) stored = {};
+		else stored = JSON.parse(stored);
+		stored[location.pathname] = state;
+		window.localStorage.setItem("grid_state", JSON.stringify(stored));
+	};
+	/**
+	 * Load the state of the grid, previously saved
+	 */
+	t.loadState = function() {
+		if (!window.localStorage || !window.JSON) return; // HTML5 not supported
+		var stored = window.localStorage.getItem("grid_state");
+		if (!stored) return; // nothing stored
+		stored = JSON.parse(stored);
+		if (!stored[location.pathname]) return; // nothing stored for this URL
+		var state = stored[location.pathname];
+		if (state["hidden_columns"])
+			for (var i = 0; i < state.hidden_columns.length; ++i) {
+				var col = this.getColumnById(state.hidden_columns[i]);
+				if (!col) return;
+				col.hide(true);
+			}
 	};
 	
 	/* --- internal functions --- */
+	/** Create the grid */
 	t._createTable = function() {
 		t.grid_element = document.createElement("DIV");
 		var table = document.createElement('TABLE');
@@ -1439,10 +2280,14 @@ function grid(element) {
 		table.appendChild(t.table);
 		t.element.appendChild(t.grid_element);
 		table.className = "grid";
+		this._table = table;
 		// listen to keys
-		listenEvent(window,'keyup',t._key_listener);
+		listenEvent(window,'keyup',t._keyListener);
 	};
-	t._key_listener = function(ev) {
+	/** Listen to keys pressed to navigate in the grid cells
+	 * @param {Event} ev the event
+	 */
+	t._keyListener = function(ev) {
 		var getCell = function(element) {
 			while (element && element != document.body) {
 				if (element.nodeName == 'TD' && element.field)
@@ -1484,23 +2329,50 @@ function grid(element) {
 		}
 		getCell = null;
 	};
-	t._create_cell = function(column, data, parent, ondone, ondone_param) {
+	/**
+	 * Create a cell
+	 * @param {GridColumn} column the column
+	 * @param {Object} data the data to give to the typed_field
+	 * @param {Element} parent the TD
+	 * @param {Function} ondone function to call when the cell is ready
+	 * @param {Object} ondone_param parameter to give to the ondone function
+	 */
+	t._createCell = function(column, data, parent, ondone, ondone_param) {
+		parent.style.display = column.hidden ? "none" : "";
 		t._cells_loading++;
-		t._create_field(column, column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
+		t._createField(column, column.field_type, column.editable, column.onchanged, column.onunchanged, column.field_args, parent, data, function(field) {
+			field.onchange.addListener(function() {
+				var tr = parent;
+				while (tr.nodeName != 'TR') tr = tr.parentNode;
+				if (tr.row_data)
+					for (var k = 0; k < tr.row_data.length; ++k)
+						if (column.id == tr.row_data[k].col_id) { tr.row_data[k].data = field.getCurrentData(); tr.row_data[k].original_data = field.originalData; break; }
+			});
 			parent.field = field;
 			field.grid_column_id = column.id;
 			if (ondone) ondone(field, ondone_param);
 			t._cells_loading--;
-			t._check_loaded();
+			t._checkLoaded();
 			t.oncellcreated.fire({parent:parent,field:field,column:column,data:data});
 		});
 	},
-	t._create_field = function(column, field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {
+	/** Create the typed_field in a cell
+	 * @param {GridColumn} column the column
+	 * @param {String} field_type class of the typed_field to instantiate
+	 * @param {Boolean} editable true to make the typed_field editable
+	 * @param {Function} onchanged function to be called when the value changed
+	 * @param {Function} onunchanged function to be called when the value comes back to its original value
+	 * @param {Object} field_args configuration of the typed_field
+	 * @param {Element} parent the container of the field
+	 * @param {Object} data data to give to the typed_field
+	 * @param {Function} ondone function called when the field has been created and ready
+	 */
+	t._createField = function(column, field_type, editable, onchanged, onunchanged, field_args, parent, data, ondone) {
 		require([["typed_field.js",field_type+".js"]], function() {
 			layout.modifyDOM(function() {
 				var f = new window[field_type](data, editable, field_args);
-				if (onchanged) f.ondatachanged.add_listener(onchanged);
-				if (onunchanged) f.ondataunchanged.add_listener(onunchanged);
+				if (onchanged) f.ondatachanged.addListener(onchanged);
+				if (onunchanged) f.ondataunchanged.addListener(onunchanged);
 				parent.appendChild(f.getHTMLElement());
 				ondone(f);
 				setTimeout(function() {
@@ -1513,6 +2385,13 @@ function grid(element) {
 		});
 	};
 	
+	/**
+	 * Export data of the grid
+	 * @param {String} format format of the file to generate
+	 * @param {String} filename name of the file to generate
+	 * @param {String} sheetname of the file is an Excel file, this is the name of the sheet in the generated Excel file
+	 * @param {Array} excluded_columns list of columns' id to do not export
+	 */
 	t.exportData = function(format,filename,sheetname,excluded_columns) {
 		if (!excluded_columns) excluded_columns = [];
 		else for (var i = 0; i < excluded_columns.length; ++i) {
@@ -1538,15 +2417,10 @@ function grid(element) {
 				else {
 					if (th.rowSpan && th.rowSpan > 1) cell.rowSpan = th.rowSpan;
 					if (th.colSpan && th.colSpan > 1) cell.colSpan = th.colSpan;
-					if (th.col && th.col.text_title)
+					if (th.col.text_title)
 						cell.value = th.col.text_title;
-					else {
-						if (th.col.span_actions)
-							th.removeChild(th.col.span_actions);
-						cell.value = th.innerHTML;
-						if (th.col.span_actions)
-							th.appendChild(th.col.span_actions);
-					}
+					else
+						cell.value = th.col.title;
 					cell.style = {fontWeight:'bold',textAlign:'center'};
 				}
 				row.push(cell);
@@ -1596,13 +2470,17 @@ function grid(element) {
 		document.body.appendChild(form);
 		form.submit();
 		t._download_frame = frame;
-		window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
+		window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
 	};
 
+	/** Number of columns still loading */
 	t._columns_loading = 0;
+	/** Number of cells still loading */
 	t._cells_loading = 0;
+	/** List of functions to call when everything is loaded and ready */
 	t._loaded_listeners = [];
-	t._check_loaded = function() {
+	/** Internal function called when something has been loaded, to check if everything is already loaded */
+	t._checkLoaded = function() {
 		if (t._columns_loading == 0 && t._cells_loading == 0) {
 			var list = t._loaded_listeners;
 			t._loaded_listeners = [];

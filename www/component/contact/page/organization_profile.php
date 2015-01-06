@@ -57,6 +57,7 @@ class page_organization_profile extends Page {
 				$new_address = array(
 					"postal_address__id" => -1, 
 					"postal_address__country_id" => $_GET["address_country_id"],
+					"postal_address__address_type" => "Office",
 					"geographic_area_text_area_id" =>$_GET["address_area_id"],
 					"geographic_area_text_country_id" => $_GET["address_country_id"],
 					"geographic_area_text_country_division_id" => $area["country_division"]
@@ -72,7 +73,7 @@ class page_organization_profile extends Page {
 		$first = true;
 		foreach ($all_types as $t) {
 			if ($first) $first = false; else $existing_types .= ",";
-			$existing_types .= "{id:".$t["id"].",name:".json_encode($t["name"])."}";
+			$existing_types .= json_encode($t);
 		}
 		$existing_types .= "]";
 		$this->addJavascript("/static/contact/organization.js");

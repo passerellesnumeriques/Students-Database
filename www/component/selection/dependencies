@@ -6,3 +6,4 @@ widgets:register postal address typed field
 lib_php_excel:import excel file
 news
 staff
+curriculum:to create/update batch at the end

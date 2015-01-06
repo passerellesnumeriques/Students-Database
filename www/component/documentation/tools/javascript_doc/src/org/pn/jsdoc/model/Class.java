@@ -22,10 +22,14 @@ public class Class extends Container {
 	public String name;
 	public String description;
 	public String extended_class = null;
+	public boolean no_name_check = false;
+	public boolean skip = false;
 	
 	public Class(Container parent, final String file, FunctionNode node, Node[] docs) {
 		super(parent, new Location(file,node));
 		JSDoc doc = new JSDoc(node, docs);
+		if (doc.hasTag("no_name_check")) no_name_check = true;
+		if (doc.hasTag("no_doc")) { skip = true; return; }
 		description = doc.description;
 		constructor = new Function(this, file, node, node);
 		name = node.getName();
@@ -50,6 +54,9 @@ public class Class extends Container {
 								AstNode value = ((Assignment)expr).getRight();
 								ValueToEvaluate ve = new ValueToEvaluate(file, value, node, expr, target, value);
 								ve.addContext_FunctionParameters(constructor);
+								HashMap<String,Object> runtime = new HashMap<String,Object>();
+								runtime.putAll(variables);
+								ve.addRuntimeContext(runtime);
 								add(names.get(names.size()-1), ve);
 								break;
 							}
@@ -100,8 +107,12 @@ public class Class extends Container {
 	}
 	
 	@Override
+	public boolean skip() {
+		return skip;
+	}
+	@Override
 	protected String getJSDocConstructor() {
-		return "JSDoc_Class("+(extended_class != null ? "\""+extended_class+"\"" : "null")+",";
+		return "JSDoc_Class("+(extended_class != null ? "\""+extended_class+"\"" : "null")+","+(no_name_check ? "true" : "false")+",";
 	}
 	@Override
 	public String getDescription() {

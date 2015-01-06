@@ -7,7 +7,7 @@ class page_trip_trip extends SelectionPage {
 	public function executeSelectionPage() {
 		$trip_id = @$input["id"];
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_trips");
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_trips");
 
 		$this->addStylesheet("/static/selection/trip/trip.css");
 		$this->requireJavascript("mini_popup.js");
@@ -22,7 +22,7 @@ class page_trip_trip extends SelectionPage {
 ?>
 <table class='trip_table'><tbody><tr><td id='trip_container'></td></tr></tbody></table>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 var can_edit = <?php echo json_encode($can_edit); ?>;
 var country_data;
 <?php
@@ -64,14 +64,14 @@ TripConnection.prototype = {
 		span.innerHTML = "Departure: ";
 		this.node.appendChild(span);
 		new When(this.node, this.departure, can_edit, function() { return t.getMinimumDepartureDate(true); }, function() { return t.getMaximumDepartureDate(true); }).
-			onchange.add_listener(function(w) { t.departure = w.when; });
+			onchange.addListener(function(w) { t.departure = w.when; });
 		this.node.appendChild(document.createElement("BR"));
 		span = document.createElement("SPAN");
 		span.className = "title";
 		span.innerHTML = "Arrival: ";
 		this.node.appendChild(span);
 		new When(this.node, this.arrival, can_edit, function() { return t.getMinimumArrivalDate(true); }, function() { return t.getMaximumArrivalDate(true); }).
-			onchange.add_listener(function(w) { t.arrival = w.when; });
+			onchange.addListener(function(w) { t.arrival = w.when; });
 		this.node.appendChild(document.createElement("BR"));
 	},
 	_whoPopup: function(button) {
@@ -113,10 +113,10 @@ TripConnection.prototype = {
 		this.node.appendChild(title);
 		this.who = new who_container(this.node,this.peoples,can_edit);
 		var t=this;
-		this.who.onadded.add_listener(function(people) {
+		this.who.onadded.addListener(function(people) {
 			t.destination.peopleAdded(people);
 		});
-		this.who.onremoved.add_listener(function(people) {
+		this.who.onremoved.addListener(function(people) {
 			t.destination.peopleRemoved(people);
 		});
 	},
@@ -214,7 +214,7 @@ function TripNode(area) {
 	this.header = document.createElement("DIV");
 	this.header.className = "trip_node_title"+(can_edit ? " editable" : "");
 	this.header.appendChild(document.createTextNode(window.top.geography.getGeographicAreaText(country_data, area).text));
-	this.onareachange.add_listener(function(area) { t.header.childNodes[0].nodeValue = window.top.geography.getGeographicAreaText(country_data, area).text; layout.changed(t.header); });
+	this.onareachange.addListener(function(area) { t.header.childNodes[0].nodeValue = window.top.geography.getGeographicAreaText(country_data, area).text; layout.changed(t.header); });
 	this.node.appendChild(this.header);
 	this.content = document.createElement("DIV");
 	this.content.className = "trip_node_content";
@@ -266,10 +266,10 @@ function TripNode(area) {
 				var menu = new context_menu();
 				menu.addTitleItem(null, "What will you do in "+t.header.childNodes[0].nodeValue+" ?");
 				menu.addIconItem("/static/selection/is/is_16.png", "An Information Session", function() {
-					var locker = lock_screen(null, "Loading Information Sessions List...");
+					var locker = lockScreen(null, "Loading Information Sessions List...");
 					// TODO max date, according to people
 					service.json("selection","is/search",{min_date:dateToSQL(t.getMinimumEndingDate()),max_date:null,area_id:t.area.area_id}, function(res) {
-						unlock_screen(locker);
+						unlockScreen(locker);
 						menu = new context_menu();
 						menu.addTitleItem("/static/selection/is/is_16.png","Which Information Session are you going to conduct here ?");
 						if (res.length == 0)
@@ -447,7 +447,7 @@ Activity.prototype = {
 			var w = new InputOver(this.what);
 			td.appendChild(w.container);
 			var t=this;
-			w.onchange.add_listener(function(w){t.what = w.input.value;});
+			w.onchange.addListener(function(w){t.what = w.input.value;});
 		} else
 			td.appendChild(document.createTextNode(what));
 	},
@@ -458,7 +458,7 @@ Activity.prototype = {
 		},function() {
 			return t.getMaximumStartingDate(true);
 		});
-		w.onchange.add_listener(function(w) {t.when = w.getTimestamp();});
+		w.onchange.addListener(function(w) {t.when = w.getTimestamp();});
 	},
 	_createWhere: function(td) {
 		// TODO
@@ -688,7 +688,7 @@ function When(container, when, can_edit, minimum_provider, maximum_provider) {
 			var f = new field_timestamp(t.when ? t.when.getTime() : null,true,{can_be_null:true,data_is_seconds:false,show_time:true,minimum_date:min,maximum_date:max});
 			p.content.appendChild(f.getHTMLElement());
 			p.showBelowElement(t.link);
-			f.onchange.add_listener(function() {
+			f.onchange.addListener(function() {
 				var ts = f.getCurrentData();
 				t.when = ts ? new Date(ts) : null;
 				t.refresh();

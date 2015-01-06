@@ -3,9 +3,9 @@ class service_picture_from_email extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Try to find the picture of the people owning the given email."; }
+	public function inputDocumentation() { echo "email"; }
+	public function outputDocumentation() { echo "A JPEG image"; }
 	public function getOutputFormat($input) {
 		return "image/jpeg";
 	}
@@ -56,7 +56,6 @@ class service_picture_from_email extends Service {
 				}
 			}
 		}
-		// TODO ?
 		$sex = "M";
 		if ($people_id <> null && $people <> null) $sex = $people["sex"];
 		header("Location: /static/people/default_".($sex == "F" ? "female" : "male").".jpg");

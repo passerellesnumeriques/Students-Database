@@ -182,7 +182,7 @@ class page_import_subjects extends Page {
 <script type='text/javascript'>
 var subjects = <?php echo json_encode($all_subjects);?>;
 		
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.removeButtons();
 popup.addIconTextButton(theme.icons_16._import, "Import Selected Subjects", "import", function() {
 	popup.freeze();
@@ -199,7 +199,7 @@ popup.addIconTextButton(theme.icons_16._import, "Import Selected Subjects", "imp
 		popup.unfreeze();
 		return;
 	}
-	popup.freeze_progress_sub("Importing subjects...", to_import.length, function(span,pb,sub) {
+	popup.freezeWithProgressAndSubMessage("Importing subjects...", to_import.length, function(span,pb,sub) {
 		var next = function() {
 			if (to_import.length == 0) {
 				<?php if (isset($_GET["onimport"])) echo "window.frameElement.".$_GET["onimport"]."();"?>

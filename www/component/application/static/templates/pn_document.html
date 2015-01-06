@@ -1,0 +1,19 @@
+<table style='width:100%;'>
+<colgroup><col style='width:120px'/><col/></colgroup>
+<tbody>
+<tr>
+	<td valign=top style='width:120px;min-width:120px;max-width:120px;'>
+		<img src='/static/application/logo.png' style='margin:10px;'/>
+	</td>
+	<td valign=middle style='padding:10px 15px 5px 5px;'>
+		#FOREACH:titles:title#
+			<div style='font-size:18pt;font-weight:bold;text-align:center'>#VALUE:title#</div>
+		#ENDFOREACH:titles#
+		#FOREACH:sub_titles:title#
+			<div style='font-size:12pt;font-weight:bold;text-align:center'>#VALUE:title#</div>
+		#ENDFOREACH:sub_titles#
+	</td>
+</tr>
+</tbody>
+</table>
+<div id='content' style='#VALUE:content_style#'></div>

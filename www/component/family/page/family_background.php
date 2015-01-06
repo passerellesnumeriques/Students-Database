@@ -77,11 +77,11 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 					remove_family.disabled = "disabled";
 				sec.addToolBottom(remove_family);
 				cancel_edit.onclick = function() {
-					var locker = lock_screen();
+					var locker = lockScreen();
 					databaselock.unlock(lock_id,function() {
 						pnapplication.dataSaved(content.id);
 						manageFamily(sec,content,family_family,family_members,people_id,can_edit);
-						unlock_screen(locker);
+						unlockScreen(locker);
 					});
 				};
 				save_button.onclick = function() {
@@ -108,26 +108,26 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 						remove_family.disabled = "";
 				};
 				remove_family.onclick = function() {
-					confirm_dialog("Are you sure you want to remove all information about this family ?",function(yes) {
+					confirmDialog("Are you sure you want to remove all information about this family ?",function(yes) {
 						if (!yes) return;
-						var locker = lock_screen(null,"Removing family information...");
+						var locker = lockScreen(null,"Removing family information...");
 						service.json("family","remove_family",{id:family_family.id},function(res) {
-							unlock_screen(locker);
+							unlockScreen(locker);
 							if (!res) return;
 							manageFamily(sec,content,{id:-1},[],people_id,can_edit);
 						});
 					});
 				};
 			};
-			var locker = lock_screen();
+			var locker = lockScreen();
 			if (family.id > 0) {
 				service.json("data_model","lock_row",{table:"Family",row_key:family.id},function(res) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 					if (res && res.lock) edit_mode(res.lock);
 				});
 			} else {
 				service.json("data_model","lock_row",{table:"People",row_key:people_id},function(res) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 					if (res && res.lock) edit_mode(res.lock);
 				});
 			}
@@ -137,9 +137,9 @@ function manageFamily(sec, content, fam, members, people_id, can_edit) {
 }
 
 <?php 
-$family = $this->getFamily($people_id, "Child");
+$family = $this->component->getFamily($people_id, "Child");
 echo "manageFamily(parents_section,document.getElementById('parents_family'),".json_encode($family[0]).",".json_encode($family[1]).",".$people_id.",".json_encode($can_edit).");\n";
-$family = $this->getFamily($people_id, $people["sex"] == "M" ? "Father" : "Mother");
+$family = $this->component->getFamily($people_id, $people["sex"] == "M" ? "Father" : "Mother");
 echo "manageFamily(own_family_section,document.getElementById('own_family'),".json_encode($family[0]).",".json_encode($family[1]).",".$people_id.",".json_encode($can_edit).");\n";
 ?>
 
@@ -148,38 +148,6 @@ window.onuserinactive = function() {
 };
 </script>
 <?php 
-	}
-	
-	private function getFamily($people_id, $member_type) {
-		$family_id = SQLQuery::create()->bypassSecurity()
-			->select("FamilyMember")
-			->whereValue("FamilyMember", "people", $people_id)
-			->whereValue("FamilyMember", "member_type", $member_type)
-			->field("family")
-			->executeSingleValue();
-		
-		if ($family_id <> null) {
-			$family = SQLQuery::create()->bypassSecurity()->select("Family")->whereValue("Family","id",$family_id)->executeSingleRow();
-			$members = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereValue("FamilyMember","family",$family_id)->execute();
-		} else {
-			$family = array("id"=>-1);
-			$members = array(array("family"=>-1,"id"=>-1,"people"=>$people_id,"member_type"=>$member_type));
-		}
-		
-		$peoples_ids = array();
-		foreach ($members as $m) array_push($peoples_ids, $m["people"]);
-		if (count($peoples_ids) > 0) {
-			$q = PNApplication::$instance->people->getPeoplesSQLQuery($peoples_ids);
-			require_once("component/people/PeopleJSON.inc");
-			PeopleJSON::PeopleSQL($q, false);
-			$peoples = $q->execute();
-		} else
-			$peoples = array();
-		
-		for ($i = 0; $i < count($members); $i++)
-			foreach ($peoples as $p) if ($p["people_id"] == $members[$i]["people"]) { $members[$i]["people"] = $p; break; }
-		
-		return array($family,$members);
 	}
 	
 }

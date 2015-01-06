@@ -109,6 +109,10 @@ class page_exam_edit_results extends SelectionPage {
 		$this->requireJavascript("custom_data_grid.js");
 		$this->requireJavascript("people_data_grid.js");
 		$this->requireJavascript("applicant_data_grid.js");
+		$this->requireJavascript("typed_field.js");
+		$this->requireJavascript("field_text.js");
+		$this->requireJavascript("field_decimal.js");
+		$this->requireJavascript("field_enum.js");
 ?>
 <div style='width:100%;height:100%;display:flex;flex-direction:column'>
 	<div class='page_title' style='flex:none'>
@@ -366,13 +370,14 @@ function SubjectGrid(subject, container, edit_mode, onready) {
 		for (var i = 0; i < subject.versions.length; ++i)
 			possible.push([subject.versions[i],String.fromCharCode("A".charCodeAt(0)+i)]);
 		var updateScores = function(field) {
-			if (edit_mode != 'answers') return;
 			var cell = t.data_grid.grid.getContainingRowAndColIds(field.getHTMLElement());
-			for (var i = 0; i < subject.parts.length; ++i) {
-				for (var j = 0; j < subject.parts[i].questions.length; ++j) {
-					var q = subject.parts[i].questions[j];
-					var ans_field = t.data_grid.grid.getCellFieldById(cell.row_id,q.id);
-					t.answerChanged(ans_field);
+			if (edit_mode == 'answers') {
+				for (var i = 0; i < subject.parts.length; ++i) {
+					for (var j = 0; j < subject.parts[i].questions.length; ++j) {
+						var q = subject.parts[i].questions[j];
+						var ans_field = t.data_grid.grid.getCellFieldById(cell.row_id,q.id);
+						t.answerChanged(ans_field);
+					}
 				}
 			}
 			if (typeof applicants_results[cell.row_id] == 'undefined')
@@ -1384,7 +1389,7 @@ function importScanner(ev) {
 function save() {
 	var applicants_to_save = [];
 	var saveResults = function() {
-		var locker = lock_screen(null, "Saving results and applying eligibility rules...");
+		var locker = lockScreen(null, "Saving results and applying eligibility rules...");
 		var data = {applicants:[],session:<?php echo $session_id;?>,room:<?php echo $room_id;?>,lock:<?php echo $lock_id;?>};
 		for (var i = 0; i < applicants_to_save.length; ++i) {
 			if (applicants_to_save[i].exam_attendance == null) continue;
@@ -1427,7 +1432,7 @@ function save() {
 			}
 		}
 		service.json("selection","exam/save_results",data,function(res) {
-			if (res === null || res === false) { unlock_screen(locker); return; }
+			if (res === null || res === false) { unlockScreen(locker); return; }
 			var e = document.getElementById('header');
 			e.removeAllChildren();
 			e.className = "page_section_title";
@@ -1438,22 +1443,26 @@ function save() {
 			e.removeAllChildren();
 			e.style.backgroundColor = "white";
 			e.style.padding = "10px";
+			e.style.overflow = "auto";
 			var s = "Results successfully saved.<br/>";
-			if (res.length == 0)
+			if (res.passers.length == 0)
 				s += "Unfortunately, no one passed. All applicants of this room/session have been excluded from the Selection Process.";
 			else {
 				s += "Here is the list of applicants who passed:<ul>";
-				for (var i = 0; i < res.length; ++i) {
+				for (var i = 0; i < res.passers.length; ++i) {
 					s += "<li>";
 					var app = null;
-					for (var j = 0; j < applicants.length; ++j) if (applicants[j].people.id == res[i]) { app = applicants[j]; break; }
+					for (var j = 0; j < applicants.length; ++j) if (applicants[j].people.id == res.passers[i]) { app = applicants[j]; break; }
 					s += app.people.first_name+" "+app.people.last_name+" (ID "+app.applicant_id+")";
 					s += "</li>";
 				}
 				s += "</ul>All others have been exluded from the Selection Process.";
+				if (res.interview_center_id) {
+					s += "<br/><br/>All passers who were not yet assigned to an interview center have been automatically assigned to the center <b>"+res.interview_center_name+"</b> <button class='action' onclick=\"window.top.popupFrame('/static/selection/exam/exam_center_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?id="+res.interview_center_id+"');\">Open this interview center</button>";
+				}
 			}
 			e.innerHTML = s;
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	};
 	var checkExamVersion = function() {
@@ -1462,7 +1471,7 @@ function save() {
 			var subjects_missing = [];
 			for (var j = 0; j < subjects.length; ++j)
 				if (subjects[j].versions.length > 1 && (!applicants_results[applicants_to_save[i].people.id][subjects[j].id] || !applicants_results[applicants_to_save[i].people.id][subjects[j].id].version))
-					subjects_missings.push(subjects[j]);
+					subjects_missing.push(subjects[j]);
 			if (subjects_missing.length == 0) continue;
 			missing.push({applicant:applicants_to_save[i],subjects_missing:subjects_missing});
 			applicants_to_save.splice(i,1);
@@ -1473,16 +1482,16 @@ function save() {
 		for (var i = 0; i < missing.length; ++i) {
 			msg += "<li>"+missing[i].applicant.people.first_name+" "+missing[i].applicant.people.last_name+" (ID "+missing[i].applicant.applicant_id+")";
 			msg += " for subject";
-			if (missing[i].subejcts_missing.length > 1) msg += "s";
-			for (var j = 0; j < missing[i].subejcts_missing.length; ++j) {
+			if (missing[i].subjects_missing.length > 1) msg += "s";
+			for (var j = 0; j < missing[i].subjects_missing.length; ++j) {
 				if (j > 0) msg += ",";
-				msg += " "+missing[i].subejcts_missing[j].name;
+				msg += " "+missing[i].subjects_missing[j].name;
 			}
 			msg += "</li>";
 		}
 		msg += "</ul>";
 		msg += "For "+(missing.length>1?"those applicants":"this applicant")+" nothing will be saved.<br/>Do you confirm ?";
-		confirm_dialog(msg, function(yes) {
+		confirmDialog(msg, function(yes) {
 			if (!yes) return;
 			saveResults();
 		});
@@ -1501,7 +1510,7 @@ function save() {
 			}
 			msg += "</ul>";
 			msg += "For "+(attendance_missing.length>1?"those applicants":"this applicant")+" nothing will be saved.<br/>Do you confirm ?";
-			confirm_dialog(msg, function(yes) {
+			confirmDialog(msg, function(yes) {
 				if (!yes) return;
 				checkExamVersion();
 			});

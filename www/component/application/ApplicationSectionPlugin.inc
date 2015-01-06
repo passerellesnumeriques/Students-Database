@@ -1,4 +1,7 @@
 <?php 
+/**
+ * Interface to implement in order to add a new section to the application (menu at the top of the main page)
+ */
 interface ApplicationSectionPlugin {
 	
 	/** The Identifier of the section */
@@ -24,6 +27,9 @@ interface ApplicationSectionPlugin {
 	
 }
 
+/**
+ * Define the Home section
+ */
 class HomeApplicationSection implements ApplicationSectionPlugin {
 	
 	public function getId() { return "home"; }
@@ -41,7 +47,12 @@ class HomeApplicationSection implements ApplicationSectionPlugin {
 	}
 	public function getMenuURL() { return "/dynamic/application/service/home_menu"; }
 	public function getDefaultPageURL() { return "/dynamic/application/page/overview"; }
-	public function canAccess() { return true; }
+	public function canAccess() {
+#SELECTION_TRAVEL
+#return false;
+#END
+		return true;
+	}
 	
 }
 ?>

@@ -40,6 +40,7 @@ public abstract class Container extends FinalElement {
 	}
 	
 	public void add(String name, Element element) {
+		//if (element.skip()) return;
 		if (content.containsKey(name)) {
 			Element current = content.get(name);
 			if (current instanceof Evaluable) {
@@ -97,34 +98,70 @@ public abstract class Container extends FinalElement {
 	
 	public void parse(String file, Node script) {
 		for (Node node : script)
-			parse_node(file, node);
+			parse_node(file, node, new HashMap<String,Object>());
 	}
-	protected void parse_node(String file, Node node) {
+	protected void parse_node(String file, Node node, HashMap<String,Object> runtime) {
+		JSDoc doc = new JSDoc((AstNode)node);
+		if (doc.hasTag("no_doc")) return;
 		if (node instanceof EmptyStatement) return;
 		if (node instanceof FunctionCall) return; // ignore calls ?
 		if (node instanceof IfStatement) {
-			parse_node(file, ((IfStatement)node).getThenPart());
-			if (((IfStatement)node).getElsePart() != null)
-				parse_node(file, ((IfStatement)node).getElsePart());
+			IfStatement _if = (IfStatement)node;
+			AstNode cd = _if.getCondition();
+			if (cd instanceof Name) {
+				runtime = new HashMap<String,Object>(runtime);
+				runtime.put(((Name)cd).getIdentifier(), null);
+			} else if (cd instanceof PropertyGet) {
+				LinkedList<String> names = new LinkedList<String>();
+				PropertyGet pg = (PropertyGet)cd;
+				do {
+					names.addFirst(pg.getProperty().getIdentifier());
+					AstNode target = pg.getTarget();
+					if (target instanceof Name) {
+						names.addFirst(((Name)target).getIdentifier());
+						break;
+					}
+					pg = (PropertyGet)target;
+				} while (true);
+				HashMap<String,Object> ctx = new HashMap<String,Object>(runtime);
+				runtime = ctx;
+				while (!names.isEmpty()) {
+					String name = names.removeFirst();
+					if (!ctx.containsKey(name)) {
+						if (names.isEmpty()) ctx.put(name, null);
+						else {
+							HashMap<String,Object> m = new HashMap<String,Object>();
+							ctx.put(name, m);
+							ctx = m;
+						}
+					} else {
+						Object o = ctx.get(name);
+						if (names.isEmpty()) break;
+						if (!(o instanceof HashMap)) {
+							HashMap<String,Object> m = new HashMap<String,Object>();
+							ctx.put(name, m);
+							ctx = m;
+						}
+					}
+				}
+			}
+			parse_node(file, _if.getThenPart(), runtime);
+			if (_if.getElsePart() != null)
+				parse_node(file, _if.getElsePart(), runtime);
 			return;
 		}
 		if (node instanceof Scope) {
 			for (Node n : ((Scope)node).getStatements())
-				parse_node(file, n);
+				parse_node(file, n, runtime);
 			return;
 		}
 		if (node instanceof ExpressionStatement) {
 			AstNode expr = ((ExpressionStatement)node).getExpression();
 			if (expr instanceof Assignment) {
-				Assignment assign = (Assignment)expr;
-				AstNode target = assign.getLeft();
-				if (target instanceof Name) {
-					add(((Name)target).getIdentifier(), new ValueToEvaluate(file, assign.getRight(), (AstNode)node, expr, target));
-				} else if (target instanceof PropertyGet) {
-					assignments_to_evaluate.add(new ValueToEvaluate(file, assign, (AstNode)node, expr, target));
-				} else {
-					error("Target of assignment not supported: "+target.getClass()+": "+expr.toSource(), file, node);
-				}
+				ValueToEvaluate e = new ValueToEvaluate(file, expr, (AstNode)node, expr);
+				e.addRuntimeContext(runtime);
+				Object res = evaluateAssignment(getGlobal(), e, false);
+				if (res == null) assignments_to_evaluate.add(e);
 				return;
 			}
 			if (expr instanceof FunctionCall) return; // ignore calls ?
@@ -198,98 +235,8 @@ public abstract class Container extends FinalElement {
 				has_more |= ((Container)e.getValue()).evaluate(global, done);
 		}
 		for (ValueToEvaluate e : assignments_to_evaluate) {
-			Assignment assign = (Assignment)e.value;
-			AstNode target = assign.getLeft();
-			LinkedList<String> names = getIdentifiers(target);
-			if (names.get(0).equals("window")) names.remove(0);
-			if (names.size() == 1) {
-				add(names.get(0), new ValueToEvaluate(e.location.file, assign.getRight(), e.value));
-				has_more = true;
-				continue;
-			}
-			Container cont = this;
-			if (names.get(0).equals("top")) {
-				if (global.content.get("window_top") == null)
-					global.add("window_top", cont = new Global());
-				else
-					cont = (Container)global.content.get("window_top");
-				names.remove(0);
-				if (names.size() == 1) {
-					cont.add(names.get(0), new ValueToEvaluate(e.location.file, assign.getRight(), e.value));
-					has_more = true;
-					continue;
-				}
-			}
-			do {
-				if (names.get(0).equals("prototype")) {
-					if (cont instanceof Class) {
-						if (names.size() == 1) {
-							// assignment to a prototype
-							if (assign.getRight() instanceof NewExpression) {
-								NewExpression n = (NewExpression)assign.getRight();
-								AstNode t = n.getTarget();
-								if (t instanceof Name) {
-									// TODO resolve
-									// TODO check not already extended
-									((Class)cont).extended_class = ((Name)t).getIdentifier();
-									break;
-								} else {
-									error("Cannot determine class to extend: "+e.value.toSource(), e);
-									break;
-								}
-							} else if (assign.getRight() instanceof ObjectLiteral) {
-								Class cl = (Class)cont;
-								ObjectAnonymous o = new ObjectAnonymous(cl.parent, e.location.file, (ObjectLiteral)assign.getRight(), e.docs);
-								for (Map.Entry<String, Element> entry : o.content.entrySet())
-									cl.add(entry.getKey(), entry.getValue());
-								break;
-							} else {
-								error("Assignment to a class prototype must be a new expression: "+e.value.toSource(), e);
-								break;
-							}
-						}
-						if (names.size() != 2) {
-							String s = "("+names.size()+" names found: ";
-							for (int i = 0; i < names.size(); ++i) { if (i>0) s+=",";s += names.get(i); }
-							s +=")";
-							error("Not supported: more than 1 level after prototype "+s+": "+e.value.toSource(), e);
-							break;
-						}
-						if (names.get(1).equals("constructor")) break; // skip
-						cont.content.put(names.get(1), new ValueToEvaluate(e.location.file, assign.getRight(), e.value));
-						has_more = true;
-						break;
-					} else {
-						error("Cannot use prototype on an element which is not a class", e);
-						break;
-					}
-				}
-				Element elem = cont.content.get(names.get(0));
-				if (elem == null) {
-					error("Unknown element '"+names.get(0)+"' in "+e.value.toSource(), e);
-					break;
-				}
-				if (!(elem instanceof Container)) {
-					// handle case of a function which is a class
-					if ((elem instanceof Function) && names.size() > 1 && names.get(1).equals("prototype")) {
-						// convert into a class
-						Class c = new Class(cont, elem.location.file, (FunctionNode)elem.location.node, ((Function)elem).docs_nodes);
-						String name = ((Function)elem).container.getName(elem);
-						((Function)elem).container.content.put(name, c);
-						elem = c;
-					} else {
-						error("Element '"+names.get(0)+"' is not a container (found:"+elem.getClass().getName()+") in "+e.value.toSource(), e);
-						break;
-					}
-				}
-				names.remove(0);
-				if (names.size() == 1 && !names.get(0).equals("prototype")) {
-					cont.add(names.get(0), new ValueToEvaluate(e.location.file, assign.getRight(), e.value));
-					has_more = true;
-					break;
-				}
-				cont = (Container)elem;
-			} while (cont != null);
+			Object res = evaluateAssignment(global, e, true);
+			if (res == Boolean.TRUE) has_more = true;
 		}
 		assignments_to_evaluate.clear();
 		return has_more;
@@ -297,6 +244,131 @@ public abstract class Container extends FinalElement {
 			t.printStackTrace(System.out);
 			return false;
 		}
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private Object evaluateAssignment(Global global, ValueToEvaluate e, boolean generate_errors) {
+		Assignment assign = (Assignment)e.value;
+		AstNode target = assign.getLeft();
+		LinkedList<String> names = getIdentifiers(target);
+		Container cont = this;
+		if (names.get(0).equals("window")) { names.remove(0); cont = global; }
+		if (!names.isEmpty() && names.get(0).equals("top")) { 
+			names.remove(0); 
+			if (global.content.get("window_top") == null)
+				global.add("window_top", cont = new Global());
+			else
+				cont = (Container)global.content.get("window_top");
+		}
+		if (!names.isEmpty() && names.get(0).equals("parent")) { names.remove(0); cont = global; }
+		if (!names.isEmpty() && names.get(0).equals("self")) { names.remove(0); }
+		if (names.isEmpty()) {
+			error("Unable to understand "+target.toSource());
+			return null;
+		}
+		if (names.size() == 1) {
+			ValueToEvaluate e2 = new ValueToEvaluate(e.location.file, assign.getRight(), e.value);
+			e2.addRuntimeContext(e.getRuntimeContext());
+			add(names.get(0), e2);
+			return Boolean.TRUE;
+		}
+		do {
+			if (names.get(0).equals("prototype")) {
+				if (cont instanceof Class) {
+					if (names.size() == 1) {
+						// assignment to a prototype
+						if (assign.getRight() instanceof NewExpression) {
+							NewExpression n = (NewExpression)assign.getRight();
+							AstNode t = n.getTarget();
+							if (t instanceof Name) {
+								// TODO resolve
+								// TODO check not already extended
+								((Class)cont).extended_class = ((Name)t).getIdentifier();
+								return Boolean.FALSE;
+							} else {
+								if (generate_errors)
+									error("Cannot determine class to extend: "+e.value.toSource(), e);
+								return null;
+							}
+						} else if (assign.getRight() instanceof ObjectLiteral) {
+							Class cl = (Class)cont;
+							ObjectAnonymous o = new ObjectAnonymous(cl.parent, e.location.file, (ObjectLiteral)assign.getRight(), e.docs);
+							for (Map.Entry<String, Element> entry : o.content.entrySet())
+								cl.add(entry.getKey(), entry.getValue());
+							return Boolean.FALSE;
+						} else {
+							if (generate_errors)
+								error("Assignment to a class prototype must be a new expression: "+e.value.toSource(), e);
+							return null;
+						}
+					}
+					if (names.size() != 2) {
+						if (generate_errors) {
+							String s = "("+names.size()+" names found: ";
+							for (int i = 0; i < names.size(); ++i) { if (i>0) s+=",";s += names.get(i); }
+							s +=")";
+							error("Not supported: more than 1 level after prototype "+s+": "+e.value.toSource(), e);
+						}
+						return null;
+					}
+					if (names.get(1).equals("constructor")) return Boolean.FALSE; // skip
+					cont.content.put(names.get(1), new ValueToEvaluate(e.location.file, assign.getRight(), e.value));
+					return Boolean.TRUE;
+				} else {
+					if (generate_errors)
+						error("Cannot use prototype on an element which is not a class", e);
+					return null;
+				}
+			}
+			Element elem = cont.content.get(names.get(0));
+			if (elem == null) {
+				if (generate_errors)
+					error("Unknown element '"+names.get(0)+"' in "+e.value.toSource(), e);
+				return null;
+			}
+			if (!(elem instanceof Container)) {
+				// handle case of a function which is a class
+				if ((elem instanceof Function) && names.size() > 1 && names.get(1).equals("prototype")) {
+					// convert into a class
+					Class c = new Class(cont, elem.location.file, (FunctionNode)elem.location.node, ((Function)elem).docs_nodes);
+					String name = ((Function)elem).container.getName(elem);
+					((Function)elem).container.content.put(name, c);
+					elem = c;
+				} else if (elem instanceof ObjectClass) {
+					Element type = global.content.get(((ObjectClass)elem).type);
+					if (type == null) {
+						if (generate_errors)
+							error("Unknown type "+((ObjectClass)elem).type+" for element '"+names.get(0)+"'", e);
+						return null;
+					}
+					if (!(type instanceof Container)) {
+						if (generate_errors)
+							error("Type "+((ObjectClass)elem).type+" for element '"+names.get(0)+"' is not a container, we cannot access to its attributes in "+e.value.toSource(), e);
+						return null;						
+					}
+					elem = type;
+				} else {
+					if (generate_errors)
+						error("Element '"+names.get(0)+"' is not a container (found:"+elem.getClass().getName()+") in "+e.value.toSource(), e);
+					return null;
+				}
+			}
+			String name = names.remove(0);
+			HashMap<String,Object> runtime = e.getRuntimeContext();
+			if (runtime.containsKey(name)) {
+				Object o = runtime.get(name);
+				if (o instanceof HashMap) runtime = (HashMap)o;
+				else break; // we are working on a runtime thing, do not continue
+			}
+			if (names.size() == 1 && !names.get(0).equals("prototype")) {
+				ValueToEvaluate e2 = new ValueToEvaluate(e.location.file, assign.getRight(), e.value);
+				if (runtime != null) e2.addRuntimeContext(runtime);
+				cont.add(names.get(0), e2);
+				return Boolean.TRUE;
+			}
+			cont = (Container)elem;
+		} while (cont != null);
+		return null;
 	}
 	
 	public String getName(Element e) {

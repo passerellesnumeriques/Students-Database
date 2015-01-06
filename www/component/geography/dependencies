@@ -1,2 +1,3 @@
 administration:to allow users to manage geography data
 application:to catch domain change event
+data_model:add customization type geographic_area

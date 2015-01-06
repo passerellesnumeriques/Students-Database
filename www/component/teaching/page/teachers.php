@@ -30,7 +30,7 @@ class page_teachers extends Page {
 				array_push($past_teachers_ids, $people_id);
 		}
 		$peoples = PNApplication::$instance->people->getPeoples($peoples_ids, true, true);
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+		$can_edit = PNApplication::$instance->user_management->hasRight("edit_curriculum");
 
 		if (count($current_teachers_ids) > 0) {
 			$current_period = PNApplication::$instance->curriculum->getCurrentAcademicPeriod();
@@ -104,7 +104,7 @@ class page_teachers extends Page {
 		
 		$search_id = $this->generateID();
 		echo "<div style='display:inline-block' id='$search_id'></div>";
-		$this->onload("new people_search('$search_id','teacher',function(people){ window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+people.id,null,95,95); });");
+		$this->onload("new people_search('$search_id','teacher',function(people){ window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people='+people.id,null,95,95); });");
 		if ($can_edit) {
 		?>
 		<button class='action green' onclick='new_teacher();'><img src='<?php echo theme::make_icon("/static/teaching/teacher_16.png",theme::$icons_10["add"]);?>'/>New Teacher</button>
@@ -127,6 +127,12 @@ function new_teacher() {
 <?php 
 	}
 	
+	/**
+	 * Filter people ids
+	 * @param integer[] $ids ids to exclude
+	 * @param array $peoples peoples
+	 * @return integer[] ids of peoples not in the ids list
+	 */
 	private function sortPeopleIds($ids, $peoples) {
 		$res = array();
 		foreach ($peoples as $p)
@@ -139,6 +145,8 @@ function new_teacher() {
 	 * @param array $teachers_ids list of teachers
 	 * @param array $teachers_dates dates of etachers
 	 * @param array $peoples teachers information
+	 * @param array $current_assignments current assignments
+	 * @param array $previous_assignments previous assignments
 	 */
 	private function buildTeachersList($teachers_ids, $teachers_dates, $peoples, $current_assignments, $previous_assignments) {
 		$teachers_ids = $this->sortPeopleIds($teachers_ids, $peoples);
@@ -150,7 +158,7 @@ require_once("component/data_model/page/utils.inc");
 foreach ($teachers_ids as $people_id) {
 	$people = null;
 	foreach ($peoples as $p) if ($p["id"] == $people_id) { $people = $p; break; }
-	echo "<tr class='teacher_row' style='cursor:pointer' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\">";
+	echo "<tr class='teacher_row' style='cursor:pointer' onclick=\"window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$people_id."',null,95,95);\">";
 	$id = $this->generateID();
 	echo "<td id='$id'></td>";
 	$this->onload("new profile_picture('$id',50,50,'center','middle').loadPeopleStorage($people_id,".json_encode($people["picture"]).",".json_encode($people["picture_revision"]).");");
@@ -170,9 +178,9 @@ foreach ($teachers_ids as $people_id) {
 	echo "<td style='padding-left:10px;white-space:nowrap'>";
 	if ($last_date <> null) {
 		echo "Started on ";
-		datamodel_cell_here($this, PNApplication::$instance->user_management->has_right("edit_curriculum"), "TeacherDates", "start", $last_date["id"], $last_date["start"], null);
+		datamodel_cell_here($this, PNApplication::$instance->user_management->hasRight("edit_curriculum"), "TeacherDates", "start", $last_date["id"], $last_date["start"], null);
 		echo "<br/>Until ";
-		datamodel_cell_here($this, PNApplication::$instance->user_management->has_right("edit_curriculum"), "TeacherDates", "end", $last_date["id"], $last_date["end"], null);
+		datamodel_cell_here($this, PNApplication::$instance->user_management->hasRight("edit_curriculum"), "TeacherDates", "end", $last_date["id"], $last_date["end"], null);
 	}
 	echo "</td>";
 	if ($current_assignments !== null) {

@@ -15,16 +15,17 @@ class calendar extends Component {
 	 * @param string $calendar_icon url of the icon for this calendar, or null
 	 * @param array $readable_rights associative array of right name =&gt; right value, needed to access the calendar in read access
 	 * @param array $writable_rights associative array of right name =&gt; right value, needed to access the calendar in write access
+	 * @param string|null $internal_data data to store with the calendar
 	 * @return boolean|number the calendar id, or false if it failed.
 	 */
 	public function createSharedCalendar($calendar_name, $calendar_color, $calendar_icon, $readable_rights, $writable_rights, $internal_data = null) {
 		foreach ($readable_rights as $name=>$value)
-			if (!PNApplication::$instance->user_management->has_right($name, $value)) {
+			if (!PNApplication::$instance->user_management->hasRight($name, $value)) {
 				PNApplication::error("You cannot create a calendar with right ".$name." because you don't have this right");
 				return false;
 			}
 		foreach ($writable_rights as $name=>$value)
-			if (!PNApplication::$instance->user_management->has_right($name, $value)) {
+			if (!PNApplication::$instance->user_management->hasRight($name, $value)) {
 				PNApplication::error("You cannot create a calendar with right ".$name." because you don't have this right");
 				return false;
 			}
@@ -86,6 +87,25 @@ class calendar extends Component {
 	}
 	
 	/**
+	 * Remove a writable right on a shared calendar
+	 * @param integer $calendar_id the calendar
+	 * @param string $right_name which right
+	 * @param string $right_value which value for the right
+	 */
+	public function removeSharedCalendarWritableRight($calendar_id, $right_name, $right_value) {
+		SQLQuery::create()->bypassSecurity()->removeKey("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$right_name));
+	}
+	/**
+	 * Add a writable right on a shared calendar
+	 * @param integer $calendar_id the calendar
+	 * @param string $right_name which right
+	 * @param string $right_value which value for the right
+	 */
+	public function addSharedCalendarWritableRight($calendar_id, $right_name, $right_value) {
+		SQLQuery::create()->bypassSecurity()->insert("CalendarRights", array("calendar"=>$calendar_id,"right_name"=>$right_name,"right_value"=>$right_value,"writable"=>true));
+	}
+	
+	/**
 	 * Remove the given shared calendar
 	 * @param integer $id identifier of the calendar to remove
 	 * @return boolean true on success
@@ -99,6 +119,10 @@ class calendar extends Component {
 		return true;
 	}
 	
+	public function renameCalendar($id, $name) {
+		SQLQuery::create()->bypassSecurity()->updateByKey("Calendar", $id, array("name"=>$name));
+	}
+	
 	/**
 	 * Check if the current user can read the calendar
 	 * @param number $calendar_id calendar id
@@ -109,7 +133,7 @@ class calendar extends Component {
 		if ($r <> null) return true;
 		$rights = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->where("calendar", $calendar_id)->execute();
 		foreach ($rights as $r)
-			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
+			if (PNApplication::$instance->user_management->hasRight($r["right_name"], $r["right_value"]))
 				return true;
 		return false;
 	}
@@ -124,7 +148,7 @@ class calendar extends Component {
 		if ($r <> null) return true;
 		$rights = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->where("calendar", $calendar_id)->where("writable",true)->execute();
 		foreach ($rights as $r)
-			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
+			if (PNApplication::$instance->user_management->hasRight($r["right_name"], $r["right_value"]))
 				return true;
 		return false;
 	}
@@ -141,7 +165,7 @@ class calendar extends Component {
 		$res = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->execute();
 		foreach ($res as $r) {
 			if (in_array($r["calendar"], $ids)) continue;
-			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
+			if (PNApplication::$instance->user_management->hasRight($r["right_name"], $r["right_value"]))
 				array_push($ids, $r["calendar"]);
 		}
 		return $ids;
@@ -159,7 +183,7 @@ class calendar extends Component {
 		$res = SQLQuery::create()->bypassSecurity()->select("CalendarRights")->where("writable",true)->execute();
 		foreach ($res as $r) {
 			if (in_array($r["calendar"], $ids)) continue;
-			if (PNApplication::$instance->user_management->has_right($r["right_name"], $r["right_value"]))
+			if (PNApplication::$instance->user_management->hasRight($r["right_name"], $r["right_value"]))
 				array_push($ids, $r["calendar"]);
 		}
 		return $ids;
@@ -259,6 +283,12 @@ class calendar extends Component {
 		return true;
 	}
 	
+	/**
+	 * Save the frequency part of an event
+	 * @param number $event_id the event ID
+	 * @param array $frequency frequency data
+	 * @param boolean $is_new indicates if this is a new event
+	 */
 	private function saveEventFrequency($event_id, $frequency, $is_new) {
 		if (!$is_new)
 			$exists = SQLQuery::create()->bypassSecurity()->select("CalendarEventFrequency")->whereValue("CalendarEventFrequency","event",$event_id)->field("event")->executeSingleValue();
@@ -291,6 +321,12 @@ class calendar extends Component {
 		}
 	}
 	
+	/**
+	 * Save attendees of an event
+	 * @param number $event_id the event ID
+	 * @param array $attendees the attendees
+	 * @param boolean $is_new indicates if this is a new event
+	 */
 	private function saveEventAttendees($event_id, $attendees, $is_new) {
 		if ($attendees == null) $attendees = array();
 		if (!$is_new)
@@ -309,7 +345,7 @@ class calendar extends Component {
 				if (!isset($attendees[$i]["creator"]))
 					$attendees[$i]["creator"] = false;
 				if (!isset($attendees[$i]["role"]))
-					$attendees[$i]["rolw"] = "NONE";
+					$attendees[$i]["role"] = "NONE";
 				$attendees[$i]["event"] = $event_id;
 				if (@$attendees[$i]["people"] > 0 && !in_array($attendees[$i]["people"], $peoples_ids)) array_push($peoples_ids, $attendees[$i]["people"]);
 				if (@$attendees[$i]["people_email"] > 0 && !in_array($attendees[$i]["people_email"], $contacts_ids)) array_push($contacts_ids, $attendees[$i]["people_email"]);
@@ -351,6 +387,13 @@ class calendar extends Component {
 		return $ev_name;
 	}
 	
+	/**
+	 * Retrieve an event from database
+	 * @param number $calendar_id ID of the calendar the event belongs to
+	 * @param number $event_id the event ID
+	 * @param boolean $include_frequency if true, frequency information will be included
+	 * @return array|boolean the event, or false if an error occured
+	 */
 	public function getEvent($calendar_id, $event_id, $include_frequency = false) {
 		if(!$this->canReadCalendar($calendar_id)){
 			PNApplication::error("Access denied to this calendar");
@@ -374,6 +417,7 @@ class calendar extends Component {
 	 * @param SQLQuery $q the query to join
 	 * @param string $from_table origin table name
 	 * @param string $from_key foreign key name in the origin table
+	 * @param boolean $with_frequency if true, will join also with table CalendarEventFrequency
 	 */
 	public function joinCalendarEvent(&$q, $from_table, $from_key, $with_frequency = false) {
 		$q->join($from_table, "CalendarEvent", array($from_key=>"id"));
@@ -404,10 +448,19 @@ class calendar extends Component {
 			$q->where("`$event_alias`.`end` > '$now'");
 	}
 	
+	/**
+	 * Retrieve all calendars from database, without any security check (used for synchronization with Google in cron task)
+	 * @return array the rows from the Calendar table
+	 */
 	public function getAllCalendarsWithoutSecurity() {
 		return SQLQuery::create()->bypassSecurity()->select("Calendar")->execute();
 	}
 	
+	/**
+	 * Get all events from a calendar, without any security check (used for synchronization with Google in cron task)
+	 * @param number $calendar_id calendar ID
+	 * @return array the events, including frequency and attendees information
+	 */
 	public function getAllCalendarEventsWithoutSecurity($calendar_id) {
 		$events = SQLQuery::create()->bypassSecurity()->select("CalendarEvent")->whereValue("CalendarEvent","calendar",$calendar_id)->execute();
 		if (count($events) == 0) return array();
@@ -425,8 +478,8 @@ class calendar extends Component {
 		foreach ($frequencies as $f) $list[$f["event"]]["frequency"] = $f;
 		return $list;
 	}
-	/**
-	 * @return CustomCalendarPlugin[]
+	/** Get all custom calendars plugins declared by components
+	 * @return CustomCalendarPlugin[] the plugins
 	 */
 	public function getAllCustomCalendars() {
 		require_once("component/calendar/CustomCalendarPlugin.inc");
@@ -438,6 +491,11 @@ class calendar extends Component {
 		return $list;
 	}
 	
+	/**
+	 * Retrieve all the users who can access the given calendar (used to by shared on Google)
+	 * @param number $calendar_id calendar ID
+	 * @return number[] list of users id
+	 */
 	public function getUsersWhoCanReadCalendar($calendar_id) {
 		// get user calendars
 		$list = SQLQuery::create()->bypassSecurity()->select("UserCalendar")->whereValue("UserCalendar","calendar",$calendar_id)->field("user")->distinct()->executeSingleField();
@@ -450,6 +508,13 @@ class calendar extends Component {
 		return $list;
 	}
 	
+	/**
+	 * Retrieve the attendees from events
+	 * @param number[] $ids events ids
+	 * @param boolean $include_people if true, people information will be included for attendees attached to a people
+	 * @param boolean $bypass_security if true, no security check will be performed while accessing the database
+	 * @return array associative array with the event ID as key, an the list of attendees as value
+	 */
 	public function getEventsAttendees($ids, $include_people = false, $bypass_security = false) {
 		$q = SQLQuery::create()->bypassSecurity($bypass_security)
 			->select("CalendarEventAttendee")

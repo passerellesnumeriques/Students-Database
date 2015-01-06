@@ -8,7 +8,7 @@ class page_list extends Page {
 		
 		$departments = SQLQuery::create()->select("PNDepartment")->orderBy("PNDepartment","name",true)->execute();
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_staff", true);
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_staff", true);
 ?>
 <div id='list_container' style='width:100%;height:100%'>
 </div>
@@ -68,7 +68,7 @@ new data_list(
 				alert("Google is not yet configured. Please ask your administrator to configure it.");
 				return;
 			}
-			popup_frame("/static/google/google.png", "Synchronize Staff information from Google", "/dynamic/staff/page/synch_google", null, null, null, function(frame,popup) {
+			popupFrame("/static/google/google.png", "Synchronize Staff information from Google", "/dynamic/staff/page/synch_google", null, null, null, function(frame,popup) {
 				frame.synch_done = function() { list.reloadData(); };
 			});
 		};
@@ -77,7 +77,7 @@ new data_list(
 		<?php } ?>
 		
 		list.makeRowsClickable(function(row){
-			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
+			window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
 		});
 		layout.changed(list.container);
 	}

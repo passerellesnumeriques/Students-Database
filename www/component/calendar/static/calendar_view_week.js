@@ -1,6 +1,6 @@
-if (typeof get_script_path != 'undefined') {
+if (typeof getScriptPath != 'undefined') {
 	/** url to access the same directory */
-	var url = get_script_path("calendar_view_week.js");
+	var url = getScriptPath("calendar_view_week.js");
 	addJavascript(url+"day_column_layout.js");
 	addJavascript(url+"day_row_layout.js");
 }
@@ -246,7 +246,7 @@ function calendar_view_week(view, container) {
 		}
 		
 		this._createTimeScale();
-		addJavascript(get_script_path("calendar_view_week.js")+"day_column_layout.js",function(){
+		addJavascript(getScriptPath("calendar_view_week.js")+"day_column_layout.js",function(){
 			t.day_column = [];
 			for (var i = 0; i < 7; ++i)
 				t.day_column[i] = new DayColumnLayout(view.calendar_manager);

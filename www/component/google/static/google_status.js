@@ -27,7 +27,7 @@ function google_status(container) {
 	};
 	
 	window.top.addJavascript("/static/google/google.js",function() {
-		window.top.google.connection_event.add_listener(function(){t.update_icon();});
+		window.top.google.connection_event.addListener(function(){t.update_icon();});
 		t.update_icon();
 	});
 	

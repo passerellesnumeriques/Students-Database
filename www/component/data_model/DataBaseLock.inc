@@ -30,6 +30,13 @@ class DataBaseLock {
 	public static function lockTableForInsert($table, &$locked_by, $bypass_security = false) {
 		return DataBaseLock::lock($table, self::$ROW_KEY_FOR_INSERT, null, $locked_by, $bypass_security);
 	}
+
+	public static function lockTableForEver($table, $reason, &$locked_by) {
+		return DataBaseLock::lock($table, null, null, $locked_by, true, $reason);
+	}
+	public static function unlockTableForEver($table, $reason) {
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("DELETE FROM `DataLocks` WHERE `table`='".SQLQuery::escape($table)."' AND `row_key` IS NULL AND `column` IS NULL AND `locker_domain`='' AND `locker_username`='".SQLQuery::escape($reason)."'");
+	}
 	
 	/** lock a row in a table, based on its primary key
 	 * @param string $table the table in which to lock a row
@@ -74,10 +81,10 @@ class DataBaseLock {
 	 * @param boolean $bypass_security do not check if the current user has the right to obtain this lock
 	 * @return integer|null lock id or null
 	 */
-	private static function lock($table, $row_key, $column, &$locked_by, $bypass_security) {
+	private static function lock($table, $row_key, $column, &$locked_by, $bypass_security, $forever_reason = false) {
 		for ($i = 0; $i < 10; $i++) {
 			$locked_by = null;
-			$id = DataBaseLock::tryLock($table, $row_key, $column, $locked_by, $bypass_security);
+			$id = DataBaseLock::tryLock($table, $row_key, $column, $locked_by, $bypass_security, $forever_reason);
 			if ($id <> null) return $id;
 			if ($i < 9) usleep(100000);
 		}
@@ -110,7 +117,7 @@ class DataBaseLock {
 	 * @param boolean $bypass_security do not check if the current user has the right to obtain this lock
 	 * @return integer|null lock id or null
 	 */
-	private static function tryLock($table, $row_key, $column, &$locked_by, $bypass_security) {
+	private static function tryLock($table, $row_key, $column, &$locked_by, $bypass_security, $forever_reason = false) {
 		if (!$bypass_security && !DataBaseLock::isLockedByUser($table, $row_key, $column)) {
 			require_once("component/data_model/Model.inc");
 			$t = DataModel::get()->getTableFromSQLName($table);
@@ -167,7 +174,8 @@ class DataBaseLock {
 		$lock_user = DataBaseLock::isLocked($table, $row_key, $column);
 		if ($lock_user <> null && is_string($lock_user)) {
 			$i = strpos($lock_user, "\\");
-			$locked_by = PNApplication::$instance->user_management->getUserFullName(substr($lock_user,0,$i),substr($lock_user,$i+1));
+			if ($i === 0) $locked_by = substr($lock_user,1);
+			else $locked_by = PNApplication::$instance->user_management->getUserFullName(substr($lock_user,0,$i),substr($lock_user,$i+1));
 			return null;
 		}
 		$row_key = self::normalizeKey($row_key);
@@ -175,9 +183,10 @@ class DataBaseLock {
 			"INSERT INTO DataLocks".
 			" (`timestamp`,`locker_domain`,`locker_username`,`table`,`row_key`,`column`)".
 			" VALUE (".
+				($forever_reason ? "'1000000000000','','$forever_reason'" : 
 				time().
 				",'".$db->escapeString(PNApplication::$instance->user_management->domain)."'".
-				",'".$db->escapeString(PNApplication::$instance->user_management->username)."'".
+				",'".$db->escapeString(PNApplication::$instance->user_management->username)."'").
 				",'".$db->escapeString($table)."'".
 				",".($row_key <> null ? "'".$db->escapeString(json_encode($row_key))."'" : "NULL").
 				",".($column <> null ? "'".$db->escapeString($column)."'" : "NULL").
@@ -307,11 +316,13 @@ class DataBaseLock {
 		$sql = "INSERT INTO DataLocks".
 			" (`timestamp`,`locker_domain`,`locker_username`,`table`,`row_key`,`column`)".
 			" VALUES ";
-		$first = true;
+		$nb = 0;
+		$query = "";
+		$ids = array();
 		foreach ($row_keys as $row_key) {
 			$row_key = self::normalizeKey($row_key);
-			if ($first) $first = false; else $sql .= ",";
-			$sql .= "(".
+			if ($nb > 0) $query .= ",";
+			$query .= "(".
 				time().
 				",'".$db->escapeString(PNApplication::$instance->user_management->domain)."'".
 				",'".$db->escapeString(PNApplication::$instance->user_management->username)."'".
@@ -319,18 +330,36 @@ class DataBaseLock {
 				",'".$db->escapeString(json_encode($row_key))."'".
 				",NULL".
 				")";
+			$nb++;
+			if ($nb == 250) {
+				$db->execute($sql.$query);
+				$id = $db->getInsertID();
+				if ($id <> 0) {
+					$nb_rows = $db->affectedRows();
+					if ($nb_rows == $nb) {
+						$res = $db->execute("SELECT LAST_INSERT_ID()");
+						$row = $db->nextRow($res);
+						$id = $row["LAST_INSERT_ID()"];
+						for ($i = 0; $i < $nb_rows; $i++)
+							array_push($ids, $id+$i);
+					}
+				}
+				$query = "";
+				$nb = 0;
+			}
 		}
-		$db->execute($sql);
-		$id = $db->getInsertID();
-		$ids = array();
-		if ($id <> 0) {
-			$nb_rows = $db->affectedRows();
-			if ($nb_rows == count($row_keys)) {
-				$res = $db->execute("SELECT LAST_INSERT_ID()");
-				$row = $db->nextRow($res);
-				$id = $row["LAST_INSERT_ID()"];
-				for ($i = 0; $i < $nb_rows; $i++)
-					array_push($ids, $id+$i);
+		if ($nb > 0) {
+			$db->execute($sql.$query);
+			$id = $db->getInsertID();
+			if ($id <> 0) {
+				$nb_rows = $db->affectedRows();
+				if ($nb_rows == $nb) {
+					$res = $db->execute("SELECT LAST_INSERT_ID()");
+					$row = $db->nextRow($res);
+					$id = $row["LAST_INSERT_ID()"];
+					for ($i = 0; $i < $nb_rows; $i++)
+						array_push($ids, $id+$i);
+				}
 			}
 		}
 		$lock_user = DataBaseLock::areRowsLocked($table, $row_keys, $ids);
@@ -642,6 +671,18 @@ class DataBaseLock {
 		if ($row_key == null) return "This lock locks a row while you are asking for a full table or a column";
 		if (json_encode($row_key) == $r["row_key"]) return null;
 		return "This lock locks a different row";
+	}
+	
+	public static function getCurrentLocksIds() {
+		if (PNApplication::$instance->user_management->username == null) return array();
+		return SQLQuery::create()
+			->bypassSecurity()
+			->select("DataLocks")
+			->whereValue("DataLocks","locker_domain",PNApplication::$instance->user_management->domain)
+			->whereValue("DataLocks","locker_username",PNApplication::$instance->user_management->username)
+			->whereNotValue("DataLocks","timestamp","1000000000000")
+			->field("id")
+			->executeSingleField();
 	}
 	
 	/** Generate the necessary JavaScript code so the given lock if will be added to the list of locks

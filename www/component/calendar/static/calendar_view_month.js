@@ -5,6 +5,9 @@
  */
 function calendar_view_month(view, container) {
 
+	/**
+	 * Adjust the start and end dates to start on a Monday, and to end on a Sunday
+	 */
 	this._adjustDates = function() {
 		this.month = view.cursor_date.getMonth()+1;
 		this.start_date = new Date(view.cursor_date.getTime());
@@ -64,7 +67,7 @@ function calendar_view_month(view, container) {
 		this._adjustDates();
 		this._reloadEvents();
 	};
-	
+	/** Refresh the view by reloading the events according to the start and end dates */
 	this._reloadEvents = function() {
 		container.removeAllChildren();
 		this._init();
@@ -185,6 +188,9 @@ function calendar_view_month(view, container) {
 		}
 	};
 	
+	/** Create the DIV element to display an event
+	 * @param {CalendarEvent} ev the event
+	 */
 	this._createEventDiv = function(ev) {
 		var cal = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
 		if (!cal) return null; // calendar has been removed
@@ -194,7 +200,10 @@ function calendar_view_month(view, container) {
 		div.style.marginBottom = "1px";
 		return div;
 	};
-	
+	/** Retrieve the cell corresponding to the given date
+	 * @param {Date} date the date we are looking for
+	 * @returns {Element} the cell, or null if the date is not in the range
+	 */
 	this._getTD = function(date) {
 		var start = this.start_date.getTime()/(24*60*60*1000);
 		var day = date.getTime()/(24*60*60*1000);
@@ -205,7 +214,7 @@ function calendar_view_month(view, container) {
 		day = Math.floor(day-start)-week*7;
 		return this._tbody.childNodes[week].childNodes[day];
 	};
-	
+	/** Re-layout cells, to handle events which are on several days */
 	t._refreshCellsLayout = function() {
 		for (var week = 0; week < this._tbody.childNodes.length; ++week) {
 			var tr = this._tbody.childNodes[week];
@@ -235,7 +244,7 @@ function calendar_view_month(view, container) {
 			}
 		}
 	};
-	
+	/** Layout the view to adjust according to the available space */
 	this._layout = function() {
 		var total_width = container.clientWidth;
 		var day_width = total_width/7;
@@ -264,7 +273,7 @@ function calendar_view_month(view, container) {
 		}
 		t._refreshCellsLayout();
 	};
-	
+	/** Initialization of the view */
 	this._init = function() {
 		container.style.overflow = "auto";
 		this._table = document.createElement("TABLE");

@@ -51,6 +51,9 @@ class service_get_data_list extends Service {
 				return;
 			}
 		}
+		
+		if (isset($input["progress_id"]))
+			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 2); // we analyzed the model: 2% progress 
 
 		$model = DataModel::get();
 		
@@ -265,7 +268,7 @@ class service_get_data_list extends Service {
 			if (isset($input["page_size"])) {
 				// calculate the total number of entries
 				$count = new SQLQuery($q);
-				$count->resetFields();
+				$count->resetNonSubQueryFields();
 				$count->removeUnusefulJoinsForCounting();
 				$count = $count->count("NB_DATA")->executeSingleRow();
 				$count = $count["NB_DATA"];
@@ -277,9 +280,19 @@ class service_get_data_list extends Service {
 				$q->limit(($page-1)*$nb, $nb);
 			}
 		}
+		
+		if (isset($input["progress_id"]))
+			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 5); // request ready: 5% progress
+		
 		$query_start_time = microtime(true);
 		// execute the query
+		set_time_limit(300);
 		$res = $q->execute();
+
+		if (isset($input["progress_id"]))
+			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 15); // request executed: 15% progress
+		
+		$nb_rows = count($res);
 		
 		// handle necessary sub requests
 		$sub_models_linked = array();
@@ -297,11 +310,13 @@ class service_get_data_list extends Service {
 				array_push($sub_models_linked[$sm_table][$data_aliases[$i]["sub_model_key"]][$data_aliases[$i]["sub_model_table"]]["indexes"], $i);
 				continue;
 			}
+			if ($nb_rows > 500) set_time_limit(30+floor($nb_rows/100));
 			$data->performSubRequests($q, $res, $data_aliases[$i], $path);
 		}
 		foreach ($sub_models_linked as $sm_table=>$sm_keys) {
 			foreach ($sm_keys as $sm_key_alias=>$entry_tables) {
 				$instances = array();
+				if ($nb_rows > 500) set_time_limit(30+floor($nb_rows/100));
 				foreach ($res as $row)
 					if (isset($row[$sm_key_alias]) && !in_array($row[$sm_key_alias], $instances))
 						array_push($instances, $row[$sm_key_alias]);
@@ -353,6 +368,9 @@ class service_get_data_list extends Service {
 			}
 		}
 		$query_end_time = microtime(true);
+
+		if (isset($input["progress_id"]))
+			PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 25); // requests done: 25% progress
 		
 		if (!$sort_done) {
 			// manual sort
@@ -402,37 +420,121 @@ class service_get_data_list extends Service {
 			}
 			echo "]";
 			echo "}";
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], "done");
 		} else {
 			/* -- export -- */
 			// create excel
+			set_time_limit(300);
 			error_reporting(E_ERROR | E_PARSE);
 			require_once("component/lib_php_excel/PHPExcel.php");
 			$excel = new PHPExcel();
 			$sheet = new PHPExcel_Worksheet($excel, "List");
 			$excel->addSheet($sheet);
 			$excel->removeSheetByIndex(0);
+			// get multiple export fields
+			$multiple = array();
+			for ($i = 0; $i < count($fields); $i++) {
+				$data = $display_data[$i];
+				$data_name = $data->getCategoryName().".".$data->getDisplayName();
+				if (isset($multiple[$data_name])) continue;
+				$max = 0;
+				foreach ($res as $row) {
+					$a = $data_aliases[$i];
+					$value = $data->getData($row, $a);
+					$path = $paths[$i];
+					$times = $data->getExportTimes($value, $path->sub_model);
+					if ($times > $max) $max = $times;
+				}
+				$multiple[$data_name] = $max;
+			}
 			// column headers
+			$has_sub_data = false;
+			foreach ($fields as $f) if ($f["sub_index"] <> -1) { $has_sub_data = true; break; }
 			$col_index = 0;
 			for ($i = 0; $i < count($display_data); $i++) {
 				$data = $display_data[$i];
-				$sheet->setCellValueByColumnAndRow($i, 1, $data->getDisplayName());
+				$data_name = $data->getCategoryName().".".$data->getDisplayName();
+				$times = $multiple[$data_name];
+				$count = 1;
+				if ($fields[$i]["sub_index"] <> -1)
+					while ($i+$count < count($display_data) && $fields[$i+$count]["path"] == $fields[$i]["path"]) $count++;
+				for ($num = 1; $num <= $times; $num++) {
+					// set the main title: display name
+					$sheet->setCellValueByColumnAndRow($col_index, 1, $data->getDisplayName().($times > 1 ? " ".$num : ""));
+					$style = $sheet->getStyleByColumnAndRow($col_index, 1);
+					$style->getFont()->setBold(true);
+					$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+					if ($has_sub_data) {
+						// we have sub data
+						if ($fields[$i]["sub_index"] == -1) {
+							// not on this one => merge 2 rows
+							$sheet->mergeCellsByColumnAndRow($col_index, 1, $col_index, 2);
+							$col_index++;
+						} else {
+							// merge the main title
+							$sheet->mergeCellsByColumnAndRow($col_index, 1, $col_index+$count-1, 1);
+							// set the sub-titles
+							$sub_data = $data->getSubDataDisplay();
+							$names = $sub_data->getDisplayNames();
+							for ($j = 0; $j < $count; $j++) {
+								$sub_index = $fields[$i+$j]["sub_index"];
+								$sheet->setCellValueByColumnAndRow($col_index, 2, $names[$sub_index]);
+								$style = $sheet->getStyleByColumnAndRow($col_index, 2);
+								$style->getFont()->setBold(true);
+								$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+								$col_index++;
+							}
+							
+						}
+					} else $col_index++;
+				}
+				$i += $count-1;
 			}
+			$row_index = $has_sub_data ? 3 : 2;
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 30);
 			// put data in excel
-			$row_index = 2;
+			$row_number = 0;
 			foreach ($res as $row) {
+				if (($row_number % 25) == 0 && isset($input["progress_id"]))
+					PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 25+floor($row_number*74/$nb_rows));
+				$row_number++;
+				set_time_limit(30);
 				$col_index = 0;
 				for ($i = 0; $i < count($display_data); $i++) {
 					$a = $data_aliases[$i];
 					$data = $display_data[$i];
 					$path = $paths[$i];
-					$value = $data->getValue($row, $a);
-					$value = $data->exportValue($value, $path->sub_model);
-					$sheet->setCellValueByColumnAndRow($col_index, $row_index, $value);
-					$col_index++;
+					$value = $data->getData($row, $a);
+					$data_name = $data->getCategoryName().".".$data->getDisplayName();
+					$times = $multiple[$data_name];
+					$count = 1;
+					if ($fields[$i]["sub_index"] <> -1)
+						while ($i+$count < count($display_data) && $fields[$i+$count]["path"] == $fields[$i]["path"]) $count++;
+					for ($num = 0; $num < $times; $num++) {
+						if ($fields[$i]["sub_index"] == -1) {
+							$val = $data->exportValueNumber($value, $path->sub_model, $num);
+							$sheet->setCellValueByColumnAndRow($col_index, $row_index, $val);
+							$col_index++;
+						} else {
+							$sub_data = $data->getSubDataDisplay();
+							for ($j = 0; $j < $count; $j++) {
+								$sub_index = $fields[$i+$j]["sub_index"];
+								$val = $sub_data->exportValueNumber($value, $path->sub_model, $sub_index, $num);
+								$sheet->setCellValueByColumnAndRow($col_index, $row_index, $val);
+								$col_index++;
+							}
+						}
+					}
+					$i += $count-1;
 				}
 				$row_index++;
 			}
+			set_time_limit(60);
 			// initialize writer according to requested format
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 99);
 			$format = $input["export"];
 			if ($format == 'excel2007') {
 				header("Content-Disposition: attachment; filename=\"list.xlsx\"");
@@ -449,28 +551,56 @@ class service_get_data_list extends Service {
 				PHPExcel_Settings::setPdfRenderer(PHPExcel_Settings::PDF_RENDERER_MPDF, "component/lib_mpdf/MPDF");
 				$writer = new PHPExcel_Writer_PDF($excel);
 			}
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], 100);
+				
 			// write to output
 			$writer->save('php://output');
+			
+			if (isset($input["progress_id"]))
+				PNApplication::$instance->application->updateTemporaryData($input["progress_id"], "done");
 		}
 	}
 }
 
+/**
+ * Provide sorting for the list of data
+ */
 class DataListRowSorter {
 	
+	/** @var string $alias alias of the column to sort */
 	private $alias;
+	/** @var boolean $asc if true, sort in ascending order, else descending order */
 	private $asc;
 	
+	/**
+	 * Create a sorter
+	 * @param string $alias alias of the column to sort
+	 * @param boolean $asc if true, sort in ascending order, else descending order
+	 */
 	public function __construct($alias, $asc) {
 		$this->alias = $alias;
 		$this->asc = $asc;
 	}
 	
+	/**
+	 * Compare 2 rows
+	 * @param array $row1 first row
+	 * @param array $row2 second row
+	 * @return number -1 if row1 should be before row2, 1 if row2 should be before row1, 0 if they are equal
+	 */
 	public function compare($row1,$row2) {
 		$r = $this->cmp($row1,$row2);
 		if ($this->asc) return $r;
 		return -$r;
 	}
 	
+	/**
+	 * Compare two rows, but without taking the ascending/descending order
+	 * @param array $row1 first row
+	 * @param array $row2 second row
+	 * @return number -1 if row1 should be before row2 in ascending order, 1 if row2 should be before row1 in ascending order, 0 if they are equal
+	 */
 	public function cmp($row1,$row2) {
 		$v1 = @$row1[$this->alias];
 		$v2 = @$row2[$this->alias];

@@ -1,8 +1,16 @@
+/**
+ * Display arrows on the top and bottom if scrolling is available
+ * @param {Element} container the element to be scrolled
+ * @param {String} bgcolor background color
+ * @param {String} color foregroung color
+ * @param {Number} arrow_height height of the arrows
+ */
 function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (!arrow_height) arrow_height = 7;
 	var t=this;
 
+	/** DIV used for the scrolling */ 
 	this.element = document.createElement("DIV");
 	while (container.childNodes.length > 0) this.element.appendChild(container.childNodes[0]);
 	
@@ -10,6 +18,7 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	container.style.flexDirection = "column";
 	container.style.position = "relative";
 	container.style.overflow = "hidden";
+	/** DIV containing the up arrow */
 	this.scroll_up = document.createElement("DIV");
 	this.scroll_up.style.display = "none";
 	this.scroll_up.style.flex = "none";
@@ -22,9 +31,10 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	this.scroll_up.style.position = "absolute";
 	this.scroll_up.style.top = "0px";
 	container.appendChild(this.scroll_up);
-	this.element.style.flex = "1 1 auto";
+	this.element.style.flex = "1 1 100%";
 	this.element.style.zIndex = 0;
 	container.appendChild(this.element);
+	/** DIV containing the down arrow */
 	this.scroll_down = document.createElement("DIV");
 	this.scroll_down.style.display = "none";
 	this.scroll_down.style.flex = "none";
@@ -38,24 +48,31 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 	this.scroll_down.style.bottom = "0px";
 	container.appendChild(this.scroll_down);
 	
+	/** DIV representing the up arrow */
 	this.arrow_up = document.createElement("DIV");
 	this.arrow_up.style.borderBottom = arrow_height+"px solid "+color;
 	this.scroll_up.appendChild(this.arrow_up);
 
+	/** DIV representing the down arrow */
 	this.arrow_down = document.createElement("DIV");
 	this.arrow_down.style.borderTop = arrow_height+"px solid "+color;
 	this.scroll_down.appendChild(this.arrow_down);
 	
+	/** Indicates if we are scrolling left or right */
 	this._scrolling_way = 0;
+	/** Interval used when an arrow is pressed */
 	this._scrolling_interval = null;
+	/** Called when an arrow is pressed */
 	this.startScrolling = function() {
 		this._scrolling_interval = setInterval(function() { t.doScrolling(); }, 10);
 	};
+	/** Called when an arrow is released */
 	this.stopScrolling = function() {
 		if (!this._scrolling_interval) return;
 		clearInterval(this._scrolling_interval);
 		this._scrolling_interval = null;
 	};
+	/** Scrolls while an arrow is pressed */
 	this.doScrolling = function() {
 		var scroll = t._scrolling_way;
 		if (t._scrolling_way < 0 && container.scrollTop + scroll < 0)
@@ -96,6 +113,7 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 		t._scrolling_way = 0;
 	};
 	
+	/** Called by the layout */
 	this.layout = function() {
 		if (this.element.scrollHeight > this.element.clientHeight) {
 			// scrolling

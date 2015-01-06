@@ -138,7 +138,7 @@ if ($google_account == null || $google_account["google_login"] == null) {
 <?php 
 }
 }
-if (PNApplication::$instance->user_management->has_right("manage_application")) {
+if (PNApplication::$instance->user_management->hasRight("manage_application")) {
 global $pn_app_version;
 ?>
 <div style='flex:none;display:none;padding:5px 10px;' id='new_version_available'>
@@ -231,8 +231,8 @@ function init_calendars() {
 			icon_loading.style.display = 'none';
 		}
 	};
-	window.top.calendar_manager.on_refresh.add_listener(refresh_listener);
-	window.top.calendar_manager.on_refresh_done.add_listener(refresh_done_listener);
+	window.top.calendar_manager.on_refresh.addListener(refresh_listener);
+	window.top.calendar_manager.on_refresh_done.addListener(refresh_done_listener);
 	require("calendar_view.js",function() {
 		new CalendarView(window.top.calendar_manager, "upcoming", 7, 'calendars_container', function() {
 		});
@@ -280,12 +280,12 @@ function init_calendars() {
 	};
 	for (var i = 0; i < window.top.calendar_manager.calendars.length; ++i)
 		new_calendar(window.top.calendar_manager.calendars[i]);
-	window.top.calendar_manager.on_calendar_added.add_listener(new_calendar);
-	window.pnapplication.onclose.add_listener(function() {
+	window.top.calendar_manager.on_calendar_added.addListener(new_calendar);
+	window.pnapplication.onclose.addListener(function() {
 		if (!window.top.calendar_manager) return;
-		window.top.calendar_manager.on_refresh.remove_listener(refresh_listener);
-		window.top.calendar_manager.on_refresh_done.remove_listener(refresh_done_listener);
-		window.top.calendar_manager.on_calendar_added.remove_listener(new_calendar);
+		window.top.calendar_manager.on_refresh.removeListener(refresh_listener);
+		window.top.calendar_manager.on_refresh_done.removeListener(refresh_done_listener);
+		window.top.calendar_manager.on_calendar_added.removeListener(new_calendar);
 	});
 }
 window.top.require("calendar.js",function() {

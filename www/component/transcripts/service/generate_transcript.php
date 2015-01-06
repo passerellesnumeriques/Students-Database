@@ -9,7 +9,7 @@ class service_generate_transcript extends Service {
 	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
-		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+		if (!PNApplication::$instance->user_management->hasRight("consult_students_grades")) {
 			// it can be the student itself
 			$ok = false;
 			if (in_array("student",PNApplication::$instance->user_management->people_types)) {

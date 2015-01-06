@@ -74,30 +74,47 @@ table.data_list_select_fields_menu {
 	border-collapse: collapse;
 	border-spacing: 0px;
 }
-table.data_list_select_fields_menu tr.header {
-	background-color: #C0C0FF;
-}
-table.data_list_select_fields_menu tr.header>td {
-	border-bottom: 1px solid black;
-	border-left: 1px solid black;
-	text-align: center;
-	margin: 0px;
-	padding: 2px;
-}
-table.data_list_select_fields_menu tr.header>td:first-child {
-	border-left: 0px;
-}
-table.data_list_select_fields_menu tr.content>td {
+table.data_list_select_fields_menu td {
+	border: 1px solid black;
+	border-top: 0px;
 	vertical-align: top;
-	margin: 0px;
-	padding: 2px;
-	border-left: 1px solid black;
+	padding: 0px;
 }
-table.data_list_select_fields_menu tr.content>td:first-child {
-	border-left: 0px;
+table.data_list_select_fields_menu .header {
+	background-color: #C0C0FF;
+	text-align: center;
+	border-bottom: 1px solid black;
+	border-top: 1px solid black;
+	font-size: 10pt;
+	padding: 1px 2px;
+	white-space: nowrap;
 }
-table.data_list_select_fields_menu tr.content>td>.sub_data {
+table.data_list_select_fields_menu .content {
+	background-color: white;
+	text-align: left;
+	font-size: 8pt;
+	padding: 0px 2px;
+	white-space: nowrap;
+}
+table.data_list_select_fields_menu td input {
+	height: 12px;
+	vertical-align: middle;
+}
+table.data_list_select_fields_menu .sub_data {
 	margin-left: 20px;
+}
+table.data_list_select_fields_menu .sub_table {
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+table.data_list_select_fields_menu .sub_table td:first-child {
+	border-left: none;
+}
+table.data_list_select_fields_menu .sub_table td:last-child {
+	border-right: none;
+}
+table.data_list_select_fields_menu .sub_table td {
+	border-bottom: none;
 }
 .data_list_filter {
 }

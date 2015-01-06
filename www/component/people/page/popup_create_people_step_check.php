@@ -6,6 +6,8 @@ class page_popup_create_people_step_check extends Page {
 	public function execute() {
 		$input = json_decode($_POST["input"], true);
 		$peoples = $input["peoples"];
+		$root_table = $input["root_table"];
+		$sub_model = $input["sub_model"];
 		$sub_models = @$input["sub_models"];
 		$multiple = isset($input["multiple"]);
 		$first_names = array();
@@ -85,20 +87,18 @@ class page_popup_create_people_step_check extends Page {
 							$last_name = $d["value"];
 					$fn = strtolower(latinize($first_name));
 					$ln = strtolower(latinize($last_name));
-					// search same
-					$same = null;
-					foreach ($matching_peoples as $mp)
-						if ($mp["fn"] == $fn && $mp["ln"] == $ln) { $same = $mp; break; }
+					// search same and similars
+					$same = array();
 					$similars = array();
-					if ($same == null) {
-						// search similar
-						foreach ($matching_peoples as $mp) {
+					foreach ($matching_peoples as $mp) {
+						if ($mp["fn"] == $fn && $mp["ln"] == $ln) array_push($same, $mp);
+						else {
 							if (!str_similar($fn, $mp["fn"])) continue;
 							if (!str_similar($ln, $mp["ln"])) continue;
 							array_push($similars, $mp);
 						}
-					} 
-					if ($same == null && count($similars) == 0)
+					}
+					if (count($same) == 0 && count($similars) == 0)
 						array_push($ok, $people);
 					else
 						array_push($to_check, array($people,$same,$similars));
@@ -116,11 +116,13 @@ class page_popup_create_people_step_check extends Page {
 		}
 		echo "];\n";
 		?>
-		window.popup = window.parent.get_popup_window_from_frame(window);
+		window.popup = window.parent.getPopupFromFrame(window);
 		function send() {
 			if (!popup.freezer) popup.freeze();
 			window.popup.removeButtons();
 			var data = {peoples:peoples};
+			data.root_table = <?php echo json_encode($root_table);?>;
+			data.sub_model = <?php echo json_encode($sub_model);?>;
 			data.sub_models = <?php echo json_encode($sub_models);?>;
 			<?php if ($multiple) echo "data.multiple = true;";?>
 			<?php 
@@ -135,7 +137,7 @@ class page_popup_create_people_step_check extends Page {
 		if (count($to_check) > 0) {
 			require_once("component/data_model/Model.inc");
 			$table = DataModel::get()->getTable("People");
-			echo "<div style='background-color:white'>";
+			echo "<div style='background-color:white;padding:5px;'>";
 			echo "<form name='to_check'>";
 			echo "The following people have been found in the database:<ul>";
 			for ($itc = 0; $itc < count($to_check); $itc++) {
@@ -157,15 +159,23 @@ class page_popup_create_people_step_check extends Page {
 						else if ($d["name"] == "Last Name")
 							$last_name = $d["value"];
 						$li_id = $this->generateID();
-						echo "<li id='$li_id'>".$first_name." ".$last_name.":<ul>";
-						if ($same <> null)
-							$this->similarPeople("seems to be the same as", $same, $path, $table, $li_id, $sub_models, $itc);
+						echo "<li id='$li_id' style='margin-bottom:10px;border-bottom:1px solid black'>".toHTML($first_name." ".$last_name);
+						if (count($same) > 0) {
+							echo " has exactly the same name as ".count($same)." people we already know";
+							if (count($similars) > 0)
+								echo ", plus we have ".count($similars)." people who have a similar name";
+						} else
+							echo ": we found ".count($similars)." people who have a similar name";
+						echo "<br/>";
+						echo "<table>";
+						foreach ($same as $similar)
+							$this->similarPeople("Exactly the same name", $similar, $path, $table, $li_id, $sub_models, $itc);
 						foreach ($similars as $similar)
-							$this->similarPeople("may be the same as", $similar, $path, $table, $li_id, $sub_models, $itc);
-						echo "</ul>";
-						echo "<a href='#' onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);peoples.push(window._new_peoples[$itc]);window.oneDone();return false;\">";
-						echo "This is a new person, I want to create it";
-						echo "</a>";
+							$this->similarPeople("Similar name", $similar, $path, $table, $li_id, $sub_models, $itc);
+						echo "</table>";
+						echo "<button style='margin: 4px 2px' onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);peoples.push(window._new_peoples[$itc]);window.oneDone();return false;\">";
+						echo toHTML($first_name." ".$last_name)." is a new person, I want to create it";
+						echo "</button>";
 						echo "</li>";
 					}
 				}
@@ -212,7 +222,7 @@ class page_popup_create_people_step_check extends Page {
 							for (var k = 0; k < p.value.length; ++k)
 								data.prefilled_data.push({table:table,data:p.value[k].name,value:p.value[k].value});
 					}
-					window.parent.popup_frame(
+					window.parent.popupFrame(
 						null,'New Person',
 						'/dynamic/people/page/people_new_type?people='+people_id+'&ondone=done&oncancel=done&type='+types[i]<?php if ($sub_models <> null) echo "+'&sub_models=".urlencode(json_encode($sub_models))."'";?>,
 						data,null,null,
@@ -234,11 +244,18 @@ class page_popup_create_people_step_check extends Page {
 	}
 	
 	private function similarPeople($msg, $similar, $path, $table, $li_id, $sub_models, $itc) {
+		$this->requireJavascript("profile_picture.js");
 		$id = $this->generateID();
-		echo "<li id='$id'>$msg ";
-		echo "<a href='#' class='black_link' title='Click to see the profile' onclick=\"window.top.popup_frame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$similar["id"]."',null,95,95);return false;\">";
+		echo "<tr id='$id'>";
+		$pic_id = $this->generateID();
+		echo "<td id='$pic_id' style='cursor:pointer;vertical-align:top;border-bottom:1px solid #808080' title='Click to see the details of this person' onclick=\"window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$similar["id"]."',null,95,95);return false;\">";
+		$this->onload("new profile_picture('$pic_id',30,30,'center','center').loadPeopleID(".$similar["id"].");");
+		echo "</td>"; 
+		echo "<td style='cursor:pointer;vertical-align:top;border-bottom:1px solid #808080' title='Click to see the details of this person' onclick=\"window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$similar["id"]."',null,95,95);return false;\">";
+		echo $msg.": <br/>";
 		echo $table->getRowDescription($similar);
-		echo "</a><br/>";
+		echo "</td>";
+		echo "<td style='vertical-align:top;border-bottom:1px solid #808080'>";
 		
 		$stypes = PNApplication::$instance->people->parseTypes($similar["types"]);
 		$missing_types = PNApplication::$instance->people->parseTypes($path["columns"]["types"]);
@@ -255,8 +272,8 @@ class page_popup_create_people_step_check extends Page {
 				if ($types <> "") $types .= ",";
 				$types .= "'$t'";
 			}
-			echo "<a href='#' onclick=\"addTypesToPeople('$li_id',[$types],".$similar["id"].",$itc);return false;\">";
-			echo "Yes, they are the same, make it as ";
+			echo "They are the same ?<br/>";
+			echo "<button onclick=\"addTypesToPeople('$li_id',[$types],".$similar["id"].",$itc);return false;\">Do not create it again, but make it as ";
 			$add_types = "";
 			$first = true;
 			foreach ($missing_types as $t) {
@@ -265,16 +282,18 @@ class page_popup_create_people_step_check extends Page {
 				echo $pi->getName();
 				$add_types .= $t;
 			}
-			echo "</a><br/>";
+			echo "</button><br/>";
+			echo "<button onclick=\"var li = document.getElementById('$id');li.parentNode.removeChild(li);return false;\">Do not create it again, and ignore it</button><br/>";
 		} else {
-			echo "<a href='#' onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);window.oneDone();return false;\">";
-			echo "Yes, they are the same, do not create it again";
-			echo "</a><br/>";
+			echo "<button onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);window.oneDone();return false;\">";
+			echo "Yes they are the same, do not create it again";
+			echo "</button><br/>";
 		}
-		echo "<a href='#' onclick=\"var li = document.getElementById('$id');li.parentNode.removeChild(li);return false;\">";
+		echo "<button href='#' onclick=\"var li = document.getElementById('$id');li.parentNode.removeChild(li);return false;\">";
 		echo "No they are 2 different persons";
-		echo "</a><br/>";
-		echo "</li>";
+		echo "</button><br/>";
+		echo "</td>";
+		echo "</tr>";
 	}
 	
 }

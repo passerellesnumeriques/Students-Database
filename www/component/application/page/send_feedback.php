@@ -72,7 +72,7 @@ function validateForm() {
 	var form = document.forms['feedback_form'];
 	var ok = true;
 	
-	var feedback_type = get_radio_value(form, 'type');
+	var feedback_type = getRadioValue(form, 'type');
 	if (!feedback_type) ok = false;
 
 	var part = form.elements['app_part'].value;
@@ -116,11 +116,11 @@ function validateForm() {
 
 function sendFeedback() {
 	var frame = document.getElementById('_ticket_post_');
-	var lock = lock_screen(null, "Sending your feedback...");
+	var lock = lockScreen(null, "Sending your feedback...");
 	var is_sent = false;
 	var sent = function() {
 		is_sent = true;
-		window.top.info_dialog("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Your feedback has been sent. Thank you !");
+		window.top.infoDialog("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Your feedback has been sent. Thank you !");
 		location.href = '/dynamic/application/page/overview';
 		sent = null;
 	};

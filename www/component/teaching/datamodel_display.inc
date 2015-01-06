@@ -22,7 +22,7 @@ class TeacherDataScreen implements datamodel\SimpleDataScreen {
 		$can_edit = true;
 		if ($people_id <> -1) {
 			$dates = SQLQuery::create()->select("TeacherDates")->whereValue("TeacherDates", "people", $people_id)->orderBy("TeacherDates", "start")->execute();
-			$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+			$can_edit = PNApplication::$instance->user_management->hasRight("edit_curriculum");
 			$q = SQLQuery::create()
 				->select("TeacherAssignment")
 				->whereValue("TeacherAssignment","people",$people_id)
@@ -50,7 +50,7 @@ class TeacherDataScreen implements datamodel\SimpleDataScreen {
 <?php } ?>
 <script type='text/javascript'>
 var people_id = <?php echo $people_id;?>;
-var can_edit_teacher_dates = <?php echo $people_id == -1 || PNApplication::$instance->user_management->has_right("edit_curriculum") ? "true" : "false"; ?>;
+var can_edit_teacher_dates = <?php echo $people_id == -1 || PNApplication::$instance->user_management->hasRight("edit_curriculum") ? "true" : "false"; ?>;
 var teacher_dates_id_counter = -1;
 var teacher_dates = [<?php
 	if ($people_id <> -1) {
@@ -97,8 +97,8 @@ function add_teacher_dates(dates, before_tr) {
 		cancel_button.innerHTML = "<img src='"+theme.icons_16.remove+"'/> Cancel";
 		td.appendChild(cancel_button);
 		cancel_button.onclick = function() {
-			if (field_start) field_start.unregister_datamodel_cell();
-			if (field_end) field_end.unregister_datamodel_cell();
+			if (field_start) field_start.unregisterDataModelCell();
+			if (field_end) field_end.unregisterDataModelCell();
 			teacher_dates.remove(dates);
 			tr.parentNode.removeChild(tr);
 		};
@@ -116,12 +116,12 @@ function add_teacher_dates(dates, before_tr) {
 			d.end = end;
 			a.push(d);
 			if (!validateAssignments(a)) return;
-			var locker = lock_screen(null,"Saving new dates...");
+			var locker = lockScreen(null,"Saving new dates...");
 			service.json("data_model","save_entity",{table:"TeacherDates",sub_model:null,field_people:people_id,field_start:start,field_end:end},function(res) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 				if (res && res.key) {
-					field_start.unregister_datamodel_cell();
-					field_end.unregister_datamodel_cell();
+					field_start.unregisterDataModelCell();
+					field_end.unregisterDataModelCell();
 					dates.id = res.key;
 					dates.start = start;
 					dates.end = end;
@@ -149,8 +149,8 @@ function add_teacher_dates(dates, before_tr) {
 					}
 				}
 				var removed = function() {
-					if (field_start) field_start.unregister_datamodel_cell();
-					if (field_end) field_end.unregister_datamodel_cell();
+					if (field_start) field_start.unregisterDataModelCell();
+					if (field_end) field_end.unregisterDataModelCell();
 					teacher_dates.remove(dates);
 					tr.parentNode.removeChild(tr);
 				};
@@ -159,9 +159,9 @@ function add_teacher_dates(dates, before_tr) {
 					var a = valueCopy(teacher_dates,0);
 					a.remove(dates);
 					if (!validateAssignments(a)) return;
-					var locker = lock_screen(null,"Removing dates...");
+					var locker = lockScreen(null,"Removing dates...");
 					service.json("data_model","remove_row",{table:"TeacherDates",row_key:dates.id},function(res) {
-						unlock_screen(locker);
+						unlockScreen(locker);
 						if (res) removed();
 					});
 				}
@@ -231,10 +231,10 @@ function checkNewEnd(dates, new_end, ec) {
 	return dates.end;
 }
 function removeTeacher() {
-	popup_frame(null,"Remove Teacher","/dynamic/people/page/remove_people_type?people="+people_id+"&type=teacher&ontyperemoved=type_removed&onpeopleremoved=people_removed",null,null,null,function(frame,pop){
+	popupFrame(null,"Remove Teacher","/dynamic/people/page/remove_people_type?people="+people_id+"&type=teacher&ontyperemoved=type_removed&onpeopleremoved=people_removed",null,null,null,function(frame,pop){
 		frame.people_removed = function() {
 			require("popup_window.js",function() {
-				get_popup_window_from_frame(window).close();
+				getPopupFromFrame(window).close();
 			});
 		};
 		frame.type_removed = function() { location.reload(); };

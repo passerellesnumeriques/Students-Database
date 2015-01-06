@@ -20,10 +20,10 @@ Confirm password: <input type='password' name='password2'/>
 </form>
 </div>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.addOkCancelButtons(function() {
 	var form = document.forms['new_user'];
-	var type = get_radio_value(form,'type');
+	var type = getRadioValue(form,'type');
 	if (!type) { alert("Please select the type of user"); return; }
 	var username = form.elements['username'].value;
 	username = username.trim().latinize().toLowerCase();
@@ -39,7 +39,7 @@ popup.addOkCancelButtons(function() {
 		service.json("user_management","check_username",{username:username},function(res) {
 			popup.unfreeze();
 			if (!res) return;
-			popup_frame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/people/page/popup_new_person?type=user&ondone=people_created",{
+			popupFrame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/people/page/popup_new_person?type=user&ondone=people_created",{
 				fixed_data: [
 				 	{table:'Users',data:'Domain',value:<?php echo json_encode(PNApplication::$instance->local_domain);?>},
 				 	{table:'Users',data:'Username',value:username}

@@ -56,9 +56,9 @@ class page_set_geography_area extends Page {
 		// link divisions and areas
 		?>
 		<script type='text/javascript'>
-		divisions.division_removed.add_listener(function(division_index){ areas.reset(); });
-		areas.area_added.add_listener(function(a){ divisions.areaAdded(a.division_index); });
-		areas.area_removed.add_listener(function(a){ divisions.areaRemoved(a.division_index); });
+		divisions.division_removed.addListener(function(division_index){ areas.reset(); });
+		areas.area_added.addListener(function(a){ divisions.areaAdded(a.division_index); });
+		areas.area_removed.addListener(function(a){ divisions.areaRemoved(a.division_index); });
 		</script>
 		<?php
 				
@@ -66,10 +66,10 @@ class page_set_geography_area extends Page {
 		// show message while loading data
 		?>
 		<script type='text/javascript'>
-		var loading_lock = lock_screen(null, "Loading Geographic Information...");
+		var loading_lock = lockScreen(null, "Loading Geographic Information...");
 		window.top.require("geography.js", function() {
 			window.top.geography.getCountryData(country_id, function(data) {
-				unlock_screen(loading_lock);
+				unlockScreen(loading_lock);
 			});
 		});
 		</script>

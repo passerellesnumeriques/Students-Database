@@ -126,6 +126,7 @@ if ($message <> null) {
 		<a href="#" onclick="DBTools();return false;">Database Tools</a><br/>
 		<a href="/dynamic/development/page/check_code" target="_blank">Check code</a><br/>
 		<a href="/dynamic/documentation/page/index" target="_blank">Technical Documentation</a><br/>
+		<a href="/dynamic/development/page/insert_data" target="_blank">Insert Data</a><br/>
 		<a href="/dynamic/test/page/home" target="_blank">Tests</a><br/>
 		<a href="?destroy_session=true">Destroy session</a><br/>
 		<a href="?uninstall=true">Reset installation</a><br/>
@@ -144,21 +145,21 @@ if ($message <> null) {
 </table>
 <script type="text/javascript">
 function resetDB() {
-	popup_frame(null,"Reset Database", "/dynamic/development/page/reset_db?domain=<?php echo PNApplication::$instance->local_domain;?>", null, 90, 90, function(frame,pop) {
+	popupFrame(null,"Reset Database", "/dynamic/development/page/reset_db?domain=<?php echo PNApplication::$instance->local_domain;?>", null, 90, 90, function(frame,pop) {
 		pop.onclose = function() { window.top.location.reload(); };
 	});
 }
 function DBTools() {
-	popup_frame(null,"Database Tools", "/dynamic/development/page/db_tools", null, 90, 90, function(frame,pop) {
+	popupFrame(null,"Database Tools", "/dynamic/development/page/db_tools", null, 90, 90, function(frame,pop) {
 		pop.onclose = function() { window.top.location.reload(); };
 	});
 }
 function cleanStorage() {
-	popup_frame(null,"Clean Storage", "/dynamic/development/page/clean_storage", null, 90, 90, function(frame,pop) {
+	popupFrame(null,"Clean Storage", "/dynamic/development/page/clean_storage", null, 90, 90, function(frame,pop) {
 	});
 }
 function exportStorage() {
-	popup_frame(null,"Export Storage", "/dynamic/development/page/export_storage", null, 90, 90, function(frame,pop) {
+	popupFrame(null,"Export Storage", "/dynamic/development/page/export_storage", null, 90, 90, function(frame,pop) {
 	});
 }
 var libraries = ["tinymce","phpexcel","mpdf","google_oauth2","google_calendar","google_plus","google_php_api"];
@@ -234,7 +235,8 @@ window.top.require("documents.js",function(){
 	window.top.pndocuments.connected_port = -1;
 	window.top.pndocuments.connect();
 });
-window.top.pnapplication.onlogout.fire();
+if (window.top.pnapplication)
+	window.top.pnapplication.onlogout.fire();
 function login() {
 	window.no_loading = true;
 	window.top.pn_loading_start();

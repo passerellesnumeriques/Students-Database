@@ -1,6 +1,17 @@
 <?php 
+/**
+ * News component stores and display messages, organized into sections and categories.
+ * Messages can contain tags to attach to specific elements.
+ * Messages can have replies.
+ * There are 2 types of messages: updates or activities. Activities are generated messages to display what people are doing in the software, while updates are messages posted by the users to inform the others.
+ */
 class news extends Component {
-	
+
+	/**
+	 * Check if the current user can post messages in the given section
+	 * @param string $section section
+	 * @return boolean true if the current user can post messages in the given section
+	 */
 	public function canPostInSection($section) {
 		require_once("NewsPlugin.inc");
 		$found = false;
@@ -16,6 +27,15 @@ class news extends Component {
 		return false;
 	}
 	
+	/**
+	 * Post a message
+	 * @param string $section section
+	 * @param string $category category
+	 * @param string $tags tags
+	 * @param string $type type
+	 * @param string $message message
+	 * @return boolean|number message id, or false
+	 */
 	public function post($section, $category, $tags, $type, $message) {
 		require_once("NewsPlugin.inc");
 		$found = false;
@@ -68,7 +88,13 @@ class news extends Component {
 		}
 	}
 	
-	public function post_reply($parent_id, $message) {
+	/**
+	 * Post a reply to another message
+	 * @param integer $parent_id parent message
+	 * @param string $message reply message
+	 * @return boolean|number message id or false
+	 */
+	public function postReply($parent_id, $message) {
 		// first get the parent
 		$parent = SQLQuery::create()->bypassSecurity()->select("News")->whereValue("News", "id", $parent_id)->executeSingleRow();
 		if ($parent == null) {
@@ -125,6 +151,13 @@ class news extends Component {
 		}
 	}
 	
+	/**
+	 * Get the most recent post, in the limit of 10 minutes from now, with a specific message
+	 * @param string $section section
+	 * @param string $category category
+	 * @param string $html content to search, used in a LIKE so it may contain %
+	 * @return array|null the row from the database, or null
+	 */
 	public function getRecentPost($section, $category, $html) {
 		$now = time();
 		return SQLQuery::create()
@@ -140,6 +173,11 @@ class news extends Component {
 			->limit(0,1)
 			->executeSingleRow();
 	}
+	/**
+	 * Change a message
+	 * @param integer $id message id
+	 * @param string $html new message content
+	 */
 	public function updatePost($id, $html) {
 		SQLQuery::create()->bypassSecurity()->updateByKey("News", $id, array("html"=>$html,"update_timestamp"=>time()));
 	}

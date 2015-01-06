@@ -11,10 +11,15 @@ import org.mozilla.javascript.ast.StringLiteral;
 public class ObjectAnonymous extends Container {
 
 	public String description = "";
+	public boolean skip = false;
 	
 	public ObjectAnonymous(Container parent, String file, ObjectLiteral obj, Node... docs) {
 		super(parent, new Location(file, obj));
 		JSDoc doc = new JSDoc(obj, docs);
+		if (doc.hasTag("no_doc")) {
+			skip = true;
+			return;
+		}
 		this.description = doc.description;
 		for (ObjectProperty p : obj.getElements()) {
 			AstNode left = p.getLeft();
@@ -34,6 +39,9 @@ public class ObjectAnonymous extends Container {
 		super(parent, new Location());
 	}
 	
+	@Override
+	public boolean skip() { return skip; }
+
 	@Override
 	protected String getJSDocConstructor() {
 		return "JSDoc_Namespace(";

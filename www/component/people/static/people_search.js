@@ -4,7 +4,7 @@ function people_search(container, people_types, onselected) {
 	var t=this;
 	
 	this.onselected = new Custom_Event();
-	if (onselected) this.onselected.add_listener(onselected);
+	if (onselected) this.onselected.addListener(onselected);
 	onselected = null;
 	
 	this.getSelectedPeople = function() { return this._selected; };

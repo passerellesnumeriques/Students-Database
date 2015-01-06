@@ -1,4 +1,9 @@
 /* #depends[typed_field.js] */
+/**
+ * Empty field
+ * @param {String} html content
+ * @param {Object} value not used
+ */
 function field_blank(html, value) {
 	if (html == null) html = "";
 	this.html = html;

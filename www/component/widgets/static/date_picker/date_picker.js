@@ -6,21 +6,31 @@ if (typeof theme != 'undefined') {
 	theme.css("date_picker.css");
 	theme.css("small_calendar.css");
 }
+/**
+ * Small calendar to select a date
+ * @param {Date} date the currently selected date. If not given, the date of today will be selected
+ * @param {Date} minimum minimum date the user can select. If not given, 1 January 1900 will be the minimum
+ * @param {Date} maximum maximum date the user can select. If not given, the maximum will be 200 years after today
+ * @param {Function} onready called when everything is ready and we can display it
+ */
 function date_picker(date, minimum, maximum, onready) {
 	if (!date) date = new Date();
 	if (!minimum) minimum = new Date(1900,0,1,0,0,0,0);
 	if (!maximum) maximum = new Date(new Date().getFullYear()+200,11,31,0,0,0,0);
 	
 	var t = this;
+	/** {Function} callend when the selected date change */
 	t.onchange = null;
+	/** The top-level element of the screen */
 	t.element = document.createElement("DIV");
 	t.element.className = 'date_picker';
 	t.element.appendChild(t.header = document.createElement("DIV"));
+	/** Return the top-level element of the screen, to include it where we want */
 	t.getElement = function() { return t.element; };
 
 	require(["date_select.js","small_calendar.js"],function() {
 		var back = document.createElement("IMG");
-		back.src = get_script_path("date_picker.js")+'back.png';
+		back.src = getScriptPath("date_picker.js")+'back.png';
 		back.className = "button_verysoft";
 		back.style.margin = "0px 2px 0px 2px";
 		back.style.padding = "0px 1px 0px 1px";
@@ -35,7 +45,7 @@ function date_picker(date, minimum, maximum, onready) {
 		// header: 3 selects for day, month and year 
 		t.select = new date_select(t.header, date, minimum, maximum);
 		var forward = document.createElement("IMG");
-		forward.src = get_script_path("date_picker.js")+'forward.png';
+		forward.src = getScriptPath("date_picker.js")+'forward.png';
 		forward.className = "button_verysoft";
 		forward.style.margin = "0px 2px 0px 2px";
 		forward.style.padding = "0px 1px 0px 1px";

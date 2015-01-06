@@ -16,6 +16,7 @@ public class BuiltinElement extends Class implements Builtin {
 		add("clientHeight", new ObjectClass("Number"));
 		add("clientWidth", new ObjectClass("Number"));
 		add("cloneNode", new Function(this, "Element"));
+		add("data", new ObjectClass("Object"));
 		add("firstChild", new ObjectClass("Element"));
 		add("getAttribute", new Function(this, "String"));
 		add("getAttributeNode", new Function(this, "Element"));

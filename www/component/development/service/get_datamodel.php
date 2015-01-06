@@ -27,61 +27,11 @@ class service_get_datamodel extends Service {
 			}
 		} else {
 			echo "{\"model\":";
-			$this->model(DataModel::get());
+			require_once 'component/data_model/DataModelJSON.inc';
+			echo DataModelJSON::model(DataModel::get());
 			echo "}";
 		}
 	}
-	
-	/**
-	 * Generate a model
-	 * @param DataModel $model
-	 */
-	private function model($model) {
-		echo "{";
-		if ($model instanceof SubDataModel) {
-			echo "\"parent_table\":".json_encode($model->getParentTable());
-			echo ",";
-		}
-		echo "\"tables\":[";
-		$first = true;
-		foreach ($model->internalGetTables(false) as $table) {
-			if ($first) $first = false; else echo ",";
-			echo "{";
-			echo "\"name\":".json_encode($table->getName());
-			echo ",\"key\":";
-			if ($table->getPrimaryKey() <> null)
-				echo json_encode($table->getPrimaryKey()->name);
-			else
-				echo json_encode($table->getKey());
-			echo ",\"indexes\":".json_encode($table->getIndexes());
-			echo ",\"columns\":[";
-			$first_col = true;
-			foreach ($table->internalGetColumns(null, false) as $col) {
-				if ($first_col) $first_col = false; else echo ",";
-				echo "{";
-				echo "\"name\":".json_encode($col->name);
-				$type = get_class($col);
-				$i = strpos($type,"\\");
-				$type = substr($type,$i+1);
-				echo ",\"type\":".json_encode($type);
-				echo ",".$col->getJSONSpec();
-				echo "}";
-			}
-			echo "]";
-			echo "}";
-		}
-		echo "]";
-		if (!($model instanceof SubDataModel)) {
-			echo ",\"sub_models\":[";
-			$first_sm = true;
-			foreach ($model->getSubModels() as $sm) {
-				if ($first_sm) $first_sm = false; else echo ",";
-				$this->model($sm);
-			}
-			echo "]";
-		}
-		echo "}";
-	}
-	
+		
 }
 ?>

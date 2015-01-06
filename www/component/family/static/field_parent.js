@@ -1,5 +1,10 @@
 /* #depends[/static/widgets/typed_field/typed_field.js] */
 
+/**
+ * Field representing either the father, or the mother of a family.
+ * It can be a single read-only field, with all information.
+ * Or it can be used with sub-fields: name, age, occupation...
+ */
 function field_parent(data,editable,config){
 	typed_field.call(this, data, editable, config);
 }
@@ -7,6 +12,7 @@ field_parent.prototype = new typed_field();
 field_parent.prototype.constructor = field_parent;	
 field_parent.prototype.canBeNull = function() { return true; };
 field_parent.prototype._create = function(data) {
+	if (!data) return; // must be set
 	if (typeof this.config.sub_data_index == 'undefined') {
 		this._setData = function(data) {
 			var text = "";
@@ -111,9 +117,7 @@ field_parent.prototype._create = function(data) {
 				if (from_input) { input.value = d != null ? d : ""; updater(d); }
 				return data;
 			};
-			this._fillWidth = this.fillWidth;
-			this.fillWidth = function() {
-				this._fillWidth();
+			this._fillWidth = function() {
 				if (input.autoresize) input.setMinimumSize(-1);
 				else _fw = true;
 			};
@@ -129,17 +133,17 @@ field_parent.prototype._create = function(data) {
 						has_other = true;
 				}
 				if (input.value == "" && has_other)
-					this.signal_error("Cannot be empty");
+					this.signalError("Cannot be empty");
 				else
-					this.signal_error(null);
+					this.signalError(null);
 			};
-			this.signal_error = function(error) {
+			this.signalError = function(error) {
 				this.error = error;
 				input.style.border = error ? "1px solid red" : "";
 				input.title = error ? error : "";
 			};
 			window.top.sub_field_registry.register(window, this);
-			this.onchange.add_listener(function(f){
+			this.onchange.addListener(function(f){
 				window.top.sub_field_registry.changed(window, f);
 			});
 		}

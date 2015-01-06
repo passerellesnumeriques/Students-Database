@@ -38,12 +38,12 @@ function load_google_calendars(ondone, feedback_handler) {
 			case -1: if (feedback_handler) feedback_handler("Not connected to Google"); ondone(null); break;
 			case 0: if (feedback_handler) feedback_handler("Connecting to Google..."); break;
 			case 1:
-				window.top.google.connection_event.remove_listener(listener);
+				window.top.google.connection_event.removeListener(listener);
 				googleConnected();
 				break;
 			}
 		};
-		window.top.google.connection_event.add_listener(listener);
+		window.top.google.connection_event.addListener(listener);
 		listener();
 	};
 	var googleApiNotReady = function() {
@@ -195,7 +195,7 @@ function GoogleCalendar(id, name, color, show, writable) {
 						var s = "Error parsing Google event from calendar "+t.name+":\r\n";
 						s += err+"\r\n";
 						s += "Details of the event returned from Google:\r\n";
-						s += debug_object_to_string(gev);
+						s += debugObjectToString(gev);
 						for (var n in ev) ev[n] = null;
 						ev = null;
 						continue;

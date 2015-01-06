@@ -1,7 +1,7 @@
 <?php 
 class page_administration extends Page {
 	
-	public function getRequiredRights() { return array(); } // TODO add right
+	public function getRequiredRights() { return array("manage_application"); }
 	
 	public function execute() {
 		$this->requireJavascript("section.js");
@@ -149,6 +149,11 @@ function invalidKeys() {
 <?php 
 	}
 
+	/**
+	 * Return the text to display with unit (KB/MB/GB) from a size
+	 * @param integer $size the size
+	 * @return string the text to display
+	 */
 	function size($size) {
 		if ($size >= 1024*1024*1024) return number_format($size/(1024*1024*1024),2)." GB";
 		if ($size >= 1024*1024) return number_format($size/(1024*1024),2)." MB";

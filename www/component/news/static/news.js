@@ -1,3 +1,14 @@
+/**
+ * Represents a message
+ * @param {Number} id database identifier
+ * @param {String} section section
+ * @param {String} category category
+ * @param {String} html message content
+ * @param {People} people author
+ * @param {User} user author
+ * @param {Number} timestamp date and time of creation of the message
+ * @param {Number} update_timestamp last update/reply time
+ */
 function NewsObject(id, section, category, html, people, user, timestamp, update_timestamp) {
 	this.id = id;
 	this.section = section;
@@ -12,6 +23,15 @@ function NewsObject(id, section, category, html, people, user, timestamp, update
 if (typeof require != 'undefined') require("animation.js");
 if (typeof theme != 'undefined') theme.css("news.css");
 
+/**
+ * Screen displaying news messages
+ * @param {Element} container where to put the screen
+ * @param {Array} sections list of {name,categories,tags}
+ * @param {Array} exclude_sections list of {name,categories}
+ * @param {String} news_type type of news to display
+ * @param {Function} onready called when the screen is ready
+ * @param {Function} onrefreshing called when the screen is refreshing to display the latest messages
+ */
 function news(container, sections, exclude_sections, news_type, onready, onrefreshing) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
@@ -22,6 +42,9 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 	this._olders_timestamp = 0;
 	this._refreshing = 0;
 	this._replies_to_load = [];
+	/** Display more messages
+	 * @param {Function} ondone called when done
+	 */
 	this.more = function(ondone) {
 		if (!t) return;
 		if (++t._refreshing == 1 && onrefreshing) onrefreshing(true);
@@ -78,6 +101,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 			if (ondone) ondone(res.length == 10);
 		});
 	};
+	/** Refresh: check if new messages are available, and display them */
 	this.refresh = function() {
 		if (!t) return;
 		if (t._latests.length == 0) { t.more(); return; }
@@ -116,6 +140,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		});
 		t._refreshReplies();
 	};
+	/** Loads replies */
 	this._launchRepliesLoading = function() {
 		if (!t) return;
 		if (t._replies_to_load.length == 0) return;
@@ -133,6 +158,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 				t._createReply(res[i]);
 		});		
 	};
+	/** Check if new replies are available, and display them */
 	this._refreshReplies = function() {
 		var to_refresh = [];
 		for (var i = 0; i < t._main_news.length; ++i) {
@@ -148,7 +174,11 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 				t._createReply(res[i]);
 		});
 	};
-	this.more_news = function(initial_internal_call) {
+	/**
+	 * Load more news
+	 * @param {Boolean} initial_internal_call internal use
+	 */
+	this.moreNews = function(initial_internal_call) {
 		while (t._more_container.childNodes.length > 0) t._more_container.removeChild(t._more_container.childNodes[0]);
 		if (!initial_internal_call) {
 			var loading = document.createElement("IMG");
@@ -163,12 +193,16 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 				button.appendChild(document.createTextNode("Show More"));
 				t._more_container.appendChild(button);
 				button.onclick = function() {
-					t.more_news(false);
+					t.moreNews(false);
 				};
 			}
 		});
 	};
 	
+	/**
+	 * Add the given message to the screen
+	 * @param {NewsObject} n message
+	 */
 	this._createNews = function(n) {
 		for (var i = 0; i < this._main_news.length; ++i)
 			if (this._main_news[i].news.id == n.id) {
@@ -195,6 +229,10 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		}
 		this._replies_to_load.push(n);
 	};
+	/**
+	 * Add the given reply to the screen
+	 * @param {NewsObject} n reply message
+	 */
 	this._createReply = function(n) {
 		var main = null;
 		for (var i = 0; i < this._main_news.length; ++i)
@@ -204,6 +242,12 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		var div = this._createDiv(n, false);
 		main.reply_div.appendChild(div);
 	};
+	/**
+	 * Create the DIV for a message
+	 * @param {NewsObject} n the message
+	 * @param {Boolean} main indicates if this is a main message, or a reply
+	 * @returns {Element} the DIV
+	 */
 	this._createDiv = function(n, main) {
 		var div = document.createElement("DIV");
 		div.news = n;
@@ -231,7 +275,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		people_name.appendChild(document.createTextNode(n.people.first_name+" "+n.people.last_name));
 		people_name.style.cursor = "pointer";
 		people_name.onclick = function() {
-			window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain,null,95,95);
+			window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+n.people.id+"&domain="+n.user.domain,null,95,95);
 		};
 		var timing = document.createElement("DIV"); header.appendChild(timing);
 		timing.style.display = "inline-block";
@@ -365,6 +409,10 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		return div;
 	};
 	
+	/** Generates a string to display the date and time of a message
+	 * @param {Number} timestamp date info
+	 * @returns {String} string to display
+	 */
 	this._getTimingString = function(timestamp) {
 		var d = new Date(timestamp*1000);
 		var now = new Date();
@@ -393,6 +441,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 		return d.toLocaleString();
 	};
 	
+	/** Refresh timing info on all displayed messages */
 	this._refreshTimings = function() {
 		if (!t) return;
 		for (var i = 0; i < t._main_news.length; ++i) {
@@ -401,10 +450,20 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 				t._refreshTiming(t._main_news[i].reply_div.childNodes[j]);
 		}
 	};
+	/** Refresh timing on the given message
+	 * @param {Element} d DIV of the message to update
+	 */
 	this._refreshTiming = function(d) {
 		d.timing_text.nodeValue = t._getTimingString(d.news.timestamp);
 	};
 	
+	/**
+	 * Display a popup to post a message
+	 * @param {Array} sections list of sections name the user can select
+	 * @param {Array} categories list of categories name the user can select
+	 * @param {Object} tags mapping of tag value, and how to display it
+	 * @param {String} note_for_user information message to add 
+	 */
 	this.post = function(sections,categories,tags,note_for_user) {
 		require(["tinymce.min.js","popup_window.js","select.js"], function() {
 			var div = document.createElement("DIV");
@@ -440,7 +499,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 				i--;
 			}
 			if (secs.length == 0) {
-				error_dialog("You don't have the right to post in any available section");
+				errorDialog("You don't have the right to post in any available section");
 				return;
 			}
 			var select_section = null;
@@ -557,6 +616,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 
 	};
 	
+	/** Creation of the screen */
 	this._init = function() {
 		t._more_container = document.createElement("DIV");
 		container.appendChild(t._more_container);
@@ -579,7 +639,7 @@ function news(container, sections, exclude_sections, news_type, onready, onrefre
 					s.categories.push(t.sections[i].categories[j].name);
 				t._selected_sections.push(s);
 			}
-			t.more_news(true);
+			t.moreNews(true);
 			t.refresh_timeout = setTimeout(t.refresh, 30000);
 			if (onready) onready(t);
 		});

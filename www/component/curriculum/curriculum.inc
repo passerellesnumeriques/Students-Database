@@ -27,10 +27,20 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("AcademicPeriod")->orderBy("AcademicPeriod", "start")->execute();
 	}
 	
+	/**
+	 * Retrieve an AcademicPeriod from the database
+	 * @param integer $academic_period_id the id
+	 * @return array the row from the AcademicPeriod table
+	 */
 	public function getAcademicPeriod($academic_period_id) {
 		return SQLQuery::create()->select("AcademicPeriod")->whereValue("AcademicPeriod","id",$academic_period_id)->executeSingleRow();
 	}
 	
+	/**
+	 * Retrieve the current (today) academic period
+	 * @param boolean $return_next_one_if_no_current if true, and there is no current period, return the next one in the future
+	 * @return array|null the row from the AcademicPeriod table, or null if there is no current period, or no next period
+	 */
 	public function getCurrentAcademicPeriod($return_next_one_if_no_current = false) {
 		$now = date("Y-m-d",time());
 		$p = SQLQuery::create()
@@ -68,6 +78,11 @@ class curriculum extends Component {
 			->execute();
 	}
 	
+	/**
+	 * Retrieve the academic period which is before the given date (start &lt; before_date)
+	 * @param string $before_date SQL date
+	 * @return array|null the row of the AcademicPeriod table
+	 */
 	public function getPreviousAcademicPeriod($before_date) {
 		return SQLQuery::create()
 			->select("AcademicPeriod")
@@ -89,6 +104,12 @@ class curriculum extends Component {
 			->fieldsOfTable("AcademicPeriod")
 			->executeSingleRow();
 	}
+	/**
+	 * Get the BatchPeriod corresponding to the given academic period, for the given batch
+	 * @param integer $batch_id the batch ID
+	 * @param integer $academic_period_id the academic period id
+	 * @return array|null the row from the BatchPeriod table
+	 */
 	public function getBatchPeriodFromAcademicPeriod($batch_id, $academic_period_id) {
 		return SQLQuery::create()
 			->select("BatchPeriod")
@@ -116,6 +137,7 @@ class curriculum extends Component {
 	}
 	/** Retrieve the given period
 	 * @param integer $period_id the requested period
+	 * @param boolean $join_academic_period if true, and additional join to AcademicPeriod is done, and all its fields are prefixed by academic_period_
 	 * @return array the row from the database
 	 */
 	public function getBatchPeriod($period_id, $join_academic_period = false) {
@@ -153,7 +175,7 @@ class curriculum extends Component {
 	}
 	
 	/** Retrieve the list of existing batches of students
-	 * @param integer[]|null list of StudentBatch ID to retrieve, or null for all batches
+	 * @param integer[]|null $ids list of StudentBatch ID to retrieve, or null for all batches
 	 * @return array the result from the database
 	 */
 	public function getBatches($ids = null) {
@@ -169,21 +191,42 @@ class curriculum extends Component {
 		return SQLQuery::create()->select("StudentBatch")->whereValue("StudentBatch", "id", $batch_id)->executeSingleRow();
 	}
 	
-	/** Retrieve batches having an end_date greater than today
+	/** Retrieve batches having an end_date &gt;= today
+	 * @param boolean $exclude_future if true, do not include the batch who didn't start yet
+	 * @param boolean $bypass_security avoid security checks
 	 * @return array list of rows from StudentBatch table
 	 */
-	public function getCurrentBatches() {
-		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+	public function getCurrentBatches($exclude_future = false, $bypass_security = false) {
+		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
 		$q->where("end_date >= CURRENT_DATE()");
+		if ($exclude_future) $q->where("start_date <= CURRENT_DATE()");
 		return $q->execute();
 	}
 	/** Retrieve batches having an end_date less than today
+	 * @param boolean $bypass_security avoid security checks
 	 * @return array list of rows from StudentBatch table
 	 */
-	public function getAlumniBatches() {
-		$q = SQLQuery::create()->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+	public function getAlumniBatches($bypass_security = false) {
+		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
 		$q->where("end_date < CURRENT_DATE()");
 		return $q->execute();
+	}
+	/**
+	 * Retrieve the future batches (integration date &gt;= today)
+	 * @param boolean $bypass_security to avoid security checks
+	 * @return array rows of the StudentBatch table
+	 */
+	public function getFutureBatches($bypass_security = false) {
+		$q = SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentBatch")->orderBy("StudentBatch", "start_date", true);
+		$q->where("start_date >= CURRENT_DATE()");
+		return $q->execute();
+	}
+	/** Retrieve all rows from the StudentBatch table
+	 * @param boolean $bypass_security avoid security checks
+	 * @return array rows
+	 */
+	public function getAllBatches($bypass_security = false) {
+		return SQLQuery::create()->bypassSecurity($bypass_security)->select("StudentBatch")->orderBy("StudentBatch", "start_date", true)->execute();
 	}
 	
 	/**
@@ -308,16 +351,28 @@ class curriculum extends Component {
 	public function getBatchPeriods($batch_id) {
 		return SQLQuery::create()->select("BatchPeriod")->whereValue("BatchPeriod", "batch", $batch_id)->execute();
 	}
+	/**
+	 * Retrieve rows from the BatchPeriod table
+	 * @param integer[] $periods_ids ids
+	 * @return array rows
+	 */
 	public function getBatchPeriodsById($periods_ids) {
 		return SQLQuery::create()->select("BatchPeriod")->whereIn("BatchPeriod", "id", $periods_ids)->execute();
 	}
 	
+	/**
+	 * Join to the BatchPeriod table
+	 * @param SQLQuery $q the query to join
+	 * @param string $from_table the table containing a foreign key to BatchPeriod
+	 * @param string $from_key the foreign key to BatchPeriod
+	 */
 	public function joinBatchPeriod(&$q, $from_table, $from_key) {
 		$q->join($from_table, "BatchPeriod", array($from_key=>"id"));
 	}
 	
 	/** Return all BatchPeriod rows corresponding to the given academic periods
 	 * @param array $academic_periods_ids list of AcademicPeriod ID
+	 * @param boolean $join_with_batch if true, and additional join to StudentBatch will be added, with the field batch_name
 	 * @return array rows from the BatchPeriod table
 	 */
 	public function getBatchPeriodsForAcademicPeriods($academic_periods_ids, $join_with_batch = false) {
@@ -375,16 +430,37 @@ class curriculum extends Component {
 		return $q;
 	}
 	
+	/**
+	 * Retrieve rows from the CurriculumSubject table
+	 * @param integer[] $subjects_ids ids
+	 * @return array rows
+	 */
 	public function getSubjectsById($subjects_ids) {
 		return SQLQuery::create()->select("CurriculumSubject")->whereIn("CurriculumSubject", "id", $subjects_ids)->execute();
 	}
 	
+	/** Get an SQLQuery retrieving the given subject
+	 * @param integer $subject_id the subject to get
+	 * @return SQLQuery the query
+	 */
 	public function getSubjectQuery($subject_id) {
 		return SQLQuery::create()->select("CurriculumSubject")->whereValue("CurriculumSubject", "id", $subject_id);
 	}
+	/** Get an SQLQuery retrieving the given subjects
+	 * @param integer[] $subjects_ids the subjects to get
+	 * @return SQLQuery the query
+	 */
 	public function getSubjectsQuery($subjects_ids) {
 		return SQLQuery::create()->select("CurriculumSubject")->whereIn("CurriculumSubject", "id", $subjects_ids);
 	}
+	/** Join to table CurriculumSubject
+	 * @param SQLQuery $q the query to join
+	 * @param string $join_table the table containing a foreign key to CurriculumSubject
+	 * @param string $join_key the foreign key to CurriculumSubject
+	 * @param boolean $join_with_batch_period if true, an additional join to the BatchPeriod of the subject will be added
+	 * @param boolean $join_with_academic_period if true, an additional join to the AcademicPeriod of the subject will be added
+	 * @param boolean $join_with_batch if true, ad additional join to the StudentBatch will be added
+	 */
 	public function joinSubjects(&$q, $join_table, $join_key, $join_with_batch_period = false, $join_with_academic_period = false, $join_with_batch = false) {
 		$q->join($join_table, "CurriculumSubject", array($join_key=>"id"));
 		if ($join_with_academic_period) $join_with_batch_period = true;

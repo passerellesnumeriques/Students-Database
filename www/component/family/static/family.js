@@ -1,15 +1,29 @@
+/**
+ * Screen to edit a family
+ * @param {Element} container where to put the screen
+ * @param {Object} family the family information
+ * @param {Array} members the members of the family
+ * @param {Number} fixed_people_id someone who cannot be removed from the family
+ * @param {Boolean} can_edit indicates if the user is able to modify information
+ * @param {Function} onchange called when something has been changed, and we need to save
+ */
 function family(container, family, members, fixed_people_id, can_edit, onchange) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
+	/** {Object} the family */
 	this.family = objectCopy(family,10);
+	/** {Array} members of the family */
 	this.members = valueCopy(members,10);
 	this.onchange = onchange;
 	
+	/** Save the family and members
+	 * @param {Function} ondone called when the save is done and successfull
+	 */
 	this.save = function(ondone) {
-		var locker = lock_screen(null,"Saving Family Information...");
+		var locker = lockScreen(null,"Saving Family Information...");
 		service.json("family","save_family",{family:this.family,members:this.members},function(res) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			if (res) {
 				t.family = res.family;
 				t.members = res.members;
@@ -18,12 +32,19 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			}
 		});
 	};
+	/** Cancel any modification */
 	this.cancel = function() {
 		this.family = objectCopy(family,10);
 		this.members = valueCopy(members,10);
 		this._init();
 	};
 	
+	/** Add a SELECT on the screen
+	 * @param {Element} container where to put it
+	 * @param {Object} member family member
+	 * @param {String} attribute attribute on the member's object to use
+	 * @param {Array} values options for the select, each element being an object with {value,text}
+	 */
 	this._addSelect = function(container, member, attribute, values) {
 		if (can_edit) {
 			var select = document.createElement("SELECT");
@@ -59,9 +80,19 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			container.appendChild(document.createTextNode(val));
 		}		
 	};
+	/** Add a SELECT with Yes/No
+	 * @param {Element} container where to put it
+	 * @param {Object} member family member
+	 * @param {String} attribute boolean attribute on the member's object
+	 */
 	this._addBooleanSelect = function(container, member, attribute) {
 		this._addSelect(container, member, attribute, [{value:null,text:"?"},{value:true,text:"Yes"},{value:false,text:"No"}]);
 	};
+	/**
+	 * Sort the children according to their rank
+	 * @param {Element} title_row the header row on the table
+	 * @param {Object} edited indicates if the rank has been edited
+	 */
 	this._orderChildren = function(title_row, edited) {
 		if (this._ordering_children) return;
 		this._ordering_children = true;
@@ -149,6 +180,11 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		if (change && t.onchange) t.onchange();
 		this._ordering_children = false;
 	};
+	/**
+	 * Create a row in the table for a member
+	 * @param {Object} member the member
+	 * @param {Element} title_row header row in the table
+	 */
 	this._addMemberRow = function(member, title_row) {
 		var next = title_row.nextSibling;
 		while (next && !next.is_title) next = next.nextSibling;
@@ -181,7 +217,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				require([["typed_field.js","field_integer.js"]], function() {
 					tr.rank = new field_integer(member.child_rank ? parseInt(member.child_rank) : null, true, {min:1,can_be_null:false});
 					td_rank.appendChild(tr.rank.getHTMLElement());
-					tr.rank.onchange.add_listener(function() {
+					tr.rank.onchange.addListener(function() {
 						t._orderChildren(title_row, tr);
 						if (t.onchange) t.onchange();
 					});
@@ -200,7 +236,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				require([["typed_field.js","field_text.js"]],function() {
 					var f = new field_text(member.other_member_type, true, {min_length:1,can_be_null:false,max_length:50});
 					td_type.appendChild(f.getHTMLElement());
-					f.onchange.add_listener(function() {
+					f.onchange.addListener(function() {
 						member.other_member_type = f.getCurrentData();
 						if (t.onchange) t.onchange();
 					});
@@ -231,7 +267,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 					}
 				}
 			}
-			popup_frame(null, "New Family Member", "/dynamic/people/page/popup_create_people?multiple=false&donotcreate=oncreated&types=family_member", data, 80, 80, function(frame,pop){
+			popupFrame(null, "New Family Member", "/dynamic/people/page/popup_create_people?multiple=false&donotcreate=oncreated&types=family_member", data, 80, 80, function(frame,pop){
 				frame.oncreated = function(peoples) {
 					if (t.onchange) t.onchange();
 					require("datadisplay.js", function() {
@@ -295,7 +331,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			td_people.appendChild(span_first_name);
 			window.top.datamodel.registerCellSpan(window, "People", "first_name", member.people.people_id, span_first_name);
 			td_people.onclick = function() {
-				popup_frame(null,"Family Member","/dynamic/people/page/profile?people="+member.people.people_id,null,80,80);
+				popupFrame(null,"Family Member","/dynamic/people/page/profile?people="+member.people.people_id,null,80,80);
 			};
 			if (member.people.people_id != fixed_people_id && can_edit) {
 				var remove = document.createElement("BUTTON");
@@ -305,7 +341,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				td_people.appendChild(remove);
 				remove.onclick = function(ev) {
 					stopEventPropagation(ev);
-					popup_frame(null,"Remove Family Member","/dynamic/people/page/remove_people_type?people="+member.people.people_id+"&type=family_member&ontyperemoved=removed&onpeopleremoved=removed",null,null,null,function(frame,pop){
+					popupFrame(null,"Remove Family Member","/dynamic/people/page/remove_people_type?people="+member.people.people_id+"&type=family_member&ontyperemoved=removed&onpeopleremoved=removed",null,null,null,function(frame,pop){
 						frame.removed = function() {
 							for (var i = 0; i < members.length; ++i)
 								if (members[i].people && members[i].people.people_id == member.people.people_id) {
@@ -376,16 +412,20 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		// occupation
 		tr.appendChild(td = document.createElement("TD"));
 		if (can_edit) {
-			var td_occ = td;
+			var div = document.createElement("DIV");
+			div.style.display = "flex";
+			div.style.flexDirection = "row";
+			td.appendChild(div);
 			require([["typed_field.js","field_text.js"]],function() {
-				var f = new field_text(member.occupation, true, {min_length:1,can_be_null:true,max_length:100});
-				td_occ.appendChild(f.getHTMLElement());
-				f.onchange.add_listener(function() {
+				var f = new field_text(member.occupation, true, {min_length:1,can_be_null:true,max_length:100,min_size:5});
+				div.appendChild(f.getHTMLElement());
+				f.getHTMLElement().style.flex = "1 1 auto";
+				f.onchange.addListener(function() {
 					member.occupation = f.getCurrentData();
 					if (t.onchange) t.onchange();
 				});
-				td_occ.appendChild(document.createTextNode(" Type: "));
-				t._addSelect(td_occ, member, "occupation_type", [{value:null,text:"?"},{value:"Regular",text:"Regular"},{value:"Irregular",text:"Irregular"}]);
+				div.appendChild(document.createTextNode(" Type: "));
+				t._addSelect(div, member, "occupation_type", [{value:null,text:"?"},{value:"Regular",text:"Regular"},{value:"Irregular",text:"Irregular"}]);
 			});
 		} else {
 			td.appendChild(document.createTextNode((member.occupation ? member.occupation : "")+(member.occupation_type ? ","+member.occupation_type : "")));
@@ -399,9 +439,9 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			if (can_edit) {
 				var td_educ = td;
 				require([["typed_field.js","field_text.js"]],function() {
-					var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100});
+					var f = new field_text(member.education_level, true, {min_length:1,can_be_null:true,max_length:100,min_size:10});
 					td_educ.appendChild(f.getHTMLElement());
-					f.onchange.add_listener(function() {
+					f.onchange.addListener(function() {
 						member.education_level = f.getCurrentData();
 						if (t.onchange) t.onchange();
 					});
@@ -417,6 +457,21 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		tr.appendChild(td = document.createElement("TD"));
 		this._addBooleanSelect(td, member, "living_with_family");
 		if (!can_edit) td.style.textAlign = "center";
+		// revenue
+		tr.appendChild(td = document.createElement("TD"));
+		if (can_edit) {
+			var td_revenue = td;
+			require([["typed_field.js","field_text.js"]],function() {
+				var f = new field_text(member.revenue, true, {min_length:0,can_be_null:true,max_length:500,min_size:5});
+				td_revenue.appendChild(f.getHTMLElement());
+				f.onchange.addListener(function() {
+					member.revenue = f.getCurrentData();
+					if (t.onchange) t.onchange();
+				});
+			});
+		} else {
+			td.appendChild(document.createTextNode(member.revenue ? member.revenue : ""));
+		}
 		// comment
 		tr.appendChild(td = document.createElement("TD"));
 		if (member.people && member.people.people_types.indexOf("/applicant/") >= 0 && member.people.people_types.indexOf("/student/") < 0) {
@@ -428,9 +483,9 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		if (can_edit) {
 			var td_comment = td;
 			require([["typed_field.js","field_text.js"]],function() {
-				var f = new field_text(member.comment, true, {min_length:0,can_be_null:true,max_length:250});
+				var f = new field_text(member.comment, true, {min_length:0,can_be_null:true,max_length:1000,min_size:10});
 				td_comment.appendChild(f.getHTMLElement());
-				f.onchange.add_listener(function() {
+				f.onchange.addListener(function() {
 					member.comment = f.getCurrentData();
 					if (t.onchange) t.onchange();
 				});
@@ -443,6 +498,9 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		td.innerHTML = member.entry_date ? member.entry_date : "";
 		return tr;
 	};
+	/**
+	 * Add a row with the parents situation
+	 */
 	this._addParentsSituation = function() {
 		var tr = document.createElement("TR"); this.table.appendChild(tr);
 		var td = document.createElement("TD"); tr.appendChild(td);
@@ -465,6 +523,9 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		} else
 			td.appendChild(document.createTextNode(this.family.parents_situation ? this.family.parents_situation : ""));
 	};
+	/**
+	 * Add a row with columns titles
+	 */
 	this._addColumnsTitles = function() {
 		var tr, td;
 		this.table.appendChild(tr = document.createElement("TR"));
@@ -487,12 +548,19 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 		td.innerHTML = "Living<br/>w/family";
 		td.style.fontSize = "9pt";
 		tr.appendChild(td = document.createElement("TH"));
+		td.innerHTML = "Revenue<br/>Info.";
+		td.style.fontSize = "9pt";
+		tr.appendChild(td = document.createElement("TH"));
 		td.innerHTML = "Comment";
 		tr.appendChild(td = document.createElement("TH"));
 		td.style.fontSize = "9pt";
 		td.innerHTML = "Last<br/>Update";
 		return tr;
 	};
+	/**
+	 * Add a row with a title
+	 * @param {String} title the title
+	 */
 	this._addTitleRow = function(title) {
 		var tr = document.createElement("TR"); this.table.appendChild(tr);
 		tr.is_title = true;
@@ -505,6 +573,9 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			td.appendChild(title);
 		return tr;
 	};
+	/**
+	 * Initialize the screen in case no information specified about the family yet
+	 */
 	this._initNull = function() {
 		container.removeAllChildren();
 		var div = document.createElement("DIV");
@@ -522,6 +593,9 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 			};
 		}
 	};
+	/**
+	 * Initialize the screen in case there is already information specified about the family
+	 */
 	this._initFamily = function() {
 		container.removeAllChildren();
 		this.table = document.createElement("TABLE");
@@ -575,6 +649,7 @@ function family(container, family, members, fixed_people_id, can_edit, onchange)
 				this._addMemberRow(this.members[i], title_children);
 		this._orderChildren(title_children);
 	};
+	/** Initialize the screen */
 	this._init = function() {
 		if (this.family.id < 0) this._initNull(); else this._initFamily();
 	};

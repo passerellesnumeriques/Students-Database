@@ -1,16 +1,17 @@
 /**
  * Create a section object containing the custom name of the given Information Session
- * @param {String|HTMLElement}container
- * @param {String|NULL} name if any
- * @param {Boolean} can_edit
+ * @param {String|Element} container where to put it
+ * @param {String|null} name if any
+ * @param {Boolean} can_edit indicates if the user can modify
  * @param {String} title title of the section element
  */
 function center_name(container, name, can_edit, title){
 	if(typeof(container) == "string") container = document.getElementById(container);
 	var t = this;
 	t.table = document.createElement("table");
+	/** Event fired when the name changed */
 	t.onupdate = new Custom_Event();
-	t.onupdate.add_listener(function() {
+	t.onupdate.addListener(function() {
 		if (t._name == name) // didn't change
 			window.pnapplication.dataSaved("SelectionCenterCustomName");
 		else
@@ -25,9 +26,11 @@ function center_name(container, name, can_edit, title){
 		return t._name;
 	};
 	
-	/**Private attributes and functionalities*/
+	/* Private attributes and functionalities */
 	
+	/** text */
 	t._text = "";
+	/** name */
 	t._name = name;
 	
 	/**

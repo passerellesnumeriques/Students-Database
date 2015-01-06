@@ -1,7 +1,7 @@
 function edit_template(container, type_id, root_table, sub_model, known_columns, template, onready) {
 	if (typeof container == 'string') container = document.getElementById('container');
 	var t=this;
-	var popup = window.parent.get_popup_window_from_frame(window);
+	var popup = window.parent.getPopupFromFrame(window);
 	
 	this._startEdition = function(type) {
 		var win = getIFrameWindow(t.frame_excel);
@@ -33,7 +33,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 							popup.addSaveButton(function() {
 								if (temp_name.value) save();
 								else
-									input_dialog(null,"New Import Template","Please choose a name for this new template","",100,function(name) {
+									inputDialog(null,"New Import Template","Please choose a name for this new template","",100,function(name) {
 										name = name.trim();
 										if (name.length == 0) return "Please enter a name";
 										return null;
@@ -89,7 +89,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 	};
 	
 	this._excelReady = function() {
-		t.splitter.show_right();
+		t.splitter.showRight();
 		t.excel_header.removeAllChildren();
 		t.excel_bar = new header_bar(t.excel_header, 'toolbar');
 		t.excel_bar.setTitle("/static/excel/excel_16.png", "Example Excel File");
@@ -106,7 +106,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 	this._startUpload = function(click_event) {
 		var pb = null;
 		t._upl.onstart = function(files, onready) {
-			popup.freeze_progress("Uploading file...", files[0].size, function(span, prog) {
+			popup.freezeWithProgress("Uploading file...", files[0].size, function(span, prog) {
 				pb = prog;
 				onready();
 			});
@@ -122,7 +122,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 				return;
 			}
 			pb.done();
-			popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
+			popup.setFreezeContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Reading File...");
 			t.frame_excel.onload = function() {
 				var check_view = function() {
 					var win = getIFrameWindow(t.frame_excel);
@@ -151,7 +151,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 						setTimeout(check_loaded, 100);
 						return;
 					}
-					popup.set_freeze_content("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
+					popup.setFreezeContent("<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Building Excel View...");
 					check_view();
 				};
 				check_loaded();
@@ -202,7 +202,7 @@ function edit_template(container, type_id, root_table, sub_model, known_columns,
 			container.style.height = "200px";
 			container.style.width = "500px";
 			t.splitter = new splitter_vertical(container, 0.5);
-			t.splitter.hide_right();
+			t.splitter.hideRight();
 			t.import_bar = new header_bar(t.import_header, 'toolbar');
 			t.import_bar.setTitle(theme.icons_16._import, "How to import data");
 

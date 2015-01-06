@@ -36,7 +36,7 @@ class page_assign_specializations extends Page {
 		<div id='assign_container' style='width:100%;height:100%'>
 		</div>
 		<script type='text/javascript'>
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
 		popup.addCancelButton();
 		popup.disableButton('save');
@@ -54,7 +54,7 @@ class page_assign_specializations extends Page {
 		}
 		
 		var assign = new assign_elements('assign_container',null,null,display_people,function(assign) {
-			assign.onchange.add_listener(function(){
+			assign.onchange.addListener(function(){
 				var changes = assign.getChanges();
 				if (changes.length > 0)
 					popup.enableButton('save');
@@ -66,22 +66,22 @@ class page_assign_specializations extends Page {
 			<?php foreach ($students as $s) echo "assign.addElement(".PeopleJSON::People($s).",".json_encode($s["specialization"]).",".(in_array($s["student_people"],$students_group_spe) ? "false" : "true").");\n";?>
 		});
 		function save() {
-			var lock = lock_screen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving specializations...");
+			var lock = lockScreen(null,"<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving specializations...");
 			var peoples = assign.getChanges();
 			var next = function(index) {
 				if (index == peoples.length) {
 					assign.changesSaved();
 					<?php if (isset($_GET["onsave"])) echo "window.frameElement.".$_GET["onsave"]."();"?>
-					unlock_screen(lock);
+					unlockScreen(lock);
 					return;
 				}
 				var original = peoples[index].original;
 				var current = peoples[index].current;
 				var people = peoples[index].element;
 				if (current == null)
-					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Unassigning specialization from "+people.first_name.toHTML()+" "+people.last_name.toHTML());
+					setLockScreenContent(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Unassigning specialization from "+people.first_name.toHTML()+" "+people.last_name.toHTML());
 				else
-					set_lock_screen_content(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Assigning specialization "+getSpecializationName(current).toHTML()+" to "+people.first_name.toHTML()+" "+people.last_name.toHTML());
+					setLockScreenContent(lock, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Assigning specialization "+getSpecializationName(current).toHTML()+" to "+people.first_name.toHTML()+" "+people.last_name.toHTML());
 				service.json("students", "assign_specialization", {student:people.id,specialization:current}, function(res) {
 					next(index+1);
 				});

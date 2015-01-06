@@ -28,7 +28,7 @@ class service_exam_reset_results extends Service {
 			}
 		} else {
 			// reset only for 1 session
-			$keys = SQLQuery::create()->bypassSecurity()->select("Applicant")->field("people")->whereValue("Applicant", "exam_session", $input["session"])->execute();
+			$keys = SQLQuery::create()->bypassSecurity()->select("Applicant")->field("people")->whereValue("Applicant", "exam_session", $input["session"])->executeSingleField();
 			if (count($keys) > 0) {
 				$rows = SQLQuery::create()->bypassSecurity()->select("ApplicantExamSubject")->whereIn("ApplicantExamSubject","applicant",$keys)->execute();
 				if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("ApplicantExamSubject", $rows);

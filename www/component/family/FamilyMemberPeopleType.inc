@@ -1,5 +1,8 @@
 <?php
-require_once("component/people/PeopleTypePlugin.inc"); 
+require_once("component/people/PeopleTypePlugin.inc");
+/**
+ * Plug-in to add the 'family_member' type of people
+ */
 class FamilyMemberPeopleType implements PeopleTypePlugin {
 	
 	public function getSecurityPriority() { return 1000; }
@@ -23,7 +26,69 @@ class FamilyMemberPeopleType implements PeopleTypePlugin {
 	public function getTables() { return array("Family","FamilyMember"); }
 	
 	public function getPeopleRowDescription($people) {
-		return "Family Member"; // TODO
+		$entries = SQLQuery::create()->bypassSecurity()
+			->select("FamilyMember")
+			->whereValue("FamilyMember", "people", $people["id"])
+			->execute();
+		$result = "";
+		// search if we have someone else, from the same family, who is known
+		foreach ($entries as $e) {
+			$others = SQLQuery::create()->bypassSecurity()
+				->select("FamilyMember")
+				->whereValue("FamilyMember", "family", $e["family"])
+				->whereNotValue("FamilyMember", "people", $people["id"])
+				->whereNotNull("FamilyMember", "people")
+				->execute();
+			if (count($others) == 0)
+				$descr = "Family member of an unknown family";
+			else {
+				$peoples_ids = array();
+				foreach ($others as $o) array_push($peoples_ids, $o["people"]);
+				$others_peoples = PNApplication::$instance->people->getPeoples($peoples_ids, false, false, true, false);
+				$descr = "";
+				foreach ($others_peoples as $p) {
+					$types = PNApplication::$instance->people->parseTypes($p["types"]);
+					$is_fm = in_array("family_member", $types);
+					if (!$is_fm || count($types) > 1) { // not only a family member
+						$other = null;
+						foreach ($others as $o) if ($o["people"] == $p["id"]) { $other = $o; break; }
+						if ($other["member_type"] == "Child") {
+							if ($e["member_type"] == "Child")
+								$s = $people["sex"] == "F" ? "Sister of " : "Brother of ";
+							else if ($e["member_type"] == "Father")
+								$s = "Father of ";
+							else if ($e["member_type"] == "Mother")
+								$s = "Mother of ";
+							else
+								$s = "Related of ";
+						} else if ($other["member_type"] == "Father") {
+							if ($e["member_type"] == "Child")
+								$s = "Child of ";
+							else if ($e["member_type"] == "Mother")
+								$s = "Wife of ";
+							else
+								$s = "Related of ";
+						} else if ($other["member_type"] == "Mother") {
+							if ($e["member_type"] == "Child")
+								$s = "Child of ";
+							else if ($e["member_type"] == "Father")
+								$s = "Housband of ";
+							else
+								$s = "Related of ";
+						}  else
+							$s = "Related of ";
+						$s .= DataModel::get()->getTable("People")->getRowDescription($p);
+						if ($descr <> "") $descr .= ", ";
+						$descr .= $s;
+					}
+				}
+			}
+			if ($descr <> "") {
+				if ($result <> "") $result .= ", ";
+				$result .= $descr;
+			}
+		}
+		return $result;
 	}
 	
 	public function getBuiltinDefaultUserRoles($people) {

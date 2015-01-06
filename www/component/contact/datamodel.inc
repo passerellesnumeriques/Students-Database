@@ -3,7 +3,7 @@
 $model->addTable("Contact")
 	->addPrimaryKey("id")
 	->addEnum("type",array("email","phone","IM"),true,false)
-	->addString("sub_type",30,0,true,false)
+	->addString("sub_type",100,0,true,false)
 	->addString("contact",100,1,false,false)
 	->addReadAccessFromForeignTable("OrganizationContact") // no need to check again
 	->addReadAccessFromForeignTable("PeopleContact") // no need to check again
@@ -73,9 +73,9 @@ $model->addTable("Contact")
 		}
 		$final = array();
 		$table_people = Datamodel::get()->getTable("PeopleContact");
-		array_push($final, $table_people->filterWriteAccess($people_rows)); 
+		$final = array_merge($final, $table_people->filterWriteAccess($people_rows)); 
 		$table_org = Datamodel::get()->getTable("OrganizationContact");
-		array_push($final, $table_org->filterWriteAccess($org_rows));
+		$final = array_merge($final, $table_org->filterWriteAccess($org_rows));
 		return $final; 
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks){
@@ -212,9 +212,9 @@ $model->addTable("PostalAddress")
 		}
 		$final = array();
 		$table_people = Datamodel::get()->getTable("PeopleAddress");
-		array_push($final, $table_people->filterWriteAccess($people_rows)); 
+		$final = array_merge($final, $table_people->filterWriteAccess($people_rows)); 
 		$table_org = Datamodel::get()->getTable("OrganizationAddress");
-		array_push($final, $table_org->filterWriteAccess($org_rows));
+		$final = array_merge($final, $table_org->filterWriteAccess($org_rows));
 		return $final; 
 	})
 	->addRemoveFilter(function(&$q, $table_alias, &$locks){
@@ -284,9 +284,13 @@ $model->addTable("Organization")
 	->addPrimaryKey("id")
 	->addString("name",100,1,false,false)
 	->addString("creator",100,1,false,false)
+	->addBoolean("obsolete",false)
 	->addBoolean("fake",true) //if true, not displayable, internal usage only
 	->setRoot()
 	->addIndex("creator")
+	->setRowDescriptionProvider(function($row) {
+		return "Organization ".toHTML($row["name"]);
+	})
 	->addReadFilter(function(&$q, $table_alias){
 		require_once("component/contact/OrganizationPlugin.inc");
 		$allowed = array();
@@ -521,6 +525,9 @@ $model->addTable("OrganizationTypes")
 			if (in_array($row["ORG_CREATOR"], $allowed))
 			array_push($final, $row);
 		return $final;
+	})
+	->setRowDescriptionProvider(function($row) {
+		return "";
 	})
 	;
 

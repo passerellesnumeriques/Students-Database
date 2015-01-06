@@ -16,7 +16,7 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_integer","{min:0,can_be_null:true}"); }
 	public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
-	public function getHorizontalAlign() { return "center"; }
+	public function getHorizontalAlign($sub_model) { return "center"; }
 	public function isEditable() { return false; }
 	public function isEditableForNewData() { return true; }
 	public function getEditLocks($sub_model) { return array(); }
@@ -81,7 +81,7 @@ class ChildRank extends datamodel\DataDisplay {
 	public function getHandledColumns() { return array(); }
 	public function getTypedField($sub_model) { return array("field_integer","{min:1,can_be_null:true}"); }
 	public function getTypedFilter($sub_model) { return array("filter_comparable","{value_field_classname:'field_integer',value_field_config:{min:0},can_be_null:true}"); }
-	public function getHorizontalAlign() { return "center"; }
+	public function getHorizontalAlign($sub_model) { return "center"; }
 	public function isEditable() { return false; }
 	public function isEditableForNewData() { return true; }
 	public function getEditLocks($sub_model) { return array(); }
@@ -144,7 +144,7 @@ class ParentsSituation extends datamodel\DataDisplay {
 	public function getTypedFilter($sub_model) {
 		return PNApplication::$instance->widgets->get_typed_filter(DataModel::get()->internalGetTable("Family")->internalGetColumn("parents_situation"));
 	}
-	public function getHorizontalAlign() { return "center"; }
+	public function getHorizontalAlign($sub_model) { return "center"; }
 	public function isEditable() { return false; }
 	public function isEditableForNewData() { return true; }
 	public function getEditLocks($sub_model) { return array(); }
@@ -303,6 +303,26 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 			SQLQuery::create()->bypassSecurity()->updateByKey("FamilyMember", $id, $member);
 		}
 	}
+	
+	public function exportValue($value, $sub_model) {
+		if ($value == null) return "";
+		$s = $value["last_name"]." ".$value["first_name"];
+		if ($value["birthdate"] <> null) {
+			require_once("component/data_model/TableDefinition.inc");
+			$bd = datamodel\ColumnDate::toTimestamp($value["birthdate"]);
+			$bd = getdate($bd);
+			$now = getdate(time());
+			$age = $now["year"] - $bd["year"];
+			if ($bd["mon"] > $now["mon"]) $age--;
+			else if ($bd["mon"] == $now["mon"] && $bd["mday"] > $now["mday"]) $age--;
+			$s .= ", ".$age;
+		}
+		if ($value["occupation"] <> null) $s .= ", ".$value["occupation"];
+		if ($value["education_level"] <> null) $s .= ", ".$value["education_level"];
+		if ($value["comment"] <> null) $s .= " (".$value["comment"].")";
+		return $s;
+	}
+	
 }
 class ParentsSubDataDisplay extends datamodel\SubDataDisplay {
 	public function getDisplayNames() {
@@ -318,6 +338,27 @@ class ParentsSubDataDisplay extends datamodel\SubDataDisplay {
 	public function isEditable($index) {
 		if ($index == 2) return false;
 		return true;
+	}
+	public function exportValue($value, $sub_mode, $index) {
+		if ($value == null) return "";
+		switch ($index) {
+			case 0: return $value["last_name"];
+			case 1: return $value["first_name"];
+			case 2: 
+				if ($value["birthdate"] == null) return "";
+				require_once("component/data_model/TableDefinition.inc");
+				$bd = datamodel\ColumnDate::toTimestamp($value["birthdate"]);
+				$bd = getdate($bd);
+				$now = getdate(time());
+				$age = $now["year"] - $bd["year"];
+				if ($bd["mon"] > $now["mon"]) $age--;
+				else if ($bd["mon"] == $now["mon"] && $bd["mday"] > $now["mday"]) $age--;
+				return $age;
+			case 3: return $value["occupation"];
+			case 4: return $value["education_level"];
+			case 5: return $value["comment"];
+		}
+		return "";
 	}
 }
 $display->addDataDisplay(new ParentDataDisplay($category, "Father"));

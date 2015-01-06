@@ -20,7 +20,7 @@ class UserDataScreen extends datamodel\GenericDataScreen {
 		if ($values->hasColumnValue("UserPeople","people")) {
 			// not new
 			$people_id = $values->getColumnValue("UserPeople","people");
-			if (PNApplication::$instance->user_management->has_right("manage_users") || $people_id == PNApplication::$instance->user_management->people_id) {
+			if (PNApplication::$instance->user_management->hasRight("manage_users") || $people_id == PNApplication::$instance->user_management->people_id) {
 				// can edit or himself
 				$user_id = $values->getColumnValue("UserPeople","user");
 				$user = SQLQuery::create()->bypassSecurity()->select("Users")->whereValue("Users","id",$user_id)->executeSingleRow();
@@ -38,9 +38,9 @@ class UserDataScreen extends datamodel\GenericDataScreen {
 					<script type='text/javascript'>
 					function resetPassword() {
 						<?php if ($user["domain"] == PNApplication::$instance->local_domain) {?>
-							popup_frame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/reset_pass?domain=<?php echo PNApplication::$instance->local_domain;?>&username=<?php echo urlencode($user["username"]);?>");
+						popupFrame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/reset_pass?domain=<?php echo PNApplication::$instance->local_domain;?>&username=<?php echo urlencode($user["username"]);?>");
 						<?php } else { ?>
-							popup_frame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_ResetPassword",url:"/dynamic/user_management/page/reset_pass?domain=<?php echo $user["domain"];?>&username=<?php echo urlencode($user["username"]);?>",domain:<?php echo json_encode($user["domain"]);?>});
+						popupFrame("/static/user_management/reset_password.png", "Reset Password", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_ResetPassword",url:"/dynamic/user_management/page/reset_pass?domain=<?php echo $user["domain"];?>&username=<?php echo urlencode($user["username"]);?>",domain:<?php echo json_encode($user["domain"]);?>});
 						<?php } ?>
 					}
 					</script>
@@ -51,7 +51,9 @@ class UserDataScreen extends datamodel\GenericDataScreen {
 	}
 	
 }
+#!SELECTION_TRAVEL
 $model->addDataScreen(new UserDataScreen($display));
+#END
 
 $display = new datamodel\TableDataDisplay("UserRole", $category);
 $display->addDataDisplay(new datamodel\JoiningTableDataDisplay("Roles", "user", "role", "name"));

@@ -10,10 +10,11 @@ $sm->addTable("InterviewCenter")
 	->addWriteAccess("manage_interview_center", true)
 	->addRemoveAccess("manage_interview_center", true)
 	->addInsertAccess("manage_interview_center", true)
-	->onInsert(function($fields,$id,$sub_model_instance) {
-		try {
-			PNApplication::$instance->news->post("selection", null, array("campaign".$sub_model_instance), "activity", "New Interview Center: <i>".$fields["name"]."</i>");
-		} catch (Exception $e) { PNApplication::error($e); }
+	->onInsert(function($inserted) {
+		foreach ($inserted as $row)
+			try {
+				PNApplication::$instance->news->post("selection", null, array("campaign".$row["sub_model_instance"]), "activity", "New Interview Center: <i>".$row["fields_values"]["name"]."</i>");
+			} catch (Exception $e) { PNApplication::error($e); }
 	});
 
 $sm->addTable("InterviewCenterPartner")
@@ -57,6 +58,8 @@ $sm->addTable("InterviewCenterExamCenter")
 $sm->addTable("InterviewSession")
 	->addForeignKey("event", "CalendarEvent", true, true, false, false, true)
 	->addForeignKey("interview_center", "InterviewCenter", true, false, true)//An exam center can have several session
+	->addInteger("every_minutes",7,5,120,false,false)
+	->addInteger("parallel_interviews",8,0,255,false,false)
 	->setPrimary("event")//The event is the primary key of a session
 	->addReadAccess("see_interview_center",true)
 	->addWriteAccess("manage_interview_center",true)
@@ -72,6 +75,9 @@ $sm->addTable("InterviewCriterion")
 	->addString("name",100,1,false,true)
 	->addDecimal("max_score",3,2,0,null,false,false)
 	->addReadAccess("see_interview_criteria", true)
+	->addWriteAccess("manage_interview_criteria", true)
+	->addInsertAccess("manage_interview_criteria", true)
+	->addRemoveAccess("manage_interview_criteria", true)
 	;
 
 $sm->addTable("InterviewEligibilityRule")

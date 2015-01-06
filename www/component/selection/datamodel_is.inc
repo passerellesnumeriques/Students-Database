@@ -4,7 +4,7 @@
 
 $sm->addTable("InformationSession")
 	->addPrimaryKey("id")
-	->addForeignKey("date","CalendarEvent",false,true,true,true)
+	->addForeignKey("date","CalendarEvent",false,true,false,true)
 	->addForeignKey("geographic_area", "GeographicArea", false, false, true)
 	->addInteger("number_boys_expected",10)
 	->addInteger("number_girls_expected",10)
@@ -15,10 +15,11 @@ $sm->addTable("InformationSession")
 	->addWriteAccess("manage_information_session",true)
 	->addInsertAccess("manage_information_session",true)
 	->addRemoveAccess("manage_information_session",true)
-	->onInsert(function($fields,$id,$sub_model_instance) {
-		try {
-			PNApplication::$instance->news->post("selection", null, array("campaign".$sub_model_instance), "activity", "New Information Session: <i>".$fields["name"]."</i>");
-		} catch (Exception $e) { PNApplication::error($e); }
+	->onInsert(function($inserted) {
+		foreach ($inserted as $row)
+			try {
+				PNApplication::$instance->news->post("selection", null, array("campaign".$row["sub_model_instance"]), "activity", "New Information Session: <i>".$row["fields_values"]["name"]."</i>");
+			} catch (Exception $e) { PNApplication::error($e); }
 	})
 	;
 $model->internalGetTable("CalendarEvent")

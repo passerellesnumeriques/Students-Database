@@ -3,9 +3,9 @@ class service_search_google extends Service {
 	
 	public function getRequiredRights() { return array("edit_geography"); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Call the Google Places API to search for a place"; }
+	public function inputDocumentation() { echo "country_id, name"; }
+	public function outputDocumentation() { echo "the result from Google"; }
 	
 	public function execute(&$component, $input) {
 		$country_id = $input["country_id"];

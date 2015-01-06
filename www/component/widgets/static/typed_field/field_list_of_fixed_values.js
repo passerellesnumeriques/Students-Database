@@ -1,11 +1,21 @@
 /* #depends[typed_field.js] */
+/**
+ * List of values, each value being a choice among possible values.
+ * If editable, the user can add and remove values.
+ * Configuration must contain <code>possible_values</code> which is an array, each element being a possible value. Each possible value is an array with 2 elements: first is the key, second is the text to display.
+ */
 function field_list_of_fixed_values(data,editable,config) {
 	if (data == null) data = [];
 	typed_field_multiple.call(this, data, editable, config);
 }
 field_list_of_fixed_values.prototype = new typed_field_multiple();
 field_list_of_fixed_values.prototype.constructor = field_list_of_fixed_values;		
-field_list_of_fixed_values.prototype.canBeNull = function() { return true; };		
+field_list_of_fixed_values.prototype.canBeNull = function() { return true; };
+/**
+ * Retrieve the text from a key
+ * @param {Object} key the key to search
+ * @returns {String} the text
+ */
 field_list_of_fixed_values.prototype._getValue = function(key) {
 	var value = null;
 	for (var j = 0; j < this.config.possible_values.length; ++j)
@@ -31,6 +41,7 @@ field_list_of_fixed_values.prototype._create = function(data) {
 		this._elements = [];
 		this._addElement = function(key) {
 			var text = document.createElement("SPAN");
+			text.style.whiteSpace = 'nowrap';
 			text.appendChild(document.createTextNode(this._getValue(key)));
 			var remove = document.createElement("IMG");
 			remove.src = theme.icons_10.remove;
@@ -43,19 +54,18 @@ field_list_of_fixed_values.prototype._create = function(data) {
 				if (this.data_index > 0)
 					t.element.removeChild(t._elements[this.data_index].comma);
 				t.element.removeChild(t._elements[this.data_index].text);
-				t.element.removeChild(t._elements[this.data_index].remove);
 				t._elements.splice(this.data_index,1);
 				for (var i = this.data_index; i < t._elements.length; ++i)
 					t._elements[i].remove.data_index = i;
 				t._datachange();
 				stopEventPropagation(ev);
 			};
+			text.appendChild(remove);
 			var comma = null;
 			if (t._elements.length > 0) comma = document.createTextNode(", ");
 			if (comma != null)
 				this.element.insertBefore(comma, this.add_button);
 			this.element.insertBefore(text, this.add_button);
-			this.element.insertBefore(remove, this.add_button);
 			this._elements.push({comma:comma,text:text,remove:remove,key:key});
 		};
 		this.add_button = document.createElement("BUTTON");

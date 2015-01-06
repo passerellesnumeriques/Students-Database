@@ -39,7 +39,7 @@ class page_index extends Page {
 						var doc = new fct();
 						w.jsdoc = doc.jsdoc;
 					} catch (e) {
-						w.top.status_manager.add_status(new window.top.StatusMessageError(e,"Invalid output for get_js:"+res.js,10000));
+						w.top.status_manager.addStatus(new window.top.StatusMessageError(e,"Invalid output for get_js:"+res.js,10000));
 					}
 					for (var i = 0; i < w.jsdoc_handlers.length; ++i)
 						w.jsdoc_handlers[i]();

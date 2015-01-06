@@ -47,7 +47,7 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		//this.header.style.backgroundColor = "#D8D8D8";
 		this.header.className = "header";
 		this.view_container = document.createElement("DIV");
-		this.view_container.style.flex = "1 1 auto";
+		this.view_container.style.flex = "1 1 100%";
 		this.view_container.style.backgroundColor = "white";
 		if (view_name != "upcoming")
 			container.appendChild(this.header);
@@ -94,28 +94,28 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			t.position_back.style.padding = "1px";
 			t.position_back.style.margin = "0px";
 			t.position_back.className = "button_verysoft";
-			t.position_back.onload = function() { t.updateHeader(); };
+			t.position_back.onload = function() { if(t) t.updateHeader(); };
 			t.position_back.src = "/static/calendar/back.png";
 			t.position_back_step.style.verticalAlign = "middle";
 			t.position_back_step.style.cursor = "pointer";
 			t.position_back_step.style.padding = "1px";
 			t.position_back_step.style.margin = "0px";
 			t.position_back_step.className = "button_verysoft";
-			t.position_back_step.onload = function() { t.updateHeader(); };
+			t.position_back_step.onload = function() { if(t) t.updateHeader(); };
 			t.position_back_step.src = "/static/calendar/back_step.png";
 			t.position_forward.style.verticalAlign = "middle";
 			t.position_forward.style.cursor = "pointer";
 			t.position_forward.style.padding = "1px";
 			t.position_forward.style.margin = "0px";
 			t.position_forward.className = "button_verysoft";
-			t.position_forward.onload = function() { t.updateHeader(); };
+			t.position_forward.onload = function() { if(t) t.updateHeader(); };
 			t.position_forward.src = "/static/calendar/forward.png";
 			t.position_forward_step.style.verticalAlign = "middle";
 			t.position_forward_step.style.cursor = "pointer";
 			t.position_forward_step.style.padding = "1px";
 			t.position_forward_step.style.margin = "0px";
 			t.position_forward_step.className = "button_verysoft";
-			t.position_forward_step.onload = function() { t.updateHeader(); };
+			t.position_forward_step.onload = function() { if(t) t.updateHeader(); };
 			t.position_forward_step.src = "/static/calendar/forward_step.png";
 			t.position_back.onclick = function() { if (t.view) t.view.back(); t.updateHeader(); };
 			t.position_back_step.onclick = function() { if (t.view) t.view.backStep(); t.updateHeader(); };
@@ -136,8 +136,8 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			t.zoom_plus.style.paddingLeft = "3px";
 			t.zoom_minus.className = "button_verysoft";
 			t.zoom_plus.className = "button_verysoft";
-			t.zoom_minus.onload = function() { t.updateHeader(); };
-			t.zoom_plus.onload = function() { t.updateHeader(); };
+			t.zoom_minus.onload = function() { if(t) t.updateHeader(); };
+			t.zoom_plus.onload = function() { if(t) t.updateHeader(); };
 			t.zoom_minus.src = theme.icons_16.zoom_in;
 			t.zoom_plus.src = theme.icons_16.zoom_out;
 			t.zoom_minus.style.cursor = "pointer";
@@ -164,8 +164,8 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 				t.header.appendChild(t.zoom_div);
 
 			t.updateHeader();
-			layout.listenElementSizeChanged(t.header, function() { t.updateHeader(); });
-			layout.listenInnerElementsChanged(t.header, function() { t.updateHeader(); });
+			layout.listenElementSizeChanged(t.header, function() { if (t) t.updateHeader(); });
+			layout.listenInnerElementsChanged(t.header, function() { if (t) t.updateHeader(); });
 			layout.changed(container);
 		});
 	};
@@ -214,7 +214,6 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 		}		
 		if (w < position_width + zoom_width) {
 			// we cannot show all
-			// TODO ? menu ? / only one ?...
 		} else {
 			this.position_div.style.position = "static";
 			this.position_div.style.visibility = "visible";
@@ -756,14 +755,14 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 			t.view.removeEvent(ev.uid);
 			t.addEvent(ev);
 		};
-		t.calendar_manager.on_event_added.add_listener(add_event_listener);
-		t.calendar_manager.on_event_removed.add_listener(remove_event_listener);
-		t.calendar_manager.on_event_updated.add_listener(update_event_listener);
-		pnapplication.onclose.add_listener(function() {
+		t.calendar_manager.on_event_added.addListener(add_event_listener);
+		t.calendar_manager.on_event_removed.addListener(remove_event_listener);
+		t.calendar_manager.on_event_updated.addListener(update_event_listener);
+		pnapplication.onclose.addListener(function() {
 			if (!t) return;
-			t.calendar_manager.on_event_added.remove_listener(add_event_listener);
-			t.calendar_manager.on_event_removed.remove_listener(remove_event_listener);
-			t.calendar_manager.on_event_updated.remove_listener(update_event_listener);
+			t.calendar_manager.on_event_added.removeListener(add_event_listener);
+			t.calendar_manager.on_event_removed.removeListener(remove_event_listener);
+			t.calendar_manager.on_event_updated.removeListener(update_event_listener);
 		});
 		t._init();
 	});

@@ -3,9 +3,25 @@ class service_create_data extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Generic service to create data"; }
+	public function inputDocumentation() {
+?>
+<ul>
+<li><code>root</code>: the table being the starting point</li>
+<li><code>sub_model</code>: optional, the sub model of <code>root</code></li>
+<li><code>sub_models</code>: optional, list of sub models to use</li>
+<li><code>multiple</code>: indicates if we are creating several data at the same time, or a single one</li>
+<li><code>paths</code>: the data with for each information the format:<ul>
+	<li><code>path</code>: the path of a table from the root</li>
+	<li><code>columns</code>: optional, to set values on specific columns on this table</li>
+	<li><code>value</code>: value to give to the DataScreen to create the data</li>
+</ul></li>
+</ul>
+<?php 
+	}
+	public function outputDocumentation() {
+		echo "<code>key</code> the id of the new row created in the root table";
+	}
 	
 	public function execute(&$component, $input) {
 		$root_table_name = $input["root"];
@@ -44,6 +60,12 @@ class service_create_data extends Service {
 		}
 	}
 	
+	/**
+	 * Create the data for the given path
+	 * @param array $path path,columns,value
+	 * @param boolean $multiple indicates if it contains multiple entries or not
+	 * @return array|integer the key of the created data, if applicable
+	 */
 	private function createData($path, $multiple) {
 		$come_from = null;
 		if ($path instanceof DataPath_Join && $path->isReverse())

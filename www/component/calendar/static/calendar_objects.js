@@ -15,6 +15,7 @@ window.calendar_event_role_requested = "REQUESTED";
 window.calendar_event_role_optional = "OPTIONAL";
 /** for information only, but participant does not need to participate */
 window.calendar_event_role_for_info = "FOR_INFO";
+/** no role, typically only the organizer or creator of the event, but won't participate */
 window.calendar_event_role_none = "NONE";
 
 /**
@@ -33,6 +34,7 @@ window.calendar_event_role_none = "NONE";
  * @param {CalendarEventFrequency} frequency recurrence
  * @param {String} app_link url
  * @param {String} app_link_name name to display
+ * @param {Array} attendees list of CalendarEventAttendee
  */
 function CalendarEvent(id, calendar_provider_id, calendar_id, uid, start, end, all_day, last_modified, title, description, location_freetext, frequency, app_link, app_link_name, attendees) {
 	this.id = id;
@@ -141,6 +143,16 @@ function copyCalendarEventFrequency(f) {
 	);
 }
 
+/** Someone attending an event
+ * @param {String} name the <i>display name</i> of the attendee
+ * @param {String} role one of the defined values
+ * @param {String} participation one of the defined values
+ * @param {Boolean} organizer indicates if this person is the one organizing the event
+ * @param {Boolean} creator indicates if this person is the one who created the event
+ * @param {String} email email of the person, or null
+ * @param {Number} people people ID if ever this is someone we know in the database
+ * @param {Number} people_email contact ID if ever the email is stored in teh database, attached to the given people
+ */
 function CalendarEventAttendee(name, role, participation, organizer, creator, email, people, people_email) {
 	this.name = name;
 	this.role = role;
@@ -151,6 +163,10 @@ function CalendarEventAttendee(name, role, participation, organizer, creator, em
 	this.people = people;
 	this.people_email = people_email;
 }
+/** Copy an attendee
+ * @param {CalendarEventAttendee} a the attendee to copy
+ * @returns {CalendarEventAttendee} the copy
+ */
 function copyCalendarEventAttendee(a) {
 	if (a == null) return null;
 	return new CalendarEventAttendee(

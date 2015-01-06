@@ -1,3 +1,14 @@
+/**
+ * Screen to display the location of a center, with hosting partner, and a list of other partners
+ * @param {popup_window} popup the popup in which we are
+ * @param {section} section_location section where to put the location and hosting partner
+ * @param {section} section_other_partners section where to put the list of other partners
+ * @param {String} center_type InformationSession, ExamCenter or InterviewCenter
+ * @param {Number} center_id id of the center
+ * @param {GeographicAreaText} geographic_area_text geographic information
+ * @param {Array} partners list of partners
+ * @param {Boolean} editable indicates if the user can modify information
+ */
 function location_and_partners(popup, section_location, section_other_partners, center_type, center_id, geographic_area_text, partners, editable) {
 	
 	this.center_id = center_id;
@@ -6,6 +17,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	
 	// Functionalities
 	
+	/** Get the hosting partner
+	 * @returns {SelectionPartner} the hosting partner, or null
+	 */
 	this.getHostPartner = function() {
 		for (var i = 0; i < this.partners.length; ++i) {
 			if (!this.partners[i].host) continue;
@@ -13,6 +27,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		}
 		return null;
 	};
+	/** Get the address hosting the event
+	 * @returns {PostalAddress} address or null
+	 */
 	this.getHostAddress = function() {
 		var host = this.getHostPartner();
 		if (host != null) {
@@ -22,6 +39,9 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		}
 		return null;
 	};
+	/** Set the hosting partner
+	 * @param {SelectionPartner} host the new hosting partner
+	 */
 	this.setHostPartner = function(host) {
 		// unselect previous host
 		for (var i = 0; i < this.partners.length; ++i)
@@ -59,6 +79,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		this._refreshMap();
 	};
 	
+	/** Open a popup to select the location, and optionnaly the hosting partner */
 	this.dialogSelectLocation = function() {
 		var t=this;
 		var win=window;
@@ -124,13 +145,13 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	
 	/** Initialize the Location section with the address and the host partner */
 	this._initLocation = function() {
-		section_location.content.style.display = "flex";
-		section_location.content.style.flexDirection = "row";
+		//section_location.content.style.display = "flex";
+		//section_location.content.style.flexDirection = "row";
 		
 		var left = document.createElement("DIV");
-		var right = document.createElement("DIV");
+		//var right = document.createElement("DIV");
 		section_location.content.appendChild(left);
-		section_location.content.appendChild(right);
+		//section_location.content.appendChild(right);
 		
 		// if this is a new center, mark it as not saved
 		if (center_id == -1)
@@ -142,7 +163,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		address_title.style.padding = "1px 2px";
 		address_title.style.marginTop = "2px";
 		address_title.style.fontStyle = "italic";
-		address_title.style.color = "#606060";
+		//address_title.style.color = "#606060";
 		address_title.style.textDecoration = "underline";
 		left.appendChild(address_title);
 		this._address_container = document.createElement("DIV");
@@ -161,7 +182,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			section_location.addToolBottom(this._button_set_location);
 		}
 		this._map_container = document.createElement("DIV");
-		right.appendChild(this._map_container);
+		left.appendChild(this._map_container);
 		this._map_container.style.visibility = "hidden";
 		this._map_container.style.position = "absolute";
 		this._map_container.style.top = "-1000px";
@@ -207,8 +228,11 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		}
 		layout.changed(section_location.element);
 	};
+	/** {GoogleMap} the map */
 	this._map = null;
+	/** {Object} marker on the map */
 	this._marker = null;
+	/** Refresh the map with current location */
 	this._refreshMap = function() {
 		var address = this.getHostAddress();
 		if (address == null && this.geographic_area_text == null) {
@@ -263,6 +287,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			}
 		}
 	};
+	/** Refresh hosting partner */
 	this._refreshHost = function() {
 		this._host_container.removeAllChildren();
 		var host = this.getHostPartner();
@@ -273,12 +298,16 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		var tr = document.createElement("TR"); table.appendChild(tr);
 		var th;
 		tr.appendChild(th = document.createElement("TH"));
-		th.colSpan = 2;
 		th.style.fontStyle = "italic";
-		th.style.color = "#606060";
+		//th.style.color = "#606060";
 		th.style.textDecoration = "underline";
 		th.appendChild(document.createTextNode("Hosting Partner"));
-		new partnerRow(table, host, editable, function(org) {
+		tr.appendChild(th = document.createElement("TH"));
+		th.style.fontStyle = "italic";
+		//th.style.color = "#606060";
+		th.style.textDecoration = "underline";
+		th.appendChild(document.createTextNode("Contact Points"));
+		new PartnerRow(table, host, editable, function(org) {
 			// remove any non-valid contact point
 			for (var i = 0; i < host.selected_contact_points_id.length; ++i) {
 				var found = false;
@@ -295,24 +324,10 @@ function location_and_partners(popup, section_location, section_other_partners, 
 			host.organization = org;
 			window.pnapplication.dataUnsaved("SelectionLocationAndPartners");
 		});
-		// move contacts
-		tr.nextSibling.childNodes[0].colSpan = 2;
-		tr2 = document.createElement("TR");
-		tr2.appendChild(th = document.createElement("TH"));
-		th.colSpan = 2;
-		th.appendChild(document.createTextNode("Contact Point(s)"));
-		th.style.fontStyle = "italic";
-		th.style.color = "#606060";
-		th.style.textDecoration = "underline";
-		table.appendChild(tr2);
-		var tr2 = document.createElement("TR");
-		tr2.appendChild(tr.nextSibling.childNodes[1]);
-		tr2.appendChild(tr.nextSibling.childNodes[1]);
-		table.appendChild(tr2);
 	};
 	
 	// Other Partners
-	
+	/** Create list of partners */
 	this._initPartners = function() {
 		// table of partners
 		this._partners_table = document.createElement("TABLE");
@@ -336,7 +351,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 					else
 						data.selected.push(t.partners[i].organization.id);
 				}
-				window.top.popup_frame("/static/contact/organization.png", "Partners", "/dynamic/contact/page/organizations?creator=Selection", data, 95, 95, function(frame,pop) {
+				window.top.popupFrame("/static/contact/organization.png", "Partners", "/dynamic/contact/page/organizations?creator=Selection", data, 95, 95, function(frame,pop) {
 					pop.addOkCancelButtons(function(){
 						var win = getIFrameWindow(frame);
 						var selected = win.selected;
@@ -383,7 +398,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		
 		this._refreshPartners();
 	};
-	
+	/** Refresh list of partners */
 	this._refreshPartners = function() {
 		this._partners_table.removeAllChildren();
 		if (this.partners.length == 0 || (this.partners.length == 1) && this.partners[0].host) {
@@ -398,7 +413,7 @@ function location_and_partners(popup, section_location, section_other_partners, 
 		th.appendChild(document.createTextNode("Contact Point(s)"));
 		for (var i = 0; i < this.partners.length; ++i) {
 			if (this.partners[i].host) continue;
-			new partnerRow(this._partners_table, this.partners[i], editable, function(org, partner) {
+			new PartnerRow(this._partners_table, this.partners[i], editable, function(org, partner) {
 				// remove any non-valid contact point
 				for (var i = 0; i < partner.selected_contact_points_id.length; ++i) {
 					var found = false;
@@ -423,10 +438,18 @@ function location_and_partners(popup, section_location, section_other_partners, 
 	this._initPartners();
 }
 
-function partnerRow(table, partner, editable, onchange) {
+/**
+ * Display a partner in a table
+ * @param {Element} table the table
+ * @param {SelectionPartner} partner the partner
+ * @param {Boolean} editable indicates if this can be modified by the user
+ * @param {Function} onchange called when something has been modified
+ */
+function PartnerRow(table, partner, editable, onchange) {
 	var tr = document.createElement("TR");
 	tr.className = "selection_partner_row";
 	table.appendChild(tr);
+	/** Refresh with current information */
 	this._refresh = function() {
 		tr.removeAllChildren();
 		var td;
@@ -439,9 +462,9 @@ function partnerRow(table, partner, editable, onchange) {
 		window.top.datamodel.registerCellText(window, "Organization", "name", partner.organization.id, name_node);
 		var t=this;
 		td.onclick = function(){
-			window.top.popup_frame("/static/contact/organization.png","Organization Profile","/dynamic/contact/page/organization_profile?organization="+partner.organization.id+"&onready=orgready", null, null, null, function(frame) {
+			window.top.popupFrame("/static/contact/organization.png","Organization Profile","/dynamic/contact/page/organization_profile?organization="+partner.organization.id+"&onready=orgready", null, null, null, function(frame) {
 				frame.orgready = function(org) {
-					org.onchange.add_listener(function () {
+					org.onchange.addListener(function () {
 						if (onchange) onchange(org.getStructure(), partner);
 						t._refresh();
 					});
@@ -467,7 +490,7 @@ function partnerRow(table, partner, editable, onchange) {
 				div.people_id = contact.people.id;
 				div.title = "Click to see details of this contact";
 				div.onclick = function() {
-					window.top.popup_frame("/static/people/profile_16.png", "Profile", "/dynamic/people/page/profile?people="+this.people_id, null, 95, 95);
+					window.top.popupFrame("/static/people/profile_16.png", "Profile", "/dynamic/people/page/profile?people="+this.people_id, null, 95, 95);
 				};
 				var span_fn = document.createElement("SPAN"); div.appendChild(span_fn);
 				span_fn.className = "contact_point_name";

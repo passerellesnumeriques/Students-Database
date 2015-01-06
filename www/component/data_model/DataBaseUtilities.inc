@@ -13,10 +13,10 @@ class DataBaseUtilities {
 	public static function createTable($db_system, &$table, $suffix = null, $output = false) {
 		$sql = "CREATE TABLE `".$table->getName().($suffix <> null ? $suffix : "")."` (";
 		
+		$sub_model = $suffix == null ? null : substr($suffix,1);
+		
 		$ref = new ReflectionClass("\datamodel\Table");
-		$p = $ref->getProperty("columns");
-		$p->setAccessible(true);
-		$columns = $p->getValue($table);
+		$columns = $table->internalGetColumnsFor($sub_model);
 		$p = $ref->getProperty("indexes");
 		$p->setAccessible(true);
 		$indexes = $p->getValue($table);
@@ -24,7 +24,7 @@ class DataBaseUtilities {
 		$first = true;
 		foreach ($columns as $col) {
 			if ($first) $first = false; else $sql .= ", ";
-			$sql .= $col->get_sql();
+			$sql .= $col->getSQL($db_system, $table->getName().($suffix <> null ? $suffix : ""));
 		}
 		$pk = $table->getPrimaryKey();
 		if ($pk <> null)
@@ -42,7 +42,10 @@ class DataBaseUtilities {
 			}
 		}
 		foreach ($indexes as $index) {
-			$sql .= ", KEY `".$index[0]."` (";
+			$unique = true;
+			for ($i = 1; $i < count($index); $i++)
+				foreach ($columns as $c) if ($c->name == $index[$i]) { $unique &= $c->unique; break; }
+			$sql .= ", ".($unique ? "UNIQUE " : "")."KEY `".$index[0]."` (";
 			for ($i = 1; $i < count($index); $i++) {
 				if ($i > 1) $sql .= ",";
 				$sql .= "`".$index[$i]."`";

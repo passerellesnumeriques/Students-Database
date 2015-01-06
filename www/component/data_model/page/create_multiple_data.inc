@@ -69,10 +69,26 @@ $page->requireJavascript("datadisplay.js");
 	
 $page->requireJavascript("grid.js");
 $grid_id = $page->generateID();
-echo "<div id='$grid_id'></div>";
 ?>
+<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
+	<div style='flex:none;background-color:white;box-shadow: 1px 2px 5px 0px #808080;margin-bottom:3px;padding:2px' class='grid_font'>
+		Customize this screen: 
+		<button class='flat grid_font' onclick='showHideColumns(this);'>
+			<img src='/static/data_model/table_column.png'/>
+			Hide/Show columns
+		</button>
+	</div>
+	<div id='<?php echo $grid_id;?>' style='flex:1 1 auto'></div>
+</div>
 <script type='text/javascript'>
 var grid = new grid('<?php echo $grid_id;?>');
+grid.makeScrollable();
+
+function showHideColumns(button) {
+	grid.showHideColumnsMenu(button, function() {
+		grid.saveState();
+	});
+}
 
 function datachanged(field) {
 	var row = grid.getContainingRow(field.getHTMLElement());
@@ -85,46 +101,70 @@ function datachanged(field) {
 function addColumnActions(col) {
 	var needFieldInfo = function() {
 		var f = new window[col.field_type](col.attached_data.new_data,true,col.field_args);
-		if (typeof f.getPossibleValues != 'undefined') {
-			col.addAction(new GridColumnAction('set_all',theme.icons_10.pen,function(ev) {
-				var div = document.createElement("DIV");
-				div.appendChild(document.createTextNode("Select the value to set on all rows: "));
-				var sel = document.createElement("SELECT");
-				div.appendChild(sel);
-				var o = document.createElement("OPTION");
-				o.text = "";
-				o.value = null;
-				sel.add(o);
-				var values = f.getPossibleValues();
-				for (var i = 0; i < values.length; ++i) {
-					o = document.createElement("OPTION");
-					o.text = values[i];
-					o.value = values[i];
-					sel.add(o);
-				}
-				require("popup_window.js",function() {
-					var popup = new popup_window("Set values for all rows",null,div);
-					popup.addOkCancelButtons(function() {
-						var value = sel.options[sel.selectedIndex].value;
+		if (typeof f.helpFillMultipleItems == 'function') {
+			var helper = f.helpFillMultipleItems();
+			col.addAction(new GridColumnAction('set_all',theme.icons_10.pen,function(ev,action,col) {
+				require("mini_popup.js",function() {
+					var p = new mini_popup(helper.title);
+					p.content.appendChild(helper.content);
+					var apply = function() {
 						if (grid.getNbRows() == 1)
-							grid.getCellField(0,grid.getColumnIndex(col)).setData(value,false,true);
+							helper.apply(grid.getCellField(0,grid.getColumnIndex(col)))
 						else {
 							var col_index = grid.getColumnIndex(col);
 							for (var i = 0; i < grid.getNbRows()-1; ++i)
-								grid.getCellField(i,col_index).setData(value,false,true);
+								helper.apply(grid.getCellField(i,col_index));
 						}
-						popup.close();
-					});
-					popup.show();
+					};
+					if (helper.validated)
+						helper.validated.addListener(function() { apply(); p.close(); });
+					else
+						p.addOkButton(function() {
+							apply();
+							return true;
+						});
+					p.showBelowElement(action.element);
 				});
-				// TODO
-			},'Enter a value for all rows'));
+			},helper.title));
+		}
+		if (typeof window[col.field_type].prototype.createValue != 'undefined') {
+			var f = new window[col.field_type](col.attached_data.new_data,true,col.field_args);
+			col.addAction(new GridColumnAction('create_value',theme.icons_10.add,function(ev,action,col) {
+				f.createValue(null,col.title);
+			},"Create new "+col.title));
 		}
 	};
 	if (col._loaded)
 		needFieldInfo();
 	else
-		col.onloaded.add_listener(needFieldInfo);
+		col.onloaded.addListener(needFieldInfo);
+}
+function addColumnContainerActions(col,field_type,field_args) {
+	require([["typed_field.js",field_type+".js"]], function() {
+		if (typeof window[field_type].prototype.helpFillMultipleItemsForAllSubData != 'undefined') {
+			var f = new window[field_type](col.attached_data.new_data,true,field_args);
+			var helper = f.helpFillMultipleItemsForAllSubData();
+			col.addAction(new GridColumnAction('set_all',theme.icons_10.pen,function(ev,action,col) {
+				require("mini_popup.js",function() {
+					var p = new mini_popup(helper.title);
+					p.content.appendChild(helper.content);
+					p.addOkButton(function() {
+						var col_index = grid.getColumnIndex(col.sub_columns[0]);
+						var nb = grid.getNbRows();
+						if (nb > 1) nb--;
+						for (var row = 0; row < nb; ++row) {
+							var fields = [];
+							for (var sub_col = 0; sub_col < col.sub_columns.length; ++sub_col)
+								fields.push(grid.getCellField(row,col_index+sub_col));
+							helper.apply(fields);
+						}
+						return true;
+					});
+					p.showBelowElement(action.element);
+				});
+			},helper.title));
+		}
+	});
 }
 
 var col, col_container, sub_cols;
@@ -196,14 +236,16 @@ foreach ($cat[1] as $field) {
 				",{datadisplay:".$data->javascriptDataDisplay($path->sub_model).",sub_data:$i});\n";
 			echo "col.field_args.sub_data_index = $i;\n";
 			echo "sub_cols.push(col);\n";
+			echo "addColumnActions(col);\n";
 		}
 		echo "col_container = new GridColumnContainer(".json_encode($data->getDisplayName()).",sub_cols,".$data->javascriptDataDisplay($path->sub_model).");\n";
 		echo "cols.push(col_container);\n";
+		echo "addColumnContainerActions(col_container,".json_encode($tf[0]).",".$tf[1].");\n";
 	}
 }
 echo "title = document.createElement('DIV');\n";
 echo "title.style.display = 'inline-block';\n";
-echo "title.innerHTML = \"<img src='".$cat[0]->getIcon()."' style='vertical-align:bottom'/> ".toHTML($cat[0]->getName())."\";\n";
+echo "title.innerHTML = \"".($cat[0]->getIcon() <> null ? "<img src='".$cat[0]->getIcon()."' style='vertical-align:bottom'/> " : "").toHTML($cat[0]->getName())."\";\n";
 echo "col_container = new GridColumnContainer(title,cols,null);\n";
 echo "col_container.text_title = ".json_encode($cat[0]->getName()).";\n";
 echo "grid.addColumnContainer(col_container);\n";
@@ -276,7 +318,7 @@ function addRow() {
 	row_data.push({
 		col_id: "remove",
 		data_id: null,
-		data: "<span style='white-space:nowrap'><button class='flat small_icon' onclick='removeRowButton(this);' style='vertical-align:middle'><img src='"+theme.icons_16.remove+"'/></button>"+(grid.getNbRows()+1)+"-</span>"
+		data: "<span style='white-space:nowrap'><button class='flat small_icon' onclick='removeRowButton(this);' tabindex='-1' style='vertical-align:middle'><img src='"+theme.icons_16.remove+"'/></button>"+(grid.getNbRows()+1)+"-</span>"
 	});
 	for (var i = 0; i < fields.length; ++i) {
 		if (fields[i].sub_data == null) {
@@ -332,6 +374,7 @@ var initPreCreated = function(i) {
 };
 initPreCreated(0);
 <?php } ?>
+grid.loadState();
 </script>
 <?php 
 }

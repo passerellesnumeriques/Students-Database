@@ -21,8 +21,11 @@ function organization(container, org, existing_types, can_edit) {
 		return org;
 	};
 	
+	/** Fired when something changed */
 	this.onchange = new Custom_Event();
+	/** Fired when addresses changed */
 	this.onaddresschange = new Custom_Event();
+	/** Fired when contact points changed */
 	this.oncontactpointchange = new Custom_Event();
 	
 	/** Create the display */
@@ -43,7 +46,7 @@ function organization(container, org, existing_types, can_edit) {
 			require([["typed_field.js","field_text.js"]],function(){
 				t.title = new field_text(org.name, true, {min_length:1,max_length:100,can_be_null:false,style:{fontSize:"x-large"}});
 				t.title_container.appendChild(t.title.getHTMLElement());
-				t.title.onchange.add_listener(function() {
+				t.title.onchange.addListener(function() {
 					org.name = t.title.getCurrentData();
 					if (t.google_search_input)
 						t.google_search_input.value = org.name;
@@ -64,14 +67,36 @@ function organization(container, org, existing_types, can_edit) {
 			for (var i = 0; i < org.types_ids.length; ++i) {
 				for (var j = 0; j < existing_types.length; ++j)
 					if (existing_types[j].id == org.types_ids[i]) {
-						types.push(existing_types[j]);
+						types.push({
+							id: existing_types[j].id,
+							name: existing_types[j].name,
+							editable: can_edit && existing_types[j].builtin != 1,
+							removable: can_edit
+						});
 						break;
 					}
 			}
-			t.types = new labels("#90D090", types, function(id) {
+			t.types = new labels("#90D090", types, function(id,onedited) {
 				// onedit
-				alert('Edit not yet implemented');
-				// TODO
+				var name;
+				for (var j = 0; j < existing_types.length; ++j)
+					if (existing_types[j].id == id) { name = existing_types[j].name; break; }
+				inputDialog(null,"Rename Organization Type","New name",name,100,function(name) {
+					name = name.trim();
+					if (name.length == 0) return "Please enter a name";
+					for (var j = 0; j < existing_types.length; ++j)
+						if (existing_types[j].id != id && existing_types[j].name.isSame(name)) return "A type already exists with this name";
+					return null;
+				},function(name) {
+					if (!name) return;
+					name = name.trim();
+					for (var j = 0; j < existing_types.length; ++j)
+						if (existing_types[j].id == id)
+							existing_types[j].name = name;
+					service.json("data_model","save_cell",{table:'OrganizationType',column:'name',row_key:id,value:name,lock:null},function(res){
+						if (res) onedited(name);
+					});
+				});
 			}, function(id, handler) {
 				// onremove
 				var ok = function() {
@@ -108,13 +133,13 @@ function organization(container, org, existing_types, can_edit) {
 								service.json("contact", "assign_organization_type", {organization:org.id,type:this.org_type.id}, function(res) {
 									if (res) {
 										org.types_ids.push(tt.org_type.id);
-										t.types.addItem(tt.org_type.id, tt.org_type.name);
+										t.types.addItem(tt.org_type.id, tt.org_type.name, tt.org_type.builtin != 1, true);
 										t.onchange.fire();
 									}
 								});
 							} else {
 								org.types_ids.push(this.org_type.id);
-								t.types.addItem(this.org_type.id, this.org_type.name);
+								t.types.addItem(this.org_type.id, this.org_type.name, this.org_type.builtin != 1, true);
 								t.onchange.fire();
 							}
 						};
@@ -123,10 +148,10 @@ function organization(container, org, existing_types, can_edit) {
 				}
 				var item = document.createElement("DIV");
 				item.className = "context_menu_item";
-				item.innerHTML = "<img src='"+theme.icons_16.add+"' style='vertical-align:bottom;padding-right:3px'/> Create a new type";
+				item.innerHTML = "<img src='"+theme.icons_10.add+"' style='vertical-align:bottom;padding-right:3px;margin-bottom:1px'/> Create a new type";
 				item.style.fontSize = "8pt";
 				item.onclick = function() {
-					input_dialog(theme.icons_16.add,"New Organization Type","Enter the name of the organization type","",100,function(name){
+					inputDialog(theme.icons_16.add,"New Organization Type","Enter the name of the organization type","",100,function(name){
 						if (name.length == 0) return "Please enter a name";
 						for (var i = 0; i < existing_types.length; ++i)
 							if (existing_types[i].name.toLowerCase().trim() == name.toLowerCase().trim())
@@ -141,14 +166,14 @@ function organization(container, org, existing_types, can_edit) {
 									if (res2) {
 										org.types_ids.push(res.id);
 										existing_types.push({id:res.id,name:name});
-										t.types.addItem(res.id, name);
+										t.types.addItem(res.id, name, can_edit, can_edit);
 										t.onchange.fire();
 									}
 								});
 							} else {
 								org.types_ids.push(res.id);
 								existing_types.push({id:res.id,name:name});
-								t.types.addItem(res.id, name);
+								t.types.addItem(res.id, name, can_edit, can_edit);
 								t.onchange.fire();
 							}
 						});
@@ -165,19 +190,25 @@ function organization(container, org, existing_types, can_edit) {
 		t.types_container.style.marginBottom = "5px";
 		t.types_container.style.borderBottom = "1px solid #A0A0A0";
 		
-		// content: addresses, contacts, contact points, map
+		// content: addresses, contacts, contact points, map, notes
 		container.appendChild(t.content_container = document.createElement("TABLE"));
-		var tr, td_contacts, td_addresses, td_points, td_map;
+		var tr, td_contacts, td_addresses, td_points, td_map, td_notes;
 		t.content_container.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_contacts = document.createElement("TD"));
 		tr.appendChild(td_addresses = document.createElement("TD"));
-		tr.appendChild(td_points = document.createElement("TD"));
+		td_addresses.rowSpan = 2;
 		tr.appendChild(td_map = document.createElement("TD"));
+		td_map.rowSpan = 3;
+		t.content_container.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td_points = document.createElement("TD"));
+		t.content_container.appendChild(tr = document.createElement("TR"));
+		tr.appendChild(td_notes = document.createElement("TD"));
+		td_notes.colSpan = 2;
 			// contacts
 		td_contacts.style.verticalAlign = "top";
 		require("contacts.js", function() {
 			t._contacts_widget = new contacts(td_contacts, "organization", org.id, org.contacts, can_edit, can_edit, can_edit);
-			t._contacts_widget.onchange.add_listener(function(c){
+			t._contacts_widget.onchange.addListener(function(c){
 				org.contacts = c.getContacts();
 				t.onchange.fire();
 			});
@@ -186,7 +217,7 @@ function organization(container, org, existing_types, can_edit) {
 		td_addresses.style.verticalAlign = "top";
 		require("addresses.js", function() {
 			t._addresses_widget = new addresses(td_addresses, true, "organization", org.id, org.addresses, can_edit, can_edit, can_edit);
-			t._addresses_widget.onchange.add_listener(function(a){
+			t._addresses_widget.onchange.addListener(function(a){
 				org.addresses = a.getAddresses();
 				t.onchange.fire();
 				t.onaddresschange.fire();
@@ -197,6 +228,7 @@ function organization(container, org, existing_types, can_edit) {
 		td_points.style.verticalAlign = "top";
 		var table = document.createElement("TABLE");
 		table.style.backgroundColor = "white";
+		table.style.width = "100%";
 		td_points.appendChild(table);
 		var thead = document.createElement("THEAD");
 		table.appendChild(thead);
@@ -221,9 +253,11 @@ function organization(container, org, existing_types, can_edit) {
 			table.appendChild(tfoot);
 			tfoot.appendChild(tr = document.createElement("TR"));
 			tr.appendChild(td = document.createElement("TD"));
+			td.style.whiteSpace = "nowrap";
 			td.innerHTML = "Add Contact Point";
 			td.style.cursor = 'pointer';
 			td.style.fontStyle ='italic';
+			td.style.fontSize = "8pt";
 			td.style.color = "#808080";
 			td.colSpan = 2;
 			td.onclick = function() {
@@ -330,7 +364,7 @@ function organization(container, org, existing_types, can_edit) {
 				return;
 			}
 			update_map();
-			t._addresses_widget.onchange.add_listener(update_map);
+			t._addresses_widget.onchange.addListener(update_map);
 		};
 		window.top.google.loadGoogleMap(map_container, function(m) {
 			t.map = m;
@@ -339,6 +373,12 @@ function organization(container, org, existing_types, can_edit) {
 					t.map.fitToBounds(parseFloat(country.south), parseFloat(country.west), parseFloat(country.north), parseFloat(country.east));
 				link_map_to_addresses();
 			});
+		});
+		
+		// notes
+		require("notes_section.js",function() {
+			t.notes = new notes_section('Organization',org.id,null,null,can_edit);
+			t.notes.createInsideSection(td_notes, null, null, false, 'soft', false);
 		});
 		
 		// google
@@ -370,7 +410,7 @@ function organization(container, org, existing_types, can_edit) {
 			};
 			google_title.appendChild(document.createElement("BR"));
 			var note = document.createElement("I");
-			note.innerHTML = "Tip: if you don't find in Google just with the name of the organization, try to add the location (i.e. xxx, Paris)";
+			note.innerHTML = "Tip: if you don't find in Google just with the name of the organization, try to add the location (i.e. xxx, Paris) or the type (i.e xxx High School)";
 			google_title.appendChild(note);
 			t._google_results_container = document.createElement("DIV");
 			container.appendChild(t._google_results_container);
@@ -390,8 +430,13 @@ function organization(container, org, existing_types, can_edit) {
 	 */
 	this._addContactPointRow = function(point, tbody) {
 		var tr, td_design, td;
+		layout.changed(tbody);
 		tbody.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td_design = document.createElement("TD"));
+		td_design.style.color = "#606060";
+		td_design.style.paddingRight = "3px";
+		td_design.style.verticalAlign = "middle";
+		td_design.style.textAlign = "right";
 		t._contact_points_rows.push(tr);
 		tr.people_id = point.people_id;
 		if (org.id != -1) {
@@ -405,7 +450,9 @@ function organization(container, org, existing_types, can_edit) {
 		} else {
 			require([["typed_field.js","field_text.js"]], function() {
 				var f = new field_text(point.designation, true, {min_length:1,max_length:100,can_be_null:false});
-				f.onchange.add_listener(function() {
+				td_design.appendChild(f.getHTMLElement());
+				layout.changed(td_design);
+				f.onchange.addListener(function() {
 					point.designation = f.getCurrentData();
 					t.onchange.fire();
 				});
@@ -414,13 +461,13 @@ function organization(container, org, existing_types, can_edit) {
 		tr.appendChild(td = document.createElement("TD"));
 		td.style.whiteSpace = 'nowrap';
 		var link = document.createElement("BUTTON");
-		link.className = "flat";
+		link.className = "flat icon";
 		link.innerHTML = "<img src='/static/people/profile_16.png'/>";
 		link.style.verticalAlign = "center";
 		link.title = "See profile";
 		link.people_id = point.people.id;
 		link.onclick = function(){
-			window.top.popup_frame("/static/people/people_16.png", "People Profile", "/dynamic/people/page/profile?plugin=people&people="+this.people_id);
+			window.top.popupFrame("/static/people/people_16.png", "People Profile", "/dynamic/people/page/profile?plugin=people&people="+this.people_id);
 		};
 		var first_name = document.createTextNode(point.people.first_name);
 		var last_name = document.createTextNode(point.people.last_name);
@@ -433,7 +480,7 @@ function organization(container, org, existing_types, can_edit) {
 		if(can_edit){
 			var remove_button = document.createElement("BUTTON");
 			td.appendChild(remove_button);
-			remove_button.className = "flat";
+			remove_button.className = "flat icon";
 			remove_button.innerHTML = "<img src = '"+theme.icons_16.remove+"' style = 'vertical-align:center;'/>";
 			remove_button.people_id = point.people.id;
 			remove_button.onclick = function(){
@@ -447,6 +494,7 @@ function organization(container, org, existing_types, can_edit) {
 							if(index != null){
 								//Remove from DOM
 								tbody.removeChild(t._contact_points_rows[index]);
+								layout.changed(tbody);
 								//Remove from t._contact_points_rows
 								t._contact_points_rows.splice(index,1);
 								t.onchange.fire();
@@ -460,6 +508,7 @@ function organization(container, org, existing_types, can_edit) {
 					if(index != null){
 						//Remove from DOM
 						tbody.removeChild(t._contact_points_rows[index]);
+						layout.changed(tbody);
 						//Remove from t._contact_points_rows
 						t._contact_points_rows.splice(index,1);
 						t.onchange.fire();
@@ -471,6 +520,10 @@ function organization(container, org, existing_types, can_edit) {
 		}
 	};
 	
+	/** Find the index of the row containing the given people in the contact points
+	 * @param {Number} people_id id of the people to search
+	 * @returns {Number} the index, or null if not found
+	 */
 	t._findRowIndexInContactPointsRows = function(people_id){
 		for(var i = 0; i < t._contact_points_rows.length; i++){
 			if(t._contact_points_rows[i].people_id == people_id)
@@ -479,6 +532,9 @@ function organization(container, org, existing_types, can_edit) {
 		return null;
 	};
 	
+	/** Launch the search of information about this organization on Google Places
+	 * @param {Function} ondone called when the search is done
+	 */
 	t.searchGoogle = function(ondone) {
 		if (org.name.length < 3) return;
 		t._google_results_container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
@@ -517,9 +573,9 @@ function organization(container, org, existing_types, can_edit) {
 							window.top.geography.getCountry(window.top.default_country_id, function(){});
 							window.top.geography.getCountryData(window.top.default_country_id, function(){});
 							require("contact_objects.js");
-							var locker = lock_screen(null, "Importing data from Google...");
+							var locker = lockScreen(null, "Importing data from Google...");
 							getGooglePlaceDetails(this._google_ref, function(place,error) {
-								if (place == null) { unlock_screen(locker); return; }
+								if (place == null) { unlockScreen(locker); return; }
 								require("contact_objects.js", function() {
 									// add phone
 									if (place.formatted_phone_number && place.formatted_phone_number.length > 0) {
@@ -540,7 +596,7 @@ function organization(container, org, existing_types, can_edit) {
 												if (onlyDigits(existing[i].contact) == num) { found = true; break; }
 											if (!found) {
 												var phone = new Contact(-1, "phone", "Office", place.formatted_phone_number);
-												t._contacts_widget.phones.addContact(phone);
+												t._contacts_widget.phones.createContact(phone);
 											}
 										}
 									}
@@ -549,7 +605,7 @@ function organization(container, org, existing_types, can_edit) {
 									window.top.geography.getCountry(window.top.default_country_id, function(country){
 										window.top.geography.getCountryData(window.top.default_country_id, function(country_data){
 											var the_end = function() {
-												unlock_screen(locker);
+												unlockScreen(locker);
 												layout.changed(container);
 											};
 											
@@ -570,13 +626,25 @@ function organization(container, org, existing_types, can_edit) {
 											}
 											// go division by division
 											var areas = [country];
+											var areas_division_index = -1;
 											var parents_ids = null;
 											var components_found = [];
 											var last_matching = null;
 											var last_matching_division = -1;
 											for (var division_index = 0; division_index < country_data.length; division_index++) {
 												// get the sub areas containing the position
-												sub_areas = window.top.geography.searchAreasByCoordinates(country_data, division_index, a.lat, a.lng, parents_ids);
+												var sub_areas = window.top.geography.searchAreasByCoordinates(country_data, division_index, a.lat, a.lng, parents_ids);
+												if (sub_areas.length == 0) {
+													// nothing match the coordinates, let's take all
+													for (var i = 0; i < country_data[division_index].areas.length; ++i)
+														if (parents_ids == null || parents_ids.indexOf(country_data[division_index].areas[i].area_parent_id)>=0)
+															sub_areas.push(country_data[division_index].areas[i]);
+												} else {
+													// add sub areas having no coordinates
+													for (var i = 0; i < country_data[division_index].areas.length; ++i)
+														if (!country_data[division_index].areas[i].north && (parents_ids == null || parents_ids.indexOf(country_data[division_index].areas[i].area_parent_id)>=0))
+															sub_areas.push(country_data[division_index].areas[i]);
+												}
 												// check if we have those sub areas in the components
 												var matching = [];
 												for (var i = components.length-1; i >= 0; --i) {
@@ -588,14 +656,43 @@ function organization(container, org, existing_types, can_edit) {
 														for (var j = 0; j < sub_areas.length; ++j)
 															if (almostMatching(components[i], sub_areas[j].area_name))
 																match.push(sub_areas[j]);
+													if (match.length == 0) {
+														var good = [];
+														var ok = [];
+														for (var j = 0; j < sub_areas.length; ++j) {
+															var m = wordsMatch(components[i], sub_areas[j].area_name, true);
+															if (m.nb_words1_in_words2 == m.nb_words_1 || m.nb_words2_in_words1 == m.nb_words_2)
+																good.push(sub_areas[j]);
+															else if (m.nb_words1_in_2 == m.nb_words_1 || m.nb_words2_in_1 == m.nb_words_2 || m._1_fully_in_2 || m._2_fully_in_1)
+																ok.push(sub_areas[j]);
+														}
+														if (good.length > 0) match = good;
+														else match = ok;
+													}
+													var remaining = "";
+													if (match.length == 0) {
+														// try a more permissive matching: by words, allowing to remove one letter from each word
+														for (var j = 0; j < sub_areas.length; ++j) {
+															var m = wordsAlmostMatch(components[i], sub_areas[j].area_name);
+															if (m.nb_words1_in_2 == m.nb_words_1 || m.nb_words2_in_1 == m.nb_words_2) {
+																match.push(sub_areas[j]);
+																remaining = m.remaining1;
+															}
+														}
+													}
 													if (match.length > 0) {
 														// ok, found it, remove the components and reduce the scope of the areas
 														last_matching = [].concat(match);
 														last_matching_division = division_index;
-														while (components.length > i) {
-															components_found.push(components[components.length-1]);
-															components.splice(components.length-1,1);
-														}
+														remaining = remaining.trim();
+														if (i == 0 && remaining.length > 0) {
+															// last component
+															components[0] = remaining;
+														} else
+															while (components.length > i) {
+																components_found.push(components[components.length-1]);
+																components.splice(components.length-1,1);
+															}
 														matching = match;
 														break;
 													}
@@ -603,6 +700,7 @@ function organization(container, org, existing_types, can_edit) {
 												if (matching.length > 0) {
 													// scope reduces to matching components
 													areas = matching;
+													areas_division_index = division_index;
 													parents_ids = [];
 													for (var i = 0; i < areas.length; ++i) parents_ids.push(areas[i].area_id);
 												} else {
@@ -612,7 +710,10 @@ function organization(container, org, existing_types, can_edit) {
 														for (var i = 0; i < country_data[0].areas.length; ++i) list.push(country_data[0].areas[i]);
 													else
 														for (var i = 0; i < country_data[division_index].areas.length; ++i) if (parents_ids.contains(country_data[division_index].areas[i].area_parent_id)) list.push(country_data[division_index].areas[i]);
+													if (list.length == 0)
+														break;
 													areas = list;
+													areas_division_index = division_index;
 													parents_ids = [];
 													for (var i = 0; i < areas.length; ++i) parents_ids.push(areas[i].area_id);
 												}
@@ -627,7 +728,7 @@ function organization(container, org, existing_types, can_edit) {
 												a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
 											} else {
 												// try to finalize only with the components' names
-												var division_index = country_data.length-2;
+												var division_index = areas_division_index;
 												while (areas.length > 1) {
 													for (var i = components.length-1; i >= 0; --i) {
 														var match = [];
@@ -652,7 +753,7 @@ function organization(container, org, existing_types, can_edit) {
 														a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
 														break;
 													}
-													if (division_index < 0) break;
+													if (division_index <= 0) break;
 													var parents = [];
 													for (var i = 0; i < areas.length; ++i) {
 														var p = window.top.geography.getParentArea(country_data, areas[i]);
@@ -661,6 +762,7 @@ function organization(container, org, existing_types, can_edit) {
 														if (!found) parents.push(p);
 													}
 													areas = parents;
+													division_index--;
 													if (areas.length == 1) {
 														a.geographic_area = window.top.geography.getGeographicAreaText(country_data, areas[0]);
 														break;
@@ -717,36 +819,32 @@ function organization(container, org, existing_types, can_edit) {
 											if (components.length > 0)
 												a.additional = components.join(", ");
 											// finally, add the address
-											// TODO first check it does not exist yet
+											// first check it does not exist yet
 											if (a.geographic_area.id > 0 || a.street_number != null || a.street != null) {
 												if (a.geographic_area.id > 0) {
 													var existings = t._addresses_widget.getAddresses();
 													var same = [];
 													for (var i = 0; i < existings.length; ++i) {
-														if (existings[i].geographic_area.id > 0) {
+														if (existings[i].geographic_area && existings[i].geographic_area.id > 0) {
 															if (existings[i].geographic_area.id == a.geographic_area.id)
 																same.push(existings[i]);
 															else {
-																var path = [];
+																var path = [parseInt(existings[i].geographic_area.id)];
 																var p = window.top.geography.searchArea(country_data, existings[i].geographic_area.id);
 																p = window.top.geography.getParentArea(country_data, p);
 																while (p != null) {
-																	path.push(p.area_id);
+																	path.push(parseInt(p.area_id));
 																	p = window.top.geography.getParentArea(country_data, p);
 																}
-																if (path.length > 0) {
-																	var path2 = [];
-																	p = window.top.geography.searchArea(country_data, a.geographic_area.id);
+																var path2 = [parseInt(a.geographic_area.id)];
+																p = window.top.geography.searchArea(country_data, a.geographic_area.id);
+																p = window.top.geography.getParentArea(country_data, p);
+																while (p != null) {
+																	path2.push(parseInt(p.area_id));
 																	p = window.top.geography.getParentArea(country_data, p);
-																	while (p != null) {
-																		path2.push(p.area_id);
-																		p = window.top.geography.getParentArea(country_data, p);
-																	}
-																	if (path2.length > 0) {
-																		for (var j = 0; j < path.length; ++j)
-																			if (path2.contains(path[j])) { same.push(existings[i]); break; }
-																	}
 																}
+																for (var j = 0; j < path.length; ++j)
+																	if (path2.contains(path[j])) { same.push(existings[i]); break; }
 															}
 														}
 													}
@@ -763,23 +861,23 @@ function organization(container, org, existing_types, can_edit) {
 															msg += "</ul>";
 														}
 														msg += "Do you want to import it ?";
-														choice_buttons_dialog(msg, choices, function(choice_index) {
+														choiceButtonsDialog(msg, choices, function(choice_index) {
 															if (choice_index == 1) { the_end(); return; } // No
 															if (choice_index == 0) {
 																// Yes
-																t._addresses_widget.addAddress(a,false);
+																t._addresses_widget.createAndAddAddress(a,false);
 																the_end();
 																return;
 															}
 															// Replace
 															t._addresses_widget.removeAddress(same[0]);
-															t._addresses_widget.addAddress(a,false);
+															t._addresses_widget.createAndAddAddress(a,false);
 															the_end();
 														});
 														return;
 													}
 												}
-												t._addresses_widget.addAddress(a,false);
+												t._addresses_widget.createAndAddAddress(a,false);
 											}
 											the_end();
 										});

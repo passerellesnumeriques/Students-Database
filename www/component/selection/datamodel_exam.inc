@@ -93,10 +93,11 @@ $sm->addTable("ExamCenter")
 	->addWriteAccess("manage_exam_center", true)
 	->addRemoveAccess("manage_exam_center", true)
 	->addInsertAccess("manage_exam_center", true)
-	->onInsert(function($fields,$id,$sub_model_instance) {
-		try {
-			PNApplication::$instance->news->post("selection", null, array("campaign".$sub_model_instance), "activity", "New Exam Center: <i>".$fields["name"]."</i>");
-		} catch (Exception $e) { PNApplication::error($e); }
+	->onInsert(function($inserted) {
+		foreach ($inserted as $row)
+			try {
+				PNApplication::$instance->news->post("selection", null, array("campaign".$row["sub_model_instance"]), "activity", "New Exam Center: <i>".$row["fields_values"]["name"]."</i>");
+			} catch (Exception $e) { PNApplication::error($e); }
 	});
 
 $sm->addTable("ExamCenterPartner")

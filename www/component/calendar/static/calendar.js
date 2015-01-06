@@ -48,12 +48,12 @@ function CalendarManager() {
 		  function(cal) { t.removeCalendar(cal); }
 		]};
 		this._calendars_listeners.push(listeners);
-		cal.onrefresh.add_listener(listeners.listeners[0]);
-		cal.onrefreshdone.add_listener(listeners.listeners[1]);
-		cal.on_event_added.add_listener(listeners.listeners[2]);
-		cal.on_event_updated.add_listener(listeners.listeners[3]);
-		cal.on_event_removed.add_listener(listeners.listeners[4]);
-		cal.on_removed.add_listener(listeners.listeners[5]);
+		cal.onrefresh.addListener(listeners.listeners[0]);
+		cal.onrefreshdone.addListener(listeners.listeners[1]);
+		cal.on_event_added.addListener(listeners.listeners[2]);
+		cal.on_event_updated.addListener(listeners.listeners[3]);
+		cal.on_event_removed.addListener(listeners.listeners[4]);
+		cal.on_removed.addListener(listeners.listeners[5]);
 		if (!cal.last_update) cal.last_update = 0;
 		if (cal.show && cal.last_update < new Date().getTime() - 60000)
 			cal.refresh();
@@ -70,12 +70,12 @@ function CalendarManager() {
 		for (var i = 0; i < this._calendars_listeners.length; ++i) {
 			if (this._calendars_listeners[i].calendar == cal) {
 				var listeners = this._calendars_listeners[i].listeners;
-				cal.onrefresh.remove_listener(listeners[0]);
-				cal.onrefreshdone.remove_listener(listeners[1]);
-				cal.on_event_added.remove_listener(listeners[2]);
-				cal.on_event_updated.remove_listener(listeners[3]);
-				cal.on_event_removed.remove_listener(listeners[4]);
-				cal.on_removed.remove_listener(listeners[5]);
+				cal.onrefresh.removeListener(listeners[0]);
+				cal.onrefreshdone.removeListener(listeners[1]);
+				cal.on_event_added.removeListener(listeners[2]);
+				cal.on_event_updated.removeListener(listeners[3]);
+				cal.on_event_removed.removeListener(listeners[4]);
+				cal.on_removed.removeListener(listeners[5]);
 				this._calendars_listeners.splice(i,1);
 				break;
 			}
@@ -161,7 +161,9 @@ CalendarsProvider.prototype = {
 	on_calendar_removed: new Custom_Event(),
 	/** {Number} minimum time (in milliseconds) before calendars from this provider can be automatically refreshed */
 	minimum_time_to_autorefresh_calendar: 5*60*1000,
+	/** {Number} minimum time (in milliseconds) before the list of calendars from this provider can be automatically refreshed */
 	minimum_time_to_autorefresh_calendars_list: 15*60*1000,
+	/** Last time the list of calendars has been refreshed */
 	_last_refresh_calendars_list: 0,
 	/** Reload the list of calendars from this provider */
 	refreshCalendars: function() {
@@ -281,6 +283,9 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				handler_for_each_provider(this._providers[i]);
 			this._handlers.push(handler_for_each_provider);
 		},
+		/** Return the current existing calendar providers
+		 * @returns {Array} array of CalendarsProvider
+		 */
 		getCurrentProviders: function() {
 			return arrayCopy(this._providers);
 		},
@@ -293,6 +298,9 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				if (this._providers[i].id == id) return this._providers[i];
 			return null;
 		},
+		/** Refresh list of calendars on every provider.
+		 * @param {Boolean} force if false, the list won't be refreshed if the minimum time given by the provider is not reached since the last refresh.
+		 */
 		_refreshCalendarsList: function(force) {
 			var now = new Date().getTime();
 			for (var i = 0; i < this._providers.length; ++i) {
@@ -300,7 +308,9 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				this._providers[i].refreshCalendars();
 			}
 		},
-		/** Internal function to refresh the list of calendars on all providers */
+		/** Internal function to refresh the list of calendars on all providers
+		 * @param {Boolean} force if false, the calendars won't be refreshed if the minimum time given by the provider is not reached since the last refresh.
+		 */
 		_refreshCalendars: function(force) {
 			var now = new Date().getTime();
 			for (var i = 0; i < this._providers.length; ++i) {
@@ -311,11 +321,12 @@ if (window == window.top && !window.top.CalendarsProviders) {
 			}
 		}
 	};
-	var listen_login_logout = function() {
+	/** Refresh calendars on login with new user, remove calendars on logout */
+	var listenLoginLogout = function() {
 		if (!window.top.pnapplication) {
-			setTimeout(listen_login_logout, 20);
+			setTimeout(listenLoginLogout, 20);
 		}
-		window.top.pnapplication.onlogout.add_listener(function() {
+		window.top.pnapplication.onlogout.addListener(function() {
 			for (var i = 0; i < window.top.CalendarsProviders._providers.length; ++i) {
 				var prev_calendars = window.top.CalendarsProviders._providers[i].calendars;
 				window.top.CalendarsProviders._providers[i].calendars = [];
@@ -325,12 +336,12 @@ if (window == window.top && !window.top.CalendarsProviders) {
 				}
 			}
 		});
-		window.top.pnapplication.onlogin.add_listener(function() {
+		window.top.pnapplication.onlogin.addListener(function() {
 			window.top.CalendarsProviders._refreshCalendarsList(true);
 			window.top.CalendarsProviders._refreshCalendars(true);
 		});
 	};
-	listen_login_logout();
+	listenLoginLogout();
 	setInterval(function() { if (window.top.CalendarsProviders) window.top.CalendarsProviders._refreshCalendarsList(); }, 150*1000);
 	setInterval(function() { if (window.top.CalendarsProviders) window.top.CalendarsProviders._refreshCalendars(); }, 45*1000);
 }
@@ -370,6 +381,7 @@ function Calendar(provider, name, color, show, icon) {
 	this.on_removed = new Custom_Event();
 	/** list of events in the calendar */
 	this.events = [];
+	/** Last time the calendar has been refreshed */
 	this._last_refresh = 0;
 	/** called to refresh the calendar. It must be overrided by the implementation of the calendar.
 	 * @param {Function} ondone to be called when the refresh is done
@@ -393,24 +405,27 @@ function Calendar(provider, name, color, show, icon) {
 	 */
 	this._refresh = function(ondone) {
 		var type = getObjectClassName(this);
-		window.top.status_manager.add_status(new window.top.StatusMessageError(null, "Calendar._refresh not implemented: "+type));
+		window.top.status_manager.addStatus(new window.top.StatusMessageError(null, "Calendar._refresh not implemented: "+type));
 		if (ondone) ondone();
 	};
 	/** {Function} function called to save an event. If it is not defined, it means the calendar is read only. This function takes the event to save as parameter. */
 	this.saveEvent = null; // must be overriden if the calendar supports modifications
+	/** {Function} function called to remove an event. If this is not defined, it means the calendar is read only. This function takes the event to remove as parameter. */
 	this.removeEvent = null; // must be overriden if the calendar supports remove
-	/** Save the visibility of the calendar (if supported by the provider)
-	 * @param {Boolean} show visibility: true to be visible, false to be hidden
+	/** {Function} Save the visibility of the calendar (if supported by the provider)
+	 * the format is function(show) {...}; with show a boolean: true to be visible, false to be hidden
 	 */
-	this.saveShow = null; // function(show) {}; to be defined if supported
-	/** Save the color of the calendar (if supported by the provider)
-	 * @param {String} color the color to save
+	this.saveShow = null; // to be defined if supported
+	/** {Function} Save the color of the calendar (if supported by the provider).
+	 * The format is function(color) {...};
 	 */
-	this.saveColor = null; // function(color) {}; to be defined if supported
+	this.saveColor = null; // to be defined if supported
 	/** {Function} function to rename the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.rename = null; // must be overriden if this is supported
+	/** {Function} function to remove the calendar: null if not supported by the provider, else this attribute must be defined */
 	this.remove = null; // must be overriden if this is supported
 	
+	/** Cleanup */
 	this.cleanup = function() {
 		for (var i = 0; i < this.events.length; ++i)
 			for (var n in this.events[i])
@@ -425,6 +440,7 @@ function Calendar(provider, name, color, show, icon) {
  * UI Control for a calendar: controls its color, visibility, name...
  * @param {Element} container where to put it
  * @param {Calendar} cal the calendar to control
+ * @param {CalendarManager} manager the calandar manager to use for the actions on the calendar
  */
 function CalendarControl(container, cal, manager) {
 	var t=this;
@@ -482,7 +498,7 @@ function CalendarControl(container, cal, manager) {
 						var chooser = new color_choice(content, "#"+cal.color);
 						var popup = new popup_window("Change Color", theme.icons_16.color, content);
 						popup.addOkCancelButtons(function() {
-							var col = color_string(chooser.color).substring(1);
+							var col = colorToString(chooser.color).substring(1);
 							manager.setCalendarColor(cal, col);
 							t.box.style.backgroundColor = "#"+col;
 							t.box.style.border = "1px solid #"+col;
@@ -493,7 +509,7 @@ function CalendarControl(container, cal, manager) {
 				});
 				if (cal.rename != null)
 					menu.addIconItem(theme.icons_16.edit, "Rename", function() {
-						input_dialog(theme.icons_16.edit,"Rename Calendar","Enter the new name",cal.name,100,function(name) {
+						inputDialog(theme.icons_16.edit,"Rename Calendar","Enter the new name",cal.name,100,function(name) {
 							if (name.length == 0) return "Please enter a name";
 							return null;
 						},function(name) {
@@ -505,7 +521,7 @@ function CalendarControl(container, cal, manager) {
 					});
 				if (cal.remove != null)
 					menu.addIconItem(theme.icons_16.remove, "Remove", function() {
-						confirm_dialog("Are you sure you want to completely remove this calendar ?", function(yes) {
+						confirmDialog("Are you sure you want to completely remove this calendar ?", function(yes) {
 							if (!yes) return;
 							cal.remove();
 						});
@@ -520,22 +536,22 @@ function CalendarControl(container, cal, manager) {
 			t.loading.src = theme.icons_10.loading;
 			t.div.appendChild(t.loading);
 		};
-		cal.onrefresh.add_listener(start_refresh);
+		cal.onrefresh.addListener(start_refresh);
 		var refresh_done = function(){
 			if (!t.loading || !t.div) return;
 			t.div.removeChild(t.loading);
 			t.loading = null;
 		};
-		cal.onrefreshdone.add_listener(refresh_done);
+		cal.onrefreshdone.addListener(refresh_done);
 		var calendar_removed = function() {
 			t.div.parentNode.removeChild(t.div);
 		};
-		cal.on_removed.add_listener(calendar_removed);
+		cal.on_removed.addListener(calendar_removed);
 		if (cal.updating) start_refresh();
 		this.div.ondomremoved(function() {
-			cal.onrefresh.remove_listener(start_refresh);
-			cal.onrefreshdone.remove_listener(refresh_done);
-			cal.on_removed.remove_listener(calendar_removed);
+			cal.onrefresh.removeListener(start_refresh);
+			cal.onrefreshdone.removeListener(refresh_done);
+			cal.on_removed.removeListener(calendar_removed);
 			start_refresh = null;
 			refresh_done = null;
 			calendar_removed = null;
@@ -603,7 +619,7 @@ function PNCalendar(provider, id, name, color, show, writable, icon, removable) 
 							removed_events[i][n] = null;
 					}
 				} catch (e) {
-					log_exception(e, "Error while refreshing PN calendar");
+					logException(e, "Error while refreshing PN calendar");
 				}
 				ondone();
 			});

@@ -3,9 +3,20 @@ class service_save_template_multiple extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Save an import template, to import multiple data (one by row of the file)"; }
+	public function inputDocumentation() {
+		echo "<ul>";
+		echo "<li><code>type</code>: the template plugin</li>";
+		echo "<li><code>id</code>: id of the template. This should not be provided for a new template.</li>";
+		echo "<li><code>name</code>: name to give to the template</li>";
+		echo "<li><code>root_table</code>: the table from which to start</li>";
+		echo "<li><code>sub_model</code>: optional, the sub model of <code>root</code></li>";
+		echo "<li><code>to_import</code>: the content of the template, an array of data,path[,sheet_name][,column][,row_start][,value]</li>";
+		echo "</ul>";
+	}
+	public function outputDocumentation() {
+		echo "id: on sucess the id of the template (useful when creating a new one)";
+	}
 	
 	public function execute(&$component, $input) {
 		$type = $input["type"];

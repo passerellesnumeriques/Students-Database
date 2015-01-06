@@ -1,5 +1,11 @@
 // #depends[curriculum_tree.js]
 
+/**
+ * Build the groups nodes
+ * @param {CurriculumTreeNode} parent parent node
+ * @param {BatchPeriod} period period
+ * @param {Specialization} spe specialization or null
+ */
 function buildGroupsTree(parent, period, spe) {
 	var spe_list = [];
 	for (var i = 0; i < groups.length; ++i)
@@ -44,7 +50,7 @@ CurriculumTreeNode_Group.prototype.createInfo = function() {
 		button.g = this.group;
 		button.onclick = function() {
 			var group = this.g;
-			input_dialog(theme.icons_16.edit,"Edit "+gt.name+" Name","Name of the "+gt.name,group.name,100,
+			inputDialog(theme.icons_16.edit,"Edit "+gt.name+" Name","Name of the "+gt.name,group.name,100,
 				function(name){
 					if (!name.checkVisible()) return "Please enter a name";
 					return null;
@@ -87,6 +93,10 @@ CurriculumTreeNode_Group.prototype.createInfo = function() {
 	}
 	return div;
 };
+/**
+ * Retrieve the ancestor node being a specialization
+ * @returns {CurriculumTreeNode_Specialization} the node, or null
+ */
 CurriculumTreeNode_Group.prototype.getSpecializationNode = function() {
 	var p = this.parent;
 	do {
@@ -96,6 +106,10 @@ CurriculumTreeNode_Group.prototype.getSpecializationNode = function() {
 	} while (p != null);
 	return null;
 };
+/**
+ * Retrieve the ancestor node being a period
+ * @returns {CurriculumTreeNode_BatchPeriod} the node, or null
+ */
 CurriculumTreeNode_Group.prototype.getPeriodNode = function() {
 	var p = this.parent;
 	while (!(p instanceof CurriculumTreeNode_BatchPeriod)) p = p.parent;
@@ -114,6 +128,12 @@ CurriculumTreeNode_Group.prototype.getURLParameters = function() {
 	return params;
 };
 
+/**
+ * Search the node corresponding to the given group
+ * @param {CurriculumTreeNode} node the node to search in
+ * @param {Number} group_id the group to search
+ * @returns {CurriculumTreeNode_Group} the node of the group, or null if not found
+ */
 function searchGroupNode(node, group_id) {
 	for (var i = 0; i < node.item.children.length; ++i) {
 		var n = node.item.children[i].node;
@@ -322,14 +342,14 @@ function newGroup(parent_node) {
 	});
 }
 /** Ask the user to confirm, then remove the StudentsGroup from database and from the tree
- * @param {CurriculumTreeNode_Class} class_node tree node of the class to remove
+ * @param {CurriculumTreeNode_Group} group_node tree node of the class to remove
  */
 function removeGroup(group_node) {
-	confirm_dialog("Are you sure you want to remove the "+getSelectedGroupType().name+" '"+group_node.group.name+"' ?",function(yes){
+	confirmDialog("Are you sure you want to remove the "+getSelectedGroupType().name+" '"+group_node.group.name+"' ?",function(yes){
 		if (!yes) return;
-		var lock = lock_screen();
+		var lock = lockScreen();
 		service.json("data_model","remove_row",{table:"StudentsGroup",row_key:group_node.group.id},function(res){
-			unlock_screen(lock);
+			unlockScreen(lock);
 			if (!res) return;
 			if (group_node.parent instanceof CurriculumTreeNode_Group) {
 				group_node.parent.group.sub_groups.removeUnique(group_node.group);

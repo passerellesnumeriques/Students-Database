@@ -9,19 +9,19 @@ class SelectionOrganizationPlugin implements OrganizationPlugin {
 		return "Selection";
 	}
 	public function canReadOrganization() {
-		return PNApplication::$instance->user_management->has_right("can_access_selection_data",true);
+		return PNApplication::$instance->user_management->hasRight("can_access_selection_data",true);
 	}
 	public function canWriteOrganization() {
 		// TODO put the correct right
-		return PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
+		return PNApplication::$instance->user_management->hasRight("manage_selection_campaign",true);
 	}
 	public function canInsertOrganization() {
 		// TODO put the correct right
-		return PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
+		return PNApplication::$instance->user_management->hasRight("manage_selection_campaign",true);
 	}
 	public function canRemoveOrganization() {
 		// TODO put the correct right
-		return PNApplication::$instance->user_management->has_right("manage_selection_campaign",true);
+		return PNApplication::$instance->user_management->hasRight("manage_selection_campaign",true);
 	}
 }
 ?>

@@ -36,7 +36,7 @@ class page_domain_auth extends Page {
 </tr>
 </table>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 
 var local = <?php echo json_encode(PNApplication::$instance->local_domain);?>;
 var local_token = <?php echo json_encode(PNApplication::$instance->user_management->auth_token);?>;

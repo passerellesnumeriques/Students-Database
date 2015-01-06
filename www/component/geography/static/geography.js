@@ -1,11 +1,22 @@
 if (window == window.top && !window.top.geography) {
 	var wt = window.top;
+	/**
+	 * Functionalities to get geographic information
+	 */
 	window.top.geography = {
+		/** {Array} the list of countries */
 		_countries: null,
+		/** Indicates if we are currently retrieving the list of countries */
 		_countries_ongoing: false,
+		/** List of functions waiting for the list of countries */
 		_countries_listeners: [],
+		/** Geographic data for countries */
 		_countries_data: [],
+		/** Functions waiting for geographic data of a country */
 		_countries_data_listeners: [],
+		/** Get the list of countries
+		 * @param {Function} onready called with the list of countries (eash being a CountryInfo), when it's loaded
+		 */
 		getCountries: function(onready) {
 			if (wt.geography._countries_ongoing) {
 				wt.geography._countries_listeners.push(onready);
@@ -25,22 +36,39 @@ if (window == window.top && !window.top.geography) {
 			}
 			onready(wt.geography._countries);
 		},
+		/** Get a country information
+		 * @param {Number} country_id the country to get
+		 * @param {Function} onready called when the information is ready (with a CountryInfo as parameter)
+		 */
 		getCountry: function(country_id, onready) {
 			this.getCountries(function(countries) {
 				for (var i = 0; i < countries.length; ++i)
 					if (countries[i].country_id == country_id) { onready(countries[i]); return; }
 			});
 		},
+		/** Given a list of countries, search the given country by id
+		 * @param {Number} country_id the country to search
+		 * @param {Array} countries the list of known countries
+		 * @returns {CountryInfo} the searched country, or null if not found
+		 */
 		getCountryFromList: function(country_id, countries) {
 			for (var i = 0; i < countries.length; ++i)
 				if (countries[i].country_id == country_id) return countries[i];
 			return null;
 		},
+		/** Get the name of a country from its id
+		 * @param {Number} country_id the id
+		 * @param {Function} onready called with the name as parameter once found
+		 */
 		getCountryName: function(country_id, onready) {
 			this.getCountry(country_id, function(country) {
 				onready(country.country_name);
 			});
 		},
+		/** Get the id of a country from its code
+		 * @param {String} country_code the code to search
+		 * @param {Function} callback called with the country id once found, or null if not found
+		 */
 		getCountryIdFromCode: function(country_code, callback) {
 			this.getCountries(function(countries) {
 				for (var i = 0; i < countries.length; ++i)
@@ -66,10 +94,11 @@ if (window == window.top && !window.top.geography) {
 			var t=this;
 			service.json("geography", "get_country_timestamp", {country_id:country_id}, function(timestamp) {
 				ajax.call("GET", "/static/geography/country_data.js.php?id="+country_id+"&ts="+timestamp, null, null, function(error) {
-					window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_ERROR,error,[{action:"popup"},{action:"close"}],10000));
+					window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_ERROR,error,[{action:"popup"},{action:"close"}],10000));
 				}, function(xhr) {
 					var result = eval("("+xhr.responseText+")");
 					t._countries_data.push({id:country_id,data:result});
+					t._processIdMapping(result);
 					for (var i = 0; i < t._countries_data_listeners.length; ++i) {
 						if (t._countries_data_listeners[i].id == country_id) {
 							for (var j = 0; j < t._countries_data_listeners[i].listeners.length; ++j)
@@ -109,6 +138,26 @@ if (window == window.top && !window.top.geography) {
 			});
 		},
 		
+		_processIdMapping: function(country_data, division_index, area_index, mapping) {
+			if (country_data.length == 0) return;
+			if (!division_index) division_index = 0;
+			if (!area_index) area_index = 0;
+			if (!mapping) mapping = {};
+			var done = 0;
+			for (var di = division_index; di < country_data.length; ++di)
+				for (var ai = di == division_index ? area_index : 0; ai < country_data[di].areas.length; ++ai) {
+					mapping[country_data[di].areas[ai].area_id] = country_data[di].areas[ai];
+					if (++done >= 250) {
+						var t=this;
+						setTimeout(function() {
+							t._processIdMapping(country_data, di, ai, mapping);
+						},100);
+						return;
+					}
+				}
+			country_data[0]._mapping = mapping;
+		},
+		
 		/* Functions to get additional info, and which store this info
 		 * Additional info are:
 		 *  - parent_area: the parent object
@@ -119,6 +168,8 @@ if (window == window.top && !window.top.geography) {
 		/** Optimize same search */
 		_last_search_area: [],
 		searchArea: function(country_data, area_id) {
+			if (country_data.length > 0 && typeof country_data[0]._mapping != 'undefined')
+				return country_data[0]._mapping[area_id];
 			for (var i = 0; i < this._last_search_area.length; ++i)
 				if (this._last_search_area[i].country_data == country_data && this._last_search_area[i].area_id == area_id)
 					return this._last_search_area[i].result;
@@ -172,8 +223,10 @@ if (window == window.top && !window.top.geography) {
 			return div.division_id;
 		},
 		getParentArea: function(country_data, area) {
-			if (area.area_parent_id <= 0) return null;
+			if (area.area_parent_id != null) area.area_parent_id = parseInt(area.area_parent_id);
+			if (!area.area_parent_id || area.area_parent_id <= 0) return null;
 			if (typeof area.parent_area != 'undefined') return area.parent_area;
+			if (typeof country_data[0]._mapping != 'undefined') return country_data[0]._mapping[area.area_parent_id];
 			var div_index = window.top.geography.getAreaDivisionIndex(country_data, area);
 			if (div_index <= 0) return null;
 			for (var i = 0; i < country_data[div_index-1].areas.length; ++i)

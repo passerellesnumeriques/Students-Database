@@ -129,7 +129,7 @@ function initPNApplication() {
 			/** List of listeners to be called when the user clicks somewhere in the application. (private: registerOnclick and unregisterOnclick must be used) */
 			_onclick_listeners: [],
 			/** Register the given listener, which will be called when the user clicks somewhere in the application (not only on the window, but on all frames)
-			 * @param {window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
+			 * @param {Window} from_window window containing the listener (used to automatically remove the listener when the window is closed)
 			 * @param {Function} listener function to be called
 			 */
 			registerOnclick: function(from_window, listener) {
@@ -256,7 +256,8 @@ function initPNApplication() {
 				if (window.pnapplication._frame_unload_listener)
 					unlistenEvent(window.frameElement, 'unload', window.pnapplication._frame_unload_listener);
 				this.onclose.fire();
-				window.top.pnapplication.unregisterWindow(window);
+				if (window.top.pnapplication)
+					window.top.pnapplication.unregisterWindow(window);
 			},
 			/** Internal list of {time,function} to call when the user is inactive */
 			_inactivity_listeners: [],
@@ -329,8 +330,8 @@ function initPNApplication() {
 			autoDisableSaveButton: function(button) {
 				if (typeof button == 'string') button = document.getElementById(button);
 				button.disabled = this.hasDataUnsaved() ? "" : "disabled"; 
-				this.ondatatosave.add_listener(function() { button.disabled = ""; });
-				this.onalldatasaved.add_listener(function() { button.disabled = "disabled"; });
+				this.ondatatosave.addListener(function() { button.disabled = ""; });
+				this.onalldatasaved.addListener(function() { button.disabled = "disabled"; });
 			}
 		};
 		var f = function() {
@@ -364,6 +365,7 @@ function initPNApplication() {
 			window.pnapplication.closeWindow();
 		}
 	});
+	var keep_browser = window.browser;
 	listenEvent(window, 'beforeunload', function(ev) {
 		if (window.pnapplication && window.pnapplication._data_unsaved && window.pnapplication._data_unsaved.length > 0) {
 			ev.returnValue = "The page contains unsaved data";
@@ -373,7 +375,8 @@ function initPNApplication() {
 			window._windowCloseRaised = true;
 			window.pnapplication.closeWindow();
 		}
-		return null;
+		if (keep_browser.IE == 0)
+			return null;
 	});
 };
 initPNApplication();
@@ -504,7 +507,9 @@ function LoadingFrame(frame_element) {
 		//console.log("Frame "+frame_element.name+" loaded in "+(new Date().getTime()-this._start)+"ms.");
 	};
 	
-	/** Check what is the current status, and remove the loading if needed */
+	/** Check what is the current status, and remove the loading if needed
+	 * @param {Boolean} renew if true, an update will be automatically done in few milliseconds 
+	 */
 	this._update = function(renew) {
 		if (!t || !frame_element) return;
 		if (!frame_element.parentNode ||
@@ -573,14 +578,14 @@ function LoadingFrame(frame_element) {
 //	if (load) {
 //		window.top._loading_application_nb++;
 //		if (window.top._loading_application_nb == 1)
-//			window.top.status_manager.add_status(window.top._loading_application_status);
+//			window.top.status_manager.addStatus(window.top._loading_application_status);
 //	}
 //	window._addJavascript_original(url, function() {
 //		if (onload) onload();
 //		if (load) {
 //			window.top._loading_application_nb--;
 //			if (window.top._loading_application_nb == 0)
-//				window.top.status_manager.remove_status(window.top._loading_application_status);
+//				window.top.status_manager.removeStatus(window.top._loading_application_status);
 //		}
 //	});
 //};

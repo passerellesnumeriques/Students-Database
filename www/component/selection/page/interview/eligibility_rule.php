@@ -7,8 +7,15 @@ class page_interview_eligibility_rule extends SelectionPage {
 		$id = isset($_GET["id"]) ? intval($_GET["id"]) : -1;
 		$parent = isset($_GET["parent"]) ? intval($_GET["parent"]) : null;
 		
-		// TODO lock rule
 		if ($id > 0) {
+			require_once 'component/data_model/DataBaseLock.inc';
+			$locked_by = null;
+			$lock_id = DataBaseLock::lockRow("InterviewEligibilityRule_".PNApplication::$instance->selection->getCampaignId(), $id, $locked_by);
+			if ($lock_id == null) {
+				echo "<div class='error_box'><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> $locked_by is already editing this rule.</div>";
+				return;
+			}
+			DataBaseLock::generateScript($lock_id);
 			$rule = SQLQuery::create()->select("InterviewEligibilityRule")->whereValue("InterviewEligibilityRule","id",$id)->executeSingleRow();
 			$parent = $rule["parent"];
 			$rule_criteria = SQLQuery::create()->select("InterviewEligibilityRuleCriterion")->whereValue("InterviewEligibilityRuleCriterion","rule",$id)->execute();
@@ -107,7 +114,7 @@ foreach ($rule_criteria as $c)
 new ValueRow();
 
 var changed = false;
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.onclose = function() {
 	if (changed) window.parent.location.reload();
 };

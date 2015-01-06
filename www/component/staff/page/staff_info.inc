@@ -8,7 +8,7 @@ function staff_info(&$page, $people_id, $container_id) {
 	
 	$table = DataModel::get()->getTable("StaffPosition");
 	
-	$can_edit = $people_id == -1 || PNApplication::$instance->user_management->has_right("manage_staff");
+	$can_edit = $people_id == -1 || PNApplication::$instance->user_management->hasRight("manage_staff");
 	
 	require_once("component/data_model/page/utils.inc");
 	
@@ -85,10 +85,10 @@ function staff_info(&$page, $people_id, $container_id) {
 				button.innerHTML = "Never been a PN Staff";
 				th.appendChild(button);
 				button.onclick = function() {
-					popup_frame(null,"Remove Staff","/dynamic/people/page/remove_people_type?people="+t.people_id+"&type=staff&ontyperemoved=type_removed&onpeopleremoved=people_removed",null,null,null,function(frame,pop){
+					popupFrame(null,"Remove Staff","/dynamic/people/page/remove_people_type?people="+t.people_id+"&type=staff&ontyperemoved=type_removed&onpeopleremoved=people_removed",null,null,null,function(frame,pop){
 						frame.people_removed = function() {
 							require("popup_window.js",function() {
-								get_popup_window_from_frame(window).close();
+								getPopupFromFrame(window).close();
 							});
 						};
 						frame.type_removed = function() { location.reload(); };
@@ -128,9 +128,9 @@ function staff_info(&$page, $people_id, $container_id) {
 						data.key = position.id;
 						data.lock = -1;
 					};
-					var locker = lock_screen(null, "Saving new staff position...");
+					var locker = lockScreen(null, "Saving new staff position...");
 					service.json("data_model","save_entity",data,function(res){
-						unlock_screen(locker);
+						unlockScreen(locker);
 						if (res && res.key && position.id == -1) position.id = res.key;
 					});
 				};
@@ -139,7 +139,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				var field;
 				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Position", null, null), null, "field", "fake_key");?>
 				td_position.appendChild(field.getHTMLElement());
-				field.onchange.add_listener(function(field){
+				field.onchange.addListener(function(field){
 					position.position = field.getCurrentData();
 					check_valid();
 				});
@@ -152,7 +152,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				var field;
 				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Department", null, null), null, "field", "fake_key");?>
 				td_department.appendChild(field.getHTMLElement());
-				field.onchange.add_listener(function(field){
+				field.onchange.addListener(function(field){
 					var s = field.getCurrentData();
 					position.department = s == null || s.length == 0 ? null : parseInt(s);
 					check_valid();
@@ -169,7 +169,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				var field;
 				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("Start", null, null), null, "field", "fake_key");?>
 				td_start.appendChild(field.getHTMLElement());
-				field.onchange.add_listener(function(field){
+				field.onchange.addListener(function(field){
 					position.start = field.getCurrentData();
 					check_valid();
 				});
@@ -182,7 +182,7 @@ function staff_info(&$page, $people_id, $container_id) {
 				var field;
 				<?php datamodel_datadisplay_new($page, $display->getDataDisplayByName("End", null, null), null, "field", "fake_key");?>
 				td_end.appendChild(field.getHTMLElement());
-				field.onchange.add_listener(function(field){
+				field.onchange.addListener(function(field){
 					position.end = field.getCurrentData();
 					check_valid();
 				});
@@ -197,7 +197,7 @@ function staff_info(&$page, $people_id, $container_id) {
 			remove.innerHTML = "<img src='"+theme.icons_16.remove+"'/>";
 			remove.onclick = function() {
 				if (t.positions.length == 1) { alert("You must keep at least one position"); return; }
-				confirm_dialog("Remove this position ?",function(yes) {
+				confirmDialog("Remove this position ?",function(yes) {
 					if (!yes) return;
 					t.positions.remove(position);
 					tr.parentNode.removeChild(tr);

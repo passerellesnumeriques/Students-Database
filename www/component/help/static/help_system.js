@@ -106,7 +106,7 @@ if (window == window.top) {
 		},
 		activateHelp: function() {
 			if (this._avail_help.length == 0) {
-				info_dialog("Unfortunately, there is no help available on this page.<br/>Something is not clear ? Please <a href='/dynamic/application/page/send_feedback' target='application_frame' onclick='get_popup_window_from_element(this).close();'>write a feedback</a>");
+				infoDialog("Unfortunately, there is no help available on this page.<br/>Something is not clear ? Please <a href='/dynamic/application/page/send_feedback' target='application_frame' onclick='getPopupFromElement(this).close();'>write a feedback</a>");
 				return;
 			}
 			var ids = [];
@@ -130,7 +130,7 @@ if (window == window.top) {
 			return;
 		}
 		window.init_help_system = null;
-		window.top.pnapplication.onwindowclosed.add_listener(function(c) {
+		window.top.pnapplication.onwindowclosed.addListener(function(c) {
 			window.top.help_system._window_closed(c.win);
 		});
 	};

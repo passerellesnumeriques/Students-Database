@@ -20,7 +20,7 @@ class service_save_custom_table extends Service {
 				return;
 			}
 		}
-		if (!PNApplication::$instance->user_management->has_right($table->getCustomizationRight())) {
+		if (!PNApplication::$instance->user_management->hasRight($table->getCustomizationRight())) {
 			PNApplication::error("You are not allowed to edit those information");
 			return;
 		}
@@ -32,6 +32,14 @@ class service_save_custom_table extends Service {
 			return;
 		}
 		DataBaseLock::update($input["lock_id"]);
+		
+		require_once("component/data_model/DataModelCustomizationPlugin.inc");
+		/* @var $plugins DataModelCustomizationPlugin[] */
+		$plugins = array();
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi)
+				if ($pi instanceof DataModelCustomizationPlugin)
+					array_push($plugins, $pi);
 
 		$col_name_counter = 1;
 		// get the current list of columns in the table
@@ -50,7 +58,7 @@ class service_save_custom_table extends Service {
 		
 		$sql_name = $table->getSQLNameFor($sub_model);
 		
-		$data_path = realpath(dirname($_SERVER["SCRIPT_FILENAME"])."/data/".\PNApplication::$instance->current_domain);
+		$data_path = realpath(dirname(__FILE__)."/../../../data/".\PNApplication::$instance->current_domain);
 		if (!file_exists($data_path."/custom_tables"))
 			if (!mkdir($data_path."/custom_tables")) {
 				PNApplication::error("Unable to create directory for custom tables in ".$data_path);
@@ -70,6 +78,8 @@ class service_save_custom_table extends Service {
 				$col_name = $col["id"];
 				$col["is_new"] = false;
 			}
+			$custom = null;
+			$custom_include = null;
 			switch ($col["type"]) {
 				case "boolean":
 					fwrite($f, "array_push(\$columns, new \datamodel\ColumnBoolean(\$this, \"$col_name\", ".($col["spec"]["can_be_null"] ? "true" : "false")."));\n");
@@ -97,8 +107,31 @@ class service_save_custom_table extends Service {
 					$max = $col["spec"]["max"] == null ? "null" : "\"".$col["spec"]["max"]."\"";
 					fwrite($f, "array_push(\$columns, new \datamodel\ColumnDate(\$this, \"$col_name\", ".($col["spec"]["can_be_null"] ? "true" : "false").", false, $min, $max));\n");
 					break;
+				case "enum":
+					$values = $col["spec"]["values"];
+					fwrite($f, "array_push(\$columns, new \datamodel\ColumnEnum(\$this, \"$col_name\", array(");
+					for ($i = 0; $i < count($values); $i++) {
+						if ($i > 0) fwrite($f, ",");
+						fwrite($f, "\"".str_replace('"', '\\"', str_replace("\\","\\\\", $values[$i]))."\"");
+					}
+					fwrite($f, "), ".($col["spec"]["can_be_null"] ? "true" : "false").",false));\n");
+					break;
+				default:
+					$pi = null;
+					foreach ($plugins as $p) if ($p->getId() == $col["type"]) { $pi = $p; break; }
+					if ($pi <> null) {
+						fwrite($f, "array_push(\$columns, new \datamodel\ForeignKey(\$this, \"$col_name\", \"".$pi->getForeignTable()."\", true, false, true, ".($col["spec"]["can_be_null"] ? "true" : "false").", false));\n");
+						$custom = $pi->getDataDisplay($col_name, $col["description"], $sub_model, $col["spec"]["can_be_null"]);
+						$custom_include = $pi->getDataDisplayFileToInclude();
+					}
+					break;
 			}
-			fwrite($f, "\$display->addDataDisplay(new \datamodel\SimpleDataDisplay(\"$col_name\",\"".str_replace("\"","\\\"",$col["description"])."\"),null,".($sub_model <> null ? "\"$sub_model\"" : "null").");\n");
+			if ($custom == null)
+				fwrite($f, "\$display->addDataDisplay(new \datamodel\SimpleDataDisplay(\"$col_name\",\"".str_replace("\"","\\\"",$col["description"])."\"),null,".($sub_model <> null ? "\"$sub_model\"" : "null").");\n");
+			else {
+				if ($custom_include <> null) fwrite($f, "require_once(".json_encode($custom_include).");\n");
+				fwrite($f, "\$display->addDataDisplay($custom);\n");
+			}
 		}
 		fwrite($f, "return \$columns;\n");
 		fwrite($f, "?>");
@@ -117,10 +150,10 @@ class service_save_custom_table extends Service {
 			if ($updated_col == null) throw new Exception("Internal error: Column ".$col["id"]." missing after loading customization");
 			if ($col["is_new"]) {
 				// this is a new column
-				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` ADD COLUMN ".$updated_col->get_sql());
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` ADD COLUMN ".$updated_col->getSQL(SQLQuery::getDataBaseAccessWithoutSecurity(), $sql_name));
 			} else {
 				// this is an update
-				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` MODIFY COLUMN ".$updated_col->get_sql());
+				SQLQuery::getDataBaseAccessWithoutSecurity()->execute("ALTER TABLE `$sql_name` MODIFY COLUMN ".$updated_col->getSQL(SQLQuery::getDataBaseAccessWithoutSecurity(), $sql_name));
 				// TODO check data with new constraints
 			}
 			// remove it from the list of previous columns, so it won't be removed at the end

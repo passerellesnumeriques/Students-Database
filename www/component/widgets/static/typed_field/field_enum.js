@@ -52,6 +52,27 @@ field_enum.prototype.exportCell = function(cell) {
 			cell.value = val;
 	}
 };
+field_enum.prototype.helpFillMultipleItems = function() {
+	var helper = {
+		title: 'Set the same value for all',
+		content: document.createElement("SELECT"),
+		apply: function(field) {
+			field.setData(this.content.options[this.content.selectedIndex].value);
+		}
+	};
+	var o = document.createElement("OPTION");
+	o.text = "";
+	o.value = null;
+	helper.content.add(o);
+	var values = this.getPossibleValues();
+	for (var i = 0; i < values.length; ++i) {
+		o = document.createElement("OPTION");
+		o.text = values[i];
+		o.value = values[i];
+		helper.content.add(o);
+	}
+	return helper;
+};
 field_enum.prototype._create = function(data) {
 	if (this.editable) {
 		var t=this;
@@ -103,7 +124,7 @@ field_enum.prototype._create = function(data) {
 			if (!found) return this._data;
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			select.style.border = error ? "1px solid red" : "";
 			select.title = error ? error : "";
@@ -112,15 +133,15 @@ field_enum.prototype._create = function(data) {
 			var err = null;
 			if (!this.config.can_be_null && select.selectedIndex == 0)
 				err = "Please select a value";
-			this.signal_error(err);
+			this.signalError(err);
 		};
-		this.fillWidth = function(cache) {
+		this._fillWidth = function(cache) {
 			// calculate the minimum width of the select, to be able to see it...
 			if (!cache) {
 				cache = {onavail:[]};
 				layout.readLayout(function() {
 					var style = getComputedStyle(select);
-					layout.three_steps_process(function() {
+					layout.threeStepsProcess(function() {
 						var sel = document.createElement("SELECT");
 						sel.style.display = "inline-block";
 						sel.style.position = "absolute";
@@ -145,8 +166,8 @@ field_enum.prototype._create = function(data) {
 						t.element.removeChild(o.sel);
 						t.element.style.width = "100%";
 						select.style.width = "100%";
-						select.style.minWidth = (o.w+27)+"px";
-						cache.w = o.w+27;
+						select.style.minWidth = (o.w)+"px";
+						cache.w = o.w;
 						for (var i = 0; i < cache.onavail.length; ++i)
 							cache.onavail[i]();
 						cache.onavail = null;
@@ -155,12 +176,10 @@ field_enum.prototype._create = function(data) {
 				return cache;
 			}
 			if (!cache.w) cache.onavail.push(function() {
-				t.element.style.width = "100%";
 				select.style.width = "100%";
 				select.style.minWidth = cache.w+"px";
 			});
 			else {
-				t.element.style.width = "100%";
 				select.style.width = "100%";
 				select.style.minWidth = cache.w+"px";
 			}
@@ -190,13 +209,14 @@ field_enum.prototype._create = function(data) {
 			}
 			return text;
 		};
+		this.element.style.whiteSpace = "nowrap";
 		this.element.appendChild(this.text = document.createTextNode(this.get_text_from_data(data)));
 		//this.element.style.height = "100%";
 		this._setData = function(data) {
 			this.text.nodeValue = this.get_text_from_data(data);
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};

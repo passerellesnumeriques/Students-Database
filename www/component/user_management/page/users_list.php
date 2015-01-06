@@ -10,7 +10,7 @@ class page_users_list extends Page {
 ?>
 <div style='width:100%;height:100%;overflow:hidden;position:absolute;top:0px;left:0px;display:flex;flex-direction:column;'>
 	<div id='users_list' style='flex:1 1 auto;'></div>
-	<?php if (PNApplication::$instance->user_management->has_right("manage_users")) {?>
+	<?php if (PNApplication::$instance->user_management->hasRight("manage_users")) {?>
 	<div class='page_footer' style='flex:none'>
 		<button class='action' onclick='synchUsers();'><img src='<?php echo theme::$icons_16["_import"];?>'/> Synchronize Users</button>
 		<button class='action green' onclick='newUser();'><img src='<?php echo theme::make_icon("/static/user_management/user_16.png",theme::$icons_10["add"]);?>'/> New User</button>
@@ -29,7 +29,7 @@ function init_users_list() {
 		function (list) {
 			window.list = list;
 			list.grid.makeScrollable();
-			<?php if (PNApplication::$instance->user_management->has_right("assign_role")) {?>
+			<?php if (PNApplication::$instance->user_management->hasRight("assign_role")) {?>
 			var roles = [<?php
 			$roles = SQLQuery::create()->select("Role")->execute();
 			$first = true;
@@ -73,14 +73,14 @@ function init_users_list() {
 						p.close();
 						if (roles_id.length == 0) return;
 						var status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING, "Assigning roles...");
-						window.top.status_manager.add_status(status);
+						window.top.status_manager.addStatus(status);
 						list.grid.startLoading();
 						var users = [];
 						var sel = list.grid.getSelectionByRowId();
 						for (var i = 0; i < sel.length; ++i)
 							users.push(list.getTableKeyForRow("Users", sel[i]));
 						service.json("user_management","assign_roles",{users:users,roles:roles_id},function(result){
-							window.top.status_manager.remove_status(status);
+							window.top.status_manager.removeStatus(status);
 							list.grid.endLoading();
 							if (result)
 								list.reloadData();
@@ -116,14 +116,14 @@ function init_users_list() {
 						p.close();
 						if (roles_id.length == 0) return;
 						var status = new window.top.StatusMessage(window.top.Status_TYPE_PROCESSING, "Unassigning roles...");
-						window.top.status_manager.add_status(status);
+						window.top.status_manager.addStatus(status);
 						list.grid.startLoading();
 						var users = [];
 						var sel = list.grid.getSelectionByRowId();
 						for (var i = 0; i < sel.length; ++i)
 							users.push(list.getTableKeyForRow("Users", sel[i]));
 						service.json("user_management","unassign_roles",{users:users,roles:roles_id},function(result){
-							window.top.status_manager.remove_status(status);
+							window.top.status_manager.removeStatus(status);
 							list.grid.endLoading();
 							if (result)
 								list.reloadData();
@@ -137,15 +137,15 @@ function init_users_list() {
 			remove.className = "flat";
 			remove.innerHTML = "<img src='"+theme.build_icon("/static/user_management/user_16.png",theme.icons_10.remove)+"'/> Remove";
 			remove.onclick = function() {
-				confirm_dialog("Are you sure you want to remove those users from this software ?",function(yes) {
+				confirmDialog("Are you sure you want to remove those users from this software ?",function(yes) {
 					if (!yes) return;
 					var users = [];
 					var sel = list.grid.getSelectionByRowId();
 					for (var i = 0; i < sel.length; ++i)
 						users.push(list.getTableKeyForRow("Users", sel[i]));
-					var locker = lock_screen(null, "Removing "+users.length+" user"+(users.length>1?"s":""));
+					var locker = lockScreen(null, "Removing "+users.length+" user"+(users.length>1?"s":""));
 					service.json("user_management","remove_users",{users:users},function(res) {
-						unlock_screen(locker);
+						unlockScreen(locker);
 						list.reloadData();
 					});
 				});
@@ -169,18 +169,18 @@ function init_users_list() {
 
 			list.makeRowsClickable(function(row){
 				if (typeof row.row_id == 'undefined') return;
-				window.top.popup_frame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
+				window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+list.getTableKeyForRow("People",row.row_id),null,95,95);
 			});
 		}
 	);
 }
 function synchUsers() {
-	popup_frame(theme.icons_16._import, "Synchronize Users", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_UserList",url:"/dynamic/user_management/page/synch_users"}, null, null, function(frame,popup){
+	popupFrame(theme.icons_16._import, "Synchronize Users", "/dynamic/user_management/page/domain_auth", {feature:"AuthenticationSystem_UserList",url:"/dynamic/user_management/page/synch_users"}, null, null, function(frame,popup){
 		popup.onclose = function() { window.list.reloadData(); };
 	});
 }
 function newUser() {
-	popup_frame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/user_management/page/new_user",null,null,null,function(frame,popup) {
+	popupFrame(theme.build_icon("/static/user_management/user_16.png",theme.icons_10.add),"New User","/dynamic/user_management/page/new_user",null,null,null,function(frame,popup) {
 		popup.onclose = function() { window.list.reloadData(); };
 	});
 }

@@ -2,7 +2,7 @@
 /* @var $model DataModel */
 $model->addTable("DataLocks")
 	->addPrimaryKey("id")
-	->addInteger("timestamp")
+	->addTimestamp("timestamp",false,false)
 	->addString("locker_domain")
 	->addString("locker_username")
 	->addString("table")

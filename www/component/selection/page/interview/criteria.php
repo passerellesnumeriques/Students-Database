@@ -6,6 +6,16 @@ class page_interview_criteria extends SelectionPage {
 	
 	public function executeSelectionPage() {
 		$can_edit = PNApplication::$instance->selection->canEditInterviewCriteria();
+		if ($can_edit) {
+			require_once("component/data_model/DataBaseLock.inc");
+			$locked_by = "";
+			$lock_id = DataBaseLock::lockTable("InterviewCriterion_".PNApplication::$instance->selection->getCampaignId(), $locked_by);
+			if ($lock_id == null) $can_edit = false;
+			else DataBaseLock::generateScript($lock_id);
+		} else {
+			$lock_id = null;
+			$locked_by = null;
+		}
 		
 		$criteria = SQLQuery::create()->select("InterviewCriterion")->execute();
 		
@@ -33,9 +43,15 @@ class page_interview_criteria extends SelectionPage {
 		?>
 		<div style='width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column;'>
 			<div class='page_title' style='flex:none'>
+				<img src='/static/selection/interview/interview_32.png'/>
 				Interview Criteria and Rules
 			</div>
 			<div id='page_content' style="padding:10px;overflow:hidden;flex:1 1 auto">
+				<?php if ($locked_by <> null) {
+					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot edit because this is currently edited by ".toHTML($locked_by)."</div>";
+				} else if (!$can_edit && PNApplication::$instance->user_management->hasRight("manage_interview_criteria")) {
+					echo "<div class='info_box'><img src='".theme::$icons_16["info"]."' style='vertical-align:bottom'/> You cannot edit because some results have been already entered.</div>";
+				} ?>
 				<div 
 					id='criteria_section'
 					title='Criteria'
@@ -59,6 +75,7 @@ class page_interview_criteria extends SelectionPage {
 			</div>
 		</div>
 		<script type='text/javascript'>
+		window.onuserinactive = function() { location.assign('/dynamic/selection/page/selection_main_page'); };
 		var criteria_section = sectionFromHTML('criteria_section');
 		var rules_section = sectionFromHTML('rules_section');
 
@@ -86,8 +103,8 @@ class page_interview_criteria extends SelectionPage {
 			<?php if ($can_edit) {?>
 			tr.field_name = new field_text(criterion.name, true, {max_length:100,can_be_null:false,min_length:1,min_size:30});
 			td.appendChild(tr.field_name.getHTMLElement());
-			tr.field_name.ondatachanged.add_listener(function() { pnapplication.dataUnsaved('criterion_'+criterion.id+'_name'); });
-			tr.field_name.ondataunchanged.add_listener(function() { pnapplication.dataSaved('criterion_'+criterion.id+'_name'); });
+			tr.field_name.ondatachanged.addListener(function() { pnapplication.dataUnsaved('criterion_'+criterion.id+'_name'); });
+			tr.field_name.ondataunchanged.addListener(function() { pnapplication.dataSaved('criterion_'+criterion.id+'_name'); });
 			<?php } else {?>
 			td.appendChild(document.createTextNode(criterion.name));
 			<?php } ?>
@@ -98,8 +115,8 @@ class page_interview_criteria extends SelectionPage {
 			<?php if ($can_edit) {?>
 			tr.field_score = new field_decimal(criterion.max_score, true, {min:0,integer_digits:3,decimal_digits:2});
 			td.appendChild(tr.field_score.getHTMLElement());
-			tr.field_score.ondatachanged.add_listener(function() { pnapplication.dataUnsaved('criterion_'+criterion.id+'_score'); });
-			tr.field_score.ondataunchanged.add_listener(function() { pnapplication.dataSaved('criterion_'+criterion.id+'_score'); });
+			tr.field_score.ondatachanged.addListener(function() { pnapplication.dataUnsaved('criterion_'+criterion.id+'_score'); });
+			tr.field_score.ondataunchanged.addListener(function() { pnapplication.dataSaved('criterion_'+criterion.id+'_score'); });
 			<?php } else {?>
 			td.appendChild(document.createTextNode(parseFloat(criterion.max_score).toFixed(2)));
 			<?php } ?>
@@ -147,9 +164,9 @@ class page_interview_criteria extends SelectionPage {
 				if (score == null) { alert("Please specify a score for each criterion"); return; }
 				criteria.push({id:tr.criterion_id,name:name,max_score:score});
 			}
-			var locker = lock_screen(null, "Saving interview criteria...");
+			var locker = lockScreen(null, "Saving interview criteria...");
 			service.json("selection","interview/save_criteria",{criteria:criteria},function(res) {
-				if (!res) { unlock_screen(locker); return; }
+				if (!res) { unlockScreen(locker); return; }
 				pnapplication.cancelDataUnsaved();
 				location.reload();
 			});
@@ -205,7 +222,7 @@ class page_interview_criteria extends SelectionPage {
 				next.onmouseout = function() { setOpacity(this,0.6); };
 				node.appendChild(next);
 				next.onclick = function() {
-					popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
 				};
 			}
 			container.appendChild(node);
@@ -252,7 +269,7 @@ class page_interview_criteria extends SelectionPage {
 				node.onmouseout = function() { this.style.border = "1px solid #000000"; this.style.boxShadow = ""; };
 				node.title = "Click to edit this rule";
 				node.onclick = function() {
-					popup_frame(null,"Edit Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule?id="+rule.id);
+					popupFrame(null,"Edit Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule?id="+rule.id);
 				};
 			}
 			node_container.appendChild(node);
@@ -267,9 +284,9 @@ class page_interview_criteria extends SelectionPage {
 				remove.onmouseover = function() { setOpacity(this,1); };
 				remove.onmouseout = function() { setOpacity(this,0.6); };
 				remove.onclick = function(ev) {
-					confirm_dialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
+					confirmDialog("Are you sure you want to remove this rule and all the ones starting from it ?", function(yes) {
 						if (!yes) return;
-						lock_screen();
+						lockScreen();
 						service.json("selection","interview/remove_eligibility_rule",{id:rule.id},function(res){
 							window.location.reload();
 						});
@@ -288,7 +305,7 @@ class page_interview_criteria extends SelectionPage {
 				add_child.onmouseover = function() { setOpacity(this,1); };
 				add_child.onmouseout = function() { setOpacity(this,0.6); };
 				add_child.onclick = function(ev) {
-					popup_frame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule?parent="+rule.id);
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule?parent="+rule.id);
 					stopEventPropagation(ev);
 					return false;
 				};
@@ -362,6 +379,12 @@ class page_interview_criteria extends SelectionPage {
 		<?php 
 	}
 	
+	/**
+	 * Build the graph/tree of eligibility rules
+	 * @param array $rules lsit of existing rules
+	 * @param integer $parent_id id of the rule from which we want the children
+	 * @return array children rules
+	 */
 	private function buildRulesTree(&$rules, $parent_id) {
 		$children = array();
 		foreach ($rules as $rule) {

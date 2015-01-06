@@ -10,7 +10,6 @@ class service_exam_status extends Service {
 	public function getOutputFormat($input) { return "text/html"; }
 	
 	public function execute(&$component, $input) {
-		// TODO sessions without anyone assigned
 		// number of exam centers
 		$nb_centers = SQLQuery::create()->select("ExamCenter")->count("nb_centers")->executeSingleValue();
 
@@ -49,20 +48,21 @@ class service_exam_status extends Service {
 		if (count($is_not_linked) == 0) {
 			echo "<div class='ok'>All (".$total_nb_is.") linked to an exam center</div>";
 		} else {
-			echo "<a href='#' class='need_action' onclick=\"popup_frame(null,'Link Information Sessions to Exam Centers','/dynamic/selection/page/exam/link_is_with_exam_center?onsaved=saved',null,null,null,function(frame,pop){frame.saved=loadExamCenterStatus;});return false;\">".count($is_not_linked)." not linked to an exam center</a><br/>";
+			echo "<a href='#' class='need_action' onclick=\"popupFrame(null,'Link Information Sessions to Exam Centers','/dynamic/selection/page/exam/link_is_with_exam_center?onsaved=saved',null,null,null,function(frame,pop){frame.saved=loadExamCenterStatus;});return false;\">".count($is_not_linked)." not linked to an exam center</a><br/>";
 		}
 		echo "</div>";
 		
 		// overview on applicants
 		echo "<div class='page_section_title2'>Applicants</div>";
 		echo "<div style='padding:0px 5px'>";
-		$nb_applicants_no_exam_center = SQLQuery::create()->select("Applicant")->whereNull("Applicant","exam_center")->count("nb")->executeSingleValue();
-		$nb_applicants_ok = SQLQuery::create()->select("Applicant")->whereNotNull("Applicant","exam_center")->whereNotNull("Applicant", "exam_session")->count("nb")->executeSingleValue();
+		$nb_applicants_no_exam_center = SQLQuery::create()->select("Applicant")->whereNotValue("Applicant","automatic_exclusion_step","Application Form")->whereNull("Applicant","exam_center")->count("nb")->executeSingleValue();
+		$nb_applicants_ok = SQLQuery::create()->select("Applicant")->whereNotValue("Applicant","automatic_exclusion_step","Application Form")->whereNotNull("Applicant","exam_center")->whereNotNull("Applicant", "exam_session")->count("nb")->executeSingleValue();
 		
 		$applicants_no_schedule = SQLQuery::create()
 			->select("Applicant")
 			->whereNotNull("Applicant","exam_center")
 			->whereNull("Applicant", "exam_session")
+			->whereNotValue("Applicant","automatic_exclusion_step","Application Form")
 			->groupBy("Applicant", "exam_center")
 			->countOneField("Applicant", "people", "nb")
 			->join("Applicant", "ExamCenter", array("exam_center"=>"id"))
@@ -85,6 +85,7 @@ class service_exam_status extends Service {
 				postData('/dynamic/selection/page/applicant/list', {
 					title: "Applicants without Exam Center",
 					filters: [
+						{category:"Selection",name:"Excluded",force:true,data:{values:[0]}},
 						{category:"Selection",name:"Exam Center",force:true,data:{values:['NULL']}}
 					]
 				});
@@ -108,7 +109,7 @@ class service_exam_status extends Service {
 						foreach ($applicants_no_schedule as $center) {
 							echo "menu.addIconItem(null,".json_encode($center["nb"]." applicant(s) in ".$center["center_name"]).",function() {";
 							?>
-							window.top.popup_frame('/static/selection/exam/exam_center_16.png','Exam Center','/dynamic/selection/page/exam/center_profile?onsaved=saved&id=<?php echo $center["center_id"];?>',null,95,95,function(frame,pop) {
+							window.top.popupFrame('/static/selection/exam/exam_center_16.png','Exam Center','/dynamic/selection/page/exam/center_profile?onsaved=saved&id=<?php echo $center["center_id"];?>',null,95,95,function(frame,pop) {
 								frame.saved = function() { if (window.refreshPage) window.refreshPage(); else window.loadExamCenterStatus(); };
 							});
 							<?php 

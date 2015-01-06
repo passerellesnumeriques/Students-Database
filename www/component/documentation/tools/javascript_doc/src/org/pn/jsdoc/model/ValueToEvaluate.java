@@ -21,6 +21,7 @@ import org.mozilla.javascript.ast.PropertyGet;
 import org.mozilla.javascript.ast.StringLiteral;
 import org.mozilla.javascript.ast.UnaryExpression;
 import org.pn.jsdoc.model.Function.Parameter;
+import org.pn.jsdoc.model.builtin.BuiltinObject;
 
 public class ValueToEvaluate extends Element implements Evaluable {
 
@@ -59,6 +60,11 @@ public class ValueToEvaluate extends Element implements Evaluable {
 			context.put(p.name, new ContextVariable(p.type, p.description));
 		}
 	}
+	private HashMap<String,Object> runtimeContext = new HashMap<String,Object>();
+	public void addRuntimeContext(HashMap<String,Object> runtime) {
+		runtimeContext.putAll(runtime);
+	}
+	public HashMap<String,Object> getRuntimeContext() { return runtimeContext; }
 	
 	private ValueToEvaluate sub(AstNode value, Node... docs) {
 		ValueToEvaluate ve = new ValueToEvaluate(location.file, value, docs);
@@ -98,6 +104,12 @@ public class ValueToEvaluate extends Element implements Evaluable {
 			}
 			case Token.TRUE: val = new ObjectClass(this.location.file, "Boolean", value, docs); break;
 			case Token.FALSE: val = new ObjectClass(this.location.file, "Boolean", value, docs); break;
+			case Token.THIS:
+				if (ctx.container instanceof Class)
+					val = new ObjectClass(this.location.file, ((Class)ctx.container).name, value, docs);
+				else
+					error("Unexpected 'this' keyword value in this context ("+ctx.container.getClass().getSimpleName()+")", this.location.file, value);
+				break;
 			default: error("Keyword not supported for value: "+value.toSource(), this.location.file, value);
 			}
 		} else if (value instanceof UnaryExpression) {
@@ -151,11 +163,18 @@ public class ValueToEvaluate extends Element implements Evaluable {
 					} else {
 						String name = ((Name)right).getIdentifier();
 						Element o = cont.content.get(name);
+						if (o == null && name.equals("prototype")) o = cont;
+						if (o == null && cont instanceof BuiltinObject) {
+							// we cannot evaluate
+							return null;
+						}
 						if (o == null)
 							error("Container "+cont.getType()+" does not have element "+name, this.location.file, value);
 						else if (o instanceof FinalElement) 
 							val = new ObjectClass(this.location.file, ((FinalElement)o).getType(), value, docs);
 						else if (o instanceof ValueToEvaluate)
+							ctx.need_reevaluation = true;
+						else if (o instanceof ValuesToEvaluate)
 							ctx.need_reevaluation = true;
 						else
 							error("Element "+name+" in container "+cont.getType()+": unexpected "+o.getClass().getSimpleName(), this.location.file, value);
@@ -217,5 +236,11 @@ public class ValueToEvaluate extends Element implements Evaluable {
 		if (!(e instanceof Container)) return null;
 		if (type == null) return (Container)e;
 		return getContainer(type, (Container)e);
+	}
+	
+	@Override
+	public boolean skip() {
+		JSDoc doc = new JSDoc(value, docs);
+		return doc.hasTag("no_doc");
 	}
 }

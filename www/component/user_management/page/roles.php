@@ -63,7 +63,7 @@ foreach ($roles as $role) {
 }
 ?>];
 function new_role() {
-	input_dialog(
+	inputDialog(
 		theme.build_icon("/static/user_management/role.png",theme.icons_10.add),
 		"New Role",
 		"Role Name",
@@ -80,9 +80,9 @@ function new_role() {
 		},function(name) {
 			if (!name) return;
 			name = name.trim();
-			var lock = lock_screen(null, "Creating role "+name);
+			var lock = lockScreen(null, "Creating role "+name);
 			service.json("user_management","create_role",{name:name},function(result){
-				unlock_screen(lock);
+				unlockScreen(lock);
 				if (result && result.id)
 					location.href = '/dynamic/user_management/page/role_rights?role='+result.id;
 			});
@@ -91,7 +91,7 @@ function new_role() {
 }
 
 function remove_role(id,name,nb_users) {
-	confirm_dialog("Are you sure you want to remove the role <i>"+name+"</i><br/>and unassign "+nb_users+" "+(nb_users>1?"users":"user")+" ?",function(confirmed){
+	confirmDialog("Are you sure you want to remove the role <i>"+name+"</i><br/>and unassign "+nb_users+" "+(nb_users>1?"users":"user")+" ?",function(confirmed){
 		if (!confirmed) return;
 		service.json("user_management","remove_role",{id:id},function(result) {
 			if (result) location.reload();

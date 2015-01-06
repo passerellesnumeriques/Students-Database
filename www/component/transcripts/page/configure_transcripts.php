@@ -265,7 +265,7 @@ class page_configure_transcripts extends Page {
 </div>
 <script type='text/javascript'>
 function saveTranscriptConfig(name, value) {
-	var locker = lock_screen(null, "Saving");
+	var locker = lockScreen(null, "Saving");
 	var data = {
 		table:'TranscriptConfig',
 		key:{period:<?php echo $_GET["period"];?>,specialization:<?php echo isset($_GET["specialization"]) ? $_GET["specialization"] : "null";?>},
@@ -273,19 +273,19 @@ function saveTranscriptConfig(name, value) {
 	};
 	data["field_"+name] = value; 
 	service.json("data_model","save_entity", data, function(res) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		refreshDesign();
 	});
 }
 function changeSubject(subject_id, selected) {
-	var locker = lock_screen(null, "Saving");
+	var locker = lockScreen(null, "Saving");
 	service.json("transcripts","set_transcript_subject",{
 		period:<?php echo $_GET["period"];?>,
 		specialization:<?php echo isset($_GET["specialization"]) ? $_GET["specialization"] : "null";?>,
 		subject:subject_id,
 		selected:selected
 	},function(res) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		refreshDesign();
 	});
 }
@@ -430,14 +430,14 @@ function makePageLayout() {
 }
 makePageLayout();
 function refreshDesign() {
-	var locker = lock_screen(null, "Reloading transcript");
+	var locker = lockScreen(null, "Reloading transcript");
 	service.html("transcripts","generate_transcript",{period:<?php echo $_GET["period"];?>,specialization:<?php echo isset($_GET["specialization"]) ? $_GET["specialization"] : "null";?>},document.getElementById('design'),function() {
 		makePageLayout();
-		unlock_screen(locker);
+		unlockScreen(locker);
 	});
 }
 function publish() {
-	popup_frame("/static/transcripts/publish.png", "Publish Transcripts", "/dynamic/transcripts/page/publish?period=<?php echo $_GET["period"]; if (isset($_GET["specialization"])) echo "&specialization=".$_GET["specialization"];?>");
+	popupFrame("/static/transcripts/publish.png", "Publish Transcripts", "/dynamic/transcripts/page/publish?period=<?php echo $_GET["period"]; if (isset($_GET["specialization"])) echo "&specialization=".$_GET["specialization"];?>");
 }
 </script>
 		<?php 

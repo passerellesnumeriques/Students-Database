@@ -143,7 +143,7 @@ class page_synch_users extends Page {
 		echo "</div>";
 		?>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 <?php if ($list <> null) {?>
 var users_info = <?php echo json_encode($users_info);?>;
 
@@ -161,7 +161,7 @@ function process_removed_users(ondone) {
 	var next = function() {
 		if (users.length == 0) { ondone(); return; }
 		var username = users[0];
-		popup.set_freeze_content("Removing user "+username);
+		popup.setFreezeContent("Removing user "+username);
 		users.splice(0,1);
 		service.json("user_management","remove_user",{domain:<?php echo json_encode($domain);?>,token:<?php echo json_encode($token);?>,username:username},function(res) {
 			next();
@@ -183,7 +183,7 @@ function process_internal_to_as(ondone) {
 	var next = function() {
 		if (users.length == 0) { ondone(); return; }
 		var username = users[0];
-		popup.set_freeze_content("Moving user "+username+" from internal to authentication system of <?php echo $domain;?>");
+		popup.setFreezeContent("Moving user "+username+" from internal to authentication system of <?php echo $domain;?>");
 		users.splice(0,1);
 		service.json("user_management","internal_to_authentication_system",{domain:<?php echo json_encode($domain);?>,token:<?php echo json_encode($token);?>,username:username},function(res) {
 			next();
@@ -220,7 +220,7 @@ function process_new_users(ondone) {
 	popup.freeze();
 	var next_to_create = function(index) {
 		if (index == to_create.length) { popup.close(); return; }
-		popup.set_freeze_content("Creation of new users");
+		popup.setFreezeContent("Creation of new users");
 		window.top.require("popup_window.js",function() {
 			var p = new window.top.popup_window('New User', null, "");
 			var type = to_create[index].type != 'user' ? to_create[index].type+",user" : "user";
@@ -252,7 +252,7 @@ function process_new_users(ondone) {
 	var next_to_link = function(index) {
 		if (index == to_link.length) { next_to_create(0); return; }
 		var u = to_link[index];
-		popup.set_freeze_content("Creation of user "+u.username);
+		popup.setFreezeContent("Creation of user "+u.username);
 		service.json("user_management","create_user",{
 			authentication_system: <?php echo json_encode($domain);?>,
 			username: u.username,

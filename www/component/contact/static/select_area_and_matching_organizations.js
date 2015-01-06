@@ -3,20 +3,24 @@ theme.css("grid.css");
 /**
  * Create a table containing two lists of partners. One with all the partners from existing in this geographic area,
  * an other one with all the partners in the parent area (but the ones in the given area) 
- * @param {String|Element} container
- * @param {Number|NULL} area_id the geographic_area id, in the case of the table lists shall be initialized
- * @param {String|NULL) row_title the title attribute to set to each list tr elements
- * @param {Number|NULL} preselected_partner_id the partner id to preselect into the list
+ * @param {String|Element} container where to put it
+ * @param {Number|null} area_id the geographic_area id, in the case of the table lists shall be initialized
+ * @param {String|null} row_title the title attribute to set to each list tr elements
+ * @param {Number|null} preselected_partner_id the partner id to preselect into the list
  * @param {String} creator organization creator
  */
 function select_area_and_matching_organizations(container, area_id, row_title, preselected_partner_id, creator){
 	var t = this;
 	if(typeof container == "string")
 		container = document.getElementById(container);
-	t.onpartnerselected = new Custom_Event();//Custom event fired when a row is selected
-	t.onpartnerunselected = new Custom_Event();//Custom event fired when a row is unselected
+	/** fired when a row is selected */
+	t.onpartnerselected = new Custom_Event(); 
+	/** fired when a row is unselected */
+	t.onpartnerunselected = new Custom_Event();
+	/** id of the organization which is selected at the beginning */
 	t.preselected_partner_id = preselected_partner_id; 
-	t._rowsSelectable = [];
+	/** Rows */
+	t._rows_selectable = [];
 	
 	/**
 	 * Launch the process, create a table for the two lists
@@ -42,25 +46,29 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 			t.refresh(area_id);
 	};
 	
-	t._isRefreshing = false;
-	t._restartRefreshing = false;
-	t._idForReRefreshing = null;
-	t._geographic_area_selected = null;//Store the selected area id
+	/** Indicates if we are currently refreshing the list of partners */
+	t._is_refreshing = false;
+	/** Indicates if we have to refresh again (the user change before the previous refresh finished */
+	t._restart_refreshing = false;
+	/** Area id for the refresh */
+	t._id_for_rerefreshing = null;
+	/** Store the selected area id */
+	t._geographic_area_selected = null;
 	/**
 	 * Refresh the content of the lists, calling the contact#get_json_organizations_by_geographic_area service
 	 * @param {Number} id the id of the geographic area used for the new selection
 	 */
 	t.refresh = function(id){
-		if(t._isRefreshing){
-			t._restartRefreshing = true;
-			t._idForReRefreshing = id;
+		if(t._is_refreshing){
+			t._restart_refreshing = true;
+			t._id_for_rerefreshing = id;
 			return;
 		}
-		t._isRefreshing = true;
+		t._is_refreshing = true;
 		t._geographic_area_selected = id;
 		//reset the array containing the lists rows
-		delete t._rowsSelectable;
-		t._rowsSelectable = [];
+		delete t._rows_selectable;
+		t._rows_selectable = [];
 		//remove all the children
 		while(t._tr_list_1.firstChild)
 			t._tr_list_1.removeChild(t._tr_list_1.firstChild);
@@ -86,11 +94,11 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 			//Set the content
 			t._tr_list_1.appendChild(td1);
 			t._tr_list_2.appendChild(td2);
-			t._isRefreshing = false;
-			if(t._restartRefreshing){
-				t._restartRefreshing = false;
-				var new_id = t._idForReRefreshing;
-				t._idForReRefreshing = null;
+			t._is_refreshing = false;
+			if(t._restart_refreshing){
+				t._restart_refreshing = false;
+				var new_id = t._id_for_rerefreshing;
+				t._id_for_rerefreshing = null;
 				t.refresh(new_id);
 			}
 		});
@@ -154,7 +162,7 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 				};
 				tr.appendChild(td);
 				tr.appendChild(td_area_text);
-				t._rowsSelectable.push(tr);
+				t._rows_selectable.push(tr);
 				tbody.appendChild(tr);
 			}
 			cont.appendChild(table);
@@ -181,9 +189,9 @@ function select_area_and_matching_organizations(container, area_id, row_title, p
 	 */
 	t._resetSelectedRow = function(){
 		t.preselected_partner_id = null;
-		for(var i = 0; i < t._rowsSelectable.length; i++){
-			if(t._rowsSelectable[i].className == "selected")
-				t._rowsSelectable[i].className = "";
+		for(var i = 0; i < t._rows_selectable.length; i++){
+			if(t._rows_selectable[i].className == "selected")
+				t._rows_selectable[i].className = "";
 		}
 	};
 	

@@ -1,3 +1,9 @@
+/**
+ * Create a DIV to represent an event on a calendar view
+ * @param {CalendarEvent} ev the event
+ * @param {Calendar} calendar the calendar the event belongs to, or null (if null, we will get it from the window.top.CalendarsProviders)
+ * @returns {Element} the created DIV
+ */
 function createEventDiv(ev, calendar) {
 	if (!calendar) calendar = window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id);
 	if (!calendar) return null;
@@ -6,13 +12,19 @@ function createEventDiv(ev, calendar) {
 	return createTimedEventDiv(ev, calendar);
 }
 
+/**
+ * Create a DIV element for an event, which can be used commonly by any kind of event
+ * @param {CalendarEvent} ev the event
+ * @param {Calendar} cal calendar the event belongs to
+ * @returns {Element} the created DIV
+ */
 function _createAbstractEventDiv(ev, cal) {
 	var div = document.createElement("DIV");
 	div.style.backgroundColor = "#"+cal.color;
 	require("color.js", function() {
-		var col = parse_hex_color(cal.color);
+		var col = parseHexColor(cal.color);
 		if (col[0]+col[1]+col[2] < 0x60*3) div.style.color = "white"; else div.style.color = "black";
-		div.style.border = "1px solid "+color_string(color_darker(col, 0x60));
+		div.style.border = "1px solid "+colorToString(colorDarker(col, 0x60));
 	});
 	div.style.padding = "1px";
 	div.style.fontSize = '8pt';
@@ -31,6 +43,12 @@ function _createAbstractEventDiv(ev, cal) {
 	return div;
 }
 
+/**
+ * Create a DIV element for a timed event (not all day)
+ * @param {CalendarEvent} ev the event
+ * @param {Calendar} cal calendar the event belongs to
+ * @returns {Element} the created DIV
+ */
 function createTimedEventDiv(ev, cal) {
 	var div = _createAbstractEventDiv(ev, cal);
 	var head = document.createElement("DIV");
@@ -39,7 +57,7 @@ function createTimedEventDiv(ev, cal) {
 	head.style.fontSize = "90%";
 	head.style.color = "#FFFFFF";
 	require("color.js", function() {
-		head.style.backgroundColor = color_string(color_darker(parse_hex_color(cal.color), 0x60));
+		head.style.backgroundColor = colorToString(colorDarker(parseHexColor(cal.color), 0x60));
 	});
 	head.style.paddingLeft = "1px";
 	head.style.paddingRight = "2px";
@@ -57,6 +75,12 @@ function createTimedEventDiv(ev, cal) {
 	return div;
 }
 
+/**
+ * Create a DIV element for a all day event (no specific time)
+ * @param {CalendarEvent} ev the event
+ * @param {Calendar} cal calendar the event belongs to
+ * @returns {Element} the created DIV
+ */
 function createAllDayEventDiv(ev, cal) {
 	var div = _createAbstractEventDiv(ev, cal);
 	

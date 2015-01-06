@@ -6,7 +6,7 @@ class page_is_main_page extends SelectionPage {
 		$this->addJavascript("/static/widgets/grid/grid.js");
 		$this->addJavascript("/static/data_model/data_list.js");
 		$this->onload("initISList();");
-		$can_create_session = PNApplication::$instance->user_management->has_right("manage_information_session",true);
+		$can_create_session = PNApplication::$instance->user_management->hasRight("manage_information_session",true);
 		$this->requireJavascript("section.js");
 		$this->onload("sectionFromHTML('status_section');");
 		$this->onload("loadISStatus();");
@@ -17,7 +17,7 @@ class page_is_main_page extends SelectionPage {
 					<div id='is_status' class='selection_status'></div>
 				</div>
 				<div style='margin-top:10px'>
-					<button class='action' onclick="window.top.popup_frame('/static/contact/address_16.png','Map','/dynamic/selection/page/map?type=is',null,95,95);"><img src='/static/contact/address_16.png'/> Open Map</button>
+					<button class='action' onclick="window.top.popupFrame('/static/contact/address_16.png','Map','/dynamic/selection/page/map?type=is',null,95,95);"><img src='/static/contact/address_16.png'/> Open Map</button>
 				</div>
 			</div>
 			<div style="padding: 5px;display:inline-block;flex:1 1 auto;">
@@ -57,7 +57,7 @@ class page_is_main_page extends SelectionPage {
 
 						list.makeRowsClickable(function(row){
 							var is_id = list.getTableKeyForRow('InformationSession',row.row_id);
-							window.top.popup_frame(
+							window.top.popupFrame(
 								"/static/selection/is/is_16.png",
 								"Information Session",
 								"/dynamic/selection/page/is/profile?id="+is_id+"&onsaved=saved",

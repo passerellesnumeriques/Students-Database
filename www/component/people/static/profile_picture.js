@@ -1,4 +1,4 @@
-if (typeof require != 'undefined')
+if (typeof require == 'function')
 	require("progress_bar.js");
 
 function profile_picture(container, width, height, halign, valign) {
@@ -461,7 +461,7 @@ function addDataListImportPicturesButton(list) {
 				if (tool.getTool("people").getPeople(pictures[i]))
 					nb++;
 			if (nb == 0) return;
-			tool.popup.freeze_progress("Saving pictures...", nb, function(span_message, progress_bar) {
+			tool.popup.freezeWithProgress("Saving pictures...", nb, function(span_message, progress_bar) {
 				var next = function(index) {
 					if (index == pictures.length) {
 						if (tool.getPictures().length > 0) {

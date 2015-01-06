@@ -11,7 +11,7 @@ class TrainingApplicationSection implements ApplicationSectionPlugin {
 	public function getComponentsForURL() { return array("training","transcripts","curriculum"); }
 	public function getMenuURL() { return "/dynamic/training/service/menu"; }
 	public function getDefaultPageURL() {
-		if (PNApplication::$instance->user_management->has_right("consult_students_list"))
+		if (PNApplication::$instance->user_management->hasRight("consult_students_list"))
 			return "/dynamic/students_groups/page/tree_frame?section=training#/dynamic/students/page/list";
 		if (in_array("student",PNApplication::$instance->user_management->people_types))
 			return "/dynamic/transcripts/page/student_grades?title=true&people=".PNApplication::$instance->user_management->people_id;
@@ -20,7 +20,10 @@ class TrainingApplicationSection implements ApplicationSectionPlugin {
 		return "/dynamic/students_groups/page/tree_frame?section=training#/dynamic/students/page/list";
 	}
 	public function canAccess() {
-		if (PNApplication::$instance->user_management->has_right("consult_students_list")) return true;
+#SELECTION_TRAVEL
+#return false;
+#END
+		if (PNApplication::$instance->user_management->hasRight("consult_students_list")) return true;
 		if (in_array("student",PNApplication::$instance->user_management->people_types)) return true;
 		if (in_array("teacher",PNApplication::$instance->user_management->people_types)) return true;
 		return false;

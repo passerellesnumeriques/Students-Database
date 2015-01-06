@@ -6,6 +6,8 @@
 function field_integer(data,editable,config) {
 	if (typeof data == 'string') data = parseInt(data);
 	if (isNaN(data)) data = null;
+	if (config && typeof config.min == 'string') config.min = parseInt(config.min);
+	if (config && typeof config.max == 'string') config.max = parseInt(config.max);
 	typed_field.call(this, data, editable, config);
 }
 field_integer.prototype = new typed_field();
@@ -38,6 +40,7 @@ field_integer.prototype._create = function(data) {
 		t.input.type = "text";
 		t.input.ondomremoved(function() {
 			t.input = null;
+			t = null;
 		});
 		t.input.onclick = function(ev) { this.focus(); stopEventPropagation(ev); return false; };
 		if (this.config && this.config.min && this.config.max) {
@@ -73,19 +76,19 @@ field_integer.prototype._create = function(data) {
 		};
 		var getValueFromInput = function() {
 			var value;
-			if (t.input.value.length == 0) value = null;
+			if (!t || !t.input || t.input.value.length == 0) value = null;
 			else {
-				var i = parseInt(t.input.value);
-				if (isNaN(i)) i = null;
+				value = parseInt(t.input.value);
+				if (isNaN(value)) value = null;
 				else {
-					if (typeof t.config.min != 'undefined' && i < t.config.min) i = t.config.min;
-					if (typeof t.config.max != 'undefined' && i > t.config.max) i = t.config.max;
+					if (typeof t.config.min != 'undefined' && value < t.config.min) value = t.config.min;
+					if (typeof t.config.max != 'undefined' && value > t.config.max) value = t.config.max;
 				}
-				value = i;
 			}
 			return value;
 		};
 		t.input.onblur = function(ev) {
+			if (!t) return;
 			var val = t._getEditedData();
 			t.input.value = val === null ? "" : val;
 			t.setData(val);
@@ -107,25 +110,24 @@ field_integer.prototype._create = function(data) {
 			if (typeof t.input.autoresize != 'undefined') t.input.autoresize();
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			t.input.style.border = error ? "1px solid red" : "";
 		};
 		this.validate = function() {
 			var value = getValueFromInput();
-			if (value === null && t.config && !t.config.can_be_null) this.signal_error("Please enter a value");
-			else this.signal_error(null);
+			if (value === null && t.config && !t.config.can_be_null) this.signalError("Please enter a value");
+			else this.signalError(null);
 		};
 		this.onenter = function(listener) {
-			onkeyup.add_listener(function(e) {
+			onkeyup.addListener(function(e) {
 				var ev = getCompatibleKeyEvent(e);
 				if (ev.isEnter) listener(t);
 			});
 		};
 		this.focus = function() { t.input.focus(); };
-		this.fillWidth = function() {
+		this._fillWidth = function() {
 			_fw = true;
-			this.element.style.width = "100%";
 			if (typeof t.input.setMinimumSize != 'undefined') t.input.setMinimumSize(-1);
 		};
 		if (t.config) {
@@ -139,46 +141,87 @@ field_integer.prototype._create = function(data) {
 			if (data != prev) { t.setData(data); }
 		}
 		this.setMinimum = function(min) {
+			if (typeof min == 'string') min = parseInt(min);
+			if (isNaN(min)) min = null;
 			t.config.min = min === null ? undefined : min;
 			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.max < min) t.config.max = min;
 			t.setData(getValueFromInput());
 		};
 		this.setMaximum = function(max) {
+			if (typeof max == 'string') max = parseInt(max);
+			if (isNaN(max)) max = null;
 			t.config.max = max === null ? undefined : max;
 			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.min > max) t.config.min = max;
 			t.setData(getValueFromInput());
 		};
 	} else {
-		this.element.appendChild(this.text = document.createTextNode(data == null ? "" : data));
+		this.element.appendChild(this.text = document.createTextNode(""));
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseInt(data);
 			if (isNaN(data)) data = null;
 			if (data === null) this.text.nodeValue = "";
-			else this.text.nodeValue = data;
+			else if (this.config && this.config.pad) {
+				var s = ""+data;
+				while (s.length < this.config.pad) s = "0"+s;
+				this.text.nodeValue = s;
+			} else
+				this.text.nodeValue = data;
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};
 		this.validate = function() {
-			if (this._data === null && this.config && !this.config.can_be_null) this.signal_error("Please enter a value");
-			else this.signal_error(null);
+			if (this._data === null && this.config && !this.config.can_be_null) this.signalError("Please enter a value");
+			else this.signalError(null);
 		};
+		this.setMinimum = function(min) {
+			if (typeof min == 'string') min = parseInt(min);
+			if (isNaN(min)) min = null;
+			if (!this.config) this.config = {};
+			this.config.min = min;
+			this.setData(this._getEditedData());
+		};
+		this.setMaximum = function(max) {
+			if (typeof max == 'string') max = parseInt(max);
+			if (isNaN(max)) max = null;
+			if (!this.config) this.config = {};
+			this.config.max = max;
+			this.setData(this._getEditedData());
+		};
+		this._setData(data);
 	}
 };
+/**
+ * Set minimum and maximum values
+ * @param {Number} min minimum value, or null
+ * @param {Number} max maximum value, or null
+ */
 field_integer.prototype.setLimits = function(min,max) {
 	if (!this.config) this.config = {};
 	this.config.min = min;
 	this.config.max = max;
 	this.setData(this._getEditedData());
 };
+/**
+ * Set minimum value
+ * @param {Number} min minimum value, or null
+ */
 field_integer.prototype.setMinimum = function(min) {
+	if (typeof min == 'string') min = parseInt(min);
+	if (isNaN(min)) min = null;
 	if (!this.config) this.config = {};
 	this.config.min = min;
 	this.setData(this._getEditedData());
 };
+/**
+ * Set maximum value
+ * @param {Number} max maximum value, or null
+ */
 field_integer.prototype.setMaximum = function(max) {
+	if (typeof max == 'string') max = parseInt(max);
+	if (isNaN(max)) max = null;
 	if (!this.config) this.config = {};
 	this.config.max = max;
 	this.setData(this._getEditedData());

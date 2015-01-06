@@ -1,3 +1,3 @@
 <?php 
-PNApplication::$instance->user_management->create_role("Staff", true, true);
+PNApplication::$instance->user_management->createRole("Staff", true, true);
 ?>

@@ -10,14 +10,17 @@ class page_interview_centers extends SelectionPage {
 		$this->onload("initInterviewCentersList();");
 		$this->requireJavascript("section.js");
 		$this->onload("sectionFromHTML('interview_status_section');");
-		$this->onload("loadInterviewStatus();");
+		$this->onload("loadInterviewCenterStatus();");
 		
-		$can_create = PNApplication::$instance->user_management->has_right("manage_interview_center",true);
+		$can_create = PNApplication::$instance->user_management->hasRight("manage_interview_center",true);
 		?>
 		<div style="display:flex;flex-direction:row">
 			<div style ="display:inline-block;padding:5px;flex:none">
 				<div id='interview_status_section' title='Status' collapsable='false' css='soft' style='display:inline-block;'>
 					<div id='interview_status' class='selection_status'></div>
+				</div>
+				<div style='margin-top:10px'>
+					<button class='action' onclick="window.top.popupFrame('/static/contact/address_16.png','Map','/dynamic/selection/page/map?type=interview',null,95,95);"><img src='/static/contact/address_16.png'/> Open Map</button>
 				</div>
 			</div>
 			
@@ -53,7 +56,7 @@ class page_interview_centers extends SelectionPage {
 						<?php } ?>
 						list.makeRowsClickable(function(row){
 							var ec_id = list.getTableKeyForRow('InterviewCenter',row.row_id);
-							window.top.popup_frame('/static/selection/exam/exam_center_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?onsaved=saved&id='+ec_id,null,95,95,function(frame,pop) {
+							window.top.popupFrame('/static/selection/exam/exam_center_16.png','Interview Center','/dynamic/selection/page/interview/center_profile?onsaved=saved&id='+ec_id,null,95,95,function(frame,pop) {
 								frame.saved = refreshPage;
 							});
 						});
@@ -65,12 +68,12 @@ class page_interview_centers extends SelectionPage {
 				require("context_menu.js",function(){
 					var menu = new context_menu();
 					menu.addIconItem(null, "Create an interview center in a new place", function() {
-						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "New Interview Center", "/dynamic/selection/page/interview/center_profile?onsaved=saved", null, 95, 95, function(frame,pop) {
+						window.top.popupFrame("/static/selection/exam/exam_center_16.png", "New Interview Center", "/dynamic/selection/page/interview/center_profile?onsaved=saved", null, 95, 95, function(frame,pop) {
 							frame.saved = refreshPage;
 						});
 					});
 					menu.addIconItem(null, "Create an interview center from an exam center", function() {
-						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "Create Interview Center From Exam Center", "/dynamic/selection/page/interview/create_center_from_exam?onsaved=saved", null, null, null, function(frame,pop) {
+						window.top.popupFrame("/static/selection/exam/exam_center_16.png", "Create Interview Center From Exam Center", "/dynamic/selection/page/interview/create_center_from_exam?onsaved=saved", null, null, null, function(frame,pop) {
 							frame.saved = refreshPage;
 						});
 					});
@@ -78,7 +81,7 @@ class page_interview_centers extends SelectionPage {
 				});
 			}
 
-			function loadInterviewStatus() {
+			function loadInterviewCenterStatus() {
 				var container = document.getElementById('interview_status');
 				container.innerHTML = "<center><img src='"+theme.icons_16.loading+"'/></center>";
 				service.html("selection","interview/status",null,container);
@@ -86,7 +89,7 @@ class page_interview_centers extends SelectionPage {
 
 			function refreshPage() {
 				dl.reloadData();
-				loadInterviewStatus();
+				loadInterviewCenterStatus();
 			}
 		</script>				
 		<?php 

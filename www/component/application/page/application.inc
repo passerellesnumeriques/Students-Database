@@ -6,7 +6,7 @@ theme::css($this, "application.css");
 window.top.username = <?php echo json_encode(PNApplication::$instance->user_management->username); ?>;
 window.top.user_id = <?php echo PNApplication::$instance->user_management->user_id; ?>;
 window.top.my_people = <?php
-$people_id = PNApplication::$instance->user_management->get_people_from_user(PNApplication::$instance->user_management->user_id);
+$people_id = PNApplication::$instance->user_management->getPeopleFromUser(PNApplication::$instance->user_management->user_id);
 require_once("component/people/PeopleJSON.inc");
 echo PeopleJSON::PeopleFromID($people_id);
 ?>;
@@ -45,11 +45,11 @@ function init_top_calendar_manager() {
 		if (!window.top.calendar_manager) return;
 		for (var i = 0; i < provider.calendars.length; ++i)
 			window.top.calendar_manager.addCalendar(provider.calendars[i]);
-		provider.on_calendar_added.add_listener(function(cal){
+		provider.on_calendar_added.addListener(function(cal){
 			if (!window.top.calendar_manager) return;
 			window.top.calendar_manager.addCalendar(cal);
 		});
-		provider.on_calendar_removed.add_listener(function(cal){
+		provider.on_calendar_removed.addListener(function(cal){
 			if (!window.top.calendar_manager) return;
 			window.top.calendar_manager.removeCalendar(cal);
 		});
@@ -63,7 +63,7 @@ function init_top_calendar_manager() {
 			});
 			window.top.calendar_manager = null;
 		};
-		window.top.pnapplication.onlogout.add_listener(window.top._logout_remove_calendars);
+		window.top.pnapplication.onlogout.addListener(window.top._logout_remove_calendars);
 	}
 }
 window.top.require("calendar.js",function() {
@@ -111,7 +111,7 @@ if (!window.top.pingInterval) {
 					return false;
 				};
 				window.top.maintenance_coming_msg = new window.top.StatusMessage(window.top.Status_TYPE_WARNING,content,[{action:"close"}],10*60*1000);
-				window.top.status_manager.add_status(window.top.maintenance_coming_msg);
+				window.top.status_manager.addStatus(window.top.maintenance_coming_msg);
 				var update_timing = function() {
 					var span = window.top.document.getElementById('maintenance_timing');
 					if (!span) {
@@ -131,9 +131,9 @@ if (!window.top.pingInterval) {
 				};
 				update_timing();
 			} else if (!res.maintenance_coming && window.top.maintenance_coming_msg) {
-				window.top.status_manager.remove_status(window.top.maintenance_coming_msg);
+				window.top.status_manager.removeStatus(window.top.maintenance_coming_msg);
 				window.top.maintenance_coming_msg = null;
-				window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The maintenance has been cancelled. You won't be disconnected so you can continue to work...",[{action:"close"}],15*1000));
+				window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"The maintenance has been cancelled. You won't be disconnected so you can continue to work...",[{action:"close"}],15*1000));
 			}
 		}, false, null, function() {
 			window.top.ping_time = -2;

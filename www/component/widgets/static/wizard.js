@@ -3,6 +3,10 @@ if (typeof require != 'undefined')
 if (typeof theme != 'undefined')
 	theme.css("wizard.css");
 
+/**
+ * Create a Wizard, composed of different pages which can be validated to go to the next one
+ * @param {Element} container where to put the wizard
+ */
 function wizard(container) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t = this;

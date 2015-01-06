@@ -46,6 +46,10 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 		var cfg = objectCopy(field.data.field_config,10);
 		if (typeof sub_index != 'undefined') cfg.sub_data_index = sub_index;
 		var f = new window[field.data.field_classname](objectCopy(field.data.new_data,10),true,cfg);
+		if (f instanceof typed_field_multiple) {
+			// multiple field, this is not what we want, so we will just let the user enter a text
+			f = new field_text(null,true,{});
+		}
 		var cont = document.createElement("DIV");
 		cont.style.display = "inline-block";
 		cont.appendChild(f.getHTMLElement());
@@ -74,7 +78,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 	this._createSingleField = function(field, sub_index) {
 		if (typeof sub_index == 'undefined' && field.data.sub_data) {
 			for (var i = 0; i < field.data.sub_data.names.length; ++i)
-				if (field.data.sub_data.editableForNew[i])
+				if (field.data.sub_data.editable_for_new[i])
 					this._createSingleField(field, i);
 			return;
 		}
@@ -189,7 +193,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 		var row = {tr:tr,selects:[],layers:[]};
 		rows.push(row);
 		for (var i = 0; i < field.data.sub_data.names.length; ++i) {
-			if (!field.data.sub_data.editableForNew[i]) continue;
+			if (!field.data.sub_data.editable_for_new[i]) continue;
 			td = document.createElement("TD");
 			tr.appendChild(td);
 			var select = this._createSelectColumn(td, field, i, null);
@@ -350,10 +354,12 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 			table.appendChild(tbody);
 			var tr_title = document.createElement("TR"); tbody.appendChild(tr_title);
 			var td = document.createElement("TD"); tr_title.appendChild(td);
+			td.style.fontWeight = "bold";
 			td.appendChild(document.createTextNode(field.data.name));
 			for (var i = 0; i < field.data.sub_data.names.length; ++i) {
-				if (!field.data.sub_data.editableForNew[i]) continue;
+				if (!field.data.sub_data.editable_for_new[i]) continue;
 				td = document.createElement("TD"); tr_title.appendChild(td);
+				td.style.textAlign = "center";
 				td.appendChild(document.createTextNode(field.data.sub_data.names[i]));
 			}
 			var rows = [];
@@ -512,12 +518,12 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 					for (var i = 0; i < sheet.__columns_layers.length; ++i)
 						sheet.__columns_layers[i].setRange(sheet.__columns_layers[i].col_start, nb_rows, sheet.__columns_layers[i].col_start, sheet.__columns_layers[i].row_end);
 			};
-			excel.onactivesheetchanged.add_listener(function() {
+			excel.onactivesheetchanged.addListener(function() {
 				var nb_rows = excel.getActiveSheet().__header_rows;
 				f.setData(nb_rows);
 				update_layer(nb_rows);
 			});
-			f.onchange.add_listener(function() {
+			f.onchange.addListener(function() {
 				var nb_rows = f.hasError() ? 0 : f.getCurrentData();
 				excel.getActiveSheet().__header_rows = nb_rows;
 				update_layer(nb_rows);
@@ -571,7 +577,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 	this._init = function() {
 		require("typed_field.js");
 		var cats = [];
-		var js = [];
+		var js = ["field_text.js"];
 		for (var i = 0; i < fields.length; ++i) {
 			if (!cats.contains(fields[i].data.category))
 				cats.push(fields[i].data.category);
@@ -605,7 +611,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 								}
 							} else {
 								for (var l = 0; l < fields[k].data.sub_data.names.length; ++l) {
-									if (!fields[k].data.sub_data.editableForNew[l]) continue;
+									if (!fields[k].data.sub_data.editable_for_new[l]) continue;
 									var name = fields[k].data.name+" "+fields[k].data.sub_data.names[l];
 									if (name.isSame(value)) {
 										t._columnFound(i,j,fields[k],l);
@@ -637,7 +643,7 @@ function template_multiple_entries(container, excel, fields, existing, onready) 
 								best_field = undefined;
 							} else {
 								for (var l = 0; l < fields[k].data.sub_data.names.length; ++l) {
-									if (!fields[k].data.sub_data.editableForNew[l]) continue;
+									if (!fields[k].data.sub_data.editable_for_new[l]) continue;
 									var match = wordsMatch(value, fields[k].data.name+" "+fields[k].data.sub_data.names[l], true);
 									if (match.nb_words1_in_words2 == 0) continue;
 									if (best_match === null) {

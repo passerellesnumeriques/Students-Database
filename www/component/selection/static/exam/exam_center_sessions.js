@@ -3,6 +3,19 @@ if (typeof require != 'undefined') {
 	require(["event_date_time_duration.js","popup_window.js","calendar_objects.js"]);
 }
 
+/**
+ * Screen for the sessions in an exam center, where we can assign applicants, and screen for the list of available rooms
+ * @param {Element} container where to create the screen for the sessions
+ * @param {Element} rooms_container where to create the list of available rooms
+ * @param {Array} rooms list of existing rooms
+ * @param {Array} sessions list of existing sessions
+ * @param {Array} applicants list of applicants assigned to this exam center
+ * @param {exam_center_is} linked_is screen of the linked information sessions
+ * @param {String} default_duration default duration of an exam session
+ * @param {Number} calendar_id calendar of the selection campaign
+ * @param {Array} peoples to use with a who_container
+ * @param {Boolean} can_edit indicates if information can be modified by the user
+ */
 function exam_center_sessions(container, rooms_container, rooms, sessions, applicants, linked_is, default_duration, calendar_id, peoples, can_edit) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	if (typeof rooms_container == 'string') rooms_container = document.getElementById(rooms_container);
@@ -20,6 +33,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	
 	/* ----- Rooms ----- */
 	
+	/** Create a new room */
 	this.newRoom = function() {
 		var r = new ExamCenterRoom(-1, this._new_room_id_counter--, "", 10);
 		this.rooms.push(r);
@@ -30,6 +44,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			this._sessions_sections[i].refresh();
 		window.pnapplication.dataUnsaved("ExamCenterRooms");
 	};
+	/** Refresh the list of rooms */
 	this._refreshRooms = function() {
 		this._table_rooms.removeAllChildren();
 		var tr, th;
@@ -40,13 +55,16 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			return;
 		}
 		tr.appendChild(th = document.createElement("TH"));
-		th.appendChild(document.createTextNode("Room Name"));
+		th.innerHTML = "Room<br/>Name";
 		tr.appendChild(th = document.createElement("TH"));
 		th.appendChild(document.createTextNode("Capacity"));
 		for (var i = 0; i < this.rooms.length; ++i)
 			this._createRoomRow(this.rooms[i]);
 		layout.changed(this._table_rooms);
 	};
+	/** Create the row for a room
+	 * @param {ExamCenterRoom} room the room
+	 */
 	this._createRoomRow = function(room) {
 		var tr, td;
 		this._table_rooms.appendChild(tr = document.createElement("TR"));
@@ -54,17 +72,18 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		tr.appendChild(td = document.createElement("TD"));
 		var field_name = new field_text(room.name, can_edit, {can_be_null:false,max_length:20});
 		td.appendChild(field_name.getHTMLElement());
-		field_name.register_datamodel_cell("ExamCenterRoom", "name", room.id);
-		field_name.onchange.add_listener(function (f) {
+		field_name.registerDataModelCell("ExamCenterRoom", "name", room.id);
+		field_name.onchange.addListener(function (f) {
 			room.name = f.getCurrentData();
+			window.pnapplication.dataUnsaved("ExamCenterRooms");
 		});
 		// room capacity
 		tr.appendChild(td = document.createElement("TD"));
 		var field_capacity = new field_integer(room.capacity, can_edit, {can_be_null:false,min:1,max:999});
 		td.appendChild(field_capacity.getHTMLElement());
-		field_capacity.register_datamodel_cell("ExamCenterRoom", "capacity", room.id);
+		field_capacity.registerDataModelCell("ExamCenterRoom", "capacity", room.id);
 		field_capacity.t = this;
-		field_capacity.onchange.add_listener(function(f) {
+		field_capacity.onchange.addListener(function(f) {
 			var new_cap = f.getCurrentData();
 			// calculate number of applicants already done with a past session
 			var now = new Date().getTime();
@@ -130,6 +149,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	
 	/* ----- Sessions ----- */
 	
+	/** Create a new exam session */
 	this.newSession = function() {
 		var t=this;
 		require(["event_date_time_duration.js","popup_window.js","calendar_objects.js"], function() {
@@ -140,7 +160,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			var date = new event_date_time_duration(content, null, default_duration, null, null, false, false);
 			popup.addOkCancelButtons(function() {
 				if (date.date == null) { alert('Please select a date'); return; }
-				if (date.duration == null || date.duration == 0) { alert('Please select a duration'); return; }
+				if (date.duration == null || date.duration == 0) { alert('Please enter a duration'); return; }
 				var d = new Date(date.date.getTime());
 				d.setHours(0,date.time,0,0);
 				var doit = function() {
@@ -158,7 +178,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 					window.pnapplication.dataUnsaved("ExamCenterSessions");
 				};
 				if (d.getTime() < new Date().getTime())
-					confirm_dialog("You are creating a session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
+					confirmDialog("You are creating a session in the past.<br/>Do you confirm the session already occured ?", function(yes) {
 						if (yes) doit();
 					});
 				else
@@ -167,18 +187,30 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			popup.show();
 		});
 	};
+	/** List of sessions */
 	this._sessions_sections = [];
+	/** Get a session
+	 * @param {Number} id session id
+	 * @returns {CalendarEvent} session
+	 */
 	this.getSession = function(id) {
 		for (var i = 0; i < this.sessions.length; ++i)
 			if (this.sessions[i].id == id)
 				return this.sessions[i];
 		return null;
 	};
+	/** Create a session
+	 * @param {CalendarEvent} event the session
+	 * @param {Array} peoples for the who_container
+	 */
 	this._createSession = function(event, peoples) {
 		this._sessions_sections.push(new ExamSessionSection(this._sessions_container, event, peoples, this, can_edit));
 		this._span_nb_sessions.innerHTML = this.sessions.length;
 		layout.changed(this._sessions_container);
 	};
+	/** Remove a session
+	 * @param {CalendarEvent} event the session
+	 */
 	this._removeSession = function(event) {
 		this.sessions.remove(event);
 		for (var i = 0; i < this._sessions_sections.length; ++i) {
@@ -198,6 +230,10 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		layout.changed(this._sessions_container);
 		window.pnapplication.dataUnsaved("ExamCenterSessions");
 	};
+	/** Get the session section
+	 * @param {Number} session_id id
+	 * @returns {ExamSessionSection} the section
+	 */
 	this._getSessionSection = function(session_id) {
 		for (var i = 0; i < this._sessions_sections.length; ++i)
 			if (this._sessions_sections[i].event.id == session_id) 
@@ -209,12 +245,21 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	
 	/* ----- Applicants ----- */
 	
+	/** Get an applicant object
+	 * @param {Number} people_id id
+	 * @returns {Applicant} the applicant
+	 */
 	this.getApplicant = function(people_id) {
 		for (var i = 0; i < this.applicants.length; ++i)
 			if (this.applicants[i].people.id == people_id)
 				return this.applicants[i];
 		return null;
 	};
+	/** Get the list of applicants assigned to the given session and room
+	 * @param {Number} session_id session
+	 * @param {Number} room_id room
+	 * @returns {Array} list of assigned applicants
+	 */
 	this.getApplicantsAssignedTo = function(session_id, room_id) {
 		var list = [];
 		for (var i = 0; i < this.applicants.length; ++i)
@@ -222,6 +267,10 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 				list.push(this.applicants[i]);
 		return list;
 	};
+	/** Automatically assign the given applicant
+	 * @param {Applicant} applicant applicant to assign
+	 * @returns {Boolean} true if the applicant has been assigned, false if there is no more available slot
+	 */
 	this._assignAuto = function(applicant) {
 		var max_slots = 0;
 		var max_room = null;
@@ -243,6 +292,12 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		if (max_slots == 0) return false;
 		return this._assignTo(applicant, max_session, max_room, true);
 	};
+	/** Assign an applicant
+	 * @param {Applicant} applicant the applicant to assign
+	 * @param {CalendarEvent} session session
+	 * @param {ExamCenterRoom} room room
+	 * @param {Boolean} already_confirmed_for_past_session if false and the session is in the past, a confirmation will be asked to the user before to really assign the applicant
+	 */
 	this._assignTo = function(applicant, session, room, already_confirmed_for_past_session) {
 		var s = this._getSessionSection(session.id);
 		var r = s.getRoomSection(room.id);
@@ -250,7 +305,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			return false; // no more seat
 		if (!already_confirmed_for_past_session && session.start.getTime() < new Date().getTime()) {
 			var t=this;
-			confirm_dialog("You are going to assign an applicant to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
+			confirmDialog("You are going to assign an applicant to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
 				if (yes) t._assignTo(applicant, session, room, true);
 			});
 			return true;
@@ -263,10 +318,17 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		window.pnapplication.dataUnsaved("ExamCenterApplicants");
 		return true;
 	};
+	/** Unassign an applicant
+	 * @param {Applicant} applicant the applicant to unassign
+	 * @param {ExamSessionSection} session_section section of the session
+	 * @param {RoomSection} room_section section of the room
+	 * @param {Function} ondone called when the unassignment has been done
+	 * @param {Boolean} already_confirmed_for_past_session if false and the session is in the past, a confirmation will be asked to the user before to really unassign the applicant
+	 */
 	this._unassign = function(applicant, session_section, room_section, ondone, already_confirmed_for_past_session) {
 		if (!already_confirmed_for_past_session && session_section.event.start.getTime() < new Date().getTime()) {
 			var t=this;
-			confirm_dialog("The exam session is already done. If this applicant already has exam results, those results will be removed. Are you sure you want to remove this applicant from this session ?", function(yes) {
+			confirmDialog("The exam session is already done, and this applicant may already have results. Are you sure you want to remove this applicant from this session ?", function(yes) {
 				if (yes) t._unassign(applicant, session_section, room_section, ondone, true);
 			});
 			return;
@@ -279,6 +341,11 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		if (ondone) ondone();
 		window.pnapplication.dataUnsaved("ExamCenterApplicants");
 	};
+	/** Move an applicant to the given session and room
+	 * @param {Number} people_id applicant
+	 * @param {ExamSessionSection} session_section session
+	 * @param {RoomSection} room_section room
+	 */
 	this._moveApplicant = function(people_id, session_section, room_section) {
 		var applicant = null;
 		for (var i = 0; i < this.applicants.length; ++i)
@@ -302,6 +369,9 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 				alert("No more seat available in this room: the applicant is now in the list of applicants without schedule");
 		});
 	};
+	/** Remove an applicant from the exam center
+	 * @param {Applicant} applicant the applicant
+	 */
 	this.removeApplicantFromCenter = function(applicant) {
 		this.applicants.remove(applicant);
 		if (applicant.exam_session_id == null) {
@@ -321,11 +391,13 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	
 	/* ----- Initialization of the screen ----- */
 	
+	/** Creation of the screen */
 	this._init = function() {
 		this._initHeader();
 		this._initRooms();
 		this._initSessions();
 	};
+	/** Creation of the header on top of the sessions and applicants lists */
 	this._initHeader = function() {
 		// header
 		this._header = document.createElement("DIV");
@@ -350,6 +422,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			button_new_session.onclick = function() { this.t.newSession(); };
 		}
 	};
+	/** Creation of the sessions */
 	this._initSessions = function() {
 		// split into 2 horizontal elements: (1) the non-assigned applicants, (2) scheduled sessions
 		this._horiz_div = document.createElement("DIV");
@@ -399,7 +472,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		
 		// listen to events on linked information sessions
 		var t=this;
-		linked_is.onapplicantsadded.add_listener(function(list) {
+		linked_is.onapplicantsadded.addListener(function(list) {
 			window.pnapplication.dataUnsaved("ExamCenterApplicants");
 			for (var i = 0; i < list.length; ++i) {
 				var app = list[i];
@@ -416,7 +489,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			}
 			t._span_total_applicants.innerHTML = t.applicants.length;
 		});
-		linked_is.onapplicantsremoved.add_listener(function(list) {
+		linked_is.onapplicantsremoved.addListener(function(list) {
 			window.pnapplication.dataUnsaved("ExamCenterApplicants");
 			var assigned_and_done = [];
 			var now = new Date().getTime();
@@ -460,8 +533,8 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 					boxes.push(cb);
 					li.appendChild(document.createTextNode(" "+assigned_and_done[i].people.first_name+" "+assigned_and_done[i].people.last_name));
 				}
-				content.appendChild(document.createTextNode("Please select the ones you really want to remove. For those applicants, any result already imported will be removed (when you will save)."));
-				confirm_dialog(content, function(yes) {
+				content.appendChild(document.createTextNode("Please select the ones you really want to remove."));
+				confirmDialog(content, function(yes) {
 					if (!yes) return;
 					var list = [];
 					for (var i = 0; i < boxes.length; ++i)
@@ -476,6 +549,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			}
 		});
 	};
+	/** Creation of the rooms */
 	this._initRooms = function() {
 		this._table_rooms = document.createElement("TABLE");
 		this._table_rooms.className = "grid";
@@ -491,6 +565,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 		}
 		this._refreshRooms();
 	};
+	/** Creation of the list of applicants not yet assigned to a session */
 	this._initNotAssignedList = function() {
 		var list = [];
 		for (var i = 0; i < this.applicants.length; ++i)
@@ -512,8 +587,8 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			t._section_not_assigned.header.style.background = t.not_assigned.getList().length > 0 ? "#FF8000" : "";
 		};
 		listener();
-		this.not_assigned.object_added.add_listener(listener);
-		this.not_assigned.object_removed.add_listener(listener);
+		this.not_assigned.object_added.addListener(listener);
+		this.not_assigned.object_removed.addListener(listener);
 		if (can_edit)
 		this.not_assigned.addDropSupport("applicant", function(people_id) {
 			// check applicant before drop
@@ -545,7 +620,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			button.title = "Remove this applicant from this exam center";
 			button.innerHTML = "<img src='/static/selection/common_centers/remove_applicant_from_center.png'/>";
 			button.onclick = function() {
-				confirm_dialog("Are you sure this applicant will not come to this exam center ?", function(yes) {
+				confirmDialog("Are you sure this applicant will not come to this exam center ?", function(yes) {
 					if (yes) t.removeApplicantFromCenter(applicant);
 				});
 				return false;
@@ -589,7 +664,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 										}
 								};
 								if (o.session.start.getTime() < new Date().getTime()) {
-									confirm_dialog("You are going to assign applicants to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
+									confirmDialog("You are going to assign applicants to a session which is already done (in the past). Are you sure you want to do this ?", function(yes) {
 										if (!yes) return;
 										doit();
 									});
@@ -603,7 +678,7 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 			});
 			// add remove button
 			not_assigned_header.addSelectionAction("<img src='/static/selection/common_centers/remove_applicant_from_center.png'/> Remove", "action red", "Remove selected applicants from this exam center", function() {
-				confirm_dialog("Are you sure those applicants will not come to this exam center ?", function(yes) {
+				confirmDialog("Are you sure those applicants will not come to this exam center ?", function(yes) {
 					if (yes) {
 						var applicants = t.not_assigned.getSelection();
 						for (var i = 0; i < applicants.length; ++i)
@@ -617,15 +692,29 @@ function exam_center_sessions(container, rooms_container, rooms, sessions, appli
 	this._init();
 }
 
+/** Section containing an exam session
+ * @param {Element} container where to create the section
+ * @param {CalendarEvent} event the session
+ * @param {Array} peoples list of peoples for the who_container
+ * @param {exam_center_sessions} sessions screen managing it
+ * @param {Boolean} can_edit indicates if information can be modified
+ */
 function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 	this.event = event;
 	this.sessions = sessions;
+	/** Get the section of a room
+	 * @param {Number} room_id id
+	 * @returns {RoomSection} the section
+	 */
 	this.getRoomSection = function(room_id) {
 		for (var i = 0; i < this._rooms.length; ++i)
 			if (this._rooms[i].room.id == room_id)
 				return this._rooms[i];
 		return null;
 	};
+	/** Remove a room
+	 * @param {ExamCenterRoom} room the room to remove
+	 */
 	this.removeRoom = function(room) {
 		for (var i = 0; i < this._rooms.length; ++i) {
 			if (this._rooms[i].room.id == room.id) {
@@ -643,6 +732,9 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		}
 		this.refreshNbApplicants();
 	};
+	/** Called when the capacity of a room has been modified
+	 * @param {ExamCenterRoom} room the room
+	 */
 	this.roomCapacityChanged = function(room) {
 		var r = this.getRoomSection(room.id);
 		while (r.applicants_list.getList().length > room.capacity) {
@@ -654,6 +746,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		}
 		this.refreshNbApplicants();
 	};
+	/** Called when the user is asking to reschedule a session */ 
 	this.reschedule = function () {
 		var t=this;
 		require(["event_date_time_duration.js","popup_window.js","calendar_objects.js"], function() {
@@ -676,11 +769,11 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 				};
 				var now = new Date().getTime();
 				if (t.event.start.getTime() < now && d.getTime() > now)
-					confirm_dialog("This session was in the past, and you reschedule it in the future.<br/>If any applicant assigned to this session already has exam results, those results will be removed! (when you will save)<br/>Are you sure you want to do this ?", function(yes) {
+					confirmDialog("This session was in the past, and you reschedule it in the future.<br/>If any applicant assigned to this session already has exam results, those results will be removed! (when you will save)<br/>Are you sure you want to do this ?", function(yes) {
 						if (yes) doit();
 					});
 				else if (t.event.start.getTime() > now && d.getTime() < now)
-					confirm_dialog("This session was in the future, and you reschedule it in the past.<br/>Do you confirm this session already occured ?", function(yes) {
+					confirmDialog("This session was in the future, and you reschedule it in the past.<br/>Do you confirm this session already occured ?", function(yes) {
 						if (yes) doit();
 					});
 				else
@@ -689,6 +782,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 			popup.show();
 		});
 	};
+	/** Creation of the screen */
 	this._init = function() {
 		var title = document.createElement("SPAN");
 		title.appendChild(document.createTextNode("Session on "));
@@ -728,7 +822,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 					message = "This session is in the past. If you remove it, all applicants assigned to it will be marked as not assigned, and if any already has exam results, those results will be removed.<br/>Are you sure you want to remove this session ?";
 				else
 					message = "Are you sure you want to remove this session, and unassign all applicants from it ?";
-				confirm_dialog(message, function(yes) {
+				confirmDialog(message, function(yes) {
 					if (yes) sessions._removeSession(event);
 				});
 			};
@@ -745,8 +839,9 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		var wc = document.createElement("DIV"); content.appendChild(wc);
 		wc.style.borderBottom = "1px solid #808080";
 		this.who = new who_container(wc, peoples, can_edit, 'exam');
-		wc.appendChild(this.who.createAddButton("Which staff will be at this exam session ?"));
-		this.who.onadded.add_listener(function(people) {
+		if (can_edit)
+			wc.appendChild(this.who.createAddButton("Which staff will be at this exam session ?"));
+		this.who.onadded.addListener(function(people) {
 			var a;
 			if (typeof people == 'string') {
 				a = new CalendarEventAttendee(people,calendar_event_role_requested,calendar_event_participation_unknown,false,false);
@@ -755,7 +850,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 			}
 			event.attendees.push(a);
 		});
-		this.who.onremoved.add_listener(function(people) {
+		this.who.onremoved.addListener(function(people) {
 			if (typeof people == 'string') {
 				for (var i = 0; i < event.attendees.length; ++i)
 					if (event.attendees[i].people == null && event.attendees[i].name == people) {
@@ -775,7 +870,9 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		
 		this.refresh();
 	};
+	/** List of room sections */
 	this._rooms = [];
+	/** Refresh the screen */
 	this.refresh = function() {
 		this.span_date.innerHTML = getDateString(event.start,true);
 		this.span_start_time.innerHTML = getTimeString(event.start,true);
@@ -796,6 +893,7 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 		this.refreshNbApplicants();
 		layout.changed(this.session_section.element);
 	};
+	/** Refresh the number of applicants in the header */
 	this.refreshNbApplicants = function() {
 		var total_applicants = 0;
 		for (var i = 0; i < sessions.applicants.length; ++i) {
@@ -808,9 +906,16 @@ function ExamSessionSection(container, event, peoples, sessions, can_edit) {
 	this._init();
 }
 
+/** Section corresponding of a room in an exam session
+ * @param {Element} container where to create the screen
+ * @param {ExamCenterRoom} room the room
+ * @param {ExamSessionSection} session_section section of the session in which this section is
+ * @param {Boolean} can_edit indicates if the user can modify something
+ */
 function RoomSection(container, room, session_section, can_edit) {
 	this.room = room;
 	this.session_section = session_section;
+	/** Creation of the screen */
 	this._init = function() {
 		var title = document.createElement("SPAN");
 		title.appendChild(document.createTextNode("Room "));
@@ -838,13 +943,25 @@ function RoomSection(container, room, session_section, can_edit) {
 			room_usage.innerHTML = t.applicants_list.getList().length;
 		};
 		listener();
-		this.applicants_list.object_added.add_listener(listener);
-		this.applicants_list.object_removed.add_listener(listener);
+		this.applicants_list.object_added.addListener(listener);
+		this.applicants_list.object_removed.addListener(listener);
 		var print = document.createElement("BUTTON");
 		print.className = "flat icon";
 		print.innerHTML = "<img src='"+theme.icons_16.print+"'/>";
 		print.onclick = function() {
-			t.applicants_list.grid.print();
+			t.applicants_list.hideActions();
+			var params = {
+				titles:["Written Exam"],
+				sub_titles:[],
+				content_style:"display:flex;flex-direction:column;align-items:center;"
+			};
+			var host = window.center_location.getHostPartner();
+			if (host) params.titles[0] += " - "+host.organization.name;
+			params.sub_titles.push(window.center_location.geographic_area_text.text+" - "+getDateString(session_section.event.start));
+			params.sub_titles.push("Applicants List - Room "+room.name);
+			t.applicants_list.grid.print("pn_document",params,function() {
+				t.applicants_list.showActions();
+			});
 		};
 		this.room_section.addToolRight(print);
 		if (can_edit)
@@ -871,7 +988,7 @@ function RoomSection(container, room, session_section, can_edit) {
 				};
 				if (t.session_section.event.start.getTime() < new Date().getTime()) {
 					// the session is in the past !
-					confirm_dialog("The session is already done. When you will save, if any of those applicants already has results for the exams, the results will be removed. Are you sure you want to unassign those applicants ?", function(yes) {
+					confirmDialog("The session is already done. When you will save, if any of those applicants already has results for the exams, the results will be removed. Are you sure you want to unassign those applicants ?", function(yes) {
 						if (yes) doit();
 					});
 				} else
@@ -900,18 +1017,26 @@ function RoomSection(container, room, session_section, can_edit) {
 	this._init();
 }
 
+/**
+ * Header of a list of applicants in the exam center sessions screen
+ * @param {applicant_data_grid} data_grid the list of applicants
+ */
 function ApplicantsListHeader(data_grid) {
+	/** DIV of the header */
 	this.header = document.createElement("DIV");
 	data_grid.container.insertBefore(this.header, data_grid.grid.grid_element);
 	this.header.className = "header_bar_menubar_style";
 	this.header.style.padding = "3px 5px 3px 5px";
 	this.header.style.height = "22px";
+	/** SPAN containing the number of selected applicants */
 	this.nb_selected_span = document.createElement("SPAN");
 	this.nb_selected_span.innerHTML = "0/0";
 	this.header.appendChild(this.nb_selected_span);
 	this.header.appendChild(document.createTextNode(" selected "));
 
+	/** Buttons of actions we can do on the selected applicants */
 	this._selection_buttons = [];
+	/** Refresh information */
 	this.refresh = function() {
 		var sel = data_grid.getSelection();
 		this.nb_selected_span.innerHTML = sel.length + "/" + data_grid.getList().length;
@@ -919,6 +1044,12 @@ function ApplicantsListHeader(data_grid) {
 			this._selection_buttons[i].disabled = sel.length > 0 ? "" : "disabled";
 		layout.changed(this.header);
 	};
+	/** Add an action we can do with selected applicants
+	 * @param {String} html HTML code
+	 * @param {String} css CSS class of the button
+	 * @param {String} tooltip tooltip text
+	 * @param {Function} onclick called when the button is clicked
+	 */
 	this.addSelectionAction = function(html, css, tooltip, onclick) {
 		var button = document.createElement("BUTTON");
 		button.className = css;
@@ -933,7 +1064,7 @@ function ApplicantsListHeader(data_grid) {
 	};
 	
 	var t=this;
-	data_grid.selection_changed.add_listener(function() { t.refresh(); });
-	data_grid.object_added.add_listener(function() { t.refresh(); });
-	data_grid.object_removed.add_listener(function() { t.refresh(); });
+	data_grid.selection_changed.addListener(function() { t.refresh(); });
+	data_grid.object_added.addListener(function() { t.refresh(); });
+	data_grid.object_removed.addListener(function() { t.refresh(); });
 }

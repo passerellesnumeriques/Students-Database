@@ -33,6 +33,15 @@ global $pn_app_version;
 	font-weight:bold;
 	padding-top: 5px;
 }
+#application_title_label {
+	position: absolute;
+	right: 0px;
+	top: 10px;
+	transform: rotate(-30deg);
+	color: #CC6600;
+	text-shadow: #a0e0c0 0.1em 0.1em 0.1em;
+	font-weight: bold;
+}
 #application_left_menu {
 	padding-top: 10px;
 	white-space: nowrap;
@@ -48,6 +57,7 @@ global $pn_app_version;
 	border-radius: 8px;
 	z-index: 1;
 	border: 1px solid #ffffff;
+	width: 100%;
 }
 #application_footer {
 	text-align: center;
@@ -148,6 +158,10 @@ global $pn_app_version;
 	background-color: rgba(255,255,255,0.3);
 	border-left: 5px solid #0080C0;
 }
+.application_left_menu_item:hover:not(.selected) {
+	transform: scaleX(1.05) scaleY(1.05);
+	transition: transform 0.1s;
+}
 .application_left_menu_item.selected {
 	background-color: #ff9933;
 	border-left: 5px solid #CC6600;
@@ -172,18 +186,29 @@ global $pn_app_version;
 }
 </style>
 <div id="application_container" style="width:100%;height:100%;display:flex;flex-direction:column">
-	<div style="flex:1 1 auto;display:flex;flex-direction:row;">
+	<div style="flex:1 1 100%;display:flex;flex-direction:row;">
 		<div style="flex:none;display:flex;flex-direction:column;">
 			<div id='application_title' style="flex:none">
 				<img src='/static/application/logo.png'/>
 				<div id="application_title_text">Students<br/>Management</div>
+<?php
+#DEV
+echo "<div id='application_title_label'>Dev</div>";
+#END
+#CHANNEL_BETA
+#echo "<div id='application_title_label'>Beta</div>";
+#END 
+#SELECTION_TRAVEL
+#echo "<div id='application_title_label'>Travel</div>";
+#END
+?>
 			</div>
-			<div id="application_left_menu_scroll" style="flex:1 1 auto;overflow:hidden;padding-right:5px;margin-right:-5px;z-index:2;">
+			<div id="application_left_menu_scroll" style="flex:1 1 100%;overflow:hidden;padding-right:5px;margin-right:-5px;z-index:2;">
 			</div>
 		</div>
-		<div style="flex:1 1 auto;display:flex;flex-direction:column;">
+		<div style="flex:1 1 100%;display:flex;flex-direction:column;">
 			<div id="application_header" style="flex:none;display:flex;flex-direction:row;">
-				<div id="application_menu_scroll" style="flex:1 1 auto;">
+				<div id="application_menu_scroll" style="flex:1 1 100%;">
 					<?php
 					$sections = array();
 					foreach (PNApplication::$instance->components as $cname=>$comp)
@@ -211,16 +236,46 @@ global $pn_app_version;
 					?>
 				</div>
 				<div id="application_right_menu" style="flex:none;">
+					<?php
+#SELECTION_TRAVEL
+#echo "<!-- ";
+#END 
+					?>
 					<input type='text' id='application_search' onchange="postFrame('/dynamic/search/page/search',{q:this.value},'application_frame');this.value='';"/>
+					<?php
+#SELECTION_TRAVEL
+#echo "--> ";
+#END 
+					?>
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>' target='application_frame'><div id='user_picture'></div></a>
 					<!-- <button class="flat" id='notifications'><img src='/static/application/menu/notifications.png'/></button>  -->
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat" id='calendars'><img src='/static/calendar/calendar_white.png'/></button></a>
+					<?php
+#SELECTION_TRAVEL
+#echo "<!-- ";
+#END 
+					?>
 					<button class="flat" id='domain_connection' onclick='domainConnectionMenu(this);'><img src='/static/data_model/database_white.png'/></button>
+					<?php
+#SELECTION_TRAVEL
+#echo "--> ";
+#END 
+					?>
 					<button class="flat" id='activate_help' onclick='activateHelp(this);'><img src='<?php echo theme::$icons_16["help_white"];?>'/></button>
+					<?php
+#SELECTION_TRAVEL
+#echo "<!-- ";
+#END 
+					?>
 					<a href='/dynamic/application/page/logout' target='pn_application_frame'><button class="flat" id='logout'><img src='/static/application/logout_white.png'/></button></a>
-				</div>
+					<?php
+#SELECTION_TRAVEL
+#echo "--> ";
+#END 
+					?>
+					</div>
 			</div>
-			<iframe id="application_frame" name="application_frame" style="flex:1 1 auto;"></iframe>
+			<iframe id="application_frame" name="application_frame" style="flex:1 1 100%;"></iframe>
 		</div>
 	</div>
 	<div id="application_footer" style="flex:none;height:16px;">
@@ -239,9 +294,19 @@ tooltip(user_picture, "Your profile");
 
 //tooltip(document.getElementById('notifications'), "See notifications");
 tooltip(document.getElementById('calendars'), "Your calendars");
-tooltip(document.getElementById('domain_connection'), "Connect to other centers' database");
 tooltip(document.getElementById('activate_help'), "Display again help messages on the current page");
+<?php
+#SELECTION_TRAVEL
+#if (false) {
+#END
+?>
+tooltip(document.getElementById('domain_connection'), "Connect to other centers' database");
 tooltip(document.getElementById('logout'), "Logout and exit application");
+<?php
+#SELECTION_TRAVEL
+#}
+#END
+?>
 
 function initPage() {
 	var hs = new horizontal_scrolling('application_menu_scroll','#009DE1','white');
@@ -286,9 +351,9 @@ function domainConnectionMenu(button) {
 	});
 }
 function connectToDomain(domain) {
-	var locker = lock_screen(null, "Connection to domain "+domain+"...");
+	var locker = lockScreen(null, "Connection to domain "+domain+"...");
 	service.json("application","set_domain",{domain:domain},function(res) {
-		if (!res) { unlock_screen(locker); return; };
+		if (!res) { unlockScreen(locker); return; };
 		window.top.location.reload();
 	});
 }
@@ -518,11 +583,18 @@ function pageLoaded(url) {
 initPage();
 
 <?php 
+#SELECTION_TRAVEL
+#echo "sectionClicked(getSection('selection'));";
+#if (false) {
+#END
 if (isset($_GET["section"])) {
 	echo "sectionClicked(getSection(".json_encode($_GET["section"])."),".(isset($_GET["page"]) ? json_encode($_GET["page"]) : "null").");";
 } else {
 	echo "sectionClicked(getSection('home'));";
 }
+#SELECTION_TRAVEL
+#}
+#END
 ?>
 
 /* Status in footer */

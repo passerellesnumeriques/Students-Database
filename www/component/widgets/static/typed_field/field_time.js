@@ -1,7 +1,7 @@
 /* #depends[typed_field.js] */
 /** Time field: if editable, it will be a text input, else only a simple text node
  * @constructor
- * @param config can contain: <code>can_be_null</code>
+ * @param config can contain: <code>can_be_null</code>, <code>is_duration</code>
  */
 function field_time(data,editable,config) {
 	this._strtotime = config && config.is_duration ? parseDurationStringToMinutes : parseTimeStringToMinutes;
@@ -72,7 +72,7 @@ field_time.prototype._create = function(data) {
 			}
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			input.style.border = error ? "1px solid red" : "";
 		};
@@ -91,7 +91,7 @@ field_time.prototype._create = function(data) {
 			if (s.length == 0) return this.config && this.config.can_be_null ? null : 0;
 			return this._strtotime(s);
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};

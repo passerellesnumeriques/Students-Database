@@ -11,7 +11,12 @@ class EducationApplicationSection implements ApplicationSectionPlugin {
 	public function getComponentsForURL() { return array("education","health","discipline"); }
 	public function getMenuURL() { return "/dynamic/education/service/menu"; }
 	public function getDefaultPageURL() { return "/dynamic/students_groups/page/tree_frame#/dynamic/education/page/overview"; }
-	public function canAccess() { return PNApplication::$instance->user_management->has_right("consult_students_list"); }
+	public function canAccess() {
+#SELECTION_TRAVEL
+#return false;
+#END
+		return PNApplication::$instance->user_management->hasRight("consult_students_list");
+	}
 	
 }
 ?>

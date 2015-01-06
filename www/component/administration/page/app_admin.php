@@ -538,9 +538,9 @@ function startMaintenance() {
 	if (pass1 == "maintenance") { alert("You cannot use maintenance as password, this is too easy to guess..."); return; }
 	var pass2 = form.elements['pass2'].value;
 	if (pass1 != pass2) { alert("The 2 passwords are different. Please retry."); return; }
-	var locker = lock_screen(null, "Starting maintenance mode...");
+	var locker = lockScreen(null, "Starting maintenance mode...");
 	service.json("administration","start_maintenance",{timing:timing,password:pass1},function(res) {
-		if (!res) { unlock_screen(locker); return; }
+		if (!res) { unlockScreen(locker); return; }
 		var div = document.createElement("DIV");
 		div.innerHTML = "Maintenance mode scheduled.<br/>Please ";
 		var link = document.createElement("A");
@@ -548,9 +548,9 @@ function startMaintenance() {
 		link.target = "_blank";
 		link.innerHTML = "click here";
 		div.appendChild(link);
-		set_lock_screen_content(locker, div);
+		setLockScreenContent(locker, div);
 		link.onclick = function() {
-			unlock_screen(locker);
+			unlockScreen(locker);
 		};
 	});
 }
@@ -568,20 +568,20 @@ function saveRemoteAccess(domain) {
 	url = url.trim();
 	if (url.length == 0) { alert("You didn't specify an URL"); return; }
 	if (password.length == 0) { alert("You didn't specify a password"); return; }
-	var locker = lock_screen(null,'Saving remote access for domain '+domain+'...');
+	var locker = lockScreen(null,'Saving remote access for domain '+domain+'...');
 	service.json("administration","save_remote_access",{domain:domain,url:url,password:password},function(res) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		if (res && res.version) {
-			window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Successfully connected to "+domain+". It's version is "+res.version, [{action:"close"}], 5000));
+			window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_OK, "Successfully connected to "+domain+". It's version is "+res.version, [{action:"close"}], 5000));
 		}
 	});
 }
 function removeRemoteAccess(domain) {
-	confirm_dialog("Remove remote access configuration for "+domain+" ?<br/>No synchronization of data will be done anymore.",function(yes) {
+	confirmDialog("Remove remote access configuration for "+domain+" ?<br/>No synchronization of data will be done anymore.",function(yes) {
 		if (!yes) return;
-		var locker = lock_screen(null,'Saving remote access for domain '+domain+'...');
+		var locker = lockScreen(null,'Saving remote access for domain '+domain+'...');
 		service.json("administration","save_remote_access",{domain:domain,url:"",password:""},function(res) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			if (res) {
 				var form = document.forms['remote_access_'+domain];
 				form.elements['url'].value = "";

@@ -3,9 +3,9 @@ class service_post extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Post a news"; }
+	public function inputDocumentation() { echo "section, category, tags, messages, type"; }
+	public function outputDocumentation() { echo "none"; }
 	
 	public function execute(&$component, $input) {
 		$section = $input["section"];

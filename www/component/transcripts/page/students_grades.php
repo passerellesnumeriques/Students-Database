@@ -118,7 +118,7 @@ class page_students_grades extends Page {
 			<img src='<?php echo theme::$icons_16["settings"];?>' style='vertical-align:bottom'/>
 			Display settings:
 		</div>
-		<div style='flex:1 1 auto;'>
+		<div style='flex:1 1 100%;'>
 			<span style='margin-left:10px'></span>
 			Grading system <select onchange="changeGradingSystem(this.options[this.selectedIndex].text,this.value);">
 			<?php
@@ -138,9 +138,9 @@ class page_students_grades extends Page {
 			<button class='flat' id='columns_chooser_button'><img src='/static/data_model/table_column.png'/> Choose columns</button>
 		</div>
 	</div>
-	<div style='flex:1 1 auto;overflow:auto' id='grades_container'>
+	<div style='flex:1 1 100%;overflow:auto' id='grades_container'>
 	</div>
-	<?php if (PNApplication::$instance->user_management->has_right("edit_students_grades")) { ?>
+	<?php if (PNApplication::$instance->user_management->hasRight("edit_students_grades")) { ?>
 	<div class='page_footer' style='flex:none;'>
 		<button id='button_import_general_appreciation' style='display:none' class='action' onclick="importGeneralAppreciation(event);"><img src='<?php echo theme::$icons_16["_import"];?>'/> Import Appreciations</button>
 		<button id='button_edit_general_appreciation' class='action' onclick="editGeneralAppreciation(this);"><img src='<?php echo theme::$icons_16["edit"];?>'/> Edit General Appreciations</button>
@@ -157,7 +157,7 @@ if (PNApplication::$instance->help->isShown("students_grades")) {
 	echo "click on ";
 	PNApplication::$instance->help->spanArrow($this, "the subject name", ".grid thead .subject_column_title", "horiz");
 	echo ".<br/>";
-	if (PNApplication::$instance->user_management->has_right("edit_students_grades")) {
+	if (PNApplication::$instance->user_management->hasRight("edit_students_grades")) {
 		echo "<br/>In this screen, you can also ";
 		PNApplication::$instance->help->spanArrow($this, "edit the general appreciation", "#button_edit_general_appreciation", "horiz");
 		echo "<br/>of each student which can be included later in the transcripts.<br/>";
@@ -269,6 +269,7 @@ grades_grid.setColumnsChooserButton(document.getElementById('columns_chooser_but
 grades_grid.setExportButton(document.getElementById('export_button'),<?php echo json_encode("Grades of ".$title);?>,'Grades');
 grades_grid.setPrintButton(document.getElementById('print_button'));
 grades_grid.grid.makeScrollable();
+grades_grid.highlightRowOnHover();
 for (var i = 0; i < categories.length; ++i) {
 	var cat_subjects = [];
 	for (var j = 0; j < subjects.length; ++j)
@@ -377,12 +378,12 @@ function setDisplayCoef(display) {
 }
 var general_appreciation_lock_id = null;
 function editGeneralAppreciation(button) {
-	var locker = lock_screen();
+	var locker = lockScreen();
 	service.json("data_model","lock_table",{table:"StudentTranscriptGeneralComment",get_locker:true},function(res) {
-		if (!res) { unlock_screen(locker); return; }
+		if (!res) { unlockScreen(locker); return; }
 		if (res.locker) {
-			unlock_screen(locker);
-			error_dialog(res.locker+" is already editing general appreciations, you cannot edit at the same time.");
+			unlockScreen(locker);
+			errorDialog(res.locker+" is already editing general appreciations, you cannot edit at the same time.");
 			return;
 		}
 		general_appreciation_lock_id = res.lock;
@@ -393,7 +394,7 @@ function editGeneralAppreciation(button) {
 		col.toggleEditable();
 		pnapplication.dataUnsaved('general_appreciation');
 		document.getElementById('button_import_general_appreciation').style.display = '';
-		unlock_screen(locker);
+		unlockScreen(locker);
 	});
 }
 function importGeneralAppreciation(event) {
@@ -423,14 +424,14 @@ function importGeneralAppreciation(event) {
 setTimeout(function(){if(!window.closing)require(["import_with_match.js","upload.js"]);},2000);
 
 function saveGeneralAppreciation(button) {
-	var locker = lock_screen(null, "Saving general appreciations...");
+	var locker = lockScreen(null, "Saving general appreciations...");
 	var comments = [];
 	for (var i = 0; i < students.length; ++i) {
 		var cell = grades_grid.grid.getCellFieldById(students[i].id, 'student_comment');
 		comments.push({people:students[i].id,comment:cell.getCurrentData()});
 	}
 	service.json("transcripts","save_general_comments",{period:<?php echo $period_id;?>,students:comments},function(res) {
-		if (!res) { unlock_screen(locker); return; }
+		if (!res) { unlockScreen(locker); return; }
 		databaselock.unlock(general_appreciation_lock_id, function(res) {
 			general_appreciation_lock_id = null;
 			button.innerHTML = "<img src='"+theme.icons_16.edit+"'/> Edit General Appreciations";
@@ -439,7 +440,7 @@ function saveGeneralAppreciation(button) {
 			col.toggleEditable();
 			pnapplication.dataSaved('general_appreciation');
 			document.getElementById('button_import_general_appreciation').style.display = 'none';
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	});
 }

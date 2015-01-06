@@ -9,6 +9,14 @@ class page_applicant_popup_import extends SelectionPage {
 		theme::css($this, "section.css");
 ?>
 <div id='container' style='background-color:white;'>
+	<div class='help_header'>
+		<table><tr><td><img src='<?php echo theme::$icons_32["help"];?>'/></td><td>
+		If you want to import from a single file, you can import manually.<br/>
+		If you have several files with the same format, you can use templates.<br/>
+		A template is used to specify the format of files once, then you can<br/>
+		use it to import several files automatically.
+		</td></tr></table>
+	</div>
 	<div style='padding:10px'>
 		<button class='big' style='font-size:14pt' onclick='manualImport(event);return false;'>
 			<img src='/static/data_import/import_excel_32.png'/> Import manually from a file
@@ -26,7 +34,7 @@ class page_applicant_popup_import extends SelectionPage {
 	</div>
 </div>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 window.top.require("popup_window.js");
 window.top.require("excel_import.js");
 function manualImport(ev) {

@@ -175,15 +175,15 @@ var waiting_datamodels = [
 ];
 
 function resetDB(version,ondone) {
-	var locker = lock_screen(null,"Resetting Database...");
+	var locker = lockScreen(null,"Resetting Database...");
 	var resetDomain = function(index) {
-		if (index == domains.length) { unlock_screen(locker); if(ondone) ondone(); return; }
-		set_lock_screen_content(locker, "Resetting Database: Domain "+domains[index]+": Removing all data...");
+		if (index == domains.length) { unlockScreen(locker); if(ondone) ondone(); return; }
+		setLockScreenContent(locker, "Resetting Database: Domain "+domains[index]+": Removing all data...");
 		service.json("development","empty_db",{domain:domains[index]},function(res) {
-			if (!res) { unlock_screen(locker); return; }
-			set_lock_screen_content(locker, "Resetting Database: Domain "+domains[index]+": Creating datamodel version: "+version);
+			if (!res) { unlockScreen(locker); return; }
+			setLockScreenContent(locker, "Resetting Database: Domain "+domains[index]+": Creating datamodel version: "+version);
 			service.json("development","create_datamodel",{domain:domains[index],version:version},function(res) {
-				if (!res) { unlock_screen(locker); return; }
+				if (!res) { unlockScreen(locker); return; }
 				resetDomain(index+1);
 			});
 		});
@@ -234,11 +234,11 @@ function addBackupRecoverVersion(version) {
 }
 
 function createBackup() {
-	var locker = lock_screen(null, "Backuping database...");
+	var locker = lockScreen(null, "Backuping database...");
 	service.json("development","backup",{},function(res) {
-		unlock_screen(locker);
+		unlockScreen(locker);
 		if (!res) {
-			error_dialog("Error during backup");
+			errorDialog("Error during backup");
 			return;
 		}
 		addBackup(res.version, res.time);
@@ -247,11 +247,11 @@ function createBackup() {
 
 function recoverBackup(version, time, model_version, imported_from_domain) {
 	resetDB(model_version,function() {
-		var locker = lock_screen(null, "Importing backup...");
+		var locker = lockScreen(null, "Importing backup...");
 		var data = {version:version,time:time,datamodel_version:model_version};
 		if (imported_from_domain) data.imported_from = imported_from_domain;
 		service.json("development","recover",data,function(res) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	});
 }
@@ -288,6 +288,7 @@ function updateMigrationScripts(versions_list) {
 		var li = document.createElement("LI");
 		var s = "Obsolete: migration to version "+version;
 		s += " (";
+		var components = migrations[version];
 		for (var j = 0; j < components.length; ++j)
 			s += (j > 0 ? ", " : "")+components[j];
 		s += ")";

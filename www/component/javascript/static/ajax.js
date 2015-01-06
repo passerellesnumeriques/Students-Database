@@ -1,21 +1,26 @@
 /**
- * @namespace
+ * Functionalities to make AJAX requests
  */
 window.ajax = {
+	/** Internal list of interceptors which can modify URLs before a call */
 	_interceptors: [],
 	/** An interceptor can modify an URL: before every AJAX call, the interceptor will be provided with the URL, and must return an URL (the same or a modified one)
-	 * @param {function} interceptor taking an URL as paramter, and must return an URL
+	 * @param {Function} interceptor taking an URL as paramter, and must return an URL
 	 */
 	addInterceptor: function(interceptor) {
 		ajax._interceptors.push(interceptor);
 	},
+	/** List of functions which can handle specific HTTP status code.
+	 * When the response is not with code 200 (OK), each of them is called with the XmlHttpRequest as parameter.
+	 * If one of them returns false, the error won't be processed anymore as it will be considered it has been handle already. 
+	 */
 	http_response_handlers: [],
 	/**
 	 * Call all interceptors for the given URL, and return the final one.
-	 * @param {string|URL} url
-	 * @returns {string|URL}
+	 * @param {String|URL} url the URL to be processed
+	 * @returns {String|URL} the new URL to use
 	 */
-	process_url: function(url) {
+	processURL: function(url) {
 		var u;
 		if (typeof url == 'string') u = new URL(url); else u = url;
 		for (var i = 0; i < ajax._interceptors.length; ++i)
@@ -25,10 +30,10 @@ window.ajax = {
 	},
 	/**
 	 * Perform an AJAX request
-	 * @param {string} method GET or POST
-	 * @param {string|URL} url
-	 * @param {string|null} content_type MIME type of the data to send to the server
-	 * @param {string|null} content_data the body of the request
+	 * @param {String} method GET or POST
+	 * @param {String|URL} url the URL to call
+	 * @param {String|null} content_type MIME type of the data to send to the server
+	 * @param {String|null} content_data the body of the request
 	 * @param {Function} error_handler in case of error, this function is called with the error message as parameter
 	 * @param {Function} success_handler on success, this function is called with the XMLHttpRequest object as parameter
 	 * @param {Boolean} foreground if true this function will block until the AJAX call is done, else this function return immediately and let the AJAX call be done in background
@@ -38,7 +43,7 @@ window.ajax = {
 	call: function(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, override_response_mime_type) {
 		if (typeof url == 'string')
 			url = new URL(url);
-		url = ajax.process_url(url);
+		url = ajax.processURL(url);
 		var xhr;
 		try { xhr = new XMLHttpRequest(); }
 		catch (e) {
@@ -61,7 +66,7 @@ window.ajax = {
 		catch (e) {
 			// error opening the AJAX request
 			if (window == window.top) {
-				log_exception(e, "while creating AJAX request to "+url.toString()); 
+				logException(e, "while creating AJAX request to "+url.toString()); 
 			} else {
 				// try on top
 				window.top.ajax.call(method, url, content_type, content_data, error_handler, success_handler, foreground, progress_handler, override_response_mime_type);
@@ -77,7 +82,7 @@ window.ajax = {
 		xhr.onerror = function(ev) {
 			has_error = true;
 			if (is_done && !aborted) {
-				//error_handler("Connection error");
+				error_handler("Connection error");
 			}
 		};
 		if (content_type != null)
@@ -114,14 +119,14 @@ window.ajax = {
 	    try {
 	    	xhr.send(content_data);
 	    } catch (e) {
-	    	log_exception(e, "Sending AJAX request to "+url);
+	    	logException(e, "Sending AJAX request to "+url);
 	    	error_handler(e);
 	    }
 	},
 	/**
 	 * Perform a POST call to the server
-	 * @param {String|URL} url
-	 * @param {String|object} data if an object is given, every attribute will be sent as string to the server 
+	 * @param {String|URL} url the URL where to post
+	 * @param {String|Object} data if an object is given, every attribute will be sent as string to the server 
 	 * @param {Function} error_handler called in case of error, with the error message as parameter
 	 * @param {Function} success_handler called on success, with the XMLHttpRequest as parameter
 	 * @param {Boolean} foreground same as for the function call
@@ -142,19 +147,19 @@ window.ajax = {
 	},
 	/**
 	 * Perform a POST call, then on success it will analyze the result
-	 * @param {String|URL} url
+	 * @param {String|URL} url the URL where to post
 	 * @param {String|Object} data if an object is given, every attribute will be sent as string to the server 
 	 * @param {Function} handler callback to call when the AJAX is done (null is given in case of error, else the parsed output)
 	 * @param {Boolean} foreground same as for the function call
 	 * @param {Function} error_handler callback to be called in case of error (error message given as parameter)
 	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
 	 */
-	post_parse_result: function(url, data, handler, foreground, error_handler, progress_handler) {
+	postParseResult: function(url, data, handler, foreground, error_handler, progress_handler) {
 		var eh = function(error) {
 			if (error_handler)
 				error_handler(error);
 			else
-				error_dialog(error);
+				errorDialog(error);
 			handler(null);
 		};
 		ajax.post(url, data, eh, function(xhr) {
@@ -211,7 +216,7 @@ window.ajax = {
 	
 	/**
 	 * Perform a POST call, with custom data type, then on success it will analyze the result
-	 * @param {String|URL} url
+	 * @param {String|URL} url the URL where to post
 	 * @param {String} data_type mime type of the input
 	 * @param {String|Object} data if an object is given, every attribute will be sent as string to the server 
 	 * @param {Function} handler callback to call when the AJAX is done (null is given in case of error, else the parsed output)
@@ -219,12 +224,12 @@ window.ajax = {
 	 * @param {Function} error_handler callback to be called in case of error (error message given as parameter)
 	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
 	 */
-	custom_post_parse_result: function(url, data_type, data, handler, foreground, error_handler, progress_handler) {
+	customPostParseResult: function(url, data_type, data, handler, foreground, error_handler, progress_handler) {
 		var eh = function(error) {
 			if (error_handler)
 				error_handler(error);
 			else
-				error_dialog(error);
+				errorDialog(error);
 			handler(null);
 		};
 		ajax.call("POST", url, data_type, data, eh, function(xhr) {

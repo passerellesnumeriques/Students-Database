@@ -14,7 +14,8 @@ class people extends Component {
 			new PeopleDocumentsPage(),
 			new PeoplePictureStoragePlugin(),
 			new PeopleDocuments(),
-			new PeopleSearchPlugin()
+			new PeopleSearchPlugin(),
+			new PeopleCreationAddPicturesPlugin()
 		);
 	}
 	
@@ -55,7 +56,7 @@ class people extends Component {
 		return $list;
 	}
 	
-	public function addPeopleType($people_id, $new_type) {
+	public function addPeopleType($people_id, $new_type, $bypass_security = false) {
 		$people = $this->getPeople($people_id);
 		if ($people == null)
 			throw new Exception("Invalid people or no access to this people");
@@ -64,7 +65,7 @@ class people extends Component {
 		$pi = $this->getPeopleTypePlugin($new_type);
 		if ($pi == null)
 			throw new Exception("Invalid people type ".$new_type);
-		if (!$pi->canWrite())
+		if (!$bypass_security && !$pi->canWrite())
 			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
 		$people["types"] .= "/$new_type/";
 		SQLQuery::create()->updateByKey("People", $people_id, array("types"=>$people["types"]));
@@ -72,15 +73,15 @@ class people extends Component {
 		if (count($roles) > 0) PNApplication::$instance->user_management->addRolesToPeople($people_id, $roles);
 	}
 	
-	public function removePeoplesType($peoples_ids, $type) {
+	public function removePeoplesType($peoples_ids, $type, $bypass_security = false) {
 		if (count($peoples_ids) == 0) return;
-		$pi = $this->getPeopleTypePlugin($new_type);
+		$pi = $this->getPeopleTypePlugin($type);
 		if ($pi == null)
 			throw new Exception("Invalid people type ".$type);
-		if (!$pi->canWrite())
+		if (!$bypass_security && !$pi->canWrite())
 			throw new Exception("You are not allowed to modify people of type ".$pi->getName());
 		// 1-remove peoples who only have this type
-		$remove_ids = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->whereValue("People","types","/$type/")->field("id")->execute();
+		$remove_ids = SQLQuery::create()->bypassSecurity()->select("People")->whereIn("People","id",$peoples_ids)->whereValue("People","types","/$type/")->field("id")->executeSingleField();
 		if (count($remove_ids) > 0) {
 			SQLQuery::create()->bypassSecurity()->removeKeys("People", $remove_ids);
 			$peoples_ids = array_diff($peoples_ids, $remove_ids);
@@ -214,13 +215,17 @@ class people extends Component {
 	}
 	
 	public function canRead($people_id) {
-		if (PNApplication::$instance->user_management->has_right("see_anybody")) return true;
+		if (PNApplication::$instance->user_management->hasRight("see_anybody")) return true;
 		if ($people_id == PNApplication::$instance->user_management->people_id) return true;
 		$p = $this->getPeople($people_id);
 		return $p <> null;
 	}
 	public function canModify($people_id) {
-		if (PNApplication::$instance->user_management->has_right("edit_anybody")) return true;
+#SELECTION_TRAVEL
+#		$row = $q = SQLQuery::create()->bypassSecurity()->select("People")->whereValue("People","id",$people_id)->where("`types` LIKE '%/applicant/%'")->executeSingleRow();
+#		return $row <> null;
+#END
+		if (PNApplication::$instance->user_management->hasRight("edit_anybody")) return true;
 		$q = SQLQuery::create();
 		$table_alias = $q->generateTableAlias();
 		$q->select(array("People"=>$table_alias));

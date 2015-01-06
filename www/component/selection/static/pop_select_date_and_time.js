@@ -82,7 +82,7 @@ function pop_select_date_and_time(pop_title,pop_icon, duration_choice, preselect
 	 */
 	t._onok = function(){
 		if(t._field_date.error){
-			error_dialog("You must set a date");
+			errorDialog("You must set a date");
 			return;
 		}
 		if(onok){

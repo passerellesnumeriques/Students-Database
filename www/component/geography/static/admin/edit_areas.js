@@ -107,14 +107,14 @@ function GeographicAreasTree(areas_section, country_id) {
 			.onsave = function(text){
 				text = text.trim();
 				if (!text.checkVisible()) {
-					error_dialog("You must enter at least one visible character");
+					errorDialog("You must enter at least one visible character");
 					return area.area_name;
 				}
 				// check unicity
 				var children = window.top.geography.getAreaChildren(t.country_data, division_index, area.area_parent_id);
 				for (var i = 0; i < children.length; ++i)
 					if (children[i].area_name.toLowerCase() == text.toLowerCase()) {
-						error_dialog("An area already exists with this name");
+						errorDialog("An area already exists with this name");
 						return area.area_name;
 					}
 				area.area_name = text;
@@ -187,7 +187,7 @@ function GeographicAreasTree(areas_section, country_id) {
 	
 	this._dialogAddAreas = function(division_index, parent_area_id, parent_item) {
 		if (division_index >= t.country_data.length) {
-			error_dialog("You cannot add sub-areas because you are in the last division");
+			errorDialog("You cannot add sub-areas because you are in the last division");
 			return;
 		}
 		var content = document.createElement("DIV");
@@ -355,7 +355,7 @@ function GeographicAreasTree(areas_section, country_id) {
 						names.push(name);
 					}
 					popup.unfreeze();
-					popup.freeze_progress("Creation of "+names.length+" Geographic Area(s)", names.length, function(span,pb) {
+					popup.freezeWithProgress("Creation of "+names.length+" Geographic Area(s)", names.length, function(span,pb) {
 						var done = 0;
 						for (var i = 0; i < names.length; ++i) {
 							var added = function() {
@@ -374,11 +374,11 @@ function GeographicAreasTree(areas_section, country_id) {
 		});
 	};
 	this._dialogRemoveArea = function(division_index, area_index) {
-		confirm_dialog("Are you sure you want to remove this area ?<br/><b>Note: all its sub-areas will be also removed.</b>", function(yes) {
+		confirmDialog("Are you sure you want to remove this area ?<br/><b>Note: all its sub-areas will be also removed.</b>", function(yes) {
 			if (!yes) return;
-			var lock = lock_screen(null, "Removing area...");
+			var lock = lockScreen(null, "Removing area...");
 			service.json("data_model","remove_row",{table:"GeographicArea", row_key:t.country_data[division_index].areas[area_index].area_id}, function(res){
-				if(!res) { unlock_screen(lock); return; }
+				if(!res) { unlockScreen(lock); return; }
 				// remove in country_data
 				var area_id = t.country_data[division_index].areas[area_index].area_id;
 				t.country_data[division_index].areas.splice(area_index,1);
@@ -401,7 +401,7 @@ function GeographicAreasTree(areas_section, country_id) {
 				}
 				// reset the tree as all indexes changed
 				t.reset();
-				unlock_screen(lock);
+				unlockScreen(lock);
 			});
 		});
 	};
@@ -435,15 +435,15 @@ function GeographicAreasTree(areas_section, country_id) {
 	this.checkCoordinates = function() {
 		if (t.country_data.length == 0) return;
 		if (!t.country.north) return;
-		var locker = lock_screen();
+		var locker = lockScreen();
 		var total = 1;
 		for (var i = 0; i < t.country_data.length-1; ++i) total += t.country_data[i].areas.length;
-		set_lock_screen_content_progress(locker, total, "Checking coordinates...", null, function(span,pb,sub) {
+		setLockScreenContentProgress(locker, total, "Checking coordinates...", null, function(span,pb,sub) {
 			t._checkCoordinates(undefined, t.country, t.country_data[0].areas, function() {
 				pb.addAmount(1);
 				var next_division = function(division_index) {
 					if (division_index >= t.country_data.length-1) {
-						unlock_screen(locker);
+						unlockScreen(locker);
 						return;
 					}
 					var area_index = 0;

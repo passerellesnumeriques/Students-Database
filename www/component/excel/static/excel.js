@@ -1050,7 +1050,7 @@ function ExcelSheetCursor(sheet) {
 		var t=this;
 		require("color.js",function() {
 			var c = [t.color[0],t.color[1],t.color[2]];
-			color_darker(c, 64);
+			colorDarker(c, 64);
 			t.div.style.border = "2px solid rgb("+c[0]+","+c[1]+","+c[2];
 		});
 		//this.div.style.pointerEvents = "none";
@@ -1101,11 +1101,11 @@ function ExcelSheetCursor(sheet) {
 		var t=this;
 		require("color.js",function() {
 			var c = [t.color[0],t.color[1],t.color[2]];
-			color_darker(c, 64);
+			colorDarker(c, 64);
 			t.div.style.border = "2px solid rgb("+c[0]+","+c[1]+","+c[2];
 			if (t.span_content) {
 				c = [t.color[0],t.color[1],t.color[2]];
-				color_darker_or_lighter(c, 64);
+				colorDarkerOrLighter(c, 64);
 				t.span_content.style.backgroundColor = "rgba("+c[0]+","+c[1]+","+c[2]+",0.8)";
 			}
 		});
@@ -1126,7 +1126,7 @@ function ExcelSheetCursor(sheet) {
 		var t=this;
 		require("color.js",function() {
 			var c = [t.color[0],t.color[1],t.color[2]];
-			color_darker_or_lighter(c, 64);
+			colorDarkerOrLighter(c, 64);
 			t.span_content.style.backgroundColor = "rgba("+c[0]+","+c[1]+","+c[2]+",0.8)";
 		});
 		t.span_content.style.borderRight = "2px solid rgba(255,255,255,0.5)";

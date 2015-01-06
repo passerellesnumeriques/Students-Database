@@ -17,12 +17,15 @@ class page_exam_center_main_page extends SelectionPage {
 		$this->onload("sectionFromHTML('exam_status_section');");
 		$this->onload("loadExamCenterStatus();");
 		
-		$can_create = PNApplication::$instance->user_management->has_right("manage_exam_center",true);
+		$can_create = PNApplication::$instance->user_management->hasRight("manage_exam_center",true);
 		?>
 		<div style="display:flex;flex-direction:row">
 			<div style ="display:inline-block;padding:5px;flex:none">
 				<div id='exam_status_section' title='Status' collapsable='false' css='soft' style='display:inline-block;'>
 					<div id='exam_status' class='selection_status'></div>
+				</div>
+				<div style='margin-top:10px'>
+					<button class='action' onclick="window.top.popupFrame('/static/contact/address_16.png','Map','/dynamic/selection/page/map?type=exam',null,95,95);"><img src='/static/contact/address_16.png'/> Open Map</button>
 				</div>
 			</div>
 			
@@ -61,7 +64,7 @@ class page_exam_center_main_page extends SelectionPage {
 						<?php } ?>
 						list.makeRowsClickable(function(row){
 							var ec_id = list.getTableKeyForRow('ExamCenter',row.row_id);
-							window.top.popup_frame('/static/selection/exam/exam_center_16.png','Exam Center','/dynamic/selection/page/exam/center_profile?onsaved=saved&id='+ec_id,null,95,95,function(frame,pop) {
+							window.top.popupFrame('/static/selection/exam/exam_center_16.png','Exam Center','/dynamic/selection/page/exam/center_profile?onsaved=saved&id='+ec_id,null,95,95,function(frame,pop) {
 								frame.saved = refreshPage;
 							});
 						});
@@ -73,12 +76,12 @@ class page_exam_center_main_page extends SelectionPage {
 				require("context_menu.js",function(){
 					var menu = new context_menu();
 					menu.addIconItem(theme.icons_16.add, "Create a center in a new place", function() {
-						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "New Exam Center", "/dynamic/selection/page/exam/center_profile?onsaved=saved", null, 95, 95, function(frame,pop) {
+						window.top.popupFrame("/static/selection/exam/exam_center_16.png", "New Exam Center", "/dynamic/selection/page/exam/center_profile?onsaved=saved", null, 95, 95, function(frame,pop) {
 							frame.saved = refreshPage;
 						});
 					});
 					menu.addHtmlItem("<img src='/static/selection/is/is_16.png'/> <img src='"+theme.icons_16.right+"'/> <img src='/static/selection/exam/exam_center_16.png'/> Create a center from an Information Session", function() {
-						window.top.popup_frame("/static/selection/exam/exam_center_16.png", "Create Exam Center From Information Session", "/dynamic/selection/page/exam/create_center_from_is?onsaved=saved", null, null, null, function(frame,pop) {
+						window.top.popupFrame("/static/selection/exam/exam_center_16.png", "Create Exam Center From Information Session", "/dynamic/selection/page/exam/create_center_from_is?onsaved=saved", null, null, null, function(frame,pop) {
 							frame.saved = refreshPage;
 						});
 					});

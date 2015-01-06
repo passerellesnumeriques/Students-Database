@@ -76,6 +76,7 @@ class CurriculumJSON {
 	}
 	/**
 	 * Build a JavaScript array of Specialization
+	 * @param array $specializations the list of specializations
 	 * @return string the JSON structure
 	 * @no_name_check
 	 */
@@ -194,6 +195,10 @@ class CurriculumJSON {
 		return $s;
 	}
 	
+	/**
+	 * Retrieve the list of CurriculumSubjectCategory from database, and return the corresponding JSON array
+	 * @return string the JSON
+	 */
 	public static function getSubjectsCategories() {
 		return self::SubjectCategoriesJSON(SQLQuery::create()->select("CurriculumSubjectCategory")->execute());
 	}

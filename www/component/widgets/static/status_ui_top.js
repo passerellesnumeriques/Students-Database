@@ -1,7 +1,13 @@
-theme.css("statusui.css");
+if (typeof theme != 'undefined') theme.css("statusui.css");
+/**
+ * Implementation of UI to display status message on the top of the window
+ * @param {StatusManager} manager manager of status messages
+ * @param {Number} margin pixels at the top
+ */
 function StatusUI_Top(manager, margin) {
 	manager.status_ui = this;
 	if (!margin) margin = 0;
+	/** DIV which will contain the messages */
 	this.container = document.createElement("DIV");
 	this.container.style.position = "fixed";
 	this.container.style.zIndex = 1000;
@@ -10,11 +16,15 @@ function StatusUI_Top(manager, margin) {
 	this.container.style.textAlign = "center";
 	document.body.appendChild(this.container);
 	
+	/**
+	 * Update the display with the given list of status messages
+	 * @param {Array} list list of StatusMessage
+	 */
 	this.update = function(list) {
 		for (var i = 0; i < list.length; ++i) {
-			var c = this.get_status_control(list[i].id);
+			var c = this.getStatusControl(list[i].id);
 			if (c == null)
-				this.create_control(list[i]);
+				this.createControl(list[i]);
 			else if (c.fading) {
 				c.fading = false;
 				if (c.anim1)
@@ -26,7 +36,7 @@ function StatusUI_Top(manager, margin) {
 				c.style.visibility = "visible";
 				setOpacity(c, 100);
 				c.style.height = "";
-				c = this.get_status_control_br(list[i].id);
+				c = this.getStatusControlBR(list[i].id);
 				c.fading = false;
 				if (c.anim1)
 					animation.stop(c.anim1);
@@ -58,7 +68,7 @@ function StatusUI_Top(manager, margin) {
 								p.style.left = (getWindowWidth()/2-p.scrollWidth/2)+'px';
 							} catch (ex) {}
 						});
-					setTimeout("_status_ui_top_fade('"+this.container.childNodes[i].id+"');", 150);
+					setTimeout("_statusUITopFade('"+this.container.childNodes[i].id+"');", 150);
 				} else {
 					this.container.removeChild(this.container.childNodes[i]);
 					i--;
@@ -72,34 +82,48 @@ function StatusUI_Top(manager, margin) {
 			this.container.style.left = (getWindowWidth()/2-this.container.scrollWidth/2)+'px';
 		}
 	};
-	this.get_status_control = function(id) {
+	/** Get the element representing the message
+	 * @param {String} id identifier of the message
+	 * @returns {Element} the element
+	 */
+	this.getStatusControl = function(id) {
 		for (var i = 0; i < this.container.childNodes.length; ++i) {
 			if (this.container.childNodes[i].name == id)
 				return this.container.childNodes[i];
 		}
 		return null;
 	};
-	this.get_status_control_br = function(id) {
+	/** Get the separator below the given message
+	 * @param {String} id identifier of the message
+	 * @returns {Element} separator
+	 */
+	this.getStatusControlBR = function(id) {
 		for (var i = 0; i < this.container.childNodes.length; ++i) {
 			if (this.container.childNodes[i].name == 'br_'+id)
 				return this.container.childNodes[i];
 		}
 		return null;
 	};
-	this.update_status = function(status) {
-		var c = this.get_status_control(status.id);
+	/** Update the display of the given status
+	 * @param {StatusMessage} status status
+	 */
+	this.updateStatus = function(status) {
+		var c = this.getStatusControl(status.id);
 		if (c == null) return;
-		this.update_status_control(c, status);
+		this.updateStatusControl(c, status);
 		this.container.style.left = (getWindowWidth()/2-this.container.scrollWidth/2)+'px';
 	},
-	this.create_control = function(status) {
+	/** Create the display for the given status
+	 * @param {StatusMessage} status the status
+	 */
+	this.createControl = function(status) {
 		var c = document.createElement("DIV");
 		c.className = "status_item";
 		c.style.display = "inline-block";
 		c.name = status.id;
 		c.style.overflow = "hidden";
 		this.container.appendChild(c);
-		this.update_status_control(c, status);
+		this.updateStatusControl(c, status);
 
 		c = document.createElement("DIV");
 		c.name = 'br_'+status.id;
@@ -107,10 +131,14 @@ function StatusUI_Top(manager, margin) {
 		c.style.height = "2px";
 		this.container.appendChild(c);
 		if (status.timeout) {
-			setTimeout(function(){manager.remove_status(status.id);}, status.timeout);
+			setTimeout(function(){manager.removeStatus(status.id);}, status.timeout);
 		}
 	};
-	this.update_status_control = function(c, status) {
+	/** Update the display of the given status
+	 * @param {Element} c the element of the status
+	 * @param {StatusMessage} status the status
+	 */
+	this.updateStatusControl = function(c, status) {
 		var t=this;
 		c.removeAllChildren();
 		c.style.backgroundColor = 
@@ -169,7 +197,7 @@ function StatusUI_Top(manager, margin) {
 					img.style.cursor = "pointer";
 					img.onmouseover = function() { setOpacity(this,100); };
 					img.onmouseout = function() { setOpacity(this,50); };
-					img.onclick = function() { manager.remove_status(status.id); };
+					img.onclick = function() { manager.removeStatus(status.id); };
 					img.onload = function() {
 						t.container.style.left = (getWindowWidth()/2-t.container.scrollWidth/2)+'px';				
 					};
@@ -188,7 +216,7 @@ function StatusUI_Top(manager, margin) {
 						require(["popup_window.js","layout.js"],function() {
 							var p = new popup_window("Error", theme.icons_16.error, "<div>"+status.message+"</div>");
 							p.show();
-							manager.remove_status(status.id);
+							manager.removeStatus(status.id);
 						});
 					};
 					img.onload = function() {
@@ -208,7 +236,12 @@ function StatusUI_Top(manager, margin) {
 	};
 }
 
-function _status_ui_top_fade(id) {
+/**
+ * Create an animation to make the given status disappear
+ * @param {String} id identifier of the status
+ * @no_doc
+ */
+function _statusUITopFade(id) {
 	var e = document.getElementById(id);
 	if (e == null) return;
 	if (!e.fading) return;

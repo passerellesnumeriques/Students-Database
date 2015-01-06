@@ -1,5 +1,6 @@
 package org.pn.jsdoc.model;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -18,13 +19,17 @@ import org.pn.jsdoc.model.builtin.BuiltinBoolean;
 import org.pn.jsdoc.model.builtin.BuiltinDate;
 import org.pn.jsdoc.model.builtin.BuiltinDocument;
 import org.pn.jsdoc.model.builtin.BuiltinElement;
+import org.pn.jsdoc.model.builtin.BuiltinEvent;
+import org.pn.jsdoc.model.builtin.BuiltinException;
 import org.pn.jsdoc.model.builtin.BuiltinHistory;
 import org.pn.jsdoc.model.builtin.BuiltinLocation;
 import org.pn.jsdoc.model.builtin.BuiltinMath;
 import org.pn.jsdoc.model.builtin.BuiltinNavigator;
 import org.pn.jsdoc.model.builtin.BuiltinNumber;
+import org.pn.jsdoc.model.builtin.BuiltinObject;
 import org.pn.jsdoc.model.builtin.BuiltinScreen;
 import org.pn.jsdoc.model.builtin.BuiltinString;
+import org.pn.jsdoc.model.builtin.BuiltinUndefined;
 import org.pn.jsdoc.model.builtin.BuiltinWindow;
 
 public class Global extends Container {
@@ -33,6 +38,10 @@ public class Global extends Container {
 		super(null, new Location());
 	}
 	
+	@Override
+	public boolean skip() {
+		return false;
+	}
 	@Override
 	protected String getJSDocConstructor() {
 		return "JSDoc_Namespace(";
@@ -46,7 +55,7 @@ public class Global extends Container {
 	}
 	
 	@Override
-	protected void parse_node(String file, Node node) {
+	protected void parse_node(String file, Node node, HashMap<String,Object> runtime) {
 		if (node instanceof FunctionNode) {
 			parse_function(file, (FunctionNode)node);
 			return;
@@ -59,7 +68,7 @@ public class Global extends Container {
 			}
 			return;
 		}
-		super.parse_node(file, node);
+		super.parse_node(file, node, runtime);
 	}
 	
 	private void parse_function(String file, FunctionNode node) {
@@ -149,6 +158,10 @@ public class Global extends Container {
 		content.put("Math", new BuiltinMath(this));
 		content.put("Array", new BuiltinArray(this));
 		content.put("Element", new BuiltinElement(this));
+		content.put("Event", new BuiltinEvent(this));
+		content.put("Exception", new BuiltinException(this));
+		content.put("Object", new BuiltinObject(this));
+		content.put("Undefined", new BuiltinUndefined(this));
 	}
 	
 }

@@ -66,12 +66,12 @@ class page_role_rights extends Page {
 			$res = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where("role",$role_id)->execute();
 			if (!is_array($res)) $res = array();
 			$final = array();
-			foreach ($res as $r) $final[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
+			foreach ($res as $r) $final[$r["right"]] = $all_rights[$r["right"]]->parseValue($r["value"]);
 			// add implications
-			PNApplication::$instance->user_management->compute_rights_implications($final);
+			PNApplication::$instance->user_management->computeRightsImplications($final);
 		} else {
 			$final = array();
-			foreach ($all_rights as $name=>$r) $final[$name] = $r->get_highest_value();
+			foreach ($all_rights as $name=>$r) $final[$name] = $r->getHighestValue();
 		}
 		
 		/** Generate a field according to the type of the right: for example, a checkbox for a boolean right */
@@ -170,7 +170,7 @@ class page_role_rights extends Page {
 			if (!was_set) pnapplication.dataSaved('add_right_'+name); else pnapplication.dataUnsaved('add_right_'+name);
 		}
 		function um_rights_save() {
-			var locker = lock_screen(null, "<img src='"+theme.icons_16.save+"'/>Saving...");
+			var locker = lockScreen(null, "<img src='"+theme.icons_16.save+"'/>Saving...");
 			var form = document.forms["um_rights"];
 			var data = {role_id:<?php echo $role_id?>,lock:<?php echo $lock_id?>};
 			for (var i = 0; i < form.elements.length; ++i) {
@@ -187,7 +187,7 @@ class page_role_rights extends Page {
 				data[right] = value;
 			}
 			service.json("user_management","save_role_rights", data, function(result) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 				if (result != null) {
 					pnapplication.cancelDataUnsaved();
 					location.reload();

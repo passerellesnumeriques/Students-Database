@@ -45,5 +45,5 @@ global $db_config;
 require_once("DataBaseSystem_".$db_config["type"].".inc");
 $db_system_class = "DataBaseSystem_".$db_config["type"];
 DataBase::$conn = new $db_system_class;
-DataBase::$conn->connect($db_config["server"], $db_config["user"], $db_config["password"]);
+DataBase::$conn->connect($db_config["server"], $db_config["user"], $db_config["password"], null, @$db_config["port"]);
 ?>

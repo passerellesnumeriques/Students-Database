@@ -399,7 +399,7 @@ function process_column_change(odm,i,ii,ndm,j,jj,parent_table,ondone) {
 	button_no.innerHTML = "No, the column is a new one, and we should remove data from previous one";
 	panel.appendChild(button_no);
 	button_confirm.onclick = function() {
-		changes.push({type:'column_spec',old_table_name:odm.tables[i].name,new_table_name:odm.tables[j].name,old_spec:odm.tables[i].columns[ii],new_spec:ndm.tables[j].columns[jj],parent_table:parent_table});
+		changes.push({type:'column_spec',old_table_name:odm.tables[i].name,new_table_name:ndm.tables[j].name,old_spec:odm.tables[i].columns[ii],new_spec:ndm.tables[j].columns[jj],parent_table:parent_table});
 		odm.tables[i].columns.splice(ii,1);
 		ndm.tables[j].columns.splice(jj,1);
 		ondone();
@@ -641,6 +641,10 @@ xhr.open("GET","/dynamic/development/service/get_datamodel?output=json", true);
 xhr.onreadystatechange = function() {
     if (this.readyState != 4) return;
     var new_datamodel = eval('('+xhr.responseText+')');
+    if (!new_datamodel || !new_datamodel.result || !new_datamodel.result.model) {
+        panel.innerHTML = "Unexpected data received while asking the datamodel: "+xhr.responseText;
+        return;
+    }
 	panel.innerHTML = "Comparing models...";
     setTimeout(function() {
     	compare_datamodels(old_datamodel.result.model, new_datamodel.result.model,null,function(){

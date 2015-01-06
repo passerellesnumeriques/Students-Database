@@ -31,6 +31,7 @@ class service_check_datamodel extends Service {
 		foreach ($tables as $table) {
 			// check table name
 			$name = $table->getName();
+			if (substr($name,0,7) == "smlink_") continue;
 			if (!ctype_alpha(substr($name,0,1)) || strtoupper(substr($name,0,1)) <> substr($name,0,1)) {
 				array_push($problems, "Invalid table name '".$name."': must start with a capital letter");
 			} else {

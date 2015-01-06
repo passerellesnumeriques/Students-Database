@@ -1,5 +1,8 @@
 <?php 
 require_once("component/people/PeopleProfilePagePlugin.inc");
+/**
+ * Plugin to add the section 'Family background' on a people's profile
+ */
 class FamilyBackgroundProfilePage implements PeopleProfilePagePlugin {
 	
 	public function isValidFor($people_id, $types) {

@@ -19,8 +19,9 @@ $model->addTable("FamilyMember")
 	->addString("occupation", 100, 1, true, false)
 	->addEnum("occupation_type", array("Regular","Irregular"), true, false)
 	->addBoolean("living_with_family", true)
-	->addInteger("child_rank", 8, 1) // ? should we put it ?
-	->addString("comment",250,0,true,false)
+	->addInteger("child_rank", 8, 1)
+	->addString("revenue",500,0,true,false)
+	->addString("comment",1000,0,true,false)
 	->addIndex("family","member_type") // to find easily all children, or parents
 	->addReadAccessFromForeignTable("People")
 	->addReadAccessFromForeignTable("FamilyMember")

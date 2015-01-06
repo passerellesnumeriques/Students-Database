@@ -21,7 +21,7 @@ class page_auth extends Page {
 			->whereValue("GoogleUser","google_id",$google_id)
 			->execute();
 			if (count($res) == 1) {
-				$error = PNApplication::$instance->user_management->external_login($res[0]["user"]);
+				$error = PNApplication::$instance->user_management->externalLogin($res[0]["user"]);
 				if ($error == null) {
 					echo "<script type='text/javascript'>";
 					echo "window.top.set_loading_message('Starting application...');";

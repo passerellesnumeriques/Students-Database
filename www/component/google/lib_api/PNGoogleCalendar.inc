@@ -83,9 +83,9 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 		$this->service->acl->delete($calendar_id, $rule_id);
 	}
 	
-	public function getAllEvents($calendar_id) {
+	public function getAllEvents($calendar_id, $include_deleted = false) {
 		$events = array();
-		$list = $this->service->events->listEvents($calendar_id, array("maxResults"=>2500,"alwaysIncludeEmail"=>true));
+		$list = $this->service->events->listEvents($calendar_id, array("maxResults"=>2500,"alwaysIncludeEmail"=>true,"showDeleted"=>$include_deleted));
 		while(true) {
 			foreach ($list->getItems() as $event)
 				array_push($events, $event);
@@ -164,7 +164,6 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 		}
 		SQLQuery::create()->bypassSecurity()->removeKeys("PNGoogleCalendar", $to_remove);
 		// 3-share
-		// 3.1 normal calendars
 		foreach ($pn_google as $cal) {
 			$users_ids = PNApplication::$instance->calendar->getUsersWhoCanReadCalendar($cal["pn_id"]);
 			if ($users_ids == null) continue; // an error occured
@@ -177,8 +176,22 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 			foreach ($emails as $email) {
 				$found = false;
 				foreach ($acls as $acl) if ($acl->getRole() == "reader" && $acl->getScope()->getType() == "user" && $acl->getScope()->getValue() == $email) { $found = true; break; }
-				if (!$found)
-					$this->addAcl($cal["google_id"], "reader", "user", $email);
+				if (!$found) {
+					// user doesn't have it, but may be he removed it, let's check if we already share it
+					$already_shared = SQLQuery::create()->bypassSecurity()
+						->select("GoogleCalendarShared")
+						->whereValue("GoogleCalendarShared", "google_calendar_id", $cal["google_id"])
+						->whereValue("GoogleCalendarShared", "email", $email)
+						->executeSingleRow();
+					if ($already_shared == null) {
+						try {
+							$this->addAcl($cal["google_id"], "reader", "user", $email);
+							SQLQuery::create()->bypassSecurity()->insert("GoogleCalendarShared",array("google_calendar_id"=>$cal["google_id"],"email"=>$email));
+						} catch (Exception $e) {
+							PNApplication::error("Error sharing google calendar to ".$email);
+						}
+					}
+				}
 			}
 			// remove
 			foreach ($acls as $acl) {
@@ -216,11 +229,12 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 		return $date;
 	}
 	
-	public static function PNEventToGoogleEvent($pn) {
+	public static function PNEventToGoogleEvent($pn, $calendar_id) {
 		$ev = new Google_Service_Calendar_Event();
 		$ev->setICalUID($pn["uid"]);
 		$ev->setSummary($pn["title"]);
 		$ev->setDescription($pn["description"]);
+		$ev->setStatus("confirmed");
 		if ($pn["all_day"] == 1) {
 			$ev->setStart(self::timestampToDate(intval($pn["start"])));
 			$days = intval($pn["end"])-intval($pn["start"]);
@@ -253,7 +267,12 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 				} else {
 					$at = new Google_Service_Calendar_EventAttendee();
 					$at->setDisplayName(@$a["name"]);
-					$at->setEmail(@$a["email"]);
+					if (@$a["email"] <> null)
+						$at->setEmail(@$a["email"]);
+					else {
+						$at->setSelf(true);
+						$at->setEmail($calendar_id);
+					}
 					switch (@$a["participation"]) {
 						case "YES": $at->setResponseStatus("accepted"); break;
 						case "NO": $at->setResponseStatus("declined"); break;
@@ -286,7 +305,7 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 	
 	public function synchCalendar($pn_id, $google_id, $last_update) {
 		try {
-			$gevents = $this->getAllEvents($google_id);
+			$gevents = $this->getAllEvents($google_id, true);
 		} catch (Google_Service_Exception $e) {
 			if ($e->getCode() == 404) return true; // not found = calendar removed, let's wait the calendars synch task
 			PNApplication::error("Unable to retrieve Google calendar events", $e);
@@ -309,29 +328,31 @@ class PNGoogleCalendar extends PNGoogle_ProjectSpecific {
 				}
 			if ($pn == null) {
 				// event has been removed: remove it from Google
-				try {
-					$this->removeEvent($google_id, $gev->getId(), true);
-				} catch (Exception $e) {
-					PNApplication::error("Error removing Google Event ".$gev->getId(), $e);
-					$err = true;
+				if ($gev->status <> "cancelled") {
+					try {
+						$this->removeEvent($google_id, $gev->getId(), true);
+					} catch (Exception $e) {
+						PNApplication::error("Error removing Google Event ".$gev->getId(), $e);
+						$err = true;
+					}
 				}
 				continue;
 			}
-			if (intval($pn["last_modified"]) < $last_update) continue; // not modified
+			if ($gev->status <> "cancelled" && intval($pn["last_modified"]) < $last_update) continue; // not modified
 			// event modified: update it in Google
 			try {
-				$this->updateEvent($google_id, $gev->getId(), self::PNEventToGoogleEvent($pn), true);
+				$this->updateEvent($google_id, $gev->getId(), self::PNEventToGoogleEvent($pn, $google_id), true);
 			} catch (Exception $e) {
-				PNApplication::error("Error updating event ".$pn["id"], $e);
+				PNApplication::error("Error updating event ".$pn["id"].".<br/>Event sent to Google:<br/>".var_export(self::PNEventToGoogleEvent($pn, $google_id),true), $e);
 				$err = true;
 			}
 		}
 		// add new events in Google
 		foreach ($pnevents as $pn) {
 			try {
-				$this->addEvent($google_id, self::PNEventToGoogleEvent($pn), true);
+				$this->addEvent($google_id, self::PNEventToGoogleEvent($pn, $google_id), true);
 			} catch (Exception $e) {
-				PNApplication::error("Error creating event ".$pn["id"]."[".$pn["uid"]."] (".$pn["title"].") from calendar ".$pn_id, $e);
+				PNApplication::error("Error creating event ".$pn["id"]."[".$pn["uid"]."] (".$pn["title"].") from calendar ".$pn_id.".<br/>Event sent to Google:<br/>".var_export(self::PNEventToGoogleEvent($pn, $google_id),true), $e);
 				$err = true;
 			}
 		}

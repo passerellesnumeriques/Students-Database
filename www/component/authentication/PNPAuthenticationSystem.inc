@@ -97,6 +97,13 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 		}
 		return $xml;
 	}
+	/**
+	 * Call a service requiring privileges on the authentication server
+	 * @param string $service name of the service
+	 * @param string $token authentication token for subsequent services
+	 * @param array $params parameters to send
+	 * @return NULL|SimpleXMLElement the XML returned by the server, or null in case of failure
+	 */
 	private function callServiceWithPrivileges($service, $token, $params) {
 		set_time_limit(300);
 		if (PNApplication::$instance->local_domain == "PNP") {

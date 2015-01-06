@@ -28,7 +28,7 @@ class page_subject_grades extends Page {
 				$spe_id = null;
 			}
 			$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id, $spe_id);
-			if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+			if (!PNApplication::$instance->user_management->hasRight("consult_students_grades")) {
 				$subjects_ids = array();
 				foreach ($subjects as $s) array_push($subjects_ids, $s["id"]);
 				$subjects_ids = PNApplication::$instance->teaching->filterAssignedSubjects($subjects_ids, PNApplication::$instance->user_management->people_id);
@@ -110,7 +110,7 @@ class page_subject_grades extends Page {
 		
 		// check access
 		$iam_assigned = null;
-		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+		if (!PNApplication::$instance->user_management->hasRight("consult_students_grades")) {
 			$iam_assigned = $grouping_id <> null ? 
 				PNApplication::$instance->teaching->isAssignedToSubjectTeaching(PNApplication::$instance->user_management->people_id, $grouping_id) :
 				PNApplication::$instance->teaching->isAssignedToSubject(PNApplication::$instance->user_management->people_id, $subject_id, $group_id);
@@ -150,7 +150,7 @@ class page_subject_grades extends Page {
 		$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
 		
 		$edit = false;
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_students_grades");
+		$can_edit = PNApplication::$instance->user_management->hasRight("edit_students_grades");
 		if (!$can_edit) {
 			if ($iam_assigned == null) 
 				$iam_assigned = $grouping_id <> null ? 
@@ -231,7 +231,7 @@ class page_subject_grades extends Page {
 		
 		// get all subjects and groups available to switch
 		$subjects = PNApplication::$instance->curriculum->getSubjects($batch["id"], $period["id"], $spe <> null ? $spe["id"] : null);
-		if (!PNApplication::$instance->user_management->has_right("consult_students_grades")) {
+		if (!PNApplication::$instance->user_management->hasRight("consult_students_grades")) {
 			$subjects_ids = array();
 			foreach ($subjects as $s) array_push($subjects_ids, $s["id"]);
 			$subjects_ids = PNApplication::$instance->teaching->filterAssignedSubjects($subjects_ids, PNApplication::$instance->user_management->people_id);
@@ -615,9 +615,9 @@ pnapplication.autoDisableSaveButton(document.getElementById('save_button'));
 var field_max_grade = new field_decimal(<?php echo json_encode($subject["max_grade"]);?>,true,{integer_digits:3,decimal_digits:2,can_be_null:false,min:1,max:100});
 var field_passing_grade = new field_decimal(<?php echo json_encode($subject["passing_grade"]);?>,true,{integer_digits:3,decimal_digits:2,can_be_null:false,min:1,max:<?php if ($subject["max_grade"] <> null) echo $subject["max_grade"]; else echo "100";?>});
 
-field_max_grade.ondatachanged.add_listener(function() {window.pnapplication.dataUnsaved("subject_max_grade");});
-field_max_grade.ondataunchanged.add_listener(function() {window.pnapplication.dataSaved("subject_max_grade");});
-field_max_grade.onchange.add_listener(function() {
+field_max_grade.ondatachanged.addListener(function() {window.pnapplication.dataUnsaved("subject_max_grade");});
+field_max_grade.ondataunchanged.addListener(function() {window.pnapplication.dataSaved("subject_max_grade");});
+field_max_grade.onchange.addListener(function() {
 	field_passing_grade.config.max = parseFloat(field_max_grade.getCurrentData());
 	field_passing_grade.validate();
 	subject_max_grade = field_max_grade.getCurrentData();
@@ -631,9 +631,9 @@ field_max_grade.onchange.add_listener(function() {
 	}
 });
 document.getElementById('max_grade_container').appendChild(field_max_grade.getHTMLElement());
-field_passing_grade.ondatachanged.add_listener(function() {window.pnapplication.dataUnsaved("subject_passing_grade");});
-field_passing_grade.ondataunchanged.add_listener(function() {window.pnapplication.dataSaved("subject_passing_grade");});
-field_passing_grade.onchange.add_listener(function() {
+field_passing_grade.ondatachanged.addListener(function() {window.pnapplication.dataUnsaved("subject_passing_grade");});
+field_passing_grade.ondataunchanged.addListener(function() {window.pnapplication.dataSaved("subject_passing_grade");});
+field_passing_grade.onchange.addListener(function() {
 	// refresh final grades
 	var col_index = grades_grid.grid.getColumnIndexById('final_grade');
 	for (var row = 0; row < grades_grid.grid.getNbRows(); ++row) {
@@ -756,8 +756,8 @@ function createEvaluation(type, eval) {
 		computeGrades();
 	};
 	<?php if ($edit) { ?>
-	field_max_grade.onchange.add_listener(update_passing);
-	field_passing_grade.onchange.add_listener(update_passing);
+	field_max_grade.onchange.addListener(update_passing);
+	field_passing_grade.onchange.addListener(update_passing);
 	<?php } ?>
 	grades_grid.addColumnInContainer(type.col_container,eval.col,type.col_container.sub_columns.length-1);
 	grades_grid.grid.onallrowsready(update_passing);
@@ -787,8 +787,8 @@ function createEvaluationType(eval) {
 		computeGrades();
 	};
 	<?php if ($edit) { ?>
-	field_max_grade.onchange.add_listener(update_passing);
-	field_passing_grade.onchange.add_listener(update_passing);
+	field_max_grade.onchange.addListener(update_passing);
+	field_passing_grade.onchange.addListener(update_passing);
 	<?php } ?>
 	cols.push(eval.col_total);
 	var div = document.createElement("DIV");
@@ -1063,10 +1063,10 @@ function newEvaluation(button) {
 function save() {
 	if (field_max_grade.error != null) { alert("Please enter a valid maximum grade"); return; }
 	if (field_passing_grade.error != null) { alert("Please enter a valid passing grade"); return; }
-	var locker = lock_screen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving...");
+	var locker = lockScreen(null, "<img src='"+theme.icons_16.loading+"' style='vertical-align:bottom'/> Saving...");
 	var save_final_grades = function() {
 		if (!pnapplication.hasDataUnsavedStartingWith("final_grade_student_")) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			return;
 		}
 		var data = {subject_id:subject_id,students:[]};
@@ -1080,7 +1080,7 @@ function save() {
 					pnapplication.dataSaved("final_grade_student_"+final_grades[i].id);
 				pnapplication.cancelDataUnsaved();
 			}
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	};
 	var save_evaluations_grades = function() {
@@ -1101,7 +1101,7 @@ function save() {
 						pnapplication.dataSaved("student_"+data.students[i].people+"_grade_"+data.students[i].grades[j].evaluation);
 			}
 			pnapplication.cancelDataUnsaved();
-			unlock_screen(locker);
+			unlockScreen(locker);
 		});
 	};
 	var save_evaluations = function() {
@@ -1125,7 +1125,7 @@ function save() {
 			data.types.push(type);
 		}
 		service.json("transcripts","save_subject_evaluations",data,function(res) {
-			if (!res) { unlock_screen(locker); return; }
+			if (!res) { unlockScreen(locker); return; }
 			pnapplication.dataSaved("evaluations_types");
 			pnapplication.dataSaved("evaluations");
 			// update ids of evaluation types
@@ -1177,7 +1177,7 @@ function save() {
 				data.students.push({people:final_grades[i].id,comment:final_grades[i].comment});
 		service.json("transcripts","save_subject_comments",data,function(res) {
 			if (!res) {
-				unlock_screen(locker);
+				unlockScreen(locker);
 				return;
 			}
 			pnapplication.dataSavedStartingWith("comment_student_");
@@ -1188,7 +1188,7 @@ function save() {
 		if (pnapplication.isDataUnsaved("subject_max_grade") || pnapplication.isDataUnsaved("subject_passing_grade") || pnapplication.isDataUnsaved("only_final")) {
 			service.json("transcripts","save_subject_grading_info",{id:subject_id,only_final_grade:only_final,max_grade:field_max_grade.getCurrentData(),passing_grade:field_passing_grade.getCurrentData()},function(res) {
 				if (!res) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 					return;
 				}
 				pnapplication.dataSaved("subject_max_grade");

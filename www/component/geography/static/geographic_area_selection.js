@@ -2,22 +2,32 @@ if (typeof window.top.require != 'undefined')
 	window.top.require("geography.js");
 
 /**
- * @method geographic_area_selection
- * @parameter container
- * @parameter country_id
- * @parameter {function} onready, function that handle the parameter to_return = {area_id: ,field: the string to display}
+ * Screen to select a geographic area
+ * @param {Element} container where to put the screen
+ * @param {Number} country_id in which country to select
+ * @param {Number} area_id currently selected area, or null
+ * @param {String} orientation either 'horizontal' or 'vertical'
+ * @param {Boolean} add_custom_search if true, the user can manually enter a name to search an area
+ * @param {Function} onready called when the screen is loaded and ready to be used and manipulated
  */
 
 function geographic_area_selection(container, country_id, area_id, orientation, add_custom_search, onready) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
+	/** {Number} the currently selected area */
 	this.selected_area_id = undefined;
-	
+	/** {Function} if specified, it will be called each time the user change the selected area */
 	this.onchange = null;
 
+	/** Returns the currently selected area ID
+	 * @returns {Number} the currently selected area, or <code>undefined</code> if nothing is selected
+	 */
 	this.getSelectedArea = function() { 
 		return this.selected_area_id;
 	};
+	/** Returns the information to display the selected area in a text form
+	 * @returns {GeographicAreaText} the text information
+	 */
 	this.getSelectedAreaText = function() {
 		if (this.selected_area_id == null)
 			return {
@@ -29,6 +39,9 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 		return window.top.geography.getGeographicAreaTextFromId(this.country_data, this.selected_area_id);
 	};
 
+	/** Set the selected area
+	 * @param {Number} area_id the area to select
+	 */
 	this.setAreaId = function(area_id) {
 		if (typeof area_id == 'string') {
 			if (area_id == "") area_id = null;
@@ -58,6 +71,11 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 		if (this.onchange) this.onchange();
 	};
 	
+	/**
+	 * Select the best matching area with the given coordinates
+	 * @param {Number} lat latitude
+	 * @param {Number} lng longitude
+	 */
 	this.selectByGeographicPosition = function(lat,lng) {
 		if (this.country_data.length == 0) return;
 		// first division
@@ -73,6 +91,7 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 		}
 		if (areas_id.length == 0) return; // no match
 		// go to next divisions
+		var last_unique = areas_id.length == 1 ? areas_id[0] : null;
 		var division_index = 1;
 		while (division_index < this.country_data.length) {
 			var sub_areas = [];
@@ -80,13 +99,13 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 			for (var i = 0; i < areas_id.length; ++i) sub_areas.push([]);
 			for (var i = 0; i < this.country_data[division_index].areas.length; ++i) {
 				var a = this.country_data[division_index].areas[i];
-				var parent_index = areas_id.indexOf(a.area_parent_id);
-				if (parent_index < 0) continue;
 				if (!a.north) continue;
 				if (lat < a.south) continue;
 				if (lat > a.north) continue;
 				if (lng < a.west) continue;
 				if (lng > a.east) continue;
+				var parent_index = areas_id.indexOf(a.area_parent_id);
+				if (parent_index < 0) continue;
 				sub_areas[parent_index].push(a.area_id);
 				one_found = true;
 			}
@@ -96,11 +115,19 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 				if (sub_areas[i].length > 0)
 					for (var j = 0; j < sub_areas[i].length; ++j)
 						areas_id.push(sub_areas[i][j]);
+			if (areas_id.length == 1) last_unique = areas_id[0];
 		}
 		if (areas_id.length == 1)
 			this.setAreaId(areas_id[0]);
+		else if (last_unique != null)
+			this.setAreaId(last_unique);
 	};
 	
+	/**
+	 * Called to select an area in a specific division
+	 * @param {Number} division_index in which division to select
+	 * @param {GeographicArea} area the area to select  
+	 */
 	this._setDivision = function(division_index, area) {
 		if (this.selects.length == 0) return; // nothing in this country
 		/*
@@ -134,6 +161,10 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 		*/
 	};
 	
+	/**
+	 * Fill the SELECT of a division, according to what is selected in the previous level
+	 * @param {Number} division_index which division to fill
+	 */
 	this._fillSelect = function(division_index) {
 		var select = this.selects[division_index];
 		var prev = select.value;
@@ -168,6 +199,10 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 		select.value = prev;
 	};
 	
+	/**
+	 * Called when a SELECT changed its value, so we can fill the sub-areas
+	 * @param {Element} select the SELECT which changed
+	 */
 	this._selectChanged = function(select) {
 		var division_index = t.selects.indexOf(select);
 		var area_id = select.value;
@@ -189,8 +224,7 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 	};
 	
 	/** Create the input node which calls the auto fill function
-	* @method geographic_area_selection#createAutoFillInput
-	* @parameter parent the container
+	* @param {Function} onready called when everything is loaded and it is ready to be used
 	*/
 	this.createAutoFillInput = function(onready){
 		require("autocomplete.js",function(){
@@ -212,12 +246,10 @@ function geographic_area_selection(container, country_id, area_id, orientation, 
 		});
 	};
 	
-	this._all_areas = null;
-	
 	/** Find the string needle in the areas list. Creates two arrays: one with the areas which name begins with
 	* needle; a second one with the areas which name contains needle
-	* @method geographic_area_selection#autoFill
-	* @param needle = the needle to find in the result object
+	* @param {String} needle the needle to find in the result object
+	* @param {Function} handler called with the list of matching items
 	*/
 	this.autoFill = function(needle, handler){
 		if (this.country_data.length == 0) return;

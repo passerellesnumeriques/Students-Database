@@ -10,17 +10,19 @@ window.service = {
 	 * @param {Function} handler callback that will receive the result, or null if an error occured
 	 * @param {Boolean} foreground if true, the function will return only after completion of the ajax call, else it will return immediately.
 	 * @param {Function} progress_handler callback to be called to display a progress (parameters are current position and total amount)
+	 * @param {Function} onerror called in case of error
+	 * @param {Boolean} no_status_on_error if true, the errors won't be automatically displayed to the user
 	 */
 	json: function(component, service_name, input, handler, foreground, progress_handler, onerror, no_status_on_error) {
 		window.top._last_service_call = new Date().getTime();
 		var data = "";
 		if (input != null)
 			data = service.generateInput(input);
-		ajax.custom_post_parse_result("/dynamic/"+component+"/service/"+service_name, "application/json;charset=UTF-8", data, 
+		ajax.customPostParseResult("/dynamic/"+component+"/service/"+service_name, "application/json;charset=UTF-8", data, 
 			function(result){
 				if (result && result.warnings)
 					for (var i = 0; i < result.warnings.length; ++i)
-						window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,result.warnings[i],[{action:"popup"},{action:"close"}],5000));
+						window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_WARNING,result.warnings[i],[{action:"popup"},{action:"close"}],5000));
 				handler(result ? result.result : null);
 			},
 			foreground,
@@ -30,19 +32,20 @@ window.service = {
 						if (error == "Connection error") {
 							var now = new Date().getTime();
 							if (now-service._last_connection_error > 30000) {
-								window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_ERROR_NOICON,error,[],5000));
+								window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_ERROR_NOICON,error,[],5000));
 								service._last_connection_error = now;
 							}
 						} else
-							window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+							window.top.status_manager.addStatus(new window.top.StatusMessageError(null,error,10000));
 					} else for (var i = 0; i < error.length; ++i)
-						window.top.status_manager.add_status(new window.top.StatusMessageError(null,error[i],10000));
+						window.top.status_manager.addStatus(new window.top.StatusMessageError(null,error[i],10000));
 				}
 				if (onerror) onerror(error, input);
 			},
 			progress_handler
 		);
 	},
+	/** timestamp of the last time we encounter a connection issue, or 0 */ 
 	_last_connection_error: 0,
 	
 	/**
@@ -68,13 +71,13 @@ window.service = {
 					data += encodeURIComponent(service.generateInput(input[name]));
 			}
 		}
-		ajax.post_parse_result("/dynamic/"+component+"/service/"+service_name, data, 
+		ajax.postParseResult("/dynamic/"+component+"/service/"+service_name, data, 
 			function(xml){
 				handler(xml);
 			},
 			foreground,
 			function(error){
-				window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+				window.top.status_manager.addStatus(new window.top.StatusMessageError(null,error,10000));
 			},
 			progress_handler
 		);
@@ -101,7 +104,7 @@ window.service = {
 				if (error_handler)
 					error_handler(error);
 				else
-					window.top.status_manager.add_status(new window.top.StatusMessageError(null,error,10000));
+					window.top.status_manager.addStatus(new window.top.StatusMessageError(null,error,10000));
 				handler(null);
 			},
 			function(xhr){
@@ -152,6 +155,7 @@ window.service = {
 	/**
 	 * Generate a JSON string from the given object.
 	 * @param {Object} input the javascript object to convert into a JSON string
+	 * @param {Array} done should not be given, this is used only for recursive calls
 	 * @returns {String} the JSON representation of the given object
 	 */
 	generateInput: function(input,done) {
@@ -184,7 +188,7 @@ window.service = {
 			}
 			s += "}";
 		} else if (typeof input == 'string')
-			s += "\""+input.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")+"\"";
+			s += "\""+input.replace(/\\/g, "\\\\").replace(/"/g, "\\\"").replace(/\n/g, "\\n").replace(/\r/g, "\\r")+"\"";
 		else if (typeof input != 'function')
 			s += input;
 		if (typeof input == 'object') {
@@ -202,7 +206,7 @@ if (typeof window.top._last_service_call == 'undefined')
  * Send the given object to the given URL using POST method.
  * @param {String} url the location where to send the data
  * @param {Object} data the data to send
- * @param {window} win the window used to send the data, which will be used to display the resulting page
+ * @param {Window} win the window used to send the data, which will be used to display the resulting page
  */
 function postData(url, data, win) {
 	if (!win) win = window;
@@ -237,7 +241,13 @@ function postFrame(url, data, frame) {
 	document.body.removeChild(form);
 }
 
-function postToDownload(url, data) {
+/** Post data, with the aim to download a file.
+ * This will show a message to the user, and remove the frame automatically after 1 minute, to let the time to generate the file to download.
+ * @param {String} url the URL where to post the data
+ * @param {Object} data data to post
+ * @param {Boolean} do_not_show_info_message if true, the status info message won't be displayed
+ */
+function postToDownload(url, data, do_not_show_info_message) {
 	var frame = document.createElement("IFRAME");
 	frame.style.position = "absolute";
 	frame.style.top = "-10000px";
@@ -255,7 +265,8 @@ function postToDownload(url, data) {
 	form.target = frame.name;
 	document.body.appendChild(form);
 	form.submit();
-	window.top.status_manager.add_status(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
+	if (!do_not_show_info_message)
+		window.top.status_manager.addStatus(new window.top.StatusMessage(window.top.Status_TYPE_INFO,"Your file is being generated, and the download will start soon...",[{action:"close"}],5000));
 	setTimeout(function() {
 		if (window.closing || !document || !document.body) return;
 		document.body.removeChild(form);

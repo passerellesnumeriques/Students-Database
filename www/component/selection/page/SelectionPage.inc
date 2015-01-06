@@ -6,19 +6,24 @@
 abstract class SelectionPage extends Page{
 	//we don't define getRequiredRights this way we will be obliged to define it in SelectionPage instances
 	final public function execute(){
-#DEV
+#CHANNEL_STABLE
+#echo "Selection is still under development. This section is disabled for production."; return;
+#END
 		$this->addJavascript("/static/selection/selection_utils.js");
 		theme::css($this, "selection.css");
 		$id = PNApplication::$instance->components["selection"]->getCampaignId();
-		$can_access_selection_data = PNApplication::$instance->components["user_management"]->has_right("can_access_selection_data",true);
+		$can_access_selection_data = PNApplication::$instance->components["user_management"]->hasRight("can_access_selection_data",true);
 		/* Check the user is allowed to read the selection data */
 		if(!$can_access_selection_data) echo "<div style='padding:5px'><div class='error_box'><img src='".theme::$icons_16["error"]."' style='vertical-align:bottom'/> You are not allowed to access to the selection data</div></div>";
 		else{
-			if($id <> null) $this->executeSelectionPage();
-			else {
+			if($id <> null) {
+				if (PNApplication::$instance->selection->getOneConfigAttributeValue("generate_applicant_id"))
+					$this->onload("window.top._applicant_id_padding=".PNApplication::$instance->selection->getOneConfigAttributeValue("number_of_applicant_id_digits").";");
+				$this->executeSelectionPage();
+			} else {
 				$campaigns = SQLQuery::create()->select("SelectionCampaign")->execute();
 				if (count($campaigns) == 0) {
-					if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) {
+					if (PNApplication::$instance->user_management->hasRight("manage_selection_campaign")) {
 					?>
 					<div style="margin:10px">
 					<button class='action' onclick="getIFrameWindow(findFrame('pn_application_frame')).createCampaign();return false;">Create a first selection campaign</button>
@@ -39,11 +44,11 @@ abstract class SelectionPage extends Page{
 									</div>
 									<ul style='margin-top:5px'>
 										<?php foreach($campaigns as $c) {
-											echo "<li><a class='black_link' href='#' onclick=\"getIFrameWindow(findFrame('pn_application_frame')).changeCampaign(".$c["id"].");return false;\">".$c["name"]."</a></li>";
+											echo "<li><a class='black_link' href='#' onclick=\"getIFrameWindow(findFrame('pn_application_frame')).changeCampaign(".$c["id"].");return false;\">".toHTML($c["name"])."</a></li>";
 										}?>
 									</ul>
 								</div>
-								<?php if (PNApplication::$instance->user_management->has_right("manage_selection_campaign")) { ?>
+								<?php if (PNApplication::$instance->user_management->hasRight("manage_selection_campaign")) { ?>
 								<div class='footer'>
 								Or <button class='action green' onclick="getIFrameWindow(findFrame('pn_application_frame')).createCampaign();return false;">Create a new campaign</button>
 								</div>
@@ -55,10 +60,6 @@ abstract class SelectionPage extends Page{
 				}
 			}
 		}
-#END
-#PROD
-#echo "Selection is still under development. This section is disabled for production.";
-#END
 	}
 	
 	abstract public function executeSelectionPage();

@@ -9,10 +9,35 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	var t=this;
 	/** Copy of the given event, that will be manipulated and updated according to the screen, without modifying directly the event (in case the user finally cancel) */
 	this.event = copyCalendarEvent(ev);
+	/** Calendar of the given event, or null if this is a new event */
 	this.original_calendar = ev ? window.top.CalendarsProviders.getProvider(ev.calendar_provider_id).getCalendar(ev.calendar_id) : null;
+	/** {Boolean} indicates if we can edit and save the event */
 	this.editable = ev ? (typeof this.original_calendar.saveEvent) == 'function' : true;
+	/** {Boolean} indicates if we can remove this event */
 	this.removable = ev ? (typeof this.original_calendar.removeEvent) == 'function' : false;
 
+	if (!ev) {
+		if (default_calendar && !default_calendar.saveEvent) default_calendar = null;
+		if (!default_calendar) {
+			 var providers = window.top.CalendarsProviders.getCurrentProviders();
+			 for (var i = 0; i < providers.length && !default_calendar; ++i)
+				 for (var j = 0; j < providers[i].calendars.length; ++j)
+					 if (providers[i].calendars[j].saveEvent) {
+						 default_calendar = providers[i].calendars[j];
+						 break;
+					 }
+		}
+		if (!default_calendar) {
+			errorDialog("You don't have any calendar that you are allowed to modify, so we cannot create any event.");
+			return;
+		}
+	}
+	
+	/**
+	 * Populate information from the display into the given event
+	 * @param {CalendarEvent} event the event to populate
+	 * @returns {String|null} an error message, or null if everything was ok
+	 */
 	this.populateEvent = function(event) {
 		var err = this.calendar.populate(event);
 		if (err) return err;
@@ -24,6 +49,10 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		if (err) return err;
 		return null;
 	};
+	/**
+	 * Save the event
+	 * @param {CalendarEvent} event the event to save
+	 */
 	this.saveEvent = function(event) {
 		var calendar = window.top.CalendarsProviders.getProvider(event.calendar_provider_id).getCalendar(event.calendar_id);
 		if (ev && (ev.calendar_id != event.calendar_id || ev.calendar_provider_id != event.calendar_provider_id)) {
@@ -35,6 +64,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		calendar.saveEvent(event);
 	};
 	
+	/** Initialize the display */
 	this._init = function() {
 		this._table = document.createElement("TABLE");
 		this._table.style.borderCollapse = "collapse";
@@ -136,7 +166,7 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 				});
 			if (this.removable)
 				popup.addIconTextButton(theme.icons_16.remove, "Remove this event", 'remove', function() {
-					confirm_dialog("Are you sure you want to remove this event ?", function(yes) {
+					confirmDialog("Are you sure you want to remove this event ?", function(yes) {
 						if (!yes) return;
 						t.original_calendar.removeEvent(ev);
 						popup.close();
@@ -146,6 +176,9 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 		}
 		popup.show();
 	};
+	/** Apply title style for left side
+	 * @param {Element} td the TD
+	 */
 	this._styleLeftTitle = function(td) {
 		td.style.color = "#606060";
 		td.style.fontWeight = "bold";
@@ -157,9 +190,17 @@ function event_screen(ev,default_calendar,new_datetime,new_all_day) {
 	})
 }
 
+/**
+ * Section to select the calendar
+ * @param {Element} container where to put the section
+ * @param {Calendar} calendar the current calendar
+ * @param {Boolean} editable indicates if we can modify it
+ * @param {Boolean} is_new indicates if this is a new event
+ */
 function event_screen_calendar_selector(container, calendar, editable, is_new) {
 	this.selected_calendar = calendar;
 
+	/** Icon representing the calendar provider */
 	this.calendar_provider_icon = document.createElement("IMG");
 	this.calendar_provider_icon.width = 16;
 	this.calendar_provider_icon.style.width = '16px';
@@ -167,6 +208,7 @@ function event_screen_calendar_selector(container, calendar, editable, is_new) {
 	this.calendar_provider_icon.style.marginRight = '3px';
 	this.calendar_provider_icon.style.verticalAlign = 'bottom';
 	container.appendChild(this.calendar_provider_icon);
+	/** Box with the color of the calendar */
 	this.calendar_box = document.createElement("DIV");
 	container.appendChild(this.calendar_box);
 	this.calendar_box.style.display = "inline-block";
@@ -175,6 +217,7 @@ function event_screen_calendar_selector(container, calendar, editable, is_new) {
 	this.calendar_box.style.border = "1px solid #"+calendar.color;
 	this.calendar_box.style.backgroundColor = "#"+calendar.color;
 	this.calendar_box.style.marginRight = '3px';
+	/** Icon representing the calendar, if any */
 	this.calendar_icon = document.createElement("IMG");
 	this.calendar_icon.width = 16;
 	this.calendar_icon.style.width = '16px';
@@ -185,6 +228,7 @@ function event_screen_calendar_selector(container, calendar, editable, is_new) {
 	else
 		this.calendar_icon.style.display = "none";
 	container.appendChild(this.calendar_icon);
+	/** Name of the calendar */
 	this.calendar_name_node = document.createTextNode(calendar.name)
 	container.appendChild(this.calendar_name_node);
 	if (editable) {
@@ -250,22 +294,36 @@ function event_screen_calendar_selector(container, calendar, editable, is_new) {
 			});
 		};
 	}
-	
+	/** Populate the given event
+	 * @param {CalendarEvent} event the event into which to put the selected calendar
+	 */
 	this.populate = function(event) {
 		event.calendar_provider_id = this.selected_calendar.provider.id;
 		event.calendar_id = this.selected_calendar.id;
 	}
 }
 
+/**
+ * Section containing the title and description of the event
+ * @param {Element} container where to put the section
+ * @param {String} title the current event title
+ * @param {String} description the current event description
+ * @param {Boolean} editable indicates if we can edit the information
+ */
 function event_screen_what(container, title, description, editable) {
 	this.title = title ? title : "";
 	this.description = description ? description : "";
+	/** Populate the given event
+	 * @param {CalendarEvent} event the event into which to put the title and description
+	 * @returns {String|null} an error message or null if ok
+	 */
 	this.populate = function(event) {
 		if (this.title.length == 0) return "Please enter a title for your event";
 		event.title = this.title;
 		event.description = this.description;
 	};
 	var t=this;
+	/** Initialize the display */
 	this._init = function() {
 		// title
 		var div = document.createElement("DIV");
@@ -273,7 +331,7 @@ function event_screen_what(container, title, description, editable) {
 		div.style.fontWeight = "bold";
 		if (editable) {
 			var io = new InputOver(title, "Enter a title for this event");
-			io.onchange.add_listener(function(io) { t.title = io.input.value; });
+			io.onchange.addListener(function(io) { t.title = io.input.value; });
 			div.appendChild(io.container);
 		} else {
 			div.appendChild(document.createTextNode(this.title));
@@ -299,10 +357,22 @@ function event_screen_what(container, title, description, editable) {
 	require("input_utils.js",function() { t._init(); });
 }
 
+/**
+ * Section containing the dates, times, and frequency information
+ * @param {Element} container where to put the section
+ * @param {Date} start current starting date
+ * @param {Date} end current ending date
+ * @param {Boolean} all_day current all_day flag
+ * @param {CalendarEventFrequency} frequency the current frequency information
+ * @param {Boolean} editable indicates if we can modify
+ */
 function event_screen_when(container, start, end, all_day, frequency, editable) {
+	/** Copy of the starting date */
 	this.start = start ? new Date(start.getTime()) : new Date();
+	/** Copy of the ending date */
 	this.end = end ? new Date(end.getTime()) : new Date();
 	this.all_day = all_day;
+	/** Copy of the frequency */
 	this.frequency = objectCopy(frequency);
 	
 	if (!editable) {
@@ -554,7 +624,7 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 				}
 				layout.changed(from_time_span.parentNode);
 			};
-			from_date.onchange.add_listener(function() {
+			from_date.onchange.addListener(function() {
 				var d = from_date.getCurrentData();
 				if (!d) return;
 				to_date.setMinimum(d);
@@ -562,17 +632,17 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 				d = parseSQLDate(d);
 				t.start.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
 			});
-			to_date.onchange.add_listener(function() {
+			to_date.onchange.addListener(function() {
 				var d = to_date.getCurrentData();
 				if (!d) return;
 				from_date.setMaximum(d);
 				d = parseSQLDate(d);
 				t.end.setFullYear(d.getFullYear(), d.getMonth(), d.getDate());
 			});
-			from_time.onchange.add_listener(function() {
+			from_time.onchange.addListener(function() {
 				t.start.setHours(0,from_time.getCurrentMinutes(),0,0);
 			});
-			to_time.onchange.add_listener(function() {
+			to_time.onchange.addListener(function() {
 				t.end.setHours(0,to_time.getCurrentMinutes(),0,0);
 			});
 			var getFrequency = function() {
@@ -654,7 +724,7 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 			repeat_until_count.onchange = function() { getFrequency(); };
 			repeat_count.onchange = function() { getFrequency(); };
 			repeat_until_date.onchange = function() { getFrequency(); };
-			repeat_until.onchange.add_listener(function() { getFrequency(); });
+			repeat_until.onchange.addListener(function() { getFrequency(); });
 			
 			t.populate = function(event) {
 				var from = parseSQLDate(from_date.getCurrentData());
@@ -690,9 +760,19 @@ function event_screen_when(container, start, end, all_day, frequency, editable) 
 	}
 }
 
+/**
+ * Section containing attendees information
+ * @param {Element} container where to put the section
+ * @param {Array} attendees list of CalendarEventAttendee
+ * @param {Boolean} editable indicates if we can modify
+ */
 function event_screen_who(container, attendees, editable) {
 	this.attendees = attendees;
 	container.appendChild(this._table = document.createElement("TABLE"));
+	/**
+	 * Create the display for an attendee
+	 * @param {CalendarEventAttendee} a the attendee
+	 */
 	this.createAttendee = function(a) {
 		var tr, td;
 		this._table.appendChild(tr = document.createElement("TR"));
@@ -719,6 +799,9 @@ function event_screen_who(container, attendees, editable) {
 		td.style.fontSize = "9pt";
 		if (a.email) td.appendChild(document.createTextNode(a.email));
 	};
+	/** Populate the event with attendees
+	 * @param {CalendarEvent} event the event to populate
+	 */
 	this.populate = function(event) {
 		event.attendees = arrayCopy(this.attendees, copyCalendarEventAttendee);
 	};

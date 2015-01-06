@@ -7,7 +7,7 @@ set_error_handler(function($severity, $message, $filename, $lineno) {
 	return true;
 });
 
-function copy_directory($src, $dst) {
+function copy_directory($src, $dst, $version = null) {
 	set_time_limit(240);
 	$exclude = array(".","..","deploy.files",".gitignore");
 	$include = null;
@@ -28,11 +28,32 @@ function copy_directory($src, $dst) {
 			} 
 		}
 	}
+	if ($version <> null) {
+		array_push($exclude, "deploy.files.$version");
+		if (file_exists($src."/deploy.files.$version")) {
+			$content = file_get_contents($src."/deploy.files.$version");
+			$lines = explode("\n",$content);
+			foreach ($lines as $line) {
+				$line = trim($line);
+				$i = strpos($line,":");
+				if ($i === false) continue;
+				$directive = substr($line, 0, $i);
+				$list = explode(",",substr($line,$i+1));
+				if ($directive == "exclude")
+					$exclude = array_merge($exclude,$list);
+				else if ($directive == "include") {
+					if ($include == null) $include = $list;
+					else $include = array_merge($include,$list);
+				}
+			}
+		}
+	}
 	$dir = opendir($src);
 	if (!$dir) die("Unable to access to directory ".$src);
 	while (($file = readdir($dir)) <> null) {
 		if ($include <> null && !in_array($file,$include)) continue;
 		if (in_array($file,$exclude)) continue;
+		if (substr($file,0,13) == "deploy.files.") continue;
 		if (strpos($src,"/page/") !== false || strpos($src,"/service/") !== false || strpos($src,"/static/") !== false) {
 			if (strpos($file,".inc") === false) {
 				if (strtolower($file) <> $file) {
@@ -42,7 +63,7 @@ function copy_directory($src, $dst) {
 		}
 		if (is_dir($src."/".$file)) {
 			if (!mkdir($dst."/".$file)) die("Unable to create directory ".$dst."/".$file);
-			copy_directory($src."/".$file, $dst."/".$file);
+			copy_directory($src."/".$file, $dst."/".$file, $version);
 		} else {
 			if (!copy($src."/".$file, $dst."/".$file)) die("Unable to copy file ".$src."/".$file);
 		}
@@ -50,6 +71,13 @@ function copy_directory($src, $dst) {
 	closedir($dir);
 }
 copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]."/www"));
+copy_directory(realpath(dirname(__FILE__)."/../www"), realpath($_POST["path"]."/www_selection_travel"), "selection_travel");
+mkdir(realpath($_POST["path"]."/www_selection_travel")."/server_comm");
+copy_directory(realpath(dirname(__FILE__)."/../selection_travel/server_comm"), realpath($_POST["path"]."/www_selection_travel/server_comm"));
+copy_directory(realpath(dirname(__FILE__)."/../selection_travel/sms"), realpath($_POST["path"]."/www_selection_travel"));
+// replace the index by the deactivated one
+rename(realpath($_POST["path"]."/www_selection_travel")."/index.php", realpath($_POST["path"]."/www_selection_travel")."/index_activated.php");
+copy(realpath($_POST["path"]."/www_selection_travel")."/index_deactivated.php", realpath($_POST["path"]."/www_selection_travel")."/index.php");
 
 if ($has_errors) die();
 ?>

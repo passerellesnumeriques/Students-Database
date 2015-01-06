@@ -1,14 +1,29 @@
-function inputAutoresizeUpdater() {
+/**
+ * Used by inputAutoresize, to resize several inputs at the same time.
+ * This is only for performance reasons.
+ */
+function InputAutoresizeUpdater() {
+	/** Cache of styles */
 	this.knowledge = [];
+	/** List to be updated */
 	this.to_update = [];
+	/** Timeout */
 	this.timeout = null;
+	/** Signal an input should be updated
+	 * @param {Element} input the input to update
+	 */
 	this.update = function(input) {
 		this.to_update.push(input);
 		if (!this.timeout) this.timeout = setTimeout(function() { if (window._input_autoresize_updater) window._input_autoresize_updater._doUpdates(); },1);
 	};
+	/** Performs the updates */
 	this._doUpdates = function() {
 		if (window.closing) return;
 		this.timeout = null;
+		if (layout.isPaused()) {
+			this.timeout = setTimeout(function() { if (window._input_autoresize_updater) window._input_autoresize_updater._doUpdates(); },1);
+			return;
+		}
 		for (var i = 0; i < this.to_update.length; ++i) {
 			var input = this.to_update[i];
 			if (!input.mirror) {
@@ -53,6 +68,7 @@ function inputAutoresizeUpdater() {
 			}
 		}
 	};
+	/** Cleaning to avoid memory leaks */
 	this.cleanup = function() {
 		this.knowledge = null;
 		this.to_update = null;
@@ -60,8 +76,13 @@ function inputAutoresizeUpdater() {
 	if (!window.to_cleanup) window.to_cleanup = [];
 	window.to_cleanup.push(this);
 };
-window._input_autoresize_updater = new inputAutoresizeUpdater();
+/** input resizer */
+window._input_autoresize_updater = new InputAutoresizeUpdater();
 
+/** Make the given input automatically resize to contain its content
+ * @param {Element} input the INPUT
+ * @param {Number} min_size minimum size, in characters, or -1 to fill width of its parent
+ */
 function inputAutoresize(input, min_size) {
 	input._min_size = min_size;
 	input.mirror = document.createElement("SPAN");
@@ -120,6 +141,11 @@ function inputAutoresize(input, min_size) {
 	});
 }
 
+/**
+ * Same as HTML5 placeholder: when the given input is empty, display the default_text
+ * @param {Element} input the INPUT
+ * @param {String} default_text default text when the input is empty
+ */
 function inputDefaultText(input, default_text) {
 	var is_default = false;
 	var original_class = input.className;
@@ -152,6 +178,11 @@ function inputDefaultText(input, default_text) {
 	if (document.activeElement == input) input.onfocus(); else input.onblur();
 }
 
+/**
+ * Display a normal text, and when the mouse is over the text, make an INPUT appear
+ * @param {String} value the initial text
+ * @param {String} default_text placeholder
+ */
 function InputOver(value, default_text) {
 	if (!value) value = "";
 	this.container = document.createElement("DIV");

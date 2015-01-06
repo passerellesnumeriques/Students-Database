@@ -18,6 +18,7 @@ class development extends Component {
 		Component::allowPageWithoutLogin("development", "check_code");
 		Component::allowPageWithoutLogin("development", "server_variables");
 		Component::allowPageWithoutLogin("development", "test");
+		Component::allowPageWithoutLogin("development", "insert_data");
 		Component::allowServiceWithoutLogin("development", "create_db");
 		Component::allowServiceWithoutLogin("development", "empty_db");
 		Component::allowServiceWithoutLogin("development", "create_datamodel");
@@ -53,6 +54,8 @@ class DevRequest {
 	public $url;
 	public $sql_queries = array();
 	public $start_time, $end_time = -1;
+	public $session_load_time = -1;
+	public $process_time = -1;
 	
 }
 ?>

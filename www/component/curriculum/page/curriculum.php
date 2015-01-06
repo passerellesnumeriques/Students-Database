@@ -4,7 +4,7 @@ class page_curriculum extends Page {
 	public function getRequiredRights() { return array(); }
 	
 	public function execute() {
-		if (!PNApplication::$instance->user_management->has_right("consult_curriculum")) {
+		if (!PNApplication::$instance->user_management->hasRight("consult_curriculum")) {
 			if (!in_array("student",PNApplication::$instance->user_management->people_types)) {
 				PNApplication::error("Access denied");
 				return;
@@ -50,7 +50,7 @@ class page_curriculum extends Page {
 		$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $period_id);
 		$specializations = PNApplication::$instance->curriculum->getSpecializations();
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("edit_curriculum");
+		$can_edit = PNApplication::$instance->user_management->hasRight("edit_curriculum");
 		
 		$editing = false;
 		if ($can_edit) {
@@ -518,7 +518,7 @@ class page_curriculum extends Page {
 									menu.element.className = menu.element.className+" popup_date_picker";
 									menu.showBelowElement(cb);
 									menu.onclose = function() {
-										confirm_dialog("Are you sure you want to make category <i>"+cat.name+"</i> obsolete starting on "+dateToSQL(date)+" ?",function(yes) {
+										confirmDialog("Are you sure you want to make category <i>"+cat.name+"</i> obsolete starting on "+dateToSQL(date)+" ?",function(yes) {
 											if (!yes) {
 												cb.checked = "";
 												return;
@@ -539,7 +539,7 @@ class page_curriculum extends Page {
 								});
 							});
 						} else {
-							confirm_dialog("Are you sure you want to put back category <i>"+cat.name+"</i> as actual (not obsolete anymore) ?",function(yes) {
+							confirmDialog("Are you sure you want to put back category <i>"+cat.name+"</i> as actual (not obsolete anymore) ?",function(yes) {
 								if (!yes) {
 									cb.checked = "checked";
 									return;
@@ -567,7 +567,7 @@ class page_curriculum extends Page {
 					button.onclick = function() { remove_category(this); };
 				}
 				popup.addIconTextButton(theme.build_icon("/static/curriculum/subjects_16.png",theme.icons_10.add), "New Category...", 'new_cat', function() {
-					input_dialog(theme.build_icon("/static/curriculum/subjects_16.png",theme.icons_10.add),"New Category","Name of the new category","",100,
+					inputDialog(theme.build_icon("/static/curriculum/subjects_16.png",theme.icons_10.add),"New Category","Name of the new category","",100,
 						function(name){
 							name = name.trim();
 							if (!name.checkVisible()) return "Please enter a name";
@@ -740,7 +740,7 @@ class page_curriculum extends Page {
 		}
 
 		function import_subjects(target_period) {
-			popup_frame(theme.icons_16._import, "Import Subjects", "/dynamic/curriculum/page/import_subjects?period="+target_period+"&onimport=reload", null, null, null, function(frame,popup) {
+			popupFrame(theme.icons_16._import, "Import Subjects", "/dynamic/curriculum/page/import_subjects?period="+target_period+"&onimport=reload", null, null, null, function(frame,popup) {
 				frame.reload = function() {
 					window.location.reload();
 				};

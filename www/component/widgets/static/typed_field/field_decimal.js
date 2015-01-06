@@ -6,7 +6,8 @@
 function field_decimal(data,editable,config) {
 	if (typeof data == 'string') data = parseFloat(data);
 	if (isNaN(data)) data = null;
-	if (config && !config.can_be_null && data == null) data = 0;
+	if (config && typeof config.min == 'string') config.min = parseFloat(config.min);
+	if (config && typeof config.max == 'string') config.max = parseFloat(config.max);
 	typed_field.call(this, data, editable, config);
 }
 field_decimal.prototype = new typed_field();
@@ -73,15 +74,15 @@ field_decimal.prototype._create = function(data) {
 		};
 		var getValueFromInput = function() {
 			var value;
-			if (t.input.value.length == 0 && t.config.can_be_null) value = null;
+			if (t.input.value.length == 0) value = null;
 			else {
-				var i;
-				if (t.input.value.length == 0 && !t.config.can_be_null) i = t.config.min ? t.config.min : 0;
-				else i = parseFloat(t.input.value);
-				if (isNaN(i)) i = t.config.min ? t.config.min : 0;
-				if (typeof t.config.min != 'undefined' && i < t.config.min) i = t.config.min;
-				if (typeof t.config.max != 'undefined' && i > t.config.max) i = t.config.max;
-				value = i.toFixed(t.config.decimal_digits);
+				value = parseFloat(t.input.value);
+				if (isNaN(value)) value = null;
+				if (value !== null) {
+					if (typeof t.config.min != 'undefined' && value < t.config.min) value = t.config.min;
+					if (typeof t.config.max != 'undefined' && value > t.config.max) value = t.config.max;
+					value = value.toFixed(t.config.decimal_digits);
+				}
 			}
 			return value;
 		};
@@ -100,27 +101,25 @@ field_decimal.prototype._create = function(data) {
 		this._setData = function(data) {
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
-			if (data === null && t.config && !t.config.can_be_null) data = 0;
 			if (data === null) t.input.value = "";
 			else t.input.value = data.toFixed(t.config.decimal_digits);
 			if (typeof t.input.autoresize != 'undefined') t.input.autoresize();
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			t.input.style.border = error ? "1px solid red" : "";
 			t.input.title = error ? error : "";
 		};
 		this.onenter = function(listener) {
-			onkeyup.add_listener(function(e) {
+			onkeyup.addListener(function(e) {
 				var ev = getCompatibleKeyEvent(e);
 				if (ev.isEnter) listener(t);
 			});
 		};
 		this.focus = function() { t.input.focus(); };
-		this.fillWidth = function() {
+		this._fillWidth = function() {
 			_fw = true;
-			this.element.style.width = "100%";
 			if (typeof t.input.setMinimumSize != 'undefined') t.input.setMinimumSize(-1);
 		};
 		this.validate = function() {
@@ -133,14 +132,18 @@ field_decimal.prototype._create = function(data) {
 				else if (typeof this.config.max != 'undefined' && val > this.config.max) this.error = "Must be maximum "+this.config.max.toFixed(t.config.decimal_digits);
 				else this.error = null;
 			}
-			this.signal_error(this.error);
+			this.signalError(this.error);
 		};
 		this.setMinimum = function(min) {
+			if (typeof min == 'string') min = parseFloat(min);
+			if (isNaN(min)) min = null;
 			t.config.min = min === null ? undefined : min;
 			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.max < min) t.config.max = min;
 			t.setData(getValueFromInput());
 		};
 		this.setMaximum = function(max) {
+			if (typeof max == 'string') max = parseFloat(max);
+			if (isNaN(max)) max = null;
 			t.config.max = max === null ? undefined : max;
 			if (typeof t.config.min != 'undefined' && typeof t.config.max != 'undefined' && t.config.min < max) t.config.min = max;
 			t.setData(getValueFromInput());
@@ -156,31 +159,61 @@ field_decimal.prototype._create = function(data) {
 			var prev = this.text.nodeValue;
 			if (typeof data == 'string') data = parseFloat(data);
 			if (isNaN(data)) data = null;
-			if (data === null && this.config && !this.config.can_be_null) data = 0;
 			if (data === null) this.text.nodeValue = "";
 			else this.text.nodeValue = data.toFixed(this.config.decimal_digits);
 			if (this.text.nodeValue != prev) layout.changed(this.element);
 			return data;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
+		};
+		this.setMinimum = function(min) {
+			if (typeof min == 'string') min = parseFloat(min);
+			if (isNaN(min)) min = null;
+			if (!this.config) this.config = {};
+			this.config.min = min;
+			this.setData(this._getEditedData());
+		};
+		this.setMaximum = function(max) {
+			if (typeof max == 'string') max = parseFloat(max);
+			if (isNaN(max)) max = null;
+			if (!this.config) this.config = {};
+			this.config.max = max;
+			this.setData(this._getEditedData());
 		};
 		this._setData(data);
 	}
 };
+/**
+ * Set minimum and maximum values
+ * @param {Number} min minimum value, or null
+ * @param {Number} max maximum value, or null
+ */
 field_decimal.prototype.setLimits = function(min,max) {
 	if (!this.config) this.config = {};
 	this.config.min = min;
 	this.config.max = max;
 	this.setData(this._getEditedData());
 };
+/**
+ * Set minimum value
+ * @param {Number} min minimum value, or null
+ */
 field_decimal.prototype.setMinimum = function(min) {
+	if (typeof min == 'string') min = parseFloat(min);
+	if (isNaN(min)) min = null;
 	if (!this.config) this.config = {};
 	this.config.min = min;
 	this.setData(this._getEditedData());
 };
+/**
+ * Set maximum value
+ * @param {Number} max maximum value, or null
+ */
 field_decimal.prototype.setMaximum = function(max) {
+	if (typeof max == 'string') max = parseFloat(max);
+	if (isNaN(max)) max = null;
 	if (!this.config) this.config = {};
 	this.config.max = max;
 	this.setData(this._getEditedData());

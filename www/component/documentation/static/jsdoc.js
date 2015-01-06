@@ -9,25 +9,30 @@ function JSDoc_Namespace(content, location, doc) {
 	this.doc = doc;
 }
 
-function JSDoc_Class(extended, content, location, doc) {
+function JSDoc_Class(extended, no_name_check, content, location, doc) {
 	this.content = content;
 	this.extended = extended;
 	this.location = location;
 	this.doc = doc;
+	this.no_name_check = no_name_check;
 }
 
-function JSDoc_Function(doc, parameters, return_type, return_doc, location) {
+function JSDoc_Function(doc, parameters, return_type, return_doc, location, no_name_check, ignore) {
 	this.doc = doc;
 	this.parameters = parameters;
 	this.return_type = return_type;
 	this.return_doc = return_doc;
 	this.location = location;
+	this.no_name_check = no_name_check;
+	this.ignore = ignore;
 }
 
-function JSDoc_Value(type, doc, location) {
+function JSDoc_Value(type, doc, location, no_name_check, ignore) {
 	this.type = type;
 	this.doc = doc;
 	this.location = location;
+	this.no_name_check = no_name_check;
+	this.ignore = ignore;
 }
 
 function filter_jsdoc(jsdoc, file) {
@@ -55,7 +60,7 @@ function filter_jsdoc_namespace(ns, file) {
 	return n;
 }
 function filter_jsdoc_class(cl, file) {
-	var n = new JSDoc_Class(cl.extended,{},cl.location,cl.doc);
+	var n = new JSDoc_Class(cl.extended,cl.no_name_check,{},cl.location,cl.doc);
 	for (var name in cl.content) {
 		var elem = cl.content[name];
 		if (elem.location.file != file) continue;

@@ -7,6 +7,33 @@ set_error_handler(function($severity, $message, $filename, $lineno) {
 	return true;
 });
 
+function remove_directory($path) {
+	$dir = opendir($path);
+	while (($filename = readdir($dir)) <> null) {
+		if ($filename == ".") continue;
+		if ($filename == "..") continue;
+		if (is_dir($path."/".$filename))
+			remove_directory($path."/".$filename);
+		else
+			unlink($path."/".$filename);
+	}
+	closedir($dir);
+	if (!@rmdir($path)) {
+		if (file_exists($path)) {
+			@rmdir($path);
+			if (file_exists($path)) {
+				sleep(1);
+				@rmdir($path);
+				if (file_exists($path)) {
+					sleep(1);
+					if (file_exists($path))
+						rmdir($path);
+				}
+			}
+		}
+	}
+}
+	
 $path = $_POST["path"]."/www/component";
 $dir = opendir($path);
 while (($file = readdir($dir)) <> null) {
@@ -17,6 +44,19 @@ while (($file = readdir($dir)) <> null) {
 		rename("$path/$file/init_data.inc", $_POST["path"]."/init_data/$file/init_data.inc");
 		if (file_exists("$path/$file/data") && is_dir("$path/$file/data")) {
 			rename("$path/$file/data", $_POST["path"]."/init_data/$file/data");
+		}
+	}
+}
+closedir($dir);
+$path = $_POST["path"]."/www_selection_travel/component";
+$dir = opendir($path);
+while (($file = readdir($dir)) <> null) {
+	if ($file == "." || $file == "..") continue;
+	if (!is_dir($path."/".$file)) continue;
+	if (file_exists("$path/$file/init_data.inc")) {
+		unlink("$path/$file/init_data.inc");
+		if (file_exists("$path/$file/data") && is_dir("$path/$file/data")) {
+			remove_directory("$path/$file/data");
 		}
 	}
 }

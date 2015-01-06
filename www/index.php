@@ -1,4 +1,7 @@
 <?php
+#DEV
+$request_start_time = microtime(true);
+#END
 if (!file_exists(dirname(__FILE__)."/install_config.inc")) {
 	include("install.inc");
 	die();
@@ -183,7 +186,8 @@ case "dynamic":
 	if ($i === FALSE) $invalid("Invalid request: no dynamic type ($path)");
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
-#DEV	
+#DEV
+	$session_load_start_time = microtime(true);
 	spl_autoload_register('component_auto_loader');
 #END
 	require_once("component/PNApplication.inc");
@@ -192,6 +196,7 @@ case "dynamic":
 	require_once("SQLQuery.inc");
 #DEV
 	spl_autoload_unregister('component_auto_loader');
+	$session_load_end_time = microtime(true);
 #END
 	$_SESSION["alive_timestamp"] = time(); // make it alive, to avoid being automatically closed
 	if (isset($_SESSION["remote"])) {
@@ -242,7 +247,8 @@ case "dynamic":
 #DEV
 	$dev = new DevRequest();
 	$dev->url = $_SERVER["PATH_INFO"];
-	$dev->start_time = microtime(true);
+	$dev->start_time = $request_start_time;
+	$dev->session_load_time = $session_load_end_time-$session_load_start_time;
 	array_push(PNApplication::$instance->development->requests, $dev);
 #END
 
@@ -252,10 +258,10 @@ case "dynamic":
 	switch ($request_type) {
 	case "page":
 		header("Content-Type: text/html;charset=UTF-8");
-		PNApplication::$instance->components[$component_name]->page($path);
+		$result = PNApplication::$instance->components[$component_name]->page($path);
 		break;
 	case "service":
-		PNApplication::$instance->components[$component_name]->service($path);
+		$result = PNApplication::$instance->components[$component_name]->service($path);
 		break;
 	default: $invalid("Invalid request: unknown request type ".$request_type);
 	}
@@ -264,6 +270,7 @@ case "dynamic":
 	if (isset($_SESSION["app"]))
 		$_SESSION["app"]->development->requests = PNApplication::$instance->development->requests;
 	$dev->end_time = microtime(true);
+	$dev->process_time = @$result;
 	session_write_close();
 #END
 	die();

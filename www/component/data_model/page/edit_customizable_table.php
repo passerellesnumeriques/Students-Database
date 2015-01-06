@@ -16,7 +16,7 @@ class page_edit_customizable_table extends Page {
 				return;
 			}
 		}
-		if (!PNApplication::$instance->user_management->has_right($table->getCustomizationRight())) {
+		if (!PNApplication::$instance->user_management->hasRight($table->getCustomizationRight())) {
 			PNApplication::error("You are not allowed to edit those information");
 			return;
 		}
@@ -76,6 +76,14 @@ class page_edit_customizable_table extends Page {
 			if (!isset($fixed_by_category[$cat])) $fixed_by_category[$cat] = array();
 			array_push($fixed_by_category[$cat], $data);
 		}
+		
+		require_once("component/data_model/DataModelCustomizationPlugin.inc");
+		/* @var $plugins DataModelCustomizationPlugin[] */
+		$plugins = array();
+		foreach (PNApplication::$instance->components as $c)
+			foreach ($c->getPluginImplementations() as $pi)
+				if ($pi instanceof DataModelCustomizationPlugin)
+					array_push($plugins, $pi);
 		
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_integer.js");
@@ -167,6 +175,7 @@ class page_edit_customizable_table extends Page {
 				var td;
 				// description
 				td = document.createElement("TD");
+				td.style.verticalAlign = "top";
 				tr.descr = document.createElement("INPUT");
 				tr.descr.type = "text";
 				tr.descr.size = 25;
@@ -177,7 +186,9 @@ class page_edit_customizable_table extends Page {
 
 				// type
 				td = document.createElement("TD");
+				td.style.verticalAlign = "top";
 				tr.type_select = document.createElement("SELECT");
+				tr.type_select.style.verticalAlign = "top";
 				fillTypes(tr.type_select, type);
 				tr.type_container = document.createElement("DIV");
 				tr.type_container.style.display = "inline-block";
@@ -208,7 +219,6 @@ class page_edit_customizable_table extends Page {
 				};
 				td.appendChild(button);
 				tr.appendChild(td);
-				// TODO do not allow to remove if some data are already there...
 
 				var next = document.getElementById('buttons_row');
 				next.parentNode.insertBefore(tr, next);
@@ -228,6 +238,11 @@ class page_edit_customizable_table extends Page {
 				addType(select, "integer", "Number - Integer", selected);
 				addType(select, "decimal", "Number - Decimal", selected);
 				addType(select, "date", "Date", selected);
+				addType(select, "enum", "Choice", selected);
+				<?php
+				foreach ($plugins as $pi)
+					echo "addType(select, ".json_encode($pi->getId()).",".json_encode($pi->getDisplayName()).",selected);";
+				?>
 			}
 			
 			function updateType(tr, spec) {
@@ -241,6 +256,11 @@ class page_edit_customizable_table extends Page {
 				case "integer": createInteger(tr.type_container, spec); break;
 				case "decimal": createDecimal(tr.type_container, spec); break;
 				case "date": createDate(tr.type_container, spec); break;
+				case "enum": createEnum(tr.type_container, spec); break;
+				<?php
+				foreach ($plugins as $pi)
+					echo "case ".json_encode($pi->getId()).": create__".$pi->getId()."(tr.type_container, spec); break;";
+				?>
 				}
 			}
 
@@ -264,10 +284,10 @@ class page_edit_customizable_table extends Page {
 				container.appendChild(document.createTextNode(" Maximum "));
 				container.spec.max = new field_integer(spec ? spec.max : null,true,{can_be_null:true});
 				container.appendChild(container.spec.max.getHTMLElement());
-				container.spec.min.onchange.add_listener(function() {
+				container.spec.min.onchange.addListener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());
 				});
-				container.spec.max.onchange.add_listener(function() {
+				container.spec.max.onchange.addListener(function() {
 					container.spec.min.setMaximum(container.spec.max.getCurrentData());
 				});
 				container.spec.get = function() {
@@ -279,7 +299,7 @@ class page_edit_customizable_table extends Page {
 				container.appendChild(document.createTextNode(" Number of decimals "));
 				container.spec.digits = new field_integer(spec ? spec.decimal_digits : 2,true,{can_be_null:false,min:1,max:6});
 				container.appendChild(container.spec.digits.getHTMLElement());
-				container.spec.digits.onchange.add_listener(function() {
+				container.spec.digits.onchange.addListener(function() {
 					container.spec.min.setDecimalDigits(container.spec.digits.getCurrentData());
 					container.spec.max.setDecimalDigits(container.spec.digits.getCurrentData());
 				});
@@ -289,10 +309,10 @@ class page_edit_customizable_table extends Page {
 				container.appendChild(document.createTextNode(" Maximum "));
 				container.spec.max = new field_decimal(spec ? spec.max : null,true,{can_be_null:true,integer_digits:10,decimal_digits:2});
 				container.appendChild(container.spec.max.getHTMLElement());
-				container.spec.min.onchange.add_listener(function() {
+				container.spec.min.onchange.addListener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());
 				});
-				container.spec.max.onchange.add_listener(function() {
+				container.spec.max.onchange.addListener(function() {
 					container.spec.min.setMaximum(container.spec.max.getCurrentData());
 				});
 				container.spec.get = function() {
@@ -307,10 +327,10 @@ class page_edit_customizable_table extends Page {
 				container.appendChild(document.createTextNode(" Maximum "));
 				container.spec.max = new field_date(spec ? spec.max : null,true,{can_be_null:true});
 				container.appendChild(container.spec.max.getHTMLElement());
-				container.spec.min.onchange.add_listener(function() {
+				container.spec.min.onchange.addListener(function() {
 					container.spec.max.setMinimum(container.spec.min.getCurrentData());
 				});
-				container.spec.max.onchange.add_listener(function() {
+				container.spec.max.onchange.addListener(function() {
 					container.spec.min.setMaximum(container.spec.max.getCurrentData());
 				});
 				container.spec.get = function() {
@@ -318,6 +338,57 @@ class page_edit_customizable_table extends Page {
 					return {min:this.min.getCurrentData(),max:this.max.getCurrentData()};
 				};
 			}
+			function createEnum(container, spec) {
+				container.appendChild(document.createTextNode("Possible choices:"));
+				var add_button = document.createElement("BUTTON");
+				add_button.className = "flat small_icon";
+				add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+				add_button.title = "Add a new choice";
+				container.appendChild(add_button);
+				container.spec.choices = [];
+				var addChoice = function(choice) {
+					var div = document.createElement("DIV");
+					var input = document.createElement("INPUT");
+					input.type = "text";
+					input.maxLength = 30;
+					input.size = 15;
+					div.appendChild(input);
+					input.value = choice;
+					container.spec.choices.push(input);
+					var remove = document.createElement("BUTTON");
+					remove.className = "flat small_icon";
+					remove.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+					remove.onclick = function() {
+						if (container.spec.choices.length == 1) {
+							// last one
+							input.value = "";
+							return;
+						}
+						container.spec.choices.remove(input);
+						container.removeChild(div);
+					};
+					div.appendChild(remove);
+					container.insertBefore(div, add_button);
+				};
+				add_button.onclick = function() {
+					addChoice("");
+				};
+				if (spec) for (var i = 0; i < spec.values.length; ++i) addChoice(spec.values[i]);
+				else addChoice("");
+				container.spec.get = function() {
+					var s = {values:[]};
+					for (var i = 0; i < container.spec.choices.length; ++i) s.values.push(container.spec.choices[i].value);
+					return s;
+				};
+			}
+			<?php 
+			foreach ($plugins as $pi) {
+				echo "function create__".$pi->getId()."(container, spec) {\n";
+				// nothing needed so far
+				echo "container.spec.get = function() { return {}; };\n";
+				echo "}\n";
+			}
+			?>
 			
 			function save() {
 				var tr = document.getElementById('header_row');
@@ -347,14 +418,14 @@ class page_edit_customizable_table extends Page {
 					fields.push(field);
 					trs.push(tr);
 				}
-				var locker = lock_screen(null, "Saving...");
+				var locker = lockScreen(null, "Saving...");
 				service.json("data_model","save_custom_table",{table:<?php echo json_encode($table_name);?>,sub_model:<?php echo json_encode($sub_model);?>,columns:fields,lock_id:<?php echo $lock_id;?>},function(res) {
 					if (res) {
 						// update columns' names
 						for (var i = 0; i < trs.length; ++i)
 							trs[i].col_id = res[i];
 					}
-					unlock_screen(locker);
+					unlockScreen(locker);
 				});
 			}
 
@@ -376,6 +447,12 @@ class page_edit_customizable_table extends Page {
 				} else if ($col instanceof \datamodel\ColumnString) {
 					$type = "string";
 					$spec["max_length"] = $col->max_length;
+				} else if ($col instanceof \datamodel\ForeignKey) {
+					$pi = null;
+					foreach ($plugins as $p) if ($p->getForeignTable() == $col->foreign_table) { $pi = $p; break; }
+					if ($pi == null) continue;
+					$type = $pi->getId();
+					// nothing in the spec so far
 				} else if ($col instanceof \datamodel\ColumnInteger) {
 					$type = "integer";
 					$spec["min"] = $col->min;
@@ -389,6 +466,9 @@ class page_edit_customizable_table extends Page {
 					$type = "date";
 					$spec["min"] = $col->minimum_date;
 					$spec["max"] = $col->maximum_date;
+				} else if ($col instanceof \datamodel\ColumnEnum) {
+					$type = "enum";
+					$spec["values"] = $col->values;
 				}
 				echo "addData(".json_encode($col->name).",".($columns_data[$col->name] ? "true" : "false").",".json_encode($descr).",".json_encode($type).",".json_encode($spec).");\n";
 			}

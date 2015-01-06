@@ -1,15 +1,31 @@
+/**
+ * Display a list of entities, and a Google map showing locating them
+ * @param {Element} container where to put it
+ * @param {String} title title of the page
+ * @param {String} type either 'people' or 'organization'
+ * @param {Array} entities_ids IDs of the peoples or organizations to display
+ * @param {Array} addresses_types selection of types of addresses to get from the entities and to display on the map
+ */
 function contact_map(container, title, type, entities_ids, addresses_types) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	var t=this;
 	
+	/** {Array} list of peoples or organizations, retrieved through a service */
 	this.entities = null;
+	/** {Array} addresses of the entities, retrieved through a service */
 	this.entities_addresses = null;
+	/** {GoogleMap} the map */
 	this.map = null;
+	/** Indicates if the entities are already retrieved */
 	this.entities_filled = false;
+	/** {Array} list of checkboxes */
 	this.entities_checkboxes = null;
+	/** {Array} list of PNMarker */
 	this.entities_markers = null;
+	/** {Array} elements to be highlighted when the mouse is going over the entity */
 	this.entities_highlight = null;
 	
+	/** Once the entities have been retrieved, this function will display them on the screen */
 	this._fillEntities = function() {
 		this.entities_checkboxes = [];
 		this.entities_markers = [];
@@ -27,7 +43,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 			link.href = "#";
 			link.entity = this.entities[i];
 			link.onclick = function() {
-				popup_frame(null,t.getEntityName(this.entity),t.getEntityURL(this.entity),null,95,95);
+				popupFrame(null,t.getEntityName(this.entity),t.getEntityURL(this.entity),null,95,95);
 				return false;
 			};
 			highlight.appendChild(link);
@@ -74,6 +90,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 		layout.changed(this._entities_container);
 		this.entities_filled = true;
 	};
+	/** Refresh the Google Map, with markers, according to what has been selected by the user */
 	this.refreshMap = function() {
 		for (var i = 0; i < this.entities.length; ++i) {
 			var entity = this.entities[i];
@@ -136,6 +153,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 		this.map.fitToShapes();
 	};
 	
+	/** Initialize the display, and launch services to retrieve needed information */
 	this._init = function() {
 		var oneReady = function() {
 			if (t.entities != null && t.entities_addresses != null) {

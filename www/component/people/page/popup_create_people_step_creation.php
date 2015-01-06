@@ -7,15 +7,17 @@ class page_popup_create_people_step_creation extends Page {
 		$input = json_decode($_POST["input"], true);
 		$peoples = $input["peoples"];
 		$sub_models = @$input["sub_models"];
+		$root_table = $input["root_table"];
+		$sub_model = $input["sub_model"];
 		$multiple = isset($input["multiple"]);
-		echo "<script type='text/javascript'>window.popup = window.parent.get_popup_window_from_frame(window);</script>";
+		echo "<script type='text/javascript'>window.popup = window.parent.getPopupFromFrame(window);window.popup.disableClose();</script>";
 		if (count($peoples) == 0) {
 			echo "<div style='background-color:white'>Nobody to create.</div>";
 			echo "<script type='text/javascript'>popup.unfreeze();popup.addCancelButton();</script>";
 		}
 		$this->addJavascript("/static/data_model/datadisplay.js");
 ?>
-<div id='container' style='padding:10px'><div style='width:300px;height:100px'></div></div>
+<div id='container' style='padding:10px;background-color:white;'><div style='width:300px;height:100px'></div></div>
 <script type='text/javascript'>
 peoples = [<?php 
 $first = true;
@@ -36,10 +38,10 @@ function next(index, span, pb) {
 		window.popup.unfreeze(); // freeze progress, original freeze remains
 		var container = document.getElementById('container');
 		if (problems.length < peoples.length) {
-			container.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> "+(success.length)+" people successfully created.<br/>";
+			container.innerHTML = "<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom' onload='layout.changed(this);'/> "+(success.length)+" people successfully created.<br/>";
 		}
 		if (problems.length > 0) {
-			container.innerHTML += "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> The creation of "+(problems.length)+" people failed:";
+			container.innerHTML += "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom' onload='layout.changed(this);'/> The creation of "+(problems.length)+" people failed:";
 			var ul = document.createElement("UL");
 			container.appendChild(ul);
 			for (var i = 0; i < problems.length; ++i) {
@@ -47,21 +49,25 @@ function next(index, span, pb) {
 				li.appendChild(document.createTextNode(problems[i].fn+" "+problems[i].ln));
 				ul.appendChild(li);
 			}
-			window.popup.removeButtons();
+		}
+		window.popup.removeButtons();
+		layout.changed(container);
+		if (success.length > 0)
+			window.popup.addContinueButton(function() {
+				window.popup.removeButtons();
+				var ids = [];
+				for (var i = 0; i < success.length; ++i) ids.push(success[i].id);
+				postData("/dynamic/people/page/popup_create_people_step_end",{peoples:peoples,peoples_ids:ids<?php if(isset($input["ondone"])) echo ",ondone:".json_encode($input["ondone"]); ?>},window);
+			});
+		else
 			window.popup.addCloseButton();
-			window.popup.unfreeze();
-			window.popup.onclose = function() {
-				try {
-					<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
-				} catch (e) { log_exception(e); }
-			};
-		} else {
-			window.popup.onclose = null;
+		window.popup.unfreeze();
+		window.popup.onclose = function() {
 			try {
 				<?php if (isset($input["ondone"])) echo "window.frameElement.".$input["ondone"]."(peoples);"?>
-			} catch (e) { log_exception(e); }
-			window.popup.close();
-		}
+			} catch (e) { logException(e); }
+		};
+		window.popup.disableClose();
 		return;
 	}
 	var p = peoples[index];
@@ -81,7 +87,7 @@ function next(index, span, pb) {
 			msg += " ("+(index+1)+"/"+peoples.length+")";
 		span.removeAllChildren();
 		span.appendChild(document.createTextNode(msg));
-		var data = {root:"People",sub_model:null,sub_models:<?php echo json_encode($sub_models);?>,paths:p};
+		var data = {root:<?php echo json_encode($root_table);?>,sub_model:<?php echo json_encode($sub_model);?>,sub_models:<?php echo json_encode($sub_models);?>,paths:p};
 		<?php if ($multiple) echo "data.multiple = true;"; ?>
 		service.json("data_model","create_data",data,function(res) {
 			pb.addAmount(1);
@@ -112,7 +118,7 @@ function next(index, span, pb) {
 		});
 	}
 }
-window.popup.freeze_progress("Creation of people...", peoples.length, function(span, pb) {
+window.popup.freezeWithProgress("Creation of people...", peoples.length, function(span, pb) {
 	next(0, span, pb);
 });
 <?php } ?>

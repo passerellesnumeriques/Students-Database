@@ -97,10 +97,10 @@ class page_departments extends Page {
 				possible_values.push([roles[i].id,roles[i].name]);
 			var field_roles = new field_list_of_fixed_values(list,true,{possible_values:possible_values});
 			td.appendChild(field_roles.getHTMLElement());
-			field_roles.onchange.add_listener(function() {
-				var locker = lock_screen(null, "Saving roles...");
+			field_roles.onchange.addListener(function() {
+				var locker = lockScreen(null, "Saving roles...");
 				service.json("staff", "save_department_roles", {department:department.id, roles:field_roles.getCurrentData()}, function(res) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 				});
 			});
 			tr.appendChild(td);
@@ -114,7 +114,7 @@ class page_departments extends Page {
 			addDepartment(departments[i]);
 
 		function newDepartment() {
-			input_dialog(theme.build_icon("/static/staff/department.png",theme.icons_10.add),"New Department","Name of the new department","",100,function(name){
+			inputDialog(theme.build_icon("/static/staff/department.png",theme.icons_10.add),"New Department","Name of the new department","",100,function(name){
 				if (name.length == 0)
 					return "Please enter a name";
 				for (var i = 0; i < departments.length; ++i)

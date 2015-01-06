@@ -34,7 +34,13 @@ function debug_status(container) {
 				td.innerHTML = "Details";
 				tr.appendChild(td = document.createElement("TH"));
 				td.style.border = '1px solid black';
-				td.innerHTML = "Time";
+				td.innerHTML = "Total Time";
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "Session";
+				tr.appendChild(td = document.createElement("TH"));
+				td.style.border = '1px solid black';
+				td.innerHTML = "Process";
 				for (var i = 0; i < result.requests.length; ++i) {
 					var req = result.requests[i];
 					table.appendChild(tr = document.createElement("TR"));
@@ -52,11 +58,21 @@ function debug_status(container) {
 					td.style.whiteSpace = "nowrap";
 					if (req && req.end_time > 0) {
 						var time = req.end_time-req.start_time;
-						td.innerHTML = time+"s.";
+						td.innerHTML = time.toFixed(4)+"s.";
 						if (time > 1) td.style.color = "#FF0000";
 						else if (time > 0.5) td.style.color = "#B00000";
 						else if (time > 0.1) td.style.color = "#700000";
 					}
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					td.style.whiteSpace = "nowrap";
+					if (req && req.session_load_time >= 0)
+						td.innerHTML = parseFloat(req.session_load_time).toFixed(4);
+					tr.appendChild(td = document.createElement("TD"));
+					td.style.border = '1px solid black';
+					td.style.whiteSpace = "nowrap";
+					if (req && req.process_time >= 0)
+						td.innerHTML = parseFloat(req.process_time).toFixed(4);
 				}
 				tab.appendChild(table);
 				tabs_control.addTab("Requests",null,tab);

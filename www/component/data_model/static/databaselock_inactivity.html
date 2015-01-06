@@ -24,7 +24,7 @@ else the data will be automatically unlocked in <span id='timing' style='font-we
 <script type='text/javascript'>
 function db_lock_still_here() {
 	window.top.pnapplication.userIsActive();
-	window.parent.get_popup_window_from_element(window.frameElement).close();
+	window.parent.getPopupFromElement(window.frameElement).close();
 }
 function db_lock_not_there() {
 	window.top.databaselock._userInactive();
@@ -33,8 +33,8 @@ function db_lock_not_there() {
 		if (typeof w.pnapplication != 'undefined' && typeof w.pnapplication.cancelDataUnsaved != 'undefined')
 			w.pnapplication.cancelDataUnsaved();
 	}
-	if (window && window.parent && window.parent.get_popup_window_from_element) {
-		var popup = window.parent.get_popup_window_from_element(window.frameElement);
+	if (window && window.parent && window.parent.getPopupFromElement) {
+		var popup = window.parent.getPopupFromElement(window.frameElement);
 		if (popup) popup.close();
 	}
 }

@@ -28,7 +28,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	};
 	/** Called each time a modification is done (edit, add, or remove) */
 	this.onchange = new Custom_Event();
-	this.onchange.add_listener(function() {
+	this.onchange.addListener(function() {
 		layout.changed(container);
 	});
 	
@@ -50,7 +50,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			th_head.colSpan = 2;
 			th_head.style.textAlign = "left";
 			th_head.style.padding = "2px 5px 2px 5px";
-			th_head.innerHTML = "<img src='/static/contact/address_16.png' style='vertical-align:bottom;padding-right:3px'/>Address";
+			th_head.innerHTML = "<img src='/static/contact/address_16.png' style='vertical-align:bottom;padding-right:3px' onload='layout.changed(this);'/>Address";
 			th_head.style.backgroundColor = "#F0F0F0";
 			setBorderRadius(th_head, 5, 5, 5, 5, 0, 0, 0, 0);
 			tr_head.appendChild(th_head);
@@ -83,12 +83,12 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		} else
 			this.tfoot.style.display = "none";
 		
+		layout.changed(container);
 		if (onready) onready(this);
 	};
 	
 	/** Add a new address
 	 * @param {PostalAddress} address the new postal address
-	 * @param {Boolean} is_new if true, the popup dialog to edit the address will be automatically displayed
 	 */
 	this.addAddress = function(address) {
 		t._createAddressRow(address);
@@ -145,7 +145,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 									p.freeze();
 									for (var i = 0; i < t.addresses.length; ++i)
 										if (t.addresses[i] == div_data.address) {
-											t.addresses[i] = edit.address;
+											updatePostalAddress(t.addresses[i], edit.address);
 											t.onchange.fire(t);
 											break;
 										}
@@ -167,7 +167,8 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 											field_unit: edit.address.unit,
 											field_additional: edit.address.additional,
 											field_lat: edit.address.lat,
-											field_lng: edit.address.lng
+											field_lng: edit.address.lng,
+											unlock:true
 										},function(res) {
 											if (!res) { p.unfreeze(); return; }
 											window.databaselock.removeLock(lock_id);
@@ -209,34 +210,43 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 			td_data.appendChild(div_remove);
 		}
 		this.tbody.appendChild(tr);
+		layout.changed(this.tbody);
 	};
 	
 	/** Called when the user clicks on "Add address". */
 	this.createAddress = function(){
 		require("contact_objects.js", function() {
-			var address = new PostalAddress(-1,null,null,null,null,null,null,null,"Home");
-			if (type_id != null && type_id > 0) {
-				service.json("contact","add_address",{
-					type:type,
-					type_id:type_id,
-					address:address
-				},function(res){
-					if(!res) return;
-					/* Update the result object */
-					address.id = res.id;
-					var l = t.addresses.length;
-					t.addresses[l] = address;
-					/* Update the table */
-					t._createAddressRow(address, true);
-				});
-			} else {
+			var address = new PostalAddress(-1,null,null,null,null,null,null,null,type == 'people' ? "Home" : "Office");
+			t.createAndAddAddress(address);
+		});
+	};
+	
+	/**
+	 * Create the address in database (if type_id > 0), and display it
+	 * @param {PostalAddress} address the address to add
+	 */
+	this.createAndAddAddress = function(address) {
+		if (type_id != null && type_id > 0) {
+			service.json("contact","add_address",{
+				type:type,
+				type_id:type_id,
+				address:address
+			},function(res){
+				if(!res) return;
 				/* Update the result object */
+				address.id = res.id;
 				var l = t.addresses.length;
 				t.addresses[l] = address;
 				/* Update the table */
 				t._createAddressRow(address, true);
-			}
-		});
+			});
+		} else {
+			/* Update the result object */
+			var l = t.addresses.length;
+			t.addresses[l] = address;
+			/* Update the table */
+			t._createAddressRow(address, true);
+		}
 	};
 	
 	/** Add the remove button to the address row
@@ -254,7 +264,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		remove_button.style.cursor = 'pointer';
 		// remove_button.style.verticalAlign = 'bottom';
 		remove_button.onclick = function(ev){
-			confirm_dialog("Are you sure you want to remove this address?", function(yes){if(yes) t.removeAddress(address);});
+			confirmDialog("Are you sure you want to remove this address?", function(yes){if(yes) t.removeAddress(address);});
 			stopEventPropagation(ev);
 			return false;
 		};
@@ -274,6 +284,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 						t.tbody.removeChild(t.tbody.childNodes[i]);
 				t.addresses.remove(address);
 				t.onchange.fire(t);
+				layout.changed(t.tbody);
 			});
 		} else {
 			for (var i = 0; i < t.tbody.childNodes.length; ++i)
@@ -281,6 +292,7 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 					t.tbody.removeChild(t.tbody.childNodes[i]);
 			t.addresses.remove(address);
 			t.onchange.fire(t);
+			layout.changed(t.tbody);
 		}
 	};
 	
@@ -289,11 +301,12 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 * @param {PostalAddress} address the associated address object
 	 */
 	this._createCategoryField = function (container,address){
-		this.context = null;
-		container.innerHTML = address.address_type;
-		container.style.cursor = "pointer";
-		container.onclick = function(ev){
-			t._showAddressTypeContextMenu(container,address);
+		var span = document.createElement("SPAN");
+		span.appendChild(document.createTextNode(address.address_type));
+		container.appendChild(span);
+		span.style.cursor = "pointer";
+		span.onclick = function(ev){
+			t._showAddressTypeContextMenu(span,address);
 			stopEventPropagation(ev);
 			return false;
 		};
@@ -305,54 +318,11 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 	 * @param {PostalAddress} address the associated address object
 	 */
 	this._showAddressTypeContextMenu = function(container,address){
-		require('context_menu.js',function(){
-			if (t.context) t.context.hide();
-			t.context = new context_menu();
-			t.context.onclose = function() {t.context = null;};
-			t._addAddressTypeToContextMenu(container, "Home", address);
-			t._addAddressTypeToContextMenu(container, "Family", address);
-			t._addAddressTypeToContextMenu(container, "Birthplace", address);
-			t._addAddressTypeToContextMenu(container, "Work", address);
-			t._addAddressTypeToContextMenu(container, "Other:", address);
-			
-			t.context.showBelowElement(container);
+		require(['context_menu.js','contact_objects.js'],function(){
+			showAddressTypeMenu(container,type,address.address_type,true,function(new_type) {
+				t._saveSubType(address,new_type,container);
+			});
 		});
-	};
-	
-	/**
-	 * Add an item to the category context_menu
-	 * @param {Element} container the one which contains the category field
-	 * @param {String} data the value of the item
-	 * @param {PostalAddress} address the associated address object
-	 */
-	this._addAddressTypeToContextMenu = function(container, data, address){
-		var item = document.createElement('div');
-		item.innerHTML = data;
-		
-		if(address.address_type == data) item.style.fontWeight ='bold';
-		if(data == "Other:"){
-			var input = document.createElement("INPUT");
-			input.type = 'text';
-			input.maxLength = 10;
-			input.size = 10;
-			item.appendChild(input);
-			t.context.onclose = function(){
-				if(input.value.checkVisible()){
-					t._saveSubType(address, input.value.uniformFirstLetterCapitalized(),container);
-				}
-			};
-			input.onkeypress = function(e){var ev = getCompatibleKeyEvent(e);
-									if(ev.isEnter) t.context.hide();
-								};
-		}
-		else{
-			item.onclick = function(){
-				t._saveSubType(address,data,container);
-			};
-		}
-		item.className = "context_menu_item";
-		t.context.addItem(item);
-		if(data == "Other:") item.onclick = null;
 	};
 	
 	/**
@@ -366,14 +336,18 @@ function addresses(container, header, type, type_id, addresses, can_edit, can_ad
 		if (type_id != null && type_id > 0) {
 			service.json("data_model","save_entity",{table:"PostalAddress",key:address.id, field_address_type:address_type, lock:-1},function(res){
 				if(!res) return;
-				container.innerHTML = address_type;
+				container.removeAllChildren();
+				container.appendChild(document.createTextNode(address_type));
 				address.address_type = address_type;
 				t.onchange.fire(t);
+				layout.changed(container);
 			});
 		} else {
-			container.innerHTML = address_type;
+			container.removeAllChildren();
+			container.appendChild(document.createTextNode(address_type));
 			address.address_type = address_type;
 			t.onchange.fire(t);
+			layout.changed(container);
 		}
 	};
 	

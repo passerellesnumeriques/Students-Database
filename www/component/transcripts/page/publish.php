@@ -29,7 +29,7 @@ class page_publish extends Page {
 	</div>
 </div>
 <script type='text/javascript'>
-var popup = window.parent.get_popup_window_from_frame(window);
+var popup = window.parent.getPopupFromFrame(window);
 popup.addOkCancelButtons(function() {
 	require("form.js",function() {
 		var data = {
@@ -37,7 +37,7 @@ popup.addOkCancelButtons(function() {
 			specialization: <?php echo json_encode($spe);?>
 		};
 		var form = document.forms['publish'];
-		var val = get_radio_value(form,'action');
+		var val = getRadioValue(form,'action');
 		if (val == 'new') {
 			data.name = form.elements['name'].value.trim();
 			if (data.name.length == 0) { alert("Please specify a name for the new publication"); return; }

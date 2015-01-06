@@ -1,5 +1,8 @@
 <?php 
 require_once("component/cron/CronTask.inc");
+/**
+ * Declares a cron task to remove expired locks in the database
+ */
 class DataModelCronPlugin implements CronPlugin {
 	
 	public function getTasks() {

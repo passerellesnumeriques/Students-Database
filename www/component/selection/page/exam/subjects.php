@@ -11,7 +11,7 @@ class page_exam_subjects extends SelectionPage {
 		$q = SQLQuery::create()->select("ExamSubject");
 		SelectionExamJSON::ExamSubjectSQL($q);
 		$subjects = $q->execute();
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_exam_subject");
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_exam_subject");
 		?>
 		<div style='width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column'>
 			<div class='page_title' style='flex:none;padding:3px 10px'>
@@ -136,16 +136,15 @@ class page_exam_subjects extends SelectionPage {
 				this.actions_container.appendChild(remove_button);
 				remove_button.className = "action red";
 				remove_button.innerHTML = "<img src='"+theme.icons_16.remove_white+"'/> Remove this subject";
-				// TODO disable remove button if already some grades, or eligibility rules associated to it
 				remove_button.onclick = function() {
-					confirm_dialog("Are you sure you want to remove this exam ?",
+					confirmDialog("Are you sure you want to remove this exam ?",
 						function(answer){
 							if(!answer) return;
-							var locker = lock_screen(null,"Removing subject...");
+							var locker = lockScreen(null,"Removing subject...");
 							service.json("selection","exam/remove_subject",{id:subject.id},function(res){
-								unlock_screen(locker);
+								unlockScreen(locker);
 								if(!res)
-									error_dialog("An error occured");
+									errorDialog("An error occured");
 								else {
 									if (selected_index == subjects.indexOf(subject)) {
 										var frame = document.getElementById('subject_frame');
@@ -206,9 +205,9 @@ class page_exam_subjects extends SelectionPage {
 			win.pnapplication.autoDisableSaveButton(save_button);
 			win.pnapplication.autoDisableSaveButton(cancel_button);
 			save_button.onclick = function() {
-				var locker = lock_screen(null, "Saving subject...");
+				var locker = lockScreen(null, "Saving subject...");
 				win.save(function(subj) {
-					unlock_screen(locker);
+					unlockScreen(locker);
 					if (subj == null) return; // error case
 					if (subject == null) {
 						// new subject
@@ -246,7 +245,6 @@ class page_exam_subjects extends SelectionPage {
 				}
 			};
 			<?php if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) { ?>
-			<?php } ?>
 			require("upload.js");
 			var import_button = document.getElementById('import_answers_from_clickers');
 			import_button.onclick = function(ev) {
@@ -267,12 +265,13 @@ class page_exam_subjects extends SelectionPage {
 				else {
 					var options = [];
 					for (var i = 0; i < win.answers.length; ++i) options.push([i,String.fromCharCode("A".charCodeAt(0)+i)]);
-					select_dialog(null,"Subject Version","For which version of the subject do you want to export ?",null,options,function(version_index) {
+					selectDialog(null,"Subject Version","For which version of the subject do you want to export ?",null,options,function(version_index) {
 						postToDownload("/dynamic/selection/service/exam/export_exam_answers_to_sunvote", {subject:win.subject.id,version_index:version_index});
 					});
 				}
 			};
-			<?php } ?>
+			<?php } /* correct answer */ ?>
+			<?php } /* can edit */ ?>
 		}
 
 		if (subjects.length == 0) {

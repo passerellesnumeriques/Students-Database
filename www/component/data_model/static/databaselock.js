@@ -30,7 +30,11 @@ window.databaselock = {
 			if (this._locks[i].id == id)
 				this._locks.splice(i,1);
 	},
-	
+	/**
+	 * Call the unlock service for the given id. If it succeed, the removeLock function will be called.
+	 * @param {Number} id the id of the lock
+	 * @param {Function} handler the function to call once done, with the result as parameter (true on succcess)
+	 */
 	unlock: function(id, handler) {
 		service.json("data_model", "unlock", {lock:id}, function(res) {
 			if (res) databaselock.removeLock(id);
@@ -57,9 +61,9 @@ window.databaselock = {
 				if (windows[i].onuserinactive) {
 					// if there is a function handling it
 					windows[i].onuserinactive();
-				} else if (windows[i].frameElement && windows[i].parent.get_popup_window_from_element && windows[i].parent.get_popup_window_from_element(windows[i].frameElement)) {
+				} else if (windows[i].frameElement && windows[i].parent.getPopupFromElement && windows[i].parent.getPopupFromElement(windows[i].frameElement)) {
 					// if in popup, close it
-					windows[i].parent.get_popup_window_from_element(windows[i].frameElement).close();
+					windows[i].parent.getPopupFromElement(windows[i].frameElement).close();
 				} else {
 					need_redirection = true;
 					break;
@@ -83,6 +87,7 @@ window.databaselock = {
 		if (ids.length > 0)
 			service.json("data_model","unlock",{locks:ids},function(result){},true);
 	},
+	/** Called regularely, to extend the expiration time of the lock still used */
 	_update: function() {
 		var ids = [];
 		for (var i = 0; i < this._locks.length; ++i) ids.push(this._locks[i].id);
@@ -98,7 +103,7 @@ function initDatabaselock() {
 		return;
 	}
 	var w = window;
-	window.pnapplication.onclose.add_listener(function() {
+	window.pnapplication.onclose.addListener(function() {
 		w.databaselock._closeWindow();
 		w = null;
 	});

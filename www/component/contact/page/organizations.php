@@ -33,7 +33,19 @@ class page_organizations extends Page {
 		}
 		if (isset($_POST["input"])) $input = json_decode($_POST["input"], true); else $input = array();
 		?>
-		<div style='width:100%;height:100%' id='org_list'>
+		<div style='width:100%;height:100%;display:flex;flex-direction:column;'>
+			<div style='flex:1 1 auto' id='org_list'></div>
+			<?php if ($can_remove && !isset($input["selected"]) && !isset($input["selected_not_changeable"])) { ?>
+			<div style='flex:none' class='page_footer'>
+				With selected organizations: 
+				<button class='action' onclick='markObsolete();' title="Hide the selected organizations, but they won't be removed, meaning you can still show them back, and any history about those organizations will remain">
+					<img src='<?php echo theme::$icons_16["hide"];?>'/> Mark them as obsolete (hide)
+				</button>
+				<button class='action red' onclick='removeSelected();' title="Remove completely the selected organizations, meaning any information related to this organization will be lost">
+					<img src='<?php echo theme::$icons_16["remove_white"];?>'/> Remove them
+				</button>
+			</div>
+			<?php } ?>
 		</div>
 		<script type='text/javascript'>
 		var selected = <?php echo isset($input["selected"]) ? json_encode($input["selected"]) : "null";?>;
@@ -54,15 +66,18 @@ class page_organizations extends Page {
 					'Organization.EMail',
 					'Organization.Phone'
 				],
-				[{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"}}],
+				[
+					{category:'Organization',name:'Managed by',data:{type:'exact',value:"Selection"},force:true},
+					{category:'Organization',name:'Is obsolete (hidden)',data:{values:[0]},force:false}
+				],
 				250,
 				'Organization.Name',
 				true,
 				function (list) {
 					list.grid.makeScrollable();
-					if (can_remove || selected != null || selected_no_changeable != null) {
+					if (can_remove || selected != null || selected_not_changeable != null) {
 						list.grid.setSelectable(true);
-						list.ondataloaded.add_listener(organizations_loaded);
+						list.ondataloaded.addListener(organizations_loaded);
 						list.grid.onrowselectionchange = organizations_selection_changed;
 					}
 					list.addTitle(null, "Organizations of "+creator);
@@ -71,25 +86,26 @@ class page_organizations extends Page {
 						new_org.className = 'flat';
 						new_org.innerHTML = "<img src='"+theme.build_icon("/static/contact/organization.png",theme.icons_10.add)+"'/> New Organization";
 						new_org.onclick = function() {
-							window.top.popup_frame(theme.icons_16.add, "New Selection Partner", "/dynamic/contact/page/organization_profile?creator=Selection&organization=-1",null,null,null,function(frame,p) {
+							window.top.popupFrame(theme.icons_16.add, "New Selection Partner", "/dynamic/contact/page/organization_profile?creator=Selection&organization=-1",null,null,null,function(frame,p) {
 								p.addOkCancelButtons(function(){
 									p.freeze();
 									var win = getIFrameWindow(frame);
 									var org = win.organization.getStructure();
 									service.json("contact", "add_organization", org, function(res) {
 										if (!res) { p.unfreeze(); return; }
-										list.reloadData();
-										p.close();
+										win.organization.notes.save(res.id, function() {
+											list.reloadData();
+											p.close();
+										});
 									});
 								});
 							});
 						};
 						list.addHeader(new_org);
 					}
-					// TODO remove button
 					list.makeRowsClickable(function(row){
 						var orga_id = list.getTableKeyForRow('Organization',row.row_id);
-						window.top.popup_frame("/static/contact/organization.png", "Organization Profile", "/dynamic/contact/page/organization_profile?organization="+orga_id,null,null,null,function(frame,p) {
+						window.top.popupFrame("/static/contact/organization.png", "Organization Profile", "/dynamic/contact/page/organization_profile?organization="+orga_id,null,null,null,function(frame,p) {
 							p.onclose = function() { list.reloadData(); };
 						});
 					});
@@ -115,6 +131,46 @@ class page_organizations extends Page {
 				} else
 					selected.remove(org_id);
 			}
+		}
+		function markObsolete() {
+			if (!dl || !dl.grid || dl.grid.getSelectionByRowId().length == 0) {
+				alert("You didn't select any organization");
+				return;
+			}
+			var sel = dl.grid.getSelectionByRowId();
+			confirmDialog("Are you sure you want to hide the "+(sel.length > 1 ? sel.length : "")+" selected organization"+(sel.length > 1 ? "s" : "")+" ?",function(yes) {
+				if (!yes) return;
+				var ids = [];
+				for (var i = 0; i < sel.length; ++i)
+					ids.push(dl.getTableKeyForRow("Organization", sel[i]));
+				var locker = lockScreen();
+				service.json("data_model","save_cells",{cells:[{table:'Organization',keys:ids,values:[{column:'obsolete',value:1}]}]},function(res){
+					unlockScreen(locker);
+					dl.reloadData();
+				});
+			});
+		}
+		function removeSelected() {
+			if (!dl || !dl.grid || dl.grid.getSelectionByRowId().length == 0) {
+				alert("You didn't select any organization");
+				return;
+			}
+			var sel = dl.grid.getSelectionByRowId();
+			var ids = [];
+			for (var i = 0; i < sel.length; ++i)
+				ids.push(dl.getTableKeyForRow("Organization", sel[i]));
+			var ask_next = function(index) {
+				if (index == ids.length) {
+					dl.reloadData();
+					return;
+				}
+				window.top.datamodel.confirm_remove("Organization", ids[index], function() {
+					ask_next(index+1);
+				},function() {
+					ask_next(index+1);
+				});
+			};
+			ask_next(0);
 		}
 		</script>
 		<?php 

@@ -58,7 +58,7 @@ class service_search extends Service {
 	private function generateResultsRows($rows, $pi) {
 		echo "<div class='search_results'><table>";
 		foreach ($rows as $row) {
-			echo "<tr class='search_result_row' onclick=\"popup_frame('".$pi->getResultIcon($row)."', '".toHTML($pi->getResultTitle($row))."', '".$pi->getResultUrl($row)."', null, 90, 90, null);\">";
+			echo "<tr class='search_result_row' onclick=\"popupFrame('".$pi->getResultIcon($row)."', '".toHTML($pi->getResultTitle($row))."', '".$pi->getResultUrl($row)."', null, 90, 90, null);\">";
 			echo $pi->generateResultRow($row);
 			echo "</tr>";
 		}

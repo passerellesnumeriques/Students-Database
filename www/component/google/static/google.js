@@ -17,11 +17,11 @@ if (window == window.top && !window.top.google) {
 			else {
 				var listener = function(){
 					if (window.top.google.connection_status == 1) {
-						window.top.google.connection_event.remove_listener(listener);
+						window.top.google.connection_event.removeListener(listener);
 						on_connected();
 					}
 				};
-				window.top.google.connection_event.add_listener(listener);
+				window.top.google.connection_event.addListener(listener);
 			}
 		},
 		
@@ -45,7 +45,7 @@ if (window == window.top && !window.top.google) {
 		connect: function(pn_email, force_login) {
 			if (window.top.google.connection_status == 0) return;
 			if (!window.top.google.api_loaded) {
-				window.top.google._api_loaded_event.add_listener(function() { window.top.google.connect(pn_email); });
+				window.top.google._api_loaded_event.addListener(function() { window.top.google.connect(pn_email); });
 				return;
 			}
 			window.top.google.connected_pn_email = pn_email;
@@ -97,11 +97,11 @@ if (window == window.top && !window.top.google) {
 		
 		connectAccount: function(onconnected) {
 			if (!window.top.google.api_loaded) {
-				var locker = lock_screen(null, "Connecting to Google...");
-				window.top.google._api_loaded_event.add_listener(function() { unlock_screen(locker); window.top.google.connectAccount(); });
+				var locker = lockScreen(null, "Connecting to Google...");
+				window.top.google._api_loaded_event.addListener(function() { unlockScreen(locker); window.top.google.connectAccount(); });
 				return;
 			}
-			input_dialog("/static/google/google.png","Connect to your Google Account","Please enter your PN email address","",200,function(value){
+			inputDialog("/static/google/google.png","Connect to your Google Account","Please enter your PN email address","",200,function(value){
 				value = value.trim();
 				if (value.length == 0) return "Please enter an email address";
 				var i = value.indexOf('@');
@@ -199,7 +199,7 @@ if (window == window.top && !window.top.google) {
 		window.top.addJavascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 		window.top.setTimeout(function(){
 			if (window.top.google.api_loaded) return;
-			window.top.remove_javascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
+			window.top.removeJavascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 			window.top.google.connection_error = "cannot load google api";
 			window.top.google.connection_status = -1;
 			window.top.google.connection_event.fire();

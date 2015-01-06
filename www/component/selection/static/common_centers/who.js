@@ -1,3 +1,10 @@
+/**
+ * Display a list of people
+ * @param {Element|String} container where to put it
+ * @param {Array} peoples list of peoples, each can be either a string (name of someone not present in the database) or an object {can_do,people} where can_do is a boolean and people a People object
+ * @param {Boolean} can_edit indicates if the list can be modified
+ * @param {String} type indicates the type of center
+ */
 function who_container(container,peoples,can_edit,type) {
 	var t=this;
 	if (typeof container == 'string') container = document.getElementById(container);
@@ -7,9 +14,14 @@ function who_container(container,peoples,can_edit,type) {
 	
 	this.peoples = peoples;
 	
+	/** Event fired when someone is added */
 	this.onadded = new Custom_Event();
+	/** Event fired when someone is removed */
 	this.onremoved = new Custom_Event();
 	
+	/** Add someone
+	 * @param {String|Object} people the person to add
+	 */
 	this.addPeople = function(people) {
 		this.peoples.push(people);
 		if (this.peoples.length == 1) // first one
@@ -18,6 +30,9 @@ function who_container(container,peoples,can_edit,type) {
 		pnapplication.dataUnsaved('who');
 		this.onadded.fire(people);
 	};
+	/** Remove someone
+	 * @param {String|Object} people the person to remove
+	 */
 	this.removePeople = function(people) {
 		t.peoples.removeUnique(people);
 		var div = null;
@@ -28,6 +43,9 @@ function who_container(container,peoples,can_edit,type) {
 		this.onremoved.fire(people);
 	};
 	
+	/** Create the DIV for the given person
+	 * @param {String|Object} people the person
+	 */
 	this._createPeopleDIV = function(people) {
 		var div = document.createElement("DIV");
 		div.style.display = "inline-block";
@@ -38,7 +56,10 @@ function who_container(container,peoples,can_edit,type) {
 		div._people = people;
 		layout.changed(t._content);
 	};
-	
+	/** Create the DIV for a custom person
+	 * @param {String} custom_name name of the person
+	 * @param {Element} div DIV to fill
+	 */
 	this._createCustomPeopleDIV = function(custom_name, div) {
 		var img = document.createElement("IMG");
 		img.src = "/static/selection/common_centers/who_black.png";
@@ -57,6 +78,11 @@ function who_container(container,peoples,can_edit,type) {
 			div.appendChild(remove_button);
 		}
 	};
+	/** Create the DIV for someone known in the database
+	 * @param {Object} people the person
+	 * @param {Element} div DIV to fill
+	 * @param {Boolean} readonly indicates if it can be removed
+	 */
 	this._createKnownPeopleDIV = function(people, div, readonly) {
 		var pic_container = document.createElement("DIV");
 		pic_container.style.textAlign = "center";
@@ -90,7 +116,10 @@ function who_container(container,peoples,can_edit,type) {
 			new profile_picture(pic_container, 45, 60).loadPeopleObject(people.people);
 		});
 	};
-	
+	/** Display a mini popup to add someone
+	 * @param {Element} button the element below which to display the mini popup
+	 * @param {String} title title of the mini popup
+	 */
 	this.addSomeonePopup = function(button, title) {
 		require("mini_popup.js",function() {
 			var p = new mini_popup(title);
@@ -236,7 +265,7 @@ function who_container(container,peoples,can_edit,type) {
 			});
 		});
 	};
-	
+	/** Display 'nobody assigned yet' */
 	this._addNobody = function() {
 		var div = document.createElement("DIV");
 		div.style.fontStyle = "italic";
@@ -246,7 +275,10 @@ function who_container(container,peoples,can_edit,type) {
 		t._content.appendChild(div);
 		layout.changed(t._content);
 	};
-	
+	/** Create a button to add someone
+	 * @param {String} add_people_question title of the mini popup
+	 * @returns {Element} the button
+	 */
 	this.createAddButton = function(add_people_question) {
 		var add_button = document.createElement("BUTTON");
 		add_button.className = "flat icon";
@@ -257,7 +289,7 @@ function who_container(container,peoples,can_edit,type) {
 		add_button.title = "Add someone";
 		return add_button;
 	};
-	
+	/** DIV containing the peoples */
 	t._content = document.createElement("DIV");
 	container.appendChild(t._content);
 
@@ -268,6 +300,14 @@ function who_container(container,peoples,can_edit,type) {
 			t._createPeopleDIV(peoples[i]);
 }
 
+/**
+ * Create a section in which a who_container will be created
+ * @param {Element} container where to create the section
+ * @param {Array} peoples list of peoples for the who_container
+ * @param {Boolean} can_edit indicates if the user can add or remove someone
+ * @param {String} type indicates the type of center
+ * @param {String} add_people_question title of the mini popup when adding someone
+ */
 function who_section(container,peoples,can_edit,type,add_people_question) {
 	var t=this;
 	if (typeof container == 'string') container = document.getElementById(container);

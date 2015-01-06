@@ -4,25 +4,35 @@
 window.browser = {
 	/** information from the UserAgent */
 	agent_infos: [],
-	/** version of Internet Explorer, or 0 */
+	/** version of Internet Explorer, or 0 
+	 * @no_name_check */
 	IE: 0,
-	/** version of Chrome, or 0 */
+	/** version of Chrome, or 0 
+	 * @no_name_check */
 	Chrome: 0,
-	/** version of WebKit, or 0 */
+	/** version of WebKit, or 0 
+	 * @no_name_check */
 	WebKit: 0,
-	/** version of Safari-compatible, or 0 */
+	/** version of Safari-compatible, or 0 
+	 * @no_name_check */
 	Safari: 0,
-	/** version of Safari, or 0 */
+	/** version of Safari, or 0 
+	 * @no_name_check */
 	SafariBrowser: 0,
-	/** version of FireFox, or 0 */
+	/** version of FireFox, or 0 
+	 * @no_name_check */
 	FireFox: 0,
-	/** version of Opera-compatible, or 0 */
+	/** version of Opera-compatible, or 0 
+	 * @no_name_check */
 	Opera: 0, 
-	/** version of Opera, or 0 */
+	/** version of Opera, or 0 
+	 * @no_name_check */
 	OperaBrowser: 0,
-	/** version of Presto, or 0 */
+	/** version of Presto, or 0 
+	 * @no_name_check */
 	Presto: 0,
-	/** version */
+	/** version 
+	 * @no_name_check */
 	Version: 0,
 	/** Detect the navigator type and version */
 	detect: function() {
@@ -104,11 +114,13 @@ if (!Array.prototype.contains)
 
 /** @class document */
 
-/** If document.getElementById does not exist, it is added */
 if (typeof document.getElementById != "function")
+	/** If document.getElementById does not exist, it is added 
+	 * @param {String} id the id
+	 * @returns {Element} the element */
 	document.getElementById = function(id) { return document.all[id]; };
-/** If document.getElementsByClassName does not exist, it is added */
 if (typeof document.getElementsByClassName!='function') {
+	/** If document.getElementsByClassName does not exist, it is added */
     document.getElementsByClassName = function() {
         var elms = document.getElementsByTagName('*');
         var ei = new Array();
@@ -133,6 +145,7 @@ if (typeof document.getElementsByClassName!='function') {
     };
 }
 if (typeof Element.prototype.getElementsByClassName!='function') {
+	/** If document.getElementsByClassName does not exist, it is added */
     Element.prototype.getElementsByClassName = function() {
         var elms = this.getElementsByTagName('*');
         var ei = new Array();
@@ -176,8 +189,8 @@ window.getIFrameWindow = function(frame) {
 };
 
 /** Return the window from the given document
- * @param {document} doc the document
- * @returns {window} the window containing the given document
+ * @param {Document} doc the document
+ * @returns {Window} the window containing the given document
  */
 window.getWindowFromDocument = function(doc) {
 	if (browser.IE > 0 && browser.IE <= 8)
@@ -185,6 +198,10 @@ window.getWindowFromDocument = function(doc) {
 	return doc.defaultView;
 };
 
+/** Return the window containing the given element
+ * @param {Element} e the element
+ * @returns {Window} its window, or null if it is not in the DOM
+ */
 window.getWindowFromElement = function(e) {
 	if (!e) return null;
 	//while (e.offsetParent) e = e.offsetParent;
@@ -192,9 +209,11 @@ window.getWindowFromElement = function(e) {
 	return getWindowFromDocument(e.ownerDocument);
 };
 
-/** Defined it if this function is not available in the current browser
- */
 if (typeof getComputedStyle == "undefined") {
+	/** Defined it if this function is not available in the current browser
+	 * @param {Element} e the element
+	 * @param {String} n pseudo element
+	 * */
 	getComputedStyle = function(e,n) {
 		return e.currentStyle;
 	};
@@ -202,6 +221,8 @@ if (typeof getComputedStyle == "undefined") {
 /** If this class is not available in the current browser, it creates it
  */
 if (typeof XMLHttpRequest == "undefined")
+	/** For IE browser, if it does not exist, we add it
+	 * @no_name_check */
 	XMLHttpRequest = function () {
 	    try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
 	      catch (e) {}
@@ -212,12 +233,16 @@ if (typeof XMLHttpRequest == "undefined")
 	    //Microsoft.XMLHTTP points to Msxml2.XMLHTTP and is redundant
 	    throw new Error("This browser does not support XMLHttpRequest.");
 	};
+/** HTTP status code returned by the browser in case of timeout
+ * @no_name_check */
 window.HTTP_Status_Timeout = browser.IE > 0 ? 12031 : 0;
+/** HTTP status code returned by the browser in case of connection problem 
+ * @no_name_check */
 window.HTTP_Status_ConnectionLost = browser.IE > 0 ? 12029 : 0;
 	
 /**
  * Set the opacity of an element (if the browser has a way to support it)
- * @param {Element} element
+ * @param {Element} element the element
  * @param {Number} opacity from 0 to 1
  */
 function setOpacity(element, opacity) {
@@ -237,6 +262,11 @@ function setOpacity(element, opacity) {
 			element.style.opacity = o;
 	}	
 }
+/**
+ * Retrieve the opacity of an element
+ * @param {Element} element the element
+ * @returns {Number} the opacity between 0 and 1
+ */
 function getOpacity(element) {
 	if (typeof element.style == 'undefined') return 1;
 	if (typeof element.style.opacity != 'undefined') return parseFloat(element.style.opacity);
@@ -290,6 +320,11 @@ function setBorderRadius(elem,
 	elem.style.WebkitBorderBottomLeftRadius = bottomleft_width+"px "+bottomleft_height+"px"; 
 	elem.style.WebkitBorderBottomRightRadius = bottomright_width+"px "+bottomright_height+"px"; 
 }
+/**
+ * Retrieve the border radius style of the given element
+ * @param {Element} elem the element
+ * @returns {Array} [topleft,topright,bottomleft,bottomright]
+ */
 function getBorderRadius(elem) {
 	var style = getComputedStyle(elem);
 	var getValue = function(name) {
@@ -415,7 +450,7 @@ function getCompatibleMouseEvent(e) {
 /**
  * Return a key event, whatever browser is used.
  * @param {Event} e the event
- * @returns {Object}
+ * @returns {Object} information about the event
  */
 function getCompatibleKeyEvent(e) {
 	// source: http://www.javascripter.net/faq/keycodes.htm
@@ -501,7 +536,13 @@ function getCompatibleKeyEvent(e) {
 };
 
 if (!browser.IE >= 9) {
+	/** Get the height of the window
+	 * @returns {Number} the height of the window
+	 */
 	window.getWindowHeight = function() { return window.innerHeight; };
+	/** Get the width of the window
+	 * @returns {Number} the width of the window
+	 */
 	window.getWindowWidth = function() { return window.innerWidth; };
 } else if (browser.IE >= 7) {
 	window.getWindowHeight = function() { return document.documentElement.scrollHeight; };
@@ -512,6 +553,12 @@ if (!browser.IE >= 9) {
 }
 
 if (browser.IE == 0) {
+	/**
+	 * Stop the propagation of an event to the hierarchy of DOM (cancelBubble for IE, stopPropagation on others)
+	 * @param {Event} evt the event
+	 * @param {Boolean} do_not_prevent_default if true, we won't prevent the default action of the browser on the current element
+	 * @returns {Boolean} return false
+	 */
 	window.stopEventPropagation = function(evt, do_not_prevent_default) {
 		evt.stopPropagation();
 		if (!do_not_prevent_default)
@@ -526,6 +573,11 @@ if (browser.IE == 0) {
 	};
 }
 
+/**
+ * Get the class name for the given object
+ * @param {Object} obj the object we want to know its class
+ * @returns {String} the class of the object
+ */
 function getObjectClassName(obj) {
 	if (obj == null) return "null";
 	if (obj == undefined) return "undefined";
@@ -536,6 +588,11 @@ function getObjectClassName(obj) {
 	}
 	return "Object";
 }
+/**
+ * Return the name of the given function
+ * @param {Function} f the function
+ * @returns {String} its name
+ */
 function getFunctionName(f) {
 	if (typeof f.name != 'undefined') return f.name;
 	var s = f.toString();
@@ -572,6 +629,12 @@ function unlistenEvent(elem, type, handler) {
 	else if (elem.detachEvent)
 	     elem.detachEvent('on'+type,handler); 
 }
+/**
+ * Create an event
+ * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
+ * @param {Object} attributes attributes to put on the event
+ * @returns {Event} the event
+ */
 function createEvent(type, attributes) {
 	var evt;
 	if (document.createEvent) {
@@ -587,7 +650,7 @@ function createEvent(type, attributes) {
 	return evt;
 }
 /**
- * Trigger an event
+ * Trigger an event (create and fire)
  * @param {Element} elem the HTML element
  * @param {String} type the type of event ('click' for onclick, 'mousedown', 'mousemove'...)
  * @param {Object} attributes attributes to set in the event
@@ -597,6 +660,12 @@ function triggerEvent(elem, type, attributes) {
 	fireEvent(elem, type, evt);
 }
 
+/**
+ * Fire a DOM event
+ * @param {Element} elem the element on which to fire the event
+ * @param {String} type type of event (i.e. mousemove, click, resize...)
+ * @param {Event} evt the event to fire
+ */
 function fireEvent(elem, type, evt) {
 	if (document.createEvent) {
 		elem.dispatchEvent(evt);
@@ -607,12 +676,16 @@ function fireEvent(elem, type, evt) {
 	}
 }
 
+/** List of javascripts already loaded */
 var _scripts_loaded = {};
+/** List of javascript currently loading */
 var _scripts_loading = {};
 /**
  * Dynamically load a javascript into the page. If it was already loaded, it will not load it again, but will call <code>onload</code> immediately
  * @param {String} url URL of the JavaScript file to load
+ * @param {Object} additional_attributes to be put on the script node
  * @param {Function} onload called once the javascript is loaded
+ * @returns {Element} the SCRIPT node
  */
 function addJavascript(url, onload, additional_attributes) {
 	if (typeof url == 'string') url = new URL(url);
@@ -622,7 +695,7 @@ function addJavascript(url, onload, additional_attributes) {
 		return _scripts_loaded[p];
 	}
 	if (typeof _scripts_loading[p] != 'undefined') {
-		if (onload) _scripts_loading[p].data.add_listener(onload);
+		if (onload) _scripts_loading[p].data.addListener(onload);
 		return _scripts_loading[p];
 	}
 	if (document.readyState != "complete") {
@@ -647,7 +720,7 @@ function addJavascript(url, onload, additional_attributes) {
 				// already using data ?? should be in the _scripts_loading...
 				_scripts_loading[p] = e;
 				if (onload)
-					e.data.add_listener(onload);
+					e.data.addListener(onload);
 				return e;
 			}
 			// didn't use this way...
@@ -659,8 +732,8 @@ function addJavascript(url, onload, additional_attributes) {
 			}
 			e.data = new Custom_Event();
 			_scripts_loading[p] = e;
-			if (onload) e.data.add_listener(onload);
-			if (e.onload) e.data.add_listener(e.onload);
+			if (onload) e.data.addListener(onload);
+			if (e.onload) e.data.addListener(e.onload);
 			e.onload = function() { if (_scripts_loading) delete _scripts_loading[p]; if (_scripts_loaded) _scripts_loaded[p]=e; this.data.fire(); this.data.cleanup(); this.data = null; };
 			return e;
 		}
@@ -671,7 +744,7 @@ function addJavascript(url, onload, additional_attributes) {
 		for (var name in additional_attributes)
 			s[name] = additional_attributes[name];
 	s.data = new Custom_Event();
-	if (onload) s.data.add_listener(onload);
+	if (onload) s.data.addListener(onload);
 	s.type = "text/javascript";
 	s.onload = function() { if (_scripts_loading) delete _scripts_loading[p]; if (_scripts_loaded) _scripts_loaded[p]=s; this._loaded = true; s.data.fire(); s.data.cleanup(); s.data = null; s.onload = null; s.onreadystatechange = null; };
 	//s.onerror = function(ev) { alert("Error loading javascript file: "+this.src); for (var name in ev) alert("Event: "+name+"="+ev[name]); };
@@ -682,9 +755,9 @@ function addJavascript(url, onload, additional_attributes) {
 }
 /**
  * Indicate a javascript is already loaded. This is automatically called by addJavascript, but may be useful in case some scripts are loaded in a different way
- * @param {String} url the URL of the loaded JavaScript
+ * @param {Element} node the SCRIPT node
  */
-function javascript_loaded(node) {
+function javascriptLoaded(node) {
 	var url = new URL(node.src).toString();
 	_scripts_loaded[url] = node;
 	delete _scripts_loading[url]; 
@@ -693,7 +766,7 @@ function javascript_loaded(node) {
  * Remove a JavaScript from the HEAD
  * @param {String} url the URL of the JavaScript file to remove
  */
-function remove_javascript(url) {
+function removeJavascript(url) {
 	var p = new URL(url).toString();
 	if (typeof _scripts_loaded[p] != 'undefined') {
 		var node = _scripts_loaded[p];
@@ -723,6 +796,7 @@ function remove_javascript(url) {
 /**
  * Dynamically load a stylesheet in the page.
  * @param {String} url the URL of the CSS file to load
+ * @param {Function} onload if given, called when the CSS file has been loaded
  */
 function addStylesheet(url,onload) {
 	if (typeof url == 'string') url = new URL(url);
@@ -756,7 +830,7 @@ function addStylesheet(url,onload) {
  * @param {String} script_filename the file name to search
  * @returns {String} the URL where it has been found, or null of it was not found
  */
-function get_script_path(script_filename) {
+function getScriptPath(script_filename) {
 	var head = document.getElementsByTagName("HEAD")[0];
 	for (var i = 0; i < head.childNodes.length; ++i) {
 		var e = head.childNodes[i];

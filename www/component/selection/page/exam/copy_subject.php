@@ -30,7 +30,7 @@ class page_exam_copy_subject extends SelectionPage {
 				->execute();
 			foreach ($subjects as $s) {
 				echo "<li>";
-				echo "<a href='/dynamic/selection/page/exam/subject?id=".$s["id"]."&campaign_id=".$c["id"]."'>";
+				echo "<a href='#' onclick='copySubject(".$s["id"].",".$c["id"].");return false;'>";
 				echo toHTML($s["name"]);
 				echo "</a>";
 				echo "</li>";
@@ -40,6 +40,18 @@ class page_exam_copy_subject extends SelectionPage {
 		}
 		echo "</ul>";
 		echo "</div>";
+?>
+<script type='text/javascript'>
+function copySubject(subject_id, campaign_id) {
+	var popup = window.parent.getPopupFromFrame(window);
+	popup.freeze("Copying subject...");
+	service.json("selection","exam/copy_subject",{subject:subject_id,campaign:campaign_id},function(res) {
+		if (!res) popup.unfreeze();
+		else popup.close();
+	});
+}
+</script>
+<?php 
 	}
 	
 }

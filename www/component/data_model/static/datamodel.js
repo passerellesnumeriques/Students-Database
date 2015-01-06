@@ -6,7 +6,7 @@
  */
 window.datamodel = {
 	/** List of components registered as containing a DataDisplay */
-	_data_widgets: [],
+	_data_widgets: {},
 	/** Registers a widget/component as containing a DataDisplay
 	 * @param {window} win the window where the widget is (given, so when the window is closed, we can unregister it automatically)
 	 * @param {DataDisplay} data_display the data
@@ -21,25 +21,26 @@ window.datamodel = {
 		var listener = function(){
 			window.top.datamodel.dataChanged(data_display, data_key, data_getter());
 		};
-		window.top.datamodel._data_widgets.push({win:win,data_display:data_display,data_key:data_key,data_getter:data_getter,data_setter:data_setter,element:element,unregister_listener:unregister_listener,listener:listener});
+		if (!win._id) win._id = win.generateID();
+		if (!element.id) element.id = win.generateID();
+		if (typeof window.top.datamodel._data_widgets[win._id] == 'undefined') window.top.datamodel._data_widgets[win._id] = {};
+		window.top.datamodel._data_widgets[win._id][element.id] = {data_display:data_display,data_key:data_key,data_getter:data_getter,data_setter:data_setter,element:element,unregister_listener:unregister_listener,listener:listener};
 		register_listener(listener);
 		element.ondomremoved(function(element) {
-			window.top.datamodel.unregisterDataWidget(element);
+			window.top.datamodel.unregisterDataWidget(win, element);
 			listener = null;
 		});
 		if (data_display.cell)
 			this.registerCellWidget(win, data_display.cell.table, data_display.cell.column, data_key, element, data_getter, data_setter, register_listener, unregister_listener);
 	},
-	unregisterDataWidget: function(element) {
-		for (var i = 0; i < this._data_widgets.length; ++i)
-			if (this._data_widgets[i].element == element) {
-				this._data_widgets[i].unregister_listener(this._data_widgets[i].listener);
-				this._data_widgets.splice(i,1);
-				i--;
-			}
+	unregisterDataWidget: function(win, element) {
+		var dw = this._data_widgets[win._id][element.id];
+		if (!dw) return;
+		dw.unregister_listener(dw.listener);
+		delete this._data_widgets[win._id][element.id];
 	},
 	/** List of components registered as containing a cell */
-	_cell_widgets: [],
+	_cell_widgets: {},
 	/** Registers a widget/component as containing a cell
 	 * @param {window} win the window where the widget is (given, so when the window is closed, we can unregister it automatically)
 	 * @param {String} table table
@@ -55,19 +56,20 @@ window.datamodel = {
 		var listener = function(){
 			window.top.datamodel.cellChanged(table, column, row_key, data_getter());
 		};
-		this._cell_widgets.push({win:win,table:table,column:column,row_key:row_key,element:element,data_getter:data_getter,data_setter:data_setter,unregister_listener:unregister_listener,listener:listener});
+		if (!win._id) win._id = win.generateID();
+		if (!element.id) element.id = win.generateID();
+		if (typeof window.top.datamodel._cell_widgets[win._id] == 'undefined') window.top.datamodel._cell_widgets[win._id] = {};
+		window.top.datamodel._cell_widgets[win._id][element.id] = {table:table,column:column,row_key:row_key,element:element,data_getter:data_getter,data_setter:data_setter,unregister_listener:unregister_listener,listener:listener};
 		register_listener(listener);
 		element.ondomremoved(function(element) {
-			window.top.datamodel.unregisterCellWidget(element);
+			window.top.datamodel.unregisterCellWidget(win, element);
 		});
 	},
-	unregisterCellWidget: function(element) {
-		for (var i = 0; i < this._cell_widgets.length; ++i)
-			if (this._cell_widgets[i].element == element) {
-				this._cell_widgets[i].unregister_listener(this._cell_widgets[i].listener);
-				this._cell_widgets.splice(i,1);
-				i--;
-			}
+	unregisterCellWidget: function(win, element) {
+		var w = this._cell_widgets[win._id][element.id];
+		if (!w) return;
+		w.unregister_listener(w.listener);
+		delete this._cell_widgets[win._id][element.id];
 	},
 	/** Register a text node displaying the data of a cell
 	 * @param {window} win the window where the widget is (given, so when the window is closed, we can unregister it automatically)
@@ -105,7 +107,7 @@ window.datamodel = {
 		input.cellSaved = function() {
 			original = input.value;
 		};
-		win.pnapplication.onclose.add_listener(function() {
+		win.pnapplication.onclose.addListener(function() {
 			if (input.value != original) {
 				input.value = original;
 				input.onchange();
@@ -137,7 +139,7 @@ window.datamodel = {
 		date_select.cellSaved = function() {
 			original = date_select.getDate();
 		};
-		win.pnapplication.onclose.add_listener(function() {
+		win.pnapplication.onclose.addListener(function() {
 			var d = date_select.getDate();
 			if ((d == null && original != null) || original == null || d.getTime() != original.getTime()) {
 				date_select.selectDate(original);
@@ -205,10 +207,12 @@ window.datamodel = {
 			if (l.data_display.table == data_display.table && l.data_display.name == data_display.name && l.data_key == data_key)
 				l.listener(value);
 		}
-		for (var i = 0; i < this._data_widgets.length; ++i) {
-			var w = this._data_widgets[i];
-			if (w.data_display.category == data_display.category && w.data_display.name == data_display.name && w.data_key == data_key) {
-				if (w.data_getter() != value) w.data_setter(value);
+		for (var win_id in this._data_widgets) {
+			var dw_win = this._data_widgets[win_id];
+			for (var eid in dw_win) {
+				var w = dw_win[eid];
+				if (w.data_display.category == data_display.category && w.data_display.name == data_display.name && w.data_key == data_key)
+					if (w.data_getter() != value) w.data_setter(value);
 			}
 		}
 	},
@@ -229,10 +233,12 @@ window.datamodel = {
 			if (l.table == table && l.column == column && l.row_key == row_key)
 				l.listener(value);
 		}
-		for (var i = 0; i < this._cell_widgets.length; ++i) {
-			var w = this._cell_widgets[i];
-			if (w.table == table && w.column == column && w.row_key == row_key) {
-				if (w.data_getter() != value) w.data_setter(value);
+		for (var win_id in this._cell_widgets) {
+			var cw_win = this._cell_widgets[win_id];
+			for (var eid in cw_win) {
+				var w = cw_win[eid];
+				if (w.table == table && w.column == column && w.row_key == row_key)
+					if (w.data_getter() != value) w.data_setter(value);
 			}
 		}
 	},
@@ -245,11 +251,14 @@ window.datamodel = {
 	 * @param {Function} handler the function to call as soon as we found the value
 	 */
 	getCellValue: function(table, column, row_key, handler) {
-		for (var i = 0; i < this._cell_widgets.length; ++i) {
-			var w = this._cell_widgets[i];
-			if (w.table == table && w.column == column && w.row_key == row_key) {
-				handler(w.data_getter());
-				return;
+		for (var win_id in this._cell_widgets) {
+			var cw = this._cell_widgets[win_id];
+			for (var eid in cw) {
+				var w = cw[eid];
+				if (w.table == table && w.column == column && w.row_key == row_key) {
+					handler(w.data_getter());
+					return;
+				}
 			}
 		}
 		// we don't have, we need to request to the server
@@ -265,18 +274,10 @@ window.datamodel = {
 	 * @param {window} win the window which has been closed
 	 */
 	_windowClosed: function(win) {
-		for (var i = 0; i < this._data_widgets.length; ++i) {
-			if (this._data_widgets[i].win == win) {
-				this._data_widgets.splice(i,1);
-				i--;
-			}
-		}
-		for (var i = 0; i < this._cell_widgets.length; ++i) {
-			if (this._cell_widgets[i].win == win) {
-				this._cell_widgets.splice(i,1);
-				i--;
-			}
-		}
+		if (win._id && typeof this._data_widgets[win._id] != 'undefined')
+			delete this._data_widgets[win._id];
+		if (win._id && typeof this._cell_widgets[win._id] != 'undefined')
+			delete this._cell_widgets[win._id];
 		for (var i = 0; i < this._data_change_listeners.length; ++i) {
 			if (this._data_change_listeners[i].win == win) {
 				this._data_change_listeners.splice(i,1);
@@ -302,8 +303,8 @@ window.datamodel = {
 			else {
 				var field = new win[field_type](value,editable,field_cfg);
 				container.appendChild(field.getHTMLElement());
-				if (onchange) field.onchange.add_listener(function(f) { onchange(f.getCurrentData()); });
-				field.register_datamodel_cell(table,column,row_key);
+				if (onchange) field.onchange.addListener(function(f) { onchange(f.getCurrentData()); });
+				field.registerDataModelCell(table,column,row_key);
 				if (oncreated) oncreated(field);
 			}
 		});
@@ -335,9 +336,9 @@ window.datamodel = {
 			});
 			popup.show();
 		};
-		var locker = lock_screen();
+		var locker = lockScreen();
 		service.customOutput("data_model","get_remove_confirmation_content",{table:table,row_key:row_key},function(html) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			content_html = html;
 			ready();
 		});
@@ -349,7 +350,7 @@ function _init_datamodel_js() {
 		setTimeout(_init_datamodel_js, 25);
 		return;
 	}
-	window.top.pnapplication.onwindowclosed.add_listener(function(c) { c.top.datamodel._windowClosed(c.win); });
+	window.top.pnapplication.onwindowclosed.addListener(function(c) { c.top.datamodel._windowClosed(c.win); });
 }
 if (!window.top.datamodel_prototype) {
 window.top.datamodel_prototype = {

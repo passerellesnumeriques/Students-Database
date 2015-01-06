@@ -17,10 +17,16 @@ abstract class AuthenticationSystem {
 	 */
 	public function closeSession($token) {}
 	
+	/** <i>Optional.</i> Extend the life time of a token.
+	 * @param string $token from the authenticate method
+	 */
 	public function extendTokenExpiration($token) {}
 	
 }
 
+/**
+ * Extend an AuthenticationSystem, by adding the capability to provide the list of existing users
+ */
 interface AuthenticationSystem_UserList {
 
 	/** <i>Optional.</i> Retrieve the list of users existing on the authentication system.
@@ -31,6 +37,9 @@ interface AuthenticationSystem_UserList {
 	
 }
 
+/**
+ * Extend an AuthenticationSystem, by adding the capability to manage the users (add/remove/rename)
+ */
 interface AuthenticationSystem_ManageUsers {
 
 	/** <i>Optional.</i> Create a new user on the authentication system.
@@ -58,6 +67,9 @@ interface AuthenticationSystem_ManageUsers {
 	
 }
 
+/**
+ * Extend an AuthenticationSystem, by adding the capability to reset the password of users
+ */
 interface AuthenticationSystem_ResetPassword {
 
 	/** <i>Optional.</i> Change the password of a user.

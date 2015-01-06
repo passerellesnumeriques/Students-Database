@@ -44,6 +44,11 @@ class page_profile extends Page {
 			return $p1->getPriority()-$p2->getPriority();
 		}
 		usort($pages, "pages_sort");
+		if ($page <> null) {
+			$real_page = null;
+			foreach ($pages as $p) if ($p->getName() == $page) { $real_page = $p->getURL($people_id); }
+			$page = $real_page;
+		}
 		if ($page == null) $page = $pages[0]->getURL($people_id);
 ?>
 <div id='profile_page' page='<?php echo $page; if ($sub_models <> null) echo "&sub_models=".json_encode($sub_models);?>'>
@@ -75,7 +80,7 @@ datamodel_cell_inline($this, "cell", "span_first_name", false, "People", "first_
 datamodel_cell_inline($this, "cell", "span_last_name", false, "People", "last_name", "people_id", null, "last_name", "function(){layout.changed(profile_header.header);}");
 ?>
 
-var popup = window.parent.get_popup_window_from_frame ? window.parent.get_popup_window_from_frame(window) : null;
+var popup = window.parent.getPopupFromFrame ? window.parent.getPopupFromFrame(window) : null;
 var page = document.getElementById('profile_page');
 function adaptPopup() {
 	if (popup.content.nodeName != "IFRAME") {

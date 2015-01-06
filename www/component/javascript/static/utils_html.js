@@ -9,11 +9,11 @@ function generateID() {
 
 /**
  * Lock the screen by adding a semi-transparent element on top of the window
- * @param onclick called when the user click on the element on top of the window
- * @param content html code or html element to be put in the center of the element
- * @returns the element on top of the window created by this function
+ * @param {Function|null} onclick called when the user click on the element on top of the window
+ * @param {String|Element|null} content html code or html element to be put in the center of the element
+ * @returns {Element} the element on top of the window created by this function
  */
-function lock_screen(onclick, content) {
+function lockScreen(onclick, content) {
 	var div = document.getElementById('lock_screen');
 	if (div) {
 		div.usage_counter++;
@@ -32,17 +32,23 @@ function lock_screen(onclick, content) {
 	if (onclick)
 		div.onclick = onclick;
 	if (content)
-		set_lock_screen_content(div, content);
+		setLockScreenContent(div, content);
 	if (typeof animation != 'undefined')
 		div.anim = animation.fadeIn(div,200,function() {div.anim=null;},10,100);
 	div.listener = function() {
+		if (!getWindowWidth) return;
 		div.style.width = getWindowWidth()+"px";
 		div.style.height = getWindowHeight()+"px";
 	};
 	listenEvent(window, 'resize', div.listener);
 	return document.body.appendChild(div);
 }
-function set_lock_screen_content(div, content) {
+/**
+ * Change the content of a screen locker
+ * @param {Element} div returned by lockScreen
+ * @param {String|Element} content new content
+ */
+function setLockScreenContent(div, content) {
 	div.removeAllChildren();
 	var table = document.createElement("TABLE"); div.appendChild(table);
 	table.style.width = "100%";
@@ -59,7 +65,15 @@ function set_lock_screen_content(div, content) {
 		d.appendChild(content);
 	td.appendChild(d);
 }
-function set_lock_screen_content_progress(lock_div, total, message, sub_div, onready) {
+/**
+ * Change the content of a screen locker, adding a progress bar in it
+ * @param {Element} lock_div returned by lockScreen
+ * @param {Number} total total amount of work to set in the progress bar
+ * @param {String} message HTML code of the message to put on top of the progress bar 
+ * @param {Boolean} sub_div if true, a DIV will be also added below the progress bar to display sub-messages
+ * @param {Function} onready called when everything is ready, with 3 parameters: the SPAN containing the message, the progress_bar, and the sub-div if requested
+ */
+function setLockScreenContentProgress(lock_div, total, message, sub_div, onready) {
 	theme.css("progress_bar.css");
 	require("progress_bar.js", function() {
 		var div = document.createElement("DIV");
@@ -77,17 +91,17 @@ function set_lock_screen_content_progress(lock_div, total, message, sub_div, onr
 			sub = document.createElement("DIV");
 			div.appendChild(sub);
 		}
-		set_lock_screen_content(lock_div, div);
+		setLockScreenContent(lock_div, div);
 		theme.css("progress_bar.css",function() {
 			onready(span, pb, sub);			
 		});
 	});
 }
 /**
- * Remove the given element, previously created by using the function lock_screen
- * @param div
+ * Remove the given element, previously created by using the function lockScreen
+ * @param {Element} div previously created with lockScreen
  */
-function unlock_screen(div) {
+function unlockScreen(div) {
 	if (!div) div = document.getElementById('lock_screen');
 	if (!div) return;
 	if (!div.parentNode) return;
@@ -109,6 +123,10 @@ function unlock_screen(div) {
 		document.body.removeChild(div);
 }
 
+/**
+ * Hide an element while loading, by creating a DIV on top of it
+ * @param {Element} to_hide the element to hide
+ */
 function LoadingHidder(to_hide) {
 	var t=this;
 	/** {Element} table containing the loading content in front of the frame */
@@ -154,14 +172,20 @@ function LoadingHidder(to_hide) {
 	this.remove = function() {
 		this._removed = true;
 		layout.unlistenElementSizeChanged(to_hide, updater);
-		if (this.div.parentNode)
-			this.div.parentNode.removeChild(this.div);
-		this.div = null;
-		t = null;
+		if (!t.div.parentNode) { t.div = null; t = null; return; }
+		animation.fadeOut(this.div, 300, function() {
+			if (t.div.parentNode)
+				t.div.parentNode.removeChild(t.div);
+			t.div = null;
+			t = null;
+		});
 	};
 	
+	/** Set the content of the hidder. It uses the setLockScreenContent so it will look the same.
+	 * @param {String|Element} content content to set
+	 */
 	this.setContent = function(content) {
-		set_lock_screen_content(this.div, content);
+		setLockScreenContent(this.div, content);
 	};
 	
 	this._position();
@@ -173,10 +197,11 @@ function LoadingHidder(to_hide) {
 }
 
 /** Wait for things to be initialized in a frame
- * @param {window} win the window of the frame
+ * @param {Window} win the window of the frame
  * @param {Function} test tests if it is ready or not (takes the window as parameter, must return true if the frame is ready)
  * @param {Function} onready called when the frame is ready
  * @param {Number} timeout time in milliseconds after which we will not try anymore (if not specified, default is 30 seconds)
+ * @param {Function} onfail called if the frame was not yet ready after the timeout
  */
 function waitFrameReady(win, test, onready, timeout, onfail) {
 	if (typeof timeout == 'undefined' || timeout === null) timeout = 30000;
@@ -192,6 +217,7 @@ function waitFrameReady(win, test, onready, timeout, onfail) {
  * @param {Function} test tests if it is ready or not (takes the window as parameter, must return true if the frame is ready)
  * @param {Function} onready called when the frame is ready
  * @param {Number} timeout time in milliseconds after which we will not try anymore (if not specified, default is 30 seconds)
+ * @param {Function} onfail called if the frame was not yet ready after the timeout
  */
 function waitFrameContentReady(frame, test, onready, timeout, onfail) {
 	if (typeof timeout == 'undefined' || timeout === null) timeout = 30000;
@@ -204,6 +230,12 @@ function waitFrameContentReady(frame, test, onready, timeout, onfail) {
 	onready(win);
 }
 
+/** Wait for a frame to be ready
+ * @param {String} frame_name name of the frame (if the frame does not exist yet, we will wait for it)
+ * @param {Function} onready called when the frame is ready
+ * @param {Number} timeout time in milliseconds after which we will not try anymore (if not specified, default is 30 seconds)
+ * @param {Function} onfailed called if the frame was not yet ready after the timeout
+ */
 function waitForFrame(frame_name, onready, timeout, onfailed) {
 	if (typeof timeout == 'undefined' || timeout === null) timeout = 30000;
 	if (timeout < 50) {
@@ -319,9 +351,17 @@ function tooltip(element, content) {
 	};
 }
 
-function printContent(container, onready, filename) {
+/**
+ * Show a print preview of the given element
+ * @param {Element} container element to print
+ * @param {Function} onready called when the print preview is ready and shown
+ * @param {String} filename optional, if the print finally ends with a save into a file, this will be the default file name
+ * @param {String} template_name optional, template to use to print
+ * @param {Object} template_parameters parameters for the template
+ */
+function printContent(container, onready, filename, template_name, template_parameters) {
 	if (typeof container == 'string') container = document.getElementById(container);
-	window.top.popup_frame(theme.icons_16.print, "Print", "/dynamic/application/page/print"+(filename?"?filename="+encodeURIComponent(filename):""), null, 95, 95, function(frame,pop){
+	window.top.popupFrame(theme.icons_16.print, "Print", "/dynamic/application/page/print"+(filename?"?filename="+encodeURIComponent(filename):""), template_name ? {template:template_name,params:template_parameters} : null, 95, 95, function(frame,pop){
 		waitFrameContentReady(frame, 
 			function(win) {
 				return win.printing_ready;

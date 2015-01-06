@@ -1,6 +1,15 @@
 /* #depends[typed_field.js] */
 if (typeof require != 'undefined') require("input_utils.js");
 
+/**
+ * Display the date/time corresponding to the timestamp.
+ * Configuration can contain:<ul>
+ * <li>can_be_null</li>
+ * <li>minimum_date</li>
+ * <li>maximum_date</li>
+ * <li>show_time: if false, only a date is displayed</li>
+ * </ul>
+ */
 function field_timestamp(data,editable,config) {
 	typed_field.call(this, data, editable, config);
 }
@@ -41,10 +50,10 @@ field_timestamp.prototype._create = function(data) {
 			if (t.config && t.config.minimum_date) cfg.minimum = t.config.minimum_date;
 			if (t.config && t.config.maximum_date) cfg.maximum = t.config.maximum_date;
 			t._field_date = new field_date(date,true,cfg);
-			t._field_date.onchange.add_listener(function() { t._datachange(); });
+			t._field_date.onchange.addListener(function() { t._datachange(); });
 			t.element.appendChild(t._field_date.getHTMLElement());
 			t._field_date.getHTMLElement().style.verticalAlign = "bottom";
-			t._field_date.onfocus.add_listener(function(){t.onfocus.fire();});
+			t._field_date.onfocus.addListener(function(){t.onfocus.fire();});
 			if (t.config && t.config.show_time) {
 				var time = 0;
 				if (d != null) time = d.getMinutes()+d.getHours()*60;
@@ -53,10 +62,10 @@ field_timestamp.prototype._create = function(data) {
 				span.style.verticalAlign = "bottom";
 				t.element.appendChild(span);
 				t._field_time = new field_time(time,true,{});
-				t._field_time.onchange.add_listener(function() { t._datachange(); });
+				t._field_time.onchange.addListener(function() { t._datachange(); });
 				t.element.appendChild(t._field_time.getHTMLElement());
 				t._field_time.getHTMLElement().style.verticalAlign = "bottom";
-				t._field_time.onfocus.add_listener(function(){t.onfocus.fire();});
+				t._field_time.onfocus.addListener(function(){t.onfocus.fire();});
 			}
 		});
 		this._setData = function(data) {
@@ -84,7 +93,7 @@ field_timestamp.prototype._create = function(data) {
 			if (t.config && t.config.data_is_seconds) timestamp = Math.floor(timestamp/1000);
 			return timestamp;
 		};
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.border = error ? "1px solid red" : "";
 		};
@@ -116,7 +125,7 @@ field_timestamp.prototype._create = function(data) {
 			return data;
 		};
 		this._setData(data);
-		this.signal_error = function(error) {
+		this.signalError = function(error) {
 			this.error = error;
 			this.element.style.color = error ? "red" : "";
 		};

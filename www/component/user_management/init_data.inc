@@ -7,5 +7,5 @@ $people_id = PNApplication::$instance->people->createPeople(array("first_name"=>
 
 // admin user
 $admin_id = PNApplication::$instance->user_management->createInternalUser("admin", "", $people_id);
-PNApplication::$instance->user_management->assign_roles(array($admin_id), array(-1), true);
+PNApplication::$instance->user_management->assignRoles(array($admin_id), array(-1), true);
 ?>

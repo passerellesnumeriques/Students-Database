@@ -1,12 +1,15 @@
 <?php 
 require_once("component/people/PeopleTypePlugin.inc");
 require_once("OrganizationPlugin.inc");
+/**
+ * Defines the type of people 'contact_point_xxx' with xxx the creator of the organizations
+ */
 class ContactPointPeopleTypePlugin implements PeopleTypePlugin {
 	
-	/** @var OrganizationPlugin $org_plugin */
+	/** @var OrganizationPlugin $org_plugin the plugin of the Organization defining the creator */
 	private $org_plugin;
 	/**
-	 * @param OrganizationPlugin $org_plugin
+	 * @param OrganizationPlugin $org_plugin the plugin of the Organization defining the creator
 	 */
 	public function __construct($org_plugin) {
 		$this->org_plugin = $org_plugin;

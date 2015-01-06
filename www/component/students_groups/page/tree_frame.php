@@ -35,7 +35,7 @@ class page_tree_frame extends Page {
 		$groups_types = $q->execute();
 		$group_type = isset($_COOKIE["students_groups_type"]) ? $_COOKIE["students_groups_type"] : 1;
 		
-		$can_edit = PNApplication::$instance->user_management->has_right("manage_batches");
+		$can_edit = PNApplication::$instance->user_management->hasRight("manage_batches");
 ?>
 <style type="text/css">
 #students_groups_tree_container {
@@ -221,7 +221,7 @@ function updateGroupTypeButtons() {
 updateGroupTypeButtons();
 function editGroupType() {
 	var gt = getSelectedGroupType();
-	input_dialog(theme.icons_16.edit,"Rename Group Type","Group Type Name",gt.name,100,function(name) {
+	inputDialog(theme.icons_16.edit,"Rename Group Type","Group Type Name",gt.name,100,function(name) {
 		if (name.trim().length == 0) return "The name cannot be empty";
 		for (var i = 0; i < group_types.length; ++i)
 			if (group_types[i].id != gt.id && group_types[i].name.isSame(name))
@@ -231,9 +231,9 @@ function editGroupType() {
 		if (!name) return;
 		name = name.trim();
 		if (name == gt.name) return;
-		var locker = lock_screen(null,"Renaming group type...");
+		var locker = lockScreen(null,"Renaming group type...");
 		service.json("data_model","save_entity",{table:"StudentsGroupType",sub_model:null,key:gt.id,lock:-1,field_name:name},function(res) {
-			unlock_screen(locker);
+			unlockScreen(locker);
 			if (!res) return;
 			gt.name = name;
 			var select = document.getElementById('select_group_type');
@@ -247,7 +247,7 @@ function editGroupType() {
 	});
 }
 function removeGroupType() {
-	var locker = lock_screen();
+	var locker = lockScreen();
 	require("popup_window.js");
 	var content = document.createElement("DIV");
 	content.style.padding = "10px";
@@ -262,7 +262,7 @@ function removeGroupType() {
 					p.close();
 				});
 			});
-			unlock_screen(locker);
+			unlockScreen(locker);
 			p.show();
 		});
 	});

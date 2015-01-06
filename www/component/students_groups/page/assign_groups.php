@@ -167,7 +167,7 @@ class page_assign_groups extends Page {
 		<div id='top_container' style='display:flex;flex-direction:row;flex:1 1 auto;'></div> 
 		</div>
 		<script type='text/javascript'>
-		var popup = window.parent.get_popup_window_from_frame(window);
+		var popup = window.parent.getPopupFromFrame(window);
 		popup.addIconTextButton(theme.icons_16.save, "Save", 'save', save);
 		popup.disableButton('save');
 		popup.addCloseButton();
@@ -253,14 +253,14 @@ class page_assign_groups extends Page {
 				echo "\tassign.addElement(getStudent(".$s["people_id"]."),".json_encode($s["group"]).",true);\n";
 			}
 			echo "\tif (previous_groups) assign.addUnassignedButton(null,'From '+".json_encode($previous_batch_period["name"]).",function(){fromPreviousPeriod(this,assign);});\n";
-			echo "\tassign.onchange.add_listener(changed);\n";
+			echo "\tassign.onchange.addListener(changed);\n";
 			echo "\tlayout.changed(assign.container);\n";
 			echo "});\n";
 			echo "assigns.push(assign);\n";
 		}
 		?>
 		function save() {
-			var lock = lock_screen(null, "Saving assignments...");
+			var lock = lockScreen(null, "Saving assignments...");
 			var changes = [];
 			for (var i = 0; i < assigns.length; ++i) changes.push(assigns[i].getChanges());
 			var next = function(index_assign, index_people) {
@@ -269,7 +269,7 @@ class page_assign_groups extends Page {
 					assigns[index_assign].changesSaved();
 					if (index_assign == assigns.length-1) {
 						<?php if (isset($_GET["onsave"])) echo "window.frameElement.".$_GET["onsave"]."();"?>
-						unlock_screen(lock);
+						unlockScreen(lock);
 						return;
 					}
 					next(index_assign+1,0);
@@ -279,9 +279,9 @@ class page_assign_groups extends Page {
 				var current = peoples[index_people].current;
 				var people = peoples[index_people].element;
 				if (current == null)
-					set_lock_screen_content(lock,"Unassign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" from "+group_type.name+" "+getGroupName(original).toHTML());
+					setLockScreenContent(lock,"Unassign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" from "+group_type.name+" "+getGroupName(original).toHTML());
 				else
-					set_lock_screen_content(lock,"Assign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" to "+group_type.name+" "+getGroupName(current).toHTML());
+					setLockScreenContent(lock,"Assign "+people.first_name.toHTML()+" "+people.last_name.toHTML()+" to "+group_type.name+" "+getGroupName(current).toHTML());
 				service.json("students_groups","assign_group",{student:people.id,group:current,period:<?php echo $period_id;?>,group_type:<?php echo $group_type_id;?>},function(res){
 					next(index_assign,index_people+1);
 				});

@@ -16,6 +16,9 @@ class AdministrationApplicationSection implements ApplicationSectionPlugin {
 	public function getDefaultPageURL() { return "/dynamic/administration/page/dashboard"; }
 	
 	public function canAccess() {
+#SELECTION_TRAVEL
+#return false;
+#END
 		require_once("component/administration/AdministrationPlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c)
 			foreach ($c->getPluginImplementations() as $pi)
