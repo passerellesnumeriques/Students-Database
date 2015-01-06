@@ -24,16 +24,15 @@ $model->addTable("FinanceRegularPayment")
 	->addRemoveAccess("manage_finance", true)
 	;
 
-$model->addTable("CustomScheduledPayment")
+$model->addTable("Loan")
 	->addPrimaryKey("id")
-	->addEnum("frequency",array("Daily","Weekly","Monthly","Yearly","Custom"),false,false)
-	->addString("description",250,0,false,false)
+	->addString("reason",250,1,false,false)
 	;
 
 $model->addTable("ScheduledPaymentDate")
 	->addForeignKey("due_operation", "FinanceOperation", true, true, false, false, true)
 	->setPrimary("due_operation")
-	->addForeignKey("custom_payment","CustomScheduledPayment", true, false, true, true, false)
+	->addForeignKey("loan","Loan", true, false, true, true, false)
 	->addForeignKey("regular_payment","FinanceRegularPayment", true, false, true, true, false)
 	->addReadAccess("consult_student_finance", true)
 	->addInsertAccess("manage_finance", true)

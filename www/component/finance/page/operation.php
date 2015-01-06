@@ -25,6 +25,8 @@ class page_operation extends Page {
 		$descr = "";
 		$due_date_ts = datamodel\ColumnDate::toTimestamp($op["date"]);
 		$due_date = date("d M Y", $due_date_ts);
+		$due_comment = null;
+		$normal_description = $op["description"];
 		if ($schedule <> null) {
 			if ($schedule["regular_payment"] <> null) {
 				// this operation comes from a general regular payment
@@ -43,6 +45,12 @@ class page_operation extends Page {
 				}
 				$descr = $regular_payment["name"];
 				$this->setPopupTitle($regular_payment["name"]." of ".$date_str." for ".$people["first_name"]." ".$people["last_name"]);
+				$normal_description = $descr." of ".$date_str;
+				if ($op["description"] <> $normal_description) {
+					$due_comment = $op["description"];
+					if (substr($due_comment,0,strlen($normal_description)+2) == $normal_description.", ")
+						$due_comment = substr($due_comment,strlen($normal_description)+2);
+				}
 				$due_date = $date_str;
 				// check if we have next payments also which can be cancelled
 				$next_operations = SQLQuery::create()
@@ -62,6 +70,8 @@ class page_operation extends Page {
 			}
 		}
 		echo "<table>";
+		if ($due_comment)
+			echo "<tr><td>Information</td><td colspan=2>".toHTML($due_comment)."</td></tr>";
 		echo "<tr><td>Due Date:</td><td align=right>$due_date</td></tr>";
 		echo "<tr><td>Amount Due:</td><td align=right>".(-floatval($op["amount"]))."</td></tr>";
 		$balance = floatval($op["amount"]);
@@ -72,6 +82,15 @@ class page_operation extends Page {
 				echo "<tr>";
 				echo "<td>Paid on ".$p["date"].":</td>";
 				echo "<td align=right>".$p["amount"]."</td>";
+				$comment = $p["description"];
+				if ($comment == $normal_description) $comment = "";
+				else {
+					if (substr($comment,0,strlen($normal_description)+2) == $normal_description.", ")
+						$comment = substr($comment,strlen($normal_description)+2);
+				}
+				if ($comment === false || $comment == "") $comment = null;
+				if ($comment)
+					echo "<td>(".toHTML($comment).")</td>";
 				echo "</tr>";
 				$balance += floatval($p["amount"]);
 			}

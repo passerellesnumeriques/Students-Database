@@ -8,10 +8,12 @@ class page_student_payment extends Page {
 		$people = PNApplication::$instance->people->getPeople($people_id);
 		echo "<div style='background-color:white;padding:5px;'>";
 		$default_amount = isset($_GET["amount"]) ? $_GET["amount"] : "";
+		$situation_description = null;
 		if (isset($_GET["regular_payment"])) {
 			// case of regular payment
 			$regular_payment_id = $_GET["regular_payment"];
 			$regular_payment = SQLQuery::create()->select("FinanceRegularPayment")->whereValue("FinanceRegularPayment","id",$regular_payment_id)->executeSingleRow();
+			$situation_description = $regular_payment["name"];
 			$this->setPopupTitle($regular_payment["name"]." of ".$people["first_name"]." ".$people["last_name"]);
 			$due = SQLQuery::create()
 				->select("ScheduledPaymentDate")
@@ -40,7 +42,7 @@ class page_student_payment extends Page {
 		if (!isset($_GET["payment_date"])) {
 			if (isset($current_due_amount)) {
 				$balance = $paid-$current_due_amount;
-				echo "Current situation:<ul><li>Due: ".$current_due_amount."</li><li>Paid: ".$paid."</li><li>= <span style='color:".($balance < 0 ? "red" : ($balance == 0 ? "black" : "green"))."'>$balance</span></ul>";
+				echo "Current situation".($situation_description <> null ? " for ".toHTML($situation_description) : "").":<ul><li>Due: ".$current_due_amount."</li><li>Paid: ".$paid."</li><li>= <span style='color:".($balance < 0 ? "red" : ($balance == 0 ? "black" : "green"))."'>$balance</span></ul>";
 				echo "Future payments due: ".$future_due_amount."<br/>";
 				echo "Maximum payment = ".($current_due_amount+$future_due_amount-$paid)."<br/>";
 				echo "<hr/>";
@@ -51,6 +53,7 @@ class page_student_payment extends Page {
 			echo "<table>";
 			echo "<tr><td>Amount paid</td><td><input name='amount' type='number' value='$default_amount'/></td></tr>";
 			echo "<tr><td>Date of payment</td><td><input name='payment_date' type='date' value='$today'/></td></tr>";
+			echo "<tr><td>Comment</td><td><input name='comment' type='text' size=30/></td></tr>";
 			echo "</table>";
 			echo "</form>";
 			echo "<button class='action' onclick=\"document.forms['payment_spec'].submit();\">Continue <img src='".theme::$icons_16["right"]."'/></button>";
@@ -124,6 +127,7 @@ class page_student_payment extends Page {
 				echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> Warning: Remaining amount of $amount cannot be assigned to a ".toHTML($regular_payment["name"])." and will be ignored.</div>";
 			}
 			?>
+			Additional comment: <input type='text' size=30 id='add_descr' value=<?php echo json_encode($_GET["comment"]);?>/><br/>
 			<button class='action' onclick='createPayments();'>Confirm</button>
 			<script type='text/javascript'>
 			function createPayments() {
@@ -132,9 +136,10 @@ class page_student_payment extends Page {
 					date: <?php echo json_encode($_GET["payment_date"]);?>,
 					operations:[]
 				};
+				var comment = document.getElementById('add_descr').value.trim();
 				<?php
 				foreach ($operations as $op) {
-					echo "data.operations.push({amount:".$op["amount"].",schedule:".$op["schedule"]["due_operation"].",description:".json_encode($op["description"])."});\n";
+					echo "data.operations.push({amount:".$op["amount"].",schedule:".$op["schedule"]["due_operation"].",description:".json_encode($op["description"])."+(comment.length > 0 ? ', '+comment : '')});\n";
 				}
 				?>
 				var popup = window.parent.getPopupFromFrame(window);
