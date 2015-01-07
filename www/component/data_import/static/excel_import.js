@@ -535,6 +535,11 @@ function excel_import(popup, container, onready) {
 			while (grid.getNbRows() <= row)
 				win.addRow();
 			var f = grid.getCellField(row++, col_index);
+			if (!f) {
+				row--;
+				setTimeout(function() { next_cell(ci,ri,progress_pos,progress_total);},1);
+				return;
+			}
 			if (f.isMultiple()) {
 				if (where.type == 'reset') f.resetData();
 				if (value != "") {
@@ -597,7 +602,10 @@ function excel_import(popup, container, onready) {
 				}
 			}
 			if (onprogress) onprogress(progress_pos, progress_total);
-			setTimeout(function() {next_cell(ci,ri,progress_pos+1,progress_total);},1);
+			if (progress_total < 40 || (progress_pos % 10) == 0)
+				setTimeout(function() {next_cell(ci,ri,progress_pos+1,progress_total);},1);
+			else
+				next_cell(ci,ri,progress_pos+1,progress_total);
 		};
 		
 		// resolve ambiguous values by field
