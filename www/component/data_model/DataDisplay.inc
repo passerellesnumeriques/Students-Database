@@ -2081,5 +2081,88 @@ class AgeDataDisplay extends CalculationDataDisplay {
 	
 }
 
+class ExistsDataDisplay extends DataDisplay {
+	
+	public function __construct($display_name, $column = null) {
+		$this->display_name = $display_name;
+		$this->column = $column;
+	}
+	
+	private $display_name;
+	private $column;
+	
+	public function getDisplayName() { return $this->display_name; }
+	public function canAccess($sub_model) {
+		try {
+			$table = \DataModel::get()->getTable($this->getTableName());
+			if ($table == null) return false;
+			if ($this->column <> null) {
+				$col = $table->getColumnFor($this->column, $sub_model);
+				if ($col == null) return false;
+			}
+			return true;
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+	public function getHandledColumns() {
+		if ($this->column == null) return array();
+		return array($this->column);
+	}
+	public function getTypedField($sub_model) {
+		return array("field_boolean","{}");
+	}
+	public function getHorizontalAlign($sub_model) { return "center"; }
+	public function isEditable() { return false; }
+	public function getEditLocks($sub_model) { return array(); }
+	public function isSortable() { return true; }
+	public function isMandatory($sub_model) { return false; }
+	public function getTypedFilter($sub_model) {
+		return array("filter_enum","{possible_values:[[1,'Yes'],[0,'No']],can_be_null:false}");
+	}
+	public function buildSQL(&$q, $path, $filtered) {
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
+		$alias = $q->generateFieldAlias();
+		if ($this->column <> null) {
+			$q->field($table_alias, $this->column, $alias);
+		} else {
+			$pk = $this->getTable()->getPrimaryKey();
+			if ($pk <> null) {
+				$q->field($table_alias, $pk->name, $alias); 
+			} else {
+				$key = $this->getTable()->getKey();
+				$has = false;
+				foreach ($key as $colname) {
+					$col = $this->getTable()->internalGetColumnFor($colname, $path->sub_model);
+					if (!$col->can_be_null) {
+						$has = true;
+						$q->field($table_alias, $colname, $alias);
+						break;
+					}
+				}
+				if (!$has) {
+					$s = "";
+					foreach ($key as $colname) {
+						if ($s <> "") $s .= ",";
+						$s .= "`$table_alias`,`$colname`";
+					}
+					$q->expression("COALESCE($s)", $alias);
+				}
+			}
+		}
+		return array("key"=>null,"data"=>$alias);
+	}
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		$cd = $this->getExpressionFilterCondition("(`".$data_aliases['data']."` IS NOT NULL)", "filter_enum", $filter, $q);
+		if ($cd == null) return null;
+		return array("type"=>"having","condition"=>$cd);
+	}
+	public function getData($row, $resultFromBuildSQL) {
+		return @$row[$resultFromBuildSQL["data"]] !== null ? 1 : 0;
+	}
+
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {}
+}
+
 } // namespace datamodel
 ?>

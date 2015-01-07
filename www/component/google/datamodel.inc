@@ -5,6 +5,7 @@ $model->addTable("GoogleUser")
 	->addString("google_id",100,1,true,false)
 	->addString("google_login", 255, 10,true,false)
 	->setPrimary("user")
+	->addReadAccess("manage_users", true)
 	;
 
 $model->addTable("PNGoogleCalendar")
