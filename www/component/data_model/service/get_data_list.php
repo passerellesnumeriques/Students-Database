@@ -131,7 +131,26 @@ class service_get_data_list extends Service {
 					array_push($data_aliases, null);
 				continue;
 			}
-			$data_alias = $data->buildSQL($q, $path);
+			$has_filter = false;
+			foreach ($filters as &$filter) {
+				do {
+					if ($filter["category"] == $data->getCategoryName() && $filter["name"] == $data->getDisplayName()) {
+						$has_filter = true;
+						break;
+					}
+					if (!isset($filter["or"])) break;
+					$f = &$filter["or"];
+					unset($filter);
+					$filter = &$f;
+				} while (true);
+			}
+			if (!$has_filter) {
+				if (isset($input["sort_field"]) && isset($input["sort_order"])) {
+					if ($input["sort_field"] == $data->getCategoryName().".".$data->getDisplayName())
+						$has_filter = true;
+				}
+			}
+			$data_alias = $data->buildSQL($q, $path, $has_filter);
 			array_push($data_aliases, $data_alias);
 			// put datadisplay in filters
 			foreach ($filters as &$filter) {
@@ -178,7 +197,7 @@ class service_get_data_list extends Service {
 							$found = true;
 							$filter["datadisplay"] = $data;
 							$filter["datapath"] = $path;
-							$filter["dataaliases"] = $data->buildSQL($q, $path);
+							$filter["dataaliases"] = $data->buildSQL($q, $path, true);
 							// check if we have other filters on same data
 							foreach ($filters as &$fil) {
 								do {
@@ -342,7 +361,7 @@ class service_get_data_list extends Service {
 							$path = $paths[$i];
 							$path->sub_model_from_link = true;
 							$path->sub_model = $sm_instance;
-							$data_alias = $data->buildSQL($sq, $path);
+							$data_alias = $data->buildSQL($sq, $path, true);
 							$sm_data_aliases[$i] = $data_alias;
 							$data_aliases[$i] = array("key"=>"SM_KEY_".$i, "data"=>"SM_DATA_".$i);
 						}

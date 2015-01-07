@@ -107,7 +107,7 @@ abstract class DataDisplay {
 	 * @param DataPath $path how we reached this data
 	 * @return array("key"=&gt;key_alias,"data"=&gt;data_alias): if data is null or not specified, the function performSubRequest must be implemented
 	 */
-	public abstract function buildSQL(&$q, $path);
+	public abstract function buildSQL(&$q, $path, $filtered);
 	/** Get the condition to be added to apply the given filter
 	 * @param \SQLQuery $q the query
 	 * @param \DataPath $path the path to reach this data
@@ -437,7 +437,7 @@ class SimpleDataDisplay extends DataDisplay {
 		return array(array("table"=>$this->getTable()->getName(), "column"=>$this->column_name, "sub_model"=>$sub_model, "lock_each_row"=>true));
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		$alias = $q->getFieldAlias($table_alias, $this->column_name);
 		if ($alias == null) {
@@ -629,7 +629,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		return "?";
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		// we need to get the key, and the value to display
 		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $path->sub_model);
 		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
@@ -825,7 +825,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		return false;
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		if ($path instanceof \DataPath_Table) {
 			$this_alias = $q->getTableAlias($path->table->getName());
 			$alias = $q->getFieldAlias($this_alias, $this->joining_key_name);
@@ -1225,7 +1225,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return array("table"=>$col[0]->table->getName(), "column"=>$col[0]->name);
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$steps = explode(".", $this->data_path);
 		$current_table = $this->getTable();
 		$current_table_alias = \DataPathSQLBuilder::build($path, $q);
@@ -1648,7 +1648,7 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 		return array("table"=>$col->table->getName(), "column"=>$col->name);
 	}
 	
-	public function buildSQL(&$q, $path) {			
+	public function buildSQL(&$q, $path, $filtered) {			
 		$columns = explode(".", $this->data_path);
 		$last_table = $this->getTable();
 		// go to the table
@@ -1781,7 +1781,7 @@ class CalculationDataDisplay extends DataDisplay {
 		return $col;
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		
@@ -1888,7 +1888,7 @@ class CountLinksDataDisplay extends DataDisplay {
 		return false;
 	}
 
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$t = $this->getTable();
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
@@ -1991,7 +1991,7 @@ class CountDataValueDataDisplay extends DataDisplay {
 		return false;
 	}
 
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$t = $this->getTable();
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
@@ -2065,8 +2065,8 @@ class AgeDataDisplay extends CalculationDataDisplay {
 		return array("field_age","{table:".json_encode($this->getTable()->getName()).",sub_model:".json_encode($sub_model).",column:".json_encode($this->birthdate_column)."}");
 	}
 	
-	public function buildSQL(&$q, $path) {
-		$keys = parent::buildSQL($q, $path);
+	public function buildSQL(&$q, $path, $filtered) {
+		$keys = parent::buildSQL($q, $path, $filtered);
 		$pk = $this->getTable()->getPrimaryKey();
 		if ($pk == null) return $keys;
 		$key_alias = $q->getFieldAlias($this->getTable()->getName(), $pk->name);

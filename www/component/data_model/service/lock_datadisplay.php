@@ -66,7 +66,7 @@ class service_lock_datadisplay extends Service {
 				$q = SQLQuery::create()->select($table);
 				if ($sub_model <> null) $q->selectSubModel($table, $sub_model);
 				$key = $data->selectTableKeyFromKey($q, $t, $input["key"]);
-				$res = $data->buildSQL($q, new DataPath_Table($t, $sub_model));
+				$res = $data->buildSQL($q, new DataPath_Table($t, $sub_model), false);
 				$row = $q->executeSingleRow(); 
 				echo "{locks:".json_encode($ids);
 				echo ",data:".json_encode($data->getData($row, $res));

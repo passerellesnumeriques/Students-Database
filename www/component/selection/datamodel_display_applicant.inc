@@ -124,7 +124,7 @@ class ApplicantExclusionReason extends datamodel\DataDisplay {
 		return array("filter_enum",$cfg);
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		$key_alias = $q->getFieldAlias($table_alias, "people");
 		if ($key_alias == null)
