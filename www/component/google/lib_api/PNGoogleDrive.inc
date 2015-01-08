@@ -11,6 +11,14 @@ class PNGoogleDrive extends PNGoogle_ProjectSpecific {
 		require_once("Google/Service/Drive.php");
 		$this->service = new Google_Service_Drive($this->client);
 	}
+
+	/**
+	 * 
+	 * @return Google_Service_Drive_About
+	 */
+	public function about() {
+		return $this->service->about->get();
+	}
 	
 	/**
 	 * 

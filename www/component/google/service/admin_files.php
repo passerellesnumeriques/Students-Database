@@ -14,6 +14,11 @@ class service_admin_files extends Service {
 	public function execute(&$component, $input) {
 		require_once 'component/google/lib_api/PNGoogleDrive.inc';
 		$gdrive = new PNGoogleDrive();
+		
+		$about = $gdrive->about();
+		echo "Size used: ".$about->quotaBytesUsed." / ".$about->quotaBytesTotal;
+		echo "<br/>";
+		
 		$list = $gdrive->getFiles();
 ?>
 <table>
