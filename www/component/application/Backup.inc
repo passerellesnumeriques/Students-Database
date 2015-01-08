@@ -121,9 +121,7 @@ class Backup {
 			$f = fopen(realpath($path)."/storage.list","w");
 			$db = SQLQuery::getDataBaseAccessWithoutSecurity();
 			$res = $db->execute("SELECT `id`,`revision` FROM `Storage` WHERE `expire` IS NULL ORDER BY `id`");
-			$first = true;
 			while (($row = $db->nextRow($res)) <> null) {
-				if ($first) $first = false; else fwrite($f, ",");
 				$filesize = filesize(PNApplication::$instance->storage->get_data_path($row["id"]));
 				fwrite($f, $row["id"].",".$row["revision"].",$filesize\n");
 			}
