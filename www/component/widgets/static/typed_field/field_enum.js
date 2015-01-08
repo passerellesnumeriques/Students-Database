@@ -166,6 +166,7 @@ field_enum.prototype._create = function(data) {
 						t.element.removeChild(o.sel);
 						t.element.style.width = "100%";
 						select.style.width = "100%";
+						if (o.w < 5) o.w=5;
 						select.style.minWidth = (o.w)+"px";
 						cache.w = o.w;
 						for (var i = 0; i < cache.onavail.length; ++i)
@@ -175,7 +176,7 @@ field_enum.prototype._create = function(data) {
 				});
 				return cache;
 			}
-			if (!cache.w) cache.onavail.push(function() {
+			if (typeof cache.w == 'undefined') cache.onavail.push(function() {
 				select.style.width = "100%";
 				select.style.minWidth = cache.w+"px";
 			});

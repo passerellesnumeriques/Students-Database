@@ -158,6 +158,25 @@ drawing = {
 		canvas.style.position = "absolute";
 		canvas.style.pointerEvents = "none";
 		var parent = getAbsoluteParent(from);
+		var parent2 = getAbsoluteParent(to);
+		if (parent != parent2) {
+			var path1 = [parent];
+			var p = parent;
+			while (p && p.nodeName != 'BODY') {
+				p = getAbsoluteParent(p);
+				if (p) path1.push(p);
+			}
+			var path2 = [parent2];
+			var p = parent2;
+			while (p && p.nodeName != 'BODY') {
+				p = getAbsoluteParent(p);
+				if (p) path2.push(p);
+			}
+			parent = null;
+			for (var i = 0; i < path1.length; ++i)
+				if (path2.indexOf(path1[i]) >= 0) { parent = path1[i]; break; }
+			if (!parent) parent = getWindowFromElement(from).document.body;
+		}
 		parent.appendChild(canvas);
 		var update = function() {
 			var from_x = absoluteLeft(from, parent);
