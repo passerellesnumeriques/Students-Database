@@ -364,6 +364,13 @@ class storage extends Component {
 		SQLQuery::create()->bypassSecurity()->updateByKey("Storage", $id, array("type"=>$type,"expire"=>null));
 	}
 	
+	function storeTempFile($path, $expire) {
+		$id = $this->allocateID("temp", null, $expire);
+		$store_path = $this->get_data_path($id);
+		copy($path, $store_path);
+		return $id;
+	}
+	
 	/** return true if this is the final call (either form sent, or no file uploaded), or false if this is an asynchronous upload */
 	function receive_upload(&$ids, &$names, &$types, &$sizes, $expire_seconds) {
 		$headers = getallheaders();

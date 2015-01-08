@@ -27,16 +27,24 @@ class page_exam_results extends SelectionPage {
 <!-- main structure of the exam results page -->
 <div style="width:100%;height:100%;display:flex;flex-direction:column">
 	<div class="page_title" style="flex:none">
-		<div style='float:right;font-size:10pt;'>
 		<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
+		<div style='float:right;font-size:10pt;'>
 		<button class='action red' onclick='resetAll();'>
 			Reset all results
-		</button><br/>
+		</button>
+		</div>
 		<?php } ?>
+		<div style='float:right;font-size:10pt;'>
 		<button class='action' onclick='exportResults(this);'>
 			<img src='/static/excel/excel_16.png'/>
 			Export results for analysis
 		</button>
+		<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
+		<br/><button class='action' onclick="popupFrame(null,'Manual import from Excel','/dynamic/selection/page/exam/manual_import_results',null,null,null,function(frame,popup){popup.onclose=function(){location.reload();}});">
+			<img src='<?php echo theme::$icons_16["_import"];?>'/>
+			Manual import from Excel
+		</button>
+		<?php } ?>
 		</div>
 		<img src='/static/transcripts/transcript_32.png'/>
 		Written Exam Results
