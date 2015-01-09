@@ -23,9 +23,9 @@ foreach ($subjects as $s) {
 Which kind of results does it contain ? 
 <select name='results_type'>
 	<option></option>
-	<?php if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) { ?>
+	<?php /* TODO if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) { ?>
 	<option value='answers'>The answer of the applicants for every question</option>
-	<?php } ?>
+	<?php } */ ?>
 	<option value='questions_marks'>The mark of the applicants for every question</option>
 	<option value='parts_marks'>Only the grade of each part of the exams</option>
 </select>

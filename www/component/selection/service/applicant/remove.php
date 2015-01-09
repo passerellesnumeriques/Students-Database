@@ -9,8 +9,44 @@ class service_applicant_remove extends Service {
 	
 	public function execute(&$component, $input) {
 		$applicants_ids = $input["applicants"];
-		
+
+		// for applicants which are also in another campaign, just remove in this campaign and move the link to the other campaign
+		set_time_limit(300);
+		$campaigns_ids = SQLQuery::create()->select("SelectionCampaign")->whereNotValue("SelectionCampaign", "id", PNApplication::$instance->selection->getCampaignId())->field("id")->executeSingleField();
+		foreach ($campaigns_ids as $cid) {
+			$common_applicants_ids = SQLQuery::create()->selectSubModel("SelectionCampaign", $cid)->select("Applicant")->whereIn("Applicant","people",$applicants_ids)->field("people")->executeSingleField();
+			if (count($common_applicants_ids) == 0) continue;
+			foreach ($common_applicants_ids as $applicant_id) {
+				SQLQuery::create()->bypassSecurity()->updateByKey("smlink_Applicant_People", $applicant_id, array("sm"=>$cid));
+				for ($i = count($applicants_ids)-1; $i >= 0; $i--)
+					if ($applicants_ids[$i] == $applicant_id) {
+						array_splice($applicants_ids, $i, 1);
+						break;
+					}
+			}
+			foreach (DataModel::get()->getSubModel("SelectionCampaign")->internalGetTables() as $table) {
+				foreach ($table->internalGetColumnsFor($cid) as $col) {
+					if ($col instanceof datamodel\ForeignKey && $col->foreign_table == "People") {
+						if ($table->getPrimaryKey() == $col)
+							SQLQuery::create()->bypassSecurity()->removeKeys($table->getName(), $common_applicants_ids);
+						else {
+							$rows = SQLQuery::create()->bypassSecurity()->select($table->getName())->whereIn($table->getName(),$col->name,$common_applicants_ids)->execute();
+							if (count($rows) > 0)
+								SQLQuery::create()->bypassSecurity()->removeRows($table->getName(), $rows);
+						}
+						break;
+					}
+				}
+			}
+		}
+		if (count($applicants_ids) == 0) {
+			echo "true";
+			return;
+		}
+
+		set_time_limit(300);
 		$peoples = PNApplication::$instance->people->getPeoples($applicants_ids);
+		
 		$to_remove = array();
 		$to_remove_type = array();
 		foreach ($peoples as $p) {

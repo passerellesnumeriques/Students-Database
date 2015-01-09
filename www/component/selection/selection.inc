@@ -228,6 +228,9 @@ class selection extends Component {
 				}
 			}
 			PNApplication::$instance->people->removePeoplesType($applicants_ids, "applicant");
+			foreach ($reassign_applicants as $id=>$cid)
+				SQLQuery::create()->bypassSecurity()
+					->updateByKey("smlink_Applicant_People", $id, array("sm"=>$cid));
 		}
 		// TODO remove organizations and their contact points...
 		// TODO remove all news having the tag campaignX
