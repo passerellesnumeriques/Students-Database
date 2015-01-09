@@ -18,6 +18,7 @@ $model->addTable("SelectionCampaign")
 				PNApplication::$instance->news->post("selection", null, array("campaign".$row["id"]), "activity", "Creation of campaign <i>".$row["fields_values"]["name"]."</i>");
 			} catch (Exception $e) { PNApplication::error($e); }
  	})
+ 	->setRowDescriptionProvider(function($row) { return "Campaign ".$row["name"]; } )
 	;
 		
 $sm = $model->addSubModel("SelectionCampaign");

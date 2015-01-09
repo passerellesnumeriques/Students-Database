@@ -13,11 +13,11 @@ class ApplicantPeopleTypePlugin implements PeopleTypePlugin {
 		$current_campaign = SQLQuery::create()->bypassSecurity()
 			->select("smlink_Applicant_People")
 			->whereValue("smlink_Applicant_People", "root", $people_id)
-			->field("sm")
-			->executeSingleValue();
-		if ($current_campaign == PNApplication::$instance->selection->getCampaignId())
+			->whereValue("smlink_Applicant_People", "sm", PNApplication::$instance->selection->getCampaignId())
+			->executeSingleRow();
+		if ($current_campaign <> null)
 			return null; // already in the same campaign
-		return "Move to this selection campaign";
+		return "Use it for this selection campaign";
 	}
 	public function reassign($people_id, $data) {
 		SQLQuery::startTransaction();
@@ -33,8 +33,6 @@ class ApplicantPeopleTypePlugin implements PeopleTypePlugin {
 					$data->saveData($people_id, $data_value["value"], $cid, $tables_fields, "people", $people_id);
 				}
 				$display->finalizeCreateData($people_id, $cid, $tables_fields, null);
-				SQLQuery::create()->bypassSecurity()
-					->removeKey("smlink_Applicant_People", $people_id);
 				$tables_fields->execute(true);
 				break;
 			}
@@ -55,8 +53,14 @@ class ApplicantPeopleTypePlugin implements PeopleTypePlugin {
 	}
 	
 	public function getPeopleRowDescription($people) {
-		$c = PNApplication::$instance->selection->getCampaignFromApplicant($people["id"], true);
-		return "Applicant during campaign ".toHTML($c["name"]);
+		$list = PNApplication::$instance->selection->getCampaignsFromApplicant($people["id"], true);
+		$s = "Applicant during ";
+		$first = true;
+		foreach ($list as $c) {
+			if ($first) $first = false; else $s .= ", ";
+			$s .= "campaign ".toHTML($c["name"]);
+		}
+		return $s;
 	}
 	
 	public function getBuiltinDefaultUserRoles($people) { return array(); }

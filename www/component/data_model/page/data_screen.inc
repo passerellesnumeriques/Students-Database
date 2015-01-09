@@ -169,11 +169,13 @@ function dataScreen(&$page, $root_table_name, $sub_model, $sub_models, $values, 
 	return $html;
 }
 
-function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$sections, $structure_name) {
+function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$sections, $structure_name, $section_add_name = null) {
 	if ($path->sub_model == "@link") return;
 	// try to resolve sub models in children
+	$multiple_sm_children = array();
 	for ($i = 0; $i < count($path->children); $i++) {
 		$child = $path->children[$i];
+		//echo "<div style='border:1px solid black'>".toHTML($child->getString())."</div>";
 		if ($child->sub_model == "@link") {
 			$root_tables = $child->table->getModel()->getLinkedRootTables();
 			if (count($root_tables) == 0) continue;
@@ -183,19 +185,40 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 					$root_key = $values->getColumnValue($root_table, $t->getPrimaryKey()->name);
 					$sub_model_table_name = $child->table->getModel()->getLinkedSubModelTable($root_table);
 					$link_table_name = "smlink_".$sub_model_table_name."_".$root_table;
-					$sm = null;
 					if ($values->hasColumnValue($link_table_name, "sm")) {
 						$sm = $values->getColumnValue($link_table_name, "sm");
-					} else {
+						$child->sub_model = $sm;
+						break;
+					}
+					if ($child->table->getModel()->isLinkUnique($sub_model_table_name)) {
 						$sm = SQLQuery::create()->bypassSecurity()
 							->select($link_table_name)
 							->whereValue($link_table_name, "root", $root_key)
 							->field("sm")
 							->executeSingleValue();
 						$values->addTableColumnValue($link_table_name, "sm", $sm);
+						$child->sub_model = $sm;
+						break;
+					} else {
+						$links = SQLQuery::create()->bypassSecurity()
+							->select($link_table_name)
+							->whereValue($link_table_name, "root", $root_key)
+							->field("sm")
+							->executeSingleField();
+						//echo "<div style='border:5px solid red'>".toHTML($child->getString()).": sm = ".var_export($links,true)."</div>";
+						if (count($links) == 0) continue;
+						if (count($links) == 1) {
+							$sm = $links[0];
+							$values->addTableColumnValue($link_table_name, "sm", $sm);
+							$child->sub_model = $sm;
+							break;
+						} else {
+							array_push($multiple_sm_children, array($child,$links,$link_table_name));
+							array_splice($path->children, $i, 1);
+							$i--;
+							break;
+						}
 					}
-					if ($sm <> null) $child->sub_model = $sm;
-					break;
 				}
 			}
 		}
@@ -204,6 +227,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 	if ($parent_display == null) return;
 	$screens = DataModel::get()->getDataScreens();
 	$avail_screens = array();
+	$removed = array();
 	foreach ($screens as $s) {
 		if (!($s instanceof \datamodel\SimpleDataScreen)) continue;
 		$tables = $s->getTables();
@@ -224,12 +248,16 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 			if (!$found) { $ok = false; break; }
 		}
 		if (!$ok) foreach ($children as $child) array_push($path->children, $child);
-		else array_push($avail_screens, array($s, $children));
+		else {
+			array_push($avail_screens, array($s, $children));
+			foreach ($children as $child) array_push($removed, $child);
+		}
 	}
 	
 	// create generic screens for remaining paths
 	foreach ($path->children as $child) {
 		if ($child->sub_model == "@link") continue;
+		//echo "<div style='border:1px solid black'>".toHTML($child->getString())."</div>";
 		$display = DataModel::get()->getTableDataDisplay($child->table->getName());
 		if ($display == null) continue;
 		if ($child->isReverse()) {
@@ -381,12 +409,14 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 		echo $ob;
 		if ($h <> "") {
 			$sec = null;
+			$name = $s[0]->getName();
+			if ($section_add_name <> null) $name .= " (".$section_add_name.")";
 			for ($i = 0; $i < count($sections); $i++)
-				if ($sections[$i][0] == $s[0]->getIcon() && $sections[$i][1] == $s[0]->getName()) { $sec = $i; break; }
+				if ($sections[$i][0] == $s[0]->getIcon() && $sections[$i][1] == $name) { $sec = $i; break; }
 			if ($sec === null) {
 				array_push($sections, array(
 					$s[0]->getIcon(),
-					$s[0]->getName(),
+					$name,
 					$h,
 					$end
 				));
@@ -395,12 +425,34 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 				$sections[$sec][3] .= $end;
 			}
 		}
-			
 	}
 
 	foreach ($avail_screens as $s)
 		foreach ($s[1] as $child)
 			buildDataScreenChildren($page, $child, $values, $prefilled_values, $sections, $structure_name);
+
+	// put back removed
+	foreach ($removed as $child) array_push($path->children, $child);
+
+	foreach ($multiple_sm_children as $m) {
+		$path->children = array($m[0]);
+		foreach ($m[1] as $sm) {
+			$values->addTableColumnValue($m[2], "sm", $sm);
+			propagateSubModel($m[0], $sm);
+			$m[0]->sub_model = $sm;
+			$table = DataModel::get()->internalGetTable($m[0]->table->getModel()->getParentTable());
+			$row = SQLQuery::create()->bypassSecurity()->select($table->getName())->whereValue($table->getName(),$table->getPrimaryKey()->name,$sm)->executeSingleRow();
+			$name = $table->getRowDescription($row);
+			buildDataScreenChildren($page, $path, $values, $prefilled_values, $sections, $structure_name, $name);
+		}
+	}
+}
+
+function propagateSubModel($path, $sm) {
+	$path->sub_model = $sm;
+	foreach ($path->children as $child)
+		if ($child->table->getModel() == $path->table->getModel())
+			propagateSubModel($child, $sm);
 }
 
 function getKeyValue($table, $values) {

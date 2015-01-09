@@ -368,6 +368,9 @@ class SubDataModel extends DataModel {
 		if (!isset($this->links_to_parent[$sub_model_table_name])) return false;
 		return $this->links_to_parent[$sub_model_table_name] == $root_table_name;
 	}
+	public function isLinkUnique($sub_model_table_name) {
+		return $this->parent_model->internalGetTable("smlink_".$sub_model_table_name."_".$this->links_to_parent[$sub_model_table_name])->getPrimaryKey() <> null;
+	}
 	/**
 	 * Check if a link exists
 	 * @param string $table_name table in the sub model

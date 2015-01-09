@@ -217,20 +217,17 @@ class selection extends Component {
 		$applicants_ids = SQLQuery::create()->select("Applicant")->field("people")->executeSingleField();
 		set_time_limit(30+floor(count($applicants_ids)/1000));
 		if (count($applicants_ids) > 0) {
-			$campaigns_ids = SQLQuery::create()->select("SelectionCampaign")->whereNotValue("SelectionCampaign", "id", $id)->field("id")->executeSingleField();
-			$reassign_applicants = array();
-			foreach ($campaigns_ids as $cid) {
-				$common_applicants_ids = SQLQuery::create()->selectSubModel("SelectionCampaign", $cid)->select("Applicant")->whereIn("Applicant","people",$applicants_ids)->field("people")->executeSingleField();
-				foreach ($common_applicants_ids as $people_id) {
+			$duplicates = SQLQuery::create()->bypassSecurity()->select("smlink_Applicant_People")->whereIn("smlink_Applicant_People","root",$applicants_ids)->whereNotValue("smlink_Applicant_People","sm",$id)->field("root")->executeSingleField();
+			if (count($duplicates) > 0) {
+				foreach ($duplicates as $people_id) {
 					$i = array_search($people_id, $applicants_ids);
 					array_splice($applicants_ids, $i, 1);
-					$reassign_applicants[$people_id] = $cid;
 				}
+				$keys = array();
+				foreach ($duplicate as $people_id) array_push($keys, array("root"=>$people_id,"sm"=>$id));
+				SQLQuery::create()->bypassSecurity()->removeKeys("smlink_Applicant_People", $keys);
 			}
 			PNApplication::$instance->people->removePeoplesType($applicants_ids, "applicant");
-			foreach ($reassign_applicants as $id=>$cid)
-				SQLQuery::create()->bypassSecurity()
-					->updateByKey("smlink_Applicant_People", $id, array("sm"=>$cid));
 		}
 		// TODO remove organizations and their contact points...
 		// TODO remove all news having the tag campaignX
@@ -991,7 +988,7 @@ class selection extends Component {
 		return $q->execute();
 	}
 	
-	public function getCampaignFromApplicant($people_id, $bypass_security = false) {
+	public function getCampaignsFromApplicant($people_id, $bypass_security = false) {
 		return SQLQuery::create()->bypassSecurity($bypass_security)
 #DEV
 			->noWarning()
@@ -999,7 +996,7 @@ class selection extends Component {
 			->select("smlink_Applicant_People")
 			->whereValue("smlink_Applicant_People", "root", $people_id)
 			->join("smlink_Applicant_People", "SelectionCampaign", array("sm"=>"id"))
-			->executeSingleRow();
+			->execute();
 	}
 	
 	public function signalExamPassersAndLoosers($passers, $loosers) {

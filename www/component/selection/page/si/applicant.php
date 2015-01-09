@@ -6,11 +6,12 @@ class page_si_applicant extends Page {
 	public function execute() {
 		$people_id = $_GET["people"];
 		
-		$campaign = PNApplication::$instance->selection->getCampaignFromApplicant($people_id);
-		if ($campaign == null || $campaign["sm"] == null) {
+		$campaigns = PNApplication::$instance->selection->getCampaignsFromApplicant($people_id);
+		if (count($campaigns) == 0) {
 			PNApplication::error("Invalid people id: not an applicant");
 			return;
 		}
+		$campaign = $campaigns[0]; // TODO
 		$campaign_id = $campaign["id"];
 		$calendar_id = $campaign["calendar"];
 		

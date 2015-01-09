@@ -139,11 +139,11 @@ function boxes_layout(container, space) {
 					row[x][y].element.style.left = lx+'px';
 					ly += row[x][y].height + space;
 					if (row[x][y].width > w) w = row[x][y].width;
+					if (row[x][y].height > h) h = row[x][y].height;
 				}
 				lx += w + space;
-				if (ly > h) h = ly;
 			}
-			row_y += h;
+			row_y += h+space;
 			boxes = boxes_not_layouted;
 		} while (boxes.length > 0);
 	};
