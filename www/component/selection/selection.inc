@@ -740,6 +740,12 @@ class selection extends Component {
 				->executeSingleField();
 			if (count($to_include) > 0)
 				SQLQuery::create()->bypassSecurity()->updateAllKeys("Applicant", $to_include, array("excluded"=>0,"automatic_exclusion_step"=>null,"automatic_exclusion_reason"=>null,"exam_passer"=>1));
+			$to_pass = array();
+			foreach ($passers as $people_id)
+				if (!in_array($people_id, $to_include))
+					array_push($to_pass, $people_id);
+			if (count($to_pass) > 0)
+				SQLQuery::create()->bypassSecurity()->updateAllKeys("Applicant", $to_pass, array("exam_passer"=>1));
 			// automatically assign to interview centers, if applicable
 			$exam_centers = SQLQuery::create()->bypassSecurity()->select("Applicant")->whereIn("Applicant","people",$passers)->whereNotNull("Applicant","people","exam_center")->field("exam_center")->distinct()->executeSingleField();
 			if (count($exam_centers) > 0) {
