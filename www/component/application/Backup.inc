@@ -323,6 +323,7 @@ class Backup {
 	public static function recoverBackup($time, $version = null, $backups_path = "data/backups") {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
+		require_once("SQLQuery.inc");
 		if (PNApplication::$instance == null) {
 			PNApplication::$instance = new PNApplication();
 			PNApplication::$instance->local_domain = $local_domain;

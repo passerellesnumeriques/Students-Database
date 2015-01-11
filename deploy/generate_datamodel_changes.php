@@ -183,7 +183,7 @@ foreach ($indexes_removed_root as $table_name=>$changes) {
 			// remove auto_increment
 			fwrite($f, "\$table = DataModel::get()->internalGetTable(\"".$table_name."\");\n");
 			fwrite($f, "\$col = \$table->internalGetColumn(\"".$c["key"]."\");\n");
-			fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `$table_name` CHANGE COLUMN \".\$col->getSQL(\$db_system, \"$table_name\"));\n");
+			fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `$table_name` MODIFY COLUMN \".\$col->getSQL(\$db_system, \"$table_name\"));\n");
 		} else
 			fwrite($f, "\$db_system->execute(\"DROP INDEX `".$c["index_name"]."` ON `$table_name`\");\n");
 	}
@@ -198,7 +198,7 @@ foreach ($indexes_removed_sm as $parent_table=>$list) {
 				// remove auto_increment
 				fwrite($f, "\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
 				fwrite($f, "\$col = \$table->internalGetColumn(\"".$c["key"]."\");\n");
-				fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` CHANGE COLUMN \".\$col->getSQL(\$db_system, \"$table_name\"));\n");
+				fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` MODIFY COLUMN \".\$col->getSQL(\$db_system, \"$table_name\"));\n");
 			} else
 				fwrite($f, "\$db_system->execute(\"DROP INDEX `".$c["index_name"]."` ON `".$table_name."_\".\$sub_model.\"`\");\n");
 		}
@@ -304,7 +304,7 @@ foreach ($indexes_added_sm as $parent_table=>$list) {
 			if ($c["index_name"] == "PRIMARY") {
 				// add auto_increment
 				fwrite($f, "\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
-				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` CHANGE COLUMN \".]$table->internalGetColumn(\"".$c["key"]."\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model.\"));\n");
+				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` MODIFY COLUMN \".]$table->internalGetColumn(\"".$c["key"]."\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model.\"));\n");
 				// add index
 				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` ADD PRIMARY KEY (`".$c["key"]."`)\");\n");
 			} else if ($c["index_name"] == "table_key") {
