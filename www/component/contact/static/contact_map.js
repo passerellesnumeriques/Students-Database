@@ -30,6 +30,9 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 		this.entities_checkboxes = [];
 		this.entities_markers = [];
 		this.entities_highlight = [];
+		var types_filter_container = document.createElement("DIV");
+		this._entities_container.appendChild(types_filter_container);
+		var addresses_types_list = [];
 		for (var i = 0; i < this.entities.length; ++i) {
 			var div = document.createElement("DIV");
 			div.style.borderBottom = "1px solid #A0A0A0";
@@ -69,8 +72,10 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 				checkboxes.push(cb);
 				markers.push(null);
 				d.appendChild(cb);
+				if (!addresses_types_list.contains(a.address_type)) addresses_types_list.push(a.address_type);
 				if (addresses_types.contains(a.address_type)) cb.checked = "checked";
 				cb.onchange = function() { t.refreshMap(); };
+				cb._type = a.address_type;
 				var span_type = document.createElement("SPAN");
 				span_type.style.color = "#808080";
 				span_type.style.fontStyle = "italic";
@@ -89,6 +94,24 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 		}
 		layout.changed(this._entities_container);
 		this.entities_filled = true;
+		require([["typed_filter.js","filter_enum.js"],"select_checkboxes.js"], function() {
+			var filter = new filter_enum({values:addresses_types},{possible_values:addresses_types_list,can_be_null:false},true);
+			types_filter_container.style.fontSize = "8pt";
+			types_filter_container.style.borderBottom = "1px solid #606060";
+			filter.select.table.style.fontSize = "8pt";
+			types_filter_container.style.verticalAlign = "middle";
+			filter.getHTMLElement().style.verticalAlign = "middle";
+			types_filter_container.appendChild(document.createTextNode("Display addresses: "));
+			types_filter_container.appendChild(filter.getHTMLElement());
+			layout.changed(types_filter_container);
+			filter.onchange.addListener(function() {
+				var types = filter.data.values;
+				for (var i = 0; i < t.entities_checkboxes.length; ++i)
+					for (var j = 0; j < t.entities_checkboxes[i].length; ++j)
+						t.entities_checkboxes[i][j].checked = types.contains(t.entities_checkboxes[i][j]._type) ? 'checked' : '';
+				t.refreshMap();
+			});
+		});
 	};
 	/** Refresh the Google Map, with markers, according to what has been selected by the user */
 	this.refreshMap = function() {
@@ -192,6 +215,7 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 		}
 		// retrieve addresses
 		service.json('contact','get_addresses',{type:type,ids:entities_ids},function(res) { t.entities_addresses = res; oneReady(); });
+		require([["typed_filter.js","filter_enum.js"],"select_checkboxes.js"]);
 		// layout
 		container.style.display = "flex";
 		container.style.flexDirection = "column";
