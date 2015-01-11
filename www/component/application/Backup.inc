@@ -339,6 +339,7 @@ class Backup {
 		foreach ($domains as $domain=>$descr)
 			if ($domain <> $local_domain)
 				self::synchronizeDatabase(null, $domain, $db, $db_config["prefix"].$domain);
+		$db->selectDatabase($db_config["prefix"].PNApplication::$instance->current_domain); // make sure following request won't be on the wrong domain
 	}
 	
 	/**
@@ -508,7 +509,7 @@ class Backup {
 			}
 			return false;
 		}
-		return importBackupFrom(realpath("data/backups/$version/$time"), "data/datamodels/datamodel_$dm_version.json", $db_system, $db_config["prefix"].$domain, $domain, realpath("data"));
+		return self::importBackupFrom(realpath("data/backups/$version/$time"), "data/datamodels/datamodel_$dm_version.json", $db_system, $db_config["prefix"].$domain, $domain, realpath("data"));
 	}
 	/**
 	 * Import a backup

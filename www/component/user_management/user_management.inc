@@ -158,7 +158,8 @@ class user_management extends Component {
 	 */
 	function updateLastConnection() {
 		if ($this->user_id == null || $this->user_id < 0) return;
-		SQLQuery::getDataBaseAccessWithoutSecurity()->execute(("UPDATE `Users` SET `last_connection`='".time()."' WHERE `id`='".$this->user_id."'"));
+		global $db_config;
+		SQLQuery::getDataBaseAccessWithoutSecurity()->execute("UPDATE `".$db_config["prefix"].PNApplication::$instance->local_domain."`.`Users` SET `last_connection`='".time()."' WHERE `id`='".$this->user_id."'");
 	}
 	
 	/** Creates an internal user, stored in the software database but not in external authentication system.
@@ -533,7 +534,7 @@ class user_management extends Component {
 				$this->rights[$domain] = $rights;
 			}
 		}
-		SQLQuery::getDataBaseAccessWithoutSecurity()->selectDatabase("students_".PNApplication::$instance->current_domain);
+		SQLQuery::getDataBaseAccessWithoutSecurity()->selectDatabase($db_config["prefix"].PNApplication::$instance->current_domain);
 	}
 	
 	/**

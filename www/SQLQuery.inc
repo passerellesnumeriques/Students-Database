@@ -24,8 +24,8 @@ class SQLQuery {
 				default: PNApplication::error("Unknown result when connecting to the database server"); break;
 			}
 		}
-		// by default, connect to the local domain
-		if (!SQLQuery::$db_system->selectDatabase($db_config["prefix"].PNApplication::$instance->local_domain))
+		// by default, connect to the current domain
+		if (!SQLQuery::$db_system->selectDatabase($db_config["prefix"].PNApplication::$instance->current_domain))
 			PNApplication::error("Unable to connect to the local domain database");
 		return SQLQuery::$db_system;
 	}

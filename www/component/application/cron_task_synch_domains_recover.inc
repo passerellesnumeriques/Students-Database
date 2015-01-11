@@ -21,5 +21,5 @@ foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
 		touch("data/domains_synch/$domain/latest_recover");
 	}
 }
-$db->selectDatabase($db_config["prefix"].PNApplication::$instance->local_domain);
+$db->selectDatabase($db_config["prefix"].PNApplication::$instance->current_domain);
 ?>
