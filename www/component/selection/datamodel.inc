@@ -3,7 +3,7 @@
 
 $model->addTable("SelectionCampaign")
 	->addPrimaryKey("id")
-	->addString("name")
+	->addString("name", 30)
 	->addBoolean("frozen",false)
 	->addEnum("frozen_reason", array("Campaign Finished","Selection Team Travelling"), true, false)
 	->addForeignKey("calendar","Calendar",false,false,false,false)//Not automatically removed, must use the calendar functionalities

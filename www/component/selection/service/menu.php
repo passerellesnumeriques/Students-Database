@@ -197,6 +197,9 @@ function refreshCampaigns() {
 	getIFrameWindow(findFrame('application_frame')).location.reload();
 }
 function createCampaign() {
+	popupFrame(theme.build_icon("/static/selection/selection_16.png",theme.icons_10.add),"New Selection Campaign","/dynamic/selection/page/new_campaign");
+	return;
+	// TODO
 	inputDialog(theme.icons_16.question,
 		"Create a selection campaign",
 		"Enter the name of the new selection campaign",

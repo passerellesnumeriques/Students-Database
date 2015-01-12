@@ -15,8 +15,8 @@ function wizard(container) {
 	t.title = "Wizard";
 	t.pages = [];
 	t.current_page = 0;
-	t.element = document.createElement("TABLE");
-	t.element.className = "wizard_table";
+	t.element = document.createElement("DIV");
+	t.element.className = "wizard_container";
 	t.element.data = t;
 	t.popup = null;
 	
@@ -26,6 +26,12 @@ function wizard(container) {
 			t.popup.show();
 			t.showPage(0);
 		});
+	};
+	t.launchInPopup = function() {
+		t.popup = window.parent.getPopupFromFrame(window);
+		t.popup.setTitle(t.icon, t.title);
+		document.body.appendChild(t.element);
+		t.showPage(0);
 	};
 	t.createInPage = function(wizard_container) {
 		wizard_container.appendChild(t.element);
@@ -46,7 +52,7 @@ function wizard(container) {
 		if (p.validate) p.validate(t,function(ok){p.valid=ok;t._refresh_buttons();});
 	};
 	t._refresh_buttons = function() {
-		if (t.current_page == -1) return;
+		if (t.current_page < 0 || t.current_page >= t.pages.length) return;
 		var ok = t.pages[t.current_page].valid;
 		t.previousButton.disabled = (t.current_page > 0 && ok ? "" : "disabled");
 		t.nextButton.disabled = (t.current_page < t.pages.length-1 && ok ? "" : "disabled");
@@ -145,6 +151,7 @@ function wizard(container) {
 	};
 	
 	t._createTable = function() {
+		
 		var tr = document.createElement("TR"); t.element.appendChild(tr);
 		tr.className = "wizard_header";
 		t.page_icon_td = document.createElement("TD"); tr.appendChild(t.page_icon_td);
