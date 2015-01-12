@@ -195,6 +195,10 @@ function interview_sessions(container, sessions, applicants, linked_exam_centers
 	this._initListeners = function() {
 		linked_exam_centers.onapplicantsadded.addListener(function(new_applicants) {
 			for (var i = 0; i < new_applicants.length; ++i) {
+				var found = false;
+				for (var j = 0; j < t.applicants.length; ++j)
+					if (t.applicants[j].people.id == new_applicants[i].people.id) { found = true; break; }
+				if (found) continue;
 				t.applicants.push(new_applicants[i]);
 				t._not_assigned.not_assigned.addApplicant(new_applicants[i]);
 			}
@@ -459,7 +463,9 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 				interview_time += session.every_minutes;
 			}
 		}
-		this.applicants_list.refreshColumnData("interview_time");
+		this.applicants_list.grid.onallrowsready(function() {
+			t.applicants_list.refreshColumnData("interview_time");
+		});
 		layout.changed(this.header);
 		layout.changed(this.span_date);
 	};

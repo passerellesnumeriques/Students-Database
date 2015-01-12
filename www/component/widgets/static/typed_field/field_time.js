@@ -17,8 +17,10 @@ field_time.prototype.canBeNull = function() { return this.config && this.config.
 field_time.prototype.compare = function(v1,v2) {
 	if (v1 == null) return v2 == null ? 0 : -1;
 	if (v2 == null) return 1;
-	v1 = this._strtotime(v1);
-	v2 = this._strtotime(v2);
+	if (typeof v1 == 'string')
+		v1 = this._strtotime(v1);
+	if (typeof v2 == 'string')
+		v2 = this._strtotime(v2);
 	if (v1 < v2) return -1;
 	if (v1 > v2) return 1;
 	return 0;
