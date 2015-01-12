@@ -72,6 +72,10 @@ class selection extends Component {
 		return $this->calendar_id;
 	}
 	
+	public function getPrograms() {
+		return $this->programs;
+	}
+	
 	/** Indicates if the campaign is frozen
 	 * @return boolean true if it is frozen
 	 */

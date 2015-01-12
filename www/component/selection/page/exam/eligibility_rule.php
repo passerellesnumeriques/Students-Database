@@ -6,6 +6,7 @@ class page_exam_eligibility_rule extends SelectionPage {
 	public function executeSelectionPage(){
 		$id = isset($_GET["id"]) ? intval($_GET["id"]) : -1;
 		$parent = isset($_GET["parent"]) ? intval($_GET["parent"]) : null;
+		$program_id = isset($_GET["program"]) ? intval($_GET["program"]) : null;
 		
 		if ($id > 0) {
 			require_once 'component/data_model/DataBaseLock.inc';
@@ -18,6 +19,7 @@ class page_exam_eligibility_rule extends SelectionPage {
 			DataBaseLock::generateScript($lock_id);
 			$rule = SQLQuery::create()->select("ExamEligibilityRule")->whereValue("ExamEligibilityRule","id",$id)->executeSingleRow();
 			$parent = $rule["parent"];
+			$program_id = $rule["program"];
 			$topics = SQLQuery::create()->select("ExamEligibilityRuleTopic")->whereValue("ExamEligibilityRuleTopic","rule",$id)->execute();
 		} else {
 			$rule = array("id"=>-1, "parent"=>$parent, "expected"=>0);
@@ -40,6 +42,7 @@ class page_exam_eligibility_rule extends SelectionPage {
 <script type='text/javascript'>
 var rule_id = <?php echo $id;?>;
 var parent_id = <?php echo json_encode($parent);?>;
+var program_id = <?php echo json_encode($program_id);?>;
 var subjects = <?php echo json_encode($subjects);?>;
 var extracts = <?php echo json_encode($extracts);?>;
 var extracts_parts = <?php echo json_encode($extracts_parts);?>;
@@ -160,6 +163,7 @@ popup.addSaveButton(function () {
 	service.json("selection","exam/save_rule",{
 		id: rule_id,
 		parent: parent_id,
+		program: program_id,
 		expected: total_field.getCurrentData(),
 		topics: topics
 	},function(res){

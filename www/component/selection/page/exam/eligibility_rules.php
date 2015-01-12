@@ -37,18 +37,31 @@ class page_exam_eligibility_rules extends SelectionPage {
 			->executeSingleRow();
 		
 		// get eligibility rules
-		$rules = SQLQuery::create()->select("ExamEligibilityRule")->execute();
-		$rules_topics = SQLQuery::create()->select("ExamEligibilityRuleTopic")->execute();
-		// put topics inside the rules
-		foreach ($rules as &$rule) {
-			$rule["topics"] = array();
-			foreach ($rules_topics as $topic)
-				if ($topic["rule"] == $rule["id"])
-					array_push($rule["topics"], $topic);
-		}
-		// make a tree of rules
 		$rules_applicants_ids = SQLQuery::create()->select("Applicant")->whereNotNull("Applicant","exam_passer")->whereValue("Applicant","exam_attendance","Yes")->field("Applicant","people")->executeSingleField();
-		$root_rules = $this->buildRulesTree($rules, null, $all_applicants_info["nb_results_entered"], $rules_applicants_ids);
+		$programs = array();
+		if (count($this->component->getPrograms()) == 0)
+			$programs[null] = array();
+		else foreach ($this->component->getPrograms() as $p)
+			$programs[$p["id"]] = array();
+		foreach ($programs as $pid=>$info) {
+			$rules = SQLQuery::create()->select("ExamEligibilityRule")->whereValue("ExamEligibilityRule","program",$pid)->execute();
+			if (count($rules) > 0) {
+				$rules_ids = array();
+				foreach ($rules as $rule) array_push($rules_ids, $rule["id"]);
+				$rules_topics = SQLQuery::create()->select("ExamEligibilityRuleTopic")->whereIn("ExamEligibilityRuleTopic","rule",$rules_ids)->execute();
+			} else
+				$rules_topics = array();
+			// put topics inside the rules
+			foreach ($rules as &$rule) {
+				$rule["topics"] = array();
+				foreach ($rules_topics as $topic)
+					if ($topic["rule"] == $rule["id"])
+						array_push($rule["topics"], $topic);
+			}
+			// make a tree of rules
+			$root_rules = $this->buildRulesTree($rules, null, $all_applicants_info["nb_results_entered"], $rules_applicants_ids);
+			$programs[$pid] = $root_rules;
+		}
 		
 		$can_edit = PNApplication::$instance->user_management->hasRight("manage_exam_rules");
 		
@@ -120,18 +133,11 @@ class page_exam_eligibility_rules extends SelectionPage {
 					</div>
 					<?php } ?>
 				</div>
-				<div 
-					id='rules_section'
-					title='Eligibility Rules'
-				>
-					<div id='rules_container' style='overflow-x:auto'>
-					</div>
-				</div>
+				<div id='rules_sections_container'></div>
 			</div>
 		</div>
 		<script type='text/javascript'>
-		var subjects_section = sectionFromHTML('subjects_section');
-		var rules_section = sectionFromHTML('rules_section');
+		var can_edit = <?php echo json_encode($can_edit);?>;
 
 		var button_force_edit = document.getElementById('button_force_edit');
 		if (button_force_edit) tooltip(button_force_edit, "If you edit the eligibility rules, they will be re-applied, meaning some applicants who are currently marked as passers may be excluded, and some applicants currently excluded may become passers");
@@ -141,10 +147,9 @@ class page_exam_eligibility_rules extends SelectionPage {
 		
 		<?php echo $script;?>
 
-		var root_rules = <?php echo json_encode($root_rules);?>;
+		var subjects_section = sectionFromHTML('subjects_section');
 		var subjects = <?php echo json_encode($subjects);?>;
 		var extracts = <?php echo json_encode($extracts);?>;
-		var can_edit = <?php echo json_encode($can_edit);?>;
 		
 		function extractSubject(subject_id) {
 			popupFrame(null,'Extract Parts from Subject','/dynamic/selection/page/exam/subject_extract?subject='+subject_id);
@@ -169,8 +174,10 @@ class page_exam_eligibility_rules extends SelectionPage {
 			if (s.endsWith(".0")) return ""+Math.floor(coef);
 			return s;
 		}
+
+
 		
-		function createPointNode(container, title, sub_title, can_add_next, parent_id) {
+		function createPointNode(container, title, sub_title, can_add_next, program_id, parent_id) {
 			var node = document.createElement("DIV");
 			node.style.flex = "none";
 			node.style.display = "flex";
@@ -213,7 +220,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				next.onmouseout = function() { setOpacity(this,0.6); };
 				node.appendChild(next);
 				next.onclick = function() {
-					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/exam/eligibility_rule?x"+(parent_id ? "&parent="+parent_id : "")+(program_id ? "&program="+program_id : ""));
 				};
 			}
 			container.appendChild(node);
@@ -255,7 +262,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 				}
 			return 0;
 		}
-		function createRuleNode(container, rule) {
+		function createRuleNode(container, rule, program_id) {
 			var node_container = document.createElement("DIV");
 			node_container.style.position = "relative";
 			node_container.style.flex = "none";
@@ -332,7 +339,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 			}
 			return node;
 		}
-		function buildRulesGraphStep(container, previous_node, nodes, final_nodes) {
+		function buildRulesGraphStep(container, previous_node, nodes, final_nodes, program_id) {
 			if (nodes == null || nodes.length == 0) {
 				final_nodes.push(previous_node);
 				return;
@@ -368,7 +375,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 					node_div.appendChild(d);
 					d.innerHTML = "Only this rule: "+nodes[i].total_passed;
 				}
-				var n = createRuleNode(node_div, nodes[i]);
+				var n = createRuleNode(node_div, nodes[i], program_id);
 				if (nodes[i].passers) {
 					var d = document.createElement("DIV");
 					d.style.textAlign = "center";
@@ -378,12 +385,23 @@ class page_exam_eligibility_rules extends SelectionPage {
 				}
 				var conn = drawing.connectElements(previous_node, n, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz');
 				conn.style.zIndex = 1;
-				buildRulesGraphStep(n_container, n, nodes[i].children, final_nodes);
+				buildRulesGraphStep(n_container, n, nodes[i].children, final_nodes, program_id);
 			}
 		}
-		function buildRulesGraph() {
-			var container = document.getElementById('rules_container');
-			container.removeAllChildren();
+		<?php
+		$i = 0;
+		foreach ($programs as $pid=>$root_rules) {
+			foreach ($this->component->getPrograms() as $p) if ($p["id"] == $pid) { $program = $p; break; }
+			$i++;
+		?>
+		function buildRulesGraph<?php echo $i;?>() {
+			var container = document.createElement("DIV");
+			container.style.overflowX = "auto";
+			var rules_section = new section(null, 'Eligibility Rules'<?php if ($pid <> null) echo "+".json_encode(" for ".$program["name"]);?>,container);
+			document.getElementById('rules_sections_container').appendChild(rules_section.element);
+			var root_rules = <?php echo json_encode($root_rules);?>;
+			var program_id = <?php echo $pid == null ? "null" : $pid?>;
+				
 			container.style.position = "relative";
 			container.style.display = "flex";
 			container.style.flexDirection = "row";
@@ -404,9 +422,9 @@ class page_exam_eligibility_rules extends SelectionPage {
 				echo "sub_title=".json_encode($s).";\n";
 			}
 			?>
-			var start = createPointNode(start_container, "Applicants", sub_title, true, null);
+			var start = createPointNode(start_container, "Applicants", sub_title, true, program_id, null);
 			var final_nodes = [];
-			buildRulesGraphStep(container, start, root_rules, final_nodes);
+			buildRulesGraphStep(container, start, root_rules, final_nodes, program_id);
 			var end_container = document.createElement("DIV");
 			end_container.style.flex = "none";
 			end_container.style.display = "flex";
@@ -420,11 +438,12 @@ class page_exam_eligibility_rules extends SelectionPage {
 				echo "sub_title=".json_encode($all_applicants_info["nb_passers"]." passed").";\n";
 			} 
 			?>
-			var end = createPointNode(end_container, "Eligible", sub_title);
+			var end = createPointNode(end_container, "Eligible", sub_title, false, program_id);
 			for (var i = 0; i < final_nodes.length; ++i)
 				drawing.connectElements(final_nodes[i], end, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz').style.zIndex = 1;
 		}
-		buildRulesGraph();
+		buildRulesGraph<?php echo $i;?>()
+		<?php } ?>
 		</script>
 		<?php 
 	}

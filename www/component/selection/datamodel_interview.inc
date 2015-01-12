@@ -84,6 +84,7 @@ $sm->addTable("InterviewEligibilityRule")
 	->addPrimaryKey("id")
 	->addForeignKey("parent", "InterviewEligibilityRule", true, false, false, true)//Can only have one parent. If null, root level
 	->addDecimal("expected",3,2,null,null,false,false) // expected grade
+	->addForeignKey("program", "SelectionProgram", true, false, true, true, false)
 	->addReadAccess("see_interview_criteria",true)
 	->addWriteAccess("manage_interview_criteria",true)
 	->addInsertAccess("manage_interview_criteria",true)
