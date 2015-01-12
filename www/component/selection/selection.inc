@@ -8,6 +8,8 @@ class selection extends Component {
 	/** @var number A calendar is linked to the selection campaign */
 	private $calendar_id = null;
 	
+	private $programs = null;
+	
 	/** @var array When set, config is an array [["name"=>"value"],[...]] */
 	private $config = null;
 	
@@ -103,6 +105,7 @@ class selection extends Component {
 			$this->frozen_reason = $campaign["frozen_reason"];
 		else
 			$this->frozen_reason = null;
+		$this->programs = SQLQuery::create()->select("SelectionProgram")->execute();
 		// load the config
 		$this->getConfig();
 	}
@@ -114,7 +117,7 @@ class selection extends Component {
 	 * Create a calendar for the selection campaign
 	 * @return integer | boolean $campaign_id the id of the campaign created, false if an error occured
 	 */
-	public function createCampaign($campaign_name){
+	public function createCampaign($campaign_name, $programs = null){
 #SELECTION_TRAVEL
 #PNApplication::error("You cannot create a new campaign because you are on a travelling version.");
 #return;
@@ -160,6 +163,11 @@ class selection extends Component {
 					$config[$name] = json_encode($data[1]);
 				}
 				SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->insertMultiple("SelectionCampaignConfig",$default_config_rows);
+				if ($programs <> null && count($programs) > 0) {
+					$to_insert = array();
+					foreach ($programs as $pname) array_push($to_insert, array("name"=>$pname));
+					SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->insertMultiple("SelectionProgram",$to_insert);
+				}
 				
 				$this->setCampaignId($campaign_id);
 

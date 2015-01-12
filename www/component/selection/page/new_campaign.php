@@ -25,8 +25,23 @@ class page_new_campaign extends Page {
 <script type='text/javascript'>
 var popup = window.parent.getPopupFromFrame(window);
 
+var nb_programs = 1;
 function create() {
-	// TODO
+	popup.freeze("Creation of the new selection campaign...");
+	var data = {};
+	data.name = document.getElementById('campaign_name').value.trim();
+	if (nb_programs > 1) {
+		data.programs = [];
+		for (var i = 0; i < nb_programs; ++i)
+			data.programs.push(document.getElementById('program_name_'+i).value.trim());
+	}
+	service.json("selection","create_campaign",data,function(res) {
+		popup.close();
+		// refresh menu
+		getIFrameWindow(findFrame('pn_application_frame')).reloadMenu();
+		// refresh page
+		getIFrameWindow(findFrame('application_frame')).location.reload();
+	});
 }
 function showPage2() {
 	document.getElementById('page1').style.display = 'none';
@@ -36,7 +51,6 @@ function showPage2() {
 	validatePage2();
 	layout.changed(document.body);
 }
-var nb_programs = 1;
 function showPage3() {
 	document.getElementById('page2').style.display = 'none';
 	var page3 = document.getElementById('page3');

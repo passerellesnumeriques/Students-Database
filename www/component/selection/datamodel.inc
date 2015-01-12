@@ -33,6 +33,15 @@ $sm->addTable("SelectionCampaignConfig")
 	->addWriteAccess("manage_selection_campaign",true)
 	->setPrimary("name");
 
+$sm->addTable("SelectionProgram")
+	->addPrimaryKey("id")
+	->addString("name",30,1,false,false)
+	->addReadAccess("can_access_selection_data",true)
+	->addInsertAccess("manage_selection_campaign",true)
+	->addRemoveAccess("manage_selection_campaign",true)
+	->addWriteAccess("manage_selection_campaign",true)
+	;
+	
 $sm->addTable("StaffStatus")
 	->addForeignKey("people", "People", true, false, false, false, true)
 	->setPrimary("people")
