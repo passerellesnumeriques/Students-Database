@@ -22,7 +22,11 @@ class page_student_grades extends Page {
 		$published_grades = SQLQuery::create()->select("PublishedTranscriptStudentSubjectGrade")->whereValue("PublishedTranscriptStudentSubjectGrade","people",$people_id)->execute();
 		$current_grades = null;
 		if ($can_see_grades) {
-			$current_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade","people",$people_id)->execute();
+			$current_grades = SQLQuery::create()
+				->select("StudentSubjectGrade")
+				->whereValue("StudentSubjectGrade","people",$people_id)
+				->whereNotNull("StudentSubjectGrade","grade")
+				->execute();
 			if (count($current_grades) == 0)
 				$current_grades = null;
 			else {
