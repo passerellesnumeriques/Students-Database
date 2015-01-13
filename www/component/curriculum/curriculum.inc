@@ -356,8 +356,20 @@ class curriculum extends Component {
 	 * @param integer[] $periods_ids ids
 	 * @return array rows
 	 */
-	public function getBatchPeriodsById($periods_ids) {
-		return SQLQuery::create()->select("BatchPeriod")->whereIn("BatchPeriod", "id", $periods_ids)->execute();
+	public function getBatchPeriodsById($periods_ids, $join_academic_period = false, $order_by_date = false) {
+		$q = SQLQuery::create()->select("BatchPeriod")->whereIn("BatchPeriod", "id", $periods_ids);
+		if ($order_by_date) $join_academic_period = true;
+		if ($join_academic_period) {
+			$q->join("BatchPeriod","AcademicPeriod",array("academic_period"=>"id"));
+			$q->fieldsOfTable("BatchPeriod");
+			$q->field("AcademicPeriod","name","academic_period_name");
+			$q->field("AcademicPeriod","start");
+			$q->field("AcademicPeriod","end");
+		}
+		if ($order_by_date !== false) {
+			$q->orderBy("AcademicPeriod","start",$order_by_date == "asc");
+		}
+		return $q->execute();
 	}
 	
 	/**

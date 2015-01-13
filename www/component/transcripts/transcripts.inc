@@ -100,8 +100,11 @@ class transcripts extends Component {
 				array("grade"=>$grade) // value
 			)); 
 		}
-		if (count($list) > 0)
+		$has_new_grades = false;
+		if (count($list) > 0) {
 			SQLQuery::create()->bypassSecurity()->updateByKeys("StudentSubjectGrade", $list);
+			$has_new_grades = true;
+		}
 		// remaining ids are new
 		$list = array();
 		foreach ($students_ids as $people_id) {
@@ -113,8 +116,18 @@ class transcripts extends Component {
 				"grade"=>$grade
 			));
 		}
-		if (count($list) > 0)
+		if (count($list) > 0) {
 			SQLQuery::create()->bypassSecurity()->insertMultiple("StudentSubjectGrade", $list);
+			$has_new_grades = true;
+		}
+		if ($has_new_grades) {
+			$q = PNApplication::$instance->curriculum->getSubjectQuery($subject_id);
+			$q->bypassSecurity();
+			$subject = $q->executeSingleRow();
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($subject["period"]);
+			$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+			PNApplication::$instance->news->post("students", "transcripts", array("batch".$period["batch"],"period".$subject["period"]), "activity", "New grades for subject ".toHTML($subject["code"]." - ".$subject["name"])." (Batch ".toHTML($batch["name"]).")");
+		}
 	}
 
 	public function update_students_comments($subject_id, $students_comments) {
@@ -282,8 +295,15 @@ class transcripts extends Component {
 				));
 			}
 		}
-		if (count($rows) > 0)
+		if (count($rows) > 0) {
 			SQLQuery::create()->bypassSecurity()->insertMultiple("StudentSubjectEvaluationGrade", $rows);
+			$q = PNApplication::$instance->curriculum->getSubjectQuery($subject_id);
+			$q->bypassSecurity();
+			$subject = $q->executeSingleRow();
+			$period = PNApplication::$instance->curriculum->getBatchPeriod($subject["period"]);
+			$batch = PNApplication::$instance->curriculum->getBatch($period["batch"]);
+			PNApplication::$instance->news->post("students", "transcripts", array("batch".$period["batch"],"period".$subject["period"]), "activity", "New grades for subject ".toHTML($subject["code"]." - ".$subject["name"])." (Batch ".toHTML($batch["name"]).")");
+		}
 		$this->compute_subject_grades($subject_id);
 	}
 	
