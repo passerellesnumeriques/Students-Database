@@ -702,24 +702,60 @@ class selection extends Component {
 		foreach ($applicants_extracts_grade as $g)
 			$applicants[$g["applicant"]]["extracts"][$g["exam_extract"]] = $g["score"];
 		
-		// get rules
-		$rules = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->execute();
-		$rules_topics = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->execute();
-		for ($i = 0; $i < count($rules); $i++) {
-			$rules[$i]["topics"] = array();
-			foreach ($rules_topics as $t) if ($t["rule"] == $rules[$i]["id"]) array_push($rules[$i]["topics"], $t);
-		}
-		$root_rule = array("id"=>null,"next_rules"=>array());
-		$this->buildExamRulesTree($rules, $root_rule);
-		
-		// apply rules for each applicant
-		$passers = array();
-		$loosers = array();
-		foreach ($applicants as $id=>$grades) {
-			set_time_limit(30);
-			$passer = $this->applyExamRulesToApplicant($root_rule, $grades);
-			if ($passer) array_push($passers, $id);
-			else array_push($loosers, $id);
+		if (count($this->programs) > 1) {
+			$rules = array();
+			$root_rules = array();
+			foreach ($this->programs as $program) {
+				// get rules
+				$rules[$program["id"]] = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->whereValue("ExamEligibilityRule","program",$program["id"])->execute();
+				$rules_topics = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->execute();
+				for ($i = 0; $i < count($rules[$program["id"]]); $i++)
+					$rules[$program["id"]][$i]["topics"] = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->whereValue("ExamEligibilityRuleTopic","rule",$rules[$program["id"]][$i]["id"])->execute();
+				$root_rule = array("id"=>null,"next_rules"=>array());
+				$this->buildExamRulesTree($rules[$program["id"]], $root_rule);
+				$root_rules[$program["id"]] = $root_rule;
+			}
+			// remove flags
+			$rows = SQLQuery::create()->bypassSecurity()->select("ApplicantExamProgramPasser")->whereIn("ApplicantExamProgramPasser","applicant",array_keys($applicants))->execute();
+			if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("ApplicantExamProgramPasser",$rows);
+			// apply rules for each applicant
+			$passers = array();
+			$loosers = array();
+			$passer_to_insert = array();
+			foreach ($applicants as $id=>$grades) {
+				set_time_limit(30);
+				$passer = false;
+				foreach ($this->programs as $program) {
+					$pass_program = $this->applyExamRulesToApplicant($root_rules[$program["id"]], $grades);
+					if ($pass_program) {
+						$passer = true;
+						array_push($passer_to_insert, array("applicant"=>$id,"program"=>$program[$id]));
+					}
+				}
+				if ($passer) array_push($passers, $id);
+				else array_push($loosers, $id);
+			}
+			if (count($passer_to_insert) > 0) SQLQuery::create()->insertMultiple("ApplicantExamProgramPasser", $passer_to_insert);
+		} else {
+			// get rules
+			$rules = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->execute();
+			$rules_topics = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->execute();
+			for ($i = 0; $i < count($rules); $i++) {
+				$rules[$i]["topics"] = array();
+				foreach ($rules_topics as $t) if ($t["rule"] == $rules[$i]["id"]) array_push($rules[$i]["topics"], $t);
+			}
+			$root_rule = array("id"=>null,"next_rules"=>array());
+			$this->buildExamRulesTree($rules, $root_rule);
+			
+			// apply rules for each applicant
+			$passers = array();
+			$loosers = array();
+			foreach ($applicants as $id=>$grades) {
+				set_time_limit(30);
+				$passer = $this->applyExamRulesToApplicant($root_rule, $grades);
+				if ($passer) array_push($passers, $id);
+				else array_push($loosers, $id);
+			}
 		}
 		
 		// exclude loosers

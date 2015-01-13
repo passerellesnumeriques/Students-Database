@@ -37,4 +37,15 @@ $sm->addTable("ApplicantExamExtract")
       ->addReadAccess("see_applicant_info", true)
       ;
 
+$sm->addTable("ApplicantExamProgramPasser")
+	->addForeignKey("applicant", "People", true, false, true, false, false)
+	->addForeignKey("program", "SelectionProgram", true, false, true, false, false)
+	->setKey(array("applicant","program"))
+	->addReadAccess("see_applicant_info", true)
+	->addInsertAccess("manage_exam_rules", true)
+	->addInsertAccess("edit_exam_results", true)
+	->addRemoveAccess("manage_exam_rules", true)
+	->addRemoveAccess("edit_exam_results", true)
+	->addIndex("applicant")
+	;
 ?>
