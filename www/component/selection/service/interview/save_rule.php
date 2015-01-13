@@ -19,13 +19,14 @@ class service_interview_save_rule extends Service {
 	public function execute(&$component, $input) {
 		$id = intval($input["id"]);
 		$parent = $input["parent"];
+		$program = @$input["program"];
 		$criteria = $input["criteria"];
 		
 		SQLQuery::startTransaction();
 		if ($id > 0) {
 			SQLQuery::create()->updateByKey("InterviewEligibilityRule", $id, array("expected"=>$input["expected"]));
 		} else
-			$id = SQLQuery::create()->insert("InterviewEligibilityRule", array("parent"=>$parent,"expected"=>$input["expected"]));
+			$id = SQLQuery::create()->insert("InterviewEligibilityRule", array("parent"=>$parent,"expected"=>$input["expected"],"program"=>$program));
 		
 		$rows = SQLQuery::create()->select("InterviewEligibilityRuleCriterion")->whereValue("InterviewEligibilityRuleCriterion", "rule", $id)->execute();
 		if (count($rows) > 0)
