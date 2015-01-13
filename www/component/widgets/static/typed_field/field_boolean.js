@@ -7,8 +7,8 @@
  */
 function field_boolean(data,editable,config) {
 	if (data == null) data = false;
-	if (typeof data == 'string') data = (data == "true" || data == "1" || data.trim().toLowerCase() == "yes" || data.trim().toLowerCase() == "y");
-	else if (typeof data == 'number') data = (data == 1);
+	if (typeof data == 'string') data = !(data == "false" || data == "0" || data.trim().toLowerCase() == "no" || data.trim().toLowerCase() == "n");
+	else if (typeof data == 'number') data = !(data == 0);
 	typed_field.call(this, data, editable, config);
 }
 field_boolean.prototype = new typed_field();
@@ -33,8 +33,8 @@ field_boolean.prototype._create = function(data) {
 	};
 	this._setData = function(data) {
 		if (data == null) data = false;
-		if (typeof data == 'string') data = (data == "true" || data == "1" || data.trim().toLowerCase() == "yes" || data.trim().toLowerCase() == "y");
-		else if (typeof data == 'number') data = (data == 1);
+		if (typeof data == 'string') data = !(data == "false" || data == "0" || data.trim().toLowerCase() == "no" || data.trim().toLowerCase() == "n");
+		else if (typeof data == 'number') data = !(data == 0);
 		t.input.checked = data ? "checked" : "";
 		return data;
 	};
