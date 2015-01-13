@@ -58,6 +58,11 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 						$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
 						array_push($this->cache[$come_from][$sub_model], $data_display);
 					}
+					foreach (PNApplication::$instance->selection->getPrograms() as $program) {
+						$data_display = new \datamodel\ReadOnlyDataDisplay("Passed interview for ".$program["name"], "ApplicantInterviewProgramPasser>applicant(program=".$program["id"].").program","center",null,array("field_boolean","{}"));
+						$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+						array_push($this->cache[$come_from][$sub_model], $data_display);
+					}
 				}
 				// add interview criteria
 				$criteria = SQLQuery::create()->bypassSecurity()->select("InterviewCriterion")->selectSubModel("SelectionCampaign", $sub_model)->execute();

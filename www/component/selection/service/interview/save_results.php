@@ -19,20 +19,40 @@ class service_interview_save_results extends Service {
 		foreach ($event["attendees"] as $a) array_push($interviewers, $a["id"]);
 		// get the existing applicants
 		$assigned_applicants = SQLQuery::create()->bypassSecurity()->select("Applicant")->whereValue("Applicant","interview_session",$input["session"])->field("people")->executeSingleField();
-		// get the eligibility rules
-		$rules = SQLQuery::create()->bypassSecurity()->select("InterviewEligibilityRule")->execute();
-		$rules_criteria = SQLQuery::create()->bypassSecurity()->select("InterviewEligibilityRuleCriterion")->execute();
-		for ($i = 0; $i < count($rules); $i++) {
-			$rules[$i]["criteria"] = array();
-			foreach ($rules_criteria as $t) if ($t["rule"] == $rules[$i]["id"]) array_push($rules[$i]["criteria"], $t);
+		if (count($component->getPrograms()) > 1) {
+			$rules = array();
+			$root_rules = array();
+			foreach ($component->getPrograms() as $program) {
+				$rules[$program["id"]] = SQLQuery::create()->bypassSecurity()->select("InterviewEligibilityRule")->whereValue("InterviewEligibilityRule","program",$program["id"])->execute();
+				for ($i = 0; $i < count($rules[$program["id"]]); $i++)
+					$rules[$program["id"]][$i]["criteria"] = SQLQuery::create()->bypassSecurity()->select("InterviewEligibilityRuleCriterion")->whereValue("InterviewEligibilityRuleCriterion","rule",$rules[$program["id"]][$i]["id"])->execute();
+				$root_rule = array("id"=>null,"next_rules"=>array());
+				$this->buildRulesTree($rules[$program["id"]], $root_rule);
+				$root_rules[$program["id"]] = $root_rule;
+			}
+			$list = SQLQuery::create()->bypassSecurity()->select("ApplicantExamProgramPasser")->whereIn("ApplicantExamProgramPasser","applicant",$assigned_applicants)->execute();
+			$applicants_programs = array();
+			foreach ($list as $e) {
+				if (!isset($applicants_programs[$e["applicant"]])) $applicants_programs[$e["applicant"]] = array($e["program"]);
+				else array_push($applicants_programs[$e["applicant"]], $e["program"]);
+			}
+		} else {
+			// get the eligibility rules
+			$rules = SQLQuery::create()->bypassSecurity()->select("InterviewEligibilityRule")->execute();
+			$rules_criteria = SQLQuery::create()->bypassSecurity()->select("InterviewEligibilityRuleCriterion")->execute();
+			for ($i = 0; $i < count($rules); $i++) {
+				$rules[$i]["criteria"] = array();
+				foreach ($rules_criteria as $t) if ($t["rule"] == $rules[$i]["id"]) array_push($rules[$i]["criteria"], $t);
+			}
+			$root_rule = array("id"=>null,"next_rules"=>array());
+			$this->buildRulesTree($rules, $root_rule);
 		}
-		$root_rule = array("id"=>null,"next_rules"=>array());
-		$this->buildRulesTree($rules, $root_rule);
 		
 		$app_ids = array();
 		$app_updates = array();
 		$insert_grades = array();
 		$insert_interviewers = array();
+		$insert_programs = array();
 		$passers = array();
 		$loosers = array();
 		foreach ($input["applicants"] as $app) {
@@ -68,7 +88,18 @@ class service_interview_save_results extends Service {
 				}
 				array_push($insert_grades, array("people"=>$app_id,"criterion"=>$g["criterion"],"grade"=>$g["grade"]));
 			}
-			if ($this->applyRules($root_rule, $app["grades"])) {
+			if (count($component->getPrograms()) > 1) {
+				$pass = false;
+				foreach ($applicants_programs[$app_id] as $program_id) {
+					$pass_program = $this->applyRules($root_rules[$program_id], $app["grades"]);
+					if ($pass_program) {
+						$pass = true;
+						array_push($insert_programs, array("applicant"=>$app_id,"program"=>$program_id));
+					}
+				}
+			} else
+				$pass = $this->applyRules($root_rule, $app["grades"]);
+			if ($pass) {
 				// passed !
 				array_push($passers, $app_id);
 			} else {
@@ -93,19 +124,27 @@ class service_interview_save_results extends Service {
 				}
 				$app_updates[$app_id]["interview_passer"] = 1;
 			}
-		}		
+		}
 		// remove any previous grade
 		$rows = SQLQuery::create()->bypassSecurity()->select("ApplicantInterviewCriterionGrade")->whereIn("ApplicantInterviewCriterionGrade","people",$app_ids)->execute();
 		if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("ApplicantInterviewCriterionGrade", $rows);
 		// remove any previous interviewers
 		$rows = SQLQuery::create()->bypassSecurity()->select("ApplicantInterviewer")->whereIn("ApplicantInterviewer","applicant",$app_ids)->execute();
 		if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("ApplicantInterviewer", $rows);
+		// remove previous programs
+		if (count($component->getPrograms()) > 0) {
+			$rows = SQLQuery::create()->bypassSecurity()->select("ApplicantInterviewProgramPasser")->whereIn("ApplicantInterviewProgramPasser","applicant",$app_ids)->execute();
+			if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("ApplicantInterviewProgramPasser", $rows);
+		}
 		// insert grades
 		if (count($insert_grades) > 0)
 			SQLQuery::create()->bypassSecurity()->insertMultiple("ApplicantInterviewCriterionGrade", $insert_grades);
 		// insert interviewers
 		if (count($insert_interviewers) > 0)
 			SQLQuery::create()->bypassSecurity()->insertMultiple("ApplicantInterviewer", $insert_interviewers);
+		// insert programs
+		if (count($insert_programs) > 0)
+			SQLQuery::create()->bypassSecurity()->insertMultiple("ApplicantInterviewProgramPasser", $insert_programs);
 		// update applicants
 		foreach ($app_updates as $app_id=>$to_update)
 			SQLQuery::create()->bypassSecurity()->updateByKey("Applicant", $app_id, $to_update);

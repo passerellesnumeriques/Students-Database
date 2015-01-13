@@ -23,4 +23,16 @@ $sm->addTable("ApplicantInterviewer")
 	->addRemoveAccessFromForeignTable("CalendarEventAttendee")
 	;
 	
+$sm->addTable("ApplicantInterviewProgramPasser")
+	->addForeignKey("applicant", "People", true, false, true, false, false)
+	->addForeignKey("program", "SelectionProgram", true, false, true, false, false)
+	->setKey(array("applicant","program"))
+	->addReadAccess("see_applicant_info", true)
+	->addInsertAccess("manage_interview_criteria", true)
+	->addInsertAccess("edit_interview_results", true)
+	->addRemoveAccess("manage_interview_criteria", true)
+	->addRemoveAccess("edit_interview_results", true)
+	->addIndex("applicant")
+	;
+
 ?>
