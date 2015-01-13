@@ -28,13 +28,21 @@ class page_exam_eligibility_rules extends SelectionPage {
 		}
 
 		// get general figures about applicants
-		$all_applicants_info = SQLQuery::create()->select("Applicant")
+		$q = SQLQuery::create()->select("Applicant")
 			->expression("SUM(case when `exam_attendance` IS NULL then 1 else 0 end)", "nb_not_yet")
 			->expression("SUM(case when `exam_attendance` = 'Yes' then 1 else 0 end)", "nb_attendees")
 			->expression("SUM(case when `exam_attendance` IS NOT NULL AND `exam_attendance` != 'Yes' then 1 else 0 end)", "nb_attendance_no")
 			->expression("SUM(case when `exam_passer` IS NOT NULL AND `exam_attendance` = 'Yes' then 1 else 0 end)", "nb_results_entered")
-			->expression("SUM(`exam_passer`)", "nb_passers")
-			->executeSingleRow();
+			;
+		if (count($this->component->getPrograms()) == 0) 
+			$q->expression("SUM(`exam_passer`)", "nb_passers");
+		else {
+			foreach ($this->component->getPrograms() as $p) {
+				$q->join("Applicant","ApplicantExamProgramPasser",array("people"=>"applicant",null=>array("program"=>$p["id"])),"p".$p["id"]);
+				$q->expression("SUM(case when `p".$p["id"]."`.`program` IS NOT NULL then 1 else 0 end)", "nb_passers_".$p["id"]);
+			}
+		}
+		$all_applicants_info = $q->executeSingleRow();
 		
 		// get eligibility rules
 		$rules_applicants_ids = SQLQuery::create()->select("Applicant")->whereNotNull("Applicant","exam_passer")->whereValue("Applicant","exam_attendance","Yes")->field("Applicant","people")->executeSingleField();
@@ -188,6 +196,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 			var title_div = document.createElement("DIV");
 			title_div.innerHTML = title;
 			title_div.style.marginBottom = "3px";
+			title_div.style.textAlign = "center";
 			node.appendChild(title_div);
 			var circle = document.createElement("DIV");
 			circle.style.border = "2px solid black";
@@ -434,11 +443,17 @@ class page_exam_eligibility_rules extends SelectionPage {
 			container.appendChild(end_container);
 			var sub_title = null;
 			<?php
-			if ($all_applicants_info["nb_passers"] > 0) {
-				echo "sub_title=".json_encode($all_applicants_info["nb_passers"]." passed").";\n";
+			if ($pid == null) {
+				if ($all_applicants_info["nb_passers"] > 0) {
+					echo "sub_title=".json_encode($all_applicants_info["nb_passers"]." passed").";\n";
+				}
+			} else {
+				if ($all_applicants_info["nb_passers_$pid"] > 0) {
+					echo "sub_title=".json_encode($all_applicants_info["nb_passers_$pid"]." passed").";\n";
+				}
 			} 
 			?>
-			var end = createPointNode(end_container, "Eligible", sub_title, false, program_id);
+			var end = createPointNode(end_container, "Eligible"<?php if ($pid <> null) echo "+' for<br/>'+".json_encode($program["name"]);?>, sub_title, false, program_id);
 			for (var i = 0; i < final_nodes.length; ++i)
 				drawing.connectElements(final_nodes[i], end, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz').style.zIndex = 1;
 		}
