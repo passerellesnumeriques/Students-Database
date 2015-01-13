@@ -214,7 +214,7 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_attendance",
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_comment", "Comment from Interview", true, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_passer", "Eligible for Social Investigation", true, false));
 $display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Social Investigation Visits", "SocialInvestigation>applicant.event.start","right",null,array("field_date","{show_utc:true}")));
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("si_grade", "Social Investigation Grade", true, false));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("si_grade", "Social Investigation Grade", false, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("final_decision","Final Decision of PN", true, false, "center"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("applicant_decision","Final Decision of Applicant", true, false, "center"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("applicant_not_coming_reason","Reason of Applicant to decline", true, false));
