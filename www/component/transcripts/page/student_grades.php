@@ -22,21 +22,28 @@ class page_student_grades extends Page {
 		$published_grades = SQLQuery::create()->select("PublishedTranscriptStudentSubjectGrade")->whereValue("PublishedTranscriptStudentSubjectGrade","people",$people_id)->execute();
 		$current_grades = null;
 		if ($can_see_grades) {
-			$current_academic_period = PNApplication::$instance->curriculum->getCurrentAcademicPeriod();
-			if ($current_academic_period <> null) {
-				$student = PNApplication::$instance->students->getStudent($people_id);
-				$batch_id = $student["batch"];
-				$current_batch_period = PNApplication::$instance->curriculum->getBatchPeriodFromAcademicPeriod($batch_id, $current_academic_period["id"]);
-				if ($current_batch_period <> null) {
-					$subjects = PNApplication::$instance->curriculum->getSubjects($batch_id, $current_batch_period["id"], $student["specialization"]);
-					if (count($subjects) > 0) {
-						$categories = PNApplication::$instance->curriculum->getSubjectCategories();
-						$subjects_ids = array();
-						foreach ($subjects as $s) array_push($subjects_ids, $s["id"]);
-						$current_grades = PNApplication::$instance->transcripts->getStudentGrades($people_id, $subjects_ids);
-						$subjects_grading = SQLQuery::create()->select("CurriculumSubjectGrading")->whereIn("CurriculumSubjectGrading","subject",$subjects_ids)->execute();
-					}
+			$current_grades = SQLQuery::create()->select("StudentSubjectGrade")->whereValue("StudentSubjectGrade","people",$people_id)->execute();
+			if (count($current_grades) == 0)
+				$current_grades = null;
+			else {
+				$subjects_ids = array();
+				foreach ($current_grades as $g) array_push($subjects_ids, $g["subject"]);
+				$q = PNApplication::$instance->curriculum->getSubjectsQuery($subjects_ids);
+				$q->join("CurriculumSubject","CurriculumSubjectGrading",array("id"=>"subject"));
+				$q->orderBy("CurriculumSubject","period");
+				$q->orderBy("CurriculumSubject","category");
+				$q->orderBy("CurriculumSubject","specialization");
+				$q->orderBy("CurriculumSubject","code");
+				$subjects = $q->execute();
+				$periods_ids = array();
+				$last_period = null;
+				foreach ($subjects as $s) {
+					if ($s["period"] == $last_period) continue;
+					array_push($periods_ids, $s["period"]);
+					$last_period = $s["period"];
 				}
+				$current_grades_periods = PNApplication::$instance->curriculum->getBatchPeriodsById($periods_ids, true, "desc");
+				$categories = PNApplication::$instance->curriculum->getSubjectCategories();
 			}
 		}
 		if (count($published_grades) == 0 && (!$can_see_grades || $current_grades == null)) {
@@ -147,62 +154,60 @@ class page_student_grades extends Page {
 			echo "<div id='transcripts_tabs' style='display:flex;flex-direction:column;height:100%;padding:5px;'>";
 			$script = "";
 			if ($current_grades <> null) {
-				$subjects_by_cat = array();
-				foreach ($subjects as $s) {
-					$grading = null;
-					foreach ($subjects_grading as $sg) if ($sg["subject"] == $s["id"]) { $grading = $sg; break; }
-					if ($grading == null || $grading["max_grade"] == null || $grading["passing_grade"] == null) continue;
-					$grade = null;
-					foreach ($current_grades as $g) if ($g["subject"] == $s["id"]) { $grade = $g["grade"]; break; }
-					if ($grade == null) continue;
-					$s["grading"] = $grading;
-					$s["student_grade"] = $grade;
-					if (!isset($subjects_by_cat[$s["category"]])) $subjects_by_cat[$s["category"]] = array();
-					array_push($subjects_by_cat[$s["category"]], $s);
-				}
-				if (count($subjects_by_cat) == 0)
-					$current_grades = null;
+				$this->requireJavascript("typed_field.js");
+				$this->requireJavascript("field_grade.js");
+				theme::css($this, "grid.css");
+				$systems = include("component/transcripts/GradingSystems.inc");
+				if (isset($_COOKIE["grading_system"]))
+					$grading_system = $_COOKIE["grading_system"];
 				else {
-					$this->requireJavascript("typed_field.js");
-					$this->requireJavascript("field_grade.js");
-					theme::css($this, "grid.css");
-					$systems = include("component/transcripts/GradingSystems.inc");
-					if (isset($_COOKIE["grading_system"]))
-						$grading_system = $_COOKIE["grading_system"];
-					else {
-						$d = PNApplication::$instance->getDomainDescriptor();
-						$grading_system = $d["transcripts"]["default_grading_system"];
-					}
-					echo "<div title=\"Current grades for ".$current_batch_period["name"]."\" style='overflow:auto;flex:1 1 auto;'>";
-					echo "<div style='display:flex;flex-direction:column;align-items:center;padding-top:5px;'>";
-					echo "<div style='margin-bottom:5px'>";
-					echo "Grading system: <select onchange='updateGradingSystem(this.options[this.selectedIndex].text, this.value);'>";
-					foreach ($systems as $name=>$conf) echo "<option value='$conf'".($grading_system == $name ? " selected='selected'" : "").">$name</option>";
-					echo "</select>";
-					echo "</div>";
-					echo "<table class='grid' style='border:1px solid black;box-shadow:2px 2px 2px 0px #808080;font-size:10pt;'><thead>";
-					echo "<tr><th>Subject</th><th>Grade</th></tr>";
+					$d = PNApplication::$instance->getDomainDescriptor();
+					$grading_system = $d["transcripts"]["default_grading_system"];
+				}
+				echo "<div title=\"Current grades\" style='overflow:auto;flex:1 1 auto;'>";
+				echo "<div style='display:flex;flex-direction:column;align-items:center;padding-top:5px;'>";
+				echo "<div style='margin-bottom:5px;'>";
+				echo "Grading system: <select onchange='updateGradingSystem(this.options[this.selectedIndex].text, this.value);'>";
+				foreach ($systems as $name=>$conf) echo "<option value='$conf'".($grading_system == $name ? " selected='selected'" : "").">$name</option>";
+				echo "</select>";
+				echo "</div>";
+				$script .= "var grades_fields = [];var field;\n";
+				foreach ($current_grades_periods as $period) {
+					echo "<table class='grid' style='border:1px solid black;box-shadow:2px 2px 2px 0px #808080;font-size:10pt;margin-bottom:8px;'><thead>";
+					echo "<tr><th colspan=3 style='border-bottom:1px solid #808080;background-color:#DDDDDD;font-size:12pt;'>".toHTML($period["name"])."</th></tr>";
+					echo "<tr><th>Subject</th><th>Grade</th><th>Comment from teacher</th></tr>";
 					echo "</thead><tbody>";
-					$script .= "var grades_fields = [];var field;\n";
-					foreach ($subjects_by_cat as $cat_id=>$list) {
-						foreach ($categories as $cat) if ($cat["id"] == $cat_id) { $cat_name = $cat["name"]; break; }
-						echo "<tr><td colspan=2 style='font-weight:bold;text-align:center;color:#602000'>".toHTML($cat_name)."</td></tr>";
-						foreach ($list as $s) {
-							echo "<tr>";
-							echo "<td>".toHTML($s["code"]." - ".$s["name"])."</td>";
-							$grade_id = $this->generateID();
-							echo "<td id='$grade_id'></td>";
-							$script .= "field = new field_grade(".floatval($s["student_grade"]).",false,{max:".floatval($s["grading"]["max_grade"]).",passing:".floatval($s["grading"]["passing_grade"]).",system:".json_encode($systems[$grading_system])."});";
-							$script .= "document.getElementById('$grade_id').appendChild(field.getHTMLElement());";
-							$script .= "field.fillWidth();";
-							$script .= "grades_fields.push(field);\n";
-							echo "</tr>";
+					$period_found = false;
+					$last_category = null;
+					foreach ($subjects as $subject) {
+						if ($subject["period"] <> $period["id"]) {
+							if (!$period_found) continue;
+							break;
 						}
+						$period_found = true;
+						if ($subject["category"] <> $last_category) {
+							$last_category = $subject["category"];
+							foreach ($categories as $cat) if ($cat["id"] == $last_category) { $cat_name = $cat["name"]; break; }
+							echo "<tr><td colspan=3 style='font-weight:bold;text-align:center;color:#602000;background-color:#F0F0F0;'>".toHTML($cat_name)."</td></tr>";
+						}
+						echo "<tr>";
+						echo "<td>".toHTML($subject["code"]." - ".$subject["name"])."</td>";
+						foreach ($current_grades as $g) if ($g["subject"] == $subject["id"]) { $grade = $g; break; }
+						$grade_id = $this->generateID();
+						echo "<td id='$grade_id'></td>";
+						$script .= "field = new field_grade(".floatval($grade["grade"]).",false,{max:".floatval($subject["max_grade"]).",passing:".floatval($subject["passing_grade"]).",system:".json_encode($systems[$grading_system])."});";
+						$script .= "document.getElementById('$grade_id').appendChild(field.getHTMLElement());";
+						$script .= "field.fillWidth();";
+						$script .= "grades_fields.push(field);\n";
+						echo "<td>";
+						echo toHTML($grade["comment"]);
+						echo "</td>";
+						echo "</tr>";
 					}
 					echo "</tbody></table>";
-					echo "</div>";
-					echo "</div>";
 				}
+				echo "</div>";
+				echo "</div>";
 			}
 			foreach ($transcripts as $t) {
 				$period = null;
