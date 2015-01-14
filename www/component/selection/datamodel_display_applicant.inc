@@ -23,7 +23,8 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 		$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "excluded", false);
 		// if an IS is specified, and this IS is linked to an exam center, automatically assign the applicant to this exam center
 		$is = $table_fields->getValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "information_session");
-		if ($is <> null) {
+		$ec = $table_fields->getValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "exam_center");
+		if ($is <> null && $ec == null) {
 			$exam_center = SQLQuery::create()->bypassSecurity()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "information_session", $is)->field("ExamCenterInformationSession", "exam_center")->executeSingleValue();
 			if ($exam_center <> null)
 				$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "exam_center", $exam_center);
@@ -206,7 +207,7 @@ require_once("component/contact/datamodel_display.inc");
 $display->addDataDisplay(new OrganizationDataDisplay("high_school", "High School", array("Selection"), array("High School"), true, null));
 $display->addDataDisplay(new OrganizationDataDisplay("ngo", "Following NGO", array("Selection"), array("NGO"), true, null));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("information_session", "name", "Information Session", false, true));
-$display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", "Exam Center", false, false));
+$display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", "Exam Center", false, true));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center_room", "name", "Exam Center Room", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Exam Session", "exam_session", "exam_session.event.start"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("exam_attendance", "Exam Attendance",true,false));
