@@ -46,10 +46,10 @@ class DataModelJSON {
 		$s .= "]";
 		if (!($model instanceof SubDataModel)) {
 			$s .= ",\"sub_models\":[";
-			$first_sm = true;
-			foreach ($model->getSubModels() as $sm) {
-				if ($first_sm) $first_sm = false; else $s .= ",";
-				self::model($sm);
+			$subs = $model->getSubModels();
+			for ($i = 0; $i < count($subs); $i++) {
+				if ($i > 0) $s .= ",";
+				$s .= self::model($subs[$i]);
 			}
 			$s .= "]";
 		}
