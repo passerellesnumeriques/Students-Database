@@ -146,9 +146,10 @@ foreach ($new_tables_root as $table) {
 }
 foreach ($new_tables_sm as $parent_table=>$tables) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
 	foreach ($tables as $table) {
 		fwrite($f, "\$table = \$sm->internalGetTable(\"".$table."\");\n");
-		fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+		fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
 		fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null)\n");
 		fwrite($f, "\tDataBaseUtilities::createTable(\$db_system, \$table, \"_\".\$sub_model[0]);\n");
 	}
@@ -159,8 +160,9 @@ foreach ($removed_tables_root as $table) {
 }
 foreach ($removed_tables_sm as $parent_table=>$tables) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
 	foreach ($tables as $table) {
-		fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$table->getPrimaryKey()->name.\"` FROM `$parent_table`\");");
+		fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");");
 		fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null)\n");
 		fwrite($f, "\t\$db_system->execute(\"DROP TABLE `".$table."_\".\$sub_model[0].\"`\");\n");
 	}
@@ -171,7 +173,8 @@ foreach ($rename_tables_root as $rename) {
 }
 foreach ($rename_tables_sm as $parent_table=>$renames) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
 	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($renames as $from=>$to) {
 		fwrite($f, "\t\$db_system->execute(\"RENAME TABLE `".$from."_\".\$sub_model[0].\"` TO `".$to."_\".\$sub_model[0].\"`\");\n");
@@ -193,7 +196,8 @@ foreach ($indexes_removed_root as $table_name=>$changes) {
 }
 foreach ($indexes_removed_sm as $parent_table=>$list) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
 	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($list as $table_name=>$changes) {
 		foreach ($changes as $c) {
@@ -222,7 +226,8 @@ foreach ($new_columns_root as $table_name=>$new_cols) {
 }
 foreach ($new_columns_sm as $parent_table=>$new_columns) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
 	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($new_columns as $table_name=>$new_cols) {
 		fwrite($f, "\t\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
@@ -243,7 +248,8 @@ foreach ($removed_columns_root as $table_name=>$cols) {
 }
 foreach ($removed_columns_sm as $parent_table=>$to_remove) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
 	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($to_remove as $table_name=>$cols)
 		foreach ($cols as $col)
@@ -261,7 +267,8 @@ foreach ($rename_columns_root as $table_name=>$renames) {
 }
 foreach ($rename_columns_sm as $parent_table=>$list) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
 	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($list as $table_name=>$renames) {
 		fwrite($f, "\t\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
@@ -305,7 +312,8 @@ foreach ($indexes_added_root as $table_name=>$changes) {
 }
 foreach ($indexes_added_sm as $parent_table=>$list) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
 	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($list as $table_name=>$changes) {
 		foreach ($changes as $c) {
