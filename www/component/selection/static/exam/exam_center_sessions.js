@@ -948,7 +948,7 @@ function RoomSection(container, room, session_section, can_edit) {
 		var print = document.createElement("BUTTON");
 		print.className = "flat icon";
 		print.innerHTML = "<img src='"+theme.icons_16.print+"'/>";
-		print.onclick = function() {
+		var printList = function(for_attendance) {
 			t.applicants_list.hideActions();
 			var params = {
 				titles:["Written Exam"],
@@ -959,8 +959,47 @@ function RoomSection(container, room, session_section, can_edit) {
 			if (host) params.titles[0] += " - "+host.organization.name;
 			params.sub_titles.push(window.center_location.geographic_area_text.text+" - "+getDateString(session_section.event.start));
 			params.sub_titles.push("Applicants List - Room "+room.name);
-			t.applicants_list.grid.print("pn_document",params,function() {
+			t.applicants_list.grid.print("pn_document",params,function(table) {
+				table.style.fontSize = "10pt";
+				if (for_attendance) {
+					service.json("selection","exam/get_subjects_list",{},function(subjects) {
+						var thead = table.childNodes[0];
+						for (var i = 0; i < subjects.length; ++i) {
+							var th = document.createElement("TH");
+							th.style.borderLeft = "1px solid #808080";
+							if (i == subjects.length-1)
+								th.style.borderRight = "1px solid #808080";
+							th.appendChild(document.createTextNode(subjects[i].name+" attendance"));
+							th.rowSpan = thead.childNodes.length;
+							thead.childNodes[0].appendChild(th);
+						}
+						var tbody = table.childNodes[1];
+						for (var i = 0; i < tbody.childNodes.length; ++i) {
+							for (var j = 0; j < subjects.length; ++j) {
+								var td = document.createElement("TD");
+								td.style.borderLeft = "1px solid #808080";
+								if (j == subjects.length-1)
+									td.style.borderRight = "1px solid #808080";
+								var div = document.createElement("DIV");
+								div.style.minWidth = "120px";
+								div.style.width = "120px";
+								div.style.minHeight = "28px";
+								div.style.height = "28px";
+								td.appendChild(div);
+								tbody.childNodes[i].appendChild(td);
+							}
+						}
+					});
+				}
 				t.applicants_list.showActions();
+			});
+		};
+		print.onclick = function() {
+			require("context_menu.js",function() {
+				var menu = new context_menu();
+				menu.addIconItem(null,"Print simple list",function() { printList(false); });
+				menu.addIconItem(null,"Print list for attendance",function() { printList(true); });
+				menu.showBelowElement(print);
 			});
 		};
 		this.room_section.addToolRight(print);
