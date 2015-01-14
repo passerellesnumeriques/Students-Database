@@ -52,7 +52,7 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 					array_push($this->cache[$come_from][$sub_model], $data_display);
 				}
 				// add programs eligibility
-				if ($sub_model == PNApplication::$instance->selection->getCampaignId()) {
+				if ($sub_model == PNApplication::$instance->selection->getCampaignId() && count(PNApplication::$instance->selection->getPrograms())>1) {
 					foreach (PNApplication::$instance->selection->getPrograms() as $program) {
 						$data_display = new \datamodel\ReadOnlyDataDisplay("Passed exam for ".$program["name"], "ApplicantExamProgramPasser>applicant(program=".$program["id"].").program","center",null,array("field_boolean","{}"));
 						$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
@@ -63,6 +63,9 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 						$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
 						array_push($this->cache[$come_from][$sub_model], $data_display);
 					}
+					$data_display = new \datamodel\ChoiceDataDisplay("program", "name", "Selected for program", false, false);
+					$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+					array_push($this->cache[$come_from][$sub_model], $data_display);
 				}
 				// add interview criteria
 				$criteria = SQLQuery::create()->bypassSecurity()->select("InterviewCriterion")->selectSubModel("SelectionCampaign", $sub_model)->execute();

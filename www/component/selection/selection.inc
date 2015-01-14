@@ -75,6 +75,13 @@ class selection extends Component {
 	public function getPrograms() {
 		return $this->programs;
 	}
+	public function setProgramBatch($program_id, $batch_id) {
+		for ($i = count($this->programs)-1; $i >= 0; $i--)
+			if ($this->programs[$i]["id"] == $program_id) {
+				$this->programs[$i]["batch"] = $batch_id;
+				break;
+			}
+	}
 	
 	/** Indicates if the campaign is frozen
 	 * @return boolean true if it is frozen
