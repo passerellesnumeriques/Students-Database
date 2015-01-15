@@ -30,12 +30,12 @@ class service_interview_save_criteria extends Service {
 					}
 			}
 		}
+		if (count($criteria) > 0)
+			SQLQuery::create()->bypassSecurity()->removeRows("InterviewCriterion", $criteria);
 		if (count($to_insert) > 0)
 			SQLQuery::create()->bypassSecurity()->insertMultiple("InterviewCriterion", $to_insert);
 		if (count($to_update) > 0)
 			SQLQuery::create()->bypassSecurity()->updateByKeys("InterviewCriterion", $to_update);
-		if (count($criteria) > 0)
-			SQLQuery::create()->bypassSecurity()->removeRows("InterviewCriterion", $criteria);
 		if (PNApplication::hasErrors()) return;
 		SQLQuery::commitTransaction();
 		echo "true";

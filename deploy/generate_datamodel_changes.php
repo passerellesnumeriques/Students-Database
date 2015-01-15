@@ -146,10 +146,12 @@ foreach ($new_tables_root as $table) {
 }
 foreach ($new_tables_sm as $parent_table=>$tables) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
 	foreach ($tables as $table) {
 		fwrite($f, "\$table = \$sm->internalGetTable(\"".$table."\");\n");
-		fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model)\n");
-		fwrite($f, "\tDataBaseUtilities::createTable(\$db_system, \$table, \"_\".\$sub_model);\n");
+		fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+		fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null)\n");
+		fwrite($f, "\tDataBaseUtilities::createTable(\$db_system, \$table, \"_\".\$sub_model[0]);\n");
 	}
 }
 // then, remove tables
@@ -158,9 +160,11 @@ foreach ($removed_tables_root as $table) {
 }
 foreach ($removed_tables_sm as $parent_table=>$tables) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
 	foreach ($tables as $table) {
-		fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model)\n");
-		fwrite($f, "\t\$db_system->execute(\"DROP TABLE `".$table."_\".\$sub_model.\"`\");\n");
+		fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");");
+		fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null)\n");
+		fwrite($f, "\t\$db_system->execute(\"DROP TABLE `".$table."_\".\$sub_model[0].\"`\");\n");
 	}
 }
 // then, rename tables
@@ -169,9 +173,11 @@ foreach ($rename_tables_root as $rename) {
 }
 foreach ($rename_tables_sm as $parent_table=>$renames) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($renames as $from=>$to) {
-		fwrite($f, "\t\$db_system->execute(\"RENAME TABLE `".$from."_\".\$sub_model.\"` TO `".$to."_\".\$sub_model.\"`\");\n");
+		fwrite($f, "\t\$db_system->execute(\"RENAME TABLE `".$from."_\".\$sub_model[0].\"` TO `".$to."_\".\$sub_model[0].\"`\");\n");
 	}
 	fwrite($f, "}\n");
 }
@@ -190,17 +196,19 @@ foreach ($indexes_removed_root as $table_name=>$changes) {
 }
 foreach ($indexes_removed_sm as $parent_table=>$list) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($list as $table_name=>$changes) {
 		foreach ($changes as $c) {
 			if ($c["index_name"] == "PRIMARY") {
-				fwrite($f, "\$db_system->execute(\"DROP INDEX `PRIMARY` ON `".$table_name."_\".\$sub_model.\"`\");\n");
+				fwrite($f, "\$db_system->execute(\"DROP INDEX `PRIMARY` ON `".$table_name."_\".\$sub_model[0].\"`\");\n");
 				// remove auto_increment
 				fwrite($f, "\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
 				fwrite($f, "\$col = \$table->internalGetColumn(\"".$c["key"]."\");\n");
-				fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` MODIFY COLUMN \".\$col->getSQL(\$db_system, \"$table_name\"));\n");
+				fwrite($f, "if (\$col <> null) \$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model[0].\"` MODIFY COLUMN \".\$col->getSQL(\$db_system, \"$table_name\"));\n");
 			} else
-				fwrite($f, "\$db_system->execute(\"DROP INDEX `".$c["index_name"]."` ON `".$table_name."_\".\$sub_model.\"`\");\n");
+				fwrite($f, "\$db_system->execute(\"DROP INDEX `".$c["index_name"]."` ON `".$table_name."_\".\$sub_model[0].\"`\");\n");
 		}
 	}
 	fwrite($f, "}\n");
@@ -218,12 +226,14 @@ foreach ($new_columns_root as $table_name=>$new_cols) {
 }
 foreach ($new_columns_sm as $parent_table=>$new_columns) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($new_columns as $table_name=>$new_cols) {
 		fwrite($f, "\t\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
 		foreach ($new_cols as $col) {
 			fwrite($f, "\t\$col = \$table->internalGetColumn(\"".$col["name"]."\");\n");
-			$sql = "ALTER TABLE `".$table_name."_"."\".\$sub_model.\"`";
+			$sql = "ALTER TABLE `".$table_name."_"."\".\$sub_model[0].\"`";
 			$sql .= " ADD COLUMN \".\$col->getSQL(\$db_system, \"$table_name\").\"";
 			if ($col["type"] == "PrimaryKey") $sql .= " PRIMARY KEY";
 			fwrite($f, "\t\$db_system->execute(\"$sql\");\n");
@@ -238,10 +248,12 @@ foreach ($removed_columns_root as $table_name=>$cols) {
 }
 foreach ($removed_columns_sm as $parent_table=>$to_remove) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($to_remove as $table_name=>$cols)
 		foreach ($cols as $col)
-			fwrite($f, "\t\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` DROP COLUMN `$col`\");\n");
+			fwrite($f, "\t\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model[0].\"` DROP COLUMN `$col`\");\n");
 	fwrite($f, "}\n");
 }
 // then, rename/change columns
@@ -255,12 +267,14 @@ foreach ($rename_columns_root as $table_name=>$renames) {
 }
 foreach ($rename_columns_sm as $parent_table=>$list) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($list as $table_name=>$renames) {
 		fwrite($f, "\t\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
 		foreach ($renames as $old_name=>$new_name) {
-			$sql = "ALTER TABLE `".$table_name."_\".\$sub_model.\"`";
-			$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model.\").\"";
+			$sql = "ALTER TABLE `".$table_name."_\".\$sub_model[0].\"`";
+			$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model[0].\").\"";
 			fwrite($f, "\t\$db_system->execute(\"$sql\");\n");
 		}
 	}
@@ -298,17 +312,19 @@ foreach ($indexes_added_root as $table_name=>$changes) {
 }
 foreach ($indexes_added_sm as $parent_table=>$list) {
 	fwrite($f, "\$sm = DataModel::get()->getSubModel(\"$parent_table\");\n");
-	fwrite($f, "foreach (\$sm->getExistingInstances() as \$sub_model) {\n");
+	fwrite($f, "\$sm_table = DataModel::get()->internalGetTable(\"$parent_table\");\n");
+	fwrite($f, "\$sub_models = \$db_system->execute(\"SELECT `\".\$sm_table->getPrimaryKey()->name.\"` FROM `$parent_table`\");\n");
+	fwrite($f, "while ((\$sub_model = \$db_system->nextRowArray(\$sub_models)) <> null) {\n");
 	foreach ($list as $table_name=>$changes) {
 		foreach ($changes as $c) {
 			if ($c["index_name"] == "PRIMARY") {
 				// add auto_increment
 				fwrite($f, "\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
-				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` MODIFY COLUMN \".]$table->internalGetColumn(\"".$c["key"]."\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model.\"));\n");
+				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model[0].\"` MODIFY COLUMN \".]$table->internalGetColumn(\"".$c["key"]."\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model[0].\"));\n");
 				// add index
-				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model.\"` ADD PRIMARY KEY (`".$c["key"]."`)\");\n");
+				fwrite($f, "\$db_system->execute(\"ALTER TABLE `".$table_name."_\".\$sub_model[0].\"` ADD PRIMARY KEY (`".$c["key"]."`)\");\n");
 			} else if ($c["index_name"] == "table_key") {
-				$sql = "ALTER TABLE `".$table_name."_\".\$sub_model.\"` ADD UNIQUE KEY `table_key` (";
+				$sql = "ALTER TABLE `".$table_name."_\".\$sub_model[0].\"` ADD UNIQUE KEY `table_key` (";
 				$first = true;
 				foreach ($c["key"] as $colname) {
 					if ($first) $first = false; else $sql .= ",";
@@ -317,7 +333,7 @@ foreach ($indexes_added_sm as $parent_table=>$list) {
 				$sql .= ")";
 				fwrite($f, "\$db_system->execute(\"$sql\");\n");
 			} else {
-				$sql = "ALTER TABLE `".$table_name."_\".\$sub_model.\"` ADD KEY `".$c["index_name"]."` (";
+				$sql = "ALTER TABLE `".$table_name."_\".\$sub_model[0].\"` ADD KEY `".$c["index_name"]."` (";
 				$first = true;
 				foreach ($c["columns"] as $colname) {
 					if ($first) $first = false; else $sql .= ",";

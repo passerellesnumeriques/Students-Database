@@ -8,6 +8,8 @@ class selection extends Component {
 	/** @var number A calendar is linked to the selection campaign */
 	private $calendar_id = null;
 	
+	private $programs = null;
+	
 	/** @var array When set, config is an array [["name"=>"value"],[...]] */
 	private $config = null;
 	
@@ -70,6 +72,17 @@ class selection extends Component {
 		return $this->calendar_id;
 	}
 	
+	public function getPrograms() {
+		return $this->programs;
+	}
+	public function setProgramBatch($program_id, $batch_id) {
+		for ($i = count($this->programs)-1; $i >= 0; $i--)
+			if ($this->programs[$i]["id"] == $program_id) {
+				$this->programs[$i]["batch"] = $batch_id;
+				break;
+			}
+	}
+	
 	/** Indicates if the campaign is frozen
 	 * @return boolean true if it is frozen
 	 */
@@ -103,6 +116,7 @@ class selection extends Component {
 			$this->frozen_reason = $campaign["frozen_reason"];
 		else
 			$this->frozen_reason = null;
+		$this->programs = SQLQuery::create()->select("SelectionProgram")->execute();
 		// load the config
 		$this->getConfig();
 	}
@@ -114,7 +128,7 @@ class selection extends Component {
 	 * Create a calendar for the selection campaign
 	 * @return integer | boolean $campaign_id the id of the campaign created, false if an error occured
 	 */
-	public function createCampaign($campaign_name){
+	public function createCampaign($campaign_name, $programs = null){
 #SELECTION_TRAVEL
 #PNApplication::error("You cannot create a new campaign because you are on a travelling version.");
 #return;
@@ -160,6 +174,11 @@ class selection extends Component {
 					$config[$name] = json_encode($data[1]);
 				}
 				SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->insertMultiple("SelectionCampaignConfig",$default_config_rows);
+				if ($programs <> null && count($programs) > 0) {
+					$to_insert = array();
+					foreach ($programs as $pname) array_push($to_insert, array("name"=>$pname));
+					SQLQuery::create()->selectSubModel("SelectionCampaign", $campaign_id)->insertMultiple("SelectionProgram",$to_insert);
+				}
 				
 				$this->setCampaignId($campaign_id);
 
@@ -690,24 +709,60 @@ class selection extends Component {
 		foreach ($applicants_extracts_grade as $g)
 			$applicants[$g["applicant"]]["extracts"][$g["exam_extract"]] = $g["score"];
 		
-		// get rules
-		$rules = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->execute();
-		$rules_topics = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->execute();
-		for ($i = 0; $i < count($rules); $i++) {
-			$rules[$i]["topics"] = array();
-			foreach ($rules_topics as $t) if ($t["rule"] == $rules[$i]["id"]) array_push($rules[$i]["topics"], $t);
-		}
-		$root_rule = array("id"=>null,"next_rules"=>array());
-		$this->buildExamRulesTree($rules, $root_rule);
-		
-		// apply rules for each applicant
-		$passers = array();
-		$loosers = array();
-		foreach ($applicants as $id=>$grades) {
-			set_time_limit(30);
-			$passer = $this->applyExamRulesToApplicant($root_rule, $grades);
-			if ($passer) array_push($passers, $id);
-			else array_push($loosers, $id);
+		if (count($this->programs) > 1) {
+			$rules = array();
+			$root_rules = array();
+			foreach ($this->programs as $program) {
+				// get rules
+				$rules[$program["id"]] = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->whereValue("ExamEligibilityRule","program",$program["id"])->execute();
+				$rules_topics = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->execute();
+				for ($i = 0; $i < count($rules[$program["id"]]); $i++)
+					$rules[$program["id"]][$i]["topics"] = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->whereValue("ExamEligibilityRuleTopic","rule",$rules[$program["id"]][$i]["id"])->execute();
+				$root_rule = array("id"=>null,"next_rules"=>array());
+				$this->buildExamRulesTree($rules[$program["id"]], $root_rule);
+				$root_rules[$program["id"]] = $root_rule;
+			}
+			// remove flags
+			$rows = SQLQuery::create()->bypassSecurity()->select("ApplicantExamProgramPasser")->whereIn("ApplicantExamProgramPasser","applicant",array_keys($applicants))->execute();
+			if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("ApplicantExamProgramPasser",$rows);
+			// apply rules for each applicant
+			$passers = array();
+			$loosers = array();
+			$passer_to_insert = array();
+			foreach ($applicants as $id=>$grades) {
+				set_time_limit(30);
+				$passer = false;
+				foreach ($this->programs as $program) {
+					$pass_program = $this->applyExamRulesToApplicant($root_rules[$program["id"]], $grades);
+					if ($pass_program) {
+						$passer = true;
+						array_push($passer_to_insert, array("applicant"=>$id,"program"=>$program[$id]));
+					}
+				}
+				if ($passer) array_push($passers, $id);
+				else array_push($loosers, $id);
+			}
+			if (count($passer_to_insert) > 0) SQLQuery::create()->insertMultiple("ApplicantExamProgramPasser", $passer_to_insert);
+		} else {
+			// get rules
+			$rules = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->execute();
+			$rules_topics = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->execute();
+			for ($i = 0; $i < count($rules); $i++) {
+				$rules[$i]["topics"] = array();
+				foreach ($rules_topics as $t) if ($t["rule"] == $rules[$i]["id"]) array_push($rules[$i]["topics"], $t);
+			}
+			$root_rule = array("id"=>null,"next_rules"=>array());
+			$this->buildExamRulesTree($rules, $root_rule);
+			
+			// apply rules for each applicant
+			$passers = array();
+			$loosers = array();
+			foreach ($applicants as $id=>$grades) {
+				set_time_limit(30);
+				$passer = $this->applyExamRulesToApplicant($root_rule, $grades);
+				if ($passer) array_push($passers, $id);
+				else array_push($loosers, $id);
+			}
 		}
 		
 		// exclude loosers

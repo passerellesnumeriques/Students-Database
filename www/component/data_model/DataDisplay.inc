@@ -993,7 +993,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 * </ul>
 	 * @param string $horiz_align horizontal alignment
 	 * @param string $filter_path if specified, the filter will be an enum using the foreign key in the given path (which should be a sub-part of the data path)
-	 * @param string $override_typed_field if specified, the typed field will be this one instead of the default one
+	 * @param array $override_typed_field if specified, the typed field will be this one instead of the default one
 	 */
 	public function __construct($display_name, $data_path, $horiz_align = "left", $filter_path = null, $override_typed_field = null) {
 		$this->display_name = $display_name;

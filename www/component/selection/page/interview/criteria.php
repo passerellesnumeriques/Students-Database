@@ -19,18 +19,30 @@ class page_interview_criteria extends SelectionPage {
 		
 		$criteria = SQLQuery::create()->select("InterviewCriterion")->execute();
 		
-		// get eligibility rules
-		$rules = SQLQuery::create()->select("InterviewEligibilityRule")->execute();
-		$rules_criteria = SQLQuery::create()->select("InterviewEligibilityRuleCriterion")->execute();
-		// put topics inside the rules
-		foreach ($rules as &$rule) {
-			$rule["criteria"] = array();
-			foreach ($rules_criteria as $criterion)
-				if ($criterion["rule"] == $rule["id"])
-				array_push($rule["criteria"], $criterion);
+		$programs = array();
+		if (count($this->component->getPrograms()) == 0)
+			$programs[null] = array();
+		else foreach ($this->component->getPrograms() as $p)
+			$programs[$p["id"]] = array();
+		foreach ($programs as $pid=>$info) {
+			$rules = SQLQuery::create()->select("InterviewEligibilityRule")->whereValue("InterviewEligibilityRule","program",$pid)->execute();
+			if (count($rules) > 0) {
+				$rules_ids = array();
+				foreach ($rules as $rule) array_push($rules_ids, $rule["id"]);
+				$rules_topics = SQLQuery::create()->select("InterviewEligibilityRuleCriterion")->whereIn("InterviewEligibilityRuleCriterion","rule",$rules_ids)->execute();
+			} else
+				$rules_topics = array();
+			// put topics inside the rules
+			foreach ($rules as &$rule) {
+				$rule["criteria"] = array();
+				foreach ($rules_topics as $topic)
+					if ($topic["rule"] == $rule["id"])
+						array_push($rule["criteria"], $topic);
+			}
+			// make a tree of rules
+			$root_rules = $this->buildRulesTree($rules, null);
+			$programs[$pid] = $root_rules;
 		}
-		// make a tree of rules
-		$root_rules = $this->buildRulesTree($rules, null);
 		
 		$this->requireJavascript("drawing.js");
 		
@@ -65,22 +77,14 @@ class page_interview_criteria extends SelectionPage {
 					</tr>
 					</tbody></table>
 				</div>
-				<div 
-					id='rules_section'
-					title='Eligibility Rules'
-				>
-					<div id='rules_container' style='overflow-x:auto'>
-					</div>
-				</div>
+				<div id='rules_sections_container'></div>
 			</div>
 		</div>
 		<script type='text/javascript'>
 		window.onuserinactive = function() { location.assign('/dynamic/selection/page/selection_main_page'); };
 		var criteria_section = sectionFromHTML('criteria_section');
-		var rules_section = sectionFromHTML('rules_section');
 
 		var criteria = <?php echo json_encode($criteria);?>;
-		var root_rules = <?php echo json_encode($root_rules);?>;
 		var can_edit = <?php echo json_encode($can_edit);?>;
 
 		function gradeStr(grade) {
@@ -181,7 +185,7 @@ class page_interview_criteria extends SelectionPage {
 		}));
 		<?php } ?>
 
-		function createPointNode(container, title, can_add_next, parent_id) {
+		function createPointNode(container, title, can_add_next, program_id, parent_id) {
 			var node = document.createElement("DIV");
 			node.style.flex = "none";
 			node.style.display = "flex";
@@ -192,6 +196,7 @@ class page_interview_criteria extends SelectionPage {
 			var title_div = document.createElement("DIV");
 			title_div.innerHTML = title;
 			title_div.style.marginBottom = "3px";
+			title_div.style.textAlign = "center";
 			node.appendChild(title_div);
 			var circle = document.createElement("DIV");
 			circle.style.border = "2px solid black";
@@ -222,7 +227,7 @@ class page_interview_criteria extends SelectionPage {
 				next.onmouseout = function() { setOpacity(this,0.6); };
 				node.appendChild(next);
 				next.onclick = function() {
-					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule"+(parent_id ? "?parent="+parent_id : ""));
+					popupFrame(null,"New Eligibility Rule","/dynamic/selection/page/interview/eligibility_rule?x"+(parent_id ? "&parent="+parent_id : "")+(program_id ? "&program="+program_id : ""));
 				};
 			}
 			container.appendChild(node);
@@ -234,7 +239,7 @@ class page_interview_criteria extends SelectionPage {
 					return criteria[i];
 			return null;
 		}
-		function createRuleNode(container, rule) {
+		function createRuleNode(container, rule, program_id) {
 			var node_container = document.createElement("DIV");
 			node_container.style.position = "relative";
 			node_container.style.flex = "none";
@@ -313,7 +318,7 @@ class page_interview_criteria extends SelectionPage {
 			}
 			return node;
 		}
-		function buildRulesGraphStep(container, previous_node, nodes, final_nodes) {
+		function buildRulesGraphStep(container, previous_node, nodes, final_nodes, program_id) {
 			if (nodes == null || nodes.length == 0) {
 				final_nodes.push(previous_node);
 				return;
@@ -340,15 +345,26 @@ class page_interview_criteria extends SelectionPage {
 				n_container.style.justifyContent = "center";
 				n_container.style.zIndex = 2;
 				step_container.appendChild(n_container);
-				var n = createRuleNode(n_container, nodes[i]);
+				var n = createRuleNode(n_container, nodes[i], program_id);
 				var conn = drawing.connectElements(previous_node, n, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz');
 				conn.style.zIndex = 1;
-				buildRulesGraphStep(n_container, n, nodes[i].children, final_nodes);
+				buildRulesGraphStep(n_container, n, nodes[i].children, final_nodes, program_id);
 			}
 		}
-		function buildRulesGraph() {
-			var container = document.getElementById('rules_container');
-			container.removeAllChildren();
+		<?php
+		$i = 0;
+		foreach ($programs as $pid=>$root_rules) {
+			foreach ($this->component->getPrograms() as $p) if ($p["id"] == $pid) { $program = $p; break; }
+			$i++;
+		?>
+		function buildRulesGraph<?php echo $i;?>() {
+			var container = document.createElement("DIV");
+			container.style.overflowX = "auto";
+			var rules_section = new section(null, 'Eligibility Rules'<?php if ($pid <> null) echo "+".json_encode(" for ".$program["name"]);?>,container);
+			document.getElementById('rules_sections_container').appendChild(rules_section.element);
+			var root_rules = <?php echo json_encode($root_rules);?>;
+			var program_id = <?php echo $pid == null ? "null" : $pid?>;
+		
 			container.style.position = "relative";
 			container.style.display = "flex";
 			container.style.flexDirection = "row";
@@ -359,9 +375,9 @@ class page_interview_criteria extends SelectionPage {
 			start_container.style.flexDirection = "column";
 			start_container.style.justifyContent = "center";
 			container.appendChild(start_container);
-			var start = createPointNode(start_container, "Applicants", true, null);
+			var start = createPointNode(start_container, "Applicants", true, program_id, null);
 			var final_nodes = [];
-			buildRulesGraphStep(container, start, root_rules, final_nodes);
+			buildRulesGraphStep(container, start, root_rules, final_nodes, program_id);
 			var end_container = document.createElement("DIV");
 			end_container.style.flex = "none";
 			end_container.style.display = "flex";
@@ -369,11 +385,12 @@ class page_interview_criteria extends SelectionPage {
 			end_container.style.justifyContent = "center";
 			end_container.style.marginLeft = "30px";
 			container.appendChild(end_container);
-			var end = createPointNode(end_container, "Eligible");
+			var end = createPointNode(end_container, "Eligible"<?php if ($pid <> null) echo "+' for<br/>'+".json_encode($program["name"]);?>, null, false, program_id);
 			for (var i = 0; i < final_nodes.length; ++i)
 				drawing.connectElements(final_nodes[i], end, drawing.CONNECTOR_NONE, drawing.CONNECTOR_ARROW, "#000000", 1, 'horiz').style.zIndex = 1;
 		}
-		buildRulesGraph();
+		buildRulesGraph<?php echo $i;?>()
+		<?php } ?>
 		
 		</script>
 		<?php 

@@ -6,6 +6,7 @@ class page_interview_eligibility_rule extends SelectionPage {
 	public function executeSelectionPage(){
 		$id = isset($_GET["id"]) ? intval($_GET["id"]) : -1;
 		$parent = isset($_GET["parent"]) ? intval($_GET["parent"]) : null;
+		$program_id = isset($_GET["program"]) ? intval($_GET["program"]) : null;
 		
 		if ($id > 0) {
 			require_once 'component/data_model/DataBaseLock.inc';
@@ -18,6 +19,7 @@ class page_interview_eligibility_rule extends SelectionPage {
 			DataBaseLock::generateScript($lock_id);
 			$rule = SQLQuery::create()->select("InterviewEligibilityRule")->whereValue("InterviewEligibilityRule","id",$id)->executeSingleRow();
 			$parent = $rule["parent"];
+			$program_id = $rule["program"];
 			$rule_criteria = SQLQuery::create()->select("InterviewEligibilityRuleCriterion")->whereValue("InterviewEligibilityRuleCriterion","rule",$id)->execute();
 		} else {
 			$rule = array("id"=>-1, "parent"=>$parent, "expected"=>0);
@@ -38,6 +40,7 @@ class page_interview_eligibility_rule extends SelectionPage {
 <script type='text/javascript'>
 var rule_id = <?php echo $id;?>;
 var parent_id = <?php echo json_encode($parent);?>;
+var program_id = <?php echo json_encode($program_id);?>;
 var criteria = <?php echo json_encode($criteria);?>;
 
 var total_field = new field_decimal(<?php echo $id > 0 ? $rule["expected"] : 0; ?>,true,{min:0,can_be_null:false,integer_digits:4,decimal_digits:1});
@@ -134,6 +137,7 @@ popup.addSaveButton(function () {
 	service.json("selection","interview/save_rule",{
 		id: rule_id,
 		parent: parent_id,
+		program: program_id,
 		expected: total_field.getCurrentData(),
 		criteria: criteria
 	},function(res){

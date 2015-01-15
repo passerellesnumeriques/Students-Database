@@ -5,6 +5,7 @@ class page_create_batch extends SelectionPage {
 	public function getRequiredRights() { return array("manage_selection_campaign"); }
 
 	public function executeSelectionPage() {
+		$program_id = @$_GET["program"];
 		// get the list of existing batches
 		$future_batches = PNApplication::$instance->curriculum->getFutureBatches(true);
 		$current_batches = PNApplication::$instance->curriculum->getCurrentBatches(true, true);
@@ -54,9 +55,22 @@ Please ask a staff (i.e. Training manager) to create it.</i>
 function launchUpdate(batch_id) {
 	var popup = window.parent.getPopupFromFrame(window);
 	popup.freeze("Updating batch of students...");
-	service.json("data_model","save_cell",{table:'SelectionCampaign',column:'batch',row_key:<?php echo $this->component->getCampaignId();?>,value:batch_id,lock:null},function(res) {
+	service.json("data_model","save_cell",{
+		<?php if ($program_id == null) { ?>
+		table:'SelectionCampaign',
+		column:'batch',
+		row_key:<?php echo $this->component->getCampaignId();?>,
+		<?php } else { ?>
+		table:'SelectionProgram',
+		sub_model:<?php echo $this->component->getCampaignId();?>,
+		column:'batch',
+		row_key:<?php echo $program_id;?>,
+		<?php } ?>
+		value:batch_id,
+		lock:null
+	},function(res) {
 		if (!res) { popup.unfreeze(); return; }
-		service.json("selection","update_batch",{batch:batch_id},function(res) {
+		service.json("selection","update_batch",{batch:batch_id<?php if ($program_id <> null) echo ",program:".$program_id;?>},function(res) {
 			popup.unfreeze();
 			if (!res) return;
 			<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();"; ?>
@@ -65,7 +79,7 @@ function launchUpdate(batch_id) {
 	});
 }
 function updateBatch(batch_id) {
-	popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch="+batch_id, null, null, null, function(frame,popup) {
+	popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch="+batch_id<?php if ($program_id <> null) echo "+'&program=".$program_id."'";?>, null, null, null, function(frame,popup) {
 		frame.confirmed = function() { launchUpdate(batch_id); };
 	});
 }

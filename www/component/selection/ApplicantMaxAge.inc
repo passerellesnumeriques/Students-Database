@@ -38,7 +38,8 @@ class ApplicantMaxAge implements PeopleCreationStep {
 					array(
 						"excluded"=>1,
 						"automatic_exclusion_step"=>"Application Form",
-						"automatic_exclusion_reason"=>"Too old"
+						"automatic_exclusion_reason"=>"Too old",
+						"exam_center"=>null // if ever exam center was specified at creation, do not assign if too old
 					)
 				))
 			);

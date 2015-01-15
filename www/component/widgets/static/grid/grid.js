@@ -2170,7 +2170,7 @@ function grid(element) {
 					}
 				};
 			}
-			if (onprintready) onprintready();
+			if (onprintready) onprintready(table);
 		}, null, template, template_parameters);
 	};
 	

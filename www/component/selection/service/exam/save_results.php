@@ -67,14 +67,28 @@ class service_exam_save_results extends Service {
 			}
 		}
 		
-		$rules = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->execute();
-		$rules_topics = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->execute();
-		for ($i = 0; $i < count($rules); $i++) {
-			$rules[$i]["topics"] = array();
-			foreach ($rules_topics as $t) if ($t["rule"] == $rules[$i]["id"]) array_push($rules[$i]["topics"], $t);
+		if (count($component->getPrograms()) > 1) {
+			$rules = array();
+			$root_rules = array();
+			foreach ($component->getPrograms() as $program) {
+				$rules[$program["id"]] = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->whereValue("ExamEligibilityRule","program",$program["id"])->execute();
+				for ($i = 0; $i < count($rules[$program["id"]]); $i++) {
+					$rules[$program["id"]][$i]["topics"] = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->whereValue("ExamEligibilityRuleTopic","rule",$rules[$program["id"]][$i]["id"])->execute();
+				}
+				$root_rule = array("id"=>null,"next_rules"=>array());
+				$this->buildRulesTree($rules[$program["id"]], $root_rule);
+				$root_rules[$program["id"]] = $root_rule;
+			}
+		} else {
+			$rules = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRule")->execute();
+			$rules_topics = SQLQuery::create()->bypassSecurity()->select("ExamEligibilityRuleTopic")->execute();
+			for ($i = 0; $i < count($rules); $i++) {
+				$rules[$i]["topics"] = array();
+				foreach ($rules_topics as $t) if ($t["rule"] == $rules[$i]["id"]) array_push($rules[$i]["topics"], $t);
+			}
+			$root_rule = array("id"=>null,"next_rules"=>array());
+			$this->buildRulesTree($rules, $root_rule);
 		}
-		$root_rule = array("id"=>null,"next_rules"=>array());
-		$this->buildRulesTree($rules, $root_rule);
 		
 		// get applicants assigned to this session/room
 		$applicants_ids = SQLQuery::create()
@@ -236,7 +250,21 @@ class service_exam_save_results extends Service {
 			
 			// apply eligibility rules
 			if ($app["exam_attendance"] == "Yes") {
-				$pass = $this->applyRules($root_rule, $subjects_scores, $extracts_scores);
+				if (count($component->getPrograms()) > 1) {
+					$pass = false;
+					$passer_to_insert = array();
+					foreach ($component->getPrograms() as $program) {
+						$pass_program = $this->applyRules($root_rules[$program["id"]], $subjects_scores, $extracts_scores);
+						if ($pass_program) {
+							$pass = true;
+							array_push($passer_to_insert, array("applicant"=>$app["people_id"],"program"=>$program["id"]));
+						}
+					}
+					$rows = SQLQuery::create()->bypassSecurity()->select("ApplicantExamProgramPasser")->whereValue("ApplicantExamProgramPasser","applicant",$app["people_id"])->execute();
+					if (count($rows) > 0) SQLQuery::create()->bypassSecurity()->removeRows("ApplicantExamProgramPasser", $rows);
+					if (count($passer_to_insert) > 0) SQLQuery::create()->insertMultiple("ApplicantExamProgramPasser", $passer_to_insert);
+				} else
+					$pass = $this->applyRules($root_rule, $subjects_scores, $extracts_scores);
 				if (!$pass) {
 					SQLQuery::create()->updateByKey("Applicant", $app["people_id"], array(
 						"exam_attendance"=>"Yes", 
