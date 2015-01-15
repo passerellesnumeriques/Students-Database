@@ -979,7 +979,7 @@ function match_division_level_names(container, country, country_data, division_i
 	map_container.style.width = "400px";
 	map_container.style.height = "300px";
 	col.appendChild(map_container);
-	window.top.google.loadGoogleMap(map_container, function(m) {
+	window.top.google.loadGoogleMap(map_container, function(gm) {
 		map = gm;
 		map.addRect(parent_area.south, parent_area.west, parent_area.north, parent_area.east, "#6060F0", "#D0D0F0", 0.2);
 		map.fitToShapes();

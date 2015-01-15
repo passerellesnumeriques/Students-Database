@@ -33,11 +33,23 @@ class service_import_kml extends Service {
 					break;
 				}
 				$placemark = substr($s, $i, $j-$i+12);
+				// convert unicode <U+ tags
+				while (($i2 = strpos($placemark, "<U+")) !== false) {
+					$j2 = strpos($placemark, ">", $i2+3);
+					if ($j2 === false) break;
+					$unicode = substr($placemark, $i2+3, $j2-$i2-3);
+					$placemark = substr($placemark,0,$i2)."&#x".$unicode.";".substr($placemark,$j2+1);
+				}
 				$node2 = @simplexml_load_string($placemark);
 				if ($node2 === null || $node2 === false) {
-					$node2 = simplexml_load_string(utf8_encode($placemark));
-					if ($node2 === null || $node2 === false) {
-						throw new Exception("Invalid XML after: ".$last);
+					$placemark = utf8_encode($placemark);
+					try {
+						$node2 = simplexml_load_string($placemark);
+						if ($node2 === null || $node2 === false) {
+							throw new Exception("Invalid XML after ".$last);
+						}
+					} catch (Exception $e) {
+						throw new Exception("Invalid XML after ".$last.": ".$e->getMessage());
 					}
 				}
 				$name = null;
