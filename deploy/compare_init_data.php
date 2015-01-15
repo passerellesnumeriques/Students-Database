@@ -267,7 +267,7 @@ if ($has_sql) {
 	<?php 
 	echo "<br/>";
 	echo "Some of the files above are SQL files. What needs to be done in the migration script ?<br/>";
-	echo "<ul>";
+	echo "<ul>\n";
 	$sql_id_count = 0;
 	foreach ($remove as $file) {
 		if (substr($file,strlen($file)-4) <> ".sql") continue;
@@ -286,7 +286,7 @@ if ($has_sql) {
 			if (!isset($new_content[$table_name])) {
 				echo "<li>Data from table $table_name are not present anymore (".count($rows)." rows)";
 				// TODO
-				echo "</li>";
+				echo "</li>\n";
 				continue;
 			}
 			$new_rows = $new_content[$table_name];
@@ -321,14 +321,14 @@ if ($has_sql) {
 				if ($new_row == null) {
 					echo "<li>Row removed from table $table_name: ";
 					// TODO
-					echo "</li>";
+					echo "</li>\n";
 				} else {
 					unset($new[$key]);
 					$cols_changed = array();
 					foreach ($row as $col=>$val)
 						if ($new_row[$col] <> $val) $cols_changed[$col] = array($val,$new_row[$col]);
 					if (count($cols_changed) == 0) continue; // same row, no change
-					echo "<li>Row ".$table["key"]."=".$key_value." changed: ";
+					echo "<li type='change'>Row ".$table["key"]."=".$key_value." changed: ";
 					$sql = "UPDATE `$table_name` SET ";
 					$first = true;
 					foreach ($cols_changed as $col=>$vals) {
@@ -348,23 +348,43 @@ if ($has_sql) {
 						$sql .= "`".$table["key"]."`='".$key."'";
 					}
 					$id = $sql_id_count++;
-					echo "<script type='text/javascript'>window.sql$id = ".json_encode($sql).";</script>";
-					echo "<button onclick=\"initDataChanged(this, window.sql$id);\">Yes, include this change</button>";
-					echo "</li>";
+					echo "<script type='text/javascript'>window.sql$id = ".json_encode($sql,JSON_UNESCAPED_UNICODE).";</script>";
+					echo "<button onclick=\"initDataChanged(this, window.sql$id);\" type='yes'>Yes, include this change</button>";
+					echo "<button onclick=\"var li = this.parentNode;var next = li;while (next.nextSibling) { next = next.nextSibling; if (next.nodeType != 1) continue; if (next.nodeName != 'LI') continue; if (next.getAttribute('type') != 'change') break; for (var i = 0; i < next.childNodes.length; ++i) if (next.childNodes[i].nodeType == 1 && next.childNodes[i].getAttribute('type') == 'yes') { next.childNodes[i].onclick(); next = li; break; } }; this.previousSibling.onclick();\">Yes, as well as all following rows changed</button>";
+					echo "<button onclick=\"this.parentNode.parentNode.removeChild(this.parentNode);\">No</button>";
+					echo "</li>\n";
 				}
 			}
 			set_time_limit(300);
 			foreach ($new as $key=>$row) {
-				echo "<li>Row added into table $table_name:";
-				// TODO
-				echo "</li>";
+				echo "<li type='add'>Row added into table $table_name:";
+				$sql = "INSERT INTO `$table_name` (";
+				$first = true;
+				foreach ($row as $colname=>$value) {
+					if ($first) $first = false; else $sql .= ",";
+					$sql .= "`$colname`";
+				}
+				$sql .= ") VALUE (";
+				$first = true;
+				foreach ($row as $colname=>$value) {
+					if ($first) $first = false; else $sql .= ",";
+					if ($value === null) $sql .= "NULL";
+					else $sql .= $value;
+				}
+				$sql .= ")";
+				$id = $sql_id_count++;
+				echo "<script type='text/javascript'>window.sql$id = ".json_encode($sql,JSON_UNESCAPED_UNICODE).";</script>";
+				echo "<button onclick=\"initDataChanged(this, window.sql$id);\" type='yes'>Yes, add this row</button>";
+				echo "<button onclick=\"var li = this.parentNode;var next = li;while (next.nextSibling) { next = next.nextSibling; if (next.nodeType != 1) continue; if (next.nodeName != 'LI') continue; if (next.getAttribute('type') != 'add') break; for (var i = 0; i < next.childNodes.length; ++i) if (next.childNodes[i].nodeType == 1 && next.childNodes[i].getAttribute('type') == 'yes') { next.childNodes[i].onclick(); next = li; break; } }; this.previousSibling.onclick();\">Yes, as well as all following new rows</button>";
+				echo "<button onclick=\"this.parentNode.parentNode.removeChild(this.parentNode);\">No</button>";
+				echo "</li>\n";
 			}
 		}
 		set_time_limit(300);
 		foreach ($new_content as $table_name=>$rows) {
 			echo "<li>Data for table $table_name:";
 			// TODO
-			echo "</li>";
+			echo "</li>\n";
 		}
 	}
 	echo "</ul>";
