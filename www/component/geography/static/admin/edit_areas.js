@@ -44,6 +44,62 @@ function GeographicAreasTree(areas_section, country_id) {
 
 		// create info on the section title
 		if (!this.span_nb_total) {
+			var button;
+			
+			button = document.createElement("BUTTON");
+			button.appendChild(document.createTextNode("Import names"));
+			areas_section.addToolRight(button);
+			button.onclick = function() {
+				require(["popup_window.js","upload.js"],function() {
+					var content = document.createElement("DIV");
+					content.style.backgroundColor = "white";
+					content.style.padding = "5px";
+					var link = document.createElement("A");
+					link.href = '#';
+					link.className = "black_link";
+					link.style.fontWeight = "bold";
+					link.innerHTML = "Upload text file from geonames.org";
+					content.appendChild(link);
+					var popup = new popup_window("Import names",null,content);
+					var up = new upload("/dynamic/geography/service/import_names_from_geonames", false, true);
+					up.onstart = function(files, onready) {
+						content.innerHTML = "Uploading file...";
+						onready();
+					};
+					var done = false;
+					up.onprogressfile = function(file, uploaded, total) {
+						if (done) return;
+						if (uploaded < total)
+							content.innerHTML = "Uploading file ("+Math.floor(uploaded*100/total)+"%)...";
+						else
+							content.innerHTML = "Analyzing file...";
+					};
+					up.ondonefile = function(file, output, errors) {
+						done = true;
+						if (errors.length > 0) {
+							content.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> An error occured.";
+							content.appendChild(document.createElement("BR"));
+							content.appendChild(link);
+							return;
+						}
+						if (output.length == 0) {
+							content.innerHTML = "<img src='"+theme.icons_16.error+"' style='vertical-align:bottom'/> Nothing found in the file.";
+							content.appendChild(document.createElement("BR"));
+							content.appendChild(link);
+							return;
+						}
+						t.import_names(content, popup, 0, null, output, function() {
+						});
+					};
+					link.onclick = function(ev) {
+						up.openDialog(ev);
+						return false;
+					};
+					popup.show();
+				});
+				return false; 
+			};
+
 			var span = document.createElement("SPAN");
 			this.span_nb_have_coordinates = document.createElement("SPAN");
 			span.appendChild(this.span_nb_have_coordinates);
@@ -53,8 +109,6 @@ function GeographicAreasTree(areas_section, country_id) {
 			span.appendChild(document.createTextNode(" area(s) have geographic coordinates"));
 			span.style.margin = "4px 5px 0px 5px";
 			areas_section.addToolRight(span);
-	
-			var button;
 	
 			button = document.createElement("BUTTON");
 			button.appendChild(document.createTextNode("Import coordinates"));
@@ -492,6 +546,72 @@ function GeographicAreasTree(areas_section, country_id) {
 			});
 		};
 		next_child(0);
+	};
+	
+	this.import_names = function(content, popup, division_index, parent_id, list, ondone) {
+		var nb = 0;
+		if (typeof list.length == 'undefined')
+			for (var geoid in list) nb++;
+		if (nb == 0) { ondone(); return; }
+		content.removeAllChildren();
+		content.appendChild(document.createTextNode(nb+" items found for "+t.country_data[division_index].division_name+(parent_id ? " under "+window.top.geography.getAreaFromDivision(t.country_data, parent_id, division_index-1).area_name : "")));
+		content.appendChild(document.createElement("BR"));
+		var inputs = [];
+		for (var geoid in list) {
+			var div = document.createElement("DIV");
+			content.appendChild(div);
+			if (typeof list[geoid].name == 'undefined') {
+				div.appendChild(document.createTextNode("Unknown area name for ID "+geoid+" with "));
+				if (typeof list[geoid].children == 'undefined' || typeof list[geoid].children.length != 'undefined')
+					div.appendChild(document.createTextNode("no sub-area..."));
+				else {
+					var nb = 0;
+					for (var childid in list[geoid].children) nb++;
+					var s = nb+" sub-areas: ";
+					nb = 0;
+					for (var childid in list[geoid].children) {
+						if (nb > 0) s += ",";
+						s += list[geoid].children[childid].name;
+						nb++;
+					}
+					div.appendChild(document.createTextNode(s));
+				}
+			} else {
+				var input = document.createElement("INPUT");
+				input.type = 'text';
+				input.size = 30;
+				input.value = list[geoid].name;
+				div.appendChild(input);
+				inputs.push(input);
+				var remove = document.createElement("BUTTON");
+				remove.className = "flat small_icon";
+				remove.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+				remove._input = input;
+				div.appendChild(remove);
+				remove.onclick = function() {
+					inputs.removeUnique(this._input);
+					this.parentNode.parentNode.removeChild(this.parentNode);
+				};
+			}
+		}
+		popup.removeButtons();
+		popup.addOkCancelButtons(function() {
+			// TODO create
+			var sub_lists = [];
+			for (var geoid in list) {
+				if (typeof list[geoid].name == 'undefined') continue;
+				if (typeof list[geoid].children != 'undefined') {
+					sub_lists.push({children:list[geoid].children});// TODO
+				}
+			}
+			var next = function(index) {
+				if (index == sub_lists.length) { ondone(); return; }
+				t.import_names(content, popup, division_index+1, null, sub_lists[index].children, function() {
+					next(index+1);
+				}); // TODO
+			};
+			next(0);
+		});
 	};
 	
 	// load info in background

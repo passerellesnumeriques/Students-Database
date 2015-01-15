@@ -128,15 +128,11 @@ String.prototype.uniformFirstLetterCapitalized = function(){
  * @returns {Boolean} true if the given string is not only made of space or is empty; else return false
  */
 String.prototype.checkVisible = function(){
-	var is_visible = false;
-	var text_split = this.split("");
-	for(var i = 0; i < text_split.length; i++){
-		if(text_split[i] != "" && text_split[i] != " " && text_split[i] !='/r' && text_split[i] != '/n' && text_split[i] != '/t'){
-			is_visible = true;
-			break;
-		}
+	for (var i = this.length-1; i >= 0; --i) {
+		var c = this.substr(i,1);
+		if (c != ' ' && c != '\r' && c != '\n' && c != '\t') return true;
 	}
-	return is_visible;
+	return false;
 };
 
 /** Check if the given element is in the array

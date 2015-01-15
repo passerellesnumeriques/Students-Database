@@ -27,18 +27,18 @@ class google extends Component {
 		$secrets = include("conf/google.inc");
 		if (!isset($this->api_keys_quotas_reached[$api_name])) {
 			$this->api_keys_quotas_reached[$api_name] = array();
-			foreach ($secrets["server_api_keys"] as $key)
+			foreach ($secrets["server_keys"] as $key)
 				array_push($this->api_keys_quotas_reached[$api_name], 0);
 		}
-		for ($i = 0; $i < count($secrets["server_api_keys"]); ++$i)
+		for ($i = 0; $i < count($secrets["server_keys"]); ++$i)
 			if ($this->api_keys_quotas_reached[$api_name][$i] == 0)
-				return $secrets["server_api_keys"][$i];
+				return $secrets["server_keys"][$i];
 		
 		// no more key, let's see if we reached the quota at least one hour ago
-		for ($i = 0; $i < count($secrets["server_api_keys"]); ++$i)
+		for ($i = 0; $i < count($secrets["server_keys"]); ++$i)
 			if ($this->api_keys_quotas_reached[$api_name][$i] < time()-60*60) {
 				$this->api_keys_quotas_reached[$api_name][$i] = 0;
-				return $secrets["server_api_keys"][$i];
+				return $secrets["server_keys"][$i];
 			}
 		
 		return null;
@@ -46,9 +46,9 @@ class google extends Component {
 	
 	public function signalAPIQuotaReached($api_name, $api_key) {
 		$secrets = include("conf/google.inc");
-		for ($key_index = 0; $key_index < count($secrets["server_api_keys"]); $key_index++)
-			if ($secrets["server_api_keys"][$key_index] == $api_key) break;
-		if ($key_index >= count($secrets["server_api_keys"])) return;
+		for ($key_index = 0; $key_index < count($secrets["server_keys"]); $key_index++)
+			if ($secrets["server_keys"][$key_index] == $api_key) break;
+		if ($key_index >= count($secrets["server_keys"])) return;
 		$this->api_keys_quotas_reached[$api_name][$key_index] = time();
 	}
 	

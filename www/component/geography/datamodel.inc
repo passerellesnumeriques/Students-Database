@@ -54,7 +54,7 @@ $model->addTable("CountryDivision")
 		SQLQuery::create()->bypassSecurity()->updateByKeys("Country", array(array($countries,array("last_modified"=>time()))));
 	})
 	->onRemove(function($table, $rows, $sub_model_instance){
-		$to_update = array(array(),array("last_modified"=>time()));
+		$to_update = array(array(array(),array("last_modified"=>time())));
 		foreach ($rows as $row)
 			if (!in_array($row["country"], $to_update[0][0]))
 				array_push($to_update[0][0], $row["country"]);
@@ -80,7 +80,7 @@ $model->addTable("GeographicArea")
 		$division_ids = array();
 		foreach ($inserted as $row) if (!in_array($row["fields_values"]["country_division"], $division_ids)) array_push($division_ids,$row["fields_values"]["country_division"]);
 		$countries = SQLQuery::create()->select("CountryDivision")->whereIn("CountryDivision","id",$division_ids)->field("country")->distinct()->executeSingleField();
-		SQLQuery::create()->bypassSecurity()->updateByKeys("Country", array($countries, array("last_modified"=>time())));
+		SQLQuery::create()->bypassSecurity()->updateByKeys("Country", array(array($countries, array("last_modified"=>time()))));
 	})
 	->onUpdate(function($keys_fields_values, $sub_model_instance) {
 		$divisions = array();
@@ -104,7 +104,7 @@ $model->addTable("GeographicArea")
 		$ids = array();
 		foreach ($rows as $row) if (!in_array($row["country_division"], $ids)) array_push($ids, $row["country_division"]);
 		$countries = SQLQuery::create()->select("CountryDivision")->whereIn("CountryDivision","id",$ids)->field("country")->distinct()->executeSingleField();
-		SQLQuery::create()->bypassSecurity()->updateByKeys("Country", array($countries, array("last_modified"=>time())));
+		SQLQuery::create()->bypassSecurity()->updateByKeys("Country", array(array($countries, array("last_modified"=>time()))));
 	})
 	;
 ?>
