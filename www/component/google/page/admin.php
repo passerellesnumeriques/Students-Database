@@ -124,8 +124,8 @@ theme::css($this, "section.css");
 			</div>
 			Search an event by UID: <input type='text' id='search_event_uid'/> <button class='action' onclick="searchEvent(document.getElementById('search_event_uid').value);">Search</button>
 			<script type='text/javascript'>
-			function loadCalendars() {
-				service.html("google", "admin_calendars", {}, document.getElementById('calendars_content'));
+			function loadCalendars(ondone) {
+				service.html("google", "admin_calendars", {}, document.getElementById('calendars_content'), ondone);
 			}
 			function searchEvent(uid) {
 				service.json("google","search_event_uid",{uid:uid},function(res) {

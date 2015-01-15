@@ -17,7 +17,7 @@ class service_admin_calendars extends Service {
 		require_once("component/google/lib_api/PNGoogleCalendar.inc");
 		$gcal = new PNGoogleCalendar();
 		if (isset($input["remove_calendar"])) {
-			$gcal->removeCalendar($_POST["calendar_id"]);
+			$gcal->removeCalendar($input["remove_calendar"]);
 			return;
 		}
 		
@@ -34,9 +34,14 @@ $synch = SQLQuery::create()->bypassSecurity()->select("GoogleCalendarSynchro")->
 		echo "<td>".toHTML($cal->getDescription())."</td>";
 		echo "<td>".toHTML($cal->getLocation())."</td>";
 		echo "<td><ul>";
-		$acls = $gcal->getAcls($cal->getId());
-		foreach ($acls as $acl) {
-			echo "<li><b>".$acl->getRole()."</b>: ".$acl->getScope()->getType().": <i>".$acl->getScope()->getValue()."</i></li>";
+		try {
+			set_time_limit(30);
+			$acls = $gcal->getAcls($cal->getId());
+			foreach ($acls as $acl) {
+				echo "<li><b>".$acl->getRole()."</b>: ".$acl->getScope()->getType().": <i>".$acl->getScope()->getValue()."</i></li>";
+			}
+		} catch (Exception $e) {
+			echo "<li><img src='".theme::$icons_16['error']."'/> Error: ".toHTML($e->getMessage())."</li>";
 		}
 		echo "</ul></td>";
 		echo "<td>";
@@ -48,7 +53,7 @@ $synch = SQLQuery::create()->bypassSecurity()->select("GoogleCalendarSynchro")->
 			echo date("d M Y H:i", $last);
 		echo "</td>";
 		echo "<td>";
-		echo "<button class='action red' onclick=\"var locker=lockScreen();service.json('google','admin_calendars',{remove_calendar:'".$cal->getId()."'},function(res){loadCalendars();unlockScreen(locker);});\"><img src='".theme::$icons_16["remove_white"]."'/> Remove</button></form>";
+		echo "<button class='action red' onclick=\"var locker=lockScreen(null,'Removing calendar...');service.json('google','admin_calendars',{remove_calendar:'".$cal->getId()."'},function(res){setLockScreenContent(locker,'Loading calendars list...');loadCalendars(function(){unlockScreen(locker);});});\"><img src='".theme::$icons_16["remove_white"]."'/> Remove</button></form>";
 		echo "</td>";
 		echo "</tr>";
 	}
