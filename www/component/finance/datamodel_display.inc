@@ -36,12 +36,8 @@ class BalanceDataDisplay extends DataDisplay {
 	public function getTypedFilter($sub_model) {
 		return array("filter_comparable","{value_field_classname:'field_decimal',value_field_config:{can_be_null:false}}");
 	}
-	/** Add any necessary select/join/field to the SQLQuery to retrieve this data
-	 * @param SQLQuery $q the sql
-	 * @param DataPath $path how we reached this data
-	 * @return array("key"=&gt;key_alias,"data"=&gt;data_alias): if data is null or not specified, the function performSubRequest must be implemented
-	 */
-	public function buildSQL(&$q, $path) {
+
+	public function buildSQL(&$q, $path, $filtered) {
 		$key_alias = $q->getFieldAlias("People", "id");
 		if ($key_alias == null) $key_alias = $q->getFieldAlias("Student","people");
 		
