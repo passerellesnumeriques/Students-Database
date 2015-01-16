@@ -23,27 +23,61 @@ class DataPathBuilder {
 		}
 		$done = array();
 		$final_paths = array();
+		$pass = array();
 		if ($table->getModel() instanceof SubDataModel) {
 			if ($sub_model == null && $sub_models <> null && isset($sub_models[$table->getModel()->getParentTable()]))
 				$sub_model = $sub_models[$table->getModel()->getParentTable()];
 			if ($sub_model <> null) {
 				// we are in a defined sub model
 				$path = new DataPath_Table($table, $sub_model);
-				DataPathBuilder::searchFromPath($path, $done, $final_paths, $sub_models, $go_to_submodels);
+				$pass = DataPathBuilder::searchFromPath($path, $done, $final_paths, $sub_models, $go_to_submodels);
 			} else if ($go_to_submodels) {
 				// we need to go to all existing sub models
 				foreach ($table->getModel()->getExistingInstances() as $sm) {
 					$path = new DataPath_Table($table, $sm);
 					$new_sub_models = array($table->getModel()->getParentTable()=>$sm);
 					if ($sub_models <> null) $new_sub_models = array_merge($new_sub_models, $sub_models);
-					DataPathBuilder::searchFromPath($path, $done, $final_paths, $new_sub_models, $go_to_submodels);
+					$pass = array_merge($pass, DataPathBuilder::searchFromPath($path, $done, $final_paths, $new_sub_models, $go_to_submodels));
 				}
 			}
 		} else {
 			$path = new DataPath_Table($table, null);
-			DataPathBuilder::searchFromPath($path, $done, $final_paths, $sub_models, $go_to_submodels);
+			$pass = DataPathBuilder::searchFromPath($path, $done, $final_paths, $sub_models, $go_to_submodels);
 		}
 		unset($table);
+		$list_sm = array();
+		$list_root = array();
+		foreach ($pass as $p) 
+			if ($p[0]->table->getModel() instanceof SubDataModel)
+				array_push($list_sm, $p);
+			else 
+				array_push($list_root, $p);
+		while (count($list_root) > 0 || count($list_sm) > 0) {
+			// first root model
+			while (count($list_root) > 0) {
+				$pass = array();
+				foreach ($list_root as $search)
+					$pass = array_merge($pass, DataPathBuilder::searchFromPath($search[0], $done, $final_paths, $search[1], $go_to_submodels));
+				$list_root = array();
+				foreach ($pass as $p) 
+					if ($p[0]->table->getModel() instanceof SubDataModel)
+						array_push($list_sm, $p);
+					else 
+						array_push($list_root, $p);
+			}
+			// no more root model
+			if (count($list_sm) > 0) {
+				$search = $list_sm[0];
+				array_splice($list_sm, 0, 1);
+				$pass = DataPathBuilder::searchFromPath($search[0], $done, $final_paths, $search[1], $go_to_submodels);
+				foreach ($pass as $p)
+					if ($p[0]->table->getModel() instanceof SubDataModel)
+						array_push($list_sm, $p);
+					else
+						array_push($list_root, $p);
+			}
+		}
+		
 		return $final_paths;
 	}
 	
@@ -60,21 +94,22 @@ class DataPathBuilder {
 		$tables = array();
 		$p = $path;
 		while ($p <> null) {
-			if (in_array($p->table->getSQLNameFor($p->sub_model), $tables)) return; // 2 times the same table in the path
+			if (in_array($p->table->getSQLNameFor($p->sub_model), $tables)) return array(); // 2 times the same table in the path
 			array_push($tables, $p->table->getSQLNameFor($p->sub_model));
 			if (!$p->unique) $multiple++;
 			$p = $p->parent;
 		}
-		if ($multiple > 1) return;
+		if ($multiple > 1) return array();
 		array_push($final_paths, $path);
 		if (isset($done[$path->table->getSQLNameFor($path->sub_model)])) {
-			if (in_array($multiple, $done[$path->table->getSQLNameFor($path->sub_model)])) return;
+			if (in_array($multiple, $done[$path->table->getSQLNameFor($path->sub_model)])) return array();
 			array_push($done[$path->table->getSQLNameFor($path->sub_model)],$multiple);
 		} else {
 			$done[$path->table->getSQLNameFor($path->sub_model)] = array($multiple);
 		}
-		DataPathBuilder::addForeignKeys($path, $done, $final_paths, $sub_models, $go_to_submodels);
-		DataPathBuilder::addExternalForeignKeys($path, $done, $final_paths, $sub_models, $go_to_submodels);
+		$res1 = DataPathBuilder::addForeignKeys($path, $done, $final_paths, $sub_models, $go_to_submodels);
+		$res2 = DataPathBuilder::addExternalForeignKeys($path, $done, $final_paths, $sub_models, $go_to_submodels);
+		return array_merge($res1, $res2);
 	}
 	
 	/**
@@ -86,6 +121,7 @@ class DataPathBuilder {
 	 * @param boolean $go_to_submodels if true, we will try to go to every sub model
 	 */
 	private static function addForeignKeys(&$path, &$done, &$final_paths, $sub_models, $go_to_submodels) {
+		$result = array();
 		foreach ($path->table->internalGetColumns($sub_models) as $col) {
 			if (!($col instanceof \datamodel\ForeignKey)) continue;
 			if ($col->foreign_table == $path->table->getName()) continue; // link on itself
@@ -114,13 +150,14 @@ class DataPathBuilder {
 				$new_sub_models = array();
 				if ($sm <> null) $new_sub_models[$t->getModel()->getParentTable()] = $sm;
 				if ($sub_models <> null) $new_sub_models = array_merge($new_sub_models, $sub_models);
-				DataPathBuilder::searchFromPath($p, $done, $final_paths, $new_sub_models, $go_to_submodels);
+				array_push($result, array($p, $new_sub_models));
 				unset($t);
 			} catch (Exception $e) {
 				// not allowed
 				continue;
 			}
 		}
+		return $result;
 	}
 	
 	/**
@@ -134,6 +171,7 @@ class DataPathBuilder {
 	private static function addExternalForeignKeys(&$path, &$done, &$final_paths, $sub_models, $go_to_submodels) {
 		$model = DataModel::get();
 		$tables = $model->getTables();
+		$result = array();
 		foreach ($tables as &$t) {
 			$sm = null;
 			if ($t->getModel() instanceof SubDataModel) {
@@ -175,7 +213,7 @@ class DataPathBuilder {
 							$p = new DataPath_Join($path, $col, $col->table, $sminstance);
 							$new_sub_models = $sub_models;
 							$new_sub_models[$t->getModel()->getParentTable()] = $sminstance;
-							DataPathBuilder::searchFromPath($p, $done, $final_paths, $new_sub_models, $go_to_submodels);
+							array_push($result, array($p, $new_sub_models));
 						}
 					}
 				} else {
@@ -183,11 +221,12 @@ class DataPathBuilder {
 					$new_sub_models = array();
 					if ($sm <> null) $new_sub_models[$t->getModel()->getParentTable()] = $sm;
 					if ($sub_models <> null) $new_sub_models = array_merge($new_sub_models, $sub_models);
-					DataPathBuilder::searchFromPath($p, $done, $final_paths, $new_sub_models, $go_to_submodels);
+					array_push($result, array($p, $new_sub_models));
 				}
 			}
 			unset($t);
 		}
+		return $result;
 	}
 	
 	/**

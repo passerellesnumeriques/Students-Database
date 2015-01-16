@@ -169,9 +169,9 @@ class page_popup_create_people_step_check extends Page {
 						echo "<br/>";
 						echo "<table>";
 						foreach ($same as $similar)
-							$this->similarPeople("Exactly the same name", $similar, $path, $table, $li_id, $sub_models, $itc);
+							$this->similarPeople("Exactly the same name", $similar, $path, $table, $li_id, $sub_models, $itc, true, $people);
 						foreach ($similars as $similar)
-							$this->similarPeople("Similar name", $similar, $path, $table, $li_id, $sub_models, $itc);
+							$this->similarPeople("Similar name", $similar, $path, $table, $li_id, $sub_models, $itc, false, $people);
 						echo "</table>";
 						echo "<button style='margin: 4px 2px' onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);peoples.push(window._new_peoples[$itc]);window.oneDone();return false;\">";
 						echo toHTML($first_name." ".$last_name)." is a new person, I want to create it";
@@ -205,7 +205,7 @@ class page_popup_create_people_step_check extends Page {
 				popup.onclose = null;
 				return true;
 			});
-			function addTypesToPeople(li_id, types, people_id,inp) {
+			function addTypesToPeople(li_id, types, people_id,inp,fullname) {
 				var li = document.getElementById(li_id);
 				li.parentNode.removeChild(li);
 				var next = function(i) {
@@ -223,7 +223,7 @@ class page_popup_create_people_step_check extends Page {
 								data.prefilled_data.push({table:table,data:p.value[k].name,value:p.value[k].value});
 					}
 					window.parent.popupFrame(
-						null,'New Person',
+						null,fullname,
 						'/dynamic/people/page/people_new_type?people='+people_id+'&ondone=done&oncancel=done&type='+types[i]<?php if ($sub_models <> null) echo "+'&sub_models=".urlencode(json_encode($sub_models))."'";?>,
 						data,null,null,
 						function(frame,pop){
@@ -243,10 +243,10 @@ class page_popup_create_people_step_check extends Page {
 		}
 	}
 	
-	private function similarPeople($msg, $similar, $path, $table, $li_id, $sub_models, $itc) {
+	private function similarPeople($msg, $similar, $path, $table, $li_id, $sub_models, $itc, $exactly, $people_data) {
 		$this->requireJavascript("profile_picture.js");
 		$id = $this->generateID();
-		echo "<tr id='$id'>";
+		echo "<tr id='$id'".($exactly ? " style='background-color:#E0E0FF;'" : "").">";
 		$pic_id = $this->generateID();
 		echo "<td id='$pic_id' style='cursor:pointer;vertical-align:top;border-bottom:1px solid #808080' title='Click to see the details of this person' onclick=\"window.top.popupFrame('/static/people/profile_16.png','Profile','/dynamic/people/page/profile?people=".$similar["id"]."',null,95,95);return false;\">";
 		$this->onload("new profile_picture('$pic_id',30,30,'center','center').loadPeopleID(".$similar["id"].");");
@@ -270,10 +270,10 @@ class page_popup_create_people_step_check extends Page {
 			$types = "";
 			foreach ($missing_types as $t) {
 				if ($types <> "") $types .= ",";
-				$types .= "'$t'";
+				$types .= "\"$t\"";
 			}
 			echo "They are the same ?<br/>";
-			echo "<button onclick=\"addTypesToPeople('$li_id',[$types],".$similar["id"].",$itc);return false;\">Do not create it again, but make it as ";
+			echo "<button onclick='addTypesToPeople(\"$li_id\",[$types],".$similar["id"].",$itc,".toHTMLAttribute($similar["first_name"]." ".$similar["last_name"]).");return false;'>Do not create it again, but make it as ";
 			$add_types = "";
 			$first = true;
 			foreach ($missing_types as $t) {
@@ -285,6 +285,18 @@ class page_popup_create_people_step_check extends Page {
 			echo "</button><br/>";
 			echo "<button onclick=\"var li = document.getElementById('$id');li.parentNode.removeChild(li);return false;\">Do not create it again, and ignore it</button><br/>";
 		} else {
+			foreach ($stypes as $t) {
+				$pi = PNApplication::$instance->people->getPeopleTypePlugin($t);
+				$descr = $pi->canReassignSameType($similar["id"]);
+				if ($descr <> null) {
+					echo "<script type='text/javascript'>";
+					echo "function reassign_$li_id(type) {";
+					echo "service.json('people','reassign_type',{people:".$similar["id"].",type:type,data:".json_encode($people_data)."},function(res){});";
+					echo "}";
+					echo "</script>";
+					echo "<button onclick=\"reassign_$li_id('$t');var li = document.getElementById('$li_id');li.parentNode.removeChild(li);window.oneDone();return false;\">Yes they are the same, ".toHTML($descr)."</button><br/>";
+				}
+			}
 			echo "<button onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);window.oneDone();return false;\">";
 			echo "Yes they are the same, do not create it again";
 			echo "</button><br/>";

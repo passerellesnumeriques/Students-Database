@@ -22,6 +22,8 @@ class ContactPointPeopleTypePlugin implements PeopleTypePlugin {
 	public function getIcon16() { return "/static/contact/contact_point.png"; }
 	public function getIcon32() { return "/static/contact/contact_point_32.png"; }
 	public function isStandalone() { return false; }
+	public function canReassignSameType($people_id) { return null; }
+	public function reassign($people_id, $data) {}
 	
 	public function getTables() { return array("ContactPoint"); }
 	

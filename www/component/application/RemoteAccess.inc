@@ -194,5 +194,24 @@ class RemoteAccess {
 		}
 	}
 	
+	public static function downloadStorageFile($domain, $domain_version, $url, $password, $storage_id, $expected_size, $target) {
+		$c = curl_init($url."dynamic/application/service/get_backup");
+		if (file_exists("conf/proxy")) include("conf/proxy");
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, FALSE);
+		curl_setopt($c, CURLOPT_HEADER, FALSE);
+		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_storage","password"=>$password,"id"=>$storage_id));
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
+		$max_time = 60+floor($expected_size/32768);
+		curl_setopt($c, CURLOPT_TIMEOUT, $max_time);
+		curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$domain_version","User-Agent: Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain));
+		curl_setopt(CURLOPT_FILE, $target);
+		set_time_limit($max_time+30);
+		$result = curl_exec($c);
+		curl_close($c);
+		return $result;
+		
+	}
+	
 }
 ?>

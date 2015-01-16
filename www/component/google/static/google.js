@@ -194,17 +194,22 @@ if (window == window.top && !window.top.google) {
 			window.top.google._api_loaded_event.fire();
 		window.top.google._api_loaded_event = null;
 	};
-	window.top.load_google_api = function() {
+	window.top.load_google_api = function(trials) {
 		window.top.google._connecting_time = new Date().getTime();
 		window.top.addJavascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
+		if (!trials) trials = 0;
+		else if (trials > 30) trials = 30;
 		window.top.setTimeout(function(){
 			if (window.top.google.api_loaded) return;
 			window.top.removeJavascript("https://apis.google.com/js/client.js?onload=google_api_loaded");
 			window.top.google.connection_error = "cannot load google api";
 			window.top.google.connection_status = -1;
 			window.top.google.connection_event.fire();
-			window.top.load_google_api();
-		},30000);
+			if (trials > 0)
+				setTimeout(function() { window.top.load_google_api(trials+1); }, trials*10000);
+			else
+				window.top.load_google_api(trials+1);
+		},trials == 0 ? 15000 : 30000);
 	};
 	window.top.load_google_api();
 }

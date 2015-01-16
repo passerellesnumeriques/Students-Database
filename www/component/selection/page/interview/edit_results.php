@@ -78,6 +78,7 @@ class page_interview_edit_results extends SelectionPage {
 	</div>
 	<div class="page_footer" style="flex:none" id='footer'>
 		<button class='action' onclick='save();'><img src='<?php echo theme::$icons_16["save"];?>'/> Save, apply rules, and see passers</button>
+		<button class='action' onclick='importFile(event);'><img src='<?php echo theme::$icons_16["_import"];?>'/> Import From File</button>
 	</div>
 </div>
 <script type='text/javascript'>
@@ -132,13 +133,13 @@ grid.addColumn(new CustomDataGridColumn(
 	new GridColumn('attendance', "Absent", null, 'center', 'field_boolean', true, absentChanged, absentChanged, {}),
 	function(applicant) { return applicant.interview_attendance === false; },
 	true,
-	null,
+	null,null,
 	true
 ));
 var cols = [];
 for (var i = 0; i < criteria.length; ++i) {
 	var col = new GridColumn('criterion_'+criteria[i].id, criteria[i].name, null, 'center', 'field_decimal', true, null, null, {integer_digits:3,decimal_digits:2,min:0,max:criteria[i].max_score,can_be_null:true});
-	col = new CustomDataGridColumn(col, function(obj, criterion_id) { return getApplicantResult(obj.people.id, criterion_id); }, true, criteria[i].id, null, true);
+	col = new CustomDataGridColumn(col, function(obj, criterion_id) { return getApplicantResult(obj.people.id, criterion_id); }, true, criteria[i].id, null, null, true);
 	cols.push(col);
 }
 grid.addColumnContainer(new CustomDataGridColumnContainer("Criteria", cols));
@@ -146,19 +147,52 @@ grid.addColumn(new CustomDataGridColumn(
 	new GridColumn('interviewers', "Interviewers", null, null, 'field_multiple_choice', true, null, null, {possible_values:interviewers,wrap:'yes'}),
 	function(applicant) { return getApplicantInterviewers(applicant.people.id); },
 	true,
-	null,
+	null,null,
 	true
 ));
 grid.addColumn(new CustomDataGridColumn(
 	new GridColumn('comment', "Comment", 300, null, 'field_text', true, null, null, {can_be_null:true,max_length:1000}),
 	function(applicant) { return applicant.interview_comment; },
 	true,
-	null,
+	null,null,
 	true
 ));
 
 for (var i = 0; i < applicants.length; ++i)
 	grid.addApplicant(applicants[i]);
+
+function importFile(event) {
+	if (grid.grid._import_with_match) return;
+	require("import_with_match.js",function() {
+		var prov = new import_with_match_provider_custom_data_grid(grid);
+		prov.getColumnsCanBeMatched = function() {
+			var cols = [];
+			var gcols = grid.getAllFinalColumns();
+			for (var i = 0; i < gcols.length; ++i) {
+				if (!gcols[i].shown) continue;
+				var id = gcols[i].grid_column.id;
+				if (id == 'attendance') continue;
+				if (id == 'interviewers') continue;
+				if (id == 'comment') continue;
+				if (id.startsWith("criterion_")) continue;
+				cols.push({ id: id, name: gcols[i].select_menu_name ? gcols[i].select_menu_name : gcols[i].grid_column.title });
+			}
+			return cols;
+		};
+		prov.getColumnsCanBeImported = function() {
+			var cols = [];
+			var gcols = grid.getAllFinalColumns();
+			for (var i = 0; i < gcols.length; ++i) {
+				if (!gcols[i].shown) continue;
+				var id = gcols[i].grid_column.id;
+				if (id == 'attendance' || id == 'comment' || id.startsWith("criterion_"))
+					cols.push({ id: id, name: gcols[i].select_menu_name ? gcols[i].select_menu_name : gcols[i].grid_column.title });
+			}
+			return cols;
+		};
+		new import_with_match(prov, event, true);
+	});
+}
 
 function save() {
 	var data = [];

@@ -211,7 +211,7 @@ INSERT INTO `Country` (`id`, `code`, `name`, `west`, `east`, `north`, `south`) V
 (188, 'VA', 'Vatican City', NULL, NULL, NULL, NULL),
 (189, 'VC', 'Saint Vincent and the Grenadines', NULL, NULL, NULL, NULL),
 (190, 'VE', 'Venezuela', NULL, NULL, NULL, NULL),
-(191, 'VN', 'Vietnam', NULL, NULL, NULL, NULL),
+(191, 'VN', 'Vietnam', '102.144410', '109.468948', '23.393395', '8.408250'),
 (192, 'VU', 'Vanuatu', NULL, NULL, NULL, NULL),
 (193, 'WS', 'Samoa', NULL, NULL, NULL, NULL),
 (194, 'YE', 'Yemen', NULL, NULL, NULL, NULL),

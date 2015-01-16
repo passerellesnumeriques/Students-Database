@@ -197,27 +197,7 @@ function refreshCampaigns() {
 	getIFrameWindow(findFrame('application_frame')).location.reload();
 }
 function createCampaign() {
-	inputDialog(theme.icons_16.question,
-		"Create a selection campaign",
-		"Enter the name of the new selection campaign",
-		'',
-		50,
-		function(text){
-			if(!text.checkVisible()) return "You must enter at least one visible character";
-			for (var i = 0; i < campaign_names.length; ++i)
-				if (campaign_names[i].toLowerCase() == text.trim().toLowerCase())
-					return "A campaign already exists with this name";
-		},
-		function(text){
-			if(!text) return;
-			var div_locker = window.top.lockScreen(null,"Creation of the new selection campaign...");
-			service.json("selection","create_campaign",{name:text.trim()},function(res){
-				unlockScreen(div_locker);
-				if(!res) return;
-				refreshCampaigns();
-			});
-		}
-	);
+	popupFrame(theme.build_icon("/static/selection/selection_16.png",theme.icons_10.add),"New Selection Campaign","/dynamic/selection/page/new_campaign");
 }
 function changeCampaign(id) {
 	service.json("selection","set_campaign_id",{campaign_id:id},function(res){

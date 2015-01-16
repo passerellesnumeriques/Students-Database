@@ -22,7 +22,7 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() { return true; }
 	public function isMandatory($sub_model) { return false; }
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$table_alias = $q->getTableAlias("FamilyMember");
 		if ($table_alias == null) {
 			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);
@@ -36,10 +36,39 @@ class NumberOfSiblings extends datamodel\DataDisplay {
 		}
 		$key_alias = $q->generateFieldAlias();
 		$q->field($table_alias, "id", $key_alias);
-		
-		$nb_sibling_alias = $q->generateFieldAlias();
-		$q->expression("IF(`$table_alias`.family IS NULL,NULL,(SELECT COUNT(*) FROM FamilyMember WHERE FamilyMember.family=`$table_alias`.family AND FamilyMember.member_type='Child')-1)",$nb_sibling_alias);
-		return array("key"=>$key_alias,"data"=>$nb_sibling_alias);
+		if ($filtered) {
+			// filtered => make it directly in the query
+			$nb_sibling_alias = $q->generateFieldAlias();
+			$q->expression("IF(`$table_alias`.family IS NULL,NULL,(SELECT COUNT(*) FROM FamilyMember WHERE FamilyMember.family=`$table_alias`.family AND FamilyMember.member_type='Child')-1)",$nb_sibling_alias);
+			return array("key"=>$key_alias,"data"=>$nb_sibling_alias);
+		}
+		// not filtered, do it through a sub request
+		$family_alias = $q->generateFieldAlias();
+		$q->field($table_alias, "family", $family_alias);
+		return array("key"=>$key_alias,"data"=>null,"family"=>$family_alias);
+	}
+	public function performSubRequests(&$original_query, &$rows, &$sql_aliases, $path) {
+		if (!isset($sql_aliases["family"])) return;
+		$families = array();
+		foreach ($rows as $row) if ($row[$sql_aliases["family"]] <> null && !in_array($row[$sql_aliases["family"]],$families)) array_push($families,$row[$sql_aliases["family"]]);
+		$requests = array();
+		if (count($families) > 0) {
+			$q = SQLQuery::create()->bypassSecurity()->select("FamilyMember")->whereIn("FamilyMember","family",$families)->whereValue("FamilyMember","member_type","Child")->groupBy("FamilyMember","family")->countOneField("FamilyMember","family","nb_children")->field("FamilyMember","family","family");
+			$families = $q->execute();
+			array_push($requests, array($q,$families));
+		}
+		$alias = $original_query->generateFieldAlias();
+		for ($i = 0; $i < count($rows); $i++) {
+			if ($rows[$i][$sql_aliases["family"]] == null) $rows[$i][$alias] = null;
+			else {
+				$nb = 0;
+				foreach ($families as $f) if ($f["family"] == $rows[$i][$sql_aliases["family"]]) { $nb = $f["nb_children"]; break; }
+				if ($nb > 0) $nb--;
+				$rows[$i][$alias] = $nb;
+			}
+		}
+		$sql_aliases["data"] = $alias;
+		return $requests;
 	}
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
 		$table_alias = $q->getTableAlias($path->table->getName());
@@ -87,7 +116,7 @@ class ChildRank extends datamodel\DataDisplay {
 	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() { return true; }
 	public function isMandatory($sub_model) { return false; }
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$table_alias = $q->getTableAlias("FamilyMember");
 		if ($table_alias == null) {
 			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);
@@ -150,7 +179,7 @@ class ParentsSituation extends datamodel\DataDisplay {
 	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() { return true; }
 	public function isMandatory($sub_model) { return false; }
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$table_alias = $q->getTableAlias("FamilyMember");
 		if ($table_alias == null) {
 			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);
@@ -212,7 +241,7 @@ class ParentDataDisplay extends datamodel\DataDisplay {
 	public function getEditLocks($sub_model) { return array(); }
 	public function isSortable() { return false; }
 	public function isMandatory($sub_model) { return false; }
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$table_alias = $q->getTableAlias("FamilyMember");
 		if ($table_alias == null) {
 			$parent_table_alias = \DataPathSQLBuilder::build($path->parent, $q);

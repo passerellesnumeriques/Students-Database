@@ -18,7 +18,7 @@ class service_get_data extends Service {
 		$aliases = array();
 		foreach ($display->getDataDisplay(null, $sm) as $data) {
 			if (!in_array($data->getDisplayName(), $input["data"])) continue;
-			$aliases[$data->getDisplayName()] = $data->buildSQL($q, new DataPath_Table($table, @$input["sub_model"]));
+			$aliases[$data->getDisplayName()] = $data->buildSQL($q, new DataPath_Table($table, @$input["sub_model"]), false);
 		}
 		if ($table->getPrimaryKey() <> null)
 			$q->whereIn($table->getName(), $table->getPrimaryKey()->name, $input["keys"]);

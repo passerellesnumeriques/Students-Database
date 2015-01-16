@@ -6,12 +6,6 @@ class page_admin extends Page {
 	public function execute() {
 if (isset($_POST["action"])) {
 	switch ($_POST["action"]) {
-		case "remove_calendar":
-			require_once("component/google/lib_api/PNGoogleCalendar.inc");
-			$gcal = new PNGoogleCalendar();
-			$gcal->removeCalendar($_POST["calendar_id"]);
-			echo "<script type='text/javascript'>location.assign('/dynamic/google/page/admin');</script>";
-			return;
 		case "configuration":
 			if (!isset($_POST["client_id"]) || trim($_POST["client_id"]) == "") echo "Missing Client ID<br/>";
 			else if (!isset($_POST["client_api_key"]) || trim($_POST["client_api_key"]) == "") echo "Missing API Key<br/>";
@@ -65,7 +59,7 @@ $this->requireJavascript("section.js");
 theme::css($this, "section.css");
 ?>
 <div style='padding:10px'>
-	<div id='section_conf' title='Configuration'>
+	<div id='section_conf' title='Configuration' collapsable='true' collapsed='false'>
 		<div>
 			<?php
 			if (!$this->component->isInstalled()) {
@@ -123,55 +117,48 @@ theme::css($this, "section.css");
 		</div>
 	</div>
 <?php if ($this->component->isInstalled()) { ?>
-	<div id='section_calendars' title='Calendars'>
+	<div id='section_calendars' title='Calendars' collapsable='true' collapsed='false'>
 		<div style='padding:5px;'>
-			<table class='all_borders'>
-				<tr><th>ID</th><th>Summary</th><th>Description</th><th>Location</th><th>Access</th><th>Last Synch</th><th></th></tr>
-				<?php 
-				require_once("component/google/lib_api/PNGoogleCalendar.inc");
-				$gcal = new PNGoogleCalendar();
-				$list = $gcal->getGoogleCalendars();
-				$synch = SQLQuery::create()->bypassSecurity()->select("GoogleCalendarSynchro")->execute();
-				foreach ($list as $cal) {
-					echo "<tr>";
-					echo "<td style='font-size:8pt;font-family:Courier New;'>".toHTML($cal->getId())."</td>";
-					echo "<td>".toHTML($cal->getSummary())."</td>";
-					echo "<td>".toHTML($cal->getDescription())."</td>";
-					echo "<td>".toHTML($cal->getLocation())."</td>";
-					echo "<td><ul>";
-					$acls = $gcal->getAcls($cal->getId());
-					foreach ($acls as $acl) {
-						echo "<li><b>".$acl->getRole()."</b>: ".$acl->getScope()->getType().": <i>".$acl->getScope()->getValue()."</i></li>";
-					}
-					echo "</ul></td>";
-					echo "<td>";
-					$last = null;
-					foreach ($synch as $s) if ($s["google_id"] == $cal->getId()) { $last = $s["timestamp"]; break; }
-					if ($last == null)
-						echo "<i>Never</i>";
-					else 
-						echo date("d M Y H:i", $last);
-					echo "</td>";
-					echo "<td>";
-					$id = $this->generateID();
-					echo "<form method='POST' id='$id'><input type='hidden' name='action' value='remove_calendar'/><input type='hidden' name='calendar_id' value='".$cal->getId()."'/><button class='action red' onclick=\"document.forms['$id'].submit();\"><img src='".theme::$icons_16["remove_white"]."'/> Remove</button></form>";
-					echo "</td>";
-					echo "</tr>";
-				}
-				?>
-			</table>
+			<div id='calendars_content'>
+			<button class='action' onclick="this.innerHTML='Loading...';this.disabled='disabled';loadCalendars();">Load calendars list</button>
+			</div>
 			Search an event by UID: <input type='text' id='search_event_uid'/> <button class='action' onclick="searchEvent(document.getElementById('search_event_uid').value);">Search</button>
+			<script type='text/javascript'>
+			function loadCalendars(ondone) {
+				service.html("google", "admin_calendars", {}, document.getElementById('calendars_content'), ondone);
+			}
+			function searchEvent(uid) {
+				service.json("google","search_event_uid",{uid:uid},function(res) {
+					infoDialog(res);
+				});
+			}
+			</script>
 		</div>
 	</div>
 	
-	<div id='section_users' title='Organizations and Users'>
+	<div id='section_files' title='Files' collapsable='true' collapsed='false'>
 		<div style='padding:5px;'>
-			<?php
-			require_once("component/google/lib_api/PNGoogleDirectory.inc");
-			$dir = new PNGoogleDirectory();
-			$root = $dir->getHierarchy();
-			$this->generateSubOrganizations($root, 0);
-			?>
+			<div id='files_content'>
+				<button class='action' onclick="this.innerHTML='Loading...';this.disabled='disabled';loadFiles();">Load files list</button>
+			</div>
+			<script type='text/javascript'>
+			function loadFiles() {
+				service.html("google", "admin_files", {}, document.getElementById('files_content'));
+			}
+			</script>
+		</div>
+	</div>
+	
+	<div id='section_users' title='Organizations and Users' collapsable='true' collapsed='false'>
+		<div style='padding:5px;'>
+			<div id='users_content'>
+				<button class='action' onclick="this.innerHTML='Loading...';this.disabled='disabled';loadUsers();">Load users list</button>
+			</div>
+			<script type='text/javascript'>
+			function loadUsers() {
+				service.html("google", "admin_users", {}, document.getElementById('users_content'));
+			}
+			</script>
 		</div>
 	</div>
 <?php } ?>
@@ -180,52 +167,11 @@ theme::css($this, "section.css");
 sectionFromHTML('section_conf');
 <?php if ($this->component->isInstalled()) { ?>
 sectionFromHTML('section_calendars');
+sectionFromHTML('section_files');
 sectionFromHTML('section_users');
-function searchEvent(uid) {
-	service.json("google","search_event_uid",{uid:uid},function(res) {
-		infoDialog(res);
-	});
-}
 <?php } ?>
 </script>
 <?php 				
-	}
-
-	private function generateSubOrganizations($node, $indent) {
-		foreach ($node["sub_organizations"] as $so) {
-			echo "<div style='margin-left:".$indent."px;'>";
-			echo "<b>".$so["org"]->name."</b>";
-			echo " ";
-			$id = $this->generateID();
-			echo "<a class='black_link' href='#' onclick='$id(this);return false;'>";
-			echo count($so["users"])." users";
-			echo "</a>";
-			$this->generateSubOrganizations($so, $indent+20);
-			echo "</div>";
-			echo "<div style='display:none' id='$id'>";
-			$images = array();
-			foreach ($so["users"] as $u) {
-				/* @var $u Google_Service_Directory_User */
-				echo "<div style='border-bottom:1px solid #808080;margin-bottom: 1px;white-space:nowrap;'>";
-				echo toHTML($u->getName()->getFullName());
-				echo " (".$u->getPrimaryEmail().")";
-				if ($u->getThumbnailPhotoUrl() <> null) {
-					$iid = $this->generateID();
-					$images[$iid] = $u->getThumbnailPhotoUrl();
-					echo " <img id='$iid' style='vertical-align:middle;' no_wait='true'/>";
-				}
-				echo "</div>";
-			}
-			echo "</div>";
-			echo "<script type='text/javascript'>";
-			echo "function $id(link) {";
-			echo "require('popup_window.js',function() { var d = document.createElement('DIV'); d.innerHTML = document.getElementById('$id').innerHTML; var p = new popup_window('Users',null,d);p.show();});";
-			echo "}";
-			echo "setTimeout(function(){var i;";
-			foreach ($images as $iid=>$url) echo "i=document.getElementById('$iid');i.style.maxHeight='50px';i.src='$url';";
-			echo "},2000);";
-			echo "</script>";
-		}
 	}
 }
 ?>

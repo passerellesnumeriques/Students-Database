@@ -6,12 +6,14 @@ class page_update_batch_confirm extends SelectionPage {
 
 	public function executeSelectionPage() {
 		$batch_id = $_GET["batch"];
+		$program_id = @$_GET["program"];
 		// get applicants to be in the batch
 		$q = SQLQuery::create()
 			->select("Applicant")
 			->whereNotValue("Applicant", "excluded", 1)
 			->whereValue("Applicant", "applicant_decision", "Will come")
 			->whereValue("Applicant", "final_decision", "Selected");
+		if ($program_id <> null) $q->whereValue("Applicant","program",$program_id);
 		PNApplication::$instance->people->joinPeople($q, "Applicant", "people", false);
 		$applicants = $q->execute();
 		$nb_selected = count($applicants);

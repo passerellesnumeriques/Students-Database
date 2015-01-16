@@ -23,7 +23,8 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 		$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "excluded", false);
 		// if an IS is specified, and this IS is linked to an exam center, automatically assign the applicant to this exam center
 		$is = $table_fields->getValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "information_session");
-		if ($is <> null) {
+		$ec = $table_fields->getValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "exam_center");
+		if ($is <> null && $ec == null) {
 			$exam_center = SQLQuery::create()->bypassSecurity()->select("ExamCenterInformationSession")->whereValue("ExamCenterInformationSession", "information_session", $is)->field("ExamCenterInformationSession", "exam_center")->executeSingleValue();
 			if ($exam_center <> null)
 				$table_fields->addValue("Applicant", PNApplication::$instance->selection->getCampaignId(), $key, "exam_center", $exam_center);
@@ -48,6 +49,22 @@ class ApplicantTableDataDisplay extends datamodel\TableDataDisplay {
 				$extracts = SQLQuery::create()->bypassSecurity()->select("ExamSubjectExtract")->selectSubModel("SelectionCampaign", $sub_model)->execute();
 				foreach ($extracts as $extract) {
 					$data_display = new \datamodel\ReadOnlyDataDisplay("Exam ".$extract["name"], "ApplicantExamExtract>applicant(exam_extract=".$extract["id"].").score");
+					$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+					array_push($this->cache[$come_from][$sub_model], $data_display);
+				}
+				// add programs eligibility
+				if ($sub_model == PNApplication::$instance->selection->getCampaignId() && count(PNApplication::$instance->selection->getPrograms())>1) {
+					foreach (PNApplication::$instance->selection->getPrograms() as $program) {
+						$data_display = new \datamodel\ReadOnlyDataDisplay("Passed exam for ".$program["name"], "ApplicantExamProgramPasser>applicant(program=".$program["id"].").program","center",null,array("field_boolean","{}"));
+						$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+						array_push($this->cache[$come_from][$sub_model], $data_display);
+					}
+					foreach (PNApplication::$instance->selection->getPrograms() as $program) {
+						$data_display = new \datamodel\ReadOnlyDataDisplay("Passed interview for ".$program["name"], "ApplicantInterviewProgramPasser>applicant(program=".$program["id"].").program","center",null,array("field_boolean","{}"));
+						$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
+						array_push($this->cache[$come_from][$sub_model], $data_display);
+					}
+					$data_display = new \datamodel\ChoiceDataDisplay("program", "name", "Selected for program", false, false);
 					$data_display->setTableAndCategory($this->getTable(), $this->getCategory());
 					array_push($this->cache[$come_from][$sub_model], $data_display);
 				}
@@ -124,7 +141,7 @@ class ApplicantExclusionReason extends datamodel\DataDisplay {
 		return array("filter_enum",$cfg);
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		$key_alias = $q->getFieldAlias($table_alias, "people");
 		if ($key_alias == null)
@@ -190,7 +207,7 @@ require_once("component/contact/datamodel_display.inc");
 $display->addDataDisplay(new OrganizationDataDisplay("high_school", "High School", array("Selection"), array("High School"), true, null));
 $display->addDataDisplay(new OrganizationDataDisplay("ngo", "Following NGO", array("Selection"), array("NGO"), true, null));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("information_session", "name", "Information Session", false, true));
-$display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", "Exam Center", false, false));
+$display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center", "name", "Exam Center", false, true));
 $display->addDataDisplay(new datamodel\ChoiceDataDisplay("exam_center_room", "name", "Exam Center Room", false, false));
 $display->addDataDisplay(new datamodel\ReadOnlyChoiceDataDisplay("Exam Session", "exam_session", "exam_session.event.start"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("exam_attendance", "Exam Attendance",true,false));
@@ -201,7 +218,7 @@ $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_attendance",
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_comment", "Comment from Interview", true, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("interview_passer", "Eligible for Social Investigation", true, false));
 $display->addDataDisplay(new datamodel\ReadOnlyDataDisplay("Social Investigation Visits", "SocialInvestigation>applicant.event.start","right",null,array("field_date","{show_utc:true}")));
-$display->addDataDisplay(new datamodel\SimpleDataDisplay("si_grade", "Social Investigation Grade", true, false));
+$display->addDataDisplay(new datamodel\SimpleDataDisplay("si_grade", "Social Investigation Grade", false, false));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("final_decision","Final Decision of PN", true, false, "center"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("applicant_decision","Final Decision of Applicant", true, false, "center"));
 $display->addDataDisplay(new datamodel\SimpleDataDisplay("applicant_not_coming_reason","Reason of Applicant to decline", true, false));

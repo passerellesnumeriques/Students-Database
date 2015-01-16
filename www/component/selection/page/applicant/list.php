@@ -27,6 +27,7 @@ class page_applicant_list extends SelectionPage {
 		$can_exclude = $can_edit_applicants;
 		$can_remove = $can_edit_applicants;
 		$is_final = false;
+		$final_with_programs = false;
 		$filters = "";
 		$forced_fields = array();
 		if (isset($_GET["type"])) {
@@ -62,15 +63,25 @@ class page_applicant_list extends SelectionPage {
 					$can_exclude = false;
 					$can_create = false;
 					$can_remove = false;
+					$final_with_programs = count($this->component->getPrograms()) > 1;
 					$filters = "filters.push({category:'Selection',name:'Eligible for Social Investigation',force:true,data:{values:[1]}});\n";
 					$filters .= "filters.push({category:'Selection',name:'Social Investigation Grade',force:true,data:{values:['NOT_NULL']}});\n";
 					$filters .= "filters.push({category:'Selection',name:'Excluded',force:true,data:{values:[0]}});\n";
 					array_push($forced_fields, array("Selection","Final Decision of PN"));
+					if ($final_with_programs)
+						array_push($forced_fields, array("Selection","Selected for program"));
 					array_push($forced_fields, array("Selection","Final Decision of Applicant"));
 					array_push($forced_fields, array("Selection","Reason of Applicant to decline"));
-					$batch_id = SQLQuery::create()->select("SelectionCampaign")->whereValue("SelectionCampaign","id",$this->component->getCampaignId())->field("batch")->executeSingleValue();
-					if ($batch_id <> null)
-						$batch = PNApplication::$instance->curriculum->getBatch($batch_id);
+					if ($final_with_programs) {
+						$batch = array();
+						foreach ($this->component->getPrograms() as $program)
+							if ($program["batch"] <> null)
+								$batch[$program["batch"]] = PNApplication::$instance->curriculum->getBatch($program["batch"]);
+					} else {
+						$batch_id = SQLQuery::create()->select("SelectionCampaign")->whereValue("SelectionCampaign","id",$this->component->getCampaignId())->field("batch")->executeSingleValue();
+						if ($batch_id <> null)
+							$batch = PNApplication::$instance->curriculum->getBatch($batch_id);
+					}
 					$is_final = true;
 					break;
 			}
@@ -106,8 +117,15 @@ class page_applicant_list extends SelectionPage {
 				<?php if ($is_final) { ?>
 				<span style='white-space: nowrap'>
 				<b><i>PN Decision:</i></b>
+				<?php if ($final_with_programs) {
+					foreach ($this->component->getPrograms() as $program)
+						echo "<button class='action green' id='button_pn_selected_".$program["id"]."' disabled='disabled' onclick='PNSelected(".$program["id"].");'>Selected for ".toHTML($program["name"])."</button>";
+					foreach ($this->component->getPrograms() as $program)
+						echo "<button class='action' id='button_pn_waiting_list_".$program["id"]."' disabled='disabled' onclick='PNWaitingList(".$program["id"].");'>Waiting List for ".toHTML($program["name"])."</button>";
+				} else { ?>
 				<button class='action green' id='button_pn_selected' disabled='disabled' onclick='PNSelected();'>Selected!</button>
 				<button class='action' id='button_pn_waiting_list' disabled='disabled' onclick='PNWaitingList();'>Waiting List</button>
+				<?php } ?>
 				<button class='action red' id='button_pn_no' disabled='disabled' onclick='PNNo();'>No</button>
 				<button class='action grey' id='button_pn_remove' disabled='disabled' onclick='PNRemove();'>Remove Decision</button>
 				</span>
@@ -204,49 +222,99 @@ class page_applicant_list extends SelectionPage {
 					<?php } ?>
 
 					<?php if ($is_final && PNApplication::$instance->user_management->hasRight("manage_selection_campaign")) {
-						if ($batch_id <> null) {?>
-						var update_batch = document.createElement("BUTTON");
-						update_batch.className = "flat";
-						update_batch.style.fontWeight = "bold";
-						update_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Update Batch <?php echo toHTML($batch["name"]); ?> with final list";
-						update_batch.onclick = function() {
-							popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch=<?php echo $batch_id;?>", null, null, null, function(frame,popup) {
-								frame.confirmed = function() {
-									var locker = lockScreen(null, "Updating batch of students...");
-									service.json("selection","update_batch",{batch:<?php echo $batch_id;?>},function(res) {
-										unlockScreen(locker);
+						if ($final_with_programs) {
+							foreach ($this->component->getPrograms() as $program) {
+								if ($program["batch"] == null) { ?>
+									var create_batch = document.createElement("BUTTON");
+									create_batch.className = "flat";
+									create_batch.style.fontWeight = "bold";
+									create_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Create a Batch with list of "+<?php echo json_encode(toHTML($program["name"])); ?>;
+									create_batch.onclick = function() {
+										popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Create Batch from Selection", "/dynamic/selection/page/create_batch?ondone=reloadPage&program=<?php echo $program["id"];?>", null, null, null, function(frame,popup) {
+											frame.reloadPage = function() {
+												location.reload();
+											};
+										});
+									};
+									list.addHeader(create_batch);
+									<?php	
+								} else { ?>
+									var update_batch = document.createElement("BUTTON");
+									update_batch.className = "flat";
+									update_batch.style.fontWeight = "bold";
+									update_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Update Batch <?php echo toHTML($batch[$program["batch"]]["name"]); ?> with "+<?php echo json_encode(toHTML($program["name"])); ?>;
+									update_batch.onclick = function() {
+										popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch=<?php echo $program["batch"];?>&program=<?php echo $program["id"];?>", null, null, null, function(frame,popup) {
+											frame.confirmed = function() {
+												var locker = lockScreen(null, "Updating batch of students...");
+												service.json("selection","update_batch",{batch:<?php echo $program["batch"];?>,program:<?php echo $program["id"];?>},function(res) {
+													unlockScreen(locker);
+												});
+											};
+										});
+									};
+									list.addHeader(update_batch);
+									var unlink_batch = document.createElement("BUTTON");
+									unlink_batch.className = "flat";
+									unlink_batch.style.fontWeight = "bold";
+									unlink_batch.innerHTML = "<img src='"+theme.icons_16.unlink+"'/> Unlink "+<?php echo json_encode(toHTML($program["name"])); ?>+" with Batch <?php echo toHTML($batch[$program["batch"]]["name"]); ?>";
+									unlink_batch.onclick = function() {
+										confirmDialog("Are you sure you want to unlink this selection process with this Batch ?<br/>All the applicants who were already included in the batch will be removed from the batch.",function(yes) {
+											if (!yes) return;
+											service.json("selection","unlink_batch",{program:<?php echo $program["id"];?>},function(res) {
+												if (res) location.reload();
+											});
+										});
+									};
+									list.addHeader(unlink_batch);
+									<?php 
+								}
+							}
+						} else {
+							if ($batch_id <> null) {?>
+								var update_batch = document.createElement("BUTTON");
+								update_batch.className = "flat";
+								update_batch.style.fontWeight = "bold";
+								update_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Update Batch <?php echo toHTML($batch["name"]); ?> with final list";
+								update_batch.onclick = function() {
+									popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Update Batch from Selection", "/dynamic/selection/page/update_batch_confirm?batch=<?php echo $batch_id;?>", null, null, null, function(frame,popup) {
+										frame.confirmed = function() {
+											var locker = lockScreen(null, "Updating batch of students...");
+											service.json("selection","update_batch",{batch:<?php echo $batch_id;?>},function(res) {
+												unlockScreen(locker);
+											});
+										};
 									});
 								};
-							});
-						};
-						list.addHeader(update_batch);
-						var unlink_batch = document.createElement("BUTTON");
-						unlink_batch.className = "flat";
-						unlink_batch.style.fontWeight = "bold";
-						unlink_batch.innerHTML = "<img src='"+theme.icons_16.unlink+"'/> Unlink this selection with Batch <?php echo toHTML($batch["name"]); ?>";
-						unlink_batch.onclick = function() {
-							confirmDialog("Are you sure you want to unlink this selection process with this Batch ?<br/>All the applicants who were already included in the batch will be removed from the batch.",function(yes) {
-								if (!yes) return;
-								service.json("selection","unlink_batch",{},function(res) {
-									if (res) location.reload();
-								});
-							});
-						};
-						list.addHeader(unlink_batch);
-						<?php } else { ?>
-						var create_batch = document.createElement("BUTTON");
-						create_batch.className = "flat";
-						create_batch.style.fontWeight = "bold";
-						create_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Create a Batch of students with final list";
-						create_batch.onclick = function() {
-							popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Create Batch from Selection", "/dynamic/selection/page/create_batch?ondone=reloadPage", null, null, null, function(frame,popup) {
-								frame.reloadPage = function() {
-									location.reload();
+								list.addHeader(update_batch);
+								var unlink_batch = document.createElement("BUTTON");
+								unlink_batch.className = "flat";
+								unlink_batch.style.fontWeight = "bold";
+								unlink_batch.innerHTML = "<img src='"+theme.icons_16.unlink+"'/> Unlink this selection with Batch <?php echo toHTML($batch["name"]); ?>";
+								unlink_batch.onclick = function() {
+									confirmDialog("Are you sure you want to unlink this selection process with this Batch ?<br/>All the applicants who were already included in the batch will be removed from the batch.",function(yes) {
+										if (!yes) return;
+										service.json("selection","unlink_batch",{},function(res) {
+											if (res) location.reload();
+										});
+									});
 								};
-							});
-						};
-						list.addHeader(create_batch);
-						<?php }
+								list.addHeader(unlink_batch);
+							<?php } else { ?>
+								var create_batch = document.createElement("BUTTON");
+								create_batch.className = "flat";
+								create_batch.style.fontWeight = "bold";
+								create_batch.innerHTML = "<img src='/static/curriculum/batch_16.png'/> Create a Batch of students with final list";
+								create_batch.onclick = function() {
+									popupFrame(theme.build_icon("/static/curriculum/batch_16.png",theme.icons_10.add), "Create Batch from Selection", "/dynamic/selection/page/create_batch?ondone=reloadPage", null, null, null, function(frame,popup) {
+										frame.reloadPage = function() {
+											location.reload();
+										};
+									});
+								};
+								list.addHeader(create_batch);
+							<?php }
+						} 
 					} ?>
 
 					<?php if (PNApplication::$instance->user_management->hasRight("edit_applicants")) { ?>
@@ -502,8 +570,15 @@ class page_applicant_list extends SelectionPage {
 			document.getElementById('button_remove').disabled = indexes.length > 0 ? "" : "disabled";
 			<?php } ?>
 			<?php if ($is_final) { ?>
+			<?php if ($final_with_programs) {
+				foreach ($this->component->getPrograms() as $program) {
+					echo "document.getElementById('button_pn_selected_".$program["id"]."').disabled = indexes.length > 0 ? '' : 'disabled';";
+					echo "document.getElementById('button_pn_waiting_list_".$program["id"]."').disabled = indexes.length > 0 ? '' : 'disabled';";
+				}
+			} else { ?>
 			document.getElementById('button_pn_selected').disabled = indexes.length > 0 ? "" : "disabled";
 			document.getElementById('button_pn_waiting_list').disabled = indexes.length > 0 ? "" : "disabled";
+			<?php } ?>
 			document.getElementById('button_pn_no').disabled = indexes.length > 0 ? "" : "disabled";
 			document.getElementById('button_pn_remove').disabled = indexes.length > 0 ? "" : "disabled";
 			document.getElementById('button_app_yes').disabled = indexes.length > 0 ? "" : "disabled";
@@ -556,26 +631,30 @@ class page_applicant_list extends SelectionPage {
 				}
 			);
 		}
-		function PNSelected() {
+		function PNSelected(program_id) {
 			var locker = lockScreen();
-			service.json("data_model","save_cells",{cells:[{
+			var cells = [{
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 				keys: getSelectedApplicantsIds(),
 				values: [{column:'final_decision',value:'Selected'}]
-			}]},function(res) {
+			}];
+			if (program_id) cells[0].values.push({column:'program',value:program_id});
+			service.json("data_model","save_cells",{cells:cells},function(res) {
 				reload_list();
 				unlockScreen(locker);
 			});
 		}
-		function PNWaitingList() {
+		function PNWaitingList(program_id) {
 			var locker = lockScreen();
-			service.json("data_model","save_cells",{cells:[{
+			var cells = [{
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 				keys: getSelectedApplicantsIds(),
 				values: [{column:'final_decision',value:'Waiting List'}]
-			}]},function(res) {
+			}];
+			if (program_id) cells[0].values.push({column:'program',value:program_id});
+			service.json("data_model","save_cells",{cells:cells},function(res) {
 				reload_list();
 				unlockScreen(locker);
 			});
@@ -586,7 +665,7 @@ class page_applicant_list extends SelectionPage {
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 				keys: getSelectedApplicantsIds(),
-				values: [{column:'final_decision',value:'Rejected'}]
+				values: [{column:'final_decision',value:'Rejected'},{column:'program',value:null}]
 			}]},function(res) {
 				reload_list();
 				unlockScreen(locker);
@@ -598,7 +677,7 @@ class page_applicant_list extends SelectionPage {
 				table: 'Applicant',
 				sub_model: <?php echo PNApplication::$instance->selection->getCampaignId();?>,
 				keys: getSelectedApplicantsIds(),
-				values: [{column:'final_decision',value:null}]
+				values: [{column:'final_decision',value:null},{column:'program',value:null}]
 			}]},function(res) {
 				reload_list();
 				unlockScreen(locker);

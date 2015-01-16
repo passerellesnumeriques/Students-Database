@@ -7,8 +7,12 @@ class service_update_batch extends Service {
 	public function inputDocumentation() { echo "batch"; }
 	public function outputDocumentation() { echo "true on success"; }
 	
+	public function mayUpdateSession() { return true; } // change batch for program
+	
 	public function execute(&$component, $input) {
 		$batch_id = $input["batch"];
+		$program_id = @$input["program"];
+		if ($program_id <> null) $component->setProgramBatch($program_id, $batch_id);
 		SQLQuery::startTransaction();
 		// get applicants to be in the batch
 		$q = SQLQuery::create()
@@ -16,6 +20,7 @@ class service_update_batch extends Service {
 			->whereNotValue("Applicant", "excluded", 1)
 			->whereValue("Applicant", "applicant_decision", "Will come")
 			->whereValue("Applicant", "final_decision", "Selected");
+		if ($program_id <> null) $q->whereValue("Applicant","program",$program_id);
 		PNApplication::$instance->people->joinPeople($q, "Applicant", "people", false);
 		$applicants = $q->execute();
 		$nb_selected = count($applicants);

@@ -979,7 +979,7 @@ function match_division_level_names(container, country, country_data, division_i
 	map_container.style.width = "400px";
 	map_container.style.height = "300px";
 	col.appendChild(map_container);
-	window.top.google.loadGoogleMap(map_container, function(m) {
+	window.top.google.loadGoogleMap(map_container, function(gm) {
 		map = gm;
 		map.addRect(parent_area.south, parent_area.west, parent_area.north, parent_area.east, "#6060F0", "#D0D0F0", 0.2);
 		map.fitToShapes();
@@ -1613,7 +1613,7 @@ function import_area_coordinates(container, area, division_index, country, count
 				search_geonames_title.style.backgroundColor = "#C0C0C0";
 				search_geonames_title.style.color = geonames_color.border;
 				var search_geonames_div = document.createElement("DIV"); div.appendChild(search_geonames_div);
-				new SearchGeonames(search_geonames_div, country.country_id, area.area_name, null, function(res) {
+				new SearchGeonames(search_geonames_div, country.country_id, area == country ? country.country_name : area.area_name, null, function(res) {
 					div.removeChild(search_geonames_title);
 					search_geonames_div.removeAllChildren();
 					new ResultsList(search_geonames_div, "geonames.org", res, geonames_color, ec.coord, ec.map);
@@ -1631,7 +1631,7 @@ function import_area_coordinates(container, area, division_index, country, count
 				search_google_title.style.backgroundColor = "#C0C0C0";
 				search_google_title.style.color = google_color.border;
 				var search_google_div = document.createElement("DIV"); div.appendChild(search_google_div);
-				new SearchGoogle(search_google_div, country.country_id, area.area_name, null, area, function(res) {
+				new SearchGoogle(search_google_div, country.country_id, area == country ? country.country_name : area.area_name, null, area, function(res) {
 					div.removeChild(search_google_title);
 					search_google_div.removeAllChildren();
 					new ResultsList(search_google_div, "Google", res, google_color, ec.coord, ec.map);

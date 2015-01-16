@@ -58,6 +58,7 @@ $applicant_table
 	->addEnum("final_decision", array("Selected","Waiting List","Rejected"), true, false)
 	->addEnum("applicant_decision", array("Will come", "Declined"), true, false)
 	->addString("applicant_not_coming_reason",250,0,true,false)
+	->addForeignKey("program", "SelectionProgram", false, false, true, true, false)
 	->addColumnWriteAccess("information_session", "manage_information_session", true)
 	->addReadAccess("can_access_selection_data",true) //All the managing rights must be handled by functionalities
 	->addInsertAccess("edit_applicants",true)
@@ -146,7 +147,7 @@ $sm->addTable("ApplicantMoreInfo")//This table contains all the custom data (bas
 	->setPrimary("people")//The primary key is the people_id
 	;
 
-$sm->addSubModelLink("Applicant","People",true,array("types"),function($columns){
+$sm->addSubModelLink("Applicant","People",false,array("types"),function($columns){
 	$types = PNApplication::$instance->people->parseTypes($columns["types"]);
 	return in_array("applicant",$types);
 });

@@ -9,6 +9,8 @@ class StaffPeopleTypePlugin implements PeopleTypePlugin {
 	public function getIcon16() { return "/static/staff/staff_16.png"; }
 	public function getIcon32() { return "/static/staff/staff_32.png"; }
 	public function isStandalone() { return true; }
+	public function canReassignSameType($people_id) { return null; }
+	public function reassign($people_id, $data) {}
 	
 	public function getTables() { return array("Staff","StaffPosition"); }
 	

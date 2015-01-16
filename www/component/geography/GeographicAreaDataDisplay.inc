@@ -28,7 +28,7 @@ class GeographicAreaDataDisplay extends \datamodel\DataDisplay {
 	public function isSortable() { return false; }
 	public function isMandatory($sub_model) { return !$this->can_be_null; }
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		$alias = $q->getFieldAlias($table_alias, $this->col_name);
 		if ($alias == null) {

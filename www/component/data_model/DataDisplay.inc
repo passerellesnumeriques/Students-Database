@@ -107,7 +107,7 @@ abstract class DataDisplay {
 	 * @param DataPath $path how we reached this data
 	 * @return array("key"=&gt;key_alias,"data"=&gt;data_alias): if data is null or not specified, the function performSubRequest must be implemented
 	 */
-	public abstract function buildSQL(&$q, $path);
+	public abstract function buildSQL(&$q, $path, $filtered);
 	/** Get the condition to be added to apply the given filter
 	 * @param \SQLQuery $q the query
 	 * @param \DataPath $path the path to reach this data
@@ -437,7 +437,7 @@ class SimpleDataDisplay extends DataDisplay {
 		return array(array("table"=>$this->getTable()->getName(), "column"=>$this->column_name, "sub_model"=>$sub_model, "lock_each_row"=>true));
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		$alias = $q->getFieldAlias($table_alias, $this->column_name);
 		if ($alias == null) {
@@ -629,7 +629,7 @@ class ChoiceDataDisplay extends DataDisplay {
 		return "?";
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		// we need to get the key, and the value to display
 		$foreign_key = $this->getTable()->getColumnFor($this->foreign_key_name, $path->sub_model);
 		$t = \DataModel::get()->getTable($foreign_key->foreign_table);
@@ -825,7 +825,7 @@ class JoiningTableDataDisplay extends DataDisplay {
 		return false;
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		if ($path instanceof \DataPath_Table) {
 			$this_alias = $q->getTableAlias($path->table->getName());
 			$alias = $q->getFieldAlias($this_alias, $this->joining_key_name);
@@ -993,7 +993,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 	 * </ul>
 	 * @param string $horiz_align horizontal alignment
 	 * @param string $filter_path if specified, the filter will be an enum using the foreign key in the given path (which should be a sub-part of the data path)
-	 * @param string $override_typed_field if specified, the typed field will be this one instead of the default one
+	 * @param array $override_typed_field if specified, the typed field will be this one instead of the default one
 	 */
 	public function __construct($display_name, $data_path, $horiz_align = "left", $filter_path = null, $override_typed_field = null) {
 		$this->display_name = $display_name;
@@ -1225,7 +1225,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 		return array("table"=>$col[0]->table->getName(), "column"=>$col[0]->name);
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$steps = explode(".", $this->data_path);
 		$current_table = $this->getTable();
 		$current_table_alias = \DataPathSQLBuilder::build($path, $q);
@@ -1648,7 +1648,7 @@ class ReadOnlyChoiceDataDisplay extends DataDisplay {
 		return array("table"=>$col->table->getName(), "column"=>$col->name);
 	}
 	
-	public function buildSQL(&$q, $path) {			
+	public function buildSQL(&$q, $path, $filtered) {			
 		$columns = explode(".", $this->data_path);
 		$last_table = $this->getTable();
 		// go to the table
@@ -1781,7 +1781,7 @@ class CalculationDataDisplay extends DataDisplay {
 		return $col;
 	}
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
 		
@@ -1888,7 +1888,7 @@ class CountLinksDataDisplay extends DataDisplay {
 		return false;
 	}
 
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$t = $this->getTable();
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
@@ -1991,7 +1991,7 @@ class CountDataValueDataDisplay extends DataDisplay {
 		return false;
 	}
 
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		$t = $this->getTable();
 		// go to the table
 		$table_alias = \DataPathSQLBuilder::build($path, $q);
@@ -2065,8 +2065,8 @@ class AgeDataDisplay extends CalculationDataDisplay {
 		return array("field_age","{table:".json_encode($this->getTable()->getName()).",sub_model:".json_encode($sub_model).",column:".json_encode($this->birthdate_column)."}");
 	}
 	
-	public function buildSQL(&$q, $path) {
-		$keys = parent::buildSQL($q, $path);
+	public function buildSQL(&$q, $path, $filtered) {
+		$keys = parent::buildSQL($q, $path, $filtered);
 		$pk = $this->getTable()->getPrimaryKey();
 		if ($pk == null) return $keys;
 		$key_alias = $q->getFieldAlias($this->getTable()->getName(), $pk->name);
@@ -2079,6 +2079,89 @@ class AgeDataDisplay extends CalculationDataDisplay {
 		return $keys;
 	}
 	
+}
+
+class ExistsDataDisplay extends DataDisplay {
+	
+	public function __construct($display_name, $column = null) {
+		$this->display_name = $display_name;
+		$this->column = $column;
+	}
+	
+	private $display_name;
+	private $column;
+	
+	public function getDisplayName() { return $this->display_name; }
+	public function canAccess($sub_model) {
+		try {
+			$table = \DataModel::get()->getTable($this->getTableName());
+			if ($table == null) return false;
+			if ($this->column <> null) {
+				$col = $table->getColumnFor($this->column, $sub_model);
+				if ($col == null) return false;
+			}
+			return true;
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+	public function getHandledColumns() {
+		if ($this->column == null) return array();
+		return array($this->column);
+	}
+	public function getTypedField($sub_model) {
+		return array("field_boolean","{}");
+	}
+	public function getHorizontalAlign($sub_model) { return "center"; }
+	public function isEditable() { return false; }
+	public function getEditLocks($sub_model) { return array(); }
+	public function isSortable() { return true; }
+	public function isMandatory($sub_model) { return false; }
+	public function getTypedFilter($sub_model) {
+		return array("filter_enum","{possible_values:[[1,'Yes'],[0,'No']],can_be_null:false}");
+	}
+	public function buildSQL(&$q, $path, $filtered) {
+		$table_alias = \DataPathSQLBuilder::build($path, $q);
+		$alias = $q->generateFieldAlias();
+		if ($this->column <> null) {
+			$q->field($table_alias, $this->column, $alias);
+		} else {
+			$pk = $this->getTable()->getPrimaryKey();
+			if ($pk <> null) {
+				$q->field($table_alias, $pk->name, $alias); 
+			} else {
+				$key = $this->getTable()->getKey();
+				$has = false;
+				foreach ($key as $colname) {
+					$col = $this->getTable()->internalGetColumnFor($colname, $path->sub_model);
+					if (!$col->can_be_null) {
+						$has = true;
+						$q->field($table_alias, $colname, $alias);
+						break;
+					}
+				}
+				if (!$has) {
+					$s = "";
+					foreach ($key as $colname) {
+						if ($s <> "") $s .= ",";
+						$s .= "`$table_alias`,`$colname`";
+					}
+					$q->expression("COALESCE($s)", $alias);
+				}
+			}
+		}
+		return array("key"=>null,"data"=>$alias);
+	}
+	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
+		$cd = $this->getExpressionFilterCondition("(`".$data_aliases['data']."` IS NOT NULL)", "filter_enum", $filter, $q);
+		if ($cd == null) return null;
+		return array("type"=>"having","condition"=>$cd);
+	}
+	public function getData($row, $resultFromBuildSQL) {
+		return @$row[$resultFromBuildSQL["data"]] !== null ? 1 : 0;
+	}
+
+	public function saveData($key, $value, $sub_model, &$tables_fields, $joining_key_for_new_data, $joining_key_value_for_new_data) {}
 }
 
 } // namespace datamodel

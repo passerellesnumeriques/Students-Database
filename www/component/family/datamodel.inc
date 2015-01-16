@@ -23,6 +23,7 @@ $model->addTable("FamilyMember")
 	->addString("revenue",500,0,true,false)
 	->addString("comment",1000,0,true,false)
 	->addIndex("family","member_type") // to find easily all children, or parents
+	->addIndex("people","member_type") // to find easily which family
 	->addReadAccessFromForeignTable("People")
 	->addReadAccessFromForeignTable("FamilyMember")
 	->addRemoveAccessFromForeignTable("People")

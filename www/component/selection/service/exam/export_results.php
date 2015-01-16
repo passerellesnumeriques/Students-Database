@@ -29,35 +29,96 @@ class service_exam_export_results extends Service {
 		require_once("component/lib_php_excel/PHPExcel.php");
 		$excel = new PHPExcel();
 		
-		PNApplication::$instance->application->updateTemporaryData($progress_id, "1");
-		$nb = count($applicants_ids)*count($subjects)*($has_answers ? 2 : 1);
-		$progress = 0;
-		
-		foreach ($subjects as $subject) {
-			$versions = SQLQuery::create()->select("ExamSubjectVersion")->whereValue("ExamSubjectVersion","exam_subject",$subject["id"])->execute();
-			$parts = SQLQuery::create()->select("ExamSubjectPart")->whereValue("ExamSubjectPart","exam_subject",$subject["id"])->orderBy("ExamSubjectPart","index")->field("id")->field("name")->execute();
-			$parts_ids = array();
-			foreach ($parts as $p) array_push($parts_ids, $p["id"]);
-			$parts_questions = SQLQuery::create()->select("ExamSubjectQuestion")->whereIn("ExamSubjectQuestion","exam_subject_part",$parts_ids)->orderBy("ExamSubjectQuestion","index")->field("id")->field("exam_subject_part")->execute();
-			for ($i = 0; $i < count($parts); $i++)
-				$parts[$i]["questions"] = array();
-			foreach ($parts_questions as $q) {
-				for ($i = 0; $i < count($parts); $i++)
-					if ($parts[$i]["id"] == $q["exam_subject_part"]) {
-						array_push($parts[$i]["questions"], $q);
-						break;
-					}
-			}
-			$all_questions_ids = array();
-			foreach ($parts as $p)
-				foreach ($p["questions"] as $q)
-					array_push($all_questions_ids, $q["id"]);
+		if (count($subjects) == 0) {
+			$excel->getSheet(0)->setCellValueByColumnAndRow(0,1,"There is no exam subject, we cannot export any result");
+			$style = $excel->getSheet(0)->getStyleByColumnAndRow(0, 1);
+			$style->getFont()->setColor(new PHPExcel_Style_Color(PHPExcel_Style_Color::COLOR_DARKRED));
+		} else if (count($applicants_ids) == 0) {
+			$excel->getSheet(0)->setCellValueByColumnAndRow(0,1,"There is no applicant, we cannot export any result");
+			$style = $excel->getSheet(0)->getStyleByColumnAndRow(0, 1);
+			$style->getFont()->setColor(new PHPExcel_Style_Color(PHPExcel_Style_Color::COLOR_DARKRED));
+		} else {
+			PNApplication::$instance->application->updateTemporaryData($progress_id, "1");
+			$nb = count($applicants_ids)*count($subjects)*($has_answers ? 2 : 1);
+			$progress = 0;
 			
-			for ($version = 0; $version < count($versions); $version++) {
-				$version_name = count($versions) > 1 ? " Version ".chr(ord("A")+$version) : "";
-				if ($has_answers) {
+			foreach ($subjects as $subject) {
+				$versions = SQLQuery::create()->select("ExamSubjectVersion")->whereValue("ExamSubjectVersion","exam_subject",$subject["id"])->execute();
+				$parts = SQLQuery::create()->select("ExamSubjectPart")->whereValue("ExamSubjectPart","exam_subject",$subject["id"])->orderBy("ExamSubjectPart","index")->field("id")->field("name")->execute();
+				$parts_ids = array();
+				foreach ($parts as $p) array_push($parts_ids, $p["id"]);
+				$parts_questions = SQLQuery::create()->select("ExamSubjectQuestion")->whereIn("ExamSubjectQuestion","exam_subject_part",$parts_ids)->orderBy("ExamSubjectQuestion","index")->field("id")->field("exam_subject_part")->execute();
+				for ($i = 0; $i < count($parts); $i++)
+					$parts[$i]["questions"] = array();
+				foreach ($parts_questions as $q) {
+					for ($i = 0; $i < count($parts); $i++)
+						if ($parts[$i]["id"] == $q["exam_subject_part"]) {
+							array_push($parts[$i]["questions"], $q);
+							break;
+						}
+				}
+				$all_questions_ids = array();
+				foreach ($parts as $p)
+					foreach ($p["questions"] as $q)
+						array_push($all_questions_ids, $q["id"]);
+				
+				for ($version = 0; $version < count($versions); $version++) {
+					$version_name = count($versions) > 1 ? " Version ".chr(ord("A")+$version) : "";
+					if ($has_answers) {
+						set_time_limit(300);
+						$sheet = new PHPExcel_Worksheet($excel, $subject["name"]."$version_name Answers");
+						$excel->addSheet($sheet);
+						// header
+						$sheet->setCellValueByColumnAndRow(0, 1, "Applicant");
+						$style = $sheet->getStyleByColumnAndRow(0, 1);
+						$style->getFont()->setBold(true);
+						$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+						$sheet->mergeCellsByColumnAndRow(0, 1, 0, 2);
+						$col = 1;
+						for ($part_i = 0; $part_i < count($parts); $part_i++) {
+							$sheet->setCellValueByColumnAndRow($col, 1, "Part ".($part_i+1)." - ".$parts[$part_i]["name"]);
+							$style = $sheet->getStyleByColumnAndRow($col, 1);
+							$style->getFont()->setBold(true);
+							$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+							$sheet->mergeCellsByColumnAndRow($col, 1, $col+count($parts[$part_i]["questions"])-1, 1);
+							for ($q_i = 0; $q_i < count($parts[$part_i]["questions"]); $q_i++) {
+								$sheet->setCellValueByColumnAndRow($col, 2, "Q".($col));
+								$style = $sheet->getStyleByColumnAndRow($col, 2);
+								$style->getFont()->setBold(true);
+								$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+								$col++;
+							}
+						}
+						// answers
+						$applicants = SQLQuery::create()
+							->select("ApplicantExamSubject")
+							->whereValue("ApplicantExamSubject","exam_subject",$subject["id"])
+							->whereValue("ApplicantExamSubject","exam_subject_version", $versions[$version]["id"])
+							->field("applicant")
+							->field("score")
+							->execute();
+						$ids = array();
+						foreach ($applicants as $a) array_push($ids, $a["applicant"]);
+						$answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
+						$current_applicant = 0;
+						$row = 2;
+						foreach ($answers as $a) {
+							if ($a["applicant"] <> $current_applicant) {
+								$current_applicant = $a["applicant"];
+								$row++;
+								$sheet->setCellValueByColumnAndRow(0, $row, $current_applicant);
+								$progress++;
+								if (($progress % 100) == 0) {
+									$pc = 1+($progress*99/$nb);
+									PNApplication::$instance->application->updateTemporaryData($progress_id, $pc);
+								}
+							}
+							$index = array_search($a["exam_subject_question"], $all_questions_ids);
+							$sheet->setCellValueByColumnAndRow($index+1, $row, $a["answer"]);
+						}
+					}
 					set_time_limit(300);
-					$sheet = new PHPExcel_Worksheet($excel, $subject["name"]."$version_name Answers");
+					$sheet = new PHPExcel_Worksheet($excel, $subject["name"].$version_name.($has_answers ? " Grades" : ""));
 					$excel->addSheet($sheet);
 					// header
 					$sheet->setCellValueByColumnAndRow(0, 1, "Applicant");
@@ -80,7 +141,7 @@ class service_exam_export_results extends Service {
 							$col++;
 						}
 					}
-					// answers
+					// grades
 					$applicants = SQLQuery::create()
 						->select("ApplicantExamSubject")
 						->whereValue("ApplicantExamSubject","exam_subject",$subject["id"])
@@ -90,7 +151,7 @@ class service_exam_export_results extends Service {
 						->execute();
 					$ids = array();
 					foreach ($applicants as $a) array_push($ids, $a["applicant"]);
-					$answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
+					$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
 					$current_applicant = 0;
 					$row = 2;
 					foreach ($answers as $a) {
@@ -105,64 +166,13 @@ class service_exam_export_results extends Service {
 							}
 						}
 						$index = array_search($a["exam_subject_question"], $all_questions_ids);
-						$sheet->setCellValueByColumnAndRow($index+1, $row, $a["answer"]);
+						$sheet->setCellValueByColumnAndRow($index+1, $row, $a["score"]);
 					}
-				}
-				set_time_limit(300);
-				$sheet = new PHPExcel_Worksheet($excel, $subject["name"].$version_name.($has_answers ? " Grades" : ""));
-				$excel->addSheet($sheet);
-				// header
-				$sheet->setCellValueByColumnAndRow(0, 1, "Applicant");
-				$style = $sheet->getStyleByColumnAndRow(0, 1);
-				$style->getFont()->setBold(true);
-				$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-				$sheet->mergeCellsByColumnAndRow(0, 1, 0, 2);
-				$col = 1;
-				for ($part_i = 0; $part_i < count($parts); $part_i++) {
-					$sheet->setCellValueByColumnAndRow($col, 1, "Part ".($part_i+1)." - ".$parts[$part_i]["name"]);
-					$style = $sheet->getStyleByColumnAndRow($col, 1);
-					$style->getFont()->setBold(true);
-					$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-					$sheet->mergeCellsByColumnAndRow($col, 1, $col+count($parts[$part_i]["questions"])-1, 1);
-					for ($q_i = 0; $q_i < count($parts[$part_i]["questions"]); $q_i++) {
-						$sheet->setCellValueByColumnAndRow($col, 2, "Q".($col));
-						$style = $sheet->getStyleByColumnAndRow($col, 2);
-						$style->getFont()->setBold(true);
-						$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-						$col++;
-					}
-				}
-				// grades
-				$applicants = SQLQuery::create()
-					->select("ApplicantExamSubject")
-					->whereValue("ApplicantExamSubject","exam_subject",$subject["id"])
-					->whereValue("ApplicantExamSubject","exam_subject_version", $versions[$version]["id"])
-					->field("applicant")
-					->field("score")
-					->execute();
-				$ids = array();
-				foreach ($applicants as $a) array_push($ids, $a["applicant"]);
-				$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
-				$current_applicant = 0;
-				$row = 2;
-				foreach ($answers as $a) {
-					if ($a["applicant"] <> $current_applicant) {
-						$current_applicant = $a["applicant"];
-						$row++;
-						$sheet->setCellValueByColumnAndRow(0, $row, $current_applicant);
-						$progress++;
-						if (($progress % 100) == 0) {
-							$pc = 1+($progress*99/$nb);
-							PNApplication::$instance->application->updateTemporaryData($progress_id, $pc);
-						}
-					}
-					$index = array_search($a["exam_subject_question"], $all_questions_ids);
-					$sheet->setCellValueByColumnAndRow($index+1, $row, $a["score"]);
 				}
 			}
+			PNApplication::$instance->application->updateTemporaryData($progress_id, "100");
+			$excel->removeSheetByIndex(0);
 		}
-		PNApplication::$instance->application->updateTemporaryData($progress_id, "100");
-		$excel->removeSheetByIndex(0);
 		header("Content-Disposition: attachment; filename=\"ExamResults.xlsx\"");
 		$writer = new PHPExcel_Writer_Excel2007($excel);
 		$writer->save('php://output');

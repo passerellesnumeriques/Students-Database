@@ -31,7 +31,10 @@ INSERT INTO `CountryDivision` (`id`, `country`, `parent`, `name`) VALUES
 (4, 92, NULL, 'Province'),
 (5, 92, 4, 'District'),
 (6, 92, 5, 'Commune'),
-(7, 92, 6, 'Village');
+(7, 92, 6, 'Village'),
+(8, 191, NULL, 'Province'),
+(9, 191, 8, 'District'),
+(10, 191, 9, 'Commune');
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

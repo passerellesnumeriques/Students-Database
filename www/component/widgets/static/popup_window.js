@@ -171,6 +171,20 @@ function popup_window(title,icon,content,hide_close_button) {
 		span.appendChild(document.createTextNode(text));
 		t.addButton(span, id, onclick, onclick_param);
 	};
+	t.removeButton = function(id) {
+		for (var i = 0; i < t.buttons.length; ++i)
+			if (t.buttons[i].id == id) {
+				if (t.footer) t.footer.removeChild(t.buttons[i]);
+				t.buttons.splice(i,1);
+				return;
+			}		
+	};
+	t.hasButton = function(id) {
+		for (var i = 0; i < t.buttons.length; ++i)
+			if (t.buttons[i].id == id)
+				return true;
+		return false;
+	};
 	/** Disable the given button.
 	 * @param {String} id of the button to disable
 	 */

@@ -1,6 +1,9 @@
 <?php 
 global $pn_app_version;
 $start = time();
+require_once("component/application/Backup.inc");
+$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+global $db_config;
 foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
 	if (!file_exists("data/domains_synch/$domain/latest_download")) continue; // nothing downloaded
 	if (time() - $start > 60*60) break; // we already spend more than 1 hour !
@@ -12,13 +15,11 @@ foreach (PNApplication::$instance->getDomains() as $domain=>$descr) {
 			continue; // we already synchronized this backup
 	}
 	// we can proceed
-	require_once("component/application/Backup.inc");
-	$db = SQLQuery::getDataBaseAccessWithoutSecurity();
-	global $db_config;
 	Backup::synchronizeDatabase("data/domains_synch/$domain", $domain, $db, $db_config["prefix"].$domain);
 	if (!PNApplication::hasErrors()) {
 		copy("data/domains_synch/$domain/latest_download", "data/domains_synch/$domain/latest_recover");
 		touch("data/domains_synch/$domain/latest_recover");
 	}
 }
+$db->selectDatabase($db_config["prefix"].PNApplication::$instance->current_domain);
 ?>

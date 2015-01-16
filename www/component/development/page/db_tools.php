@@ -184,7 +184,11 @@ function resetDB(version,ondone) {
 			setLockScreenContent(locker, "Resetting Database: Domain "+domains[index]+": Creating datamodel version: "+version);
 			service.json("development","create_datamodel",{domain:domains[index],version:version},function(res) {
 				if (!res) { unlockScreen(locker); return; }
-				resetDomain(index+1);
+				setLockScreenContent(locker, "Resetting Database: Domain "+domains[index]+": Creating initial data");
+				service.json("development","init_data",{domain:domains[index]},function(res) {
+					if (!res) { unlockScreen(locker); return; }
+					resetDomain(index+1);
+				});
 			});
 		});
 	};

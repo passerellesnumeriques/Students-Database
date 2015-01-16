@@ -7,6 +7,7 @@ class service_get_backup extends Service {
 	public function inputDocumentation() {
 		echo "if <code>request</code> is given, the following values are possible:<ul>";
 		echo "<li><b>get_list</b>: the service will return the list of available backups</li>";
+		echo "<li><b>get_storage</b>: get a file from storage</li>";
 		echo "</ul>";
 		echo "if no request, it means a file from a backup is requested, and the following input are mandatory:<ul>";
 		echo "<li><code>version</code>: version of the backup</li>";
@@ -42,6 +43,7 @@ class service_get_backup extends Service {
 		}
 		switch ($input["request"]) {
 			case "get_list": $this->getList(); break;
+			case "get_storage": $this->getStorage($input); break;
 			case "get_backup": $this->getBackup($input); break;
 			default:
 				header("HTTP/1.0 400 Bad Request");
@@ -128,5 +130,12 @@ class service_get_backup extends Service {
 			readfile("data/backups/$version/$time/$file.zip");
 	}
 	
+	private function getStorage($input) {
+		$id = $input["id"];
+		$path = PNApplication::$instance->storage->get_data_path($id);
+		if (!file_exists($path))
+			return;
+		readfile($path);
+	}
 }
 ?>

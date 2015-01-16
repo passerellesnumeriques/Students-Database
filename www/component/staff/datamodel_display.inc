@@ -19,7 +19,7 @@ class StaffPositionDataDisplay extends datamodel\DataDisplay {
 	public function isSortable() { return false; }
 	public function isMandatory($sub_model) { return false; }
 	
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		return array("key"=>$q->getFieldAlias("People", "id"),"data"=>null);
 	}
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {
@@ -63,7 +63,7 @@ class StaffDepartmentDataDisplay extends datamodel\DataDisplay {
 	public function isSortable() { return false; }
 	public function isMandatory($sub_model) { return false; }
 
-	public function buildSQL(&$q, $path) {
+	public function buildSQL(&$q, $path, $filtered) {
 		return array("key"=>$q->getFieldAlias("People", "id"),"data"=>null);
 	}
 	public function getFilterCondition(&$q, $path, $data_aliases, $filter) {

@@ -150,7 +150,7 @@ function linkEditCoordinatesWithMap(edit_coordinates, map) {
 			if (map.shapes.length == 0) return;
 			var bounds = map.shapes[0].getBounds();
 			for (var i = 1; i < map.shapes.length; ++i)
-				bounds = maxGoogleBounds(bounds, map.shapes[i].getBounds());
+				bounds = window.top.maxGoogleBounds(bounds, map.shapes[i].getBounds());
 			edit_coordinates.setCoordinates(bounds.getNorthEast().lat(), bounds.getNorthEast().lng(), bounds.getSouthWest().lat(), bounds.getSouthWest().lng());
 		};
 		this._buttons.appendChild(encompassing_button);

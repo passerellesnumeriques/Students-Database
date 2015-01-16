@@ -67,7 +67,8 @@ function build_filters() {
 			filters.push({category:'Student',name:'Specialization',data:{values:[url.params['specialization']]},force:true});
 		}
 	} else if (batches && batches.length > 0) {
-		var filter = {category:'Student',name:'Batch',data:{values:batches},force:true};
+		var filter = {category:'Student',name:'Batch',data:{values:[]},force:true};
+		for (var i = 0; i < batches.length; ++i) filter.data.values.push(""+batches[i]);
 		filters.push(filter);
 	}
 	return filters;

@@ -66,6 +66,7 @@ $sm->addTable("ExamEligibilityRule")
 	->addPrimaryKey("id")
 	->addForeignKey("parent", "ExamEligibilityRule", true, false, false, true)//Can only have one parent. If null, root level
 	->addDecimal("expected",3,2,null,null,false,false) // expected grade
+	->addForeignKey("program", "SelectionProgram", true, false, true, true, false)
 	->addWriteAccess("manage_exam_subject",true)
 	->addReadAccess("see_exam_subject",true)
 	->addInsertAccess("manage_exam_subject",true)

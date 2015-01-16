@@ -3,7 +3,7 @@
 
 $model->addTable("SelectionCampaign")
 	->addPrimaryKey("id")
-	->addString("name")
+	->addString("name", 30)
 	->addBoolean("frozen",false)
 	->addEnum("frozen_reason", array("Campaign Finished","Selection Team Travelling"), true, false)
 	->addForeignKey("calendar","Calendar",false,false,false,false)//Not automatically removed, must use the calendar functionalities
@@ -18,6 +18,7 @@ $model->addTable("SelectionCampaign")
 				PNApplication::$instance->news->post("selection", null, array("campaign".$row["id"]), "activity", "Creation of campaign <i>".$row["fields_values"]["name"]."</i>");
 			} catch (Exception $e) { PNApplication::error($e); }
  	})
+ 	->setRowDescriptionProvider(function($row) { return "Campaign ".$row["name"]; } )
 	;
 		
 $sm = $model->addSubModel("SelectionCampaign");
@@ -32,6 +33,16 @@ $sm->addTable("SelectionCampaignConfig")
 	->addWriteAccess("manage_selection_campaign",true)
 	->setPrimary("name");
 
+$sm->addTable("SelectionProgram")
+	->addPrimaryKey("id")
+	->addString("name",30,1,false,false)
+	->addForeignKey("batch", "StudentBatch", false, false, false, true)
+	->addReadAccess("can_access_selection_data",true)
+	->addInsertAccess("manage_selection_campaign",true)
+	->addRemoveAccess("manage_selection_campaign",true)
+	->addWriteAccess("manage_selection_campaign",true)
+	;
+	
 $sm->addTable("StaffStatus")
 	->addForeignKey("people", "People", true, false, false, false, true)
 	->setPrimary("people")

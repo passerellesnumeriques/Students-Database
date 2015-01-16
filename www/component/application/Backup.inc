@@ -8,7 +8,8 @@ class Backup {
 	public static $possible_files = array(
 		"db",
 		"storage",
-		"custom_tables"
+		"custom_tables",
+		"storage.list"
 	);
 	
 	/**
@@ -115,9 +116,18 @@ class Backup {
 		self::zipDirectory(realpath($path)."/db", realpath($path)."/db.zip");
 		self::removeDirectory($path."/db");
 		set_time_limit(60*60);
-		if ($filter_storage_types === false && $filter_storage_sub_models === false)
+		if ($filter_storage_types === false && $filter_storage_sub_models === false) {
 			self::zipDirectory(realpath("data/$local_domain/storage"), realpath($path)."/storage.zip", true);
-		else {
+			$f = fopen(realpath($path)."/storage.list","w");
+			$db = SQLQuery::getDataBaseAccessWithoutSecurity();
+			$res = $db->execute("SELECT `id`,`revision` FROM `Storage` WHERE `expire` IS NULL ORDER BY `id`");
+			while (($row = $db->nextRow($res)) <> null) {
+				$filesize = filesize(PNApplication::$instance->storage->get_data_path($row["id"]));
+				fwrite($f, $row["id"].",".$row["revision"].",$filesize\n");
+			}
+			fclose($f);
+			self::zipFile(realpath($path)."/storage.list",realpath($path)."/storage.list.zip",true);
+		} else {
 			if ($filter_storage_types !== true && $filter_storage_types !== false) {
 				if (count($storage_ids) > 0)
 					$storage_ids = SQLQuery::create()->bypassSecurity()->select("Storage")->whereIn("Storage","id",$storage_ids)->whereIn("Storage","type",$filter_storage_types)->field("id")->executeSingleField();
@@ -268,6 +278,22 @@ class Backup {
 		}
 	}
 	
+	public static function zipFile($file, $zipfile, $remove_after) {
+		if (class_exists("ZipArchive")) {
+			$zip = new ZipArchive();
+			if (!$zip->open($zipfile, ZipArchive::CREATE)) throw new Exception("Unable to create zip file: ".$zipfile);
+			$zip->addFile($file,basename($file));
+			$zip->close();
+		} else {
+			$output = array();
+			$ret = 0;
+			exec("/usr/bin/zip \"".$zipfile."\" \"".$file."\"", $output, $ret);
+			if ($ret <> 0 && (!$handle_empty || $ret <> 18))
+				throw new Exception("Error creating zip file ".$zipfile." from file ".$file." (".$ret.")");
+		}
+		if ($remove_after) @unlink($file);
+	}
+	
 	/**
 	 * Remove a directory with its content
 	 * @param string $path the directory to remove
@@ -297,6 +323,7 @@ class Backup {
 	public static function recoverBackup($time, $version = null, $backups_path = "data/backups") {
 		global $local_domain;
 		require_once("component/PNApplication.inc");
+		require_once("SQLQuery.inc");
 		if (PNApplication::$instance == null) {
 			PNApplication::$instance = new PNApplication();
 			PNApplication::$instance->local_domain = $local_domain;
@@ -313,6 +340,7 @@ class Backup {
 		foreach ($domains as $domain=>$descr)
 			if ($domain <> $local_domain)
 				self::synchronizeDatabase(null, $domain, $db, $db_config["prefix"].$domain);
+		$db->selectDatabase($db_config["prefix"].PNApplication::$instance->current_domain); // make sure following request won't be on the wrong domain
 	}
 	
 	/**
@@ -404,12 +432,33 @@ class Backup {
 		}
 		
 		// recover storage
-		if (file_exists("data/$domain/storage")) self::removeDirectory("data/$domain/storage");
-		mkdir("data/$domain/storage");
-		set_time_limit(60*60);
-		if ($directory <> null)
-			unzipFile(realpath("$directory/storage.zip"), realpath("data/$domain/storage"));
-		if (file_exists("data/$domain/storage/empty")) rmdir("data/$domain/storage/empty");
+		if (file_exists("$directory/storage.zip")) {
+			// single file with everything
+			if (file_exists("data/$domain/storage")) self::removeDirectory("data/$domain/storage");
+			mkdir("data/$domain/storage");
+			set_time_limit(60*60);
+			if ($directory <> null)
+				unzipFile(realpath("$directory/storage.zip"), realpath("data/$domain/storage"));
+			if (file_exists("data/$domain/storage/empty")) rmdir("data/$domain/storage/empty");
+		} else if (is_dir("$directory/storage")) {
+			// diff
+			$removed = @file_get_contents("$directory/storage/removed");
+			if ($removed <> "" && $removed <> null) {
+				$removed = explode(",", $removed);
+				foreach ($removed as $id)
+					@unlink(storage::getDomainStoragePath($domain)."/".storage::get_data_path_in_storage($id));
+			}
+			$dir = opendir("$directory/storage/files");
+			while (($filename = readdir($dir)) <> null) {
+				if (is_dir("$directory/storage/files/$filename")) continue;
+				$filepath = storage::getDomainStoragePath($domain)."/".storage::get_data_path_in_storage(intval($filename));
+				@unlink($filepath);
+				rename("$directory/storage/files/$filename", $filepath);
+			}
+			closedir($dir);
+		} else {
+			// error ?
+		}
 	}
 	
 	/**
@@ -461,7 +510,7 @@ class Backup {
 			}
 			return false;
 		}
-		return importBackupFrom(realpath("data/backups/$version/$time"), "data/datamodels/datamodel_$dm_version.json", $db_system, $db_config["prefix"].$domain, $domain, realpath("data"));
+		return self::importBackupFrom(realpath("data/backups/$version/$time"), "data/datamodels/datamodel_$dm_version.json", $db_system, $db_config["prefix"].$domain, $domain, realpath("data"));
 	}
 	/**
 	 * Import a backup

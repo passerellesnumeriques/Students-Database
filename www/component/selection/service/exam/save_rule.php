@@ -8,6 +8,7 @@ class service_exam_save_rule extends Service {
 		echo "<ul>";
 		echo "<li><code>id</code>: rule's ID, or -1 for a new one</li>";
 		echo "<li><code>parent</code>: parent rule's ID, or null for a root rule</li>";
+		echo "<li><code>program</code>: program id or null for a new rule</li>";
 		echo "<li><code>expected</code>: minimum total grade expected</li>";
 		echo "<li><code>topics</code>: list of ExamEligibilityRuleTopic defining the subject or extract with it's coefficient</li>";
 		echo "</ul>";
@@ -19,13 +20,14 @@ class service_exam_save_rule extends Service {
 	public function execute(&$component, $input) {
 		$id = intval($input["id"]);
 		$parent = $input["parent"];
+		$program = @$input["program"];
 		$topics = $input["topics"];
 		
 		SQLQuery::startTransaction();
 		if ($id > 0) {
 			SQLQuery::create()->updateByKey("ExamEligibilityRule", $id, array("expected"=>$input["expected"]));
 		} else
-			$id = SQLQuery::create()->insert("ExamEligibilityRule", array("parent"=>$parent,"expected"=>$input["expected"]));
+			$id = SQLQuery::create()->insert("ExamEligibilityRule", array("parent"=>$parent,"expected"=>$input["expected"],"program"=>$program));
 		
 		$rows = SQLQuery::create()->select("ExamEligibilityRuleTopic")->whereValue("ExamEligibilityRuleTopic", "rule", $id)->execute();
 		if (count($rows) > 0)

@@ -24,8 +24,8 @@ class SQLQuery {
 				default: PNApplication::error("Unknown result when connecting to the database server"); break;
 			}
 		}
-		// by default, connect to the local domain
-		if (!SQLQuery::$db_system->selectDatabase($db_config["prefix"].PNApplication::$instance->local_domain))
+		// by default, connect to the current domain
+		if (!SQLQuery::$db_system->selectDatabase($db_config["prefix"].PNApplication::$instance->current_domain))
 			PNApplication::error("Unable to connect to the local domain database");
 		return SQLQuery::$db_system;
 	}
@@ -370,6 +370,11 @@ class SQLQuery {
 	}
 	public function &sum($table, $field, $alias) {
 		return $this->expression("SUM(`".DataModel::get()->getTable($table)->getSQLName($this->sub_models)."`.`".$field."`)", $alias);
+	}
+	
+	public function &removeExpressions() {
+		$this->expressions = array();
+		return $this;
 	}
 	
 	/** Retrieve the alias used for the given field (either in select, or in a join)
@@ -848,9 +853,7 @@ class SQLQuery {
 	}
 	
 	/** When the SELECT is only used for counting rows, this will remove any unecessary joins */
-	public function removeUnusefulJoinsForCounting() {
-		// TODO temporarly deactivated: the problem is when the security checks add some conditions, it may impact so the count will not be accurate
-		/*
+	private function removeUnusefulJoinsForCounting() {
 		$used_tables = array();
 		foreach ($this->where as $expr) {
 			$s = $expr;
@@ -893,13 +896,12 @@ class SQLQuery {
 				$i--;
 			}
 		}
-		*/
 	}
 
 	/** Generate the SELECT
 	 * @return string the SELECT query generated
 	 */
-	public function generate() {
+	public function generate($clean_for_counting = false) {
 		// filter the query according to access rights
 		if (!$this->bypass_security) {
 			foreach ($this->tables as $t=>$alias) {
@@ -1027,6 +1029,12 @@ class SQLQuery {
 			PNApplication::errorHTML("Field '".$f[1]."' on table '".$f[0]."' does not exist in SQL query: ".$this->dump());
 
 		$this->fields = $final_fields;
+		
+		if ($clean_for_counting) {
+			$this->resetNonSubQueryFields();
+			$this->removeExpressions();
+			$this->removeUnusefulJoinsForCounting();
+		}
 		
 		$sql = "SELECT ";
 		if (count($this->fields) == 0 && $this->count_one_field === null && $this->count === null && count($this->expressions) == 0 && !$this->bypass_security)
@@ -1180,8 +1188,8 @@ class SQLQuery {
 	/** Execute the SELECT, and return all rows as an array
 	 * @return array rows returned from the database
 	 */
-	public function execute() {
-		$sql = $this->generate();
+	public function execute($clean_for_counting = false) {
+		$sql = $this->generate($clean_for_counting);
 		$res = SQLQuery::db()->execute($sql);
 		if ($res === FALSE) return null;
 		$a = array();
@@ -1196,8 +1204,8 @@ class SQLQuery {
 	/** Execute a SELECT containing a single field(column) to return, and return an array of values from this field
 	 * @return array list of values
 	 */
-	public function executeSingleField() {
-		$a = $this->execute();
+	public function executeSingleField($clean_for_counting = false) {
+		$a = $this->execute($clean_for_counting);
 		if ($a === null) return null;
 		$a2 = array();
 		foreach ($a as $r) foreach ($r as $col=>$val) { array_push($a2, $val); break; }
@@ -1207,8 +1215,8 @@ class SQLQuery {
 	/** Execute a SELECT which should return a single field in a single row, meaning a single value.
 	 * @return mixed the value or null
 	 */
-	public function executeSingleValue() {
-		$a = $this->executeSingleField();
+	public function executeSingleValue($clean_for_counting = false) {
+		$a = $this->executeSingleField($clean_for_counting);
 		if ($a === null) return null;
 		if (count($a) == 0) return null;
 		return $a[0];
@@ -1217,10 +1225,9 @@ class SQLQuery {
 	/** Execute a SELECT which should return a single row, and return this row
 	 * @return array the row
 	 */
-	public function executeSingleRow() {
+	public function executeSingleRow($clean_for_counting = false) {
 		$this->limit(0, 1);
-		$sql = $this->generate();
-		$res = SQLQuery::db()->execute($sql);
+		$sql = $this->generate($clean_for_counting);		$res = SQLQuery::db()->execute($sql);
 		if ($res === FALSE) return null;
 		$r = SQLQuery::db()->nextRow($res);
 		if ($r === FALSE) return null;
