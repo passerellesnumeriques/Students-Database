@@ -27,7 +27,11 @@ $model->addTable("FinanceRegularPayment")
 
 $model->addTable("Loan")
 	->addPrimaryKey("id")
+	->addDate("date",false,false)
 	->addString("reason",250,1,false,false)
+	->addReadAccess("consult_student_finance", true)
+	->addInsertAccess("edit_student_finance", true)
+	->addRemoveAccess("edit_student_finance", true)
 	;
 
 $model->addTable("ScheduledPaymentDate")
