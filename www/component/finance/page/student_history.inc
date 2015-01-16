@@ -1,8 +1,8 @@
 <?php 
 function studentFinanceOperationsHistory(&$page, $student_id) {
 	$operations = SQLQuery::create()->select("FinanceOperation")->whereValue("FinanceOperation","people",$student_id)->orderBy("FinanceOperation","date")->execute();
+	$ids = array();
 	if (count($operations) > 0) {
-		$ids = array();
 		foreach ($operations as $op) $ids[$op["id"]] = $op;
 		$list = SQLQuery::create()->select("PaymentOperation")->whereIn("PaymentOperation","due_operation",array_keys($ids))->execute();
 		$payments = array();
@@ -81,5 +81,6 @@ function openOperation(id) {
 </script>
 <?php 
 	echo "</div>";
+	return $ids;
 }
 ?>
