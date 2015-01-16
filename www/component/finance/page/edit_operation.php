@@ -95,7 +95,7 @@ class page_edit_operation extends Page {
 	?>
 	<tr>
 		<td>Description</td>
-		<td><input name='description' type='text' size=50 disabled='disabled' value=<?php echo json_encode($descr);?>/></td>
+		<td><input name='description' type='text' size=50 disabled='disabled' value=<?php echo toHTMLAttribute($descr);?>/></td>
 	</tr>
 	<tr>
 		<td>Additional description</td>
