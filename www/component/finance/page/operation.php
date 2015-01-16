@@ -67,6 +67,24 @@ class page_operation extends Page {
 					if (!$has_next_payment)
 						$can_cancel_next_operations = true;
 				}
+			} else if ($schedule["loan"] <> null) {
+				// this operation comes from a loan
+				$loan = SQLQuery::create()->select("Loan")->whereValue("Loan","id",$schedule["loan"])->executeSingleRow();
+				$descr = "Repayment of loan";
+				$this->setPopupTitle("Repayment of loan for ".$people["first_name"]." ".$people["last_name"]);
+				$loan_operations = SQLQuery::create()
+					->select("ScheduledPaymentDate")
+					->whereValue("ScheduledPaymentDate","loan",$loan["id"])
+					->join("ScheduledPaymentDate","FinanceOperation",array("due_operation"=>"id"))
+					->execute();
+				$loan_amount = 0;
+				foreach ($loan_operations as $op) $loan_amount += -$op["amount"];
+				echo "<table>";
+				echo "<tr><td>Loan Date:</td><td>".date("d M Y",\datamodel\ColumnDate::toTimestamp($loan["date"]))."</td></tr>";
+				echo "<tr><td>Loan Amount:</td><td>".$loan_amount."</td></tr>";
+				echo "<tr><td>Loan Reason:</td><td>".$loan["reason"]."</td></tr>";
+				echo "</table>";
+				echo "<hr/>";
 			}
 		}
 		echo "<table>";

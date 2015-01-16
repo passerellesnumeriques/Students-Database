@@ -36,6 +36,33 @@ class page_student_payment extends Page {
 					->executeSingleValue();
 				if ($paid == null) $paid = 0; else $paid = floatval($paid);
 			}
+		} else if (isset($_GET["loan"])) {
+			// case of a loan to repay
+			$loan_id = $_GET["loan"];
+			$loan = SQLQuery::create()->select("Loan")->whereValue("Loan","id",$loan_id)->executeSingleRow();
+			$situation_description = "Loan (reason: ".$loan["reason"].")";
+			$this->setPopupTitle("Repayment of loan");
+			$due = SQLQuery::create()
+				->select("ScheduledPaymentDate")
+				->whereValue("ScheduledPaymentDate", "loan", $loan_id)
+				->join("ScheduledPaymentDate","FinanceOperation",array("due_operation"=>"id"))
+				->whereValue("FinanceOperation","people",$people_id)
+				->expression("SUM(IF(`FinanceOperation`.`date` <= CURRENT_DATE(),`FinanceOperation`.`amount`,0))", "past_due")
+				->expression("SUM(IF(`FinanceOperation`.`date` > CURRENT_DATE(),`FinanceOperation`.`amount`,0))", "future_due")
+				->executeSingleRow();
+			if ($due <> null && $due["past_due"] !== NULL) {
+				$current_due_amount = -floatval($due["past_due"]);
+				$future_due_amount = -floatval($due["future_due"]);
+				$paid = SQLQuery::create()
+					->select("ScheduledPaymentDate")
+					->whereValue("ScheduledPaymentDate", "loan", $loan_id)
+					->join("ScheduledPaymentDate","PaymentOperation",array("due_operation"=>"due_operation"))
+					->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"))
+					->whereValue("FinanceOperation","people",$people_id)
+					->expression("SUM(`FinanceOperation`.`amount`)", "paid")
+					->executeSingleValue();
+				if ($paid == null) $paid = 0; else $paid = floatval($paid);
+			}
 		} else {
 			// nothing specified, the user needs to choose what is the payment for
 			$to_pay = SQLQuery::create()->select(array("FinanceOperation"=>"due"))
@@ -51,6 +78,7 @@ class page_student_payment extends Page {
 				->field("due","date","due_date")
 				->join("due","ScheduledPaymentDate",array("id"=>"due_operation"))
 				->field("ScheduledPaymentDate","regular_payment")
+				->field("ScheduledPaymentDate","loan")
 				->execute();
 			if (count($to_pay) == 0) {
 				echo "This student already paid everything.";
@@ -71,7 +99,11 @@ class page_student_payment extends Page {
 			} else {
 				echo "<ul>";
 				$regular_payments_ids = array();
-				foreach ($past as $p) if ($p["regular_payment"] <> null && !in_array($p["regular_payment"], $regular_payments_ids)) array_push($regular_payments_ids, $p["regular_payment"]);
+				$loans_ids = array();
+				foreach ($past as $p) {
+					if ($p["regular_payment"] <> null && !in_array($p["regular_payment"], $regular_payments_ids)) array_push($regular_payments_ids, $p["regular_payment"]);
+					if ($p["loan"] <> null && !in_array($p["loan"], $loans_ids)) array_push($loans_ids, $p["loan"]);
+				}
 				if (count($regular_payments_ids) > 0) {
 					$regular_payments = SQLQuery::create()->select("FinanceRegularPayment")->whereIn("FinanceRegularPayment","id",$regular_payments_ids)->execute();
 					foreach ($regular_payments as $rp) {
@@ -87,7 +119,21 @@ class page_student_payment extends Page {
 						echo "</li>";
 					}
 				}
-				// TODO
+				if (count($loans_ids) > 0) {
+					$loans = SQLQuery::create()->select("Loan")->whereIn("Loan","id",$loans_ids)->execute();
+					foreach ($loans as $loan) {
+						echo "<li>";
+						echo "Loan of ".date("d M Y",\datamodel\ColumnDate::toTimestamp($loan["date"]))." (reason: ".toHTML($loan["reason"]).")";
+						echo ": Current amount due: ";
+						$total = 0;
+						foreach ($past as $p)
+							if ($p["loan"] == $loan["id"])
+								$total += -(floatval($p["to_pay"])+floatval($p["total_paid"]));
+						echo $total;
+						echo " <button class='action' onclick=\"location.href='?student=".$people_id."&loan=".$loan["id"].(isset($_GET["ondone"]) ? "&ondone=".$_GET["ondone"] : "")."';\">Pay</button>";
+						echo "</li>";
+					}
+				}
 				echo "</ul>";
 			}
 			echo "<div class='page_section_title'>Future payments</div>";
@@ -96,7 +142,11 @@ class page_student_payment extends Page {
 			} else {
 				echo "<ul>";
 				$regular_payments_ids = array();
-				foreach ($future as $p) if ($p["regular_payment"] <> null && !in_array($p["regular_payment"], $regular_payments_ids)) array_push($regular_payments_ids, $p["regular_payment"]);
+				$loans_ids = array();
+				foreach ($future as $p) {
+					if ($p["regular_payment"] <> null && !in_array($p["regular_payment"], $regular_payments_ids)) array_push($regular_payments_ids, $p["regular_payment"]);
+					if ($p["loan"] <> null && !in_array($p["loan"], $loans_ids)) array_push($loans_ids, $p["loan"]);
+				}
 				if (count($regular_payments_ids) > 0) {
 					$regular_payments = SQLQuery::create()->select("FinanceRegularPayment")->whereIn("FinanceRegularPayment","id",$regular_payments_ids)->execute();
 					foreach ($regular_payments as $rp) {
@@ -112,7 +162,21 @@ class page_student_payment extends Page {
 						echo "</li>";
 					}
 				}
-				// TODO
+				if (count($loans_ids) > 0) {
+					$loans = SQLQuery::create()->select("Loan")->whereIn("Loan","id",$loans_ids)->execute();
+					foreach ($loans as $loan) {
+						echo "<li>";
+						echo "Loan of ".date("d M Y",\datamodel\ColumnDate::toTimestamp($loan["date"]))." (reason: ".toHTML($loan["reason"]).")";
+						echo ": Future amount due: ";
+						$total = 0;
+						foreach ($future as $p)
+							if ($p["loan"] == $loan["id"])
+								$total += -(floatval($p["to_pay"])+floatval($p["total_paid"]));
+						echo $total;
+						echo " <button class='action' onclick=\"location.href='?student=".$people_id."&loan=".$loan["id"].(isset($_GET["ondone"]) ? "&ondone=".$_GET["ondone"] : "")."';\">Pay</button>";
+						echo "</li>";
+					}
+				}
 				echo "</ul>";
 			}
 			return;
@@ -206,6 +270,84 @@ class page_student_payment extends Page {
 			echo "</ul>";
 			if ($amount > 0) {
 				echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> Warning: Remaining amount of $amount cannot be assigned to a ".toHTML($regular_payment["name"])." and will be ignored.</div>";
+			}
+			?>
+			Additional comment: <input type='text' size=30 id='add_descr' value=<?php echo json_encode($_GET["comment"]);?>/><br/>
+			<button class='action' onclick='createPayments();'>Confirm</button>
+			<script type='text/javascript'>
+			function createPayments() {
+				var data = {
+					student: <?php echo $people_id;?>,
+					date: <?php echo json_encode($_GET["payment_date"]);?>,
+					operations:[]
+				};
+				var comment = document.getElementById('add_descr').value.trim();
+				<?php
+				foreach ($operations as $op) {
+					echo "data.operations.push({amount:".$op["amount"].",schedule:".$op["schedule"]["due_operation"].",description:".json_encode($op["description"])."+(comment.length > 0 ? ', '+comment : '')});\n";
+				}
+				?>
+				var popup = window.parent.getPopupFromFrame(window);
+				popup.freeze("Creation of payments...");
+				service.json("finance","student_payment",data,function(res) {
+					if (!res) { popup.unfreeze(); return; }
+					<?php if (isset($_GET["ondone"])) echo "window.frameElement.".$_GET["ondone"]."();";?>
+					popup.close();
+				});
+			}
+			</script>
+			<?php 
+		} else if (isset($loan)) {
+			$due_operations = SQLQuery::create()
+				->select("ScheduledPaymentDate")
+				->whereValue("ScheduledPaymentDate", "loan", $loan_id)
+				->join("ScheduledPaymentDate", "FinanceOperation", array("due_operation"=>"id"))
+				->whereValue("FinanceOperation", "people", $people_id)
+				->orderBy("FinanceOperation","date")
+				->execute();
+			if (count($due_operations) == 0) {
+				echo "<div class='error_box'>".toHTML($people["first_name"]." ".$people["last_name"])." doesn't have to pay this loan</div>";
+				echo "</div>";
+				return;
+			}
+			$due_operations_ids = array();
+			foreach ($due_operations as $op) {
+				array_push($due_operations_ids, $op["due_operation"]);
+			}
+			$payments_done = SQLQuery::create()
+				->select("PaymentOperation")
+				->whereIn("PaymentOperation","due_operation",$due_operations_ids)
+				->join("PaymentOperation","FinanceOperation",array("payment_operation"=>"id"))
+				->execute();
+			$amount = floatval($_GET["amount"]);
+			$operations = array();
+			foreach ($due_operations as $due) {
+				$paid = 0;
+				foreach ($payments_done as $p)
+					if ($p["due_operation"] == $due["due_operation"])
+						$paid += floatval($p["amount"]);
+				$due_amount = -floatval($due["amount"]);
+				if ($paid >= $due_amount) continue; // already paid
+				$payment_amount = $amount > $due_amount-$paid ? $due_amount-$paid : $amount;
+				$descr = $due["description"];
+				array_push($operations, array(
+					"schedule"=>$due,
+					"amount"=>$payment_amount,
+					"remaining"=>$due_amount-$paid-$payment_amount,
+					"description"=>$descr
+				));
+				$amount -= $payment_amount;
+				if ($amount == 0) break;
+			}
+			echo "The following payments will be registered:<ul>";
+			foreach ($operations as $op) {
+				echo "<li>".toHTML($op["description"]);
+				echo ": ".$op["amount"]." paid, remaining = ".$op["remaining"];
+				echo "</li>";
+			}
+			echo "</ul>";
+			if ($amount > 0) {
+				echo "<div class='warning_box'><img src='".theme::$icons_16["warning"]."' style='vertical-align:bottom'/> Warning: Remaining amount of $amount cannot be assigned to this loan and will be ignored.</div>";
 			}
 			?>
 			Additional comment: <input type='text' size=30 id='add_descr' value=<?php echo json_encode($_GET["comment"]);?>/><br/>
