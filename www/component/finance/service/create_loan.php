@@ -10,7 +10,7 @@ class service_create_loan extends Service {
 	public function execute(&$component, $input) {
 		SQLQuery::startTransaction();
 		
-		$loan_id = SQLQuery::create()->insert("Loan",array("date"=>$input["date"],"reason"=>$input["reason"]));
+		$loan_id = SQLQuery::create()->insert("Loan",array("people"=>$input["people"],"date"=>$input["date"],"reason"=>$input["reason"]));
 		if ($loan_id == null) return;
 		
 		foreach ($input["operations"] as $op) {
