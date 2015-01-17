@@ -72,11 +72,6 @@ class page_allowance_overview extends Page {
 				if (!TreeFrameSelection::isSingleBatch()) echo "</div>";
 				continue;
 			}
-			if ($can_edit) {
-				echo "<div class='page_section_title shadow'>";
-				echo "<button class='action' onclick='setBaseAmountForBatch(".$batch["id"].");'>Set Base Amount</button>";
-				echo "</div>";
-			}
 			$students = array();
 			foreach ($list as $student) $students[$student["people_id"]] = $student;
 			$base_amount = SQLQuery::create()
@@ -87,6 +82,14 @@ class page_allowance_overview extends Page {
 				->execute()
 				;
 			foreach ($base_amount as $a) $students[$a["student"]]["base_amount"] = $a;
+			if ($can_edit) {
+				echo "<div class='page_section_title shadow'>";
+				$can_skip = count($base_amount) > 0 && count($base_amount) < count($students);
+				echo "<button class='action' onclick='setBaseAmountForBatch(".$batch["id"].",".json_encode($can_skip).");'>Set Base Amount</button>";
+				if (count($base_amount) > 0)
+					echo "<button class='action' onclick='modifyBaseAmount(".$batch["id"].");'>Modify Base Amount</button>";
+				echo "</div>";
+			}
 			echo "<table class='grid selected_hover'><thead>";
 			echo "<tr>";
 				echo "<th>Student</th>";
@@ -111,6 +114,15 @@ class page_allowance_overview extends Page {
 </div>
 <div style='display:none;padding:10px;' id='popup_set_base_amount_for_batch'>
 	Enter the base amount for all students: <span id='base_amount_for_batch'></span>
+	<div style='display:none' id='skip_no_allowance_container'>
+		<input type='checkbox' id='skip_no_allowance'/>
+		Except for students having no allowance
+	</div>
+</div>
+<div style='display:none;padding:10px;' id='popup_modify_base_amount'>
+	Change the amount by <span id='modify_base_amount'></span><br/>
+	A positive value will increase the base amount for every student<br/>
+	A negative value will decrease it
 </div>
 <div style='display:none;padding:10px;' id='popup_set_base_amount_for_student'>
 	Enter the base amount: <span id='base_amount_for_student'></span>
@@ -133,14 +145,36 @@ function removeForBatch(batch_id) {
 <?php if ($can_edit) { ?>
 var base_amount_for_batch = new field_decimal(1,true,{can_be_null:false,min:1,integer_digits:10,decimal_digits:2});
 document.getElementById('base_amount_for_batch').appendChild(base_amount_for_batch.getHTMLElement());
-function setBaseAmountForBatch(batch_id) {
+function setBaseAmountForBatch(batch_id, can_skip) {
 	var popup = new popup_window("Set Base Amount For Batch",null,document.getElementById('popup_set_base_amount_for_batch'));
 	popup.keep_content_on_close = true;
 	base_amount_for_batch.setData(1);
+	var skip_no_allowance = document.getElementById('skip_no_allowance');
+	skip_no_allowance.checked = '';
+	document.getElementById('skip_no_allowance_container').style.display = can_skip ? "" : "none";
 	popup.addOkCancelButtons(function() {
 		if (base_amount_for_batch.hasError()) { alert("Please enter a valid amount"); return; }
 		popup.freeze("Setting base amount...");
-		service.json("finance","set_allowance_base_amount",{batch:batch_id,amount:base_amount_for_batch.getCurrentData(),allowance:<?php echo $allowance_id;?>},function(res) {
+		service.json("finance","set_allowance_base_amount",{batch:batch_id,amount:base_amount_for_batch.getCurrentData(),allowance:<?php echo $allowance_id;?>,skip_no_allowance:skip_no_allowance.checked},function(res) {
+			if (!res)
+				popup.unfreeze();
+			else
+				location.reload();
+		});
+	});
+	popup.show();
+}
+
+var modify_base_amount = new field_decimal(0,true,{can_be_null:false,integer_digits:10,decimal_digits:2});
+document.getElementById('modify_base_amount').appendChild(modify_base_amount.getHTMLElement());
+function modifyBaseAmount(batch_id) {
+	var popup = new popup_window("Modify Base Amount For Batch",null,document.getElementById('popup_modify_base_amount'));
+	popup.keep_content_on_close = true;
+	modify_base_amount.setData(0);
+	popup.addOkCancelButtons(function() {
+		if (base_amount_for_batch.hasError()) { alert("Please enter a valid amount"); return; }
+		popup.freeze("Setting base amount...");
+		service.json("finance","modify_allowance_base_amount",{batch:batch_id,change:modify_base_amount.getCurrentData(),allowance:<?php echo $allowance_id;?>},function(res) {
 			if (!res)
 				popup.unfreeze();
 			else

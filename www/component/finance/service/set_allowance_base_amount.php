@@ -26,7 +26,7 @@ class service_set_allowance_base_amount extends Service {
 		}
 		if (count($update) > 0)
 			SQLQuery::create()->updateAllKeys("StudentAllowance", $update, array("amount"=>$input["amount"]));
-		if (count($students) > 0) {
+		if (count($students) > 0 && (!isset($input["skip_no_allowance"]) || !$input["skip_no_allowance"])) {
 			$insert = array();
 			foreach ($students as $student)
 				array_push($insert, array(
