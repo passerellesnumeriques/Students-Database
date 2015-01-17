@@ -167,7 +167,7 @@ class page_general_payment_overview extends Page {
 				echo "<tr>";
 				foreach ($dates as $d) {
 					for ($i = 0; $i < $payment["times"]; $i++)
-						echo "<th>".($i+1)."</th>";
+						echo "<th date='$d'>".($i+1)."</th>";
 				}
 				echo "</tr>";
 			}
@@ -284,14 +284,15 @@ function cellClicked(td) {
 		var tbody = tr.parentNode;
 		var table = tbody.parentNode;
 		var thead = table.childNodes[0];
-		tr = thead.childNodes[0];
-		var th = tr.childNodes[col_index];
+		tr = thead.childNodes[thead.childNodes.length-1];
+		var th = tr.childNodes[thead.childNodes.length == 1 ? col_index : col_index-1];
 		var date = th.getAttribute("date");
 		inputDialog("/static/finance/finance_16.png","Create "+<?php echo json_encode($payment["name"]);?>+" on "+date,"Amount","",30,function(text) {
 			var amount = parseFloat(text.trim());
 			if (amount <= 0 || isNaN(amount)) return "Invalid amount";
 			return null;
 		},function(text) {
+			if (!text) return;
 			var amount = parseFloat(text.trim());
 			service.json("finance","new_scheduled_payment",{student:student_id,regular_payment:<?php echo $payment_id;?>,date:date,amount:amount},function(res) {
 				if (res) location.reload();

@@ -14,7 +14,24 @@ class service_new_scheduled_payment extends Service {
 		$date_ts = datamodel\ColumnDate::toTimestamp($date);
 		if (isset($input["regular_payment"])) {
 			$payment = SQLQuery::create()->select("FinanceRegularPayment")->whereValue("FinanceRegularPayment", "id", $input["regular_payment"])->executeSingleRow();
-			$descr = $payment["name"]." of ";
+			$descr = $payment["name"];
+			if ($payment["times"] > 1) {
+				$existing = SQLQuery::create()
+					->select("ScheduledPaymentDate")
+					->whereValue("ScheduledPaymentDate","regular_payment",$input["regular_payment"])
+					->join("ScheduledPaymentDate","FinanceOperation",array("due_operation"=>"id"))
+					->whereValue("FinanceOperation","people",$people_id)
+					->whereValue("FinanceOperation","date",$date)
+					->execute();
+				for ($i = 0; $i < $payment["times"]; $i++) {
+					$found = false;
+					foreach ($existing as $e) if (substr($e["description"],0,strlen($payment["name"])+2+strlen("".($i+1))) == $payment["name"]." ".($i+1)."/") { $found = true; break; }
+					if (!$found) break;
+				}
+				$descr .= " ".($i+1)."/".$payment["times"];
+			}
+			if ($payment["frequency"] == "Weekly") $descr .= " for week";
+			$descr .= " of ";
 			switch ($payment["frequency"]) {
 				case "Daily":
 				case "Weekly":

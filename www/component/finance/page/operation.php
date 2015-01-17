@@ -58,7 +58,7 @@ class page_operation extends Page {
 				$next_operations = SQLQuery::create()
 					->select("FinanceOperation")
 					->whereValue("FinanceOperation","people",$op["people"])
-					->where("`FinanceOperation`.`date` > '".$op["date"]."'")
+					->where("((`FinanceOperation`.`date` > '".$op["date"]."') OR (`FinanceOperation`.`date` = '".$op["date"]."' AND `FinanceOperation`.`id` > ".$op["id"]."))")
 					->join("FinanceOperation", "ScheduledPaymentDate", array("id"=>"due_operation"))
 					->whereValue("ScheduledPaymentDate", "regular_payment", $schedule["regular_payment"])
 					->join("FinanceOperation","PaymentOperation",array("id"=>"due_operation"))
