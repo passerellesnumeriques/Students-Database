@@ -64,6 +64,9 @@ class page_dashboard extends Page {
 		<button class='action green' onclick='newGeneralRegularPayment();'>
 			Create General Regular Payment
 		</button>
+		<button class='action green' onclick='newAllowance();'>
+			Create Allowance
+		</button>
 	</div>
 	<?php } ?>
 </div>
@@ -80,6 +83,29 @@ class page_dashboard extends Page {
 					<span id='new_grp_times_container'></span>
 					times every
 					<span id='new_grp_every_container'></span>
+					<select name='freq'>
+						<option value='Daily'>Day</option>
+						<option value='Weekly'>Week</option>
+						<option value='Monthly' selected='selected'>Month</option>
+						<option value='Yearly'>Year</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+	</form>
+</div>
+<div style='display:none;padding:5px;' id='new_allowance'>
+	<form name='new_allowance'>
+		<table>
+			<tr>
+				<td>Name:</td>
+				<td><input type='text' size=20 maxlength=30 name='name' value='Allowance'/></td>
+			</tr>
+			<tr>
+				<td>Frequency:</td>
+				<td>
+					<span id='new_allowance_times_container'></span>
+					times every
 					<select name='freq'>
 						<option value='Daily'>Day</option>
 						<option value='Weekly'>Week</option>
@@ -112,6 +138,29 @@ function newGeneralRegularPayment() {
 				frequency:form.elements['freq'].value,
 				times:new_grp_times.getCurrentData(),
 				every:new_grp_every.getCurrentData()
+			},function(res) {
+				if (!res) return;
+				getIFrameWindow(findFrame("pn_application_frame")).reloadMenu();
+				location.reload();
+			});
+		});
+		popup.show();
+	});
+}
+
+var new_allowance_times = new field_integer(1,true,{can_be_null:false,min:1,max:100});
+document.getElementById('new_allowance_times_container').appendChild(new_allowance_times.getHTMLElement());
+function newAllowance() {
+	require("popup_window.js",function() {
+		var popup = new popup_window("New Allowance","/static/finance/finance_16.png",document.getElementById('new_allowance'));
+		popup.keep_content_on_close = true;
+		var form = document.forms['new_allowance'];
+		form.elements['name'].value = "Allowance";
+		popup.addOkCancelButtons(function() {
+			service.json("finance","new_allowance",{
+				name:form.elements['name'].value,
+				frequency:form.elements['freq'].value,
+				times:new_allowance_times.getCurrentData(),
 			},function(res) {
 				if (!res) return;
 				getIFrameWindow(findFrame("pn_application_frame")).reloadMenu();

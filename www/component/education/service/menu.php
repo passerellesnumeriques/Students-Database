@@ -36,6 +36,15 @@ class service_menu extends Service {
     Finance
 </a>
 <?php 
+$allowances = PNApplication::$instance->finance->getAllowances();
+foreach ($allowances as $a) {
+	?>
+	<a class='application_left_menu_item' href='/dynamic/students_groups/page/tree_frame?section=education#/dynamic/finance/page/allowance_overview%3Fid%3D<?php echo $a["id"];?>' style='padding-left:12px'>
+		<img src='<?php echo theme::$icons_10["arrow_right_white"];?>' style='vertical-align:middle;'/>
+		<?php echo toHTML($a["name"]);?>
+	</a>
+	<?php
+}
 $general_regular_payments = PNApplication::$instance->finance->getGeneralRegularPayments();
 foreach ($general_regular_payments as $p) {
 	?>

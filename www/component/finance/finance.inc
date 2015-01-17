@@ -10,5 +10,10 @@ class finance extends Component {
 	public function getGeneralRegularPayments() {
 		return SQLQuery::create()->select("FinanceRegularPayment")->execute();
 	}
+	
+	public function getAllowances() {
+		return SQLQuery::create()->select("Allowance")->execute();
+	}
+	
 }
 ?>
