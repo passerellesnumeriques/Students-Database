@@ -123,7 +123,10 @@ function removeForBatch(batch_id) {
 	for (var i = 0; i < batches.length; ++i) if (batches[i].id == batch_id) { batch = batches[i]; break; }
 	confirmDialog("Are you sure you want to remove <?php echo $allowance["name"];?> for Batch "+batch.name+" ?",function(yes) {
 		if (!yes) return;
-		// TODO
+		service.json("finance","remove_students_allowance",{batch:batch_id,allowance:<?php echo $allowance_id;?>},function(res) {
+			if (!res) popup.unfreeze();
+			else location.reload();
+		});
 	});
 }
 
@@ -154,6 +157,17 @@ function setBaseAmountForStudent(student_id, current_amount, tr) {
 	var popup = new popup_window("Set Base Amount For Student "+student_name,null,document.getElementById('popup_set_base_amount_for_student'));
 	popup.keep_content_on_close = true;
 	base_amount_for_student.setData(current_amount ? current_amount : 1);
+	if (current_amount)
+		popup.addIconTextButton(theme.icons_16.remove,"Remove allowance for this student",'remove',function() {
+			confirmDialog("Are you sure you want to remove this allowance for "+student_name+" ?<br/>This will remove any other information entered about this allowance.",function(yes) {
+				if (!yes) return;
+				popup.freeze("Removing allowance...");
+				service.json("finance","remove_students_allowance",{student:student_id,allowance:<?php echo $allowance_id;?>},function(res) {
+					if (!res) popup.unfreeze();
+					else location.reload();
+				});
+			});
+		});
 	popup.addOkCancelButtons(function() {
 		if (base_amount_for_student.hasError()) { alert("Please enter a valid amount"); return; }
 		popup.freeze("Setting base amount...");
