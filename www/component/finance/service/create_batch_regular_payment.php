@@ -47,53 +47,61 @@ class service_create_batch_regular_payment extends Service {
 		}
 		do {
 			$payments = array();
-			$descr = $payment["name"]." of ";
-			switch ($payment["frequency"]) {
-				case "Daily":
-				case "Weekly":
-					$descr .= date("d M Y", mktime(0,0,0,$month,$day,$year));
-					break;
-				case "Monthly":
-					$descr .= date("F Y", mktime(0,0,0,$month,$day,$year));
-					break;
-				case "Yearly":
-					$descr .= $year;
-					break;
+			for ($i = 0; $i < $payment["times"]; $i++) {
+				$descr = $payment["name"];
+				if ($payment["times"] > 1) $descr .= " ".($i+1)."/".$payment["times"];
+				if ($payment["frequency"] == "Weekly") $descr .= " for week";
+				$descr .= " of ";
+				switch ($payment["frequency"]) {
+					case "Daily":
+					case "Weekly":
+						$descr .= date("d M Y", mktime(0,0,0,$month,$day,$year));
+						break;
+					case "Monthly":
+						$descr .= date("F Y", mktime(0,0,0,$month,$day,$year));
+						break;
+					case "Yearly":
+						$descr .= $year;
+						break;
+				}
+				foreach ($students_ids as $people_id)
+					array_push($payments, array(
+						"people"=>$people_id,
+						"amount"=>-$amount,
+						"date"=>$year."-".$month."-".$day,
+						"description"=>$descr
+					));
 			}
-			foreach ($students_ids as $people_id)
-				array_push($payments, array(
-					"people"=>$people_id,
-					"amount"=>-$amount,
-					"date"=>$year."-".$month."-".$day,
-					"description"=>$descr
-				));
 			$payments_ids = SQLQuery::create()->insertMultiple("FinanceOperation", $payments);
 			$schedules = array();
-			for ($i = 0; $i < count($students_ids); $i++)
-				array_push($schedules, array(
-					"due_operation"=>$payments_ids[$i],
-					"regular_payment"=>$payment_id
-				));
+			$k = 0;
+			for ($i = 0; $i < $payment["times"]; $i++)
+				for ($j = 0; $j < count($students_ids); $j++,$k++)
+					array_push($schedules, array(
+						"due_operation"=>$payments_ids[$k],
+						"regular_payment"=>$payment_id
+					));
 			SQLQuery::create()->insertMultiple("ScheduledPaymentDate", $schedules);
 			switch ($payment["frequency"]) {
 				case "Daily":
-					$d = getdate(mktime(0,0,0,$month,$day+1,$year));
+					$d = getdate(mktime(0,0,0,$month,$day+$payment["every"],$year));
 					$day = $d["mday"];
 					$month = $d["mon"];
 					$year = $d["year"];
 					break;
 				case "Weekly":
-					$d = getdate(mktime(0,0,0,$month,$day+7,$year));
+					$d = getdate(mktime(0,0,0,$month,$day+7*$payment["every"],$year));
 					$day = $d["mday"];
 					$month = $d["mon"];
 					$year = $d["year"];
 					break;
 				case "Monthly":
 					$day = 1;
-					if (++$month == 13) { $month = 1; $year++; }
+					for ($i = 0; $i < $payment["every"]; $i++)
+						if (++$month == 13) { $month = 1; $year++; }
 					break;
 				case "Yearly":
-					$year++;
+					$year += $payment["every"];
 					break;
 				default:
 					PNApplication::error("Unknown frequency: ".$payment["frequency"]);

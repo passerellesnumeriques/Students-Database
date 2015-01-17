@@ -27,6 +27,8 @@ class page_operation extends Page {
 		$due_date = date("d M Y", $due_date_ts);
 		$due_comment = null;
 		$normal_description = $op["description"];
+		$i = strpos($normal_description, ",");
+		if ($i !== false) $normal_description = substr($normal_description,0,$i);
 		if ($schedule <> null) {
 			if ($schedule["regular_payment"] <> null) {
 				// this operation comes from a general regular payment
@@ -45,7 +47,7 @@ class page_operation extends Page {
 				}
 				$descr = $regular_payment["name"];
 				$this->setPopupTitle($regular_payment["name"]." of ".$date_str." for ".$people["first_name"]." ".$people["last_name"]);
-				$normal_description = $descr." of ".$date_str;
+				//$normal_description = $descr." of ".$date_str;
 				if ($op["description"] <> $normal_description) {
 					$due_comment = $op["description"];
 					if (substr($due_comment,0,strlen($normal_description)+2) == $normal_description.", ")

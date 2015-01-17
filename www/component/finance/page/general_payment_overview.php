@@ -77,9 +77,11 @@ class page_general_payment_overview extends Page {
 				if (count($schedules) > 0 && $can_manage)
 					echo "<button class='action red' style='float:right' onclick='removeForBatch(".$batch["id"].");'><img src='".theme::$icons_16["remove_white"]."'/> Remove</button>";
 				echo "</div>";
+				echo "<div style='border-bottom:1px solid black;margin-bottom:5px;'>";
 			}
 			if (count($students) == 0) {
 				echo "<i>No student in this batch</i>";
+				if (!TreeFrameSelection::isSingleBatch()) echo "</div>";
 				continue;
 			}
 			if (count($schedules) == 0) {
@@ -87,6 +89,7 @@ class page_general_payment_overview extends Page {
 				if ($can_manage) {
 					echo "<button class='action' onclick='configurePaymentForBatch(".$batch["id"].")'>Configure it</button>";
 				}
+				if (!TreeFrameSelection::isSingleBatch()) echo "</div>";
 				continue;
 			}
 			$due_operations = array();
@@ -130,64 +133,79 @@ class page_general_payment_overview extends Page {
 			echo "<table class='grid selected_hover' id='$table_id'>";
 			echo "<thead>";
 			echo "<tr>";
-				echo "<th>Student</th>";
+				echo "<th".($payment["times"] > 1 ? " rowspan=2" : "").">Student</th>";
 				$d = $start;
 				while ($d <= $end) {
 					$date = getdate($d);
 					$sql_date = datamodel\ColumnDate::toSQLDate($date);
 					array_push($dates, $sql_date);
-					echo "<th date='$sql_date'>";
+					echo "<th date='$sql_date'".($payment["times"] > 1 ? " colspan=".$payment["times"] : "").">";
 					switch ($payment["frequency"]) {
 						case "Daily":
 							echo date("d M Y", $d);
-							$d += 24*60*60;
+							$d += 24*60*60*$payment["every"];
 							break;
 						case "Weekly":
 							echo date("d M Y", $d);
-							$d += 7*24*60*60;
+							$d += 7*24*60*60*$payment["every"];
 							break;
 						case "Monthly":
 							echo date("M Y", $d);
 							$dd = getdate($d);
-							$d = mktime(0,0,0,$dd["mon"]+1,1,$dd["year"]);
+							$d = mktime(0,0,0,$dd["mon"]+$payment["every"],1,$dd["year"]);
 							break;
 						case "Yearly":
 							$dd = getdate($d);
 							echo $dd["year"];
-							$d = mktime(0,0,0,$dd["mon"],1,$dd["year"]+1);
+							$d = mktime(0,0,0,$dd["mon"],1,$dd["year"]+$payment["every"]);
 							break;
 					}
 					echo "</th>";
 				}
 			echo "</tr>";
+			if ($payment["times"] > 1) {
+				echo "<tr>";
+				foreach ($dates as $d) {
+					for ($i = 0; $i < $payment["times"]; $i++)
+						echo "<th>".($i+1)."</th>";
+				}
+				echo "</tr>";
+			}
 			echo "</thead><tbody>";
 			foreach ($students as $s) {
 				echo "<tr student_id='".$s["people_id"]."'>";
-				echo "<td style='white-space:nowrap;'>".toHTML($s["last_name"]." ".$s["first_name"])."</td>";
+				echo "<td style='white-space:nowrap;cursor:pointer;' onclick=\"window.parent.popupFrame(null,'Student','/dynamic/people/page/profile?page=Finance&people=".$s["people_id"]."');\">".toHTML($s["last_name"]." ".$s["first_name"])."</td>";
 				$late = false;
 				foreach ($dates as $d) {
-					$schedule = null;
-					if (isset($s["schedules"]))
-						foreach ($s["schedules"] as $sched)
-							if ($sched["date"] == $d) { $schedule = $sched; break; }
-					$ts = datamodel\ColumnDate::toTimestamp($d);
-					if ($schedule <> null) {
-						$payments = @$payments_done[$schedule["due_operation"]];
-						if ($payments == null) $payments = array();
-						$paid = 0;
-						foreach ($payments as $p) $paid += floatval($p["amount"]);
-						$balance = $paid+floatval($schedule["amount"]);
-						if ($balance == 0)
-							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#60FF60" : "#A0FFA0").";'>Paid</div></td>";
-						else if ($balance == $schedule["amount"])
-							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF0000" : "#FF8080").";'>$balance</div></td>";
-						else if ($balance < 0)
-							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF9040" : "#FFB080").";'>$balance</div></td>";
-						else
-							echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#0080FF;'>$balance</td>";
-						if ($balance < 0 && $ts < time()) $late = true;
-					} else {
-						echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#A0A0A0;'>N/A</div></td>";
+					for ($i = 0; $i < $payment["times"]; $i++) {
+						$schedule = null;
+						if (isset($s["schedules"]))
+							foreach ($s["schedules"] as $sched)
+								if ($sched["date"] == $d) {
+									if ($payment["times"] == 1 || substr($sched["description"],0,strlen($payment["name"])+2+strlen("".($i+1))) == $payment["name"]." ".($i+1)."/") {
+										$schedule = $sched;
+										break;
+									}
+								}
+						$ts = datamodel\ColumnDate::toTimestamp($d);
+						if ($schedule <> null) {
+							$payments = @$payments_done[$schedule["due_operation"]];
+							if ($payments == null) $payments = array();
+							$paid = 0;
+							foreach ($payments as $p) $paid += floatval($p["amount"]);
+							$balance = $paid+floatval($schedule["amount"]);
+							if ($balance == 0)
+								echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#60FF60" : "#A0FFA0").";'>Paid</div></td>";
+							else if ($balance == $schedule["amount"])
+								echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF0000" : "#FF8080").";'>$balance</div></td>";
+							else if ($balance < 0)
+								echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:".($ts < time() ? "#FF9040" : "#FFB080").";'>$balance</div></td>";
+							else
+								echo "<td op='".$schedule["due_operation"]."' style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#0080FF;'>$balance</td>";
+							if ($balance < 0 && $ts < time()) $late = true;
+						} else {
+							echo "<td style='padding:1px;cursor:pointer;text-align:center;' onmouseover='mouseOverCell(this);' onmouseout='mouseOutCell(this);' onclick='cellClicked(this);'><div style='background-color:#A0A0A0;'>N/A</div></td>";
+						}
 					}
 				}
 				if ($late) array_push($late_students, $s["people_id"]);
@@ -195,6 +213,7 @@ class page_general_payment_overview extends Page {
 			}
 			echo "</tbody>";
 			echo "</table>";
+			if (!TreeFrameSelection::isSingleBatch()) echo "</div>";
 		}
 		?>
 	</div>
@@ -202,18 +221,23 @@ class page_general_payment_overview extends Page {
 <script type='text/javascript'>
 var batches = <?php echo json_encode($batches);?>;
 var freq = "<?php echo $payment["frequency"];?>";
+var every = <?php echo $payment["every"];?>;
+var times = <?php echo $payment["times"];?>;
 var late_students = <?php echo json_encode($late_students);?>;
 var tables_ids = <?php echo json_encode($tables_ids);?>;
 
 var selected_td = null;
 var selected_th = null;
+var selected_th2 = null;
 
 function removeSelectedCell() {
 	if (selected_td == null) return;
 	selected_td.style.color = "";
 	selected_th.style.backgroundColor = "";
+	if (selected_th2) selected_th2.style.backgroundColor = "";
 	selected_td = null;
 	selected_th = null;
+	selected_th2 = null;
 }
 function mouseOverCell(td) {
 	removeSelectedCell();
@@ -224,13 +248,22 @@ function mouseOverCell(td) {
 	var tbody = tr.parentNode;
 	var table = tbody.parentNode;
 	var thead = table.childNodes[0];
-	tr = thead.childNodes[0];
-	var th = tr.childNodes[col_index];
+	tr = thead.childNodes[thead.childNodes.length-1];
+	var th = tr.childNodes[thead.childNodes.length == 1 ? col_index : col_index-1];
 	th.style.backgroundColor = "#FFC080";
 	td.style.color = "#FFE0C0";
 	selected_td = td;
 	selected_th = th;
-}
+	if (thead.childNodes.length > 1) {
+		var i = 0;
+		selected_th2 = thead.childNodes[0].childNodes[1];
+		while (i+selected_th2.colSpan < col_index) {
+			i += selected_th2.colSpan;
+			selected_th2 = selected_th2.nextSibling;
+		}
+		selected_th2.style.backgroundColor = "#FFC080";
+	}
+	}
 function mouseOutCell(td) {
 	removeSelectedCell();
 }
@@ -305,7 +338,24 @@ function configurePaymentForBatch(batch_id) {
 		new StartEndDates(start, end);
 		table.appendChild(tr = document.createElement("TR"));
 		tr.appendChild(td = document.createElement("TD"));
-		td.innerHTML = freq+" amount";
+		if (every == 1 && times == 1) td.innerHTML = freq+" amount";
+		else {
+			var s = "Amount to pay "+times+" time"+(times>1?"s":"");
+			s += " every ";
+			var f;
+			switch (freq) {
+			case "Daily": f="day";break;
+			case "Weekly": f="week";break;
+			case "Monthly": f="month";break;
+			case "Yearly": f="year";break;
+			}
+			if (every > 1) {
+				s += every+" "+f+"s";
+			} else {
+				s += f;
+			}
+			td.innerHTML = s; 
+		}
 		tr.appendChild(td = document.createElement("TD"));
 		var amount = new field_decimal(null,true,{integer_digits:10,decimal_digits:2,can_be_null:false,min:0});
 		td.appendChild(amount.getHTMLElement());

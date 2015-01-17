@@ -701,6 +701,7 @@ function addJavascript(url, onload, additional_attributes) {
 	if (document.readyState != "complete") {
 		// delay the load, as we may not have yet all the scripts in the head
 		var listener = function() {
+			if (typeof addJavascript != 'function') return; // page closed
 			addJavascript(url,onload,additional_attributes);
 			unlistenEvent(document, 'readystatechange', listener);
 			listener = null;
@@ -802,7 +803,7 @@ function addStylesheet(url,onload) {
 	if (typeof url == 'string') url = new URL(url);
 	if (document.readyState != "complete") {
 		// delay the load, as we may not have yet all the css in the head
-		setTimeout(function(){addStylesheet(url);},1);
+		setTimeout(function(){if (typeof addStylesheet == 'function') addStylesheet(url);},1);
 		return;
 	}
 	var head = document.getElementsByTagName("HEAD")[0];

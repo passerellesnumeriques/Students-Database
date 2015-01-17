@@ -22,7 +22,42 @@ class page_dashboard extends Page {
 			?>
 		</div>
 	</div>
-	<div style='flex: 1 1 100%;'>
+	<div style='flex: 1 1 100%;overflow:auto;'>
+		<?php 
+		$batches_ids = TreeFrameSelection::getBatchesIds();
+		$batches = PNApplication::$instance->curriculum->getBatches($batches_ids);
+		foreach ($batches as $batch) {
+			$group_id = TreeFrameSelection::getGroupId();
+			$period_id = TreeFrameSelection::getPeriodId();
+			if ($group_id <> null) {
+				$q = PNApplication::$instance->students_groups->getStudentsQueryForGroup($group_id);
+				PNApplication::$instance->people->joinPeople($q, "StudentGroup", "people", false);
+			} else if ($period_id <> null) {
+				$spe_id = TreeFrameSelection::getSpecializationId();
+				if ($spe_id == null) $spe_id = false;
+				$students_ids = PNApplication::$instance->students_groups->getStudentsForPeriod($period_id, $spe_id);
+				$q = PNApplication::$instance->people->getPeoplesSQLQuery($students_ids,false,true);
+			} else {
+				$q = PNApplication::$instance->students->getStudentsQueryForBatches(array($batch["id"]));
+				PNApplication::$instance->people->joinPeople($q, "Student", "people", false);
+			}
+			$q->orderBy("People","last_name");
+			$q->orderBy("People","first_name");
+			$students = $q->execute();
+			
+			if (!TreeFrameSelection::isSingleBatch()) {
+				echo "<div class='page_section_title' style='background-color:white'>";
+				echo "Batch ".toHTML($batch["name"]);
+				echo "</div>";
+			}
+			if (count($students) == 0) {
+				echo "<i>No student in this batch</i>";
+				continue;
+			}
+				
+			// TODO
+		}
+		?>
 	</div>
 	<?php if ($can_manage) { ?>
 	<div class='page_footer' style='flex:none;'>
@@ -42,18 +77,29 @@ class page_dashboard extends Page {
 			<tr>
 				<td>Frequency:</td>
 				<td>
+					<span id='new_grp_times_container'></span>
+					times every
+					<span id='new_grp_every_container'></span>
 					<select name='freq'>
-						<option value='Daily'>Daily</option>
-						<option value='Weekly'>Weekly</option>
-						<option value='Monthly' selected='selected'>Monthly</option>
-						<option value='Yearly'>Yearly</option>
+						<option value='Daily'>Day</option>
+						<option value='Weekly'>Week</option>
+						<option value='Monthly' selected='selected'>Month</option>
+						<option value='Yearly'>Year</option>
 					</select>
 				</td>
 			</tr>
 		</table>
 	</form>
 </div>
+<?php 
+$this->requireJavascript("typed_field.js");
+$this->requireJavascript("field_integer.js");
+?>
 <script type='text/javascript'>
+var new_grp_times = new field_integer(1,true,{can_be_null:false,min:1,max:100});
+document.getElementById('new_grp_times_container').appendChild(new_grp_times.getHTMLElement());
+var new_grp_every = new field_integer(1,true,{can_be_null:false,min:1,max:100});
+document.getElementById('new_grp_every_container').appendChild(new_grp_every.getHTMLElement());
 function newGeneralRegularPayment() {
 	require("popup_window.js",function() {
 		var popup = new popup_window("New Regular Payment","/static/finance/finance_16.png",document.getElementById('new_general_regular_payment'));
@@ -61,7 +107,12 @@ function newGeneralRegularPayment() {
 		var form = document.forms['new_general_regular_payment'];
 		form.elements['name'].value = "";
 		popup.addOkCancelButtons(function() {
-			service.json("finance","new_general_regular_payment",{name:form.elements['name'].value,frequency:form.elements['freq'].value},function(res) {
+			service.json("finance","new_general_regular_payment",{
+				name:form.elements['name'].value,
+				frequency:form.elements['freq'].value,
+				times:new_grp_times.getCurrentData(),
+				every:new_grp_every.getCurrentData()
+			},function(res) {
 				if (!res) return;
 				getIFrameWindow(findFrame("pn_application_frame")).reloadMenu();
 				location.reload();

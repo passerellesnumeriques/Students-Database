@@ -238,20 +238,7 @@ class page_student_payment extends Page {
 				$due_amount = -floatval($due["amount"]);
 				if ($paid >= $due_amount) continue; // already paid
 				$payment_amount = $amount > $due_amount-$paid ? $due_amount-$paid : $amount;
-				$descr = $regular_payment["name"]." of ";
-				switch ($regular_payment["frequency"]) {
-					case "Daily":
-					case "Weekly":
-						$descr .= date("d M Y", datamodel\ColumnDate::toTimestamp($due["date"]));
-						break;
-					case "Monthly":
-						$descr .= date("F Y", datamodel\ColumnDate::toTimestamp($due["date"]));
-						break;
-					case "Yearly":
-						$d = datamodel\ColumnDate::splitDate($due["date"]);
-						$descr .= $d["year"];
-						break;
-				}
+				$descr = $due["description"];
 				array_push($operations, array(
 					"schedule"=>$due,
 					"amount"=>$payment_amount,

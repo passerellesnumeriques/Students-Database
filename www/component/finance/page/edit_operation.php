@@ -60,21 +60,8 @@ class page_edit_operation extends Page {
 	<?php if ($schedule <> null || $payment_of <> null) {
 		if ($schedule <> null) {
 			$ts = datamodel\ColumnDate::toTimestamp($op["date"]);
-			if ($schedule["regular_payment"]) {
-				$descr = $regular_payment["name"]." of ";
-				switch ($regular_payment["frequency"]) {
-					case "Daily":
-					case "Weekly":
-						$descr .= date("d M Y",$ts);
-						break;
-					case "Monthly":
-						$descr .= date("F Y", $ts);
-						break;
-					case "Yearly":
-						$descr .= date("Y", $ts);
-						break;
-				}
-			}
+			$i = strpos($op["description"], ",");
+			$descr = $i === false ? $op["description"] : substr($op["description"], 0, $i);
 		} else {
 			$descr = $payment_of["description"];
 			if ($descr === null) $descr = "";
@@ -99,7 +86,7 @@ class page_edit_operation extends Page {
 	</tr>
 	<tr>
 		<td>Additional description</td>
-		<td><input name='add_descr' type='text' size=50 original=<?php echo json_encode($add_descr);?> value=<?php echo json_encode($add_descr);?> onchange='if (this.value == this.getAttribute("original")) pnapplication.dataSaved("description"); else pnapplication.dataUnsaved("description");'/></td>
+		<td><input name='add_descr' type='text' size=50 original=<?php echo json_encode($add_descr);?> value=<?php echo toHTMLAttribute($add_descr);?> onchange='if (this.value == this.getAttribute("original")) pnapplication.dataSaved("description"); else pnapplication.dataUnsaved("description");'/></td>
 	</tr>
 	<?php } else { ?>
 	<tr>
