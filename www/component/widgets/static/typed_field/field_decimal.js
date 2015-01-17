@@ -57,7 +57,7 @@ field_decimal.prototype._create = function(data) {
 					return true;
 				}
 				// not a digit
-				if (ev.printableChar == "-" && t.input.value.length == 0) {
+				if (ev.printableChar == "-" && t.input.selectionStart == 0) {
 					// - at the beginning: ok
 					return true;
 				}
