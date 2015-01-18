@@ -103,9 +103,8 @@ if (PNApplication::$instance->current_domain <> PNApplication::$instance->local_
 		<?php
 		$sections = array();
 		foreach (PNApplication::$instance->components as $cname=>$comp)
-			foreach ($comp->getPluginImplementations() as $pi)
-				if ($pi instanceof ApplicationSectionPlugin)
-					array_push($sections, $pi);
+			foreach ($comp->getPluginImplementations("ApplicationSectionPlugin") as $pi)
+				array_push($sections, $pi);
 		usort($sections, function($s1, $s2) {
 			if ($s1->getPriority() <= $s2->getPriority()) return -1;
 			return 1;

@@ -21,8 +21,7 @@ class page_popup_create_people extends Page {
 		foreach ($types as $type) {
 			$ok = null;
 			foreach (PNApplication::$instance->components as $c) {
-				foreach ($c->getPluginImplementations() as $pi) {
-					if (!($pi instanceof PeopleTypePlugin)) continue;
+				foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 					if ($pi->getId() <> $type) continue;
 					$ok = $pi->canRemove();
 					if ($types_descr <> "") $types_descr .= ", ";
@@ -113,8 +112,7 @@ class page_popup_create_people extends Page {
 		$possible_types = array();
 		foreach (PNApplication::$instance->components as $c) {
 			if ($c == $this) continue;
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeopleTypePlugin)) continue;
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 				if (in_array($pi->getId(), $types)) continue;
 				if (!$pi->canWrite()) continue;
 				array_push($possible_types, $pi);

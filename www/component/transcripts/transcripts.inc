@@ -2,13 +2,16 @@
 
 class transcripts extends Component {
 
-	public function getPluginImplementations() {
-		require_once("GradesPeopleProfilePagePlugin.inc");
-		require_once("TranscriptsNewsPlugin.inc");
-		return array(
-			new GradesPeopleProfilePagePlugin(),
-			new TranscriptsStudentsPlugin()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "PeopleProfilePagePlugin":
+				require_once("GradesPeopleProfilePagePlugin.inc");
+				return array(new GradesPeopleProfilePagePlugin());
+			case "StudentsPlugin":
+				require_once("TranscriptsNewsPlugin.inc");
+				return array(new TranscriptsStudentsPlugin());
+		}
+		return array();
 	}
 	
 	public function set_subject_grading($subject_id, $only_final_grades, $max_grade, $passing_grade) {

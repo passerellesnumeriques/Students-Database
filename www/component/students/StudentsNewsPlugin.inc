@@ -30,9 +30,8 @@ class StudentsNewsSection implements NewsSection {
 		$list = array();
 		require_once("StudentsPlugin.inc");
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof StudentsPlugin)
-					$list = array_merge($list, $pi->getNewsCategories());
+			foreach ($c->getPluginImplementations("StudentsPlugin") as $pi)
+				$list = array_merge($list, $pi->getNewsCategories());
 		}
 		return $list;
 	}

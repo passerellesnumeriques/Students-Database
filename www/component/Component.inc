@@ -295,7 +295,7 @@ abstract class Component {
 	 * (contains only functionalities, without any additional <i>polutant</i> things)
 	 * @return array list of plugin instances
 	 */
-	public function getPluginImplementations() { return array(); }
+	public function getPluginImplementations($interface_name) { return array(); }
 
 }
 

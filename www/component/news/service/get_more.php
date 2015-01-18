@@ -30,8 +30,7 @@ class service_get_more extends Service {
 		
 		$where = "(";
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof NewsPlugin)) continue;
+			foreach ($c->getPluginImplementations("NewsPlugin") as $pi) {
 				foreach ($pi->getSections() as $section) {
 					if ($section->getAccessRight() == 0) continue;
 					$found = null;

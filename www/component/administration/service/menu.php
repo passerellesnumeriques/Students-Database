@@ -12,11 +12,10 @@ class service_menu extends Service {
 		require_once("component/administration/AdministrationPlugin.inc");
 		$pages = array();
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof AdministrationPlugin)
-					foreach ($pi->getAdministrationPages() as $page)
-						if ($page->canAccess())
-							array_push($pages, $page);
+			foreach ($c->getPluginImplementations("AdministrationPlugin") as $pi)
+				foreach ($pi->getAdministrationPages() as $page)
+					if ($page->canAccess())
+						array_push($pages, $page);
 		usort($pages, function($p1,$p2) {
 			$s1 = $p1->getTitle();
 			if ($s1 == "Dashboard") return -1;

@@ -90,9 +90,8 @@ if (isset($_POST["q"])) {
 	// generic search
 	$plugins = array();
 	foreach (PNApplication::$instance->components as $c)
-		foreach ($c->getPluginImplementations() as $pi)
-			if ($pi instanceof SearchPlugin)
-				array_push($plugins, $pi);
+		foreach ($c->getPluginImplementations("SearchPlugin") as $pi)
+			array_push($plugins, $pi);
 	usort($plugins, function($p1,$p2){return $p1->getPriority()-$p2->getPriority();});
 	foreach ($plugins as $pi) {
 		echo "searchPlugin({plugin:".json_encode($pi->getId()).",generic:".json_encode($_POST["q"])."},".json_encode($pi->getName()).");\n";

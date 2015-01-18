@@ -4,13 +4,16 @@
  */ 
 class teaching extends Component {
 
-	public function getPluginImplementations() {
-		require_once("TeacherPeopleTypePlugin.inc");
-		require_once("TeacherAssignmentsPeopleProfilePagePlugin.inc");
-		return array(
-				new TeacherPeopleTypePlugin(),
-				new TeacherAssignmentsPeopleProfilePagePlugin(),
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "PeopleTypePlugin":
+				require_once("TeacherPeopleTypePlugin.inc");
+				return array(new TeacherPeopleTypePlugin());
+			case "PeopleProfilePagePlugin":
+				require_once("TeacherAssignmentsPeopleProfilePagePlugin.inc");
+				return array(new TeacherAssignmentsPeopleProfilePagePlugin());
+		}
+		return array();
 	}
 	
 	/**

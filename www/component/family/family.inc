@@ -4,13 +4,20 @@
  */ 
 class family extends Component {
 	
-	public function getPluginImplementations() {
-		require_once("FamilyBackgroundProfilePage.inc");
-		require_once("FamilyMemberPeopleType.inc");
-		return array(
-			new FamilyBackgroundProfilePage(),
-			new FamilyMemberPeopleType()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "PeopleProfilePagePlugin":
+				require_once("FamilyBackgroundProfilePage.inc");
+				return array(
+					new FamilyBackgroundProfilePage(),
+				);
+			case "PeopleTypePlugin":
+				require_once("FamilyMemberPeopleType.inc");
+				return array(
+					new FamilyMemberPeopleType()
+				);
+		}
+		return array();
 	}
 	
 	/**

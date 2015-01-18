@@ -4,21 +4,25 @@
  */
 class contact extends Component {
 	
-	public function getPluginImplementations() {
-		require_once("OrganizationNotes.inc");
-		$list = array(
-			new OrganizationNotes()
-		);
-		require_once("ContactPointPeopleTypePlugin.inc");
-		require_once("OrganizationPlugin.inc");
-		foreach (PNApplication::$instance->components as $c) {
-			if ($c == $this) continue;
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof OrganizationPlugin)) continue;
-				array_push($list, new ContactPointPeopleTypePlugin($pi));
-			}
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "NotesPlugin":
+				require_once("OrganizationNotes.inc");
+				return array(
+					new OrganizationNotes()
+				);
+			case "PeopleTypePlugin":
+				require_once("ContactPointPeopleTypePlugin.inc");
+				require_once("OrganizationPlugin.inc");
+				$list = array();
+				foreach (PNApplication::$instance->components as $c) {
+					if ($c == $this) continue;
+					foreach ($c->getPluginImplementations("OrganizationPlugin") as $pi)
+						array_push($list, new ContactPointPeopleTypePlugin($pi));
+				}
+				return $list;
 		}
-		return $list;
+		return array();
 	}
 	/**
 	 * Add a new postal address to an organization
@@ -168,8 +172,7 @@ class contact extends Component {
 	public function createOrganizationType($creator, $name, $builtin = false) {
 		require_once("component/contact/OrganizationPlugin.inc");
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof OrganizationPlugin)) continue;
+			foreach ($c->getPluginImplementations("OrganizationPlugin") as $pi) {
 				if ($pi->getOrganizationCreator() == $creator) {
 					if (!($pi->canInsertOrganization())) {
 						PNApplication::error("You are not allowed to create orgnization in ".$creator);

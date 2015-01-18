@@ -47,20 +47,19 @@ class service_get_my_calendars extends Service {
 		}
 		require_once("component/calendar/CustomCalendarPlugin.inc");
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof CustomCalendarPlugin) {
-					if (!$pi->canAccess()) continue;
-					if ($first) $first = false; else echo ",";
-					echo "{";
-					echo "id:".json_encode($pi->getId());
-					echo ",name:".json_encode($pi->getName());
-					echo ",color:".json_encode($pi->getDefaultColor());
-					echo ",writable:false";
-					echo ",show:true";
-					echo ",icon:".json_encode($pi->getIcon());
-					echo ",removable:false";
-					echo "}";
-				}
+			foreach ($c->getPluginImplementations("CustomCalendarPlugin") as $pi) {
+				if (!$pi->canAccess()) continue;
+				if ($first) $first = false; else echo ",";
+				echo "{";
+				echo "id:".json_encode($pi->getId());
+				echo ",name:".json_encode($pi->getName());
+				echo ",color:".json_encode($pi->getDefaultColor());
+				echo ",writable:false";
+				echo ",show:true";
+				echo ",icon:".json_encode($pi->getIcon());
+				echo ",removable:false";
+				echo "}";
+			}
 		echo "]";
 	}
 	

@@ -485,9 +485,8 @@ class calendar extends Component {
 		require_once("component/calendar/CustomCalendarPlugin.inc");
 		$list = array();
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof CustomCalendarPlugin)
-					array_push($list, $pi);
+			foreach ($c->getPluginImplementations("CustomCalendarPlugin") as $pi)
+				array_push($list, $pi);
 		return $list;
 	}
 	

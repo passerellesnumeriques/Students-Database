@@ -81,9 +81,8 @@ class page_edit_customizable_table extends Page {
 		/* @var $plugins DataModelCustomizationPlugin[] */
 		$plugins = array();
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof DataModelCustomizationPlugin)
-					array_push($plugins, $pi);
+			foreach ($c->getPluginImplementations("DataModelCustomizationPlugin") as $pi)
+				array_push($plugins, $pi);
 		
 		$this->requireJavascript("typed_field.js");
 		$this->requireJavascript("field_integer.js");

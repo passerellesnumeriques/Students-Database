@@ -4,13 +4,16 @@
  */ 
 class curriculum extends Component {
 	
-	public function getPluginImplementations() {
-		require_once("CurriculumStudentsPlugin.inc");
-		require_once("CurriculumDocumentsPlugin.inc");
-		return array(
-			new CurriculumStudentsPlugin(),
-			new CurriculumAttachedDocumentsPlugin()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "StudentsPlugin":
+				require_once("CurriculumStudentsPlugin.inc");
+				return array(new CurriculumStudentsPlugin());
+			case "AttachedDocumentsPlugin":
+				require_once("CurriculumDocumentsPlugin.inc");
+				return array(new CurriculumAttachedDocumentsPlugin());
+		}
+		return array();
 	}
 	
 	/** Returns all AcademicYear from database

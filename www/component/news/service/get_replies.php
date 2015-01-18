@@ -11,8 +11,7 @@ class service_get_replies extends Service {
 		$accessible = "";
 		require_once("component/news/NewsPlugin.inc");
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof NewsPlugin)) continue;
+			foreach ($c->getPluginImplementations("NewsPlugin") as $pi) {
 				foreach ($pi->getSections() as $section) {
 					if ($section->getAccessRight() == 0) continue;
 					$where = "(`section`='".SQLQuery::escape($section->getName())."' AND `category` IN (NULL";

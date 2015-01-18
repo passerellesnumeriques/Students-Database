@@ -21,10 +21,9 @@ class AdministrationApplicationSection implements ApplicationSectionPlugin {
 #END
 		require_once("component/administration/AdministrationPlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof AdministrationPlugin)
-					foreach ($pi->getAdministrationPages() as $page)
-						if ($page->canAccess()) return true; // at least one page is accessible
+			foreach ($c->getPluginImplementations("AdministrationPlugin") as $pi)
+				foreach ($pi->getAdministrationPages() as $page)
+					if ($page->canAccess()) return true; // at least one page is accessible
 		return false;
 	}
 	

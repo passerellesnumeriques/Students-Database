@@ -7,10 +7,9 @@ class data_import extends Component {
 	public function getTemplatePlugin($type) {
 		require_once("DataImportTemplatePlugin.inc");
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof DataImportTemplatePlugin)
-					if ($pi->getId() == $type)
-						return $pi;
+			foreach ($c->getPluginImplementations("DataImportTemplatePlugin") as $pi)
+				if ($pi->getId() == $type)
+					return $pi;
 		return null;
 	}
 	

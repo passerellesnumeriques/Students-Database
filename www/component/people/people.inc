@@ -4,19 +4,25 @@
  */
 class people extends Component {
 
-	public function getPluginImplementations() {
-		require_once("PeoplePluginsImplementations.inc");
-		require_once("PeoplePictureStoragePlugin.inc");
-		require_once("PeopleDocuments.inc");
-		require_once("PeopleSearchPlugin.inc");
-		return array(
-			new PeopleProfilePage(),
-			new PeopleDocumentsPage(),
-			new PeoplePictureStoragePlugin(),
-			new PeopleDocuments(),
-			new PeopleSearchPlugin(),
-			new PeopleCreationAddPicturesPlugin()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "PeopleProfilePagePlugin":
+				require_once("PeoplePluginsImplementations.inc");
+				return array(new PeopleProfilePage(),new PeopleDocumentsPage());
+			case "StoragePlugin":
+				require_once("PeoplePictureStoragePlugin.inc");
+				return array(new PeoplePictureStoragePlugin());
+			case "AttachedDocumentsPlugin":
+				require_once("PeopleDocuments.inc");
+				return array(new PeopleDocuments());
+			case "SearchPlugin":
+				require_once("PeopleSearchPlugin.inc");
+				return array(new PeopleSearchPlugin());
+			case "PeopleCreationStep":
+				require_once("PeoplePluginsImplementations.inc");
+				return array(new PeopleCreationAddPicturesPlugin());
+		}
+		return array();
 	}
 	
 	public function parseTypes($types) {
@@ -35,8 +41,7 @@ class people extends Component {
 		require_once("PeopleTypePlugin.inc");
 		foreach (PNApplication::$instance->components as $c) {
 			if ($c == $this) continue;
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeopleTypePlugin)) continue;
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 				if ($pi->getId() == $type) return $pi;
 			}
 		}
@@ -48,8 +53,7 @@ class people extends Component {
 		$list = array();
 		foreach (PNApplication::$instance->components as $c) {
 			if ($c == $this) continue;
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeopleTypePlugin)) continue;
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 				array_push($list, $pi);
 			}
 		}
@@ -187,8 +191,7 @@ class people extends Component {
 		require_once("PeopleTypePlugin.inc");
 		$plugin = null;
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeopleTypePlugin)) continue;
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 				if (in_array($pi->getId(), $types)) {
 					if ($plugin == null || $plugin->getSecurityPriority() > $pi->getSecurityPriority())
 						$plugin = $pi;
@@ -203,8 +206,7 @@ class people extends Component {
 		require_once("PeopleTypePlugin.inc");
 		$plugin = null;
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi) {
-			if (!($pi instanceof PeopleTypePlugin)) continue;
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 			if (in_array($pi->getId(), $types)) {
 				if ($plugin == null || $plugin->getSecurityPriority() > $pi->getSecurityPriority())
 					$plugin = $pi;

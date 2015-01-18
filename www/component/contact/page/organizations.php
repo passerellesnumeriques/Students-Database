@@ -17,8 +17,7 @@ class page_organizations extends Page {
 		$can_read = false;
 		$can_remove = false;
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof OrganizationPlugin)) continue;
+			foreach ($c->getPluginImplementations("OrganizationPlugin") as $pi) {
 				if ($pi->getOrganizationCreator() == $creator) {
 					$can_create |= $pi->canInsertOrganization();
 					$can_read |= $pi->canReadOrganization();
