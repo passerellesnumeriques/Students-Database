@@ -7,6 +7,15 @@ class development extends Component {
 		return $this->requests[count($this->requests)-1];
 	}
 	
+	public function check($request_descr) {
+		$req = $this->current_request();
+		if (count($req->sql_queries) > 20)
+			PNApplication::warning("Processing of $request_descr did ".count($req->sql_queries)." database requests. Consider to optimize it. <a href='#' onclick=\"try{getIFrameWindow(window.top.findFrame('pn_application_frame'))._debug_status.showDebugPopup();}catch(e){logException(e);};return false;\">debug</a>");
+		$time = microtime(true)-$req->start_time-$req->session_load_time;
+		if ($time > 0.5)
+			PNApplication::warning("Processing of $request_descr took ".number_format($time,2)."s. Consider to optimize it. <a href='#' onclick=\"try{getIFrameWindow(window.top.findFrame('pn_application_frame'))._debug_status.showDebugPopup();}catch(e){logException(e);};return false;\">debug</a>");
+	}
+	
 	public function initRequest() {
 		//Component::allowPageWithoutLogin("development", "tools");
 		Component::allowPageWithoutLogin("development", "reset_db");

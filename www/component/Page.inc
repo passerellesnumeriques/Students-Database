@@ -144,6 +144,9 @@ abstract class Page {
 		}
 		$content = ob_get_clean();
 		ob_end_clean();
+#DEV
+		PNApplication::$instance->development->check("Page ".$path);
+#END
 		$this->startPage();
 		echo $content;
 		$this->endPage();

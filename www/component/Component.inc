@@ -234,6 +234,9 @@ abstract class Component {
 			$result = ob_get_contents();
 			ob_end_clean();
 			if ($result === "" || $result === false) $result = null;
+#DEV
+			PNApplication::$instance->development->check("Service ".$path);
+#END
 			restore_error_handler();
 			PNApplication::printJSONResult($result);
 			$done->done = true;

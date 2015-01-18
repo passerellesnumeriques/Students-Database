@@ -7,14 +7,14 @@ function debug_status(container) {
 	t.icon.style.cursor = "pointer";
 	container.appendChild(t.icon);
 	
-	t.icon.onclick = function() {
-		require(["popup_window.js","tabs.js"]);
+	t.showDebugPopup = function() {
+		window.top.require(["popup_window.js","tabs.js"]);
 		service.json("development","get_debug_info",{},function(result){
-			require(["popup_window.js","tabs.js"],function(){
+			window.top.require(["popup_window.js","tabs.js"],function(){
 				var content = document.createElement("DIV");
 				//content.style.width = (getWindowWidth()-50)+"px";
 				//content.style.height = (getWindowHeight()-50)+"px";
-				var tabs_control = new tabs(content, false);
+				var tabs_control = new window.top.tabs(content, false);
 				var tab, table, tr, td;
 				
 				// requests
@@ -219,9 +219,11 @@ function debug_status(container) {
 				tab.appendChild(table);
 				tabs_control.addTab("Locks", null, tab);
 				
-				var popup = new popup_window("Debug Information", "/static/development/debug.png", content);
+				var popup = new window.top.popup_window("Debug Information", "/static/development/debug.png", content);
 				popup.show();
 			});
 		});
 	};
+	
+	t.icon.onclick = function() { t.showDebugPopup(); };
 }
