@@ -8,6 +8,7 @@ class service_check_libraries_updates extends Service {
 	public function outputDocumentation() {}
 	
 	public function execute(&$component, $input) {
+		$component->current_request()->no_process_time_warning = true;
 		switch ($input["library"]) {
 			case "phpexcel": $this->checkPHPExcel(); break;
 			case "mpdf": $this->checkMPDF(); break;

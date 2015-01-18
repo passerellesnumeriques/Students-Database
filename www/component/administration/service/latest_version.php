@@ -8,6 +8,9 @@ class service_latest_version extends Service {
 	public function outputDocumentation() { echo "<code>version</code>"; }
 	
 	public function execute(&$component, $input) {
+#DEV
+$component->current_request()->no_process_time_warning = true;
+#END
 		require_once("update_urls.inc");
 		$url = getLatestVersionURL();
 		$c = curl_init($url);

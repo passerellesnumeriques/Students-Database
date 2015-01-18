@@ -9,10 +9,10 @@ class development extends Component {
 	
 	public function check($request_descr) {
 		$req = $this->current_request();
-		if (count($req->sql_queries) > 20)
+		if (!$req->no_database_warning && count($req->sql_queries) > 20)
 			PNApplication::warning("Processing of $request_descr did ".count($req->sql_queries)." database requests. Consider to optimize it. <a href='#' onclick=\"try{getIFrameWindow(window.top.findFrame('pn_application_frame'))._debug_status.showDebugPopup();}catch(e){logException(e);};return false;\">debug</a>");
 		$time = microtime(true)-$req->start_time-$req->session_load_time;
-		if ($time > 0.5)
+		if (!$req->no_process_time_warning && $time > 0.5)
 			PNApplication::warning("Processing of $request_descr took ".number_format($time,2)."s. Consider to optimize it. <a href='#' onclick=\"try{getIFrameWindow(window.top.findFrame('pn_application_frame'))._debug_status.showDebugPopup();}catch(e){logException(e);};return false;\">debug</a>");
 	}
 	
@@ -65,6 +65,8 @@ class DevRequest {
 	public $start_time, $end_time = -1;
 	public $session_load_time = -1;
 	public $process_time = -1;
+	public $no_database_warning = false;
+	public $no_process_time_warning = false;
 	
 }
 ?>

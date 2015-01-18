@@ -137,6 +137,12 @@ abstract class DataDisplay {
 	public function getData($row, $resultFromBuildSQL) {
 		return @$row[$resultFromBuildSQL["data"]];
 	}
+	public function getNeededColumnsToDetermineData() {
+		return null;
+	}
+	public function determineDataFromColumns($columns) {
+		return null;
+	}
 	/** Given a table key, return the key to send. By default returns the same.
 	 * @param integer|array $key the key in the table
 	 * @return mixed the value to send as the key
@@ -2077,6 +2083,23 @@ class AgeDataDisplay extends CalculationDataDisplay {
 		}
 		$keys["key"] = $key_alias;
 		return $keys;
+	}
+	
+	public function getNeededColumnsToDetermineData() {
+		return array($this->birthdate_column);
+	}
+	public function determineDataFromColumns($columns) {
+		$date = $columns[$this->birthdate_column];
+		if ($date == null) return null;
+		$s = explode("-", $columns[$this->birthdate_column]);
+		$y = intval($s[0]);
+		$m = intval($s[1]);
+		$d = intval($s[2]);
+		$now = getdate();
+		$age = $now["year"]-$y;
+		if ($now["mon"] < $m) $age--;
+		else if ($now["mon"] == $m && $now["mday"] < $d) $age--;
+		return $age;
 	}
 	
 }

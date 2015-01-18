@@ -132,12 +132,16 @@ namespace datamodel {
 					$table_alias = "THE_TABLE";
 					$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
 					$q->whereKey($path->table->getName(), $key_value);
-					$path->table->prepareSelectToDetermineWriteAccess($q, $table_alias);
-					if ($q->limit(0,1)->executeSingleRow() == null)
-						$readonly = true;
+					if ($path->table->prepareSelectToDetermineWriteAccess($q, $table_alias)) {
+						$rows = $q->limit(0,1)->execute();
+						$rows = $path->table->filterWriteAccess($rows);
+						if (count($rows) == 0)
+							$readonly = true;
+					}
 				}
 			}
 			foreach ($list as $data) {
+				/* @var $data DataDisplay */
 				if (!$data->canAccess($path->sub_model)) return;
 				$can_edit = $is_new ? $data->isEditableForNewData() : ($data->isEditable() && !$readonly);
 				if ($is_new && !$can_edit && !$values->hasDataValue($path->table->getName(), $data)) continue;
@@ -149,26 +153,42 @@ namespace datamodel {
 				$tf = $data->getTypedField($path->sub_model);
 				if (!$is_new)
 					$kv = $key_value;
-				if ($values->hasDataValue($path->table->getName(), $data))
+				$has = false;
+				if (!$values->hasDataValue($path->table->getName(), $data)) {
+					$cols = $data->getNeededColumnsToDetermineData();
+					if ($cols <> null) {
+						$has = true;
+						$columns_values = array();
+						foreach ($cols as $colname) 
+							if (!$values->hasColumnValue($path->table->getName(), $colname)) { $has = false; break; }
+							else $columns_values[$colname] = $values->getColumnValue($path->table->getName(), $colname);
+						if ($has)
+							$values->addTableDataValue($path->table->getName(), $data->getDisplayName(), $value = $data->determineDataFromColumns($columns_values));
+					}
+				} else {
 					$value = $values->getDataValue($path->table->getName(), $data);
-				else if ($is_new && $prefilled_values->hasDataValue($path->table->getName(), $data))
-					$value = $prefilled_values->getDataValue($path->table->getName(), $data);
-				else if ($is_new)
-					$value = $data->getNewData();
-				else {
-					$table_alias = "THE_TABLE";
-					$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
-					$q->whereKey($path->table->getName(), $key_value);
-					$keys = $data->buildSQL($q, $path,false);
-					$row = $q->executeSingleRow();
-					if ($keys["key"] <> null)
-						$kv = $row[$keys["key"]];
-					if ($keys["data"] <> null)
-						$value = $data->getData($row, $keys);
+					$has = true;
+				}
+				if (!$has) {
+					if ($is_new && $prefilled_values->hasDataValue($path->table->getName(), $data))
+						$value = $prefilled_values->getDataValue($path->table->getName(), $data);
+					else if ($is_new)
+						$value = $data->getNewData();
 					else {
-						$rows = array($row);
-						$data->performSubRequests($q, $rows, $keys, $path);
-						$value = $data->getData($rows[0], $keys);
+						$table_alias = "THE_TABLE";
+						$q = \SQLQuery::create()->select(array($path->table->getName()=>$table_alias))->selectSubModelForTable($path->table, $path->sub_model);
+						$q->whereKey($path->table->getName(), $key_value);
+						$keys = $data->buildSQL($q, $path,false);
+						$row = $q->executeSingleRow();
+						if ($keys["key"] <> null)
+							$kv = $row[$keys["key"]];
+						if ($keys["data"] <> null)
+							$value = $data->getData($row, $keys);
+						else {
+							$rows = array($row);
+							$data->performSubRequests($q, $rows, $keys, $path);
+							$value = $data->getData($rows[0], $keys);
+						}
 					}
 				}
 				if (!$is_new)

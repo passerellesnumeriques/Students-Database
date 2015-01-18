@@ -7,6 +7,10 @@ class service_store_stats extends Service {
 	public function outputDocumentation() { echo "none"; }
 	
 	public function execute(&$component, $input) {
+#DEV
+$component->current_request()->no_process_time_warning = true;
+#END
+		
 		global $pn_app_version;
 		if (PNApplication::$instance->user_management->user_id > 0)
 			$user = PNApplication::$instance->user_management->domain."/".PNApplication::$instance->user_management->username;

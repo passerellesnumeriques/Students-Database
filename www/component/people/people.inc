@@ -231,7 +231,7 @@ class people extends Component {
 		$q->select(array("People"=>$table_alias));
 		$q->whereValue($table_alias, "id", $people_id);
 		$table = DataModel::get()->getTable("People");
-		$table->prepareSelectToDetermineWriteAccess($q, $table_alias);
+		if (!$table->prepareSelectToDetermineWriteAccess($q, $table_alias)) return true;
 		$rows = $q->execute();
 		$rows = $table->filterWriteAccess($rows);
 		if (count($rows) == 0) return false;
@@ -240,7 +240,8 @@ class people extends Component {
 	public function canRemove($people_id, &$locks) {
 		$q = SQLQuery::create()->select("People");
 		$q->whereValue("People","id",$people_id);
-		DataModel::get()->getTable("People")->prepareSelectToDetermineRemoveAccess($q, "People", $locks);
+		$q->field("People","id");
+		if (!DataModel::get()->getTable("People")->prepareSelectToDetermineRemoveAccess($q, "People", $locks)) return true;
 		$rows = $q->execute();
 		$rows = DataModel::get()->getTable("People")->filterRemoveAccess($rows);
 		return count($rows) == 1;		
