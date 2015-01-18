@@ -8,47 +8,35 @@ class service_get_replies extends Service {
 	public function outputDocumentation() { echo "List of NewsObject, containing reply_to as well"; }
 	
 	public function execute(&$component, $input) {
-		$news = SQLQuery::create()->bypassSecurity()
-			->select("News")
-			->whereIn("News", "id", $input["ids"])
-			->field("News", "id")
-			->field("News", "section")
-			->field("News", "category")
-			->execute();
+		$accessible = "";
 		require_once("component/news/NewsPlugin.inc");
-		for ($i = 0; $i < count($news); $i++) {
-			$found = false;
-			foreach (PNApplication::$instance->components as $c) {
-				foreach ($c->getPluginImplementations() as $pi) {
-					if (!($pi instanceof NewsPlugin)) continue;
-					foreach ($pi->getSections() as $section) {
-						if ($section->getName() <> $news[$i]["section"]) continue;
-						if ($section->getAccessRight() == 0) continue;
-						if ($news[$i]["category"] == null) {
-							$found = true;
-							break;
-						}
-						foreach ($section->getCategories() as $cat) {
-							if ($cat->getName() <> $news[$i]["category"]) continue;
-							if ($cat->getAccessRight() == 0) continue;
-							$found = true;
-							break;
-						}
-						if ($found) break;
+		foreach (PNApplication::$instance->components as $c) {
+			foreach ($c->getPluginImplementations() as $pi) {
+				if (!($pi instanceof NewsPlugin)) continue;
+				foreach ($pi->getSections() as $section) {
+					if ($section->getAccessRight() == 0) continue;
+					$where = "(`section`='".SQLQuery::escape($section->getName())."' AND `category` IN (NULL";
+					foreach ($section->getCategories() as $cat) {
+						if ($cat->getAccessRight() == 0) continue;
+						$where .= ",'".SQLQuery::escape($cat->getName())."'";
 					}
-					if ($found) break;
+					$where .= "))";
+					if ($accessible <> "") $accessible .= " OR ";
+					$accessible .= $where;
 				}
-				if ($found) break;
-			}
-			if (!$found) {
-				array_splice($news, $i, 1);
-				$i--;
 			}
 		}
-		if (count($news) == 0) { echo "[]"; return; }
-		
-		$ids = array();
-		foreach ($news as $n) array_push($ids, $n["id"]);
+		if ($accessible == "") {
+			echo "[]";
+			return;
+		}
+		$ids = SQLQuery::create()->bypassSecurity()
+			->select("News")
+			->whereIn("News", "id", $input["ids"])
+			->where($accessible)
+			->field("News", "id")
+			->executeSingleField();
+		if (count($ids) == 0) { echo "[]"; return; }
 		$news = SQLQuery::create()->bypassSecurity()
 			->select("News")
 			->whereIn("News", "reply_to", $ids)
