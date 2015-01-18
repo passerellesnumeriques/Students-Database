@@ -167,6 +167,20 @@ var frame_parameters = {};
 function selectPage(url) {
 	var u = new URL(url);
 	for (var name in frame_parameters) u.params[name] = frame_parameters[name];
+	// check if the current location is equivalent, to avoid reloading same page just because the parameters changed order
+	var win = getIFrameWindow(frame);
+	if (win && win.location) {
+		var url = new URL(win.location.href); 
+		if (u.path == url.path) {
+			var params = [];
+			for (var name in url.params) params.push(name+"="+url.params[name]);
+			var params2 = [];
+			for (var name in u.params) params2.push(name+"="+u.params[name]);
+			params.sort();
+			params2.sort();
+			if (params.toString() == params2.toString()) return;
+		}
+	}
 	frame.src = u.toString();
 }
 function nodeSelected(node) {
@@ -326,6 +340,29 @@ listenEvent(frame,'load',function() {
 	if (!win || !win.location) return;
 	if (win.location.href == "about:blank") return;
 	var url = new URL(win.location.href);
+	if (location.hash != null && location.hash.length > 1) {
+		var u;
+		var path = location.hash.substring(1);
+		var i = path.indexOf(encodeURIComponent("?"));
+		if (i < 0) u = new URL(path);
+		else u = new URL(path.substr(0,i)+decodeURIComponent(path.substr(i)));
+		// check if current hash is equivalent
+		if (u.path == url.path) {
+			var params = [];
+			for (var name in url.params) {
+				if (typeof frame_parameters[name] != 'undefined') continue;
+				params.push(name+"="+url.params[name]);
+			}
+			var params2 = [];
+			for (var name in u.params) {
+				if (typeof frame_parameters[name] != 'undefined') continue;
+				params2.push(name+"="+u.params[name]);
+			}
+			params.sort();
+			params2.sort();
+			if (params.toString() == params2.toString()) return; // exactly the same URL, do not modify the hash which will lead to reload again the page
+		}
+	}
 	var hash = "#"+url.path;
 	var params = "";
 	for (var name in url.params) {

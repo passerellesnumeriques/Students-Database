@@ -548,6 +548,13 @@ function pageLoaded(url) {
 			var iu = new URL(item.getAttribute("href"));
 			if (iu.hash == u.hash) oks2.push(item);
 		}
+		if (oks2.length == 0) {
+			for (var i = 0; i < oks.length; ++i) {
+				var item = oks[i];
+				var iu = new URL(item.getAttribute("href"));
+				if (u.hash.startsWith(iu.hash)) oks2.push(item);
+			}
+		}
 		if (oks2.length > 0) oks = oks2;
 	}
 	if (oks.length > 1 && u.params.length > 0) {
