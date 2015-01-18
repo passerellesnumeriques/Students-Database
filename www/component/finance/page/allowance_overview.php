@@ -81,7 +81,22 @@ class page_allowance_overview extends Page {
 				->whereNull("StudentAllowance","date")
 				->execute()
 				;
-			foreach ($base_amount as $a) $students[$a["student"]]["base_amount"] = $a;
+			$students_allowances_ids = array();
+			$students_deductions = array();
+			foreach ($base_amount as $a) {
+				$students[$a["student"]]["base_amount"] = $a;
+				$students_deductions[$a["id"]] = array();
+				array_push($students_allowances_ids, $a["id"]);
+			}
+			$list = SQLQuery::create()
+				->select("StudentAllowanceDeduction")
+				->whereIn("StudentAllowanceDeduction","student_allowance",$students_allowances_ids)
+				->execute();
+			$deductions = array();
+			foreach ($list as $d) {
+				if (!in_array($d["name"], $deductions)) array_push($deductions, $d["name"]);
+				array_push($students_deductions[$d["student_allowance"]], $d);
+			}
 			if ($can_edit) {
 				echo "<div class='page_section_title shadow'>";
 				$can_skip = count($base_amount) > 0 && count($base_amount) < count($students);
@@ -90,19 +105,48 @@ class page_allowance_overview extends Page {
 					echo "<button class='action' onclick='modifyBaseAmount(".$batch["id"].");'>Modify Base Amount</button>";
 				echo "</div>";
 			}
+			$cols_deductions = count($deductions);
+			if ($cols_deductions == 0) $cols_deductions = 1;
 			echo "<table class='grid selected_hover'><thead>";
 			echo "<tr>";
-				echo "<th>Student</th>";
-				echo "<th>Base amount</th>";
+				echo "<th rowspan=2>Student</th>";
+				echo "<th rowspan=2>Base amount</th>";
+				echo "<th colspan=$cols_deductions class='first_in_container last_in_container'>Deductions";
+				if ($can_edit) echo " <button class='flat small_icon' title='Add a new deduction for all students' onclick='addGlobalDeduction(".$batch["id"].");'><img src='".theme::$icons_10["add"]."'/></button>";
+				echo "</th>";
+				echo "<th rowspan=2>Total</th>";
+			echo "</tr>";
+			echo "<tr>";
+				if (count($deductions) == 0) echo "<th></th>";
+				else foreach ($deductions as $name) echo "<th>".toHTML($name)."</th>";
 			echo "</tr>";
 			echo "</thead><tbody>";
 			foreach ($students as $student) {
 				echo "<tr student_name=".toHTMLAttribute($student["last_name"]." ".$student["first_name"]).">";
 				echo "<td>".toHTML($student["last_name"]." ".$student["first_name"])."</td>";
 				if (!isset($student["base_amount"])) {
-					echo "<td style='font-style:italic;cursor:pointer;' title='Click to set an allowance for this student' onclick='setBaseAmountForStudent(".$student["people_id"].",undefined,this.parentNode);'>No allowance</td>";
+					echo "<td colspan=".(2+$cols_deductions)." style='font-style:italic;cursor:pointer;' title='Click to set an allowance for this student' onclick='setBaseAmountForStudent(".$student["people_id"].",undefined,this.parentNode);'>No allowance</td>";
 				} else {
 					echo "<td style='text-align:right;cursor:pointer' title='Click to edit the base amount for this student' onclick='setBaseAmountForStudent(".$student["people_id"].",".$student["base_amount"]["amount"].",this.parentNode);'>".$student["base_amount"]["amount"]."</td>";
+					$total = $student["base_amount"]["amount"];
+					if (count($deductions) == 0) echo "<td></td>";
+					else for ($i = 0; $i < count($deductions); $i++) {
+						$cl = "";
+						if ($i == 0) $cl = "first_in_container";
+						if ($i == count($deductions)-1) $cl .= ($cl <> "" ? " " : "")."last_in_container";
+						echo "<td style='text-align:right;' class='$cl'>";
+						$deduc = null;
+						foreach ($students_deductions[$student["base_amount"]["id"]] as $d)
+							if ($d["name"] == $deductions[$i]) { $deduc = $d; break; }
+						if ($deduc <> null) {
+							echo $deduc["amount"];
+							$total -= $deduc["amount"];
+						}
+						echo "</td>";
+					}
+					echo "<td style='text-align:right'>";
+					echo number_format($total,2);
+					echo "</td>";
 				}
 				echo "</tr>";
 			}
@@ -119,13 +163,34 @@ class page_allowance_overview extends Page {
 		Except for students having no allowance
 	</div>
 </div>
-<div style='display:none;padding:10px;' id='popup_modify_base_amount'>
-	Change the amount by <span id='modify_base_amount'></span><br/>
-	A positive value will increase the base amount for every student<br/>
-	A negative value will decrease it
+<div style='display:none;' id='popup_modify_base_amount'>
+	<div style='padding:10px;'>
+		Change the amount by <span id='modify_base_amount'></span><br/>
+	</div>
+	<div class='info_footer'>
+		<div style='display:inline-block;vertical-align:top'>
+			<img src='<?php echo theme::$icons_32["info"];?>'/>
+		</div>
+		<div style='display:inline-block;vertical-align:top'>
+			A positive value will increase the base amount for every student<br/>
+			A negative value will decrease it
+		</div>
+	</div>
 </div>
 <div style='display:none;padding:10px;' id='popup_set_base_amount_for_student'>
 	Enter the base amount: <span id='base_amount_for_student'></span>
+</div>
+<div style='display:none;padding:10px;' id='popup_add_global_deduction'>
+	<table>
+		<tr>
+			<td>Name of the deduction</td>
+			<td><input type='text' size=30 maxlength=30 id='global_deduction_name'/></td>
+		</tr>
+		<tr>
+			<td>Amount to deduct</td>
+			<td id='global_deduction_amount'></td>
+		</tr>
+	</table>
 </div>
 <script type='text/javascript'>
 var batches = <?php echo json_encode($batches);?>;
@@ -172,7 +237,8 @@ function modifyBaseAmount(batch_id) {
 	popup.keep_content_on_close = true;
 	modify_base_amount.setData(0);
 	popup.addOkCancelButtons(function() {
-		if (base_amount_for_batch.hasError()) { alert("Please enter a valid amount"); return; }
+		if (modify_base_amount.hasError()) { alert("Please enter a valid amount"); return; }
+		if (modify_base_amount.getCurrentData() == 0) return;
 		popup.freeze("Setting base amount...");
 		service.json("finance","modify_allowance_base_amount",{batch:batch_id,change:modify_base_amount.getCurrentData(),allowance:<?php echo $allowance_id;?>},function(res) {
 			if (!res)
@@ -206,6 +272,29 @@ function setBaseAmountForStudent(student_id, current_amount, tr) {
 		if (base_amount_for_student.hasError()) { alert("Please enter a valid amount"); return; }
 		popup.freeze("Setting base amount...");
 		service.json("finance","set_allowance_base_amount",{student:student_id,amount:base_amount_for_student.getCurrentData(),allowance:<?php echo $allowance_id;?>},function(res) {
+			if (!res)
+				popup.unfreeze();
+			else
+				location.reload();
+		});
+	});
+	popup.show();
+}
+
+var global_deduction_amount = new field_decimal(0,true,{can_be_null:false,min:0,integer_digits:10,decimal_digits:2});
+document.getElementById('global_deduction_amount').appendChild(global_deduction_amount.getHTMLElement());
+function addGlobalDeduction(batch_id) {
+	var popup = new popup_window("New Deduction",null,document.getElementById('popup_add_global_deduction'));
+	popup.keep_content_on_close = true;
+	global_deduction_amount.setData(0);
+	var input_name = document.getElementById('global_deduction_name');
+	input_name.value = "";
+	popup.addOkCancelButtons(function() {
+		var name = input_name.value.trim();
+		if (name.length == 0) { alert("Please enter a name describing the deduction"); return; }
+		if (global_deduction_amount.hasError() || global_deduction_amount.getCurrentData() == 0) { alert("Please enter a valid amount"); return; }
+		popup.freeze("Creating new deduction...");
+		service.json("finance","new_allowance_deduction",{batch:batch_id,name:name,amount:global_deduction_amount.getCurrentData(),allowance:<?php echo $allowance_id;?>},function(res) {
 			if (!res)
 				popup.unfreeze();
 			else

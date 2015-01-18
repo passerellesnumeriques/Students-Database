@@ -149,6 +149,7 @@ Array.prototype.removeUnique=function(e){var i=this.indexOf(e);if(i>=0)this.spli
 
 /** @no_doc */
 function _domRemoved(e) {
+	if (e.noDomRemoved) return;
 	if (e._ondomremoved) { e._ondomremoved.fire(e); e._ondomremoved.cleanup(); e._ondomremoved = null; }
 	if (e.nodeType != 1) return;
 	for (var i = 0; i < e.childNodes.length; ++i)

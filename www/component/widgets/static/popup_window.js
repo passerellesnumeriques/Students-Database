@@ -897,12 +897,14 @@ function popup_window(title,icon,content,hide_close_button) {
 		t.popup = null;
 		var do_close = function() {
 			if (t && (keep_content_hidden || t.keep_content_on_close)) {
+				t.content.noDomRemoved = true;
 				t.content.parentNode.removeChild(t.content);
 				t.content.style.position = 'absolute';
 				t.content.style.visibility = 'hidden';
 				t.content.style.display = "none";
 				t.content.style.top = '-10000px';
 				t.content.ownerDocument.body.appendChild(t.content);
+				delete t.content.noDomRemoved;
 			}
 			popup.removeAllChildren();
 			if (popup.parentNode)
