@@ -58,10 +58,10 @@ class TableDataValues {
 		return isset($this->columns_values[$column_name]);
 	}
 	public function hasDataValue($data) {
-		if (isset($this->data_values[$data->getDisplayName()])) return true;
+		if (array_key_exists($data->getDisplayName(), $this->data_values)) return true;
 		$cell = $data->getSingleCell();
 		if ($cell <> null) {
-			return isset($this->columns_values[$cell["column"]]);
+			return array_key_exists($cell["column"], $this->columns_values);
 		}
 		$columns = $data->getHandledColumns();
 		if (count($columns) == 0) return false;
@@ -306,6 +306,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 					$q->selectSubModelForTable($child->table, $child->sub_model);
 					$q->select($path->table->getName());
 					$q->whereKey($path->table, $key_value);
+					$need_q = false;
 					if ($child->unique) {
 						$fields_matching = array();
 						if ($child->isReverse()) {
@@ -315,6 +316,7 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 						}
 						$q->join($path->table->getName(), $child->table->getName(), $fields_matching);
 						$q->fieldsOfTable($child->table->getName());
+						$need_q = true;
 					}
 						
 					$display = DataModel::get()->getTableDataDisplay($child->table->getName());
@@ -328,66 +330,82 @@ function buildDataScreenChildren(&$page, $path, $values, $prefilled_values, &$se
 							$child->parent = new DataPath_Table($path->table, $path->sub_model);
 							$data_aliases[$data->getDisplayName()] = $data->buildSQL($q, $child, false);
 							$child->parent = $path;
+							$need_q = true;
 						}
 					}
 					//echo "<br/>\nSQL=".$q->generate()."<br/>\n";
-					$row = $q->executeSingleRow();
-					$requests = array(array($q,array($row)));
-					if ($display <> null) {
-						if ($child->isReverse())
-							$from = $child->foreign_key->name;
-						else
-							$from = null;
-						foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
-							if ($data_aliases[$data->getDisplayName()]["data"] == null) {
-								$child->parent = new DataPath_Table($path->table, $path->sub_model);
-								$rows = array($row);
-								$sub = $data->performSubRequests($q, $rows, $data_aliases[$data->getDisplayName()], $child);
-								$requests = array_merge($requests, $sub);
-								$row = $rows[0];
-								$child->parent = $path;
+					if ($need_q) {
+						$row = null;
+						if (count($q->joins) == 0 && count($q->expressions) == 0) {
+							// no join, may be we already have all the data ? so no need to make a new request ?
+							$has_all = true;
+							$row = array();
+							foreach ($q->fields as $f) {
+								if ($values->hasColumnValue($f[0], $f[1]))
+									$row[$f[2]] = $values->getColumnValue($f[0], $f[1]);
+								else { $has_all = false; break; }
 							}
+							if (!$has_all) $row = null;
 						}
-					}
-					foreach ($child->table->internalGetColumnsFor($child->sub_model) as $col) {
-						if (isset($row[$col->name]))
-							$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);
-						else {
-							$found = false;
-							foreach ($requests as $req) {
-								$sql_request = $req[0];
-								$request_results = $req[1];
-								$col_alias = $sql_request->getFieldAlias($child->table->getName(), $col->name);
-								if ($col_alias <> null && count($request_results)==1 && isset($request_results[0][$col_alias])) {
-									$values->addTableColumnValue($child->table->getName(), $col->name, $request_results[0][$col_alias]);
-									$found = true;
-									break;
+						if ($row == null)
+							$row = $q->executeSingleRow();
+						$requests = array(array($q,array($row)));
+						if ($display <> null) {
+							if ($child->isReverse())
+								$from = $child->foreign_key->name;
+							else
+								$from = null;
+							foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
+								if ($data_aliases[$data->getDisplayName()]["data"] == null) {
+									$child->parent = new DataPath_Table($path->table, $path->sub_model);
+									$rows = array($row);
+									$sub = $data->performSubRequests($q, $rows, $data_aliases[$data->getDisplayName()], $child);
+									$requests = array_merge($requests, $sub);
+									$row = $rows[0];
+									$child->parent = $path;
 								}
 							}
-							if (!$found && $col instanceof datamodel\ForeignKey) {
-								// search the primary key
-								$ft = DataModel::get()->internalGetTable($col->foreign_table);
-								$pk = $ft->getPrimaryKey();
+						}
+						foreach ($child->table->internalGetColumnsFor($child->sub_model) as $col) {
+							if (isset($row[$col->name]))
+								$values->addTableColumnValue($child->table->getName(), $col->name, $row[$col->name]);
+							else {
+								$found = false;
 								foreach ($requests as $req) {
 									$sql_request = $req[0];
 									$request_results = $req[1];
-									$col_alias = $sql_request->getFieldAlias($ft->getName(), $pk->name);
+									$col_alias = $sql_request->getFieldAlias($child->table->getName(), $col->name);
 									if ($col_alias <> null && count($request_results)==1 && isset($request_results[0][$col_alias])) {
 										$values->addTableColumnValue($child->table->getName(), $col->name, $request_results[0][$col_alias]);
 										$found = true;
 										break;
 									}
 								}
+								if (!$found && $col instanceof datamodel\ForeignKey) {
+									// search the primary key
+									$ft = DataModel::get()->internalGetTable($col->foreign_table);
+									$pk = $ft->getPrimaryKey();
+									foreach ($requests as $req) {
+										$sql_request = $req[0];
+										$request_results = $req[1];
+										$col_alias = $sql_request->getFieldAlias($ft->getName(), $pk->name);
+										if ($col_alias <> null && count($request_results)==1 && isset($request_results[0][$col_alias])) {
+											$values->addTableColumnValue($child->table->getName(), $col->name, $request_results[0][$col_alias]);
+											$found = true;
+											break;
+										}
+									}
+								}
 							}
 						}
+						if ($display <> null)
+							foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
+								$values->addTableDataValue($child->table->getName(), $data->getDisplayName(), $data->getData($row, $data_aliases[$data->getDisplayName()]));
+								$cell = $data->getSingleCell();
+								if ($cell <> null)
+									$values->addTableColumnValue($cell["table"], $cell["column"], $data->getData($row, $data_aliases[$data->getDisplayName()]));
+							}
 					}
-					if ($display <> null)
-						foreach ($display->getDataDisplay($from, $child->sub_model) as $data) {
-							$values->addTableDataValue($child->table->getName(), $data->getDisplayName(), $data->getData($row, $data_aliases[$data->getDisplayName()]));
-							$cell = $data->getSingleCell();
-							if ($cell <> null)
-								$values->addTableColumnValue($cell["table"], $cell["column"], $data->getData($row, $data_aliases[$data->getDisplayName()]));
-						}
 				//} else {
 				//	// not unique, just put the key
 				//	if ($child->isReverse())
