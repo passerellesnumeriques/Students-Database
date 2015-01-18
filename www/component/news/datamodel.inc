@@ -14,6 +14,7 @@ $model->addTable("News")
 	->addEnum("type", array("activity","update"))
 	->addForeignKey("reply_to", "News", true, false, true, true, false)
 	->setRoot()
+	->addIndex("reply_to")
 	;
 
 ?>
