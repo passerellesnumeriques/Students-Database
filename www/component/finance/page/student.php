@@ -27,11 +27,13 @@ class page_student extends Page {
 					</tr>
 				</thead><tbody>
 					<?php
-					$schedules = SQLQuery::create()
-						->select("ScheduledPaymentDate")
-						->whereIn("ScheduledPaymentDate","due_operation",array_keys($operations))
-						->execute()
-						;
+					if (count($operations) > 0)
+						$schedules = SQLQuery::create()
+							->select("ScheduledPaymentDate")
+							->whereIn("ScheduledPaymentDate","due_operation",array_keys($operations))
+							->execute();
+					else
+						$schedules = array();
 					$regular_payment_ids = array();
 					$loans_ids = array();
 					foreach ($schedules as $sched) {

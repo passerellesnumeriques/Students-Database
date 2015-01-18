@@ -7,8 +7,25 @@ class page_allowance_overview extends Page {
 		require_once 'component/students_groups/page/TreeFrameSelection.inc';
 		$allowance_id = $_GET["id"];
 		$allowance = SQLQuery::create()->select("Allowance")->whereValue("Allowance","id",$allowance_id)->executeSingleRow();
-		$can_manage = PNApplication::$instance->user_management->hasRight("manage_finance");
-		$can_edit = PNApplication::$instance->user_management->hasRight("edit_student_finance");
+		if (@$_GET["edit"] == "true") {
+			$can_manage = PNApplication::$instance->user_management->hasRight("manage_finance");
+			$can_edit = PNApplication::$instance->user_management->hasRight("edit_student_finance");
+		} else {
+			$can_edit = false;
+			$can_manage = false;
+			$may_edit = PNApplication::$instance->user_management->hasRight("manage_finance") || PNApplication::$instance->user_management->hasRight("edit_student_finance");
+		}
+
+		$locked_by = null;
+		if ($can_edit) {
+			require_once 'component/data_model/DataBaseLock.inc';
+			$lock_id = DataBaseLock::lockTable("StudentAllowance", $locked_by);
+			if ($lock_id <> null) DataBaseLock::generateScript($lock_id);
+			else {
+				$can_edit = $can_manage = false;
+				$may_edit = true;
+			}
+		}
 		
 		if ($can_edit) {
 			$this->requireJavascript("typed_field.js");
@@ -22,7 +39,11 @@ class page_allowance_overview extends Page {
 	<div class='page_title' style='flex:none'>
 		<?php
 		if (TreeFrameSelection::isSingleBatch() && $can_manage)
-			echo "<button class='action red' style='float:right' onclick='removeForBatch(".TreeFrameSelection::getBatchId().");'><img src='".theme::$icons_16["remove_white"]."'/> Remove</button>"; 
+			echo "<button class='action red' style='float:right' onclick='removeForBatch(".TreeFrameSelection::getBatchId().");'><img src='".theme::$icons_16["remove_white"]."'/> Remove</button>";
+		if (!$can_manage && !$can_edit && $may_edit)
+			echo "<button class='action' style='float:right' onclick=\"var u = new window.URL(location.href);u.params['edit'] = true; location.href = u.toString();\"><img src='".theme::$icons_16["edit"]."'/> Edit</button>";
+		else if ($can_manage || $can_edit)
+			echo "<button class='action' style='float:right' onclick=\"var u = new window.URL(location.href);delete u.params.edit; location.href = u.toString();\"><img src='".theme::$icons_16["no_edit"]."'/> Stop Editing</button>";
 		?>
 		<img src='/static/finance/finance_32.png'/>
 		<?php echo toHTML($allowance["name"])?>
@@ -37,6 +58,11 @@ class page_allowance_overview extends Page {
 			?>
 		</div>
 	</div>
+	<?php 
+	if ($locked_by <> null) {
+		echo "<div class='info_header'>You cannot edit because ".toHTML($locked_by)." is currently editing allowances.</div>";
+	}
+	?>
 	<div style='flex: 1 1 100%;overflow:auto;background-color:white'>
 		<?php 
 		$batches_ids = TreeFrameSelection::getBatchesIds();
@@ -118,26 +144,34 @@ class page_allowance_overview extends Page {
 			echo "</tr>";
 			echo "<tr>";
 				if (count($deductions) == 0) echo "<th></th>";
-				else foreach ($deductions as $name) echo "<th>".toHTML($name)."</th>";
+				else foreach ($deductions as $name) {
+					echo "<th>";
+					echo toHTML($name);
+					if ($can_edit) {
+						echo "<button class='flat small_icon' title='Edit this deduction' onclick='editDeduction(".$batch["id"].",".toHTMLAttribute($name).");'><img src='".theme::$icons_10["edit"]."'/></button>";
+						echo "<button class='flat small_icon' title='Remove this deduction for all students' onclick='removeDeduction(".toHTMLAttribute($name).");'><img src='".theme::$icons_10["remove"]."'/></button>";
+					}
+					echo "</th>";
+				}
 			echo "</tr>";
 			echo "</thead><tbody>";
 			foreach ($students as $student) {
 				echo "<tr student_name=".toHTMLAttribute($student["last_name"]." ".$student["first_name"]).">";
 				echo "<td>".toHTML($student["last_name"]." ".$student["first_name"])."</td>";
 				if (!isset($student["base_amount"])) {
-					echo "<td colspan=".(2+$cols_deductions)." style='font-style:italic;cursor:pointer;' title='Click to set an allowance for this student' onclick='setBaseAmountForStudent(".$student["people_id"].",undefined,this.parentNode);'>No allowance</td>";
+					echo "<td colspan=".(2+$cols_deductions)." style='font-style:italic;".($can_edit ? "cursor:pointer;' title=".toHTMLAttribute("Click to set an allowance for ".$student["last_name"]." ".$student["first_name"])." onclick='setBaseAmountForStudent(".$student["people_id"].",undefined,this.parentNode);'" : "'").">No allowance</td>";
 				} else {
-					echo "<td style='text-align:right;cursor:pointer' title='Click to edit the base amount for this student' onclick='setBaseAmountForStudent(".$student["people_id"].",".$student["base_amount"]["amount"].",this.parentNode);'>".$student["base_amount"]["amount"]."</td>";
+					echo "<td style='text-align:right;".($can_edit ? "cursor:pointer' title=".toHTMLAttribute("Click to edit the base amount for ".$student["last_name"]." ".$student["first_name"])." onclick='setBaseAmountForStudent(".$student["people_id"].",".$student["base_amount"]["amount"].",this.parentNode);'" : "'").">".$student["base_amount"]["amount"]."</td>";
 					$total = $student["base_amount"]["amount"];
 					if (count($deductions) == 0) echo "<td></td>";
 					else for ($i = 0; $i < count($deductions); $i++) {
 						$cl = "";
 						if ($i == 0) $cl = "first_in_container";
 						if ($i == count($deductions)-1) $cl .= ($cl <> "" ? " " : "")."last_in_container";
-						echo "<td style='text-align:right;' class='$cl'>";
 						$deduc = null;
 						foreach ($students_deductions[$student["base_amount"]["id"]] as $d)
 							if ($d["name"] == $deductions[$i]) { $deduc = $d; break; }
+						echo "<td class='$cl' style='text-align:right;".($can_edit ? "cursor:pointer;' title=".toHTMLAttribute("Click to edit deduction ".$deductions[$i]." for ".$student["last_name"]." ".$student["first_name"])." onclick='editStudentDeduction(".$student["people_id"].",".($deduc <> null ? $deduc["id"] : "null").");'" : "'").">";
 						if ($deduc <> null) {
 							echo $deduc["amount"];
 							$total -= $deduc["amount"];
@@ -172,7 +206,7 @@ class page_allowance_overview extends Page {
 			<img src='<?php echo theme::$icons_32["info"];?>'/>
 		</div>
 		<div style='display:inline-block;vertical-align:top'>
-			A positive value will increase the base amount for every student<br/>
+			A positive value will increase the amount for every student<br/>
 			A negative value will decrease it
 		</div>
 	</div>
@@ -302,6 +336,32 @@ function addGlobalDeduction(batch_id) {
 		});
 	});
 	popup.show();
+}
+
+function editDeduction(batch_id, deduction_name) {
+	var popup = new popup_window("Modify "+deduction_name,null,document.getElementById('popup_modify_base_amount'));
+	popup.keep_content_on_close = true;
+	modify_base_amount.setData(0);
+	popup.addOkCancelButtons(function() {
+		if (modify_base_amount.hasError()) { alert("Please enter a valid amount"); return; }
+		if (modify_base_amount.getCurrentData() == 0) return;
+		popup.freeze("Setting new amount...");
+		service.json("finance","modify_allowance_deduction",{batch:batch_id,change:modify_base_amount.getCurrentData(),allowance:<?php echo $allowance_id;?>,deduction_name:deduction_name},function(res) {
+			if (!res)
+				popup.unfreeze();
+			else
+				location.reload();
+		});
+	});
+	popup.show();
+}
+
+function removeDeduction(deduction_name) {
+	// TODO
+}
+
+function editStudentDeduction(student_id, deduc_id) {
+	// TODO
 }
 <?php } ?>
 </script>
