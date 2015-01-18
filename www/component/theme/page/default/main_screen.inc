@@ -640,7 +640,7 @@ function initFooter() {
 	span_debug_status.style.right = "23px";
 	footer.appendChild(span_debug_status);
 	require("debug_status.js",function() {
-		new debug_status(span_debug_status);
+		window._debug_status = new debug_status(span_debug_status);
 	});
 <?php
 #END 
