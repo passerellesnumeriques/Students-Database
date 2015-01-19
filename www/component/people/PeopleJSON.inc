@@ -73,7 +73,7 @@ class PeopleJSON {
 		$data .= ",birthdate:".json_encode($row["birthdate"]);
 		$data .= ",picture_id:".json_encode($row["picture_id"]);
 		$data .= ",picture_revision:".json_encode(@$row["picture_revision"]);
-		$data .= ",can_edit:".(PNApplication::$instance->people->canModifyTypes($row["people_types"]) ? "true" : "false");
+		//$data .= ",can_edit:".(PNApplication::$instance->people->canModifyTypes($row["people_types"]) ? "true" : "false");
 		$data .= "}";
 		return $data;
 	}

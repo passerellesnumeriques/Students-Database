@@ -219,6 +219,38 @@ function debug_status(container) {
 				tab.appendChild(table);
 				tabs_control.addTab("Locks", null, tab);
 				
+				// requests
+				tab = document.createElement("DIV");
+				tab.style.width = "100%";
+				tab.style.height = "100%";
+				tab.style.padding = "10px";
+				var cb_profiling = document.createElement("INPUT");
+				cb_profiling.type = 'checkbox';
+				cb_profiling.checked = result.cfg.xdebug_profiling ? 'checked' : '';
+				tab.appendChild(cb_profiling);
+				tab.appendChild(document.createTextNode("Enable XDebug profiling"));
+				tab.appendChild(document.createElement("BR"));
+				var save_cfg = document.createElement("BUTTON");
+				save_cfg.innerHTML = "Save";
+				save_cfg.onclick = function() {
+					if (cb_profiling.checked)
+						setCookie("XDEBUG_PROFILE","1",60,"/dynamic/");
+					else
+						removeCookie("XDEBUG_PROFILE","/dynamic/");
+				};
+				tab.appendChild(save_cfg);
+				tab.appendChild(document.createElement("BR"));
+				var phpinfo = document.createElement("A");
+				phpinfo.innerHTML = "php info";
+				phpinfo.href = '#';
+				phpinfo.onclick = function() {
+					window.top.popupFrame(null,"PHP Info","/dynamic/development/page/phpinfo");
+					return false;
+				};
+				tab.appendChild(phpinfo);
+				tabs_control.addTab("Configuration", null, tab);
+
+				
 				var popup = new window.top.popup_window("Debug Information", "/static/development/debug.png", content);
 				popup.show();
 			});

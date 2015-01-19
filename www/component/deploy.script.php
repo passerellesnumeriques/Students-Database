@@ -205,7 +205,20 @@ function processComponent($dirname, $name, &$done, &$components_order, &$compone
 	foreach ($deps as $dep) processComponent($dirname, $dep, $done, $components_order, $components_content);
 	array_push($components_order, $name);
 }
+
+function browseComponentForJS($fs_path, $url_path, &$mapping) {
+	$d = opendir($fs_path);
+	while (($filename = readdir($d)) <> null) {
+		if ($filename == "." || $filename == "..") continue;
+		if (is_dir($path."/".$filename))
+			browseComponentForJS($path."/".$filename, $url_path.$filename."/");
+		else if (substr($filename,strlen($filename)-3) == ".js")
+			$mapping[$filename] = $url_path.$filename;
+	}
+	closedir($d);
 }
+
+} // end of functions
 $done = array();
 $components_order = array();
 $components_content = "";
@@ -233,5 +246,14 @@ $s .= "?>";
 $f = fopen(dirname(__FILE__)."/PNApplication.inc","w");
 if (!$f) die("Unable to write in PNApplication.inc");
 fwrite($f, $s);
+fclose($f);
+
+// generate javascript mapping for require function
+$js_map = array();
+foreach ($components_order as $name) {
+	browseComponentForJS(dirname(__FILE__)."/$name/static", "/static/$name/", $js_map);
+}
+$f = fopen(dirname(__FILE__)."/javascript.paths","w");
+fwrite($f, "<?php return ".var_export($js_map,true).";?>");
 fclose($f);
 ?>
