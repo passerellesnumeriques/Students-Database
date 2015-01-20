@@ -28,15 +28,19 @@ class user_management extends Component {
 		$this->logged_out = new Event();
 	}
 	
-	public function getPluginImplementations() {
-		require_once("UserManagementAdministrationPlugin.inc");
-		require_once("UserPeopleTypePlugin.inc");
-		require_once("UserPeopleProfilePagePlugin.inc");
-		return array(
-			new UserManagementAdministartionPlugin(),
-			new UserPeopleTypePlugin(),
-			new UserPeopleProfilePagePlugin()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "AdministrationPlugin":
+				require_once("UserManagementAdministrationPlugin.inc");
+				return array(new UserManagementAdministartionPlugin());
+			case "PeopleTypePlugin":
+				require_once("UserPeopleTypePlugin.inc");
+				return array(new UserPeopleTypePlugin());
+			case "PeopleProfilePagePlugin":
+				require_once("UserPeopleProfilePagePlugin.inc");
+				return array(new UserPeopleProfilePagePlugin());
+		}
+		return array();
 	}
 
 	/**

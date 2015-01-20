@@ -24,10 +24,9 @@ class page_send_feedback extends Page {
 		<?php
 		$sections = array();
 		foreach (PNApplication::$instance->components as $cname=>$comp)
-			foreach ($comp->getPluginImplementations() as $pi)
-				if ($pi instanceof ApplicationSectionPlugin)
-					if ($pi->canAccess())
-						array_push($sections, $pi);
+			foreach ($comp->getPluginImplementations("ApplicationSectionPlugin") as $pi)
+				if ($pi->canAccess())
+					array_push($sections, $pi);
 		usort($sections, function($s1, $s2) {
 			if ($s1->getPriority() <= $s2->getPriority()) return -1;
 			return 1;

@@ -17,8 +17,7 @@ require_once("component/people/PeopleTypePlugin.inc");
 $types = array();
 foreach (PNApplication::$instance->components as $c) {
 	if ($c == $this) continue;
-	foreach ($c->getPluginImplementations() as $pi) {
-		if (!($pi instanceof PeopleTypePlugin)) continue;
+	foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 		if ($pi->getId() == $_GET["type"]) continue;
 		if (!$pi->canWrite()) continue;
 		array_push($types, $pi);

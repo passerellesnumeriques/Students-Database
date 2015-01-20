@@ -12,9 +12,8 @@ class cron extends Component {
 		require_once("component/cron/CronTask.inc");
 		$tasks = array();
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof CronPlugin)
-					$tasks = array_merge($tasks, $pi->getTasks());
+			foreach ($c->getPluginImplementations("CronPlugin") as $pi)
+				$tasks = array_merge($tasks, $pi->getTasks());
 		return $tasks;
 	}
 	/** Get the list of maintenance tasks
@@ -24,9 +23,8 @@ class cron extends Component {
 		require_once("component/cron/CronTask.inc");
 		$tasks = array();
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-			if ($pi instanceof CronPlugin)
-			$tasks = array_merge($tasks, $pi->getMaintenanceTasks());
+			foreach ($c->getPluginImplementations("CronPlugin") as $pi)
+				$tasks = array_merge($tasks, $pi->getMaintenanceTasks());
 		return $tasks;
 	}
 	

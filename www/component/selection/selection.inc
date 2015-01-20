@@ -1,4 +1,6 @@
 <?php
+global $campaign_loaded;
+$campaign_loaded = false;
 class selection extends Component {
 	/** @var number currently selected campaign */
 	private $campaign_id = null;
@@ -35,25 +37,34 @@ class selection extends Component {
 			SQLQuery::setSubModel("SelectionCampaign", $this->campaign_id);
 	}
 	
-	public function getPluginImplementations() {
-		require_once("SelectionOrganizationPlugin.inc");
-		require_once("SelectionNewsPlugin.inc");
-		require_once("ApplicantPeopleTypePlugin.inc");
-		require_once("SelectionApplicationSection.inc");
-		require_once("ApplicantImportTemplate.inc");
-		require_once("ApplicantMaxAge.inc");
-		require_once("SocialInvestigationProfilePage.inc");
-		require_once("SocialInvestigationPicturesPlugin.inc");
-		return array(
-			new SelectionOrganizationPlugin(),
-			new SelectionNewsPlugin(),
-			new ApplicantPeopleTypePlugin(),
-			new SelectionApplicationSection(),
-			new ApplicantImportTemplate(),
-			new ApplicantMaxAge(),
-			new SocialInvestigationProfilePage(),
-			new SocialInvestigationPicturesPlugin()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "OrganizationPlugin":
+				require_once("SelectionOrganizationPlugin.inc");
+				return array(new SelectionOrganizationPlugin());
+			case "NewsPlugin":
+				require_once("SelectionNewsPlugin.inc");
+				return array(new SelectionNewsPlugin());
+			case "PeopleTypePlugin":
+				require_once("ApplicantPeopleTypePlugin.inc");
+				return array(new ApplicantPeopleTypePlugin());
+			case "ApplicationSectionPlugin":
+				require_once("SelectionApplicationSection.inc");
+				return array(new SelectionApplicationSection());
+			case "DataImportTemplatePlugin":
+				require_once("ApplicantImportTemplate.inc");
+				return array(new ApplicantImportTemplate());
+			case "PeopleCreationStep":
+				require_once("ApplicantMaxAge.inc");
+				return array(new ApplicantMaxAge());
+			case "PeopleProfilePagePlugin":
+				require_once("SocialInvestigationProfilePage.inc");
+				return array(new SocialInvestigationProfilePage());
+			case "StoragePlugin":
+				require_once("SocialInvestigationPicturesPlugin.inc");
+				return array(new SocialInvestigationPicturesPlugin());
+		}
+		return array();
 	}
 	
 	/**
@@ -119,6 +130,8 @@ class selection extends Component {
 		$this->programs = SQLQuery::create()->select("SelectionProgram")->execute();
 		// load the config
 		$this->getConfig();
+		global $campaign_loaded;
+		$campaign_loaded = true;
 	}
 	
 	/**

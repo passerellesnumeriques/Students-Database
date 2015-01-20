@@ -4,11 +4,15 @@
  */ 
 class storage extends Component {
 	
-	public function getPluginImplementations() {
-		require_once("CronPlugin.inc");
-		return array(
-			new StorageCronPlugin()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "CronPlugin":
+				require_once("CronPlugin.inc");
+				return array(
+					new StorageCronPlugin()
+				);
+		}
+		return array();
 	}
 	
 	/**
@@ -203,8 +207,7 @@ class storage extends Component {
 		if ($file["type"] == "temp") return true;
 		require_once("StoragePlugin.inc");
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof StoragePlugin)) continue;
+			foreach ($c->getPluginImplementations("StoragePlugin") as $pi) {
 				if ($pi->getType() <> $file["type"]) continue;
 				return $pi->canRead($file["id"]);
 			}
@@ -219,8 +222,7 @@ class storage extends Component {
 		if ($file["type"] == "temp") return true;
 		require_once("StoragePlugin.inc");
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi) {
-			if (!($pi instanceof StoragePlugin)) continue;
+			foreach ($c->getPluginImplementations("StoragePlugin") as $pi) {
 			if ($pi->getType() <> $file["type"]) continue;
 			return $pi->canWrite($file["id"]);
 		}

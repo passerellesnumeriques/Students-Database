@@ -1,18 +1,22 @@
 <?php 
 class documents extends Component {
 
-	public function getPluginImplementations() {
-		require_once("DocumentsStorage.inc");
-		return array(
-			new DocumentsStorage()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "StoragePlugin":
+				require_once("DocumentsStorage.inc");
+				return array(
+					new DocumentsStorage()
+				);
+		}
+		return array();
 	}
 	
 	public function getAttachedDocumentsPlugin($table, $type) {
 		require_once("DocumentsPlugin.inc");
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if (($pi instanceof AttachedDocumentsPlugin) && $pi->getTable() == $table && $pi->getType() == $type)
+			foreach ($c->getPluginImplementations("AttachedDocumentsPlugin") as $pi)
+				if ($pi->getTable() == $table && $pi->getType() == $type)
 					return $pi;
 		return null;
 	}

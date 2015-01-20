@@ -1,6 +1,6 @@
-<?php header("Content-Type: text/javascript");?>
-var javascripts_paths = {
-<?php 
+<?php header("Content-Type: text/javascript");
+#DEV
+echo "var javascripts_paths = {"; 
 global $first_file;
 $first_file = true;
 function browse($path, $component, $sub_path) {
@@ -25,8 +25,12 @@ while (($filename = readdir($dir)) <> null) {
 		browse("component/".$filename."/static", $filename, "/");
 }
 closedir($dir);
+echo "};";
+#END
+#PROD
+#echo "var javascripts_paths = ".json_encode(include("component/javascript.paths")).";";
+#END
 ?>
-};
 
 function require(javascript,handler) {
 	if (javascript instanceof Array || getObjectClassName(javascript) == "Array") {

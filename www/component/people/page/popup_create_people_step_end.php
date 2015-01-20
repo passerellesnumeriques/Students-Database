@@ -16,9 +16,8 @@ class page_popup_create_people_step_end extends Page {
 			require_once("component/people/PeopleCreationStepPlugin.inc");
 			$steps = array();
 			foreach (PNApplication::$instance->components as $c)
-				foreach ($c->getPluginImplementations() as $pi)
-					if ($pi instanceof PeopleCreationStep)
-						array_push($steps, array("plugin"=>$pi, "peoples_ids"=>array()));
+				foreach ($c->getPluginImplementations("PeopleCreationStep") as $pi)
+					array_push($steps, array("plugin"=>$pi, "peoples_ids"=>array()));
 			$list = PNApplication::$instance->people->getPeoples($peoples_ids, false, false, false, true);
 			foreach ($list as $p) {
 				for ($i = 0; $i < count($steps); $i++) {
@@ -58,9 +57,8 @@ popup.close();
 		require_once("component/people/PeopleCreationStepPlugin.inc");
 		$plugin = null;
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof PeopleCreationStep)
-					if ($pi->getId() == $plugin_id) { $plugin = $pi; break; }
+			foreach ($c->getPluginImplementations("PeopleCreationStep") as $pi)
+				if ($pi->getId() == $plugin_id) { $plugin = $pi; break; }
 			if ($plugin <> null) break;
 		}
 ?>

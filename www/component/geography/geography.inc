@@ -30,15 +30,25 @@ class geography extends Component {
 		$this->local_country_divisions = null;
 	}
 	
-	public function getPluginImplementations() {
-		require_once("GeographyAdministrationPlugin.inc");
-		require_once("GeographicAreaSearchPlugin.inc");
-		require_once("GeographicAreaType.inc");
-		return array(
-			new GeographyAdministrationPlugin(),
-			new GeographicAreaSearchPlugin(),
-			new GeographicAreaType()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "AdministrationPlugin":
+				require_once("GeographyAdministrationPlugin.inc");
+				return array(
+					new GeographyAdministrationPlugin(),
+				);
+			case "SearchPlugin":
+				require_once("GeographicAreaSearchPlugin.inc");
+				return array(
+					new GeographicAreaSearchPlugin(),
+				);
+			case "DataModelCustomizationPlugin":
+				require_once("GeographicAreaType.inc");
+				return array(
+					new GeographicAreaType()
+				);
+		}
+		return array();
 	}
 	
 	public function getCountryId($country_code) {

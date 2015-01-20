@@ -1093,3 +1093,6 @@ function setCookie(cname,cvalue,expires_minutes,url) {
 	var expires = "expires="+d.toGMTString();
 	document.cookie = cname + "=" + cvalue + "; " + expires + "; Path="+url;
 }
+function removeCookie(cname,url) {
+	document.cookie = cname + "=; expires=Thu, 01 Jan 1970 00:00:01 GMT; Path="+url;
+}

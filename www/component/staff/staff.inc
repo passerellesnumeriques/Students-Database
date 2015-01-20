@@ -4,15 +4,19 @@
  */
 class staff extends Component {
 	
-	public function getPluginImplementations() {
-		require_once("StaffAdministrationPlugin.inc");
-		require_once("StaffPeopleTypePlugin.inc");
-		require_once("StaffBirthdaysCalendar.inc");
-		return array(
-			new StaffAdministrationPlugin(),
-			new StaffPeopleTypePlugin(),
-			new StaffBirthdaysCalendar()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "AdministrationPlugin":
+				require_once("StaffAdministrationPlugin.inc");
+				return array(new StaffAdministrationPlugin());
+			case "PeopleTypePlugin":
+				require_once("StaffPeopleTypePlugin.inc");
+				return array(new StaffPeopleTypePlugin());
+			case "CustomCalendarPlugin":
+				require_once("StaffBirthdaysCalendar.inc");
+				return array(new StaffBirthdaysCalendar());
+		}
+		return array();
 	}
 	
 	public function createDepartment($name, $default_user_roles, $bypass_security = false) {

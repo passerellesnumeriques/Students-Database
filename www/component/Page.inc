@@ -79,17 +79,18 @@ abstract class Page {
 	 */
 	public final function requireJavascript($js_filename, $onload = "") {
 		if ($this->javascript_paths == null) {
+#DEV
 			$this->javascript_paths = array();
-			$dir = opendir("component");
-			while (($filename = readdir($dir)) <> null) {
-				if (!is_dir("component/".$filename)) continue;
-				if ($filename == "." || $filename == "..") continue;
-				if (file_exists("component/".$filename."/static"))
-					$this->browseJavascripts("component/".$filename."/static", $filename, "/");
+			foreach (PNApplication::$instance->components as $cname=>$c) {
+				if (file_exists("component/$cname/static"))
+					$this->browseJavascripts("component/$cname/static", $cname, "/");
 			}
-			closedir($dir);
+#END
+#PROD
+#$this->javascript_paths = include("component/javascript.paths");
+#END
 		}
-		$this->addJavascript($this->javascript_paths[$js_filename], $onload);
+			$this->addJavascript($this->javascript_paths[$js_filename], $onload);
 	}
 	/** Go through every component to find javascript files
 	 * @param string $path current full path

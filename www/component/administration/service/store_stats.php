@@ -8,7 +8,7 @@ class service_store_stats extends Service {
 	
 	public function execute(&$component, $input) {
 #DEV
-$component->current_request()->no_process_time_warning = true;
+PNApplication::$instance->development->current_request()->no_process_time_warning = true;
 #END
 		
 		global $pn_app_version;

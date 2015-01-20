@@ -9,7 +9,7 @@ class service_latest_version extends Service {
 	
 	public function execute(&$component, $input) {
 #DEV
-$component->current_request()->no_process_time_warning = true;
+PNApplication::$instance->development->current_request()->no_process_time_warning = true;
 #END
 		require_once("update_urls.inc");
 		$url = getLatestVersionURL();

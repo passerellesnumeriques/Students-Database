@@ -81,8 +81,8 @@ class AdministrationDashboardPlugin implements AdministrationPlugin {
 			new AdministrationPage("Dashboard", "/dynamic/administration/page/dashboard", theme::$icons_16["dashboard"], theme::$icons_32["dashboard"], "Go back to the administration dashboard", 
 				function() {
 					foreach (PNApplication::$instance->components as $name=>$c)
-						foreach ($c->getPluginImplementations() as $pi)
-							if ($pi instanceof AdministrationPlugin && !($pi instanceof AdministrationDashboardPlugin))
+						foreach ($c->getPluginImplementations("AdministrationPlugin") as $pi)
+							if (!($pi instanceof AdministrationDashboardPlugin))
 								foreach ($pi->getAdministrationPages() as $page)
 									if ($page->canAccess()) return true; // at least one page is accessible
 				}

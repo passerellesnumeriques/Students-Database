@@ -8,9 +8,8 @@ class search extends Component {
 	public function getPlugin($id) {
 		require_once("component/search/SearchPlugin.inc");
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof SearchPlugin)
-					if ($pi->getId() == $id) return $pi;
+			foreach ($c->getPluginImplementations("SearchPlugin") as $pi)
+				if ($pi->getId() == $id) return $pi;
 		return null;
 	}
 	

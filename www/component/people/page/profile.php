@@ -33,8 +33,7 @@ class page_profile extends Page {
 		
 		$pages = array();
 		foreach (PNApplication::$instance->components as $cname=>$c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeopleProfilePagePlugin)) continue;
+			foreach ($c->getPluginImplementations("PeopleProfilePagePlugin") as $pi) {
 				if (!($pi->isValidFor($people_id, $types))) continue;
 				array_push($pages, $pi);
 			}

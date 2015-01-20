@@ -165,9 +165,7 @@ function next_optional() {
 }
 
 function pn_loading_frame_loaded() {
-	setTimeout(function() {
-		pn_loading_end();
-	},1000);
+	pn_loading_end();
 }
 function pn_loading_start() {
 	if (pn_loading_visible) return;

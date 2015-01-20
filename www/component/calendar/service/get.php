@@ -27,9 +27,8 @@ class service_get extends Service {
 			$plugin = null;
 			require_once("component/calendar/CustomCalendarPlugin.inc");
 			foreach (PNApplication::$instance->components as $c)
-				foreach ($c->getPluginImplementations() as $pi)
-					if ($pi instanceof CustomCalendarPlugin)
-						if ($pi->getId() == $calendar_id) { $plugin = $pi; break; }
+				foreach ($c->getPluginImplementations("CustomCalendarPlugin") as $pi)
+					if ($pi->getId() == $calendar_id) { $plugin = $pi; break; }
 			if ($plugin == null) {
 				PNApplication::error("Unknown calendar");
 				return;

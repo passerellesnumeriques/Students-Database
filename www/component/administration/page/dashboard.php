@@ -51,8 +51,8 @@ class page_dashboard extends Page {
 require_once("component/administration/AdministrationPlugin.inc");
 $pages = array();
 foreach (PNApplication::$instance->components as $c)
-	foreach ($c->getPluginImplementations() as $pi)
-		if ($pi instanceof AdministrationPlugin && !($pi instanceof AdministrationDashboardPlugin))
+	foreach ($c->getPluginImplementations("AdministrationPlugin") as $pi)
+		if (!($pi instanceof AdministrationDashboardPlugin))
 			foreach ($pi->getAdministrationPages() as $page)
 				if ($page->canAccess())
 					array_push($pages, $page);

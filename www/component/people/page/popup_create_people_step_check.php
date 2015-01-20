@@ -283,7 +283,7 @@ class page_popup_create_people_step_check extends Page {
 				$add_types .= $t;
 			}
 			echo "</button><br/>";
-			echo "<button onclick=\"var li = document.getElementById('$id');li.parentNode.removeChild(li);return false;\">Do not create it again, and ignore it</button><br/>";
+			echo "<button onclick=\"var li = document.getElementById('$li_id');li.parentNode.removeChild(li);return false;\">Do not create it again, and ignore it</button><br/>";
 		} else {
 			foreach ($stypes as $t) {
 				$pi = PNApplication::$instance->people->getPeopleTypePlugin($t);

@@ -4,13 +4,16 @@
  */
 class data_model extends Component {
 	
-	public function getPluginImplementations() {
-		require_once("DataModelAdministrationPlugin.inc");
-		require_once("CronPlugin.inc");
-		return array(
-			new DataModelAdministrationPlugin(),
-			new DataModelCronPlugin()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "AdministrationPlugin":
+				require_once("DataModelAdministrationPlugin.inc");
+				return array(new DataModelAdministrationPlugin());
+			case "CronPlugin":
+				require_once("CronPlugin.inc");
+				return array(new DataModelCronPlugin());
+		}
+		return array();
 	}
 	
 	/**

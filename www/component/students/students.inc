@@ -6,15 +6,19 @@
  */
 class students extends Component {
 	
-	public function getPluginImplementations() {
-		require_once("StudentsNewsPlugin.inc");
-		require_once("StudentPeopleTypePlugin.inc");
-		require_once("StudentsBirthdaysCalendar.inc");
-		return array(
-			new StudentPeopleTypePlugin(),
-			new StudentsNewsPlugin(),
-			new StudentsBirthdaysCalendar()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "PeopleTypePlugin":
+				require_once("StudentPeopleTypePlugin.inc");
+				return array(new StudentPeopleTypePlugin());
+			case "NewsPlugin":
+				require_once("StudentsNewsPlugin.inc");
+				return array(new StudentsNewsPlugin());
+			case "CustomCalendarPlugin":
+				require_once("StudentsBirthdaysCalendar.inc");
+				return array(new StudentsBirthdaysCalendar());
+		}
+		return array();
 	}
 	
 	/**

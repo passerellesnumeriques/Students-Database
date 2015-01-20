@@ -16,8 +16,7 @@ class news extends Component {
 		require_once("NewsPlugin.inc");
 		$found = false;
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof NewsPlugin)) continue;
+			foreach ($c->getPluginImplementations("NewsPlugin") as $pi) {
 				foreach ($pi->getSections() as $s) {
 					if ($s->getName() <> $section) continue;
 					if ($s->getAccessRight() == 2) return true;
@@ -40,8 +39,7 @@ class news extends Component {
 		require_once("NewsPlugin.inc");
 		$found = false;
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof NewsPlugin)) continue;
+			foreach ($c->getPluginImplementations("NewsPlugin") as $pi) {
 				foreach ($pi->getSections() as $s) {
 					if ($s->getName() <> $section) continue;
 					if ($category == null) {
@@ -105,8 +103,7 @@ class news extends Component {
 		require_once("NewsPlugin.inc");
 		$found = false;
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof NewsPlugin)) continue;
+			foreach ($c->getPluginImplementations("NewsPlugin") as $pi) {
 				foreach ($pi->getSections() as $s) {
 					if ($s->getName() <> $section) continue;
 					if ($s->getAccessRight() <> 2) break;

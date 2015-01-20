@@ -22,8 +22,7 @@ class service_post_reply extends Service {
 		require_once("component/news/NewsPlugin.inc");
 		$found = false;
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof NewsPlugin)) continue;
+			foreach ($c->getPluginImplementations("NewsPlugin") as $pi) {
 				foreach ($pi->getSections() as $section) {
 					if ($section->getName() <> $root["section"]) continue;
 					if ($section->getAccessRight() <> 2) continue;

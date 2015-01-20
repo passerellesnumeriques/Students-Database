@@ -22,6 +22,9 @@ class service_get_debug_info extends Service {
 			echo "}";
 		}
 		echo "]";
+		echo ",cfg:{";
+		echo "xdebug_profiling:".json_encode(isset($_COOKIE["XDEBUG_PROFILE"]));
+		echo "}";
 		echo "}";
 	}
 	

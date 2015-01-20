@@ -15,9 +15,8 @@ class PeopleSearchPlugin implements SearchPlugin {
 		$plugins = array();
 		require_once("component/people/PeopleTypePlugin.inc");
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof PeopleTypePlugin)
-					$plugins[$pi->getId()] = $pi;
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi)
+				$plugins[$pi->getId()] = $pi;
 		$res = array();
 		foreach ($results as $row) {
 			$types = PNApplication::$instance->people->parseTypes($row["types"]);

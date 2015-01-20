@@ -1192,13 +1192,15 @@ class SQLQuery {
 		$sql = $this->generate($clean_for_counting);
 		$res = SQLQuery::db()->execute($sql);
 		if ($res === FALSE) return null;
+		return SQLQuery::db()->fetchRows($res);
+		/*
 		$a = array();
 		while (($r = SQLQuery::db()->nextRow($res)) !== FALSE) {
 			foreach ($r as $key=>$val)
 				if ($val <> null) $r[$key] = $val;
 			array_push($a, $r);
 		}
-		return $a;
+		return $a;*/
 	}
 
 	/** Execute a SELECT containing a single field(column) to return, and return an array of values from this field
@@ -1216,10 +1218,12 @@ class SQLQuery {
 	 * @return mixed the value or null
 	 */
 	public function executeSingleValue($clean_for_counting = false) {
-		$a = $this->executeSingleField($clean_for_counting);
-		if ($a === null) return null;
-		if (count($a) == 0) return null;
-		return $a[0];
+		$sql = $this->generate($clean_for_counting);
+		$res = SQLQuery::db()->execute($sql);
+		if ($res === FALSE) return null;
+		$row = SQLQuery::db()->nextRowArray($res);
+		if ($row === FALSE) return null;
+		return $row[0];
 	}
 
 	/** Execute a SELECT which should return a single row, and return this row
@@ -1231,9 +1235,11 @@ class SQLQuery {
 		if ($res === FALSE) return null;
 		$r = SQLQuery::db()->nextRow($res);
 		if ($r === FALSE) return null;
+		return $r;
+		/*
 		foreach ($r as $key=>$val)
 			if ($val <> null) $r[$key] = $val;
-		return $r;
+		return $r;*/
 	}
 	
 	/** Only to display error messages, return the name of a column, based on DataDisplay

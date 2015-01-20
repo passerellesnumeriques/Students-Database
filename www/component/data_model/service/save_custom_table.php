@@ -37,9 +37,8 @@ class service_save_custom_table extends Service {
 		/* @var $plugins DataModelCustomizationPlugin[] */
 		$plugins = array();
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi)
-				if ($pi instanceof DataModelCustomizationPlugin)
-					array_push($plugins, $pi);
+			foreach ($c->getPluginImplementations("DataModelCustomizationPlugin") as $pi)
+				array_push($plugins, $pi);
 
 		$col_name_counter = 1;
 		// get the current list of columns in the table

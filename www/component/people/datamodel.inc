@@ -22,8 +22,7 @@ $model->addTable("People")
 		$first = true;
 		foreach ($types as $type) {
 			foreach (PNApplication::$instance->components as $c) {
-				foreach ($c->getPluginImplementations() as $pi) {
-					if (!($pi instanceof PeopleTypePlugin)) continue;
+				foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 					if ($pi->getId() <> $type) continue;
 					$descr = $pi->getPeopleRowDescription($row);
 					if ($descr <> null && $descr <> "") {
@@ -49,8 +48,7 @@ $model->addTable("People")
 		$types = array();
 		require_once("PeopleTypePlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeopleTypePlugin)) continue;
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 				array_push($types, $pi);
 			}
 		}
@@ -73,8 +71,7 @@ $model->addTable("People")
 		$types = array();
 		require_once("PeopleTypePlugin.inc");
 		foreach (PNApplication::$instance->components as $name=>$c) {
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeopleTypePlugin)) continue;
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 				array_push($types, $pi);
 			}
 		}
@@ -106,8 +103,7 @@ $model->addTable("People")
 			$types = PNApplication::$instance->people->parseTypes($row["people_types"]);
 			$ok = true;
 			foreach (PNApplication::$instance->components as $name=>$c) {
-				foreach ($c->getPluginImplementations() as $pi) {
-					if (!($pi instanceof PeopleTypePlugin)) continue;
+				foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 					if (!in_array($pi->getId(), $types)) continue;
 					if (!($pi->canRemove())) { $ok = false; break; }	
 				}
@@ -123,8 +119,7 @@ $model->addTable("People")
 		require_once("PeopleTypePlugin.inc");
 		$types_ok = array();
 		foreach (PNApplication::$instance->components as $c)
-			foreach ($c->getPluginImplementations() as $pi) {
-				if (!($pi instanceof PeopleTypePlugin)) continue;
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
 				if (!in_array($pi->getId(), $types)) continue;
 				if (!$pi->canRemove()) continue;
 				if (in_array($pi->getId(), $types_ok)) continue;

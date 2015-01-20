@@ -6,13 +6,20 @@ class google extends Component {
 		Component::allowPageWithoutLogin("google", "auth");
 	}
 	
-	public function getPluginImplementations() {
-		require_once("GoogleAdministrationPlugin.inc");
-		require_once("CronPlugin.inc");
-		return array(
-			new GoogleAdministrationPlugin(),
-			new GoogleCronPlugin()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "AdministrationPlugin":
+				require_once("GoogleAdministrationPlugin.inc");
+				return array(
+					new GoogleAdministrationPlugin(),
+				);
+			case "CronPlugin":
+				require_once("CronPlugin.inc");
+				return array(
+					new GoogleCronPlugin()
+				);
+		}
+		return array();
 	}
 	
 	public function isInstalled() {

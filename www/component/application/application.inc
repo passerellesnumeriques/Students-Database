@@ -21,15 +21,25 @@ class application extends Component {
 		Component::allowServiceWithoutLogin("application", "get_backup");
 	}
 	
-	public function getPluginImplementations() {
-		require_once("GeneralNewsPlugin.inc");
-		require_once("ApplicationSectionPlugin.inc");
-		require_once("CronPlugin.inc");
-		return array(
-			new GeneralNewsPlugin(),
-			new HomeApplicationSection(),
-			new ApplicationCronPlugin()
-		);
+	public function getPluginImplementations($interface_name) {
+		switch ($interface_name) {
+			case "NewsPlugin":
+				require_once("GeneralNewsPlugin.inc");
+				return array(
+					new GeneralNewsPlugin(),
+				);
+			case "ApplicationSectionPlugin":
+				require_once("ApplicationSectionPlugin.inc");
+				return array(
+					new HomeApplicationSection(),
+				);
+			case "CronPlugin":
+				require_once("CronPlugin.inc");
+				return array(
+					new ApplicationCronPlugin()
+				);
+		}
+		return array();
 	}
 	
 	/** Store a new temporary data (expiring in 15 minutes)
