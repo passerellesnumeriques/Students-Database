@@ -64,11 +64,15 @@ field_enum.prototype.helpFillMultipleItems = function() {
 	o.text = "";
 	o.value = null;
 	helper.content.add(o);
-	var values = this.getPossibleValues();
-	for (var i = 0; i < values.length; ++i) {
+	for (var i = 0; i < this.config.possible_values.length; ++i) {
 		o = document.createElement("OPTION");
-		o.text = values[i];
-		o.value = values[i];
+		if (this.config.possible_values[i] instanceof Array) {
+			o.text = this.config.possible_values[i][1];
+			o.value = this.config.possible_values[i][0];
+		} else {
+			o.text = this.config.possible_values[i];
+			o.value = this.config.possible_values[i];
+		}
 		helper.content.add(o);
 	}
 	return helper;
