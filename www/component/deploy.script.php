@@ -210,8 +210,8 @@ function browseComponentForJS($fs_path, $url_path, &$mapping) {
 	$d = opendir($fs_path);
 	while (($filename = readdir($d)) <> null) {
 		if ($filename == "." || $filename == "..") continue;
-		if (is_dir($path."/".$filename))
-			browseComponentForJS($path."/".$filename, $url_path.$filename."/");
+		if (is_dir($fs_path."/".$filename))
+			browseComponentForJS($fs_path."/".$filename, $url_path.$filename."/", $mapping);
 		else if (substr($filename,strlen($filename)-3) == ".js")
 			$mapping[$filename] = $url_path.$filename;
 	}
