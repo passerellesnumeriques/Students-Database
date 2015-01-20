@@ -7,6 +7,11 @@ class service_menu extends Service {
 	public function inputDocumentation() { echo "No"; }
 	public function outputDocumentation() { echo "The HTML to put in the menu"; }
 	public function getOutputFormat($input) { return "text/html"; }
+	
+	public function mayUpdateSession() {
+		global $campaign_loaded;
+		return $campaign_loaded;
+	}
 		
 	public function execute(&$component, $input) {
 		$campaigns = SQLQuery::create()->select("SelectionCampaign")->execute();

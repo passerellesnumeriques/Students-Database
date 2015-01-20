@@ -1,4 +1,6 @@
 <?php
+global $campaign_loaded;
+$campaign_loaded = false;
 class selection extends Component {
 	/** @var number currently selected campaign */
 	private $campaign_id = null;
@@ -128,6 +130,8 @@ class selection extends Component {
 		$this->programs = SQLQuery::create()->select("SelectionProgram")->execute();
 		// load the config
 		$this->getConfig();
+		global $campaign_loaded;
+		$campaign_loaded = true;
 	}
 	
 	/**
