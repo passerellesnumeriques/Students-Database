@@ -576,7 +576,7 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 	}
 	if (count($subjects) == 0) return;
 	echo "<style type='text/css'>".file_get_contents(dirname(__FILE__)."/grades_details.css")."</style>";
-	echo "<div class='grades_details'>";
+	echo "<div>";
 	$header = file_get_contents(dirname(__FILE__)."/grades_details_header.html");
 	$header = str_replace("#First Name#", $student["first_name"], $header);
 	$header = str_replace("#Last Name#", $student["last_name"], $header);
@@ -587,7 +587,7 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 	echo $header;
 	$script = "";
 	foreach ($subjects as $subject) {
-		echo "<div class='subject_container'>";
+		echo "<div class='subject_container grades_details page_layout_section'>";
 			echo "<div class='subject_info_container'>";
 				echo "<div class='subject_info'>";
 					echo "<div class='subject_info_title'>Subject Code</div>";
@@ -628,9 +628,9 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 							echo $teacher["last_name"]." ".$teacher["first_name"];
 						}
 						echo "</div>";
+						echo "</div>";
 					}
 				}
-				echo "</div>";
 			echo "</div>";
 			echo "<table class='grades_table'>";
 			echo "<tr class='grades_title'>";

@@ -143,6 +143,7 @@ class service_publish extends Service {
 					SQLQuery::create()->insertMultiple("PublishedTranscriptStudentEvaluationTypeGrade", $to_insert);
 				// evaluations
 				foreach ($evaluations as $e) {
+					if ($e["type"] <> $eval_type["id"]) continue;
 					$eval_id = SQLQuery::create()->insert("PublishedTranscriptEvaluation", array(
 						"type"=>$type_id,
 						"name"=>$e["name"],
