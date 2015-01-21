@@ -670,7 +670,7 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 				if (!$first) echo "<tr class='grades'>";
 				echo "<td class='evaluation_type_total_title'>TOTAL</td>";
 				echo "<td class='evaluation_type_total_grade grade' colspan=2>";
-				if ($type["student_grade"] !== null) {
+				if (@$type["student_grade"] !== null) {
 					$id = "grades_details_".$subject["id"]."_".$student["id"]."_eval_type_".$type["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 					echo "<div id='$id'>".number_format($type["student_grade"],2)."</div>";
 					$script .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($type["student_grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
