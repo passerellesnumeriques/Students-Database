@@ -231,7 +231,7 @@ function getStyleSizes(element, style_knowledge) {
  */
 function setWidth(element, width, style_knowledge) {
 	var win = getWindowFromElement(element);
-	if (win != window) { win.setWidth(element, width, style_knowledge); return; }
+	if (win != window && win != null) { win.setWidth(element, width, style_knowledge); return; }
 	var s = getStyleSizes(element, style_knowledge);
 	// we compute the border, as follow, because using the style may be wrong in case we have a border-collapse
 	var w = width;
@@ -250,7 +250,7 @@ function setWidth(element, width, style_knowledge) {
  */
 function setHeight(element, height, style_knowledge) {
 	var win = getWindowFromElement(element);
-	if (win != window) { win.setHeight(element, height, style_knowledge); return; }
+	if (win != window && win != null) { win.setHeight(element, height, style_knowledge); return; }
 	var s = getStyleSizes(element, style_knowledge);
 	var h = height;
 	h -= s.borderTopWidth + s.borderBottomWidth;
@@ -266,7 +266,7 @@ function setHeight(element, height, style_knowledge) {
  */
 function getWidth(element, style_knowledge) {
 	var win = getWindowFromElement(element);
-	if (win != window) return win.getWidth(element, style_knowledge);
+	if (win != window && win != null) return win.getWidth(element, style_knowledge);
 	var s = getStyleSizes(element, style_knowledge);
 	return element.offsetWidth + s.marginLeft + s.marginRight;
 }
@@ -278,7 +278,7 @@ function getWidth(element, style_knowledge) {
  */
 function getHeight(element, style_knowledge) {
 	var win = getWindowFromElement(element);
-	if (win != window) return win.getHeight(element, style_knowledge);
+	if (win != window && win != null) return win.getHeight(element, style_knowledge);
 	var s = getStyleSizes(element, style_knowledge);
 	return element.offsetHeight + s.marginTop + s.marginBottom;
 }
