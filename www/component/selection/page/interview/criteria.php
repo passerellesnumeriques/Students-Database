@@ -25,6 +25,7 @@ class page_interview_criteria extends SelectionPage {
 		else foreach ($this->component->getPrograms() as $p)
 			$programs[$p["id"]] = array();
 		foreach ($programs as $pid=>$info) {
+			if ($pid == "") $pid = null;
 			$rules = SQLQuery::create()->select("InterviewEligibilityRule")->whereValue("InterviewEligibilityRule","program",$pid)->execute();
 			if (count($rules) > 0) {
 				$rules_ids = array();

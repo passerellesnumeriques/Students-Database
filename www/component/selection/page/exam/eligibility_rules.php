@@ -52,6 +52,7 @@ class page_exam_eligibility_rules extends SelectionPage {
 		else foreach ($this->component->getPrograms() as $p)
 			$programs[$p["id"]] = array();
 		foreach ($programs as $pid=>$info) {
+			if ($pid == "") $pid = null;
 			$rules = SQLQuery::create()->select("ExamEligibilityRule")->whereValue("ExamEligibilityRule","program",$pid)->execute();
 			if (count($rules) > 0) {
 				$rules_ids = array();

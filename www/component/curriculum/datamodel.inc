@@ -200,7 +200,7 @@ $model->addTable("CurriculumSubject")
 					;
 				$message = "Subject <i>".toHTML($row["fields_values"]["name"])."</i> (code <i>".toHTML($row["fields_values"]["code"])."</i>) created in category ".toHTML($category)." for period ".toHTML($period["period_name"])." of batch ".toHTML($period["batch_name"]);
 				if (isset($row["fields_values"]["specialization"]) && $row["fields_values"]["specialization"] <> null) {
-					$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $row["fields_value"]["specialization"])->field("Specialization","name")->executeSingleValue();
+					$spe = SQLQuery::create()->bypassSecurity()->select("Specialization")->whereValue("Specialization", "id", $row["fields_values"]["specialization"])->field("Specialization","name")->executeSingleValue();
 					$message .= " in specialization ".toHTML($spe);
 				}
 				PNApplication::$instance->news->post("students", "curriculum", array("batch".$period["batch_id"],"period".$row["fields_values"]["period"]), "activity", $message);
