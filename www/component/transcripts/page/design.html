@@ -63,7 +63,10 @@
 	width: 55px;
 }
 .transcripts .grades .info_col {
-	width: 45px;
+	width: 40px;
+}
+.transcripts .grades .comment_col {
+	width: 220px;
 }
 .transcripts .grades .subject_row {
 	height: 20px;
@@ -164,9 +167,11 @@
 		#IF:batch_average#<col class='grade_col'/>#ENDIF#
 		#IF:batch_lowest#<col class='grade_col'/>#ENDIF#
 		#IF:batch_highest#<col class='grade_col'/>#ENDIF#
+		#IF:batch_rank#<col class='grade_col'/>#ENDIF#
 		#IF:class_average#<col class='grade_col'/>#ENDIF#
 		#IF:class_lowest#<col class='grade_col'/>#ENDIF#
 		#IF:class_highest#<col class='grade_col'/>#ENDIF#
+		#IF:class_rank#<col class='grade_col'/>#ENDIF#
 		#IF:comment#<col class='comment_col'/>#ENDIF#
 	</colgroup>
 	<tbody>
@@ -180,9 +185,11 @@
 		#IF:batch_average#<td class='title' style='font-size:90%'><div>Batch<br/>Average</div></td>#ENDIF#
 		#IF:batch_lowest#<td class='title' style='font-size:90%'><div>Batch<br/>Lowest</div></td>#ENDIF#
 		#IF:batch_highest#<td class='title' style='font-size:90%'><div>Batch<br/>Highest</div></td>#ENDIF#
+		#IF:batch_rank#<td class='title' style='font-size:90%'><div>Rank in<br/>Batch</div></td>#ENDIF#
 		#IF:class_average#<td class='title' style='font-size:90%'><div>Class<br/>Average</div></td>#ENDIF#
 		#IF:class_lowest#<td class='title' style='font-size:90%'><div>Class<br/>Lowest</div></td>#ENDIF#
 		#IF:class_highest#<td class='title' style='font-size:90%'><div>Class<br/>Highest</div></td>#ENDIF#
+		#IF:class_rank#<td class='title' style='font-size:90%'><div>Rank in<br/>Class</div></td>#ENDIF#
 		#IF:comment#<td class='title'><div>Comment</div></td>#ENDIF#
 	</tr>
 	#ENDIF#
@@ -196,9 +203,11 @@
 		#IF:batch_average#<td class='grade'>#BATCH_AVERAGE#</td>#ENDIF#
 		#IF:batch_lowest#<td class='grade'>#BATCH_LOWEST#</td>#ENDIF#
 		#IF:batch_highest#<td class='grade'>#BATCH_HIGHEST#</td>#ENDIF#
+		#IF:batch_rank#<td class='grade'>#BATCH_RANK#</td>#ENDIF#
 		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
 		#IF:class_lowest#<td class='grade'>#CLASS_LOWEST#</td>#ENDIF#
 		#IF:class_highest#<td class='grade'>#CLASS_HIGHEST#</td>#ENDIF#
+		#IF:class_rank#<td class='grade'>#CLASS_RANK#</td>#ENDIF#
 		#IF:comment#<td class='comment'>#COMMENT#</td>#ENDIF#
 	</tr>
 	#END_SUBJECT#
@@ -209,11 +218,13 @@
 		#IF:coefficient#<td>#TOTAL_COEFFICIENT#</td>#ENDIF#
 		<td>#TOTAL_GRADE#</td>
 		#IF:batch_average#<td>#TOTAL_BATCH_AVERAGE#</td>#ENDIF#
-		#IF:batch_lowest#<td class='blank'></td>#ENDIF#
-		#IF:batch_highest#<td class='blank'></td>#ENDIF#
+		#IF:batch_lowest#<td>#TOTAL_BATCH_LOWEST#</td>#ENDIF#
+		#IF:batch_highest#<td>#TOTAL_BATCH_HIGHEST#</td>#ENDIF#
+		#IF:batch_rank#<td>#TOTAL_BATCH_RANK#</td>#ENDIF#
 		#IF:class_average#<td>#TOTAL_CLASS_AVERAGE#</td>#ENDIF#
-		#IF:class_lowest#<td class='blank'></td>#ENDIF#
-		#IF:class_highest#<td class='blank'></td>#ENDIF#
+		#IF:class_lowest#<td>#TOTAL_CLASS_LOWEST#</td>#ENDIF#
+		#IF:class_highest#<td>#TOTAL_CLASS_HIGHEST#</td>#ENDIF#
+		#IF:class_rank#<td>#TOTAL_CLASS_RANK#</td>#ENDIF#
 		#IF:comment#<td class='blank'></td>#ENDIF#
 	</tr>
 	</tbody>
@@ -230,9 +241,12 @@
 		#IF:batch_average#<col class='grade_col'/>#ENDIF#
 		#IF:batch_lowest#<col class='grade_col'/>#ENDIF#
 		#IF:batch_highest#<col class='grade_col'/>#ENDIF#
+		#IF:batch_rank#<col class='grade_col'/>#ENDIF#
 		#IF:class_average#<col class='grade_col'/>#ENDIF#
 		#IF:class_lowest#<col class='grade_col'/>#ENDIF#
 		#IF:class_highest#<col class='grade_col'/>#ENDIF#
+		#IF:class_rank#<col class='grade_col'/>#ENDIF#
+		#IF:comment#<col class='comment_col'/>#ENDIF#
 	</colgroup>
 	<tbody>
 	<tr class='subject_row'>
@@ -243,9 +257,12 @@
 		#IF:batch_average#<td class='grade'>#BATCH_AVERAGE#</td>#ENDIF#
 		#IF:batch_lowest#<td class='grade'>#BATCH_LOWEST#</td>#ENDIF#
 		#IF:batch_highest#<td class='grade'>#BATCH_HIGHEST#</td>#ENDIF#
+		#IF:batch_rank#<td class='grade'>#BATCH_RANK#</td>#ENDIF#
 		#IF:class_average#<td class='grade'>#CLASS_AVERAGE#</td>#ENDIF#
 		#IF:class_lowest#<td class='grade'>#CLASS_LOWEST#</td>#ENDIF#
 		#IF:class_highest#<td class='grade'>#CLASS_HIGHEST#</td>#ENDIF#
+		#IF:class_rank#<td class='grade'>#CLASS_RANK#</td>#ENDIF#
+		#IF:comment#<td class='comment'>#COMMENT#</td>#ENDIF#
 	</tr>
 	</tbody>
 </table>
@@ -260,19 +277,23 @@
 		#IF:batch_average#<col class='grade_col'/>#ENDIF#
 		#IF:batch_lowest#<col class='grade_col'/>#ENDIF#
 		#IF:batch_highest#<col class='grade_col'/>#ENDIF#
+		#IF:batch_rank#<col class='grade_col'/>#ENDIF#
 		#IF:class_average#<col class='grade_col'/>#ENDIF#
 		#IF:class_lowest#<col class='grade_col'/>#ENDIF#
 		#IF:class_highest#<col class='grade_col'/>#ENDIF#
+		#IF:class_rank#<col class='grade_col'/>#ENDIF#
 	</colgroup>
 	<tr class='total'>
 		<td>Global Grade Point Average</td>
 		<td>#GLOBAL_GRADE#</td>
 		#IF:batch_average#<td>#GLOBAL_BATCH_AVERAGE_GRADE#</td>#ENDIF#
-		#IF:batch_lowest#<td class='blank'></td>#ENDIF#
-		#IF:batch_highest#<td class='blank'></td>#ENDIF#
+		#IF:batch_lowest#<td>#GLOBAL_BATCH_LOWEST_GRADE#</td>#ENDIF#
+		#IF:batch_highest#<td>#GLOBAL_BATCH_HIGHEST_GRADE#</td>#ENDIF#
+		#IF:batch_rank#<td>#GLOBAL_BATCH_RANK#</td>#ENDIF#
 		#IF:class_average#<td>#GLOBAL_CLASS_AVERAGE_GRADE#</td>#ENDIF#
-		#IF:class_lowest#<td class='blank'></td>#ENDIF#
-		#IF:class_highest#<td class='blank'></td>#ENDIF#
+		#IF:class_lowest#<td>#GLOBAL_CLASS_LOWEST_GRADE#</td>#ENDIF#
+		#IF:class_highest#<td>#GLOBAL_CLASS_HIGHEST_GRADE#</td>#ENDIF#
+		#IF:class_rank#<td>#GLOBAL_CLASS_RANK#</td>#ENDIF#
 	</tr>
 </table>
 <!-- General appreciation -->
