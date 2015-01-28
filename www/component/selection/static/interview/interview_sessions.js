@@ -578,14 +578,76 @@ function InterviewSession(interview_sessions, session, staffs, can_edit) {
 		print.className = "flat icon";
 		print.innerHTML = "<img src='"+theme.icons_16.print+"'/>";
 		print.onclick = function() {
-			list.hideActions();
-			var params = {titles:["Interviews"],sub_titles:[],content_style:"display:flex;flex-direction:column;align-items:center;"};
-			var host = window.center_location.getHostPartner();
-			if (host) params.titles[0] += " - "+host.organization.name;
-			params.sub_titles.push(window.center_location.geographic_area_text.text+" - "+getDateString(session.event.start));
-			params.sub_titles.push("Applicants "+title);
-			list.grid.print("pn_document",params,function() {
-				list.showActions();
+			require("mini_popup.js",function() {
+				var p = new mini_popup("Print Interviews List");
+				var cb_grades = document.createElement("INPUT");
+				cb_grades.type = 'checkbox';
+				p.content.appendChild(cb_grades);
+				p.content.appendChild(document.createTextNode("Add columns for grades and comment"));
+				p.content.appendChild(document.createElement("BR"));
+				var cb_attendance = document.createElement("INPUT");
+				cb_attendance.type = "checkbox";
+				p.content.appendChild(cb_attendance);
+				p.content.appendChild(document.createTextNode("Add column for attendance"));
+				p.addOkButton(function() {
+					list.hideActions();
+					var params = {titles:["Interviews"],sub_titles:[],content_style:"display:flex;flex-direction:column;align-items:center;"};
+					var host = window.center_location.getHostPartner();
+					if (host) params.titles[0] += " - "+host.organization.name;
+					params.sub_titles.push(window.center_location.geographic_area_text.text+" - "+getDateString(session.event.start));
+					params.sub_titles.push("Applicants "+title);
+					list.grid.print("pn_document",params,function(table) {
+						list.showActions();
+						var thead = table.childNodes[0];
+						var tbody = table.childNodes[1];
+						if (cb_attendance.checked) {
+							var th = document.createElement("TH");
+							th.style.borderLeft = "1px solid #808080";
+							th.appendChild(document.createTextNode("Attendance"));
+							th.rowSpan = thead.childNodes.length;
+							thead.childNodes[0].appendChild(th);
+							for (var i = 0; i < tbody.childNodes.length; ++i) {
+								var td = document.createElement("TD");
+								td.style.borderLeft = "1px solid #808080";
+								tbody.childNodes[i].appendChild(td);
+							}
+						}
+						if (cb_grades.checked) {
+							service.json("selection","interview/get_criteria",{},function(criteria) {
+								for (var i = 0; i < criteria.length; ++i) {
+									var th = document.createElement("TH");
+									th.style.borderLeft = "1px solid #808080";
+									th.appendChild(document.createTextNode(criteria[i].name));
+									th.rowSpan = thead.childNodes.length;
+									thead.childNodes[0].appendChild(th);
+								}
+								var th = document.createElement("TH");
+								th.style.borderLeft = "1px solid #808080";
+								th.appendChild(document.createTextNode("Comment"));
+								th.rowSpan = thead.childNodes.length;
+								thead.childNodes[0].appendChild(th);
+								for (var i = 0; i < tbody.childNodes.length; ++i) {
+									for (var j = 0; j < criteria.length; j++) {
+										var td = document.createElement("TD");
+										td.style.borderLeft = "1px solid #808080";
+										tbody.childNodes[i].appendChild(td);
+									}
+									var td = document.createElement("TD");
+									td.style.borderLeft = "1px solid #808080";
+									var div = document.createElement("DIV");
+									div.style.minWidth = "150px";
+									div.style.width = "150px";
+									div.style.minHeight = "28px";
+									div.style.height = "28px";
+									td.appendChild(div);
+									tbody.childNodes[i].appendChild(td);
+								}
+							});
+						}
+					});
+					return true;
+				});
+				p.showBelowElement(print);
 			});
 		};
 		print.style.marginLeft = "10px";
