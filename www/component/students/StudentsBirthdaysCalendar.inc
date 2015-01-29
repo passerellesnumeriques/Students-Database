@@ -9,6 +9,8 @@ class StudentsBirthdaysCalendar implements CustomCalendarPlugin {
 	public function canAccess() {
 		if (in_array("staff",PNApplication::$instance->user_management->people_types))
 			return true;
+		if (in_array("student",PNApplication::$instance->user_management->people_types))
+			return true;
 		if (PNApplication::$instance->user_management->hasRight("consult_students_list"))
 			return true;
 		return false;
