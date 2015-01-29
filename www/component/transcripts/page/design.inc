@@ -580,6 +580,7 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 				$q->field("PublishedTranscriptStudentSubjectGrade","grade");
 				$q->field("StudentGroup","people");
 				$q->whereNotNull("PublishedTranscriptStudentSubjectGrade","grade");
+				$q->bypassSecurity(); // allow to get full class, even from a student account
 				$grades = $q->execute();
 				if (count($grades) == 0) {
 					$av = $low = $high = $rank = null;
@@ -664,6 +665,7 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 				$q->field("PublishedTranscriptStudentSubjectGrade","grade");
 				$q->field("StudentGroup","people");
 				$q->whereNotNull("PublishedTranscriptStudentSubjectGrade","grade");
+				$q->bypassSecurity(); // allow to get full class, even from a student account
 				$grades = $q->execute();
 				if (count($grades) == 0) {
 					$av = $low = $high = $rank = null;
