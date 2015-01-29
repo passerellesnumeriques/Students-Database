@@ -4,11 +4,12 @@ class service_search extends Service {
 	public function getRequiredRights() { return array(); }
 	
 	public function documentation() { echo "Search people"; }
-	public function inputDocumentation() { echo "name, types, exclude_types, include_picture"; }
+	public function inputDocumentation() { echo "name, types, exclude_types, include_picture, limit"; }
 	public function outputDocumentation() { echo "list of People objects"; }
 	
 	public function execute(&$component, $input) {
 		$q = SQLQuery::create()->select("People");
+		if (isset($input["limit"])) $q->limit(0, $input["limit"]);
 		if (isset($input["types"])) {
 			$w = "";
 			for ($i = 0; $i < count($input["types"]); $i++) {

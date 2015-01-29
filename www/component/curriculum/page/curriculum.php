@@ -281,18 +281,22 @@ class page_curriculum extends Page {
 		if (PNApplication::$instance->help->isShown("curriculum")) {
 			$help_div_id = PNApplication::$instance->help->startHelp("curriculum", $this, "right", "relative:curriculum_page_title:bottom");
 			if (!$editing) {
-				echo "This screen displays the list of subjects, by category, for the<br/>";
-				echo "selected batch or period (selection through the ";
-				PNApplication::$instance->help->spanArrow($this, "tree on the right", "@parent#curriculum_tree_container", "horiz_straight");
-				echo ").<br/>";
-				echo "Those information will be used to assign teachers to subjects,<br/>";
-				echo "but also for to enter the grades of the students<br/>";
-				if ($can_edit && !isset($_GET["locker"])) {
-					echo "<br/>";
-					echo "To edit the curriculum (add/remove/edit subjects), click on the<br/>";
-					echo "Edit button at the top<br/>";
-					PNApplication::$instance->help->spanArrow($this, "try now", "#edit_curriculum_button");
-					echo " to display help on how to edit the curriculum.";
+				if (PNApplication::$instance->user_management->hasRight("consult_curriculum")) {
+					echo "This screen displays the list of subjects, by category, for the<br/>";
+					echo "selected batch or period (selection through the ";
+					PNApplication::$instance->help->spanArrow($this, "tree on the right", "@parent#curriculum_tree_container", "horiz_straight");
+					echo ").<br/>";
+					echo "Those information will be used to assign teachers to subjects,<br/>";
+					echo "but also for to enter the grades of the students<br/>";
+					if ($can_edit && !isset($_GET["locker"])) {
+						echo "<br/>";
+						echo "To edit the curriculum (add/remove/edit subjects), click on the<br/>";
+						echo "Edit button at the top<br/>";
+						PNApplication::$instance->help->spanArrow($this, "try now", "#edit_curriculum_button");
+						echo " to display help on how to edit the curriculum.";
+					}
+				} else {
+					echo "This screen displays the list of subjects, by category, for your batch";
 				}
 			} else {
 				echo "Great ! Now you can edit the curriculum.<br/>";

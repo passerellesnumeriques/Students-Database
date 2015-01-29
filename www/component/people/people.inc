@@ -179,8 +179,8 @@ class people extends Component {
 	public function &searchPeopleByFirstAndLastName($first_name, $last_name) {
 		$q = SQLQuery::create()
 			->select("People")
-			->where("LOWER(`People`.`first_name`) LIKE LOWER('%".SQLQuery::escape($first_name)."%')")
-			->where("LOWER(`People`.`last_name`) LIKE LOWER('%".SQLQuery::escape($last_name)."%')")
+			->where("REPLACE(LOWER(`People`.`first_name`),' ','') LIKE REPLACE(LOWER('%".SQLQuery::escape($first_name)."%'),' ','')")
+			->where("REPLACE(LOWER(`People`.`last_name`),' ','') LIKE REPLACE(LOWER('%".SQLQuery::escape($last_name)."%'),' ','')")
 			;
 		$q->fieldsOfTable("People");
 		return $q;
