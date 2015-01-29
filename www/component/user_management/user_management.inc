@@ -664,8 +664,10 @@ class user_management extends Component {
 	 * @param integer $user_id user
 	 * @return integer|NULL people id
 	 */
-	public function getPeopleFromUser($user_id) {
-		return SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id)->executeSingleValue();
+	public function getPeopleFromUser($user_id, $domain = null) {
+		$q = SQLQuery::create()->select("UserPeople")->field("people")->where("user",$user_id);
+		if ($domain <> null) $q->databaseOfDomain($domain);
+		return $q->executeSingleValue();
 	}
 	
 	/** Check if the given people is a user

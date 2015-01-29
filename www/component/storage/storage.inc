@@ -110,8 +110,8 @@ class storage extends Component {
 	 * Return the path for the current domain
 	 * @return string the path
 	 */
-	public static function storagePath() {
-		return self::getDomainStoragePath(PNApplication::$instance->current_domain);
+	public static function storagePath($domain = null) {
+		return self::getDomainStoragePath($domain <> null ? $domain : PNApplication::$instance->current_domain);
 	}
 	
 	/**
@@ -311,8 +311,8 @@ class storage extends Component {
 		return $dir1."/".$dir2."/".$dir3."/".$filename;
 	}
 	
-	function get_data_path($id) {
-		return self::storagePath()."/".self::get_data_path_in_storage($id);
+	function get_data_path($id, $domain = null) {
+		return self::storagePath($domain)."/".self::get_data_path_in_storage($id);
 	}
 	
 	function new_revision($id) {

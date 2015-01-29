@@ -244,9 +244,11 @@ echo "<div id='application_title_label'>Dev</div>";
 					<?php
 #SELECTION_TRAVEL
 #echo "--> ";
-#END 
+#END
+					if (PNApplication::$instance->local_domain == PNApplication::$instance->current_domain) {
 					?>
 					<a href='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>' target='application_frame'><div id='user_picture'></div></a>
+					<?php } ?>
 					<!-- <button class="flat" id='notifications'><img src='/static/application/menu/notifications.png'/></button>  -->
 					<a href='/dynamic/calendar/page/calendars' target='application_frame'><button class="flat" id='calendars'><img src='/static/calendar/calendar_white.png'/></button></a>
 					<?php
@@ -286,10 +288,12 @@ echo "<div id='application_title_label'>Dev</div>";
 </div>
 <script type='text/javascript' defer>
 user_picture = document.getElementById('user_picture');
-require("profile_picture.js",function() {
-	new profile_picture(user_picture, 25, 25, "center", "middle").loadPeopleObject(window.top.my_people);
-});
-tooltip(user_picture, "Your profile");
+if (user_picture) {
+	require("profile_picture.js",function() {
+		new profile_picture(user_picture, 25, 25, "center", "middle").loadPeopleObject(window.top.my_people);
+	});
+	tooltip(user_picture, "Your profile");
+}
 
 //tooltip(document.getElementById('notifications'), "See notifications");
 tooltip(document.getElementById('calendars'), "Your calendars");

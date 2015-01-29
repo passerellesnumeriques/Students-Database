@@ -9,15 +9,16 @@ class PeopleJSON {
 	 * @return NULL
 	 * @no_name_check
 	 */
-	public static function PeopleFromID($id){
+	public static function PeopleFromID($id, $domain = null){
 		$q = SQLQuery::create()
 			->select("People")
 			->whereValue("People", "id", $id);
+		if ($domain <> null) $q->databaseOfDomain($domain);
 		PNApplication::$instance->storage->joinRevision($q, "People", "picture", "picture_revision");
 		self::PeopleSQL($q);
 		$row = $q->executeSingleRow();
 		if($row <> null)
-			return self::People($row);
+			return self::People($row, $domain);
 		else 
 			return null;
 	}
@@ -63,7 +64,7 @@ class PeopleJSON {
 	 * @return string
 	 * @no_name_check
 	 */
-	public static function People($row){
+	public static function People($row, $domain = null){
 		$data = "";
 		$data .= "{id:".json_encode($row["people_id"]);
 		$data .= ",first_name:".json_encode($row['first_name']);
@@ -74,6 +75,7 @@ class PeopleJSON {
 		$data .= ",picture_id:".json_encode($row["picture_id"]);
 		$data .= ",picture_revision:".json_encode(@$row["picture_revision"]);
 		//$data .= ",can_edit:".(PNApplication::$instance->people->canModifyTypes($row["people_types"]) ? "true" : "false");
+		if ($domain <> null) $data .= ",domain:".json_encode($domain);
 		$data .= "}";
 		return $data;
 	}

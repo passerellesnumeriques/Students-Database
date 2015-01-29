@@ -118,8 +118,10 @@ function profile_picture(container, width, height, halign, valign) {
 		});
 	};
 	
-	this.loadPeopleID = function(people_id, onloaded) {
-		service.json("people", "picture", {people:people_id}, function(res) {
+	this.loadPeopleID = function(people_id, onloaded, domain) {
+		var data = {people:people_id};
+		if (domain) data.domain = domain;
+		service.json("people", "picture", data, function(res) {
 			if (!t) return;
 			if (!res) {
 				if (t.picture.parentNode) t.picture.parentNode.removeChild(t.picture);
@@ -146,20 +148,20 @@ function profile_picture(container, width, height, halign, valign) {
 				if (onloaded) onloaded();
 				return;
 			}
-			t.loadPeopleID(res.people_id, onloaded);
+			t.loadPeopleID(res.people_id, onloaded, domain);
 		});
 	};
 	this.loadPeopleObject = function(people, onloaded) {
 		if (typeof people.picture_id == 'undefined')
-			this.loadPeopleID(people.id, onloaded);
+			this.loadPeopleID(people.id, onloaded, typeof people.domain != 'undefined' ? people.domain : null);
 		else if (people.picture_id == null)
 			this.setNoPicture(people.id, people.sex, onloaded);
 		else
-			this.loadPeopleStorage(people.id, people.picture_id,people.picture_revision,onloaded);
+			this.loadPeopleStorage(people.id, people.picture_id,people.picture_revision,onloaded, typeof people.domain != 'undefined' ? people.domain : null);
 	};
-	this.loadPeopleStorage = function(people_id,picture_id,revision,onloaded) {
+	this.loadPeopleStorage = function(people_id,picture_id,revision,onloaded,domain) {
 		if (!picture_id)
-			this.loadPeopleID(people_id, onloaded);
+			this.loadPeopleID(people_id, onloaded, domain);
 		else {
 			if (this._datamodel_cell_listener)
 				window.top.datamodel.removeCellChangeListener(this._datamodel_cell_listener);
@@ -172,13 +174,13 @@ function profile_picture(container, width, height, halign, valign) {
 				t.revision = value;
 				t.reload();
 			});
-			this._load(picture_id,revision,onloaded);
+			this._load(picture_id,revision,onloaded,domain);
 		}
 	};
 	
 	this.storage_id = null;
 	this.revision = null;
-	this._load = function(storage_id,revision,onloaded) {
+	this._load = function(storage_id,revision,onloaded,domain) {
 		this.storage_id = storage_id;
 		this.revision = revision;
 		if (typeof window.btoa == 'undefined') {
@@ -198,7 +200,7 @@ function profile_picture(container, width, height, halign, valign) {
 				t.picture = null;
 				if (onloaded) onloaded();
 			};
-			t.picture.src = "/dynamic/storage/service/get?id="+storage_id+"&revision="+revision;
+			t.picture.src = "/dynamic/storage/service/get?id="+storage_id+"&revision="+revision+(domain ? "&domain="+domain : "");
 		} else {
 			var progress = 0;
 			var total = 0;
@@ -215,7 +217,7 @@ function profile_picture(container, width, height, halign, valign) {
 				if (total != 0) t.progress.setTotal(total);
 				t.progress.setPosition(progress);
 			});
-			service.customOutput("storage", "get?id="+storage_id+"&revision="+revision, null, 
+			service.customOutput("storage", "get?id="+storage_id+"&revision="+revision+(domain ? "&domain="+domain : ""), null, 
 				function(bin) {
 					if (!t) return;
 					if (!bin) return;

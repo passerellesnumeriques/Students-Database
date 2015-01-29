@@ -26,10 +26,14 @@ class service_home_menu extends Service {
     <img src='/static/calendar/calendar_white.png'/>
     Your Calendars
 </a>
+<?php 
+if (PNApplication::$instance->local_domain == PNApplication::$instance->current_domain) {
+?>
 <a class='application_left_menu_item' href="/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_management->people_id;?>">
     <img src='/static/people/profile_white.png'/>
     Your Profile
 </a>
+<?php } ?>
 <a class='application_left_menu_item' href="/dynamic/search/page/search">
     <img src='<?php echo theme::$icons_16["search_white"];?>'/>
     Search

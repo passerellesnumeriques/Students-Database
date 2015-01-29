@@ -13,14 +13,14 @@ class geography extends Component {
 		if ($this->local_country == null) {
 			$d = PNApplication::$instance->getDomainDescriptor();
 			$d = $d["geography"];
-			$this->local_country = SQLQuery::create()->bypassSecurity()->select("Country")->whereValue("Country", "code", strtoupper($d["country_code"]))->executeSingleRow();
+			$this->local_country = SQLQuery::create()->databaseOfDomain(PNApplication::$instance->local_domain)->bypassSecurity()->select("Country")->whereValue("Country", "code", strtoupper($d["country_code"]))->executeSingleRow();
 		}
 		return $this->local_country;
 	}
 	public function getLocalDivisions() {
 		if ($this->local_country_divisions == null) {
 			$lc = $this->getLocalCountry();
-			$this->local_country_divisions = $this->getCountryDivisions($lc["id"]);
+			$this->local_country_divisions = $this->getCountryDivisions($lc["id"], true);
 		}
 		return $this->local_country_divisions;
 	}
@@ -198,8 +198,8 @@ class geography extends Component {
 		return $list;
 	}
 	
-	public function getCountryDivisions($country_id) {
-		$rows = SQLQuery::create()->bypassSecurity()->select("CountryDivision")->whereValue("CountryDivision", "country", $country_id)->execute();
+	public function getCountryDivisions($country_id, $local_database = false) {
+		$rows = SQLQuery::create()->databaseOfDomain($local_database ? PNApplication::$instance->local_domain : PNApplication::$instance->current_domain)->bypassSecurity()->select("CountryDivision")->whereValue("CountryDivision", "country", $country_id)->execute();
 		$divisions = array();
 		$parent = null;
 		while (count($rows) > 0) {
