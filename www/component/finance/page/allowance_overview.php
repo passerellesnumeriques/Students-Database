@@ -114,10 +114,13 @@ class page_allowance_overview extends Page {
 				$students_deductions[$a["id"]] = array();
 				array_push($students_allowances_ids, $a["id"]);
 			}
-			$list = SQLQuery::create()
-				->select("StudentAllowanceDeduction")
-				->whereIn("StudentAllowanceDeduction","student_allowance",$students_allowances_ids)
-				->execute();
+			if (count($students_allowances_ids) == 0)
+				$list = array();
+			else
+				$list = SQLQuery::create()
+					->select("StudentAllowanceDeduction")
+					->whereIn("StudentAllowanceDeduction","student_allowance",$students_allowances_ids)
+					->execute();
 			$deductions = array();
 			foreach ($list as $d) {
 				if (!in_array($d["name"], $deductions)) array_push($deductions, $d["name"]);
@@ -227,6 +230,7 @@ class page_allowance_overview extends Page {
 	</table>
 </div>
 <script type='text/javascript'>
+window.onuserinactive = function() { var u = new window.URL(location.href);delete u.params.edit; location.href = u.toString(); };
 var batches = <?php echo json_encode($batches);?>;
 
 function removeForBatch(batch_id) {
