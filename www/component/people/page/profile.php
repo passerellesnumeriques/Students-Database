@@ -26,7 +26,7 @@ class page_profile extends Page {
 			;
 		$people = $q->executeSingleRow();
 		if ($people == null) {
-			PNApplication::error("This person does not exist in the database");
+			PNApplication::error("You are not allowed to see details about this person");
 			return;
 		}
 		$types = PNApplication::$instance->people->parseTypes($people["people_types"]);

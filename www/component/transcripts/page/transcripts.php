@@ -296,8 +296,8 @@ function refreshTranscript() {
 	print_button.disabled = "";
 	var locker = lockScreen(null, "Reloading transcript");
 	service.html("transcripts","generate_transcript",{id:selected_transcript,student:selected_student},document.getElementById('transcript'),function() {
-		makePageLayout(document.getElementById('transcript'));
 		unlockScreen(locker);
+		makePageLayout(document.getElementById('transcript'));
 	});
 }
 refreshTranscript();

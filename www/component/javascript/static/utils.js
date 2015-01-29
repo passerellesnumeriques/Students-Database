@@ -336,6 +336,7 @@ function Custom_Event_Cleaner() {
 	this.events = {};
 	/** Clean */
 	this.cleanup = function() {
+		if (!window || !window._cecleaner_interval) return;
 		clearInterval(window._cecleaner_interval);
 		window._cecleaner_interval = null;
 		var list = this.events;

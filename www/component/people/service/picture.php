@@ -20,11 +20,12 @@ class service_picture extends Service {
 			->field("sex")
 			->bypassSecurity() // accept to access the picture of anyone...
 			;
+		if (isset($input["domain"])) $q->databaseOfDomain($input["domain"]);
 		PNApplication::$instance->storage->joinRevision($q, "People", "picture", "revision");
 		$people = $q->executeSingleRow();
 		if ($people["picture"] <> null) {
 			if (@$input["redirect"] == "1")
-				header("Location: /dynamic/storage/service/get?id=".$people["picture"]."&revision=".$people["revision"]);
+				header("Location: /dynamic/storage/service/get?id=".$people["picture"]."&revision=".$people["revision"].(isset($input["domain"]) ? "&domain=".$input["domain"] : ""));
 			else
 				echo "{storage_id:".$people["picture"].",revision:".$people["revision"]."}";
 		} else {

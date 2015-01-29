@@ -97,7 +97,7 @@ class page_synch_users extends Page {
 								$fullname = $user["info"]["People"]["first_name"];
 								if (isset($user["info"]["People"]["middle_name"]))
 									$fullname .= " ".$user["info"]["People"]["middle_name"];
-								$fullname .= $user["info"]["People"]["last_name"];
+								$fullname .= " ".$user["info"]["People"]["last_name"];
 								echo " (".$fullname.")";
 							}
 						}
@@ -110,6 +110,7 @@ class page_synch_users extends Page {
 						}
 					}
 					echo "<br/>";
+					$has_links = false;
 					if (isset($user["info"])) {
 						if (isset($user["info"]["People"])) {
 							if (isset($user["info"]["People"]["first_name"]) && isset($user["info"]["People"]["last_name"])) {
@@ -118,11 +119,15 @@ class page_synch_users extends Page {
 								$q->whereNull("Users", "username");
 								$match = $q->execute();
 								foreach ($match as $row) {
+									$has_link = true;
 									echo "<input type='radio' name='".$user["username"]."' value='link_".$row["id"]."' onclick=\"if (this.checked) { if (this._already) { this.checked=''; this._already=false; } else { var list=this.form.elements['".$user["username"]."']; for(var i=0;i<list.length;++i)list[i]._already=false; this._already=true; } }\"/> Create user and link with existing people: ".DataModel::get()->getTable("People")->getRowDescription($row)."<br/>";
 								}
 							}
 						}
 					}
+					$id1 = $this->generateID();
+					$id2 = $this->generateID();
+					echo "<input type='radio' disabled='disabled' name='".$user["username"]."' value='custom_link' id='$id1'/> Link to <span id='$id2'></span><button onclick=\"selectSomeone(document.getElementById('$id1'),document.getElementById('$id2'));\">Select</button><br/>"; 
 					array_push($users_info, array("username"=>$user["username"],"info"=>@$user["info"]));
 					echo "<input type='radio' name='".$user["username"]."' value='create_user' onclick=\"if (this.checked) { if (this._already) { this.checked=''; this._already=false; } else { var list=this.form.elements['".$user["username"]."']; for(var i=0;i<list.length;++i)list[i]._already=false; this._already=true; } }\"/> Create as a new ";
 					echo "<select name='type_".$user["username"]."'>";
@@ -146,6 +151,58 @@ class page_synch_users extends Page {
 var popup = window.parent.getPopupFromFrame(window);
 <?php if ($list <> null) {?>
 var users_info = <?php echo json_encode($users_info);?>;
+
+function selectSomeone(radio,span) {
+	var content = document.createElement("DIV");
+	content.style.padding = "10px";
+	content.appendChild(document.createTextNode("Enter a name: "));
+	var input = document.createElement("INPUT");
+	content.appendChild(input);
+	var search_button = document.createElement("BUTTON");
+	search_button.innerHTML = "Search";
+	content.appendChild(search_button);
+	var result_container = document.createElement("DIV");
+	content.appendChild(result_container);
+	var pop = new window.parent.popup_window("Search someone",null,content);
+	pop.show();
+	search_button.onclick = function() {
+		pop.freeze("Searching...");
+		result_container.removeAllChildren();
+		layout.changed(result_container);
+		service.json("people","search",{name:input.value.trim(),limit:25},function(res) {
+			pop.unfreeze();
+			result_container.style.borderTop = "1px solid #808080";
+			result_container.style.marginTop = "5px";
+			result_container.style.paddingTop = "2px";
+			if (res.length == 0) {
+				result_container.innerHTML = "<i>Nobody found with this name</i>";
+				layout.changed(result_container);
+				return;
+			}
+			result_container.innerHTML = "<b><i>Click on a person below to select it:</i></b><br/>";
+			for (var i = 0; i < res.length; ++i) {
+				var div = document.createElement("DIV");
+				div.appendChild(document.createTextNode(res[i].last_name+' '+res[i].first_name));
+				div.style.paddingTop = "2px";
+				div.style.paddingBottom = "2px";
+				div.style.cursor = "pointer";
+				div.onmouseover = function() { this.style.backgroundColor = "#FFF0D0"; };
+				div.onmouseout = function() { this.style.backgroundColor = ""; };
+				div.people = res[i];
+				div.onclick = function() {
+					radio.disabled = '';
+					radio.checked = 'checked';
+					radio.value = 'link_'+this.people.id;
+					span.innerHTML = this.innerHTML;
+					layout.changed(span);
+					pop.close();
+				};
+				result_container.appendChild(div);
+			}
+			layout.changed(result_container);
+		});
+	};
+}
 
 function process_removed_users(ondone) {
 	if (typeof document.forms["removed_users"] == 'undefined') { ondone(); return; }

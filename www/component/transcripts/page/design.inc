@@ -151,9 +151,11 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 	processTranscriptCondition($design, "batch_average", @$config["batch_average"] == 1);
 	processTranscriptCondition($design, "batch_lowest", @$config["batch_lowest"] == 1);
 	processTranscriptCondition($design, "batch_highest", @$config["batch_highest"] == 1);
+	processTranscriptCondition($design, "batch_rank", @$config["batch_rank"] == 1);
 	processTranscriptCondition($design, "class_average", @$config["class_average"] == 1);
 	processTranscriptCondition($design, "class_lowest", @$config["class_lowest"] == 1);
 	processTranscriptCondition($design, "class_highest", @$config["class_highest"] == 1);
+	processTranscriptCondition($design, "class_rank", @$config["class_rank"] == 1);
 	processTranscriptCondition($design, "comment", @$config["comment"] == 1);
 	processTranscriptCondition($design, "general_appreciation", @$config["general_appreciation"] == 1);
 
@@ -189,6 +191,8 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 	$global_total_class_coef = 0;
 	$global_total_batch_av = 0;
 	$global_total_batch_coef = 0;
+	$global_class_grades = array();
+	$global_batch_grades = array();
 	while (($i = strpos($design, "#SUBJECT_CATEGORY#", $i)) !== false) {
 		$j = strpos($design, "#END_SUBJECT_CATEGORY#", $i);
 		$content = substr($design,$i+18,$j-$i-18);
@@ -242,12 +246,24 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 				$total_class_av = 0;
 				$total_batch_coef = 0;
 				$total_class_coef = 0;
+				$class_students_grades = array();
+				$batch_students_grades = array();
 				for ($subject_index = 0; $subject_index < count($list); $subject_index++) {
 					$subject = $list[$subject_index];
 					$subj_content = substr($cat_content, $k+9, $l-$k-9);
 					processTranscriptConditionIndex($subj_content, "SUBJECT", $subject_index, count($list));
-					$subj_content = generateSubjectSection($cat, $subject, $subj_content, $config, $period, $student_grades, $student, $transcript_id, $id_suffix, $script_grades, $grading_systems, $total_class_av, $total_batch_av, $total_class_coef, $total_batch_coef);
+					$subj_content = generateSubjectSection($cat, $subject, $subj_content, $config, $period, $student_grades, $student, $transcript_id, $id_suffix, $script_grades, $grading_systems, $total_class_av, $total_batch_av, $total_class_coef, $total_batch_coef, $class_students_grades, $batch_students_grades);
 					$result_subjects .= $subj_content;
+				}
+				foreach ($class_students_grades as $sid=>$sg) {
+					if (!isset($global_class_grades[$sid])) $global_class_grades[$sid] = array("grade"=>0,"coef"=>0);
+					$global_class_grades[$sid]["grade"] += $sg["grade"];
+					$global_class_grades[$sid]["coef"] += $sg["coef"];
+				}
+				foreach ($batch_students_grades as $sid=>$sg) {
+					if (!isset($global_batch_grades[$sid])) $global_batch_grades[$sid] = array("grade"=>0,"coef"=>0);
+					$global_batch_grades[$sid]["grade"] += $sg["grade"];
+					$global_batch_grades[$sid]["coef"] += $sg["coef"];
 				}
 				$cat_content = str_replace("#TOTAL_HOURS#", $total_hours, $cat_content);
 				$cat_content = str_replace("#TOTAL_COEFFICIENT#", $total_coef, $cat_content);
@@ -258,7 +274,45 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 					$id = "total_class_average_".$cat["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 					$cat_content = str_replace("#TOTAL_CLASS_AVERAGE#", "<div id='$id'>$total_class_av</div>", $cat_content);
 					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_class_av).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
-				}				
+				}
+				if (@$config["class_lowest"] == 1) {
+					$lowest = null;
+					foreach ($class_students_grades as $sg) {
+						if ($sg["coef"] == 0) continue;
+						$g = $sg["grade"]/$sg["coef"];
+						if ($lowest === null || $g < $lowest) $lowest = $g;
+					}
+					$id = "total_class_lowest_".$cat["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+					$cat_content = str_replace("#TOTAL_CLASS_LOWEST#", "<div id='$id'>$lowest</div>", $cat_content);
+					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($lowest).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+				}
+				if (@$config["class_highest"] == 1) {
+					$highest = null;
+					foreach ($class_students_grades as $sg) {
+						if ($sg["coef"] == 0) continue;
+						$g = $sg["grade"]/$sg["coef"];
+						if ($highest === null || $g > $highest) $highest = $g;
+					}
+					$id = "total_class_highest_".$cat["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+					$cat_content = str_replace("#TOTAL_CLASS_HIGHEST#", "<div id='$id'>$highest</div>", $cat_content);
+					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($highest).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+				}
+				if (@$config["class_rank"] == 1) {
+					$all_grades = array();
+					$stg = null;
+					foreach ($class_students_grades as $sid=>$sg) {
+						if ($sg["coef"] == 0) continue;
+						$g = $sg["grade"]/$sg["coef"];
+						array_push($all_grades, $g);
+						if ($sid == $student["id"]) $stg = $g;
+					}
+					if ($stg === null) $rank = "";
+					else {
+						$rank = 1;
+						foreach ($all_grades as $g) if ($g > $stg) $rank++;
+					}
+					$cat_content = str_replace("#TOTAL_CLASS_RANK#", $rank, $cat_content);
+				}
 				if (@$config["batch_average"] == 1) {
 					$global_total_batch_av += $total_batch_av;
 					$global_total_batch_coef += $total_batch_coef;
@@ -267,6 +321,44 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 					$cat_content = str_replace("#TOTAL_BATCH_AVERAGE#", "<div id='$id'>$total_batch_av</div>", $cat_content);
 					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($total_batch_av).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 				}				
+				if (@$config["batch_lowest"] == 1) {
+					$lowest = null;
+					foreach ($batch_students_grades as $sg) {
+						if ($sg["coef"] == 0) continue;
+						$g = $sg["grade"]/$sg["coef"];
+						if ($lowest === null || $g < $lowest) $lowest = $g;
+					}
+					$id = "total_batch_lowest_".$cat["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+					$cat_content = str_replace("#TOTAL_BATCH_LOWEST#", "<div id='$id'>$lowest</div>", $cat_content);
+					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($lowest).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+				}
+				if (@$config["batch_highest"] == 1) {
+					$highest = null;
+					foreach ($batch_students_grades as $sg) {
+						if ($sg["coef"] == 0) continue;
+						$g = $sg["grade"]/$sg["coef"];
+						if ($highest === null || $g > $highest) $highest = $g;
+					}
+					$id = "total_batch_highest_".$cat["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+					$cat_content = str_replace("#TOTAL_BATCH_HIGHEST#", "<div id='$id'>$highest</div>", $cat_content);
+					$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($highest).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+				}
+				if (@$config["batch_rank"] == 1) {
+					$all_grades = array();
+					$stg = null;
+					foreach ($batch_students_grades as $sid=>$sg) {
+						if ($sg["coef"] == 0) continue;
+						$g = $sg["grade"]/$sg["coef"];
+						array_push($all_grades, $g);
+						if ($sid == $student["id"]) $stg = $g;
+					}
+					if ($stg === null) $rank = "";
+					else {
+						$rank = 1;
+						foreach ($all_grades as $g) if ($g > $stg) $rank++;
+					}
+					$cat_content = str_replace("#TOTAL_BATCH_RANK#", $rank, $cat_content);
+				}
 				$cat_content = substr($cat_content,0,$k).$result_subjects.substr($cat_content,$l+13);
 			}
 			$result_categories .= $cat_content;
@@ -284,12 +376,24 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 			$total_batch_av = 0;
 			$total_batch_coef = 0;
 			$total_class_coef = 0;
-			$subj_content = generateSubjectSection($cat, $subject, "".$content, $config, $period, $student_grades, $student, $transcript_id, $id_suffix, $script_grades, $grading_systems, $total_class_av, $total_batch_av, $total_class_coef, $total_batch_coef);
+			$class_students_grades = array();
+			$batch_students_grades = array();
+			$subj_content = generateSubjectSection($cat, $subject, "".$content, $config, $period, $student_grades, $student, $transcript_id, $id_suffix, $script_grades, $grading_systems, $total_class_av, $total_batch_av, $total_class_coef, $total_batch_coef, $class_students_grades, $batch_students_grades);
 			$global_total_class_av += $total_class_av;
 			$global_total_class_coef += $total_class_coef;
 			$global_total_batch_av += $total_batch_av;
 			$global_total_batch_coef += $total_batch_coef;
 			$result_single .= $subj_content;
+			foreach ($class_students_grades as $sid=>$sg) {
+				if (!isset($global_class_grades[$sid])) $global_class_grades[$sid] = array("grade"=>0,"coef"=>0);
+				$global_class_grades[$sid]["grade"] += $sg["grade"];
+				$global_class_grades[$sid]["coef"] += $sg["coef"];
+			}
+			foreach ($batch_students_grades as $sid=>$sg) {
+				if (!isset($global_batch_grades[$sid])) $global_batch_grades[$sid] = array("grade"=>0,"coef"=>0);
+				$global_batch_grades[$sid]["grade"] += $sg["grade"];
+				$global_batch_grades[$sid]["coef"] += $sg["coef"];
+			}
 		}
 		$design = substr($design, 0, $i).$result_single.substr($design, $j+22);
 	}
@@ -320,11 +424,87 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 		$design = str_replace("#GLOBAL_CLASS_AVERAGE_GRADE#", "<div id='$id'>$global_total_class_av</div>", $design);
 		$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($global_total_class_av).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 	}
+	if (@$config["class_lowest"] == 1) {
+		$lowest = null;
+		foreach ($global_class_grades as $g) {
+			if ($g["coef"] == 0) continue;
+			$grade = $g["grade"]/$g["coef"];
+			if ($lowest === null || $grade < $lowest) $lowest = $grade;
+		}
+		$id = "global_class_lowest_grade"."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+		$design = str_replace("#GLOBAL_CLASS_LOWEST_GRADE#", "<div id='$id'>$lowest</div>", $design);
+		$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($lowest).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+	}
+	if (@$config["class_highest"] == 1) {
+		$highest = null;
+		foreach ($global_class_grades as $g) {
+			if ($g["coef"] == 0) continue;
+			$grade = $g["grade"]/$g["coef"];
+			if ($highest === null || $grade > $highest) $highest = $grade;
+		}
+		$id = "global_class_highest_grade"."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+		$design = str_replace("#GLOBAL_CLASS_HIGHEST_GRADE#", "<div id='$id'>$highest</div>", $design);
+		$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($highest).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+	}
+	if (@$config["class_rank"] == 1) {
+		$sg = null;
+		$all_grades = array();
+		foreach ($global_class_grades as $sid=>$g) {
+			if ($g["coef"] == 0) continue;
+			$grade = $g["grade"]/$g["coef"];
+			array_push($all_grades, $grade);
+			if ($sid == $student["id"]) $sg = $grade;
+		}
+		if ($sg === null) $rank = "";
+		else {
+			$rank = 1;
+			foreach ($all_grades as $g) if ($g > $sg) $rank++;
+		}
+		$design = str_replace("#GLOBAL_CLASS_RANK#", $rank, $design);
+	}
 	if (@$config["batch_average"] == 1) {
 		$global_total_batch_av = $global_total_batch_coef > 0 ? $global_total_batch_av/$global_total_batch_coef : "null";
 		$id = "global_batch_average_grade"."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 		$design = str_replace("#GLOBAL_BATCH_AVERAGE_GRADE#", "<div id='$id'>$global_total_batch_av</div>", $design);
 		$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($global_total_batch_av).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+	}
+	if (@$config["batch_lowest"] == 1) {
+		$lowest = null;
+		foreach ($global_batch_grades as $g) {
+			if ($g["coef"] == 0) continue;
+			$grade = $g["grade"]/$g["coef"];
+			if ($lowest === null || $grade < $lowest) $lowest = $grade;
+		}
+		$id = "global_batch_lowest_grade"."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+		$design = str_replace("#GLOBAL_BATCH_LOWEST_GRADE#", "<div id='$id'>$lowest</div>", $design);
+		$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($lowest).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+	}
+	if (@$config["batch_highest"] == 1) {
+		$highest = null;
+		foreach ($global_batch_grades as $g) {
+			if ($g["coef"] == 0) continue;
+			$grade = $g["grade"]/$g["coef"];
+			if ($highest === null || $grade > $highest) $highest = $grade;
+		}
+		$id = "global_batch_highest_grade"."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
+		$design = str_replace("#GLOBAL_BATCH_HIGHEST_GRADE#", "<div id='$id'>$highest</div>", $design);
+		$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($highest).",false,{max:100,passing:".$passing.",color:false,system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+	}
+	if (@$config["batch_rank"] == 1) {
+		$sg = null;
+		$all_grades = array();
+		foreach ($global_batch_grades as $sid=>$g) {
+			if ($g["coef"] == 0) continue;
+			$grade = $g["grade"]/$g["coef"];
+			array_push($all_grades, $grade);
+			if ($sid == $student["id"]) $sg = $grade;
+		}
+		if ($sg === null) $rank = "";
+		else {
+			$rank = 1;
+			foreach ($all_grades as $g) if ($g > $sg) $rank++;
+		}
+		$design = str_replace("#GLOBAL_BATCH_RANK#", $rank, $design);
 	}
 	
 	echo $design;
@@ -341,7 +521,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 		generateGradesDetails($transcript_id, $subjects, $student, $batch, $period, $class_name, $student_grades, $id_suffix, $config, $grading_systems);
 }
 
-function generateSubjectSection($cat, $subject, $subj_content, $config, $period, $student_grades, $student, $transcript_id, $id_suffix, &$script_grades, $grading_systems, &$total_class_av, &$total_batch_av, &$total_class_coef, &$total_batch_coef) {
+function generateSubjectSection($cat, $subject, $subj_content, $config, $period, $student_grades, $student, $transcript_id, $id_suffix, &$script_grades, $grading_systems, &$total_class_av, &$total_batch_av, &$total_class_coef, &$total_batch_coef, &$class_students_grades, &$batch_students_grades) {
 	$subj_content = str_replace("#CATEGORY_NAME#", toHTML($cat["name"]), $subj_content);
 	$subj_content = str_replace("#SUBJECT_CODE#", toHTML($subject["code"]), $subj_content);
 	$subj_content = str_replace("#SUBJECT_NAME#", toHTML($subject["name"]), $subj_content);
@@ -365,18 +545,20 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 	$id = "grade_subject_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 	$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>".$student_grade["grade"]."</div>", $subj_content);
 	$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade["grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
-	if (@$config["class_average"] == 1 || @$config["class_lowest"] == 1 || @$config["class_highest"] == 1) {
+	if (@$config["class_average"] == 1 || @$config["class_lowest"] == 1 || @$config["class_highest"] == 1 || @$config["class_rank"] == 1) {
 		if (substr($transcript_id,0,1) == "_") {
 			// fake
 			$av = isset($subject["max_grade"]) && isset($subject["passing_grade"]) ? floatval($subject["passing_grade"])+(floatval($subject["max_grade"])-floatval($subject["passing_grade"]))*(rand() / getrandmax()) : null;
 			if ($av == null) {
 				$low = null;
 				$high = null;
+				$rank = null;
 			} else {
 				$low = $av-floatval($subject["passing_grade"])*(rand() / getrandmax());
 				if ($low < 0) $low = 0;
 				$high = $av+floatval($subject["passing_grade"])*(rand() / getrandmax());
 				if ($high > floatval($subject["max_grade"])) $high = floatval($subject["max_grade"]);
+				$rank = rand(1,25);
 			}
 		} else {
 			$info = PNApplication::$instance->teaching->getStudentGroupingInfoForSubject($student["id"], $subject["id"]);
@@ -390,22 +572,29 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 				foreach ($info["groups_together"] as $g) array_push($groups_ids, $g["id"]);
 			}
 			if (count($groups_ids) == 0) {
-				$av = $low = $high = null;
+				$av = $low = $high = $rank = null;
 			} else {
 				$q = PNApplication::$instance->students_groups->getStudentsQueryForGroups($groups_ids,false);
 				$q->groupBy("StudentGroup","people");
 				$q->join("StudentGroup","PublishedTranscriptStudentSubjectGrade",array("people"=>"people",null=>array("id"=>$transcript_id,"subject"=>$subject["id"])));
 				$q->field("PublishedTranscriptStudentSubjectGrade","grade");
+				$q->field("StudentGroup","people");
 				$q->whereNotNull("PublishedTranscriptStudentSubjectGrade","grade");
-				$grades = $q->executeSingleField();
+				$q->bypassSecurity(); // allow to get full class, even from a student account
+				$grades = $q->execute();
 				if (count($grades) == 0) {
-					$av = $low = $high = null;
+					$av = $low = $high = $rank = null;
 				} else {
 					$total = 0;
 					$high = null;
 					$low = null;
+					$sg = null;
 					foreach ($grades as $grade) {
-						$g = floatval($grade);
+						$g = floatval($grade["grade"]);
+						if ($grade["people"] == $student["id"]) $sg = $g;
+						if (!isset($class_students_grades[$grade["people"]])) $class_students_grades[$grade["people"]] = array("grade"=>0,"coef"=>0);
+						$class_students_grades[$grade["people"]]["grade"] += $g*$subject["coefficient"];
+						$class_students_grades[$grade["people"]]["coef"] += $subject["coefficient"];
 						if ($high === null) $high = $low = $g;
 						else {
 							if ($g > $high) $high = $g;
@@ -414,14 +603,22 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 						$total += $g;
 					}
 					$av = $total/count($grades);
+					$rank = null;
+					if ($sg <> null) {
+						$rank = 1;
+						foreach ($grades as $grade) {
+							$g = floatval($grade["grade"]);
+							if ($g > $sg) $rank++;
+						}
+					}
 				}
 			}
-		}
-		if (@$config["class_average"] == 1) {
 			if ($av <> null) {
 				$total_class_av += $av*$subject["coefficient"];
 				$total_class_coef += $subject["coefficient"];
 			}
+		}
+		if (@$config["class_average"] == 1) {
 			$id = "class_average_subject_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 			$subj_content = str_replace("#CLASS_AVERAGE#", "<div id='$id'>$av</div>", $subj_content);
 			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($av).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
@@ -436,24 +633,29 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 			$subj_content = str_replace("#CLASS_HIGHEST#", "<div id='$id'>$high</div>", $subj_content);
 			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($high).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 		}
+		if (@$config["class_rank"] == 1) {
+			$subj_content = str_replace("#CLASS_RANK#", $rank !== null ? $rank : "", $subj_content);
+		}
 	}
-	if (@$config["batch_average"] == 1 || @$config["batch_lowest"] == 1 || @$config["batch_highest"] == 1) {
+	if (@$config["batch_average"] == 1 || @$config["batch_lowest"] == 1 || @$config["batch_highest"] == 1 || @$config["batch_rank"] == 1) {
 		if (substr($transcript_id,0,1) == "_") {
 			// fake
 			$av = isset($subject["max_grade"]) && isset($subject["passing_grade"]) ? floatval($subject["passing_grade"])+(floatval($subject["max_grade"])-floatval($subject["passing_grade"]))*(rand() / getrandmax()) : null;
 			if ($av == null) {
 				$low = null;
 				$high = null;
+				$rank = null;
 			} else {
 				$low = $av-floatval($subject["passing_grade"])*(rand() / getrandmax());
 				if ($low < 0) $low = 0;
 				$high = $av+floatval($subject["passing_grade"])*(rand() / getrandmax());
 				if ($high > floatval($subject["max_grade"])) $high = floatval($subject["max_grade"]);
+				$rank = rand(1,25);
 			}
 		} else {
 			$groups = PNApplication::$instance->students_groups->getGroups(1, $subject["period"], $subject["specialization"] <> null ? $subject["specialization"] : false);
 			if (count($groups) == 0) {
-				$av = $low = $high = null;
+				$av = $low = $high = $rank = null;
 			} else {
 				$groups_ids = array();
 				foreach ($groups as $g) array_push($groups_ids, $g["id"]);
@@ -461,16 +663,24 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 				$q->groupBy("StudentGroup","people");
 				$q->join("StudentGroup","PublishedTranscriptStudentSubjectGrade",array("people"=>"people",null=>array("id"=>$transcript_id,"subject"=>$subject["id"])));
 				$q->field("PublishedTranscriptStudentSubjectGrade","grade");
+				$q->field("StudentGroup","people");
 				$q->whereNotNull("PublishedTranscriptStudentSubjectGrade","grade");
-				$grades = $q->executeSingleField();
+				$q->bypassSecurity(); // allow to get full class, even from a student account
+				$grades = $q->execute();
 				if (count($grades) == 0) {
-					$av = $low = $high = null;
+					$av = $low = $high = $rank = null;
 				} else {
 					$total = 0;
 					$high = null;
 					$low = null;
+					$rank = null;
+					$sg = null;
 					foreach ($grades as $grade) {
-						$g = floatval($grade);
+						$g = floatval($grade["grade"]);
+						if ($grade["people"] == $student["id"]) $sg = $g;
+						if (!isset($batch_students_grades[$grade["people"]])) $batch_students_grades[$grade["people"]] = array("grade"=>0,"coef"=>0);
+						$batch_students_grades[$grade["people"]]["grade"] += $g*$subject["coefficient"];
+						$batch_students_grades[$grade["people"]]["coef"] += $subject["coefficient"];
 						if ($high === null) $high = $low = $g;
 						else {
 							if ($g > $high) $high = $g;
@@ -479,14 +689,21 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 						$total += $g;
 					}
 					$av = $total/count($grades);
+					if ($sg <> null) {
+						$rank = 1;
+						foreach ($grades as $grade) {
+							$g = floatval($grade["grade"]);
+							if ($g > $sg) $rank++;
+						}
+					}
 				}
 			}
-		}
-		if (@$config["batch_average"] == 1) {
 			if ($av <> null) {
 				$total_batch_av += $av*$subject["coefficient"];
 				$total_batch_coef += $subject["coefficient"];
 			}
+		}
+		if (@$config["batch_average"] == 1) {
 			$id = "batch_average_subject_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 			$subj_content = str_replace("#BATCH_AVERAGE#", "<div id='$id'>$av</div>", $subj_content);
 			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($av).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
@@ -501,82 +718,107 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 			$subj_content = str_replace("#BATCH_HIGHEST#", "<div id='$id'>$high</div>", $subj_content);
 			$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($high).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 		}
+		if (@$config["batch_rank"] == 1) {
+			$subj_content = str_replace("#BATCH_RANK#", $rank !== null ? $rank : "", $subj_content);
+		}
 	}
 	return $subj_content;
 }
 
 function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, $period, $class_name, $student_grades, $id_suffix, $config, $grading_systems) {
+
 	$subjects = array();
+	$eval_types = array();
+	$evals = array();
+	
+	$subjects_ids = array();
 	foreach ($all_subjects as $s) {
-		if (substr($transcript_id,0,1) == "_") {
-			// fake
-			$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereValue("CurriculumSubjectEvaluationType","subject",$s["id"])->execute();
-			if (count($types) == 0) continue;
-			$subject = $s;
-			$subject["types"] = $types;
-			$types_ids = array();
-			foreach ($types as $t) array_push($types_ids, $t["id"]);
-			$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation","type",$types_ids)->execute();
-			$student_grade = 0;
-			$student_grade_coef = 0;
+		array_push($subjects_ids, $s["id"]);
+		$s["types"] = array();
+		$subjects[$s["id"]] = $s;
+	}
+	
+	if (substr($transcript_id,0,1) == "_") {
+		// fake
+		$types = SQLQuery::create()->select("CurriculumSubjectEvaluationType")->whereIn("CurriculumSubjectEvaluationType","subject",$subjects_ids)->execute();
+		foreach ($types as $type) {
+			$type["evals"] = array();
+			$eval_types[$type["id"]] = $type;
+			array_push($subjects[$type["subject"]]["types"], $type["id"]);
+		}
+		if (count($types) > 0) {
+			$evaluations = SQLQuery::create()->select("CurriculumSubjectEvaluation")->whereIn("CurriculumSubjectEvaluation","type",array_keys($eval_types))->execute();
+			foreach ($evaluations as $eval) {
+				$evals[$eval["id"]] = $eval;
+				array_push($eval_types[$eval["type"]]["evals"], $eval["id"]);
+			}
 			$good = rand(0,2);
-			for ($i = 0; $i < count($subject["types"]); $i++) {
-				$subject["types"][$i]["evaluations"] = array();
+			foreach ($eval_types as $et_id=>$et) {
 				$total = 0;
 				$total_coef = 0;
-				foreach ($evaluations as $e) {
+				foreach ($et["evals"] as $eid) {
 					switch ($good) {
-						case 0: $g = rand(floatval($subject["passing_grade"])+0.2*(floatval($subject["max_grade"])-floatval($subject["passing_grade"])),floatval($subject["max_grade"]))*100/floatval($subject["max_grade"]); break;
-						case 1: $g = rand(floatval($subject["passing_grade"]),floatval($subject["max_grade"]))*100/floatval($subject["max_grade"]); break;
+						case 0: $g = rand(floatval($subjects[$et["subject"]]["passing_grade"])+0.2*(floatval($subjects[$et["subject"]]["max_grade"])-floatval($subjects[$et["subject"]]["passing_grade"])),floatval($subjects[$et["subject"]]["max_grade"]))*100/floatval($subjects[$et["subject"]]["max_grade"]); break;
+						case 1: $g = rand(floatval($subjects[$et["subject"]]["passing_grade"]),floatval($subjects[$et["subject"]]["max_grade"]))*100/floatval($subjects[$et["subject"]]["max_grade"]); break;
 						case 2: $g = rand(0,100);
 					}
-					$e["student_grade"] = $g*floatval($e["max_grade"])/100;
-					$total += ($e["student_grade"]*100/floatval($e["max_grade"]))*intval($e["weight"]);
-					$total_coef += intval($e["weight"]);
-					if ($e["type"] == $subject["types"][$i]["id"])
-						array_push($subject["types"][$i]["evaluations"], $e);
+					$sg = $g*floatval($evals[$eid]["max_grade"])/100;
+					$evals[$eid]["student_grade"] = $sg;
+					$total += ($sg*100/floatval($evals[$eid]["max_grade"]))*intval($evals[$eid]["weight"]);
+					$total_coef += intval($evals[$eid]["weight"]);
 				}
-				$subject["types"][$i]["student_grade"] = $total_coef > 0 ? $total/$total_coef : null;
-				$student_grade += $subject["types"][$i]["student_grade"] * intval($subject["types"][$i]["weight"]);
-				$student_grade_coef += intval($subject["types"][$i]["weight"]);
+				if ($total_coef > 0)
+					$eval_types[$et_id]["student_grade"] = $total/$total_coef;
 			}
-			$student_grade = $student_grade_coef > 0 ? $student_grade / $student_grade_coef : null;
-			array_push($subjects, $subject);
-		} else {
-			// published
-			$types = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptEvaluationType")->whereValue("PublishedTranscriptEvaluationType","subject",$s["id"])->whereValue("PublishedTranscriptEvaluationType","transcript",$transcript_id)->execute();
-			if (count($types) == 0) continue;
-			$subject = $s;
-			$subject["types"] = $types;
-			$types_ids = array();
-			foreach ($types as $t) array_push($types_ids, $t["id"]);
-			$evaluations = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptEvaluation")->whereIn("PublishedTranscriptEvaluation","type",$types_ids)->execute();
-			$types_grades = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptStudentEvaluationTypeGrade")->whereIn("PublishedTranscriptStudentEvaluationTypeGrade","type",$types_ids)->whereValue("PublishedTranscriptStudentEvaluationTypeGrade","people",$student["id"])->execute();
-			$eval_ids = array();
-			foreach ($evaluations as $e) array_push($eval_ids, $e["id"]);
-			if (count($eval_ids) > 0)
-				$eval_grade = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptStudentEvaluationGrade")->whereIn("PublishedTranscriptStudentEvaluationGrade","evaluation",$eval_ids)->whereValue("PublishedTranscriptStudentEvaluationGrade","people",$student["id"])->execute();
-			else
-				$eval_grade = array();
-			for ($i = 0; $i < count($subject["types"]); $i++) {
-				$subject["types"][$i]["evaluations"] = array();
-				foreach ($evaluations as $e) {
-					foreach ($eval_grade as $g) if ($g["evaluation"] == $e["id"]) { $e["student_grade"] = $g["grade"]; break; }
-					if ($e["type"] == $subject["types"][$i]["id"])
-						array_push($subject["types"][$i]["evaluations"], $e);
+			foreach ($subjects as $sid=>$s) {
+				if (count($s["types"]) == 0) { unset($subjects[$sid]); continue; }
+				$total = 0;
+				$total_coef = 0;
+				foreach ($s["types"] as $tid) {
+					if (!array_key_exists("student_grade", $eval_types[$tid])) continue;
+					$total += $eval_types[$tid]["student_grade"] * intval($eval_types[$tid]["weight"]);
+					$total_coef += intval($eval_types[$tid]["weight"]);
 				}
-				foreach ($types_grades as $g)
-					if ($g["type"] == $subject["types"][$i]["id"])
-						$subject["types"][$i]["student_grade"] = $g["grade"];
+				if ($total_coef > 0)
+					$subjects[$sid]["student_grade"] = $total/$total_coef;
 			}
-			array_push($subjects, $subject);
-			$student_grade = null;
-			foreach ($student_grades as $sg) if ($sg["subject"] == $s["id"]) { $student_grade = $sg["grade"]; break; }
 		}
+	} else {
+		// published
+		$types = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptEvaluationType")->whereIn("PublishedTranscriptEvaluationType","subject",$subjects_ids)->whereValue("PublishedTranscriptEvaluationType","transcript",$transcript_id)->execute();
+		foreach ($types as $type) {
+			$type["evals"] = array();
+			$eval_types[$type["id"]] = $type;
+			array_push($subjects[$type["subject"]]["types"], $type["id"]);
+		}
+		if (count($types) > 0) {
+			$evaluations = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptEvaluation")->whereIn("PublishedTranscriptEvaluation","type",array_keys($eval_types))->execute();
+			foreach ($evaluations as $eval) {
+				$evals[$eval["id"]] = $eval;
+				array_push($eval_types[$eval["type"]]["evals"], $eval["id"]);
+			}
+			// grades by type
+			$types_grades = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptStudentEvaluationTypeGrade")->whereIn("PublishedTranscriptStudentEvaluationTypeGrade","type",array_keys($eval_types))->whereValue("PublishedTranscriptStudentEvaluationTypeGrade","people",$student["id"])->execute();
+			foreach ($types_grades as $tg)
+				$eval_types[$tg["type"]]["student_grade"] = $tg["grade"];
+			// grades by eval
+			if (count($evaluations) > 0) {
+				$eval_grade = SQLQuery::create()->bypassSecurity($student["id"] == PNApplication::$instance->user_management->people_id)->select("PublishedTranscriptStudentEvaluationGrade")->whereIn("PublishedTranscriptStudentEvaluationGrade","evaluation",array_keys($evals))->whereValue("PublishedTranscriptStudentEvaluationGrade","people",$student["id"])->execute();
+				foreach ($eval_grade as $eg)
+					$evals[$eg["evaluation"]]["student_grade"] = $eg["grade"];
+			}
+		}
+		// subject total grade
+		foreach ($student_grades as $sg)
+			$subjects[$sg["subject"]]["student_grade"] = $sg["grade"];
+		// remove empty subjects 
+		foreach ($subjects as $sid=>$s)
+			if (count($s["types"]) == 0) { unset($subjects[$sid]); continue; }
 	}
+	
 	if (count($subjects) == 0) return;
 	echo "<style type='text/css'>".file_get_contents(dirname(__FILE__)."/grades_details.css")."</style>";
-	echo "<div class='grades_details'>";
+	echo "<div>";
 	$header = file_get_contents(dirname(__FILE__)."/grades_details_header.html");
 	$header = str_replace("#First Name#", $student["first_name"], $header);
 	$header = str_replace("#Last Name#", $student["last_name"], $header);
@@ -586,8 +828,8 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 	$header = str_replace("#Academic Period Date#", date("d M Y",strtotime($period["academic_period_start"]))." to ".date("d M Y",strtotime($period["academic_period_end"])), $header);
 	echo $header;
 	$script = "";
-	foreach ($subjects as $subject) {
-		echo "<div class='subject_container'>";
+	foreach ($subjects as $subject_id=>$subject) {
+		echo "<div class='subject_container grades_details page_layout_section'>";
 			echo "<div class='subject_info_container'>";
 				echo "<div class='subject_info'>";
 					echo "<div class='subject_info_title'>Subject Code</div>";
@@ -628,9 +870,9 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 							echo $teacher["last_name"]." ".$teacher["first_name"];
 						}
 						echo "</div>";
+						echo "</div>";
 					}
 				}
-				echo "</div>";
 			echo "</div>";
 			echo "<table class='grades_table'>";
 			echo "<tr class='grades_title'>";
@@ -639,15 +881,17 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 			echo "<td>Max Pts</td>";
 			echo "<td>Coef.</td>";
 			echo "</tr>";
-			foreach ($subject["types"] as $type) {
+			foreach ($subject["types"] as $type_id) {
+				$type = $eval_types[$type_id];
 				echo "<tr class='grades'>";
-				echo "<td rowspan=".(count($type["evaluations"])+1)." class='evaluation_type'>";
+				echo "<td rowspan=".(count($type["evals"])+1)." class='evaluation_type'>";
 				echo toHTML($type["name"]);
 				echo "<br/>";
 				echo "<span style='font-weight:normal'>Coef. ".$type["weight"]."</span>";
 				echo "</td>";
 				$first = true;
-				foreach ($type["evaluations"] as $e) {
+				foreach ($type["evals"] as $eid) {
+					$e = $evals[$eid];
 					if ($first) $first = false; else echo "<tr class='grades'>";
 					echo "<td class='evaluation_name'>";
 					echo toHTML($e["name"]);
@@ -670,7 +914,7 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 				if (!$first) echo "<tr class='grades'>";
 				echo "<td class='evaluation_type_total_title'>TOTAL</td>";
 				echo "<td class='evaluation_type_total_grade grade' colspan=2>";
-				if ($type["student_grade"] !== null) {
+				if (@$type["student_grade"] !== null) {
 					$id = "grades_details_".$subject["id"]."_".$student["id"]."_eval_type_".$type["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
 					echo "<div id='$id'>".number_format($type["student_grade"],2)."</div>";
 					$script .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($type["student_grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
@@ -682,10 +926,10 @@ function generateGradesDetails($transcript_id, $all_subjects, $student, $batch, 
 			echo "<tr class='grades subject_total'>";
 			echo "<td colspan=2>Final Grade</td>";
 			echo "<td class='grade' colspan=2>";
-			if ($student_grade !== null) {
+			if (@$subject["student_grade"] !== null) {
 				$id = "grades_details_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
-				echo "<div id='$id'>".number_format($type["student_grade"],2)."</div>";
-				$script .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+				echo "<div id='$id'>".number_format($subject["student_grade"],2)."</div>";
+				$script .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($subject["student_grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]]).",color:false});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
 			}
 			echo "</td>";
 			echo "<td></td>";

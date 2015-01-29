@@ -137,9 +137,11 @@ class page_configure_transcripts extends Page {
 					<input type='checkbox' <?php echo @$config["batch_average"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('batch_average',this.checked?1:0);"/> Batch average<br/>
 					<input type='checkbox' <?php echo @$config["batch_lowest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('batch_lowest',this.checked?1:0);"/> Batch lowest<br/>
 					<input type='checkbox' <?php echo @$config["batch_highest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('batch_highest',this.checked?1:0);"/> Batch highest<br/>
+					<input type='checkbox' <?php echo @$config["batch_rank"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('batch_rank',this.checked?1:0);"/> Rank in Batch<br/>
 					<input type='checkbox' <?php echo @$config["class_average"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_average',this.checked?1:0);"/> Class/Group average<br/>
 					<input type='checkbox' <?php echo @$config["class_lowest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_lowest',this.checked?1:0);"/> Class/Group lowest<br/>
 					<input type='checkbox' <?php echo @$config["class_highest"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_highest',this.checked?1:0);"/> Class/Group highest<br/>
+					<input type='checkbox' <?php echo @$config["class_rank"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('class_rank',this.checked?1:0);"/> Rank in Class/Group<br/>
 				</div>
 				<b>Annexes</b><div style='margin-left:10px'>
 					<input type='checkbox' <?php echo @$config["grades_details"] == 1 ? "checked='checked'" : "";?> onchange="saveTranscriptConfig('grades_details',this.checked?1:0);"/> Grades details by subject<br/>

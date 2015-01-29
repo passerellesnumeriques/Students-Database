@@ -160,6 +160,11 @@ class SQLQuery {
 	 */
 	public function &database($db_name) { $this->database = $db_name; return $this; }
 	
+	public function &databaseOfDomain($domain) {
+		global $db_config;
+		return $this->database($db_config["prefix"].$domain);
+	}
+	
 	/** Select a sub model
 	 * @param string $key_table the table defining the sub model
 	 * @param number $key the key defining the sub model instance

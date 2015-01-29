@@ -18,7 +18,8 @@
 .grades_details .student_information .name {
 	font-weight: bold;
 }
-.grades_details .subject_container {
+.grades_details.subject_container {
+	margin-bottom: 10px;'
 }
 .grades_details .subject_info_container {
 	margin-bottom: 3px;
@@ -51,7 +52,7 @@
 .grades_details .grades_table td:last-child {
 	border-right: none;
 }
-.grades_details .grades_title td {
+.grades_details .grades_table .grades_title td {
 	font-weight: bold;
 	text-align: center;
 	border-bottom: 1px solid black;

@@ -12,7 +12,9 @@ class service_get extends Service {
 		$id = $_GET["id"];
 		if ($this->file == null || $this->id <> $id) {
 			$this->id = $id;
-			$this->file = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id)->executeSingleRow();
+			$q = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id);
+			if (isset($_GET["domain"])) $q->databaseOfDomain($_GET["domain"]);
+			$this->file = $q->executeSingleRow();
 		}
 		if ($this->file <> null && $this->file["mime"] <> null) return $this->file["mime"];
 		return "application/octet-stream";
@@ -23,7 +25,9 @@ class service_get extends Service {
 		if (isset($_POST["download"])) $_GET["filename"] = $_POST["download"];
 		if ($this->file == null || $this->id <> $id) {
 			$this->id = $id;
-			$this->file = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id)->executeSingleRow();
+			$q = SQLQuery::create()->bypassSecurity()->select("Storage")->whereValue("Storage", "id", $id);
+			if (isset($_GET["domain"])) $q->databaseOfDomain($_GET["domain"]);
+			$this->file = $q->executeSingleRow();
 		}
 		if ($this->file == null) {
 			header("HTTP/1.0 400 Invalid storage id");
@@ -37,7 +41,7 @@ class service_get extends Service {
 			header("Location: ?id=".$id."&revision=".$this->file["revision"].(isset($_GET["filename"]) ? "&filename=".urlencode($_GET["filename"]) : ""));
 			return;
 		}
-		$path = $component->get_data_path($id);
+		$path = $component->get_data_path($id, @$_GET["domain"]);
 		include("cache.inc");
 		cacheHeadersFromFile($path);
 		if (isset($_GET["filename"]))

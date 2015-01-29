@@ -432,7 +432,10 @@ class curriculum extends Component {
 		if ($period_id <> null) $q->whereValue("CurriculumSubject", "period", $period_id);
 		else {
 			$periods = $this->getBatchPeriods($batch_id);
-			if (count($periods) == 0) return array();
+			if (count($periods) == 0) {
+				$q->where("0");
+				return $q;
+			}
 			$ids = array();
 			foreach ($periods as $period) array_push($ids, $period["id"]);
 			$q->whereIn("CurriculumSubject", "period", $ids);
