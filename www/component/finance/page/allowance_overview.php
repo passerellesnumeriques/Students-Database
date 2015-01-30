@@ -152,7 +152,7 @@ class page_allowance_overview extends Page {
 					echo toHTML($name);
 					if ($can_edit) {
 						echo "<button class='flat small_icon' title='Edit this deduction' onclick='editDeduction(".$batch["id"].",".toHTMLAttribute($name).");'><img src='".theme::$icons_10["edit"]."'/></button>";
-						echo "<button class='flat small_icon' title='Remove this deduction for all students' onclick='removeDeduction(".toHTMLAttribute($name).");'><img src='".theme::$icons_10["remove"]."'/></button>";
+						echo "<button class='flat small_icon' title='Remove this deduction for all students' onclick='removeDeduction(".$batch["id"].",".toHTMLAttribute($name).");'><img src='".theme::$icons_10["remove"]."'/></button>";
 					}
 					echo "</th>";
 				}
@@ -174,7 +174,7 @@ class page_allowance_overview extends Page {
 						$deduc = null;
 						foreach ($students_deductions[$student["base_amount"]["id"]] as $d)
 							if ($d["name"] == $deductions[$i]) { $deduc = $d; break; }
-						echo "<td class='$cl' style='text-align:right;".($can_edit ? "cursor:pointer;' title=".toHTMLAttribute("Click to edit deduction ".$deductions[$i]." for ".$student["last_name"]." ".$student["first_name"])." onclick='editStudentDeduction(".$student["people_id"].",".($deduc <> null ? $deduc["id"] : "null").");'" : "'").">";
+						echo "<td class='$cl' style='text-align:right;".($can_edit ? "cursor:pointer;' title=".toHTMLAttribute("Click to edit deduction ".$deductions[$i]." for ".$student["last_name"]." ".$student["first_name"])." onclick='editStudentDeduction(".$student["people_id"].",".($deduc <> null ? $deduc["id"] : "null").",this,".toHTMLAttribute($name).");'" : "'").">";
 						if ($deduc <> null) {
 							echo $deduc["amount"];
 							$total -= $deduc["amount"];
@@ -229,6 +229,9 @@ class page_allowance_overview extends Page {
 		</tr>
 	</table>
 </div>
+<div style='display:none;padding:10px;' id='popup_edit_student_global_deduction'>
+	Deduction for <span id='student_global_deduction_name'></span>: <span id='student_global_deduction_amount'></span>
+</div>
 <script type='text/javascript'>
 window.onuserinactive = function() { var u = new window.URL(location.href);delete u.params.edit; location.href = u.toString(); };
 var batches = <?php echo json_encode($batches);?>;
@@ -239,8 +242,7 @@ function removeForBatch(batch_id) {
 	confirmDialog("Are you sure you want to remove <?php echo $allowance["name"];?> for Batch "+batch.name+" ?",function(yes) {
 		if (!yes) return;
 		service.json("finance","remove_students_allowance",{batch:batch_id,allowance:<?php echo $allowance_id;?>},function(res) {
-			if (!res) popup.unfreeze();
-			else location.reload();
+			if (res) location.reload();
 		});
 	});
 }
@@ -360,12 +362,47 @@ function editDeduction(batch_id, deduction_name) {
 	popup.show();
 }
 
-function removeDeduction(deduction_name) {
-	// TODO
+function removeDeduction(batch_id, deduction_name) {
+	confirmDialog("Are you sure to remove "+deduction_name+" ?",function(yes) {
+		if (!yes) return;
+		service.json("finance","remove_allowance_deduction",{batch:batch_id,deduction_name:deduction_name,allowance:<?php echo $allowance_id;?>},function(res) {
+			if (res) location.reload();
+		});
+	});
 }
 
-function editStudentDeduction(student_id, deduc_id) {
-	// TODO
+var student_global_deduction_amount = new field_decimal(0,true,{can_be_null:false,min:0,integer_digits:10,decimal_digits:2});
+document.getElementById('student_global_deduction_amount').appendChild(student_global_deduction_amount.getHTMLElement());
+function editStudentDeduction(student_id, deduc_id, td, deduction_name) {
+	var student_name = td.parentNode.getAttribute("student_name");
+	var popup = new popup_window("Set Deduction For "+student_name,null,document.getElementById('popup_edit_student_global_deduction'));
+	popup.keep_content_on_close = true;
+	var current_amount = td.innerHTML;
+	if (current_amount.length == 0) current_amount = 0; else current_amount = parseFloat(current_amount);
+	student_global_deduction_amount.setData(current_amount);
+	var name = document.getElementById('student_global_deduction_name');
+	name.removeAllChildren();
+	name.appendChild(document.createTextNode(deduction_name));
+	if (current_amount)
+		popup.addIconTextButton(theme.icons_16.remove,"Remove deduction for this student",'remove',function() {
+			confirmDialog("Are you sure you want to remove this deduction for "+student_name+" ?",function(yes) {
+				if (!yes) return;
+				popup.freeze("Removing allowance...");
+				service.json("finance","set_student_allowance_deduction",{amount:0,student:student_id,deduction:deduc_id,allowance:<?php echo $allowance_id;?>},function(res) {
+					if (!res) popup.unfreeze();
+					else location.reload();
+				});
+			});
+		});
+	popup.addOkCancelButtons(function() {
+		if (student_global_deduction_amount.hasError()) { alert("Please enter a valid amount"); return; }
+		popup.freeze("Setting deduction amount...");
+		service.json("finance","set_student_allowance_deduction",{student:student_id,amount:student_global_deduction_amount.getCurrentData(),allowance:<?php echo $allowance_id;?>,deduction:deduc_id,deduction_name:deduction_name},function(res) {
+			if (!res) popup.unfreeze();
+			else location.reload();
+		});
+	});
+	popup.show();
 }
 <?php } ?>
 </script>

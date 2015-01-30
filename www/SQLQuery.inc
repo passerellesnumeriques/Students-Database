@@ -2349,7 +2349,7 @@ class SQLQuery {
 					$sm[0]->removeTables($key);
 			
 			// unlock
-			foreach ($locks as $lock) DataBaseLock::unlock($lock);
+			DataBaseLock::unlockMultiple($locks);
 		} catch (Exception $e) {
 			if (!$in_transaction) SQLQuery::rollbackTransaction();
 			throw $e;
