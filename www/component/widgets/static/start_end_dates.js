@@ -12,6 +12,7 @@ function ConfigurableDate() {
 ConfigurableDate.prototype = {
 	onchange: null,
 	getDate: function() {},
+	setDate: function(date) {},
 	setMinimum: function(min) {},
 	setMaximum: function(max) {}
 };
@@ -27,6 +28,10 @@ function SelectDay(container, current, min, max) {
 	this.getDate = function() {
 		if (!this.select) return null;
 		return this.select.getDate();
+	};
+	this.setDate = function(date) {
+		if (!this.select) current = date;
+		else this.select.setDate(date);
 	};
 	this.setMinimum = function(min) {
 		this.min = min;
@@ -55,6 +60,9 @@ function SelectMonth(container, current, min, max) {
 	this.date.setDate(1);
 	this.getDate = function() {
 		return this.date;
+	};
+	this.setDate = function(date) {
+		this.select.value = date.getTime();
 	};
 	this.setMinimum = function(min) {
 		this.min = new Date(min.getTime());

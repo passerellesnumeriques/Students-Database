@@ -30,6 +30,8 @@ class page_allowance_overview extends Page {
 		if ($can_edit) {
 			$this->requireJavascript("typed_field.js");
 			$this->requireJavascript("field_decimal.js");
+			$this->requireJavascript("field_date.js");
+			$this->requireJavascript("start_end_dates.js");
 			$this->requireJavascript("popup_window.js");
 		}
 		
@@ -126,12 +128,64 @@ class page_allowance_overview extends Page {
 				if (!in_array($d["name"], $deductions)) array_push($deductions, $d["name"]);
 				array_push($students_deductions[$d["student_allowance"]], $d);
 			}
+			$base_dates = SQLQuery::create()
+				->select("StudentAllowance")
+				->whereValue("StudentAllowance","allowance",$allowance_id)
+				->whereIn("StudentAllowance","student",array_keys($students))
+				->whereNotNull("StudentAllowance","date")
+				->orderBy("StudentAllowance", "date")
+				->execute()
+				;
+			$students_allowances_dates = array();
+			$start_date = null;
+			$end_date = null;
+			foreach ($base_dates as $date) {
+				if (!isset($students[$date["student"]]["dates"])) $students[$date["student"]]["dates"] = array();
+				$d = \datamodel\ColumnDate::toTimestamp($date["date"]);
+				if (!isset($students[$date["student"]]["dates"][$d])) $students[$date["student"]]["dates"][$d] = array();
+				array_push($students[$date["student"]]["dates"][$d], $date["id"]);
+				$date["deductions"] = array();
+				$students_allowances_dates[$date["id"]] = $date;
+				if ($start_date == null || $d < $start_date) $start_date = $d;
+				if ($end_date == null || $d > $end_date) $end_date = $d;
+			}
+			if (count($students_allowances_dates) > 0)
+				$list = SQLQuery::create()
+					->select("StudentAllowanceDeduction")
+					->whereIn("StudentAllowanceDeduction", "student_allowance", array_keys($students_allowances_dates))
+					->execute();
+			else
+				$list = array();
+			foreach ($list as $d) array_push($students_allowances_dates[$d["student_allowance"]]["deductions"], $d);
+			$dates = array();
+			if ($start_date <> null) {
+				$date = $start_date;
+				$tz = date_default_timezone_get();
+				date_default_timezone_set("GMT");
+				do {
+					array_push($dates, $date);
+					switch ($allowance["frequency"]) {
+						case "Daily": $date += 24*60*60; break;
+						case "Weekly": $date += 7*24*60*60; break;
+						case "Monthly":
+							$d = getdate($date);
+							$date = mktime(0,0,0,$d["mon"]+1,1,$d["year"]);
+							break;
+						case "Yearly":
+							$d = getdate($date);
+							$date = mktime(0,0,0,1,1,$d["year"]+1);
+							break;
+					}
+				} while ($date <= $end_date);
+				date_default_timezone_set($tz);
+			}
 			if ($can_edit) {
 				echo "<div class='page_section_title shadow'>";
 				$can_skip = count($base_amount) > 0 && count($base_amount) < count($students);
 				echo "<button class='action' onclick='setBaseAmountForBatch(".$batch["id"].",".json_encode($can_skip).");'>Set Base Amount</button>";
 				if (count($base_amount) > 0)
 					echo "<button class='action' onclick='modifyBaseAmount(".$batch["id"].");'>Modify Base Amount</button>";
+				echo "<button class='action' onclick='planForBatch(".$batch["id"].");'>Plan Allowance</button>";
 				echo "</div>";
 			}
 			$cols_deductions = count($deductions);
@@ -144,6 +198,24 @@ class page_allowance_overview extends Page {
 				if ($can_edit) echo " <button class='flat small_icon' title='Add a new deduction for all students' onclick='addGlobalDeduction(".$batch["id"].");'><img src='".theme::$icons_10["add"]."'/></button>";
 				echo "</th>";
 				echo "<th rowspan=2>Total</th>";
+				foreach ($dates as $date) {
+					echo "<th";
+					if ($allowance["times"] == 1) echo " rowspan=2";
+					else echo " colspan=".$allowance["times"];
+					echo ">";
+					switch ($allowance["frequency"]) {
+						case "Daily": case "Weekly":
+							echo date("d M Y", $date);
+							break;
+						case "Monthly":
+							echo date("M Y", $date);
+							break;
+						case "Yearly":
+							echo date("Y", $date);
+							break;
+					}
+					echo "</th>";
+				}
 			echo "</tr>";
 			echo "<tr>";
 				if (count($deductions) == 0) echo "<th></th>";
@@ -156,6 +228,11 @@ class page_allowance_overview extends Page {
 					}
 					echo "</th>";
 				}
+				if ($allowance["times"] > 1)
+					foreach ($dates as $date) {
+						for ($i = 1; $i <= $allowance["times"]; $i++)
+							echo "<th>$i</th>";
+					}
 			echo "</tr>";
 			echo "</thead><tbody>";
 			foreach ($students as $student) {
@@ -184,6 +261,25 @@ class page_allowance_overview extends Page {
 					echo "<td style='text-align:right'>";
 					echo number_format($total,2);
 					echo "</td>";
+					// dates
+					foreach ($dates as $date) {
+						$sa = array();
+						if (isset($student["dates"]) && isset($student["dates"][$date]))
+							foreach ($student["dates"][$date] as $sa_id)
+								array_push($sa, $students_allowances_dates[$sa_id]);
+						for ($i = 0; $i < $allowance["times"]; $i++) {
+							if (count($sa) <= $i) {
+								echo "<td style='background-color:#A0A0A0;'></td>";
+								continue;
+							}
+							echo "<td style='text-align:right;'>";
+							$total = floatval($sa[$i]["amount"]);
+							foreach ($sa[$i]["deductions"] as $d)
+								$total -= floatval($d["amount"]);
+							echo number_format($total,2);
+							echo "</td>";
+						}
+					}
 				}
 				echo "</tr>";
 			}
@@ -231,6 +327,26 @@ class page_allowance_overview extends Page {
 </div>
 <div style='display:none;padding:10px;' id='popup_edit_student_global_deduction'>
 	Deduction for <span id='student_global_deduction_name'></span>: <span id='student_global_deduction_amount'></span>
+</div>
+<div style='display:none;padding:10px;' id='popup_plan'>
+	<table>
+		<tr>
+			<td colspan=2>
+				<?php
+				if ($allowance["times"] > 1) echo $allowance["times"]." times ";
+				echo $allowance["frequency"]; 
+				?>
+			</td>
+		</tr>
+		<tr>
+			<td>Starting from</td>
+			<td id='plan_from'></td>
+		</tr>
+		<tr>
+			<td>Until</td>
+			<td id='plan_to'></td>
+		</tr>
+	</table>
 </div>
 <script type='text/javascript'>
 window.onuserinactive = function() { var u = new window.URL(location.href);delete u.params.edit; location.href = u.toString(); };
@@ -403,6 +519,40 @@ function editStudentDeduction(student_id, deduc_id, td, deduction_name) {
 		});
 	});
 	popup.show();
+}
+<?php
+switch ($allowance["frequency"]) {
+	case "Daily":
+	case "Weekly":
+		echo "var plan_from = new SelectDay(document.getElementById('plan_from'),new Date(2000,1,1),new Date(2000,1,1),new Date(2000,1,1));";
+		echo "var plan_to = new SelectDay(document.getElementById('plan_to'),new Date(2000,1,1),new Date(2000,1,1),new Date(2000,1,1));";
+		break;
+	case "Monthly":
+	case "Yearly":
+		echo "var plan_from = new SelectMonth(document.getElementById('plan_from'),new Date(2000,1,1),new Date(2000,1,1),new Date(2000,1,1));";
+		echo "var plan_to = new SelectMonth(document.getElementById('plan_to'),new Date(2000,1,1),new Date(2000,1,1),new Date(2000,1,1));";
+		break;
+} 
+?>
+var plan_dates = new StartEndDates(plan_from, plan_to);
+function planForBatch(batch_id) {
+	var batch = null;
+	for (var i = 0; i < batches.length; ++i) if (batches[i].id == batch_id) { batch = batches[i]; break; }
+	plan_from.setMinimum(parseSQLDate(batch.start_date));
+	plan_from.setMaximum(parseSQLDate(batch.end_date));
+	plan_to.setMinimum(parseSQLDate(batch.start_date));
+	plan_to.setMaximum(parseSQLDate(batch.end_date));
+	var popup = new popup_window("Planning",null,document.getElementById('popup_plan'));
+	popup.keep_content_on_close = true;
+	popup.addOkCancelButtons(function() {
+		popup.freeze("Setting allowance dates...");
+		service.json("finance","set_allowance_planning",{batch:batch_id,start:dateToSQL(plan_from.getDate()),end:dateToSQL(plan_to.getDate()),allowance:<?php echo $allowance_id;?>},function(res) {
+			if (!res) popup.unfreeze();
+			else location.reload();
+		});
+	});
+	popup.show();
+	// TODO
 }
 <?php } ?>
 </script>
