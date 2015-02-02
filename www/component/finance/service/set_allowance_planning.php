@@ -90,7 +90,8 @@ class service_set_allowance_planning extends Service {
 							"student"=>$student_id,
 							"allowance"=>$allowance_id,
 							"date"=>$sql_date,
-							"amount"=>$base["amount"]
+							"amount"=>$base["amount"],
+							"paid"=>false
 						));
 						foreach ($base["deductions"] as $d) {
 							array_push($insert_deductions, array(

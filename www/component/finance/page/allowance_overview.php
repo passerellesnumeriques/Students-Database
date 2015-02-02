@@ -32,8 +32,8 @@ class page_allowance_overview extends Page {
 			$this->requireJavascript("field_decimal.js");
 			$this->requireJavascript("field_date.js");
 			$this->requireJavascript("start_end_dates.js");
-			$this->requireJavascript("popup_window.js");
 		}
+		$this->requireJavascript("popup_window.js");
 		
 		theme::css($this, "grid.css");
 ?>
@@ -134,6 +134,7 @@ class page_allowance_overview extends Page {
 				->whereIn("StudentAllowance","student",array_keys($students))
 				->whereNotNull("StudentAllowance","date")
 				->orderBy("StudentAllowance", "date")
+				->orderBy("StudentAllowance", "id")
 				->execute()
 				;
 			$students_allowances_dates = array();
@@ -235,6 +236,7 @@ class page_allowance_overview extends Page {
 					}
 			echo "</tr>";
 			echo "</thead><tbody>";
+			$now = time();
 			foreach ($students as $student) {
 				echo "<tr student_name=".toHTMLAttribute($student["last_name"]." ".$student["first_name"]).">";
 				echo "<td>".toHTML($student["last_name"]." ".$student["first_name"])."</td>";
@@ -272,7 +274,10 @@ class page_allowance_overview extends Page {
 								echo "<td style='background-color:#A0A0A0;'></td>";
 								continue;
 							}
-							echo "<td style='text-align:right;'>";
+							echo "<td style='background-color:";
+							if ($sa[$i]["paid"] <> 1) echo $date < $now ? "#FFA0A0" : "#FFD0D0";
+							else echo "#C0F0C0";
+							echo ";text-align:right;cursor:pointer;' title=".toHTMLAttribute("Click to see details of this allowance for ".$student["last_name"]." ".$student["first_name"])." onclick='openStudentAllowance(".$sa[$i]["id"].");'>";
 							$total = floatval($sa[$i]["amount"]);
 							foreach ($sa[$i]["deductions"] as $d)
 								$total -= floatval($d["amount"]);
@@ -552,9 +557,14 @@ function planForBatch(batch_id) {
 		});
 	});
 	popup.show();
-	// TODO
 }
 <?php } ?>
+function openStudentAllowance(student_allowance_id) {
+	var popup = new popup_window("Student Allowance Details",null,"");
+	popup.setContentFrame("/dynamic/finance/page/student_allowance?id="+student_allowance_id);
+	popup.addCloseButton();
+	popup.show();
+}
 </script>
 <?php 
 	}

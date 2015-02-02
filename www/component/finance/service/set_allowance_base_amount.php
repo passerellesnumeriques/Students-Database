@@ -33,7 +33,8 @@ class service_set_allowance_base_amount extends Service {
 					"student"=>$student,
 					"allowance"=>$input["allowance"],
 					"date"=>null,
-					"amount"=>$input["amount"]
+					"amount"=>$input["amount"],
+					"paid"=>false
 				));
 			SQLQuery::create()->insertMultiple("StudentAllowance", $insert);
 		}
