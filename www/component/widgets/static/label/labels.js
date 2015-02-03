@@ -34,6 +34,7 @@ function labels(color, list, onedit, onremove, add_list_provider, onready) {
 		} : null, onremove && removable ? function() {
 			onremove(id, function() {
 				t.element.removeChild(item.label.element);
+				layout.changed(t.element);
 			});
 		} : null);
 		this.list.push(item);
@@ -42,6 +43,7 @@ function labels(color, list, onedit, onremove, add_list_provider, onready) {
 			this.element.insertBefore(item.label.element, t.addButton);
 		else
 			this.element.appendChild(item.label.element);
+		layout.changed(this.element);
 	};
 	
 	require("label.js",function() {

@@ -656,7 +656,8 @@ class ContactPointDataScreen implements datamodel\SimpleDataScreen {
 		$ok = false;
 		require_once("ContactPointPeopleTypePlugin.inc");
 		foreach (PNApplication::$instance->components as $c) {
-			foreach ($c->getPluginImplementations("ContactPointPeopleTypePlugin") as $pi) {
+			foreach ($c->getPluginImplementations("PeopleTypePlugin") as $pi) {
+				if (!($pi instanceof ContactPointPeopleTypePlugin)) continue;
 				if (in_array($pi->getId(), $people_types) && $pi->canRead()) {
 					$ok = true;
 					break;
