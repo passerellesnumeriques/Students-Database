@@ -562,7 +562,6 @@ function planForBatch(batch_id) {
 function openStudentAllowance(student_allowance_id) {
 	var popup = new popup_window("Student Allowance Details",null,"");
 	popup.setContentFrame("/dynamic/finance/page/student_allowance?id="+student_allowance_id);
-	popup.addCloseButton();
 	popup.show();
 }
 </script>
