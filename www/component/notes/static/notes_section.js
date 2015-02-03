@@ -190,12 +190,12 @@ notes_section.prototype = {
 			onsaved();
 		}
 	},
-	save: function(attached_key) {
-		if (this.attached_key > 0) return;
+	save: function(attached_key, ondone) {
+		if (this.attached_key > 0) { if (ondone) ondone(); return; }
 		this.attached_key = attached_key;
 		var t=this;
 		var next = function(index) {
-			if (index == t.notes.length) return;
+			if (index == t.notes.length) { if (ondone) ondone(); return; }
 			service.json("notes","create",{title:t.notes[index].title,text:t.notes[index].text,author:t.notes[index].author.id,table:t.attached_table,key:t.attached_key,sub_model:t.sub_model,sub_model_instance:t.sub_model_instance},function(res) {
 				if (res && res.id) t.notes[index].id = res.id;
 				next(index+1);
