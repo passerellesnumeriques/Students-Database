@@ -172,7 +172,21 @@ function editBaseAmount(td) {
 	field.ondataunchanged.addListener(function() { pnapplication.dataSaved('base_amount'); });
 }
 function editDeduction(td, deduction_id) {
-	// TODO
+	var field = new field_decimal(amount_deducted[deduction_id],true,{min:0,can_be_null:false,integer_digits:10,decimal_digits:2});
+	td.removeAllChildren();
+	td.appendChild(document.createTextNode("- "));
+	td.appendChild(field.getHTMLElement());
+	td.onclick = null;
+	td.title = '';
+	td.style.cursor = '';
+	td.className = '';
+	layout.changed(td);
+	field.onchange.addListener(function() {
+		amount_deducted[deduction_id] = field.getCurrentData();
+		refreshTotal();
+	});
+	field.ondatachanged.addListener(function() { pnapplication.dataUnsaved('deduction_'+deduction_id); });
+	field.ondataunchanged.addListener(function() { pnapplication.dataSaved('deduction_'+deduction_id); });
 }
 function removeDeduction(button, deduction_id) {
 	// TODO
