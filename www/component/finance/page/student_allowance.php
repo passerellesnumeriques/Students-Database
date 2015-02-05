@@ -215,7 +215,7 @@ popup.addIconTextButton(theme.icons_16.add, "New Deduction...", "add_deduction",
 			if (amount_deducted[existing.id] != 0) continue; // already set
 			// was previously set, but it has been removed in the screen
 		} else {
-			if (amount_deducted[base_deductions[i]]) continue; // already added
+			if (amount_deducted[base_deductions[i].id]) continue; // already added
 		}
 		var radio = document.createElement("INPUT");
 		radio.type = 'radio';
@@ -248,7 +248,7 @@ popup.addIconTextButton(theme.icons_16.add, "New Deduction...", "add_deduction",
 				if (name.length == 0) { alert("Please enter a name for the new deduction"); return; }
 				for (var i = 0; i < deductions.length; ++i)
 					if (deductions[i].name.isSame(name)) {
-						if (amount_deducted[deductions[i]] != 0) { alert("This deduction already exists"); return; }
+						if (amount_deducted[deductions[i].id] != 0) { alert("This deduction already exists"); return; }
 						d = deductions[i];
 						break;
 					}
@@ -269,8 +269,27 @@ popup.addIconTextButton(theme.icons_16.add, "New Deduction...", "add_deduction",
 			}
 			var table = total_amount.parentNode.parentNode;
 			var tr = document.createElement("TR");
-			
-			// TODO create row
+			var td = document.createElement("TD");
+			var icon = document.createElement("IMG");
+			icon.src = theme.icons_10.remove;
+			icon.style.cursor = 'pointer';
+			icon.style.visibility = 'hidden';
+			icon.title = 'Remove this deduction';
+			icon.onclick = function() { removeDeduction(this, d.id); };
+			td.appendChild(icon);
+			tr.appendChild(td);
+			td = document.createElement("TD");
+			td.appendChild(document.createTextNode(d.name));
+			tr.appendChild(td);
+			td = document.createElement("TD");
+			editDeduction(td, d.id);
+			tr.appendChild(td);
+			td = document.createElement("TD");
+			td = document.createElement("TD");
+			table.insertBefore(tr, total_amount.parentNode);
+			animation.appearsOnOver(tr, [icon]);
+			p.close();
+			pnapplication.dataUnsaved('new_deduction');
 		});
 		p.show();
 	});
