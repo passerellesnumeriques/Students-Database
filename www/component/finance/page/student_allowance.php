@@ -149,8 +149,10 @@ var base_amount = <?php echo $base_allowance["amount"];?>;
 var initial_base_amount = base_amount;
 var deductions = <?php echo json_encode($deductions);?>;
 var empty_deductions = <?php echo json_encode($empty_deductions);?>;
+var base_deductions = <?php echo json_encode($base_deductions);?>;
 var total_amount = document.getElementById('total_amount');
 var amount_deducted = {};
+var new_deduction_id = -1;
 for (var i = 0; i < deductions.length; ++i)
 	amount_deducted[deductions[i].id] = deductions[i].amount;
 for (var i = 0; i < empty_deductions.length; ++i)
@@ -189,13 +191,90 @@ function editDeduction(td, deduction_id) {
 	field.ondataunchanged.addListener(function() { pnapplication.dataSaved('deduction_'+deduction_id); });
 }
 function removeDeduction(button, deduction_id) {
-	// TODO
+	amount_deducted[deduction_id] = 0;
+	var tr = button.parentNode.parentNode;
+	layout.changed(tr.parentNode);
+	tr.parentNode.removeChild(tr);
+	refreshTotal();
 }
 function refreshTotal() {
 	var total = base_amount;
 	for (var id in amount_deducted) total -= amount_deducted[id];
 	total_amount.innerHTML = total.toFixed(2);
 }
+popup.addIconTextButton(theme.icons_16.add, "New Deduction...", "add_deduction", function() {
+	var content = document.createElement("DIV");
+	content.style.padding = "10px";
+	var radios = [];
+	// first, propose to add the base deductions which have been removed
+	for (var i = 0; i < base_deductions.length; ++i) {
+		var existing = null;
+		for (var j = 0; j < deductions.length; ++j)
+			if (deductions[j].name == base_deductions[i].name) { existing = deductions[j]; break; }
+		if (existing != null) {
+			if (amount_deducted[existing.id] != 0) continue; // already set
+			// was previously set, but it has been removed in the screen
+		} else {
+			if (amount_deducted[base_deductions[i]]) continue; // already added
+		}
+		var radio = document.createElement("INPUT");
+		radio.type = 'radio';
+		radio.name = 'choice';
+		radio.style.verticalAlign = 'bottom';
+		radio._deduction = existing ? existing : base_deductions[i];
+		radios.push(radio);
+		content.appendChild(radio);
+		content.appendChild(document.createTextNode(radio._deduction.name));
+		content.appendChild(document.createElement("BR"));
+	}
+	// then, propose to create a custom one
+	var radio_custom = document.createElement("INPUT");
+	radio_custom.type = 'radio';
+	radio_custom.name = 'choice';
+	radio_custom.style.verticalAlign = 'bottom';
+	content.appendChild(radio_custom);
+	content.appendChild(document.createTextNode("Custom deduction: "));
+	var input_custom = document.createElement("INPUT");
+	input_custom.type = 'text';
+	input_custom.maxLength = 30;
+	input_custom.style.verticalAlign = "bottom";
+	content.appendChild(input_custom);
+	require("popup_window.js", function() {
+		var p = new popup_window("New Deduction", null, content);
+		p.addOkCancelButtons(function() {
+			var d = null;
+			if (radio_custom.checked) {
+				var name = input_custom.value.trim();
+				if (name.length == 0) { alert("Please enter a name for the new deduction"); return; }
+				for (var i = 0; i < deductions.length; ++i)
+					if (deductions[i].name.isSame(name)) {
+						if (amount_deducted[deductions[i]] != 0) { alert("This deduction already exists"); return; }
+						d = deductions[i];
+						break;
+					}
+				if (d == null)
+					for (var i = 0; i < base_deductions.length; ++i)
+						if (base_deductions[i].name.isSame(name)) { alert("This deduction already exists"); return; }
+			} else {
+				for (var i = 0; i < radios.length; ++i) if (radios[i].checked) { d = radios[i]._deduction; break; }
+				if (d == null) { alert("Please select a deduction to add"); return; }
+			}
+			if (d == null) {
+				d = {
+					id: new_deduction_id--,
+					name: name,
+					amount: 0
+				};
+				amount_deducted[d.id] = 0;
+			}
+			var table = total_amount.parentNode.parentNode;
+			var tr = document.createElement("TR");
+			
+			// TODO create row
+		});
+		p.show();
+	});
+});
 popup.addFrameSaveButton(function() {
 	// TODO
 });
