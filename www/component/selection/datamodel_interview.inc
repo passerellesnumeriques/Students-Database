@@ -5,7 +5,7 @@
 $sm->addTable("InterviewCenter")
 	->addPrimaryKey("id")
 	->addString("name",255,0,false)//optional
-	->addForeignKey("geographic_area", "GeographicArea", true, false, true, false, true)//An exam center must be linked to a geographic area, and this area is unique in this table
+	->addForeignKey("geographic_area", "GeographicArea", true, false, true, false, false)//An interview center must be linked to a geographic area, and this area is unique in this table
 	->addReadAccess("see_interview_center", true)
 	->addWriteAccess("manage_interview_center", true)
 	->addRemoveAccess("manage_interview_center", true)

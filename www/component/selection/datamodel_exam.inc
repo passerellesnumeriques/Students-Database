@@ -89,7 +89,7 @@ $sm->addTable("ExamEligibilityRuleTopic")
 $sm->addTable("ExamCenter")
 	->addPrimaryKey("id")
 	->addString("name",255,0,false)//optional
-	->addForeignKey("geographic_area", "GeographicArea", true, false, true, false, true)//An exam center must be linked to a geographic area, and this area is unique in this table
+	->addForeignKey("geographic_area", "GeographicArea", true, false, true, false, false)//An exam center must be linked to a geographic area, and this area is unique in this table
 	->addReadAccess("see_exam_center", true)
 	->addWriteAccess("manage_exam_center", true)
 	->addRemoveAccess("manage_exam_center", true)
