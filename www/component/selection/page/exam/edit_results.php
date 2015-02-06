@@ -162,6 +162,7 @@ foreach ($applicants_ids as $id) {
 		echo ",parts:{";
 		foreach ($subjects as $s) if ($s["id"] == $as["exam_subject"]) { $subject = $s; break; }
 		$first_part = true;
+		if (isset($applicants_parts[$id]))
 		foreach ($applicants_parts[$id] as $ap) {
 			$part = null;
 			foreach ($subject["parts"] as $sp) if ($sp["id"] == $ap["exam_subject_part"]) { $part = $sp; break; }
@@ -171,6 +172,7 @@ foreach ($applicants_ids as $id) {
 			echo "score:".json_encode($ap["exam_subject_part"]);
 			echo ",questions:{";
 			$first_question = true;
+			if (isset($applicants_answers[$id]))
 			foreach ($applicants_answers[$id] as $aa) {
 				$found = false;
 				foreach ($part["questions"] as $q) if ($q["id"] == $aa["exam_subject_question"]) { $found = true; break; }
