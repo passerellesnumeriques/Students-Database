@@ -86,6 +86,9 @@ class page_exam_edit_results extends SelectionPage {
 		$applicants_answers = array();
 		$applicants_parts = array();
 		$applicants_subjects = array();
+		$has_parts_score = false;
+		$has_question_score = false;
+		$has_question_answers = false;
 		if (count($applicants_ids) > 0) {
 			$_applicants_answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant", $applicants_ids)->execute();
 			$_applicants_parts = SQLQuery::create()->select("ApplicantExamSubjectPart")->whereIn("ApplicantExamSubjectPart","applicant", $applicants_ids)->execute();
@@ -93,10 +96,13 @@ class page_exam_edit_results extends SelectionPage {
 			foreach ($_applicants_answers as $a) {
 				if (!isset($applicants_answers[$a["applicant"]])) $applicants_answers[$a["applicant"]] = array();
 				array_push($applicants_answers[$a["applicant"]], $a);
+				if ($a["answer"] <> null) $has_question_answers = true;
+				$has_question_score = true;
 			}
 			foreach ($_applicants_parts as $a) {
 				if (!isset($applicants_parts[$a["applicant"]])) $applicants_parts[$a["applicant"]] = array();
 				array_push($applicants_parts[$a["applicant"]], $a);
+				$has_parts_score = true;
 			}
 			foreach ($_applicants_subjects as $a) {
 				if (!isset($applicants_subjects[$a["applicant"]])) $applicants_subjects[$a["applicant"]] = array();
@@ -127,10 +133,10 @@ class page_exam_edit_results extends SelectionPage {
 	<div id='header' style='flex:none;background-color:white;box-shadow: 1px 2px 5px 0px #808080;margin-bottom:5px;padding:5px;display:flex;flex-direction:row;align-items:center'>
 		Edit mode: <select id='edit_mode' onchange='buildGrid();'>
 			<?php if (PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer")) { ?>
-			<option value='answers'>Enter answer for each question</option>
+			<option value='answers'<?php if ($has_question_answers) echo " selected='selected'";?>>Enter answer for each question</option>
 			<?php } ?>
-			<option value='questions_scores'>Enter score for each question</option>
-			<option value='parts_scores'>Enter score for each part</option>
+			<option value='questions_scores'<?php if ($has_question_score && !$has_question_answers) echo " selected='selected'";?>>Enter score for each question</option>
+			<option value='parts_scores'<?php if ($has_parts_score && !$has_question_score) echo " selected='selected'";?>>Enter score for each part</option>
 		</select>
 		<button class='flat' id='columns_chooser_button'><img src='/static/data_model/table_column.png'/> Choose columns</button>
 		<button class='flat' onclick='importClickers(event);'><img src='/static/selection/exam/sunvote_16.png'/> Import from Clickers (SunVote)</button>
@@ -169,7 +175,7 @@ foreach ($applicants_ids as $id) {
 			if ($part == null) continue;
 			if ($first_part) $first_part = false; else echo ",";
 			echo "'".$ap["exam_subject_part"]."':{";
-			echo "score:".json_encode($ap["exam_subject_part"]);
+			echo "score:".json_encode($ap["score"]);
 			echo ",questions:{";
 			$first_question = true;
 			if (isset($applicants_answers[$id]))
