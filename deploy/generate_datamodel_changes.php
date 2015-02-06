@@ -102,8 +102,8 @@ foreach ($changes as $change) {
 				$rename_columns_root[$change["new_table_name"]][$change["old_column_name"]] = $change["new_column_name"];
 			} else {
 				if (!isset($rename_columns_sm[$change["parent_table"]])) $rename_columns_sm[$change["parent_table"]] = array();
-				if (!isset($rename_columns_sm[$change["parent_table"]][$change["table"]])) $rename_columns_sm[$change["parent_table"]][$change["table"]] = array();
-				$rename_columns_sm[$change["parent_table"]][$change["table"]][$change["old_column_name"]] = $change["new_column_name"];
+				if (!isset($rename_columns_sm[$change["parent_table"]][$change["new_table_name"]])) $rename_columns_sm[$change["parent_table"]][$change["new_table_name"]] = array();
+				$rename_columns_sm[$change["parent_table"]][$change["new_table_name"]][$change["old_column_name"]] = $change["new_column_name"];
 			}
 			break;
 		case "column_spec":
@@ -112,8 +112,8 @@ foreach ($changes as $change) {
 				$rename_columns_root[$change["new_table_name"]][$change["old_spec"]["name"]] = $change["new_spec"]["name"];
 			} else {
 				if (!isset($rename_columns_sm[$change["parent_table"]])) $rename_columns_sm[$change["parent_table"]] = array();
-				if (!isset($rename_columns_sm[$change["parent_table"]][$change["table"]])) $rename_columns_sm[$change["parent_table"]][$change["table"]] = array();
-				$rename_columns_sm[$change["parent_table"]][$change["table"]][$change["old_spec"]["name"]] = $change["new_spec"]["name"];
+				if (!isset($rename_columns_sm[$change["parent_table"]][$change["new_table_name"]])) $rename_columns_sm[$change["parent_table"]][$change["new_table_name"]] = array();
+				$rename_columns_sm[$change["parent_table"]][$change["new_table_name"]][$change["old_spec"]["name"]] = $change["new_spec"]["name"];
 			}
 			break;
 		case "index_removed":
@@ -261,8 +261,8 @@ foreach ($rename_columns_root as $table_name=>$renames) {
 	fwrite($f, "\$table = DataModel::get()->internalGetTable(\"".$table_name."\");\n");
 	foreach ($renames as $old_name=>$new_name) {
 		$sql = "ALTER TABLE `$table_name`";
-		$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->getSQL(\$db_system, \"$table_name\").\"";
-		fwrite($f, "\$db_system->execute(\"$sql\");\n");
+		$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->getSQL(\$db_system, \"$table_name\")";
+		fwrite($f, "\$db_system->execute(\"$sql);\n");
 	}
 }
 foreach ($rename_columns_sm as $parent_table=>$list) {
@@ -274,8 +274,8 @@ foreach ($rename_columns_sm as $parent_table=>$list) {
 		fwrite($f, "\t\$table = \$sm->internalGetTable(\"".$table_name."\");\n");
 		foreach ($renames as $old_name=>$new_name) {
 			$sql = "ALTER TABLE `".$table_name."_\".\$sub_model[0].\"`";
-			$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model[0].\").\"";
-			fwrite($f, "\t\$db_system->execute(\"$sql\");\n");
+			$sql .= " CHANGE COLUMN `$old_name` \".\$table->internalGetColumn(\"$new_name\")->getSQL(\$db_system, \"".$table_name."_\".\$sub_model[0])";
+			fwrite($f, "\t\$db_system->execute(\"$sql);\n");
 		}
 	}
 	fwrite($f, "}\n");
