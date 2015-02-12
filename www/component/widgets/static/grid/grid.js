@@ -1543,6 +1543,10 @@ function grid(element) {
 				footer.insertBefore(tr,footer.childNodes[0]);
 			else
 				footer.appendChild(tr);
+			if (t.selectable) {
+				var td = document.createElement("TD");
+				tr.appendChild(td);
+			}
 			for (var i = 0; i < t.columns.length; ++i) {
 				if (t.columns[i].col.style.width)
 					 t.columns[i].col._width = t.columns[i].col.style.width;
