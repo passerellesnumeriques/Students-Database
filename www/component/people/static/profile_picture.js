@@ -113,9 +113,10 @@ function profile_picture(container, width, height, halign, valign) {
 		
 		if (this._datamodel_cell_listener)
 			window.top.datamodel.removeCellChangeListener(this._datamodel_cell_listener);
-		window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, this._datamodel_cell_listener = function(value) {
-			t.loadPeopleID(people_id);
-		});
+		if (people_id)
+			window.top.datamodel.addCellChangeListener(window, "People", "picture", people_id, this._datamodel_cell_listener = function(value) {
+				t.loadPeopleID(people_id);
+			});
 	};
 	
 	this.loadPeopleID = function(people_id, onloaded, domain) {
@@ -152,6 +153,7 @@ function profile_picture(container, width, height, halign, valign) {
 		});
 	};
 	this.loadPeopleObject = function(people, onloaded) {
+		if (!people) { this.setNoPicture(null,null,onloaded); return; }
 		if (typeof people.picture_id == 'undefined')
 			this.loadPeopleID(people.id, onloaded, typeof people.domain != 'undefined' ? people.domain : null);
 		else if (people.picture_id == null)

@@ -134,8 +134,9 @@ class service_get_more extends Service {
 			echo ",category:".json_encode($n["category"]);
 			echo ",html:".json_encode($n["html"]);
 			echo ",user:{domain:".json_encode($n["domain"]).",username:".json_encode($n["username"])."}";
-			$r = $people_names[$n["domain"]][$n["username"]];
-			echo ",people:".PeopleJSON::People($r);
+			$r = @$people_names[$n["domain"]][$n["username"]];
+			if ($r <> null)
+				echo ",people:".PeopleJSON::People($r);
 			echo ",timestamp:".$n["timestamp"];
 			echo ",update_timestamp:".$n["update_timestamp"];
 			echo "}";

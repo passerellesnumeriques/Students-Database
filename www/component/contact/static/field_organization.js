@@ -522,6 +522,11 @@ function OrganizationSelectionPopupContent(list, multiple, selected_ids, create,
 					var area_id = list[i].areas[list[i].areas.length-1];
 					if (typeof areas_div[area_id] == 'undefined') {
 						var area = window.top.geography.searchArea(country_data, area_id);
+						if (!area) {
+							// should not happen...
+							missing.push(list[i]);
+							continue;
+						}
 						var division = window.top.geography.getAreaDivisionIndex(country_data, area);
 						areas_div[area_id] = t._byarea.createAreaDiv(country_data[division].division_name, area);
 						areas_div[area_id]._division = division;

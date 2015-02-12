@@ -128,8 +128,9 @@ class service_get_latests extends Service {
 			echo ",html:".json_encode($n["html"]);
 			echo ",domain:".json_encode($n["domain"]);
 			echo ",user:{domain:".json_encode($n["domain"]).",username:".json_encode($n["username"])."}";
-			$r = $people_names[$n["domain"]][$n["username"]];
-			echo ",people:".PeopleJSON::People($r);
+			$r = @$people_names[$n["domain"]][$n["username"]];
+			if ($r <> null)
+				echo ",people:".PeopleJSON::People($r);
 			echo ",timestamp:".$n["timestamp"];
 			echo ",update_timestamp:".$n["timestamp"];
 			echo "}";

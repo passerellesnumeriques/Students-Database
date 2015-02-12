@@ -110,6 +110,7 @@ function initPNApplication() {
 				for (var name in w)
 					if (name != "closing" && name != "name" && name != "frameElement" &&
 						name != "self" && name != "parent" && name != "top" &&
+						name != "location" &&
 						!window.top.pnapplication._reserved_names.contains(name) &&
 						typeof Window.prototype[name] == 'undefined' &&
 						name != "id" && name != "_domRemoved")

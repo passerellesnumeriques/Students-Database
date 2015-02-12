@@ -10,6 +10,8 @@ class service_get_latests_replies extends Service {
 	public function outputDocumentation() { echo "List of NewsObject, containing reply_to"; }
 	
 	public function execute(&$component, $input) {
+		if (count($input["to_refresh"]) == 0) { echo "[]"; return; }
+		
 		require_once("component/news/NewsPlugin.inc");
 
 		$q = SQLQuery::create()->bypassSecurity()->select("News");
@@ -61,8 +63,9 @@ class service_get_latests_replies extends Service {
 			echo ",html:".json_encode($n["html"]);
 			echo ",domain:".json_encode($n["domain"]);
 			echo ",user:{domain:".json_encode($n["domain"]).",username:".json_encode($n["username"])."}";
-			$r = $people_names[$n["domain"]][$n["username"]];
-			echo ",people:".PeopleJSON::People($r);
+			$r = @$people_names[$n["domain"]][$n["username"]];
+			if ($r <> null)
+				echo ",people:".PeopleJSON::People($r);
 			echo ",timestamp:".$n["timestamp"];
 			echo ",update_timestamp:".$n["timestamp"];
 			echo ",reply_to:".$n["reply_to"];

@@ -112,6 +112,11 @@ function vertical_scrolling(container, bgcolor, color, arrow_height) {
 		t.doScrolling();
 		t._scrolling_way = 0;
 	};
+	container.onwheel = function(ev) {
+		t._scrolling_way = Math.floor(ev.deltaY*10);
+		t.doScrolling();
+		t._scrolling_way = 0;
+	};
 	
 	/** Called by the layout */
 	this.layout = function() {

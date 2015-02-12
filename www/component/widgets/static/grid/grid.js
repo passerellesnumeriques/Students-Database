@@ -454,6 +454,7 @@ function GridColumn(id, title, width, align, field_type, editable, onchanged, on
 		if (hidden == this.hidden) return;
 		this.hidden = hidden;
 		this.th.style.display = hidden ? "none" : "";
+		this.col.style.display = hidden ? "none" : "";
 		// hide td for each row
 		var index = this.grid.columns.indexOf(this);
 		for (var i = 0; i < this.grid.table.childNodes.length; ++i) {
@@ -1521,12 +1522,6 @@ function grid(element) {
 			for (var i = 0; i < t.columns.length; ++i)
 				t.columns[i].th._width = t.columns[i].isHidden() ? 0 : getWidth(t.columns[i].th, knowledge);
 			//setWidth(t.element, total_width, knowledge);
-			// take the width of each column
-			var widths = [];
-			if (t.selectable)
-				widths.push(t.thead.childNodes[0].childNodes[0]._width);
-			for (var i = 0; i < t.columns.length; ++i)
-				widths.push(t.columns[i].th._width);
 			// fix the width of each th
 			if (t.selectable) {
 				setWidth(t.thead.childNodes[0].childNodes[0], t.thead.childNodes[0].childNodes[0]._width, knowledge);
@@ -1548,21 +1543,21 @@ function grid(element) {
 				footer.insertBefore(tr,footer.childNodes[0]);
 			else
 				footer.appendChild(tr);
-			for (var i = 0; i < t.colgroup.childNodes.length; ++i) {
-				if (t.colgroup.childNodes[i].style.width)
-					 t.colgroup.childNodes[i]._width = t.colgroup.childNodes[i].style.width;
-				t.colgroup.childNodes[i].style.width = widths[i]+"px";
-				t.colgroup.childNodes[i].style.minWidth = widths[i]+"px";
+			for (var i = 0; i < t.columns.length; ++i) {
+				if (t.columns[i].col.style.width)
+					 t.columns[i].col._width = t.columns[i].col.style.width;
+				t.columns[i].col.style.width = t.columns[i].th._width+"px";
+				t.columns[i].col.style.minWidth = t.columns[i].th._width+"px";
 				var td = document.createElement("TD");
 				td.style.padding = "0px";
-				if (widths[i] == 0) td.style.display = "none";
+				if (t.columns[i].th._width == 0) td.style.display = "none";
 				var div = document.createElement("DIV");
 				td.appendChild(div);
 				tr.appendChild(td);
 				//setWidth(td, widths[i], knowledge);
 				//setWidth(div, widths[i], knowledge);
-				div.style.width = widths[i]+"px";
-				div.style.minWidth = widths[i]+"px";
+				div.style.width = t.columns[i].th._width+"px";
+				div.style.minWidth = t.columns[i].th._width+"px";
 			}
 			tr.style.height = "0px";
 			// put the thead as relative
