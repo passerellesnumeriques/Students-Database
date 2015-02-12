@@ -17,7 +17,6 @@ Enter the URL of domain <?php echo $domain;?>: <input type='text' name='url' siz
 Enter the password for remote access: <input type='password' name='password'/><br/>
 <br/>
 <button class='action' onclick='getList();'>Connect</button>
-
 </form>
 <script type='text/javascript'>
 function getList() {
@@ -26,9 +25,11 @@ function getList() {
 	var pass = form.elements['password'].value;
 	if (url.length == 0 || pass.length == 0) return;
 	if (url.substring(url.length-1) != "/") form.elements['url'].value = url + "/";
-	var content = document.getElementById('content');
+	var content = document.createElement('DIV');
 	content.innerHTML = "Connecting to <?php echo $domain?>...";
+	form.parentNode.appendChild(content);
 	layout.changed(content);
+	form.style.display="none";
 	form.submit();
 }
 </script>
