@@ -36,7 +36,8 @@ class service_exam_export_exam_session_applicants_to_sunvote extends Service {
 		$sheet->setCellValueByColumnAndRow(2, 1, "Student Name");
 		// applicants
 		for ($i = 0; $i < count($applicants); $i++) {
-			$sheet->setCellValueByColumnAndRow(0,$i+2,$i+1);
+			//$sheet->setCellValueByColumnAndRow(0,$i+2,$i+1); // changed to applicant ID as asked by PNC
+			$sheet->setCellValueByColumnAndRow(0,$i+2,$applicants[$i]["applicant_id"]);
 			$sheet->setCellValueByColumnAndRow(1,$i+2,$applicants[$i]["applicant_id"]);
 			$sheet->setCellValueByColumnAndRow(2,$i+2,$applicants[$i]["first_name"]." ".$applicants[$i]["last_name"]);
 		}
