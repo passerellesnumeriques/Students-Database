@@ -53,6 +53,9 @@ if ($campaign <> null) {
 			echo "not locked";
 		echo "' style='vertical-align:bottom'/>";
 	}
+	if ($campaign["frozen"] == 1 && $campaign["frozen_reason"] == "Selection Team Travelling") {
+		echo "<button class='flat' style='margin:0px' onclick='travelCopy();' title='Travel with a copy'><img src='/static/selection/briefcase_white.png'/></button>";
+	}
 }
 #SELECTION_TRAVEL
 #}
@@ -254,6 +257,9 @@ function lockCampaign() {
 }
 function unlockCampaign() {
 	popupFrame(theme.icons_16.unlock, "Unlock Selection Campaign", "/dynamic/selection/page/unlock");
+}
+function travelCopy() {
+	popupFrame("/static/selection/briefcase_black.png", "Travel Copy", "/dynamic/selection/page/travel_copy");
 }
 <?php } ?>
 </script>
