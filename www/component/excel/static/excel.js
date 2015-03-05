@@ -658,7 +658,7 @@ function ExcelSheetCell(sheet, column, row) {
 	this.getValue = function() {
 		if (typeof this.value == 'string')
 			return this.value;
-		return this.value.innerHTML;
+		return this.value.innerText;
 	};
 	this.setStyle = function(styles) {
 		if (typeof this._styles != 'undefined') {
