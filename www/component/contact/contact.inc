@@ -28,18 +28,17 @@ class contact extends Component {
 	 * Add a new postal address to an organization
 	 * @param integer $organization_id Organization ID
 	 * @param array $new_address PostalAddress coming from JSON
-	 * @param boolean $fake indicates if this address is attached to a fake organization
 	 * @return integer|boolean the address ID or false if it failed
 	 */
-	public function addAddressToOrganization($organization_id,$new_address,$fake = false) {
+	public function addAddressToOrganization($organization_id,$new_address) {
 		//Check the rights
 		require_once("component/data_model/Model.inc");
 		$table = DataModel::get()->getTable("OrganizationAddress");
-		if (!$fake && !$table->acceptInsert(array("organization"=>$organization_id))) {
+		if (!$table->acceptInsert(array("organization"=>$organization_id))) {
 			PNApplication::error("You are not allowed to add an address for this organization");
 			return false;
 		} else {
-			$address_id = $this->addAddress("OrganizationAddress","organization",$organization_id,$new_address,$fake);
+			$address_id = $this->addAddress("OrganizationAddress","organization",$organization_id,$new_address);
 			return $address_id;
 		}
 	}
@@ -47,18 +46,17 @@ class contact extends Component {
 	 * Add a new postal address to a people
 	 * @param integer $people_id People ID
 	 * @param array $new_address PostalAddress coming from JSON
-	 * @param boolean $fake indicates if this address is attached to a fake organization
 	 * @return integer|boolean the address ID or false if it failed
 	 */
-	public function addAddressToPeople($people_id,$new_address,$fake = false) {
+	public function addAddressToPeople($people_id,$new_address) {
 		//Check the rights
 		require_once("component/data_model/Model.inc");
 		$table = DataModel::get()->getTable("PeopleAddress");
-		if (!$fake && !$table->acceptInsert(array("people"=>$people_id))) {
+		if (!$table->acceptInsert(array("people"=>$people_id))) {
 			PNApplication::error("You are not allowed to add an address for this people");
 			return false;
 		} else {
-			$address_id = $this->addAddress("PeopleAddress","people",$people_id,$new_address,$fake);
+			$address_id = $this->addAddress("PeopleAddress","people",$people_id,$new_address);
 			return $address_id;
 		}
 	}

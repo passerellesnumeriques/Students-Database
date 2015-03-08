@@ -285,7 +285,6 @@ $model->addTable("Organization")
 	->addString("name",100,1,false,false)
 	->addString("creator",100,1,false,false)
 	->addBoolean("obsolete",false)
-	->addBoolean("fake",true) //if true, not displayable, internal usage only
 	->setRoot()
 	->addIndex("creator")
 	->setRowDescriptionProvider(function($row) {
@@ -311,8 +310,6 @@ $model->addTable("Organization")
 		}
 		$w .= ")";
 		$q->where($w);
-		// add a filter on the fake aspect of the organization
-		$q->where("`".$table_alias."`.`fake` IS NULL");
 	})
 	->addWriteFilter(function(&$q, $table_alias){
 		$q->field($table_alias, "creator", "ORG_CREATOR");
