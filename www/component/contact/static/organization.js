@@ -46,16 +46,28 @@ organization.prototype = {
 			div_general_contacts.style.display = "flex";
 			div_general_contacts.style.flexDirection = "row";
 			div_contacts.appendChild(div_general_contacts);
-			var div_contacts = document.createElement("DIV");
+			var div_contacts_container = document.createElement("DIV");
 			var div_contact_points = document.createElement("DIV");
-			div_general_contacts.appendChild(div_contacts);
+			div_general_contacts.appendChild(div_contacts_container);
 			div_general_contacts.appendChild(div_contact_points);
-			div_contacts.style.paddingLeft = "5px";
-			t._initGeneralContacts(div_contacts);
+			div_contacts_container.style.paddingLeft = "5px";
+			t._initGeneralContacts(div_contacts_container);
 			div_contact_points.style.paddingLeft = "5px";
 			div_contact_points.style.paddingRight = "5px";
 			t._contact_points = new contact_points(div_contact_points, t.org, t.org.general_contact_points);
 			t._contact_points.onchange.addListener(function() { t.onchange.fire(); });
+			
+			var div = document.createElement("DIV");
+			div.style.borderTop = "1px solid #808080";
+			div.style.padding = "2px 5px";
+			t._add_location_button = document.createElement("BUTTON");
+			t._add_location_button.className = "action";
+			t._add_location_button.innerHTML = "Add Location / Address";
+			t._add_location_button.onclick = function() {
+				// TODO
+			};
+			div.appendChild(t._add_location_button);
+			div_contacts.appendChild(div);
 		}, this);
 	},
 	_initHeader: function() {
@@ -207,7 +219,12 @@ organization.prototype = {
 			items.push(item);
 			return items;
 		});
-		header.appendChild(this._types.element);
+		var types_container = document.createElement("DIV");
+		types_container.style.margin = "2px";
+		types_container.style.verticalAlign = "middle";
+		types_container.appendChild(document.createTextNode("Types: "));
+		types_container.appendChild(this._types.element);
+		header.appendChild(types_container);
 	},
 	_initGeneralContacts: function(container) {
 		this._contacts_widget = new contacts(container, "organization", this.org.id, this.org.general_contacts, this.can_edit, this.can_edit, this.can_edit);

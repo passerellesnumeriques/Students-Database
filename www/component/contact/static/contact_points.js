@@ -83,19 +83,21 @@ function contact_points(container, org, list) {
 				require(["contact_objects.js","people_objects.js"],function() {
 					var paths = peoples[0];
 					var people_path = null;
-					var contact_path = null;
+					var contact_point_path = null;
+					var contacts_path = null;
 					for (var i = 0; i < paths.length; ++i)
 						if (paths[i].path == "People") people_path = paths[i];
-						else if (paths[i].path == "People<<ContactPoint(people)") contact_path = paths[i];
+						else if (paths[i].path == "People<<ContactPoint(people)") contact_point_path = paths[i];
+						else if (paths[i].path == "People<<PeopleContact(people)") contacts_path = paths[i];
 					
 					var people_id = people_path.key;
 					var first_name = "", last_name = "";
 					for (var i = 0; i < people_path.value.length; ++i)
 						if (people_path.value[i].name == "First Name") first_name = people_path.value[i].value;
 						else if (people_path.value[i].name == "Last Name") last_name = people_path.value[i].value;
-					var designation = contact_path.value;
+					var designation = contact_point_path.value;
 					var people = new People(people_id,first_name,last_name);
-					var point = new ContactPoint(people_id, people, designation);
+					var point = new ContactPoint(people_id, people, designation, contacts_path ? contacts_path.value : []);
 					if (org.id == -1)
 						point.create_people = paths;
 					list.push(point);
@@ -116,8 +118,25 @@ function contact_points(container, org, list) {
 		td.appendChild(document.createTextNode(cp.people.first_name+" "+cp.people.last_name));
 		tr.appendChild(td = document.createElement("TD"));
 		td.appendChild(document.createTextNode(cp.designation));
-		// TODO contacts
-		layout.changed(this.grid);
+		var emails = [], phones = [], ims = [];
+		for (var i = 0; i < cp.contacts.length; ++i)
+			switch (cp.contacts[i].type) {
+			case "email": emails.push(cp.contacts[i]); break;
+			case "phone": phones.push(cp.contacts[i]); break;
+			case "IM": ims.push(cp.contacts[i]); break;
+			}
+		require([["typed_field.js","field_contact_type.js"]], function(t) {
+			tr.appendChild(td = document.createElement("TD"));
+			var emails_control = new field_contact_type({type:"people",type_id:cp.people.id,contacts:emails}, false, {type:"email"});
+			td.appendChild(emails_control.getHTMLElement());
+			tr.appendChild(td = document.createElement("TD"));
+			var phones_control = new field_contact_type({type:"people",type_id:cp.people.id,contacts:phones}, false, {type:"phone"});
+			td.appendChild(phones_control.getHTMLElement());
+			tr.appendChild(td = document.createElement("TD"));
+			var ims_control = new field_contact_type({type:"people",type_id:cp.people.id,contacts:ims}, false, {type:"IM"});
+			td.appendChild(ims_control.getHTMLElement());
+			layout.changed(t.grid);
+		}, this);
 	};
 	
 	this._init();

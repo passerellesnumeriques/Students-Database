@@ -298,8 +298,9 @@ function OrganizationLocation(address, contacts, contact_points) {
  * @param {People} people People object for this contact point
  * @param {String} designation designation of this people in the organization (i.e. director, IT manager...)
  */
-function ContactPoint(organization_id, people, designation) {
+function ContactPoint(organization_id, people, designation, contacts) {
 	this.organization_id = organization_id;
 	this.people = people;
 	this.designation = designation;
+	this.contacts = contacts;
 }
