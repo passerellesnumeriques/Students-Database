@@ -32,17 +32,17 @@ echo "};";
 #END
 ?>
 
-function require(javascript,handler) {
+function require(javascript,handler,handler_param) {
 	if (javascript instanceof Array || getObjectClassName(javascript) == "Array") {
 		var nb = javascript.length;
 		for (var i = 0; i < javascript.length; ++i) {
 			if (javascript[i] instanceof Array || getObjectClassName(javascript[i]) == "Array")
 				require_sequential(javascript[i],function(){
-					if (--nb == 0 && handler) handler();
+					if (--nb == 0 && handler) handler(handler_param);
 				});
 			else
 				require(javascript[i],function(){
-					if (--nb == 0 && handler) handler();
+					if (--nb == 0 && handler) handler(handler_param);
 				});
 		}
 		return;
@@ -51,7 +51,9 @@ function require(javascript,handler) {
 		alert("Unknown javascript '"+javascript+"'");
 		return;
 	}
-	addJavascript(javascripts_paths[javascript], handler);
+	addJavascript(javascripts_paths[javascript], function() {
+		if (handler) handler(handler_param);
+	});
 }
 function require_sequential(scripts, handler) {
 	var pos = 0;

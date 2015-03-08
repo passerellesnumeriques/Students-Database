@@ -195,6 +195,7 @@ class ContactJSON {
 		$list_types_ids = SQLQuery::create()->select("OrganizationTypes")->whereIn("OrganizationTypes","organization",$ids)->execute();
 		$q = SQLQuery::create()->select("OrganizationContact")->whereIn("OrganizationContact","organization",$ids)->join("OrganizationContact","Contact",array("contact"=>"id"));
 		$q->field("OrganizationContact", "organization", "organization_id");
+		$q->field("OrganizationContact", "attached_location", "attached_location");
 		self::ContactSQL($q);
 		$list_contacts = $q->execute();
 		$q = SQLQuery::create()->select("OrganizationAddress")->whereIn("OrganizationAddress","organization",$ids)->join("OrganizationAddress","PostalAddress",array("address"=>"id"));
@@ -203,6 +204,7 @@ class ContactJSON {
 		$list_addresses = $q->execute();
 		$q = SQLQuery::create()->select("ContactPoint")->whereIn("ContactPoint","organization",$ids);
 		$q->field("ContactPoint", "organization", "organization_id");
+		$q->field("ContactPoint", "attached_location", "attached_location");
 		self::OrganizationContactPointSQL($q);
 		$list_contact_points = $q->execute();
 		$s = "[";
@@ -268,21 +270,34 @@ class ContactJSON {
 			$s .= "]";
 		} else
 			$s .= "null";
-		$s .= ",contacts:";
+		$general_contacts = array();
+		$general_contact_points = array();
+		$locations = array();
+		if ($addresses !== null)
+			foreach ($addresses as $addr) $locations[$addr["postal_address__id"]] = array("address"=>$addr,"contacts"=>array(),"contact_points"=>array());
+		$s .= ",general_contacts:";
 		if ($contacts !== null) {
-			$s .= self::Contacts($contacts);
+			foreach ($contacts as $c) if ($c["attached_location"] == null) array_push($general_contacts, $c); else array_push($locations[$c["attached_location"]]["contacts"], $c); 
+			$s .= self::Contacts($general_contacts);
 		} else 
 			$s .= "null";
-		$s .= ",addresses:";
-		if ($addresses !== null) {
-			$s .= self::PostalAddresses($addresses);
-		} else 
-			$s .= "null";
-		$s .= ",contact_points:";
+		$s .= ",general_contact_points:";
 		if ($contact_points !== null) {
-			$s .= self::OrganizationContactPoints($contact_points);
+			foreach ($contact_points as $c) if ($c["attached_location"] == null) array_push($general_contact_points, $c); else array_push($locations[$c["attached_location"]]["contact_points"], $c); 
+			$s .= self::OrganizationContactPoints($general_contact_points);
 		} else 
 			$s .= "null";
+		$s .= ",locations:[";
+		$first = true;
+		foreach ($locations as $addr_id=>$loc) {
+			if ($first) $first = false; else $s .= ",";
+			$s .= "{";
+			$s .= "address:".self::PostalAddress($loc["address"]);
+			$s .= ",contacts:".self::Contacts($loc["contacts"]);
+			$s .= ",contact_points:".self::OrganizationContactPoints($loc["contact_points"]);
+			$s .= "}";
+		}
+		$s .= "]";
 		$s .= "}";
 		return $s;
 	}

@@ -272,17 +272,23 @@ function showContactTypeMenu(below_element,type,current_type,show_other,onchange
  * @param {String} name organization name
  * @param {String} creator used to identify on which part of the application the organization belongs to, and so which users can access it (i.e. selection, or external relations...)
  * @param {Array} types_ids list of organization type ids
- * @param {Array} contacts list of Contact
- * @param {Array} addresses list of PostalAddress
- * @param {Array} contact_points list of ContactPoint
+ * @param {Array} general_contacts list of Contact
+ * @param {Array} general_contact_points list of ContactPoint
+ * @param {Array} locations list of OrganizationLocation
  */
-function Organization(id, name, creator, types_ids, contacts, addresses, contact_points) {
+function Organization(id, name, creator, types_ids, general_contacts, general_contact_points, locations) {
 	this.id = id;
 	this.name = name;
 	this.creator = creator;
 	this.types_ids = types_ids;
+	this.general_contacts = general_contacts;
+	this.general_contact_points = general_contact_points;
+	this.locations = locations;
+}
+
+function OrganizationLocation(address, contacts, contact_points) {
+	this.address = address;
 	this.contacts = contacts;
-	this.addresses = addresses;
 	this.contact_points = contact_points;
 }
 

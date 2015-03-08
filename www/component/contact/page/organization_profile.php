@@ -1,114 +1,42 @@
 <?php 
-require_once '/component/contact/ContactJSON.inc';
 class page_organization_profile extends Page {
+
 	public function getRequiredRights() { return array(); }
+	
 	public function execute(){
 		$id = isset($_GET["organization"]) ? intval($_GET["organization"]) : -1;
-		
-		require_once("contact.inc");
-		require_once("address.inc");
-		
 		if ($id > 0) {
 			$org = SQLQuery::create()->select("Organization")->whereValue("Organization","id",$id)->executeSingleRow();
 			$creator = $org["creator"];
+			$org_json = ContactJSON::OrganizationFromID($id);
+			$all_types = SQLQuery::create()->select("OrganizationType")->whereValue("OrganizationType", "creator", $creator)->execute();
+			// TODO can_edit and lock
+			$can_edit = true;
 		} else {
 			$creator = $_GET["creator"];
-		}
-		$all_types = SQLQuery::create()->select("OrganizationType")->whereValue("OrganizationType", "creator", $creator)->execute();
-		
-		$selected_types = array();
-		if ($id <= 0 && isset($_GET["types_names"])) {
-			$selected_types_names = explode(";", $_GET["types_names"]);
-			foreach ($selected_types_names as $name)
-				foreach ($all_types as $type)
-					if ($type["name"] == $name) {
-						array_push($selected_types, $type["id"]);
-						break;
-					}
-		}
-		$name = "";
-		if ($id <= 0 && isset($_GET["name"]))
-			$name = $_GET["name"];
-		
-		$org_structure = "{";
-		if ($id > 0) {
-			$org_structure .= "id:".$org["id"];
-			$org_structure .= ",name:".json_encode($org["name"]);
-			$org_types = SQLQuery::create()->select("OrganizationTypes")->whereValue("OrganizationTypes", "organization", $id)->execute();
-			$org_structure .= ",types_ids:[";
-			$first = true;
-			foreach ($org_types as $t) {
-				if ($first) $first = false; else $org_structure .= ",";
-				$org_structure .= $t["type"];
+			$all_types = SQLQuery::create()->select("OrganizationType")->whereValue("OrganizationType", "creator", $creator)->execute();
+			$selected_types = array();
+			if (isset($_GET["types_names"])) {
+				$selected_types_names = explode(";", $_GET["types_names"]);
+				foreach ($selected_types_names as $name)
+					foreach ($all_types as $type)
+						if ($type["name"] == $name) {
+							array_push($selected_types, $type["id"]);
+							break;
+						}
 			}
-			$org_structure .= "]";
-			$org_structure .= ",contacts:".contacts_structure("organization", $id);
-			$org_structure .= ",addresses:".addresses_structure("organization", $id);
-			require_once("component/contact/ContactJSON.inc");
-			$org_structure .= ",contact_points:";
-			$org_structure .= ContactJSON::OrganizationContactsPointsFromDB($id);
-		} else {
-			$org_structure .= "id:-1";
-			$org_structure .= ",name:".json_encode($name);
-			$org_structure .= ",types_ids:".json_encode($selected_types);
-			$org_structure .= ",contacts:[]";
-			if(isset($_GET["address_country_id"]) && isset($_GET["address_area_id"])){
-				$area = PNApplication::$instance->geography->getArea($_GET["address_area_id"]);
-				$new_address = array(
-					"postal_address__id" => -1, 
-					"postal_address__country_id" => $_GET["address_country_id"],
-					"postal_address__address_type" => "Office",
-					"geographic_area_text_area_id" =>$_GET["address_area_id"],
-					"geographic_area_text_country_id" => $_GET["address_country_id"],
-					"geographic_area_text_country_division_id" => $area["country_division"]
-				);
-				$org_structure .= ",addresses:[".ContactJSON::PostalAddress($new_address)."]";
-			} else 
-				$org_structure .= ",addresses:[]";
-			$org_structure .= ",contact_points:[]";
+			$name = isset($_GET["name"]) ? $_GET["name"] : "";
+			// TODO $_GET["address_area_id"]
+			$org_json = "{id:-1,name:".json_encode($name).",creator:".json_encode($creator).",types_ids:".json_encode($selected_types).",general_contacts:[],general_contact_points:[],locations:[]}";
+			$can_edit = true;
 		}
-		$org_structure .= ",creator:".json_encode($creator);
-		$org_structure .= "}";
-		$existing_types = "[";
-		$first = true;
-		foreach ($all_types as $t) {
-			if ($first) $first = false; else $existing_types .= ",";
-			$existing_types .= json_encode($t);
-		}
-		$existing_types .= "]";
-		$this->addJavascript("/static/contact/organization.js");
-		$container_id = $this->generateID();
-		$this->onload("window.organization = new organization('$container_id',$org_structure,$existing_types,true);");
-		if (isset($_GET["onready"])) $this->onload("window.frameElement.".$_GET["onready"]."(window.organization);");
-		echo "<center><div id='$container_id' style='margin:5px;display:inline-block;border:1px solid #808080'></div></center>";
-		?>
-<!-- 		<table>
-			<th style = "height:100px">
-				<span  id = 'organization_title'></span>
-			</th>
-			<tr>
-				<td style ='vertical-align:top;'>
-					<span id='type'></span>
-				</td>
-				<td style ='vertical-align:top;'>
-					<span  id='address'></span>
-					<span  id='contact'></span>
-				</td>
-			</tr>
-		</table> -->
-		<?php
-// 		$q = SQLQuery::create()->select("Organization")
-// 				->field("id")
-// 				->where("id = ".$id."");
-// 		$exist = $q->execute();
-// 		if(isset($exist[0]["id"])){
-// 			require_once("contact.inc");
-// 			contact($this,"organization","contact",$id);
-// 			require_once("address.inc");
-// 			address($this,"organization","address",$id);
-// 		}
-// 		require_once("organization_profile.inc");
-// 		organization_profile($this,$id,"type","organization_title");
+		// TODO $_GET["onready"]
+?>
+<div id='org_container'>
+</div>
+<?php 
+		$this->requireJavascript("organization.js");
+		$this->onload("new organization('org_container',$org_json,".json_encode($all_types).",".json_encode($can_edit).");");
 	}
 	
 }
