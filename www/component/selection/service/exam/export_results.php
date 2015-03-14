@@ -154,7 +154,7 @@ class service_exam_export_results extends Service {
 					$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
 					$current_applicant = 0;
 					$row = 2;
-					foreach ($answers as $a) {
+					foreach ($grades as $a) {
 						if ($a["applicant"] <> $current_applicant) {
 							$current_applicant = $a["applicant"];
 							$row++;
