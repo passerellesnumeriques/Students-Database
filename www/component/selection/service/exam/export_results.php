@@ -94,19 +94,21 @@ class service_exam_export_results extends Service {
 							->select("ApplicantExamSubject")
 							->whereValue("ApplicantExamSubject","exam_subject",$subject["id"])
 							->whereValue("ApplicantExamSubject","exam_subject_version", $versions[$version]["id"])
-							->field("applicant")
-							->field("score")
+							->field("ApplicantExamSubject","applicant")
+							->field("ApplicantExamSubject","score")
+							->join("ApplicantExamSubject","Applicant",array("applicant"=>"people"))
+							->field("Applicant","applicant_id")
 							->execute();
 						$ids = array();
-						foreach ($applicants as $a) array_push($ids, $a["applicant"]);
-						$answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
+						foreach ($applicants as $a) $ids[$a["applicant"]] = $a["applicant_id"];
+						$answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",array_keys($ids))->orderBy("ApplicantExamAnswer","applicant")->execute();
 						$current_applicant = 0;
 						$row = 2;
 						foreach ($answers as $a) {
 							if ($a["applicant"] <> $current_applicant) {
 								$current_applicant = $a["applicant"];
 								$row++;
-								$sheet->setCellValueByColumnAndRow(0, $row, $current_applicant);
+								$sheet->setCellValueByColumnAndRow(0, $row, $ids[$current_applicant]);
 								$progress++;
 								if (($progress % 100) == 0) {
 									$pc = 1+($progress*99/$nb);
@@ -146,19 +148,21 @@ class service_exam_export_results extends Service {
 						->select("ApplicantExamSubject")
 						->whereValue("ApplicantExamSubject","exam_subject",$subject["id"])
 						->whereValue("ApplicantExamSubject","exam_subject_version", $versions[$version]["id"])
-						->field("applicant")
-						->field("score")
+						->field("ApplicantExamSubject","applicant")
+						->field("ApplicantExamSubject","score")
+						->join("ApplicantExamSubject","Applicant",array("applicant"=>"people"))
+						->field("Applicant","applicant_id")
 						->execute();
 					$ids = array();
-					foreach ($applicants as $a) array_push($ids, $a["applicant"]);
-					$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
+					foreach ($applicants as $a) $ids[$a["applicant"]] = $a["applicant_id"];
+					$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",array_keys($ids))->orderBy("ApplicantExamAnswer","applicant")->execute();
 					$current_applicant = 0;
 					$row = 2;
 					foreach ($grades as $a) {
 						if ($a["applicant"] <> $current_applicant) {
 							$current_applicant = $a["applicant"];
 							$row++;
-							$sheet->setCellValueByColumnAndRow(0, $row, $current_applicant);
+							$sheet->setCellValueByColumnAndRow(0, $row, $ids[$current_applicant]);
 							$progress++;
 							if (($progress % 100) == 0) {
 								$pc = 1+($progress*99/$nb);
