@@ -14,14 +14,20 @@ class service_exam_export_results extends Service {
 	public function execute(&$component, $input) {
 		$progress_id = $input["input"]["progress_id"];
 		$all = $input["input"]["all"];
+		$session_id = isset($input["input"]["session_id"]) ? $input["input"]["session_id"] : null;
 		
 		$has_answers = PNApplication::$instance->selection->getOneConfigAttributeValue("set_correct_answer");
 		
 		$subjects = SQLQuery::create()->select("ExamSubject")->execute();
-		$q = SQLQuery::create()->select("Applicant")->field("people");
+		$q = SQLQuery::create()->select("Applicant");
 		if ($all) $q->whereNotValue("Applicant", "exam_attendance", "No");
 		else $q->whereValue("Applicant", "exam_attendance", "Yes");
-		$applicants_ids = $q->executeSingleField();
+		if ($session_id <> null) $q->whereValue("Applicant", "exam_session", $session_id);
+		$q->field("people")->field("applicant_id");
+		$q->join("Applicant","People",array("people"=>"id"))->field("People","first_name")->field("People","last_name");
+		$applicants = $q->execute();
+		$applicants_ids = array();
+		foreach ($applicants as $a) $applicants_ids[$a["people"]] = $a; 
 		
 		set_time_limit(300);
 		
@@ -102,30 +108,23 @@ class service_exam_export_results extends Service {
 							}
 						}
 						// answers
-						$applicants = SQLQuery::create()
+						$ids = SQLQuery::create()
 							->select("ApplicantExamSubject")
 							->whereValue("ApplicantExamSubject","exam_subject",$subject["id"])
 							->whereValue("ApplicantExamSubject","exam_subject_version", $versions[$version]["id"])
+							->whereIn("ApplicantExamSubject", "applicant", array_keys($applicants_ids))
 							->field("ApplicantExamSubject","applicant")
-							->field("ApplicantExamSubject","score")
-							->join("ApplicantExamSubject","Applicant",array("applicant"=>"people"))
-							->field("Applicant","applicant_id")
-							->join("Applicant","People",array("people"=>"id"))
-							->field("People","first_name")
-							->field("People","last_name")
-							->execute();
-						$ids = array();
-						foreach ($applicants as $a) $ids[$a["applicant"]] = $a;
-						$answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",array_keys($ids))->orderBy("ApplicantExamAnswer","applicant")->execute();
+							->executeSingleField();
+						$answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
 						$current_applicant = 0;
 						$row = 2;
 						foreach ($answers as $a) {
 							if ($a["applicant"] <> $current_applicant) {
 								$current_applicant = $a["applicant"];
 								$row++;
-								$sheet->setCellValueByColumnAndRow(0, $row, $ids[$current_applicant]["applicant_id"]);
-								$sheet->setCellValueByColumnAndRow(1, $row, $ids[$current_applicant]["first_name"]);
-								$sheet->setCellValueByColumnAndRow(2, $row, $ids[$current_applicant]["last_name"]);
+								$sheet->setCellValueByColumnAndRow(0, $row, $applicants_ids[$current_applicant]["applicant_id"]);
+								$sheet->setCellValueByColumnAndRow(1, $row, $applicants_ids[$current_applicant]["first_name"]);
+								$sheet->setCellValueByColumnAndRow(2, $row, $applicants_ids[$current_applicant]["last_name"]);
 								$progress++;
 								if (($progress % 100) == 0) {
 									$pc = 1+($progress*99/$nb);
@@ -173,30 +172,23 @@ class service_exam_export_results extends Service {
 						}
 					}
 					// grades
-					$applicants = SQLQuery::create()
+					$ids = SQLQuery::create()
 						->select("ApplicantExamSubject")
 						->whereValue("ApplicantExamSubject","exam_subject",$subject["id"])
 						->whereValue("ApplicantExamSubject","exam_subject_version", $versions[$version]["id"])
+						->whereIn("ApplicantExamSubject", "applicant", array_keys($applicants_ids))
 						->field("ApplicantExamSubject","applicant")
-						->field("ApplicantExamSubject","score")
-						->join("ApplicantExamSubject","Applicant",array("applicant"=>"people"))
-						->field("Applicant","applicant_id")
-						->join("Applicant","People",array("people"=>"id"))
-						->field("People","first_name")
-						->field("People","last_name")
-						->execute();
-					$ids = array();
-					foreach ($applicants as $a) $ids[$a["applicant"]] = $a;
-					$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",array_keys($ids))->orderBy("ApplicantExamAnswer","applicant")->execute();
+						->executeSingleField();
+					$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
 					$current_applicant = 0;
 					$row = 2;
 					foreach ($grades as $a) {
 						if ($a["applicant"] <> $current_applicant) {
 							$current_applicant = $a["applicant"];
 							$row++;
-							$sheet->setCellValueByColumnAndRow(0, $row, $ids[$current_applicant]["applicant_id"]);
-							$sheet->setCellValueByColumnAndRow(1, $row, $ids[$current_applicant]["first_name"]);
-							$sheet->setCellValueByColumnAndRow(2, $row, $ids[$current_applicant]["last_name"]);
+							$sheet->setCellValueByColumnAndRow(0, $row, $applicants_ids[$current_applicant]["applicant_id"]);
+							$sheet->setCellValueByColumnAndRow(1, $row, $applicants_ids[$current_applicant]["first_name"]);
+							$sheet->setCellValueByColumnAndRow(2, $row, $applicants_ids[$current_applicant]["last_name"]);
 							$progress++;
 							if (($progress % 100) == 0) {
 								$pc = 1+($progress*99/$nb);
