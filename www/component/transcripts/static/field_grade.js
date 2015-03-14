@@ -240,10 +240,12 @@ field_grade.prototype._create = function(data) {
 				this.element.style.display = "flex";
 				this.element.style.alignItems = "center";
 				this.element.style.justifyContent = "center";
-				this.element.style.position = "absolute";
-				this.element.style.top = "0px";
-				this.element.style.left = "0px";
-				this.element.style.backgroundColor = this.getGradeColor(grade);
+				if (this.element.parentNode)
+					this.element.parentNode.style.backgroundColor = this.getGradeColor(grade);
+				else {
+					var t = this;
+					this.element.ondomadded(function() { t.element.parentNode.style.backgroundColor = t.getGradeColor(grade); });
+				}
 			}
 			return grade;
 		};

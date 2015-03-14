@@ -57,9 +57,10 @@ field_age.prototype.setDataDisplay = function(data_display, data_key) {
 	this._dm_listener = function(value) {
 		t.setData(value);
 	};
-	window.top.datamodel.addCellChangeListener(window, this.config.table, this.config.column, data_key, this._dm_listener);
+	var wtopdm = window.top.datamodel;
+	wtopdm.addCellChangeListener(window, this.config.table, this.config.column, data_key, this._dm_listener);
 	this.element.ondomremoved(function() {
-		window.top.datamodel.removeCellChangeListener(t._dm_listener);
+		wtopdm.removeCellChangeListener(t._dm_listener);
 		t._dm_listener = null;
 	});
 };

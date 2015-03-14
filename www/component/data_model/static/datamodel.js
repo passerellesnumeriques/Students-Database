@@ -350,7 +350,9 @@ function _init_datamodel_js() {
 		setTimeout(_init_datamodel_js, 25);
 		return;
 	}
-	window.top.pnapplication.onwindowclosed.addListener(function(c) { c.top.datamodel._windowClosed(c.win); });
+	window.top.require("datamodel.js");
+	if (window == window.top)
+		window.top.pnapplication.onwindowclosed.addListener(function(c) { c.top.datamodel._windowClosed(c.win); });
 }
 if (!window.top.datamodel_prototype) {
 window.top.datamodel_prototype = {

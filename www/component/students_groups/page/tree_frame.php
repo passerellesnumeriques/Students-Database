@@ -71,7 +71,7 @@ class page_tree_frame extends Page {
 }
 </style>
 <div id="students_groups_tree_frame_container" style="width:100%;height:100%;overflow:hidden;display:flex;flex-direction:row">
-	<iframe name="students_groups_tree_frame" id="students_groups_tree_frame" style="border:none;flex:1 1 auto;"></iframe>
+	<iframe name="students_groups_tree_frame" id="students_groups_tree_frame" style="border:none;flex:1 1 100%;min-height:100%"></iframe>
 	<div id="students_groups_tree_container" style="flex:none;display:flex;flex-direction:column;min-width:245px">
 		<div id='tree_header' icon='/static/curriculum/batch_16.png' title='Batches &amp; Groups' style="flex:none">
 			<?php if ($can_edit) { ?>
@@ -344,7 +344,7 @@ window.top.require("datamodel.js", function() {
 	window.curriculum_root = new CurriculumTreeNode_Root(tr);
 	//Initilization of the page
 	var selected_node = getCookie("students_groups_tree_node");
-	if (selected_node.length == 0) selected_node = "current_students";
+	if (!selected_node) selected_node = "current_students";
 	var node = window.curriculum_root.findTag(selected_node);
 	if (!node) node = window.curriculum_root.findTag("current_students");
 	node.item.select();

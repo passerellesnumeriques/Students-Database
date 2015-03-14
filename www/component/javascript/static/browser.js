@@ -701,6 +701,7 @@ function addJavascript(url, onload, additional_attributes) {
 	if (document.readyState != "complete") {
 		// delay the load, as we may not have yet all the scripts in the head
 		var listener = function() {
+			if (document.readyState != "complete") return;
 			addJavascript(url,onload,additional_attributes);
 			unlistenEvent(document, 'readystatechange', listener);
 			listener = null;
