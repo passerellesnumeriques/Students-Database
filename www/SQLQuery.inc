@@ -2553,7 +2553,7 @@ class SQLQuery {
 				$primary = $t->getPrimaryKey();
 				if ($primary <> null) {
 					// search keys for rows matching
-					$q = SQLQuery::create()->bypassSecurity($this->bypass_security || $t->canRemoveFromForeignTable($table->getName()))
+					$q = SQLQuery::create()->bypassSecurity()
 #DEV
 						->noWarning()
 #END
@@ -2564,12 +2564,21 @@ class SQLQuery {
 						$q->selectSubModel($t->getModel()->getParentTable(), $sm);
 					$q->whereIn($table_alias, $col->name, $keys);
 					$q->field($table_alias, $primary->name);
+					if (!$this->bypass_security && !$t->canRemoveAny() && !$t->canRemoveFromForeignTable($table->getName())) {
+						$t->prepareSelectToDetermineRemoveAccess($q, $table_alias, $locks);
+					}
 					$rows = $q->executeSingleField();
+					if (count($rows) == 0) continue; // nothing to remove
+					if (!$this->bypass_security && !$t->canRemoveAny() && !$t->canRemoveFromForeignTable($table->getName())) {
+						$filtered = $t->filterRemoveAccess($rows);
+						if (count($filtered) <> count($rows))
+							throw new Exception("Access denied: remove from table '".$t->getName()."' due to link to removed data from table '".$table->getName()."': ".(count($rows)-count($filtered))." row(s) cannot be removed");
+					}
 					$this->browseTablesForRemove($t, $sm, $rows, $table->getName(), $locks, $to_remove, $to_update, $sub_models_to_remove);
 				} else {
 					// no primary key, this must be done with a where
-					if (!$this->bypass_security && !$t->canRemoveAny()) {
-						$q = SQLQuery::create()->bypassSecurity($this->bypass_security || $t->canRemoveFromForeignTable($table->getName()))
+					if (!$this->bypass_security && !$t->canRemoveAny() && !$t->canRemoveFromForeignTable($table->getName())) {
+						$q = SQLQuery::create()->bypassSecurity()
 #DEV
 							->noWarning()
 #END
@@ -2581,6 +2590,7 @@ class SQLQuery {
 						$q->whereIn($table_alias, $col->name, $keys);
 						$t->prepareSelectToDetermineRemoveAccess($q, $table_alias, $locks);
 						$rows = $q->execute();
+						if (count($rows) == 0) continue; // nothing to remove
 						$filtered = $t->filterRemoveAccess($rows);
 						if (count($filtered) <> count($rows))
 							throw new Exception("Access denied: remove from table '".$t->getName()."' due to link to removed data from table '".$table->getName()."': ".(count($rows)-count($filtered))." row(s) cannot be removed");
