@@ -100,7 +100,7 @@ class service_exam_export_results extends Service {
 							$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 							$sheet->mergeCellsByColumnAndRow($col, 1, $col+count($parts[$part_i]["questions"])-1, 1);
 							for ($q_i = 0; $q_i < count($parts[$part_i]["questions"]); $q_i++) {
-								$sheet->setCellValueByColumnAndRow($col, 2, "Q".($col));
+								$sheet->setCellValueByColumnAndRow($col, 2, "Q".($q_i+1));
 								$style = $sheet->getStyleByColumnAndRow($col, 2);
 								$style->getFont()->setBold(true);
 								$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
@@ -164,7 +164,7 @@ class service_exam_export_results extends Service {
 						$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 						$sheet->mergeCellsByColumnAndRow($col, 1, $col+count($parts[$part_i]["questions"])-1, 1);
 						for ($q_i = 0; $q_i < count($parts[$part_i]["questions"]); $q_i++) {
-							$sheet->setCellValueByColumnAndRow($col, 2, "Q".($col));
+							$sheet->setCellValueByColumnAndRow($col, 2, "Q".($q_i+1));
 							$style = $sheet->getStyleByColumnAndRow($col, 2);
 							$style->getFont()->setBold(true);
 							$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
