@@ -286,7 +286,8 @@ function Organization(id, name, creator, types_ids, general_contacts, general_co
 	this.locations = locations;
 }
 
-function OrganizationLocation(address, contacts, contact_points) {
+function OrganizationLocation(name, address, contacts, contact_points) {
+	this.name = name;
 	this.address = address;
 	this.contacts = contacts;
 	this.contact_points = contact_points;

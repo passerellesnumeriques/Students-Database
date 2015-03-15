@@ -563,6 +563,7 @@ $model->addTable("OrganizationAddress")
 	->addForeignKey("address","PostalAddress",true,false,true,false)
 	->setKey(array("organization","address"))
 	->addIndex("organization")
+	->addString("name", 100, 0, true, false)
 	->addReadAccessFromForeignTable("Organization") // if we come already from the organization, no need to check again
 	->addReadFilter(function(&$q, $table_alias) {
 		$table = Datamodel::get()->getTable("Organization");

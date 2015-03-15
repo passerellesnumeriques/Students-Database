@@ -176,6 +176,7 @@ class ContactJSON {
 		$contacts = $q->execute();
 		$q = SQLQuery::create()->select("OrganizationAddress")->whereValue("OrganizationAddress","organization",$id)->join("OrganizationAddress","PostalAddress",array("address"=>"id"));
 		self::PostalAddressSQL($q);
+		$q->field("OrganizationAddress", "name", "location_name");
 		$addresses = $q->execute();
 		$q = SQLQuery::create()->select("ContactPoint")->whereValue("ContactPoint","organization",$id);
 		self::OrganizationContactPointSQL($q);
@@ -200,6 +201,7 @@ class ContactJSON {
 		$list_contacts = $q->execute();
 		$q = SQLQuery::create()->select("OrganizationAddress")->whereIn("OrganizationAddress","organization",$ids)->join("OrganizationAddress","PostalAddress",array("address"=>"id"));
 		$q->field("OrganizationAddress", "organization", "organization_id");
+		$q->field("OrganizationAddress", "name", "location_name");
 		self::PostalAddressSQL($q);
 		$list_addresses = $q->execute();
 		$q = SQLQuery::create()->select("ContactPoint")->whereIn("ContactPoint","organization",$ids);
@@ -274,7 +276,7 @@ class ContactJSON {
 		$general_contact_points = array();
 		$locations = array();
 		if ($addresses !== null)
-			foreach ($addresses as $addr) $locations[$addr["postal_address__id"]] = array("address"=>$addr,"contacts"=>array(),"contact_points"=>array());
+			foreach ($addresses as $addr) $locations[$addr["postal_address__id"]] = array("name"=>$addr["location_name"],"address"=>$addr,"contacts"=>array(),"contact_points"=>array());
 		$s .= ",general_contacts:";
 		if ($contacts !== null) {
 			foreach ($contacts as $c) if ($c["attached_location"] == null) array_push($general_contacts, $c); else array_push($locations[$c["attached_location"]]["contacts"], $c); 
@@ -292,7 +294,8 @@ class ContactJSON {
 		foreach ($locations as $addr_id=>$loc) {
 			if ($first) $first = false; else $s .= ",";
 			$s .= "{";
-			$s .= "address:".self::PostalAddress($loc["address"]);
+			$s .= "name:".json_encode($loc["name"]);
+			$s .= ",address:".self::PostalAddress($loc["address"]);
 			$s .= ",contacts:".self::Contacts($loc["contacts"]);
 			$s .= ",contact_points:".self::OrganizationContactPoints($loc["contact_points"]);
 			$s .= "}";

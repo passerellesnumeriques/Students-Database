@@ -3,6 +3,9 @@ class development extends Component {
 	
 	public $requests = array();
 	
+	/**
+	 * @return DevRequest
+	 */
 	public function &current_request() {
 		return $this->requests[count($this->requests)-1];
 	}
