@@ -38,19 +38,21 @@ function CalendarView(calendar_manager, view_name, zoom, container, onready) {
 	this._init = function() {
 		while (container.childNodes.length > 0)
 			container.removeChild(container.childNodes[0]);
-		container.style.display = "flex";
-		container.style.flexDirection = "column";
 		this.header = document.createElement("DIV");
-		this.header.style.flex = "none";
-		this.header.style.height = "28px";
-		this.header.style.fontSize = '9pt';
-		//this.header.style.backgroundColor = "#D8D8D8";
-		this.header.className = "header";
 		this.view_container = document.createElement("DIV");
-		this.view_container.style.flex = "1 1 100%";
 		this.view_container.style.backgroundColor = "white";
-		if (view_name != "upcoming")
+		if (view_name != "upcoming") {
+			container.style.display = "flex";
+			container.style.flexDirection = "column";
+			this.header.style.flex = "none";
+			this.header.style.height = "28px";
+			this.header.style.fontSize = '9pt';
+			//this.header.style.backgroundColor = "#D8D8D8";
+			this.header.className = "header";
+			this.view_container.style.flex = "1 1 100%";
 			container.appendChild(this.header);
+		} else {
+		}
 		container.appendChild(this.view_container);
 		var ready_count = 0;
 		var ready = function() {

@@ -311,7 +311,8 @@ typed_field_multiple.prototype.getDataIndex = function(index) { alert("Function 
  */
 typed_field_multiple.prototype.setDataIndex = function(index, value, from_input) { alert("Function setDataIndex not implemented in typed_field_multiple: "+getObjectClassName(this)); };
 
-if (!window.top.sub_field_registry) {
+
+if (window == window.top) {
 	/** 
 	 * Allow to register fields having sub data, so that we can synchronize the sub datas
 	 */
@@ -375,3 +376,4 @@ if (!window.top.sub_field_registry) {
 	};
 	window.top.pnapplication.onwindowclosed.addListener(function(c) {c.top.sub_field_registry._clean(c.win); });
 }
+window.top.require("typed_field.js");

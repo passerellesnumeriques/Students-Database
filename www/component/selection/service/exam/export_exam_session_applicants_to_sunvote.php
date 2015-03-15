@@ -39,13 +39,17 @@ class service_exam_export_exam_session_applicants_to_sunvote extends Service {
 			//$sheet->setCellValueByColumnAndRow(0,$i+2,$i+1); // changed to applicant ID as asked by PNC
 			$sheet->setCellValueByColumnAndRow(0,$i+2,$applicants[$i]["applicant_id"]);
 			$sheet->setCellValueByColumnAndRow(1,$i+2,$applicants[$i]["applicant_id"]);
-			$sheet->setCellValueByColumnAndRow(2,$i+2,$applicants[$i]["first_name"]." ".$applicants[$i]["last_name"]);
+			//$sheet->setCellValueByColumnAndRow(2,$i+2,$applicants[$i]["first_name"]." ".$applicants[$i]["last_name"]);
+			$sheet->setCellValueByColumnAndRow(2,$i+2,$applicants[$i]["applicant_id"]); // changed to applicant ID because SunVote export only the name with the results, and we need to have the ID instead of the name
 		}
 		// replacement keypads
 		for ($j = 0; $j < 10; $j++) {
-			$sheet->setCellValueByColumnAndRow(0,$i+$j+2,$i+$j+1);
-			$sheet->setCellValueByColumnAndRow(1,$i+$j+2,99001+$j);
-			$sheet->setCellValueByColumnAndRow(2,$i+$j+2,99001+$j);
+			//$sheet->setCellValueByColumnAndRow(0,$i+$j+2,$i+$j+1);
+			//$sheet->setCellValueByColumnAndRow(1,$i+$j+2,99001+$j);
+			//$sheet->setCellValueByColumnAndRow(2,$i+$j+2,99001+$j);
+			$sheet->setCellValueByColumnAndRow(0,$i+$j+2,3501+$j); // changed with ID from 3500 as asked by PNC because SunVote do not reconize IDs after 3600
+			$sheet->setCellValueByColumnAndRow(1,$i+$j+2,3501+$j);
+			$sheet->setCellValueByColumnAndRow(2,$i+$j+2,3501+$j);
 		}
 		
 		header("Content-Disposition: attachment; filename=\"".$center['name']."_Session_".date("Ymd_hia",$session["start"])."_Room_".$room["name"]."_Applicants_List.xlsx\"");

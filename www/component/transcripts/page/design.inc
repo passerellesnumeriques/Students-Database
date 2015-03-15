@@ -543,8 +543,8 @@ function generateSubjectSection($cat, $subject, $subj_content, $config, $period,
 	foreach ($student_grades as $g) if ($g["subject"] == $subject["id"]) { $student_grade = $g; break; }
 	$subj_content = str_replace("#COMMENT#", toHTML($student_grade["comment"]), $subj_content);
 	$id = "grade_subject_".$subject["id"]."_".$student["id"]."_$transcript_id".($id_suffix <> null ? $id_suffix : "");
-	$subj_content = str_replace("#GRADE#", "<div id='$id' style='position:absolute;height:100%;top:0px;left:0px;width:100%;'>".$student_grade["grade"]."</div>", $subj_content);
-	$script_grades .= "e=document.getElementById('$id');e.removeAllChildren();f=new field_grade(".json_encode($student_grade["grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.appendChild(f.getHTMLElement());\n";
+	$subj_content = str_replace("#GRADE#", "<div id='$id'>".$student_grade["grade"]."</div>", $subj_content);
+	$script_grades .= "e=document.getElementById('$id');f=new field_grade(".json_encode($student_grade["grade"]).",false,{max:".(isset($subject["max_grade"]) ? $subject["max_grade"] : "null").",passing:".(isset($subject["passing_grade"]) ? $subject["passing_grade"] : "null").",system:".json_encode($grading_systems[$config["grading_system"]])."});f.fillWidth();e.parentNode.appendChild(f.getHTMLElement());e.parentNode.removeChild(e);\n";
 	if (@$config["class_average"] == 1 || @$config["class_lowest"] == 1 || @$config["class_highest"] == 1 || @$config["class_rank"] == 1) {
 		if (substr($transcript_id,0,1) == "_") {
 			// fake

@@ -135,6 +135,7 @@ function init_users_list() {
 			};
 			list.addHeader(unassign_roles);
 			var remove = document.createElement("BUTTON");
+			remove.disabled = "disabled";
 			remove.className = "flat";
 			remove.innerHTML = "<img src='"+theme.build_icon("/static/user_management/user_16.png",theme.icons_10.remove)+"'/> Remove";
 			remove.onclick = function() {

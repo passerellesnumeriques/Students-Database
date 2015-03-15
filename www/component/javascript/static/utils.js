@@ -169,6 +169,22 @@ Element.prototype.removeChild = function(e) {
 	_domRemoved(e);
 	return this._removeChild(e);
 };
+Element.prototype.ondomadded = function(listener) {
+	if (!this._ondomadded) this._ondomadded = new Custom_Event();
+	this._ondomadded.addListener(listener);
+};
+Element.prototype._appendChild = Element.prototype.appendChild;
+Element.prototype.appendChild = function(e) {
+	var r = this._appendChild(e);
+	if (e._ondomadded) e._ondomadded.fire();
+	return r;
+}
+Element.prototype._insertBefore = Element.prototype.insertBefore;
+Element.prototype.insertBefore = function(e,b) {
+	var r = this._insertBefore(e,b);
+	if (e._ondomadded) e._ondomadded.fire();
+	return r;
+}
 /** Remove all children on this element.
  * This must be used instead of using innerHTML, so that we can fire remove events on every element.
  */

@@ -151,7 +151,7 @@ class people extends Component {
 		if (count($peoples_ids) == 0) return array();
 		$q = SQLQuery::create()->select("People")->whereIn("People","id",$peoples_ids);
 		if ($sort)
-			$q->orderBy("People","last_name")->orderBY("People","first_name");
+			$q->orderBy("People","last_name")->orderBy("People","first_name");
 		if ($json_format) {
 			require_once("component/people/PeopleJSON.inc");
 			PeopleJSON::PeopleSQL($q, $include_picture_revision);

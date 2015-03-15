@@ -69,10 +69,15 @@ function initPNApplication() {
 					new LoadingFrame(w.frameElement);
 				if (w.frameElement && w.frameElement._loading_frame)
 					w.frameElement._loading_frame.startUnloading();
-				window.top.pnapplication._windows.remove(w);
-				unlistenEvent(w,'click',window.top.pnapplication._window_click_listener);
-				unlistenEvent(w,'mousemove',window.top.pnapplication._window_mousemove_listener);
-				unlistenEvent(w,'mouseup',window.top.pnapplication._window_mouseup_listener);
+				var top = window.top;
+				if (browser.IE > 0) {
+					while (top.frameElement) top = getWindowFromElement(top.frameElement);
+					top = top.top;
+				}
+				top.pnapplication._windows.remove(w);
+				unlistenEvent(w,'click',top.pnapplication._window_click_listener);
+				unlistenEvent(w,'mousemove',top.pnapplication._window_mousemove_listener);
+				unlistenEvent(w,'mouseup',top.pnapplication._window_mouseup_listener);
 				for (var i = 0; i < this._onclick_listeners.length; ++i)
 					if (this._onclick_listeners[i][0] == w) {
 						this._onclick_listeners.splice(i,1);
@@ -96,7 +101,7 @@ function initPNApplication() {
 						}
 				}
 				w.closing = true;
-				window.top.pnapplication.onwindowclosed.fire({top:window.top,win:w});
+				top.pnapplication.onwindowclosed.fire({top:top,win:w});
 				// clean up
 				w.document.body.removeAllChildren();
 				if (w.to_cleanup) {
@@ -111,7 +116,7 @@ function initPNApplication() {
 					if (name != "closing" && name != "name" && name != "frameElement" &&
 						name != "self" && name != "parent" && name != "top" &&
 						name != "location" &&
-						!window.top.pnapplication._reserved_names.contains(name) &&
+						!top.pnapplication._reserved_names.contains(name) &&
 						typeof Window.prototype[name] == 'undefined' &&
 						name != "id" && name != "_domRemoved")
 						w[name] = null;
@@ -257,8 +262,13 @@ function initPNApplication() {
 				if (window.pnapplication._frame_unload_listener)
 					unlistenEvent(window.frameElement, 'unload', window.pnapplication._frame_unload_listener);
 				this.onclose.fire();
-				if (window.top.pnapplication)
-					window.top.pnapplication.unregisterWindow(window);
+				var top = window.top;
+				if (browser.IE > 0) {
+					while (top.frameElement) top = getWindowFromElement(top.frameElement);
+					top = top.top;
+				}
+				if (top.pnapplication)
+					top.pnapplication.unregisterWindow(window);
 			},
 			/** Internal list of {time,function} to call when the user is inactive */
 			_inactivity_listeners: [],

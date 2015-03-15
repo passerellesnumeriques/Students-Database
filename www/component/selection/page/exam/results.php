@@ -143,12 +143,13 @@ class page_exam_results extends SelectionPage {
 			</div>
 		</div>
 	</div>
-	<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
 	<div class="page_footer" style="flex:none">
+		<?php if (PNApplication::$instance->user_management->hasRight("edit_exam_results")) { ?>
 		<button id="edit_results_button" class="action" disabled="disabled" onclick="editResults();">Edit Results</button>
 		<button id="remove_results_button" class="action red" disabled="disabled" onclick="resetSession();">Reset results</button>
+		<?php } ?>
+		<button id="export_session_results_button" class="action" disabled="disabled" onclick="exportSession(this);">Export results</button>
 	</div>
-	<?php } ?>
 </div>
 <script type='text/javascript'>
 /* global variable containing data about selected items */
@@ -179,7 +180,7 @@ function createDataList(campaign_id)
 
 			var export_sunvote = document.createElement("BUTTON");
 			export_sunvote.className = "flat";
-			export_sunvote.innerHTML = "<img src='/static/selection/exam/sunvote_16.png'/> Export for Clickers";
+			export_sunvote.innerHTML = "<img src='/static/selection/exam/sunvote_16.png'/> Export applicants list for Clickers";
 			export_sunvote.onclick = function() {
 				postToDownload("/dynamic/selection/service/exam/export_exam_session_applicants_to_sunvote", {session:selected["session_id"],room:selected["room_id"]});
 			};
@@ -210,6 +211,7 @@ function initResults(){
 		document.getElementById('edit_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
 		document.getElementById('remove_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
 		<?php } ?>
+		document.getElementById('export_session_results_button').disabled = selected["session_id"] != null ? "" : "disabled";
 	});
 }
 
@@ -287,12 +289,12 @@ function resetAll() {
 	});
 }
 
-function launchExport(all) {
+function launchExport(all, session_id) {
 	var locker = lockScreen();
 	setLockScreenContentProgress(locker, 100, "Generating Excel file...", null, function(span, pb, sub) {
 		service.json("application","create_temp_data",{value:'0'},function(res) {
 			var temp_data_id = res.id;
-			postToDownload("/dynamic/selection/service/exam/export_results",{progress_id:temp_data_id,all:all},true);
+			postToDownload("/dynamic/selection/service/exam/export_results",{progress_id:temp_data_id,all:all,session_id:session_id ? session_id : null},true);
 			var refresh = function() {
 				service.json("application","get_temp_data",{id:temp_data_id},function(res) {
 					if (res.value == 'done' || res.value === null || isNaN(parseInt(res.value))) {
@@ -311,11 +313,27 @@ function launchExport(all) {
 function exportResults(button) {
 	require("context_menu.js",function() {
 		var menu = new context_menu();
-		menu.addIconItem(null, "All results, including applicants who cheated or partially attended", function() {
+		menu.addTitleItem(null, "Export results from ALL exam centers for analysis");
+		menu.addIconItem(null, "Including applicants who cheated or partially attended", function() {
 			launchExport(true);
 		});
-		menu.addIconItem(null, "Only results from applicants who fully attended and didn't cheat", function() {
+		menu.addIconItem(null, "Only from applicants who fully attended and didn't cheat", function() {
 			launchExport(false);
+		});
+		menu.showBelowElement(button);
+	});
+}
+
+function exportSession(button) {
+	if(!selected["session_id"]) return;
+	require("context_menu.js",function() {
+		var menu = new context_menu();
+		menu.addTitleItem(null, "Export results from the selected exam session");
+		menu.addIconItem(null, "Including applicants who cheated or partially attended", function() {
+			launchExport(true, selected["session_id"]);
+		});
+		menu.addIconItem(null, "Only from applicants who fully attended and didn't cheat", function() {
+			launchExport(false, selected["session_id"]);
 		});
 		menu.showBelowElement(button);
 	});
