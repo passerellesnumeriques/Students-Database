@@ -326,19 +326,19 @@ function checkPHPConfig() {
 		addText(" memory_limit: ");
 		if (size >= 250*1024*1024) addOk((size/(1024*1024))+"M",true);
 		else if (size >= 64*1024*1024) addWarning((size/(1024*1024))+"M can be short to process Excel files (recommended is at least 128M, 256M is the best)",true);
-		else addError((size/(1024*1024))+"M is too small, we won't be able to process most of the Excel files (recommended is at least 128M, 256M is the best)",true);
+		else addWarning((size/(1024*1024))+"M is too small, we won't be able to process most of the Excel files (recommended is at least 128M, 256M is the best)",true);
 		request("phpconfig_post_size","",function(res) {
 			size = parseInt(res);
 			addText(" post_max_size: ");
 			if (size >= 100*1024*1024) addOk((size/(1024*1024))+"M",true);
 			else if (size >= 32*1024*1024) addWarning((size/(1024*1024))+"M can be short if the user wants to upload big files (recommended is at least 128M, 256M is the best)",true);
-			else addError((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
+			else addWarning((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
 			request("phpconfig_upload_max_filesize","",function(res) {
 				size = parseInt(res);
 				addText(" upload_max_filesize: ");
 				if (size >= 100*1024*1024) addOk((size/(1024*1024))+"M",true);
 				else if (size >= 32*1024*1024) addWarning((size/(1024*1024))+"M can be short if the user wants to upload big files (recommended is at least 128M, 256M is the best)",true);
-				else addError((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
+				else addWarning((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
 				request("phpconfig_max_file_uploads","",function(res) {
 					size = parseInt(res);
 					addText(" max_file_uploads: ");
