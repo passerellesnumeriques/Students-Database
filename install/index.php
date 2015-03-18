@@ -277,8 +277,13 @@ function checkApacheVersion() {
 		if (res.length == 0) addError("Unable to determine which Web Server is used");
 		else {
 			var i = res.indexOf('/');
-			if (i < 0) addError("Unable to determine which Web Server is used, the server said: "+res);
-			else {
+			if (i < 0) {
+				if (res == "Apache") {
+					addWarning("Your server is Apache, but we cannot check which version. Please check your Apache server is at least the version 2.2");
+					checkPHPExtensions();
+				} else
+					addError("Unable to determine which Web Server is used, the server said: "+res);
+			} else {
 				var server = res.substring(0,i);
 				var version = res.substring(i+1);
 				if (server != "Apache") addError("This Web Server is not Apache: "+server+" found");
