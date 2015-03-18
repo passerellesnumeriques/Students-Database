@@ -20,7 +20,7 @@ class service_add_contact extends Service {
 		if ($input["owner_type"] == "people")
 			$contact_id = $component->addContactToPeople($input["owner_id"], $input["contact"]);
 		else if ($input["owner_type"] == "organization")
-			$contact_id = $component->addContactToOrganization($input["owner_id"], $input["contact"]);
+			$contact_id = $component->addContactToOrganization($input["owner_id"], $input["contact"], @$input["attached_location"]);
 		else {
 			PNApplication::error("Invalid owner_type");
 			$contact_id = false;

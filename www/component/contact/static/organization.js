@@ -263,7 +263,7 @@ organization.prototype = {
 		header.appendChild(types_container);
 	},
 	_initGeneralContacts: function(container) {
-		this._contacts_widget = new contacts(container, "organization", this.org.id, this.org.general_contacts, this.can_edit, this.can_edit, this.can_edit);
+		this._contacts_widget = new contacts(container, "organization", this.org.id, this.org.general_contacts, null, this.can_edit, this.can_edit, this.can_edit);
 		var t=this;
 		this._contacts_widget.onchange.addListener(function(c){
 			t.org.contacts = c.getContacts();
@@ -400,8 +400,7 @@ function OrganizationLocationControl(container, org, loc, can_edit) {
 		ccp_container.appendChild(contacts_container);
 		ccp_container.appendChild(contact_points_container);
 		contact_points_container.style.marginLeft = "5px";
-		// TODO give the attached_location
-		this._contacts_widget = new contacts(contacts_container, "organization", org.org.id, loc.contacts, can_edit, can_edit, can_edit);
+		this._contacts_widget = new contacts(contacts_container, "organization", org.org.id, loc.contacts, {attached_location:loc.address.id}, can_edit, can_edit, can_edit);
 		this._contacts_widget.onchange.addListener(function(c){
 			loc.contacts = c.getContacts();
 			org.onchange.fire();

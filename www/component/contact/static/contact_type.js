@@ -9,6 +9,7 @@ if (typeof require != 'undefined') {
  * @param {String} owner_type either "people" or "organization"
  * @param {Number} owner_id owner id (people id, or organization id) or -1 for a new one
  * @param {Array} contacts list of Contact
+ * @param {Object} additional_info additional data to be sent to services
  * @param {Boolean} can_edit indicates if the user can edit an existing contact
  * @param {Boolean} can_add indicates if the user can add a new contact to the list, attached to the owner
  * @param {Boolean} can_remove indicates if the user can remove an existing contact
@@ -16,7 +17,7 @@ if (typeof require != 'undefined') {
  * @param {Function} ontypechanged called when the sub_type of a contact is changed
  * @param {Function} onready called when the UI control is ready
  */
-function contact_type(contact_type, contact_type_name, owner_type, owner_id, contacts, can_edit, can_add, can_remove, small, ontypechanged, onready) {
+function contact_type(contact_type, contact_type_name, owner_type, owner_id, contacts, additional_info, can_edit, can_add, can_remove, small, ontypechanged, onready) {
 	/** table containing all contacts */
 	this.table = document.createElement("TABLE");
 	this.table.style.backgroundColor = "white";
@@ -158,7 +159,11 @@ function contact_type(contact_type, contact_type_name, owner_type, owner_id, con
 	this.createContact = function (contact){
 		if (owner_id != null && owner_id > 0) {
 			/*Update the database*/
-			service.json("contact","add_contact",{owner_type:owner_type,owner_id:owner_id,contact:contact},function(res){
+			var data = additional_info ? objectCopy(additional_info) : {};
+			data.owner_type = owner_type;
+			data.owner_id = owner_id;
+			data.contact = contact;
+			service.json("contact","add_contact",data,function(res){
 				if (!res) return;
 				/*Update the result object*/
 				var l = contacts.length;

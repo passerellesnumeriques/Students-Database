@@ -124,8 +124,8 @@ class contact extends Component {
 	 * @param array $contact Contact structure
 	 * @return boolean|number the new contact id, or false if it failed
 	 */
-	public function addContactToOrganization($org_id, $contact) {
-		return $this->addContact("OrganizationContact", "organization", $org_id, $contact);
+	public function addContactToOrganization($org_id, $contact, $attached_location = null) {
+		return $this->addContact("OrganizationContact", "organization", $org_id, $contact, $attached_location);
 	}
 	/**
 	 * Internal method to add a contact to a people or an organization
@@ -135,7 +135,7 @@ class contact extends Component {
 	 * @param array $contact the contact structure to add
 	 * @return boolean|number the new contact id, or false if it failed
 	 */
-	private function addContact($table_name, $join_column, $join_value, $contact) {
+	private function addContact($table_name, $join_column, $join_value, $contact, $attached_location = null) {
 		$table = DataModel::get()->getTable($table_name);
 		if (!$table->acceptInsert(array($join_column=>$join_value))) {
 			PNApplication::error("You are not allowed to add a contact for this ".$join_column);
@@ -150,7 +150,9 @@ class contact extends Component {
 		if ($contact_id == 0)
 			return false;
 		try {
-			SQLQuery::create()->insert($table_name, array($join_column=>$join_value,"contact"=>$contact_id));
+			$c = array($join_column=>$join_value,"contact"=>$contact_id);
+			if ($attached_location <> null) $c["attached_location"] = $attached_location;
+			SQLQuery::create()->insert($table_name, $c);
 		} catch (Exception $ex) {
 			PNApplication::error($ex);
 			SQLQuery::create()->removeKey("Contact", $contact_id);
