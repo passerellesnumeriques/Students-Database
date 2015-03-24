@@ -1492,7 +1492,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 
 	public function exportValue($value, $sub_model) {
 		$col = $this->getColumn($this->data_path, $sub_model);
-		return $col->getDisplayValue($value);
+		return $col[0]->getDisplayValue($value);
 	}
 	public function getExportTimes($value, $sub_model) {
 		$col = $this->getColumn($this->data_path, $sub_model);
