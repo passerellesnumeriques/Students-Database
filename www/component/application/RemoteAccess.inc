@@ -11,32 +11,31 @@ class RemoteAccess {
 	 * @return NULL|string the version of the remove Students Management Software
 	 */
 	public static function getDomainVersion($domain, $url) {
-		$c = curl_init($url."dynamic/application/service/get_backup");
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_list"));
-		curl_setopt($c, CURLOPT_HTTPHEADER, array("User-Agent: Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain));
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-		curl_setopt($c, CURLOPT_TIMEOUT, 30);
-		$result = curl_exec($c);
-		if ($result === false) {
-			PNApplication::error("Connection to domain $domain: ".curl_error($c));
-			curl_close($c);
-			return null;
-		}
-		curl_close($c);
-		
-		$i = strpos($result, "pn_version_changed:");
-		if ($i === false) {
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url."dynamic/application/service/get_backup");
+		$req->postForm(array("request"=>"get_list"));
+		$req->setHeader("User-Agent", "Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain);
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() == 403) {
+				$version = $resp->getHeader("pn_version_changed");
+				if ($version == null) {
+					PNApplication::error("We can connect to the URL of domain $domain, but this is not Students Management Software");
+					return null;
+				}
+				return $version;
+			}
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
 			PNApplication::error("We can connect to the URL of domain $domain, but this is not Students Management Software");
 			return null;
+		} catch (Exception $e) {
+			PNApplication::error("Connection to domain $domain: ".$e->getMessage());
+			return null;
 		}
-		$result = substr($result,$i+19);
-		$i = strpos($result,"\n");
-		$version = trim(substr($result,0,$i));
-		return $version;
 	}
 	
 	/**
@@ -48,24 +47,24 @@ class RemoteAccess {
 	 * @return NULL|array the list of backups, each being an associative array with 2 keys: version, time
 	 */
 	public static function getBackupList($domain, $domain_version, $url, $password) {
-		$c = curl_init($url."dynamic/application/service/get_backup");
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, FALSE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_list","password"=>$password));
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-		curl_setopt($c, CURLOPT_TIMEOUT, 30);
-		curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$domain_version","User-Agent: Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain));
-		$result = curl_exec($c);
-		if ($result === false) {
-			PNApplication::error("Connection to domain $domain: ".curl_error($c));
-			curl_close($c);
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url."dynamic/application/service/get_backup");
+		$req->postForm(array("request"=>"get_list","password"=>$password));
+		$req->setHeader("User-Agent", "Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain);
+		$req->setHeader("Cookie", "pnversion=$domain_version");
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+		} catch (Exception $e) {
+			PNApplication::error("Connection to domain $domain: ".$e->getMessage());
 			return null;
 		}
-		curl_close($c);
 		
-		$backups = json_decode($result, true);
+		$backups = json_decode($resp->getBody(), true);
 		if ($backups == null) {
 			PNApplication::error("Invalid response of domain $domain");
 			return null;
@@ -93,36 +92,30 @@ class RemoteAccess {
 	 * @return NULL|integer the size of the file
 	 */
 	public static function getBackupFileSize($domain, $domain_version, $url, $password, $backup_version, $backup_time, $backup_file) {
-		$c = curl_init($url."dynamic/application/service/get_backup?get_size=true");
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_backup","password"=>$password,"version"=>$backup_version,"time"=>$backup_time,"file"=>$backup_file));
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-		curl_setopt($c, CURLOPT_TIMEOUT, 30);
-		curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$domain_version","User-Agent: Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain));
-		$result = curl_exec($c);
-		if ($result === false) {
-			PNApplication::error("Connection to domain $domain: ".curl_error($c));
-			curl_close($c);
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url."dynamic/application/service/get_backup?get_size=true");
+		$req->postForm(array("request"=>"get_backup","password"=>$password,"version"=>$backup_version,"time"=>$backup_time,"file"=>$backup_file));
+		$req->setHeader("User-Agent", "Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain);
+		$req->setHeader("Cookie", "pnversion=$domain_version");
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() == 404)
+				return -1;
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+		} catch (Exception $e) {
+			PNApplication::error("Connection to domain $domain: ".$e->getMessage());
 			return null;
 		}
-		curl_close($c);
-		if (strpos($result, "HTTP/1.0 404") !== false)
-			return -1;
-		$i = strpos($result, "File-Size:");
-		if ($i === false) {
+
+		$result = $resp->getHeader("File-Size");
+		if ($result == null) {
 			PNApplication::error("Invalid response of domain $domain");
 			return null;
 		}
-		$result = substr($result, $i+10);
-		$i = strpos($result, "\n");
-		if ($i === false) {
-			PNApplication::error("Invalid response of domain $domain");
-			return null;
-		}
-		$result = trim(substr($result,0,$i));
 		if (!is_numeric($result)) {
 			PNApplication::error("Invalid response of domain $domain");
 			return null;
@@ -146,26 +139,28 @@ class RemoteAccess {
 	 * @return integer the number of bytes downloaded and written in the file
 	 */
 	public static function downloadBackupFileRange($domain, $domain_version, $url, $password, $backup_version, $backup_time, $backup_file, $from, $to, $target, $max_time) {
-		$c = curl_init($url."dynamic/application/service/get_backup");
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, FALSE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_backup","password"=>$password,"version"=>$backup_version,"time"=>$backup_time,"file"=>$backup_file));
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-		curl_setopt($c, CURLOPT_TIMEOUT, $max_time);
-		curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$domain_version","Range: bytes=".$from."-".$to,"User-Agent: Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain));
-		$result = curl_exec($c);
-		if ($result === false) {
-			PNApplication::error("Download $file from domain $domain: ".curl_error($c));
-			curl_close($c);
-			return 0;
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url."dynamic/application/service/get_backup");
+		$req->postForm(array("request"=>"get_backup","password"=>$password,"version"=>$backup_version,"time"=>$backup_time,"file"=>$backup_file));
+		$req->setHeader("User-Agent", "Students Management Software - Domain Synchronization from ".PNApplication::$instance->local_domain);
+		$req->setHeader("Cookie", "pnversion=$domain_version");
+		$req->downloadRange($from, $to);
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+		} catch (Exception $e) {
+			PNApplication::error("Download $file from domain $domain: ".$e->getMessage());
+			return null;
 		}
-		curl_close($c);
+		
 		$f = fopen($target, "a");
-		fwrite($f, $result);
+		fwrite($f, $resp->getBody());
 		fclose($f);
-		return strlen($result);
+		return strlen($resp->getBody());
 	}
 	
 	/**
@@ -195,6 +190,7 @@ class RemoteAccess {
 	}
 	
 	public static function downloadStorageFile($domain, $domain_version, $url, $password, $storage_id, $expected_size, $target) {
+		// TODO support with HTTPClient ?
 		$c = curl_init($url."dynamic/application/service/get_backup");
 		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, FALSE);

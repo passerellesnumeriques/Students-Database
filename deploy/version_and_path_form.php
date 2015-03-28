@@ -28,18 +28,20 @@ function getVersionsListURL() {
 }
 
 $url = getVersionsListURL();
-$c = curl_init($url);
-if (file_exists("$www/conf/proxy")) include("$www/conf/proxy");
-curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-curl_setopt($c, CURLOPT_TIMEOUT, 25);
-set_time_limit(90);
-$result = curl_exec($c);
-if ($result == false) die("<span style='color:red'>Error downloading ".$url.": ".curl_error($c)."</span>");
-curl_close($c);
-$versions = explode("\n",$result);
+require_once "$www/HTTPClient.inc";
+$c = new HTTPClient();
+$c->setProxyConfLocation("$www/conf/proxy");
+$req = new HTTPRequest();
+$req->setURL($url);
+try {
+	$responses = $c->send($req);
+	$resp = $responses[count($responses)-1];
+	if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+		throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+} catch (Exception $e) {
+	die("<span style='color:red'>Error downloading ".$url.": ".toHTML($e->getMessage())."</span>");
+}
+$versions = explode("\n",$resp->getBody());
 echo $versions[count($versions)-1];
 $current_index = array_search($current_version, $versions);
 ?>

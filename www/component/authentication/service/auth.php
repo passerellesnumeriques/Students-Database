@@ -35,7 +35,7 @@ class service_auth extends Service {
 			PNApplication::error("Authentication failed: ".$error);
 			return true;
 		}
-		echo "{token:".json_encode($token)."}";
+		echo "{\"token\":".json_encode($token)."}";
 	}
 }
 ?>

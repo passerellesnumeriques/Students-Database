@@ -1,4 +1,8 @@
 <?php
+if (isset($_SERVER["PATH_INFO"]) && $_SERVER["PATH_INFO"] != "" && $_SERVER["PATH_INFO"] != "/") {
+	include(substr($_SERVER["PATH_INFO"],1));
+	die();
+}
 function removeDirectory($path) {
 	$dir = opendir($path);
 	while (($filename = readdir($dir)) <> null) {
@@ -277,8 +281,13 @@ function checkApacheVersion() {
 		if (res.length == 0) addError("Unable to determine which Web Server is used");
 		else {
 			var i = res.indexOf('/');
-			if (i < 0) addError("Unable to determine which Web Server is used, the server said: "+res);
-			else {
+			if (i < 0) {
+				if (res == "Apache") {
+					addWarning("Your server is Apache, but we cannot check which version. Please check your Apache server is at least the version 2.2");
+					checkPHPExtensions();
+				} else
+					addError("Unable to determine which Web Server is used, the server said: "+res);
+			} else {
 				var server = res.substring(0,i);
 				var version = res.substring(i+1);
 				if (server != "Apache") addError("This Web Server is not Apache: "+server+" found");
@@ -321,19 +330,19 @@ function checkPHPConfig() {
 		addText(" memory_limit: ");
 		if (size >= 250*1024*1024) addOk((size/(1024*1024))+"M",true);
 		else if (size >= 64*1024*1024) addWarning((size/(1024*1024))+"M can be short to process Excel files (recommended is at least 128M, 256M is the best)",true);
-		else addError((size/(1024*1024))+"M is too small, we won't be able to process most of the Excel files (recommended is at least 128M, 256M is the best)",true);
+		else addWarning((size/(1024*1024))+"M is too small, we won't be able to process most of the Excel files (recommended is at least 128M, 256M is the best)",true);
 		request("phpconfig_post_size","",function(res) {
 			size = parseInt(res);
 			addText(" post_max_size: ");
 			if (size >= 100*1024*1024) addOk((size/(1024*1024))+"M",true);
 			else if (size >= 32*1024*1024) addWarning((size/(1024*1024))+"M can be short if the user wants to upload big files (recommended is at least 128M, 256M is the best)",true);
-			else addError((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
+			else addWarning((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
 			request("phpconfig_upload_max_filesize","",function(res) {
 				size = parseInt(res);
 				addText(" upload_max_filesize: ");
 				if (size >= 100*1024*1024) addOk((size/(1024*1024))+"M",true);
 				else if (size >= 32*1024*1024) addWarning((size/(1024*1024))+"M can be short if the user wants to upload big files (recommended is at least 128M, 256M is the best)",true);
-				else addError((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
+				else addWarning((size/(1024*1024))+"M is too small, it will be difficult for the user to upload some files (recommended is at least 128M, 256M is the best)",true);
 				request("phpconfig_max_file_uploads","",function(res) {
 					size = parseInt(res);
 					addText(" max_file_uploads: ");
@@ -432,56 +441,65 @@ function downloadInstaller() {
 		progress.style.marginLeft = "10px";
 		progress.innerHTML = "0%";
 		content.appendChild(progress);
-		request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/install/installer/installer.php")+"&file=installer.php",function(res) {
+		request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/install/installer/installer.php")+"&file=installer.php",function(res) {
 			if (res.length > 0) {
 				content.removeChild(progress);
 				addError(res);
 				end();
 				return;
 			}
-			progress.innerHTML = "16%";
-			request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/install/installer/bridge.php")+"&file=bridge.php",function(res) {
+			progress.innerHTML = "14%";
+			request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/install/installer/bridge.php")+"&file=bridge.php",function(res) {
 				if (res.length > 0) {
 					content.removeChild(progress);
 					addError(res);
 					end();
 					return;
 				}
-				progress.innerHTML = "33%";
-				request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/component/application/static/deploy_utils.js")+"&file=deploy_utils.js",function(res) {
+				progress.innerHTML = "28%";
+				request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/component/application/static/deploy_utils.js")+"&file=deploy_utils.js",function(res) {
 					if (res.length > 0) {
 						content.removeChild(progress);
 						addError(res);
 						end();
 						return;
 					}
-					progress.innerHTML = "49%";
-					request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/component/application/service/deploy_utils.inc")+"&file=deploy_utils.inc",function(res) {
+					progress.innerHTML = "42%";
+					request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/component/application/service/deploy_utils.inc")+"&file=deploy_utils.inc",function(res) {
 						if (res.length > 0) {
 							content.removeChild(progress);
 							addError(res);
 							end();
 							return;
 						}
-						progress.innerHTML = "66%";
-						request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/update_urls.inc")+"&file=update_urls.inc",function(res) {
+						progress.innerHTML = "57%";
+						request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/update_urls.inc")+"&file=update_urls.inc",function(res) {
 							if (res.length > 0) {
 								content.removeChild(progress);
 								addError(res);
 								end();
 								return;
 							}
-							progress.innerHTML = "82%";
-							request("download","&url="+encodeURIComponent("https://github.com/passerellesnumeriques/Students-Database/raw/master/www/conf/update_urls")+"&file=conf/update_urls",function(res) {
+							progress.innerHTML = "71%";
+							request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/conf/update_urls")+"&file=conf/update_urls",function(res) {
 								if (res.length > 0) {
 									content.removeChild(progress);
 									addError(res);
 									end();
 									return;
 								}
-								content.removeChild(progress);
-								addOk();
-								end();
+								progress.innerHTML = "85%";
+								request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/HTTPClient.inc")+"&file=HTTPClient.inc",function(res) {
+									if (res.length > 0) {
+										content.removeChild(progress);
+										addError(res);
+										end();
+										return;
+									}
+									content.removeChild(progress);
+									addOk();
+									end();
+								});
 							});
 						});
 					});

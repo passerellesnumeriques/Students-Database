@@ -42,33 +42,37 @@ class service_travel_download_update extends Service {
 			$size = intval($_GET["size"]);
 			$to = $from + 512*1024 -1;
 			if ($to >= $size) $to = $size-1;
-			$c = curl_init($url);
-			if (file_exists("conf/proxy")) include("conf/proxy");
-			curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-			curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-			curl_setopt($c, CURLOPT_TIMEOUT, 300);
-			curl_setopt($c, CURLOPT_HTTPHEADER, array("Range: bytes=".$from."-".$to));
-			set_time_limit(350);
-			$result = curl_exec($c);
-			curl_close($c);
-			if ($result === false) return;
-			echo $result;
+			require_once 'HTTPClient.inc';
+			$c = new HTTPClient();
+			$req = new HTTPRequest();
+			$req->setURL($url);
+			$req->setHeader("User-Agent", "Students Management Software");
+			$req->downloadRange($from, $to);
+			try {
+				$responses = $c->send($req);
+				$resp = $responses[count($responses)-1];
+				if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+					throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+			} catch (Exception $e) {
+				return;
+			}
+			echo $resp->getBody();
 		} else if (isset($_GET["file"])) {
 			$url = getUpdateURL($_GET["file"]);
-			$c = curl_init($url);
-			if (file_exists("conf/proxy")) include("conf/proxy");
-			curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-			curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-			curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-			curl_setopt($c, CURLOPT_TIMEOUT, 300);
-			set_time_limit(350);
-			$result = curl_exec($c);
-			curl_close($c);
-			if ($result === false) return;
-			echo $result;
+					require_once 'HTTPClient.inc';
+			$c = new HTTPClient();
+			$req = new HTTPRequest();
+			$req->setURL($url);
+			$req->setHeader("User-Agent", "Students Management Software");
+			try {
+				$responses = $c->send($req);
+				$resp = $responses[count($responses)-1];
+				if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+					throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+			} catch (Exception $e) {
+				return;
+			}
+			echo $resp->getBody();
 		}
 	}
 	
