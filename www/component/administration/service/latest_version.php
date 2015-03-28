@@ -13,26 +13,20 @@ PNApplication::$instance->development->current_request()->no_process_time_warnin
 #END
 		require_once("update_urls.inc");
 		$url = getLatestVersionURL();
-		$c = curl_init($url);
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-		curl_setopt($c, CURLOPT_TIMEOUT, 25);
-		set_time_limit(45);
-		$result = curl_exec($c);
-		if ($result === false) {
-			PNApplication::error("Error connecting to SourceForge (".curl_errno($c)."): ".curl_error($c));
-			curl_close($c);
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url);
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+		} catch (Exception $e) {
+			PNApplication::error("Error retrieving latest version from SourceForge: ".$e->getMessage());
 			return;
 		}
-		curl_close($c);
-		if (strlen($result) > 15) {
-			PNApplication::error("Unable to retrieve latest version");
-			return;
-		}
-		echo "{version:".json_encode($result)."}";
+		echo "{version:".json_encode($resp->getBody())."}";
 	}
 	
 }

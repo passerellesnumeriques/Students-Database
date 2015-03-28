@@ -13,20 +13,22 @@ $www = realpath($here."/../www");
 set_include_path($here . PATH_SEPARATOR . $www);
 
 function download($url, $file) {
-	$c = curl_init($url);
 	global $www;
-	if (file_exists("$www/conf/proxy")) include("$www/conf/proxy");
-	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-	curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-	curl_setopt($c, CURLOPT_TIMEOUT, 5*60);
-	set_time_limit(6*60);
-	$result = curl_exec($c);
-	if ($result == false) die("<span style='color:red'>Error downloading ".$url.": ".curl_error($c)."</span>");
-	curl_close($c);
+	require_once "$www/HTTPClient.inc";
+	$c = new HTTPClient();
+	$c->setProxyConfLocation("$www/conf/proxy");
+	$req = new HTTPRequest();
+	$req->setURL($url);
+	try {
+		$responses = $c->send($req);
+		$resp = $responses[count($responses)-1];
+		if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+			throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+	} catch (Exception $e) {
+		die("<span style='color:red'>Error downloading ".$url.": ".toHTML($e->getMessage())."</span>");
+	}
 	$f = fopen($file,"w");
-	fwrite($f,$result);
+	fwrite($f,$res->getBody());
 	fclose($f);
 }
 function remove_directory($path) {

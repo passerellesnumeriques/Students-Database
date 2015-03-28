@@ -11,7 +11,6 @@ class RemoteSMSAuthenticationSystem extends AuthenticationSystem {
 	private $url;
 	
 	public function authenticate($username, $password, &$error) {
-		set_time_limit(45);
 		$url = $this->url;
 		if (substr($url,strlen($url)-1) <> "/") $url .= "/";
 		require_once 'component/application/RemoteAccess.inc';
@@ -21,23 +20,24 @@ class RemoteSMSAuthenticationSystem extends AuthenticationSystem {
 			return null;
 		}
 		$url .= "dynamic/authentication/service/auth";
-		$c = curl_init($url);
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, FALSE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array("domain"=>$this->domain,"username"=>$username,"password"=>$password));
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 15);
-		curl_setopt($c, CURLOPT_TIMEOUT, 30);
-		curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$version","User-Agent: Students Management Software - Authentication request from ".PNApplication::$instance->local_domain));
-		$result = curl_exec($c);
-		if ($result === false) {
-			$error = "Error connecting to ".$this->domain.": ".curl_error($c);
-			curl_close($c);
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url);
+		$req->postForm(array("domain"=>$this->domain,"username"=>$username,"password"=>$password));
+		$req->setHeader("User-Agent", "Students Management Software - Authentication from ".PNApplication::$instance->local_domain);
+		$req->setHeader("Cookie", "pnversion=$version");
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+		} catch (Exception $e) {
+			$error = "Error connecting to ".$this->domain.": ".$e->getMessage();
 			return null;
 		}
-		curl_close($c);
-		$json = json_decode($result, true);
+		
+		$json = json_decode($resp->getBody(), true);
 		if ($json === null) {
 			$error = "Invalid response from ".$this->domain;
 			return null;

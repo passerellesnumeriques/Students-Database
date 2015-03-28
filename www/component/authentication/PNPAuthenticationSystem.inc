@@ -12,29 +12,27 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 	}
 
 	public function authenticate($username, $password, &$error) {
-		set_time_limit(45);
 		if (PNApplication::$instance->local_domain == "PNP") {
-			$c = curl_init("authentication");
+			$url = "authentication";
 		} else {
-			$c = curl_init("authentication.pnp.studentscenter.org:800");
-			if (file_exists("conf/proxy")) include("conf/proxy");
+			$url = "authentication.pnp.studentscenter.org:800";
 		}
-		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, FALSE);
-		curl_setopt($c, CURLOPT_POST, TRUE);
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array("service"=>"authenticate","username"=>$username,"password"=>$password));
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-		curl_setopt($c, CURLOPT_TIMEOUT, 25);
-		$result = curl_exec($c);
-		set_time_limit(30);
-		if ($result === false) {
-			$error = curl_error($c);
-			curl_close($c);
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url);
+		$req->postForm(array("service"=>"authenticate","username"=>$username,"password"=>$password));
+		$req->setHeader("User-Agent", "Students Management Software - Authentication from ".PNApplication::$instance->local_domain);
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+		} catch (Exception $e) {
+			$error = $e->getMessage();
 			return null;
 		}
-		curl_close($c);
-		$xml = @simplexml_load_string($result);
+		$xml = @simplexml_load_string($resp->getBody());
 		if ($xml === false || $xml === null) {
 			$error = "Invalid response from remote system: ".toHTML($result);
 			return null;
@@ -68,29 +66,28 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 	 * @return NULL|SimpleXMLElement the XML returned by the server, or null in case of failure
 	 */
 	private function callService($service, $token, $params) {
-		set_time_limit(300);
 		if (PNApplication::$instance->local_domain == "PNP") {
-			$c = curl_init("authentication");
+			$url = "authentication";
 		} else {
-			$c = curl_init("authentication.pnp.studentscenter.org:800");
-			if (file_exists("conf/proxy")) include("conf/proxy");
+			$url = "authentication.pnp.studentscenter.org:800";
 		}
-		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, FALSE);
-		curl_setopt($c, CURLOPT_POST, TRUE);
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-		curl_setopt($c, CURLOPT_TIMEOUT, 240);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array_merge(array("service"=>$service,"token"=>$token), $params));
-		$result = curl_exec($c);
-		set_time_limit(30);
-		if ($result === false) {
-			PNApplication::error("Error calling service ".$service." on authentication system: ".curl_error($c));
-			curl_close($c);
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url);
+		$req->postForm(array_merge(array("service"=>$service,"token"=>$token), $params));
+		$req->setHeader("User-Agent", "Students Management Software - Authentication from ".PNApplication::$instance->local_domain);
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+		} catch (Exception $e) {
+			PNApplication::error("Error calling service ".$service." on authentication system: ".$e->getMessage());
 			return null;
 		}
-		curl_close($c);
-		$xml = @simplexml_load_string($result);
+		
+		$xml = @simplexml_load_string($resp->getBody());
 		if ($xml === false) {
 			PNApplication::error("Invalid response from authentication system");
 			return null;
@@ -105,29 +102,28 @@ class PNPAuthenticationSystem extends AuthenticationSystem implements Authentica
 	 * @return NULL|SimpleXMLElement the XML returned by the server, or null in case of failure
 	 */
 	private function callServiceWithPrivileges($service, $token, $params) {
-		set_time_limit(300);
 		if (PNApplication::$instance->local_domain == "PNP") {
-			$c = curl_init("authentication/privileges/$service.sh");
+			$url = "authentication";
 		} else {
-			$c = curl_init("authentication.pnp.studentscenter.org:800/privileges/$service.sh");
-			if (file_exists("conf/proxy")) include("conf/proxy");
+			$url = "authentication.pnp.studentscenter.org:800";
 		}
-		curl_setopt($c, CURLOPT_COOKIESESSION, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, FALSE);
-		curl_setopt($c, CURLOPT_POST, TRUE);
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-		curl_setopt($c, CURLOPT_TIMEOUT, 240);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array_merge(array("token"=>$token), $params));
-		$result = curl_exec($c);
-		set_time_limit(30);
-		if ($result === false) {
-			PNApplication::error("Error calling service ".$service." on authentication system: ".curl_error($c));
-			curl_close($c);
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url."/privileges/$service.sh");
+		$req->postForm(array_merge(array("token"=>$token), $params));
+		$req->setHeader("User-Agent", "Students Management Software - Authentication from ".PNApplication::$instance->local_domain);
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+		} catch (Exception $e) {
+			PNApplication::error("Error calling service ".$service." on authentication system: ".$e->getMessage());
 			return null;
 		}
-		curl_close($c);
-		$xml = @simplexml_load_string($result);
+		
+		$xml = @simplexml_load_string($resp->getBody());
 		if ($xml === false) {
 			PNApplication::error("Invalid response from authentication system");
 			return null;

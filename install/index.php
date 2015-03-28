@@ -448,7 +448,7 @@ function downloadInstaller() {
 				end();
 				return;
 			}
-			progress.innerHTML = "16%";
+			progress.innerHTML = "14%";
 			request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/install/installer/bridge.php")+"&file=bridge.php",function(res) {
 				if (res.length > 0) {
 					content.removeChild(progress);
@@ -456,7 +456,7 @@ function downloadInstaller() {
 					end();
 					return;
 				}
-				progress.innerHTML = "33%";
+				progress.innerHTML = "28%";
 				request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/component/application/static/deploy_utils.js")+"&file=deploy_utils.js",function(res) {
 					if (res.length > 0) {
 						content.removeChild(progress);
@@ -464,7 +464,7 @@ function downloadInstaller() {
 						end();
 						return;
 					}
-					progress.innerHTML = "49%";
+					progress.innerHTML = "42%";
 					request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/component/application/service/deploy_utils.inc")+"&file=deploy_utils.inc",function(res) {
 						if (res.length > 0) {
 							content.removeChild(progress);
@@ -472,7 +472,7 @@ function downloadInstaller() {
 							end();
 							return;
 						}
-						progress.innerHTML = "66%";
+						progress.innerHTML = "57%";
 						request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/update_urls.inc")+"&file=update_urls.inc",function(res) {
 							if (res.length > 0) {
 								content.removeChild(progress);
@@ -480,7 +480,7 @@ function downloadInstaller() {
 								end();
 								return;
 							}
-							progress.innerHTML = "82%";
+							progress.innerHTML = "71%";
 							request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/conf/update_urls")+"&file=conf/update_urls",function(res) {
 								if (res.length > 0) {
 									content.removeChild(progress);
@@ -488,9 +488,18 @@ function downloadInstaller() {
 									end();
 									return;
 								}
-								content.removeChild(progress);
-								addOk();
-								end();
+								progress.innerHTML = "85%";
+								request("download","&url="+encodeURIComponent("https://raw.githubusercontent.com/passerellesnumeriques/Students-Database/master/www/HTTPClient.inc")+"&file=HTTPClient.inc",function(res) {
+									if (res.length > 0) {
+										content.removeChild(progress);
+										addError(res);
+										end();
+										return;
+									}
+									content.removeChild(progress);
+									addOk();
+									end();
+								});
 							});
 						});
 					});

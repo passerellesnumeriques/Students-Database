@@ -27,59 +27,51 @@ class service_save_remote_access extends Service {
 		
 		// Step 1: get the version
 		
-		$c = curl_init($url."dynamic/application/service/get_backup");
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_list"));
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 30);
-		curl_setopt($c, CURLOPT_TIMEOUT, 60);
-		$result = curl_exec($c);
-		if ($result === false) {
-			PNApplication::error(curl_error($c));
-			curl_close($c);
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url."dynamic/application/service/get_backup");
+		$req->postForm(array("request"=>"get_list"));
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() == 403) {
+				$version = trim($resp->getHeader("pn_version_changed"));
+				if ($version == null) {
+					PNApplication::error("We can connect to the URL, but this is not Students Management Software");
+					return;
+				}
+			} else {
+				if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+					throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+				PNApplication::error("We can connect to the URL, but this is not Students Management Software");
+				return;
+			}
+		} catch (Exception $e) {
+			PNApplication::error($e->getMessage());
 			return;
 		}
-		curl_close($c);
-		
-		$i = strpos($result, "pn_version_changed:");
-		if ($i === false) {
-			PNApplication::error("We can connect to the URL, but this is not Students Management Software");
-			return;
-		}
-		$result = substr($result,$i+19);
-		$i = strpos($result,"\n");
-		$version = trim(substr($result,0,$i));
 		
 		// Step 2: connect using version cookie
 
-		$c = curl_init($url."dynamic/application/service/get_backup");
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_HEADER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_POSTFIELDS, array("request"=>"get_list","password"=>$password));
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 30);
-		curl_setopt($c, CURLOPT_TIMEOUT, 60);
-		curl_setopt($c, CURLOPT_HTTPHEADER, array("Cookie: pnversion=$version"));
-		$result = curl_exec($c);
-		if ($result === false) {
-			PNApplication::error(curl_error($c));
-			curl_close($c);
+		$req = new HTTPRequest();
+		$req->setURL($url."dynamic/application/service/get_backup");
+		$req->postForm(array("request"=>"get_list","password"=>$password));
+		$req->setHeader("Cookie", "pnversion=$version");
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300) {
+				if ($resp->getStatus() == 403)
+					throw new Exception("We successfully connect, but the request was rejected: ".$resp->getStatusMessage());
+				else
+					throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+			}
+		} catch (Exception $e) {
+			PNApplication::error($e->getMessage());
 			return;
 		}
-		curl_close($c);
-		
-		$i = strpos($result, "HTTP/1.0 403 Access Denied");
-		if ($i !== false) {
-			$error = substr($result, $i+26);
-			$i = strpos($error, "\n");
-			$error = trim(substr($error,0,$i));
-			PNApplication::error("We successfully connect, but the request was rejected ".$error);
-			return;
-		}
-		
+
 		if (file_exists("data/domains_synch/$domain/last_check"))
 			@unlink("data/domains_synch/$domain/last_check");
 		

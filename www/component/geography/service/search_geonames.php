@@ -65,17 +65,22 @@ class service_search_geonames extends Service {
 			$url .= "&featureCode=".$featureCode;
 		$url .= "&lang=en";
 		$url .= "&username=pnsdb&style=FULL&type=json";
-		$c = curl_init($url);
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		$result = curl_exec($c);
-		if ($result === false) {
-			PNApplication::error("Error connecting to GeoNames: ".curl_error($c));
-			curl_close($c);
+		require_once 'HTTPClient.inc';
+		$c = new HTTPClient();
+		$req = new HTTPRequest();
+		$req->setURL($url);
+		$req->setHeader("User-Agent", "Students Management Software");
+		try {
+			$responses = $c->send($req);
+			$resp = $responses[count($responses)-1];
+			if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
+				throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
+		} catch (Exception $e) {
+			PNApplication::error("Error connecting to GeoNames: ".$e->getMessage());
 			return array();
 		}
-		curl_close($c);
-		$result = json_decode($result, true);
+		
+		$result = json_decode($resp->getBody(), true);
 		if (!isset($result["geonames"])) {
 			if ($result["status"])
 				PNApplication::error("Request to geonames error: #".@$result["status"]["value"]." ".@$result["status"]["message"]);
