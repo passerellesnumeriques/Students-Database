@@ -86,18 +86,9 @@ class page_organizations extends Page {
 						new_org.innerHTML = "<img src='"+theme.build_icon("/static/contact/organization.png",theme.icons_10.add)+"'/> New Organization";
 						new_org.onclick = function() {
 							window.top.popupFrame(theme.icons_16.add, "New Selection Partner", "/dynamic/contact/page/organization_profile?creator=Selection&organization=-1",null,null,null,function(frame,p) {
-								p.addOkCancelButtons(function(){
-									p.freeze();
-									var win = getIFrameWindow(frame);
-									var org = win.organization.getStructure();
-									service.json("contact", "add_organization", org, function(res) {
-										if (!res) { p.unfreeze(); return; }
-										win.organization.notes.save(res.id, function() {
-											list.reloadData();
-											p.close();
-										});
-									});
-								});
+								p.onclose = function() {
+									list.reloadData();
+								};	
 							});
 						};
 						list.addHeader(new_org);

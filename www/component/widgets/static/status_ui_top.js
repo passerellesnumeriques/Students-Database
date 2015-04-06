@@ -14,6 +14,8 @@ function StatusUI_Top(manager, margin) {
 	this.container.style.top = margin+"px";
 	this.container.style.visibility = "hidden";
 	this.container.style.textAlign = "center";
+	this.container.style.left = margin+'px';
+	this.container.style.right = margin+'px';
 	document.body.appendChild(this.container);
 	
 	/**
@@ -79,7 +81,7 @@ function StatusUI_Top(manager, margin) {
 			this.container.style.visibility = 'hidden';
 		else {
 			this.container.style.visibility = "visible";
-			this.container.style.left = (getWindowWidth()/2-this.container.scrollWidth/2)+'px';
+			//this.container.style.left = (getWindowWidth()/2-this.container.scrollWidth/2)+'px';
 		}
 	};
 	/** Get the element representing the message

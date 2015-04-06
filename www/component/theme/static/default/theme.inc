@@ -26,6 +26,7 @@ theme::$icons_16 = array(
 	"_import" =>		"/static/theme/default/icons_16/import.png",
 	"info" => 			"/static/theme/default/icons_16/info.png",
 	"invisible" => 		"/static/theme/default/icons_16/invisible.png",
+	"label" => 			"/static/theme/default/icons_16/label.png",
 	"left" => 			"/static/theme/default/icons_16/left.png",
 	"like_white" =>		"/static/theme/default/icons_16/like_white.png",
 	"link" => 			"/static/theme/default/icons_16/link.png",

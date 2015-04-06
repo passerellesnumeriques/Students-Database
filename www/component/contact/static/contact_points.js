@@ -1,4 +1,4 @@
-function contact_points(container, org, list) {
+function contact_points(container, org, list, attached_location) {
 	if (typeof container == 'string') container = document.getElementById(container);
 	
 	this.onchange = new Custom_Event();
@@ -74,7 +74,8 @@ function contact_points(container, org, list) {
 					null,
 					{
 						fixed_columns: [
-						  {table:"ContactPoint",column:"organization",value:org.id}
+						  {table:"ContactPoint",column:"organization",value:org.id},
+						  {table:"ContactPoint",column:"attached_location",value:attached_location}
 						]
 					}
 				);
@@ -97,7 +98,7 @@ function contact_points(container, org, list) {
 						else if (people_path.value[i].name == "Last Name") last_name = people_path.value[i].value;
 					var designation = contact_point_path.value;
 					var people = new People(people_id,first_name,last_name);
-					var point = new ContactPoint(people_id, people, designation, contacts_path ? contacts_path.value : []);
+					var point = new ContactPoint(people_id, people, designation, contacts_path ? contacts_path.value : [], attached_location);
 					if (org.id == -1)
 						point.create_people = paths;
 					list.push(point);
@@ -137,6 +138,46 @@ function contact_points(container, org, list) {
 			td.appendChild(ims_control.getHTMLElement());
 			layout.changed(t.grid);
 		}, this);
+		tr.className = "highlight_hover";
+		tr.style.cursor = "pointer";
+		tr.title = "Open profile of this person";
+		tr.onclick = function() {
+			window.top.popupFrame("/static/people/profile_16.png","Profile","/dynamic/people/page/profile?people="+cp.people.id,null,95,95,function(frame,pop) {
+				pop.onclose = function() {
+					service.json("contact","get_contact_point",{people:cp.people.id},function(cp) {
+						tr.childNodes[0].childNodes[0].nodeValue = cp.people.first_name+" "+cp.people.last_name;
+						tr.childNodes[1].childNodes[0].nodeValue = cp.designation;
+						emails = [], phones = [], ims = [];
+						for (var i = 0; i < cp.contacts.length; ++i)
+							switch (cp.contacts[i].type) {
+							case "email": emails.push(cp.contacts[i]); break;
+							case "phone": phones.push(cp.contacts[i]); break;
+							case "IM": ims.push(cp.contacts[i]); break;
+							}
+						td = tr.childNodes[2];
+						td.removeAllChildren();
+						var emails_control = new field_contact_type({type:"people",type_id:cp.people.id,contacts:emails}, false, {type:"email"});
+						td.appendChild(emails_control.getHTMLElement());
+						td = tr.childNodes[3];
+						td.removeAllChildren();
+						var phones_control = new field_contact_type({type:"people",type_id:cp.people.id,contacts:phones}, false, {type:"phone"});
+						td.appendChild(phones_control.getHTMLElement());
+						td = tr.childNodes[4];
+						td.removeAllChildren();
+						var ims_control = new field_contact_type({type:"people",type_id:cp.people.id,contacts:ims}, false, {type:"IM"});
+						td.appendChild(ims_control.getHTMLElement());
+						layout.changed(tr);
+						for (var i = 0; i < list.length; ++i) {
+							if (list[i].people.id == cp.people.id) {
+								list[i] = cp;
+								break;
+							}
+						}
+					});
+				};
+			});
+		};
+		// TODO remove
 	};
 	
 	this._init();

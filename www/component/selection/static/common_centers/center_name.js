@@ -38,7 +38,7 @@ function center_name(container, name, can_edit, title){
 	 */
 	t._setSection = function(){
 		t._container_of_section_content = document.createElement("div");
-		t.section = new section("/static/selection/common_centers/label.png",title,t._container_of_section_content,false,false,"soft");
+		t.section = new section(theme.icons_16.label,title,t._container_of_section_content,false,false,"soft");
 	};
 	
 	/**

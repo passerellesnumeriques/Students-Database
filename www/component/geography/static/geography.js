@@ -567,6 +567,14 @@ if (window == window.top && !window.top.geography) {
 				parseFloat(parseFloat(area2.east).toFixed(6))
 			);
 		},
+		boxCenter: function(area) {
+			return this.rectCenter(
+				parseFloat(parseFloat(area.south).toFixed(6)),
+				parseFloat(parseFloat(area.north).toFixed(6)),
+				parseFloat(parseFloat(area.west).toFixed(6)),
+				parseFloat(parseFloat(area.east).toFixed(6))
+			);
+		},
 		rectContains: function(r1_south, r1_north, r1_west, r1_east, r2_south, r2_north, r2_west, r2_east) {
 			return (
 				r2_south >= r1_south &&
@@ -577,6 +585,12 @@ if (window == window.top && !window.top.geography) {
 				r2_west <= r1_east &&
 				r2_east >= r1_west &&
 				r2_east <= r1_east);
+		},
+		rectCenter: function(south, north, west, east) {
+			return {
+				lat: south+(north-south)/2,
+				lng: west+(east-west)/2
+			};
 		},
 		boxIntersect: function(a1,a2) {
 			return this.rectIntersect(

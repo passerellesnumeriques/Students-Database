@@ -173,6 +173,7 @@ class ContactJSON {
 		$types_ids = SQLQuery::create()->select("OrganizationTypes")->whereValue("OrganizationTypes","organization",$id)->field("OrganizationTypes","type")->executeSingleField();
 		$q = SQLQuery::create()->select("OrganizationContact")->whereValue("OrganizationContact","organization",$id)->join("OrganizationContact","Contact",array("contact"=>"id"));
 		self::ContactSQL($q);
+		$q->field("OrganizationContact", "attached_location", "attached_location");
 		$contacts = $q->execute();
 		$q = SQLQuery::create()->select("OrganizationAddress")->whereValue("OrganizationAddress","organization",$id)->join("OrganizationAddress","PostalAddress",array("address"=>"id"));
 		self::PostalAddressSQL($q);
@@ -181,6 +182,21 @@ class ContactJSON {
 		$q = SQLQuery::create()->select("ContactPoint")->whereValue("ContactPoint","organization",$id);
 		self::OrganizationContactPointSQL($q);
 		$contact_points = $q->execute();
+		if (count($contact_points) > 0) {
+			$peoples_ids = array();
+			foreach ($contact_points as $cp) if (!in_array($cp["people_id"], $peoples_ids)) array_push($peoples_ids, $cp["people_id"]);
+			$q = SQLQuery::create()->select("PeopleContact")->whereIn("PeopleContact","people",$peoples_ids)->join("PeopleContact", "Contact", array("contact"=>"id"));
+			$q->field("PeopleContact","people","people_id");
+			self::ContactSQL($q);
+			$list = $q->execute();
+			for ($i = 0; $i < count($contact_points); $i++) {
+				$people_id = $contact_points[$i]["people_id"];
+				$contact_points[$i]["contacts"] = array();
+				foreach ($list as $c)
+					if ($c["people_id"] == $people_id)
+						array_push($contact_points[$i]["contacts"], $c);
+			}
+		} 
 		return self::OrganizationJSON($org, $types_ids, $contacts, $addresses, $contact_points);
 	}
 	
@@ -206,9 +222,23 @@ class ContactJSON {
 		$list_addresses = $q->execute();
 		$q = SQLQuery::create()->select("ContactPoint")->whereIn("ContactPoint","organization",$ids);
 		$q->field("ContactPoint", "organization", "organization_id");
-		$q->field("ContactPoint", "attached_location", "attached_location");
 		self::OrganizationContactPointSQL($q);
 		$list_contact_points = $q->execute();
+		if (count($list_contact_points) > 0) {
+			$peoples_ids = array();
+			foreach ($list_contact_points as $cp) if (!in_array($cp["people_id"], $peoples_ids)) array_push($peoples_ids, $cp["people_id"]);
+			$q = SQLQuery::create()->select("PeopleContact")->whereIn("PeopleContact","people",$peoples_ids)->join("PeopleContact", "Contact", array("contact"=>"id"));
+			$q->field("PeopleContact","people","people_id");
+			self::ContactSQL($q);
+			$list = $q->execute();
+			for ($i = 0; $i < count($list_contact_points); $i++) {
+				$people_id = $list_contact_points[$i]["people_id"];
+				$list_contact_points[$i]["contacts"] = array();
+				foreach ($list as $c)
+					if ($c["people_id"] == $people_id)
+						array_push($list_contact_points[$i]["contacts"], $c);
+			}
+		} 
 		$s = "[";
 		$first = true;
 		foreach ($orgs as $org) {
@@ -285,7 +315,7 @@ class ContactJSON {
 			$s .= "null";
 		$s .= ",general_contact_points:";
 		if ($contact_points !== null) {
-			foreach ($contact_points as $c) if ($c["attached_location"] == null) array_push($general_contact_points, $c); else array_push($locations[$c["attached_location"]]["contact_points"], $c); 
+			foreach ($contact_points as $c) if ($c["contact_point_attached_location"] == null) array_push($general_contact_points, $c); else array_push($locations[$c["attached_location"]]["contact_points"], $c); 
 			$s .= self::OrganizationContactPoints($general_contact_points);
 		} else 
 			$s .= "null";
@@ -329,6 +359,7 @@ class ContactJSON {
 		$alias = $q->getTableAlias("ContactPoint");
 		$q->field($alias, "organization", "contact_point_organization_id");
 		$q->field($alias, "designation", "contact_point_designation");
+		$q->field($alias, "attached_location", "contact_point_attached_location");
 		require_once("component/people/PeopleJSON.inc");
 		PNApplication::$instance->people->joinPeople($q, "ContactPoint", "people");
 		PeopleJSON::PeopleSQL($q);
@@ -345,6 +376,8 @@ class ContactJSON {
 			"organization_id:".$row["contact_point_organization_id"].
 			",people:".PeopleJSON::People($row).
 			",designation:".json_encode($row["contact_point_designation"]).
+			",attached_location:".json_encode($row["contact_point_attached_location"]).
+			(isset($row["contacts"]) ? ",contacts:".self::Contacts($row["contacts"]) : "").
 			"}";
 	}
 	
@@ -378,17 +411,17 @@ class ContactJSON {
 		$rows_contact_point = array();
 		foreach($json["partners"] as $p){
 			array_push($rows_partner,array(
-			$field_name => $json["id"],
-			"organization" => $p["organization"],
-			"host" => $p["host"],
-			"host_address" => $p["host_address"]
+				$field_name => $json["id"],
+				"organization" => $p["organization"],
+				"host" => $p["host"],
+				"host_address" => $p["host_address"]
 			));
 			if(isset($p["contact_points_selected"]) && count($p["contact_points_selected"]) > 0){
 				foreach($p["contact_points_selected"] as $people){
 					array_push($rows_contact_point,array(
-					$field_name => $json["id"],
-					"organization" => $p["organization"],
-					"people" => $people
+						$field_name => $json["id"],
+						"organization" => $p["organization"],
+						"people" => $people
 					));
 				}
 			}

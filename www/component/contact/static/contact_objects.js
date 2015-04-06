@@ -27,12 +27,12 @@ function PostalAddress(id, country_id, geographic_area, street, street_number, b
 		this.geographic_area.country_id = country_id;
 		this.geographic_area.text = null;
 	}
-	this.street = street;
-	this.street_number = street_number;
-	this.building = building;
-	this.unit = unit;
-	this.additional = additional;
-	this.address_type = address_type;
+	this.street = street ? street : "";
+	this.street_number = street_number ? street_number : "";
+	this.building = building ? building : "";
+	this.unit = unit ? unit : "";
+	this.additional = additional ? additional : "";
+	this.address_type = address_type ? address_type : "";
 	this.lat = lat;
 	this.lng = lng;
 }
@@ -299,9 +299,10 @@ function OrganizationLocation(name, address, contacts, contact_points) {
  * @param {People} people People object for this contact point
  * @param {String} designation designation of this people in the organization (i.e. director, IT manager...)
  */
-function ContactPoint(organization_id, people, designation, contacts) {
+function ContactPoint(organization_id, people, designation, contacts, attached_location) {
 	this.organization_id = organization_id;
 	this.people = people;
 	this.designation = designation;
 	this.contacts = contacts;
+	this.attached_location = attached_location;
 }

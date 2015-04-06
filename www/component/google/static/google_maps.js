@@ -164,23 +164,35 @@ function GoogleMap(container, onready) {
 		this.map.setCenter(new window.top.google.maps.LatLng(south+(north-south)/2, west+(east-west)/2));
 	};
 	
-	this.fitToShapes = function() {
+	this.fitToShapes = function(donot_zoom_too_much) {
 		if (this.shapes.length == 0) return;
 		var bounds = this.getShapeBounds(this.shapes[0]);
 		for (var i = 1; i < this.shapes.length; ++i)
 			bounds = maxGoogleBounds(bounds, this.getShapeBounds(this.shapes[i]));
 		var diff = bounds.getNorthEast().lat() - bounds.getSouthWest().lat();
-		if (diff < 0.01) {
+		if (!donot_zoom_too_much && diff < 0.01) {
 			bounds = new window.top.google.maps.LatLngBounds(
 				new window.top.google.maps.LatLng(bounds.getSouthWest().lat()-(0.01-diff)/2, bounds.getSouthWest().lng()),
 				new window.top.google.maps.LatLng(bounds.getNorthEast().lat()+(0.01-diff)/2, bounds.getNorthEast().lng())
 			);
 		}
+		if (donot_zoom_too_much && diff < 0.5) {
+			bounds = new window.top.google.maps.LatLngBounds(
+				new window.top.google.maps.LatLng(bounds.getSouthWest().lat()-(0.5-diff)/2, bounds.getSouthWest().lng()),
+				new window.top.google.maps.LatLng(bounds.getNorthEast().lat()+(0.5-diff)/2, bounds.getNorthEast().lng())
+			);
+		}
 		diff = bounds.getNorthEast().lng() - bounds.getSouthWest().lng();
-		if (diff < 0.01) {
+		if (!donot_zoom_too_much && diff < 0.01) {
 			bounds = new window.top.google.maps.LatLngBounds(
 				new window.top.google.maps.LatLng(bounds.getSouthWest().lat(), bounds.getSouthWest().lng()-(0.01-diff)/2),
 				new window.top.google.maps.LatLng(bounds.getNorthEast().lat(), bounds.getNorthEast().lng()+(0.01-diff)/2)
+			);
+		}
+		if (donot_zoom_too_much && diff < 0.5) {
+			bounds = new window.top.google.maps.LatLngBounds(
+				new window.top.google.maps.LatLng(bounds.getSouthWest().lat(), bounds.getSouthWest().lng()-(0.5-diff)/2),
+				new window.top.google.maps.LatLng(bounds.getNorthEast().lat(), bounds.getNorthEast().lng()+(0.5-diff)/2)
 			);
 		}
 		this.fitToBounds(bounds.getSouthWest().lat(), bounds.getSouthWest().lng(), bounds.getNorthEast().lat(), bounds.getNorthEast().lng());
@@ -344,6 +356,10 @@ function PNMapMarker(lat, lng, color, content) {
 	if (typeof content == 'string') {
 		var div = document.createElement("DIV");
 		div.appendChild(document.createTextNode(content));
+		if (content.trim().length == 0) {
+			div.style.minWidth = "15px";
+			div.style.minHeight = "10px";
+		}
 		content = div;
 	}
 	this._content = content;
@@ -434,6 +450,18 @@ loadGoogleMaps(function() {
 			ctx.lineTo(14,0);
 			ctx.stroke();
 		}
+	};
+	PNMapMarker.prototype.setContent = function(content) {
+		if (typeof content == 'string') {
+			var div = document.createElement("DIV");
+			div.appendChild(document.createTextNode(content));
+			if (content.trim().length == 0) {
+				div.style.minWidth = "15px";
+				div.style.minHeight = "10px";
+			}
+			content = div;
+		}
+		this._content = content;
 	};
 	PNMapMarker.prototype.bringToFront = function() {
 		if (this._div) this._div.style.zIndex = 10;

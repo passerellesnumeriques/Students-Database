@@ -8,6 +8,7 @@ class page_organization_profile extends Page {
 		if ($id > 0) {
 			$org = SQLQuery::create()->select("Organization")->whereValue("Organization","id",$id)->executeSingleRow();
 			$creator = $org["creator"];
+			require_once 'component/contact/ContactJSON.inc';
 			$org_json = ContactJSON::OrganizationFromID($id);
 			$all_types = SQLQuery::create()->select("OrganizationType")->whereValue("OrganizationType", "creator", $creator)->execute();
 			// TODO can_edit and lock

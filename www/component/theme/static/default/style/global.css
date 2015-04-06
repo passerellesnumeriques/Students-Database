@@ -104,6 +104,18 @@ table.all_borders>tbody>tr>th, table.all_borders>tr>th {
     box-shadow: 0px -3px 5px -2px #DDDDDD inset;
 }
 
+.page_section_header_blue {
+    font-family: Arial;
+    font-size: 14px;
+    color: #303080;
+    background-color: white;
+    font-weight: bold;
+    padding: 4px 10px 3px 10px;
+    margin-bottom: 3px;
+    border-bottom: 1px solid #5050F0;
+    border-image: linear-gradient(to right, #5050F0, #D0D0FF) 0 0 100% 0;
+}
+
 .page_title.shadow, .page_section_title.shadow, .page_section_title2.shadow, .page_section_title3.shadow  {
 	box-shadow: 1px 2px 5px 0px #808080;
 	margin-bottom: 5px;
@@ -393,6 +405,12 @@ table.data_screen>tbody>tr>td.sub_data_title {
 	color: #404040;
 	font-weight: bold;
 }
+
+tr.highlight_hover:hover {
+	background-color: #FFF0D0;
+    background: linear-gradient(to bottom, #FFF0D0 0%, #F0D080 100%);
+}
+
 
 /* Information sections: help, warning, error... */
 .help {

@@ -30,7 +30,7 @@ class contact extends Component {
 	 * @param array $new_address PostalAddress coming from JSON
 	 * @return integer|boolean the address ID or false if it failed
 	 */
-	public function addAddressToOrganization($organization_id,$new_address) {
+	public function addAddressToOrganization($organization_id,$new_address,$name = null) {
 		//Check the rights
 		require_once("component/data_model/Model.inc");
 		$table = DataModel::get()->getTable("OrganizationAddress");
@@ -38,7 +38,7 @@ class contact extends Component {
 			PNApplication::error("You are not allowed to add an address for this organization");
 			return false;
 		} else {
-			$address_id = $this->addAddress("OrganizationAddress","organization",$organization_id,$new_address);
+			$address_id = $this->addAddress("OrganizationAddress","organization",$organization_id,$new_address,$name);
 			return $address_id;
 		}
 	}
@@ -69,7 +69,7 @@ class contact extends Component {
 	 * @param boolean $bypass indicates if we need to bypass the security accessing the database
 	 * @return boolean|number id of the postal address on success, or false
 	 */
-	private function addAddress($table, $column, $key, $new_address, $bypass) {
+	private function addAddress($table, $column, $key, $new_address, $name = null) {
 		// convert JSON to database
 		require_once("ContactJSON.inc");
 		$new_address = ContactJSON::PostalAddress2DB($new_address);
@@ -86,10 +86,9 @@ class contact extends Component {
 			return false;
 		}
 		try {
-			if($bypass)
-				SQLQuery::create()->bypassSecurity()->insert($table, array($column=>$key,"address"=>$address_id));
-			else
-				SQLQuery::create()->insert($table, array($column=>$key,"address"=>$address_id));
+			$oa = array($column=>$key,"address"=>$address_id);
+			if ($name !== null) $oa["name"] = $name;
+			SQLQuery::create()->insert($table, $oa);
 		} catch (Exception $ex) {
 			PNApplication::error($ex);
 			SQLQuery::create()->removeKey("PostalAddress", $address_id);
