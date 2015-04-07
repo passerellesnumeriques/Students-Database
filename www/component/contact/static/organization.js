@@ -91,41 +91,13 @@ organization.prototype = {
 			t._add_location_button.className = "action";
 			t._add_location_button.innerHTML = "Add Location / Address";
 			t._add_location_button.onclick = function() {
-				var container = document.createElement("DIV");
-				div_contacts.insertBefore(container, div);
-				container.style.borderBottom = "1px solid #808080";
-				container.style.padding = "2px 5px";
-				if (t.org.id != -1) {
-					container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
-					t.popup.freeze();
-					layout.changed(div_contacts);
-					var addr = new PostalAddress(-1,window.top.default_country_id);
-					service.json("contact","add_address",{type:"organization",type_id:t.org.id,address:addr},function(res) {
-						if (!res || !res.id) {
-							div_contacts.removeChild(container);
-							t.popup.unfreeze();
-							layout.changed(div_contacts);
-							return;
-						}
-						addr.id = res.id;
-						var loc = new OrganizationLocation("",addr,[],[]);
-						t.org.locations.push(loc);
-						new OrganizationLocationControl(container, t, loc, true);
-						layout.changed(div_contacts);
-						t.onchange.fire();
-						// TODO map
-					});
-				} else {
-					var loc = new OrganizationLocation("",new PostalAddress(t._location_id_counter--,window.top.default_country_id),[],[]);
-					t.org.locations.push(loc);
-					new OrganizationLocationControl(container, t, loc, true);
-					layout.changed(div_contacts);
-					t.onchange.fire();
-					// TODO map
-				}
+				t._createLocationDiv(div_contacts, div, null);
 			};
 			div.appendChild(t._add_location_button);
 			div_contacts.appendChild(div);
+			
+			for (var i = 0; i < t.org.locations.length; ++i)
+				t._createLocationDiv(div_contacts, div, t.org.locations[i]);
 			
 			window.top.require("google_maps.js", function() {
 				t._map = new window.top.GoogleMap(map_container, function() {
@@ -308,6 +280,49 @@ organization.prototype = {
 			t.onchange.fire();
 		});
 	},
+	_createLocationDiv: function(div_contacts, div, location) {
+		var container = document.createElement("DIV");
+		div_contacts.insertBefore(container, div);
+		container.style.borderBottom = "1px solid #808080";
+		container.style.padding = "2px 5px";
+		if (location == null) {
+			if (this.org.id != -1) {
+				container.innerHTML = "<img src='"+theme.icons_16.loading+"'/>";
+				this.popup.freeze();
+				layout.changed(div_contacts);
+				var addr = new PostalAddress(-1,window.top.default_country_id);
+				var t = this;
+				service.json("contact","add_address",{type:"organization",type_id:this.org.id,address:addr},function(res) {
+					if (!res || !res.id) {
+						div_contacts.removeChild(container);
+						t.popup.unfreeze();
+						layout.changed(div_contacts);
+						return;
+					}
+					addr.id = res.id;
+					var loc = new OrganizationLocation("",addr,[],[]);
+					t.org.locations.push(loc);
+					container.removeAllChildren();
+					new OrganizationLocationControl(container, t, loc, true);
+					layout.changed(div_contacts);
+					t.onchange.fire();
+					t.popup.unfreeze();
+				});
+			} else {
+				var loc = new OrganizationLocation("",new PostalAddress(this._location_id_counter--,window.top.default_country_id),[],[]);
+				this.org.locations.push(loc);
+				new OrganizationLocationControl(container, this, loc, true);
+				layout.changed(div_contacts);
+				this.onchange.fire();
+				// TODO map
+			}
+		} else {
+			new OrganizationLocationControl(container, this, location, this.can_edit);
+			layout.changed(div_contacts);
+			// TODO map
+		}
+		// TODO remove location
+	},
 	_updateMap: function() {
 		for (var i = 0; i < this.org.locations.length; ++i) {
 			var loc = this.org.locations[i];
@@ -342,7 +357,7 @@ organization.prototype = {
 			};
 			if (loc.address.lat)
 				updateMarekr(marker, loc.address.lat, loc.address.lng, loc.name, loc.address.id);
-			else if(loc.address.geographic_area.id > 0) {
+			else if(loc.address.geographic_area != null && loc.address.geographic_area.id > 0) {
 				var closure = {
 					loc:loc,
 					searchCenter: function() {
