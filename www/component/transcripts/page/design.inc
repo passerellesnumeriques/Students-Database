@@ -367,7 +367,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 	}
 	while (($i = strpos($design, "#SINGLE_SUBJECT#", $i)) !== false) {
 		$j = strpos($design, "#END_SINGLE_SUBJECT#", $i);
-		$content = substr($design,$i+18,$j-$i-18);
+		$content = substr($design,$i+16,$j-$i-16);
 		$result_single = "";
 		for ($subject_index = 0; $subject_index < count($single); $subject_index++) {
 			$cat = $single[$subject_index][0];
@@ -395,7 +395,7 @@ function generateTranscriptFor($transcript_id, $config, $categories, $subjects, 
 				$global_batch_grades[$sid]["coef"] += $sg["coef"];
 			}
 		}
-		$design = substr($design, 0, $i).$result_single.substr($design, $j+22);
+		$design = substr($design, 0, $i).$result_single.substr($design, $j+20);
 	}
 		
 	$total_grade = 0;
