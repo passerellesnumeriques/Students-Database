@@ -28,7 +28,7 @@ function download($url, $file) {
 		die("<span style='color:red'>Error downloading ".$url.": ".toHTML($e->getMessage())."</span>");
 	}
 	$f = fopen($file,"w");
-	fwrite($f,$res->getBody());
+	fwrite($f,$resp->getBody());
 	fclose($f);
 }
 function remove_directory($path) {
