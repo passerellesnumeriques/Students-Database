@@ -149,10 +149,12 @@ $zip->open(dirname(__FILE__)."/data/data.zip");
 $zip->extractTo(dirname(__FILE__)."/data/unzip");
 $zip->close();
 // copy configuration files sent by the server
-$dir = opendir(dirname(__FILE__)."/data/unzip/conf");
-while (($file = readdir($dir)) <> null) {
-	if (is_dir(dirname(__FILE__)."/data/unzip/conf/$file")) continue;
-	copy(dirname(__FILE__)."/data/unzip/conf/$file", $sms_path."/conf/$file");
+if (file_exists(dirname(__FILE__)."/data/unzip/conf")) {
+	$dir = opendir(dirname(__FILE__)."/data/unzip/conf");
+	while (($file = readdir($dir)) <> null) {
+		if (is_dir(dirname(__FILE__)."/data/unzip/conf/$file")) continue;
+		copy(dirname(__FILE__)."/data/unzip/conf/$file", $sms_path."/conf/$file");
+	}
 }
 // import backup in both database: init and domain
 progress("Importing the copy of the database into your computer...");
