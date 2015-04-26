@@ -60,12 +60,13 @@ function downloadByStep($server_url, $server_version, $download_version) {
 	$info = $info["result"];
 	$filename = $info["filename"];
 	$filesize = $info["size"];
+	if (file_exists(dirname(__FILE__)."/update/$filename")) @unlink(dirname(__FILE__)."/update/$filename");
 	$f = fopen(dirname(__FILE__)."/update/$filename","w");
 	// ask the server to download
 	$downloaded = 0;
 	while ($downloaded < $filesize) {
 		progress("Downloading version ".$download_version,$downloaded, $filesize);
-		$url = "http://$server_url/dynamic/selection/service/travel/download_update?from=".$downloaded."&size=".$filesize."&version=".urlencode($download_version);
+		$url = "http://$server_url/dynamic/selection/service/travel/download_update?from=".$downloaded."&size=".$filesize."&version=".urlencode($download_version)."&url=".urlencode($info["final_url"]);
 		$c = curl_init($url);
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
@@ -75,7 +76,11 @@ function downloadByStep($server_url, $server_version, $download_version) {
 		set_time_limit(350);
 		$result = curl_exec($c);
 		if ($result === false) die("Error: unable to connect to the Students Management Software Server: ".curl_error($c));
+		$resp_code = curl_getinfo($c, CURLINFO_HTTP_CODE);
 		curl_close($c);
+		if ($resp_code <> 200) {
+			die("An error occured while downloading the file (".$result."). Please try again.");
+		}
 		$progress = strlen($result);
 		if ($progress == 0) {
 			die("An error occured while downloading the file. Please try again.");

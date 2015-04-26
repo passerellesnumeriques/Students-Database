@@ -41,9 +41,11 @@ class HTTPClient {
 		if ($response->isRedirected() && $max_redirect > 0) {
 			$request->followRedirection($response->getRedirectionLocation());
 			$responses = $this->send($request, $max_redirect-1);
-			array_splice($responses, 0, 0, $response);
+			array_splice($responses, 0, 0, array($response));
 			return $responses;
 		}
+		if ($request->isRangeRequested() && $response->getStatus() == 200)
+			throw new Exception("Invalid response from server ".$request->getHostName().": it does not support progressive download.");
 		return array($response);
 	}
 	
@@ -66,6 +68,10 @@ class HTTPRequest {
 	
 	public function setMethod($method) {
 		$this->method = $method;
+	}
+	
+	public function getHostName() {
+		return $this->hostname;
 	}
 
 	public function setURL($url) {
@@ -138,6 +144,10 @@ class HTTPRequest {
 		$this->headers["Range"] = "bytes=".$from."-".$to;
 	}
 	
+	public function isRangeRequested() {
+		return array_key_exists("Range", $this->headers);
+	}
+	
 	public function getURL() {
 		$url = $this->secure ? "https" : "http";
 		$url .= "://";
@@ -145,6 +155,13 @@ class HTTPRequest {
 		$url .= ":".$this->port;
 		$url .= $this->path;
 		return $url;
+	}
+	
+	public function getAsString() {
+		$s = $this->method." ".$this->path."\n";
+		foreach ($this->headers as $name=>$value) $s .= $name.": ".$value."\n";
+		$s .= "\n";
+		return $s;
 	}
 }
 
@@ -217,6 +234,14 @@ class HTTPResponse {
 	
 	public function getRedirectionLocation() {
 		return $this->headers["location"];
+	}
+	
+	public function getAsString() {
+		$s = $this->protocol." ".$this->status." ".$this->message."\n";
+		foreach ($this->headers as $name=>$value) $s .= $name.": ".$value."\n";
+		$s .= "\n";
+		$s .= $this->body;
+		return $s;
 	}
 }
 ?>

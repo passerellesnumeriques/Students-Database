@@ -17,7 +17,20 @@ function removeDirectory($path) {
 			unlink($path."/".$filename);
 	}
 	closedir($dir);
-	rmdir($path);
+	if (!@rmdir($path)) {
+		if (file_exists($path)) {
+			@rmdir($path);
+			if (file_exists($path)) {
+				sleep(1);
+				@rmdir($path);
+				if (file_exists($path)) {
+					sleep(1);
+					if (file_exists($path))
+						rmdir($path);
+				}
+			}
+		}
+	}
 }
 function connectDB() {
 	require_once("DataBaseSystem_".$_POST["db_type"].".inc");

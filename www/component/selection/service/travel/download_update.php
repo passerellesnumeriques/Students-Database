@@ -32,12 +32,15 @@ class service_travel_download_update extends Service {
 				PNApplication::error($e);
 				return;
 			}
-			echo "{\"size\":".$info["size"].",\"filename\":".json_encode("Students_Management_Software_".$version."_Selection_Travel.zip")."}";
+			echo "{\"size\":".$info["size"].",\"filename\":".json_encode("Students_Management_Software_".$version."_Selection_Travel.zip").",\"final_url\":".json_encode($info["final_url"])."}";
 			return;
 		}
 		if (isset($_GET["from"])) {
 			$version = isset($_GET["version"]) ? $_GET["version"] : $pn_app_version;
-			$url = getUpdateURL("Students_Management_Software_".$version."_Selection_Travel.zip");
+			if (isset($_GET["url"]) && strpos($_GET["url"], "Students_Management_Software_".$version."_Selection_Travel.zip") > 0)
+				$url = $_GET["url"];
+			else
+				$url = getUpdateURL("Students_Management_Software_".$version."_Selection_Travel.zip");
 			$from = intval($_GET["from"]);
 			$size = intval($_GET["size"]);
 			$to = $from + 512*1024 -1;
@@ -54,6 +57,8 @@ class service_travel_download_update extends Service {
 				if ($resp->getStatus() < 200 || $resp->getStatus() >= 300)
 					throw new Exception("Server response: ".$resp->getStatus()." ".$resp->getStatusMessage());
 			} catch (Exception $e) {
+				header("HTTP/1.1 500 Download error");
+				echo $e->getMessage();
 				return;
 			}
 			echo $resp->getBody();
