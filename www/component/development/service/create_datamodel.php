@@ -6,6 +6,11 @@ class service_create_datamodel extends Service {
 	public function inputDocumentation() {}
 	public function outputDocumentation() {}
 	public function execute(&$component, $input) {
+#DEV
+PNApplication::$instance->development->current_request()->no_process_time_warning = true;
+PNApplication::$instance->development->current_request()->no_database_warning = true;
+#END
+		
 		$domain = $input["domain"];
 		$version = $input["version"];
 		
