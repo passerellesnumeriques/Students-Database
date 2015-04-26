@@ -76,12 +76,16 @@ class HTTPRequest {
 
 	public function setURL($url) {
 		$i = strpos($url, "://");
-		$protocol = strtolower(substr($url, 0, $i));
-		if ($protocol == "https")
-			$this->secure = true;
-		else 
+		if ($i === false) {
 			$this->secure = false;
-		$url = substr($url, $i+3);
+		} else {
+			$protocol = strtolower(substr($url, 0, $i));
+			if ($protocol == "https")
+				$this->secure = true;
+			else 
+				$this->secure = false;
+			$url = substr($url, $i+3);
+		}
 		$i = strpos($url, "/");
 		$j = strpos($url, ":");
 		if ($j > 0 && ($j < $i || $i === false)) {
