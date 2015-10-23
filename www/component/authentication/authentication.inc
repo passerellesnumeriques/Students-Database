@@ -22,8 +22,10 @@ class authentication extends Component {
 		}
 		switch ($domain) {
 			case "PNP":
-				require_once("PNPAuthenticationSystem.inc");
-				return new PNPAuthenticationSystem();
+				//require_once("PNPAuthenticationSystem.inc");
+				//return new PNPAuthenticationSystem();
+				require_once("LDAPAuthenticationSystem.inc");
+				return new LDAPAuthenticationSystem("server1.pn.local", array("PN","LOCAL"));
 			case "PNC":
 				require_once("LDAPAuthenticationSystem.inc");
 				return new LDAPAuthenticationSystem("kep.pnc.lan", array("PNC","LAN"));
