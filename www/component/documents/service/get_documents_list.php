@@ -3,9 +3,17 @@ class service_get_documents_list extends Service {
 	
 	public function getRequiredRights() { return array(); }
 	
-	public function documentation() {}
-	public function inputDocumentation() {}
-	public function outputDocumentation() {}
+	public function documentation() { echo "Returns the list of documents attached to the given entity"; }
+	public function inputDocumentation() { echo "table, sub_model, key and type defining the row in the table and the plug-in"; }
+	public function outputDocumentation() {
+?>The array of documents:<ul>
+	<li><code>id</code></li>
+	<li><code>name</code></li>
+	<li><code>lock</code></li>
+	<li><code>versions</code></li>
+</ul>
+<?php
+	}
 	
 	public function execute(&$component, $input) {
 		$table = $input["table"];
@@ -37,12 +45,12 @@ class service_get_documents_list extends Service {
 			$q = SQLQuery::create()->bypassSecurity()->select("DocumentVersion")->whereIn("DocumentVersion", "document", $ids);
 			$q->orderBy("DocumentVersion","timestamp",false);
 			PNApplication::$instance->storage->joinRevision($q, "DocumentVersion", "file", null);
-			PNApplication::$instance->user_management->joinPeople($q, "DocumentVersion", "user");
+			PNApplication::$instance->people->joinPeople($q, "DocumentVersion", "people");
 			$q->field("DocumentVersion","id","version_id");
 			$q->field("DocumentVersion","document","document");
 			$q->field("DocumentVersion","file","storage_id");
 			$q->field("DocumentVersion","timestamp","version_time");
-			$q->field("DocumentVersion","user","version_user");
+			$q->field("DocumentVersion","people","version_people");
 			$q->field("Storage","mime","doc_type");
 			$q->field("Storage","revision","storage_revision");
 			$versions = $q->execute();
@@ -78,7 +86,6 @@ class service_get_documents_list extends Service {
 				echo ",time:".$v["version_time"];
 				echo ",storage_id:".$v["storage_id"];
 				echo ",revision:".$v["storage_revision"];
-				echo ",user:".$v["version_user"];
 				echo ",people:".PeopleJSON::People($v);
 				echo "}";
 			}

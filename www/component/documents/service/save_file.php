@@ -44,7 +44,7 @@ class service_save_file extends Service {
 			if ($max_versions == 1) {
 				$data = file_get_contents('php://input');
 				PNApplication::$instance->storage->update_file($versions[0]["file"], $data);
-				SQLQuery::create()->bypassSecurity()->updateByKey("DocumentVersion", $versions[0]["id"], array("timestamp"=>time(),"user"=>PNApplication::$instance->user_management->user_id));
+				SQLQuery::create()->bypassSecurity()->updateByKey("DocumentVersion", $versions[0]["id"], array("timestamp"=>time(),"people"=>PNApplication::$instance->user_management->people_id));
 				if (!PNApplication::hasErrors()) {
 					echo "OK";
 					return;
@@ -56,7 +56,7 @@ class service_save_file extends Service {
 				$storage_id = PNApplication::$instance->storage->custom_upload($type, 60);
 				SQLQuery::startTransaction();
 				PNApplication::$instance->storage->convertTempFile($storage_id, "document");
-				SQLQuery::create()->bypassSecurity()->insert("DocumentVersion",array("document"=>$id,"file"=>$storage_id,"timestamp"=>time(),"user"=>PNApplication::$instance->user_management->user_id));
+				SQLQuery::create()->bypassSecurity()->insert("DocumentVersion",array("document"=>$id,"file"=>$storage_id,"timestamp"=>time(),"people"=>PNApplication::$instance->user_management->people_id));
 				$to_remove = SQLQuery::create()->bypassSecurity()
 					->select("DocumentVersion")
 					->whereValue("DocumentVersion","document",$id)

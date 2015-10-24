@@ -383,7 +383,8 @@ AttachedDocuments.prototype = {
 		td.removeAllChildren();
 		if (doc.lock == null) {
 			removeClassName(td, "editing");
-			td.appendChild(document.createTextNode("Latest version by "+doc.versions[0].people.first_name+" "+doc.versions[0].people.last_name+" on "+new Date(doc.versions[0].time*1000).toLocaleString()));
+			if (doc.versions[0].people && doc.versions[0].people.id) // only if the people still exists
+				td.appendChild(document.createTextNode("Latest version by "+doc.versions[0].people.first_name+" "+doc.versions[0].people.last_name+" on "+new Date(doc.versions[0].time*1000).toLocaleString()));
 		} else {
 			addClassName(td, "editing");
 			td.appendChild(document.createTextNode("Currently edited by "+doc.lock));
