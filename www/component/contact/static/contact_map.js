@@ -180,6 +180,18 @@ function contact_map(container, title, type, entities_ids, addresses_types) {
 	this._init = function() {
 		var oneReady = function() {
 			if (t.entities != null && t.entities_addresses != null) {
+				// reorder addresses
+				var new_addresses = [];
+				for (var i = 0; i < entities_ids.length; ++i) new_addresses.push(null);
+				for (var i = 0; i < entities_ids.length; ++i) {
+					for (var j = 0; j < t.entities.length; ++j) {
+						if (t.entities[j].id == entities_ids[i]) {
+							new_addresses[j] = t.entities_addresses[i];
+							break;
+						}
+					}
+				}
+				t.entities_addresses = new_addresses;
 				if (!t.entities_filled) t._fillEntities();
 				if (t.map) t.refreshMap();
 			}
