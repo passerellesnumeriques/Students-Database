@@ -283,7 +283,9 @@ echo "<div id='application_title_label'>Dev</div>";
 			Students Management Software (<?php echo $pn_app_version; ?>)
 			 - © 2013<?php $now = date("Y");if ($now <> "2013") echo "-".$now;?>
 			 - <a href='http://www.passerellesnumeriques.org' target='_blank' style='color:white;text-decoration:none' onmouseover="this.style.textDecoration='underline';" onmouseout="this.style.textDecoration='none';">Passerelles numériques</a>
+<!-- 
 			 - <a href='/dynamic/application/page/send_feedback' target='application_frame' style='color:white' title='Send a feedback (issue, suggestion, idea...) about this application'>Write a feedback</a>
+ -->
 	</div>
 </div>
 <script type='text/javascript' defer>

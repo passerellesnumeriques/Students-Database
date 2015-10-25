@@ -47,20 +47,8 @@ class page_send_feedback extends Page {
 	<textarea style='width:95%' rows=10 name='text' onchange='validateForm();' onkeyup='validateForm();'></textarea>
 	</form>
 	<br/>
-	
-	You can also attach some files/pictures to better illustrate:<br/>
-	<form name='ticket_form' enctype="multipart/form-data" action="https://sourceforge.net/p/studentsdatabase/tickets/save_ticket" method="POST" target='_ticket_post_'>
-	  <input id='ticket_summary' name="ticket_form.summary" type="hidden" value="">
-	  <input id='ticket_text' name="ticket_form.description" type="hidden">
-	  <input name="ticket_form.ticket_num" type="hidden">
-	  <input name="ticket_form.status" type="hidden" value="open">
-	  <input name="ticket_form.assigned_to" type="hidden" value="">
-	  <input name="ticket_form.labels" type="hidden" value="">
-	  <input value="studentsdatabase" type="hidden">
-	  <input value="tickets" type="hidden">
-	  <input type="file" name="ticket_form.attachment" multiple="">
-	</form>
-	<iframe id='_ticket_post_' name='_ticket_post_' style='display:none'></iframe>
+	<input type='hidden' id='ticket_summary' value=''/>
+	<input type='hidden' id='ticket_text' value=''/>
 </div>
 <div class='page_footer' style='flex:none'>
 	<button id='button_submit' class='action' disabled='disabled' onclick="sendFeedback();">Submit feedback</button>
@@ -114,24 +102,11 @@ function validateForm() {
 }
 
 function sendFeedback() {
-	var frame = document.getElementById('_ticket_post_');
 	var lock = lockScreen(null, "Sending your feedback...");
-	var is_sent = false;
-	var sent = function() {
-		is_sent = true;
+	service.json('application', 'send_feedback', {title:document.getElementById('ticket_summary').value, text:document.getElementById('ticket_text').value}, function(res) {
 		window.top.infoDialog("<img src='"+theme.icons_16.ok+"' style='vertical-align:bottom'/> Your feedback has been sent. Thank you !");
 		location.href = '/dynamic/application/page/overview';
-		sent = null;
-	};
-	frame.onload = sent;
-	frame.onunload = sent;
-	frame.onerror = sent; 
-	document.forms['ticket_form'].submit();
-	setTimeout(function() {
-		if (window.closing) return;
-		if (is_sent) return;
-		sent();
-	}, 20000);
+	});
 }
 </script>
 <?php 

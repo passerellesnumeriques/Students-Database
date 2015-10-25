@@ -29,6 +29,8 @@ class HTTPClient {
 			array_push($headers, $name.": ".$value);
 		curl_setopt($c, CURLOPT_HTTPHEADER, $headers);
 		curl_setopt($c, CURLOPT_CUSTOMREQUEST, $request->getMethod());
+		if ($request->getUsername() <> null)
+			curl_setopt($c, CURLOPT_USERPWD, $request->getUsername().":".$request->getPassword());
 		set_time_limit(350);
 		$result = curl_exec($c);
 		if ($result === false || $result == "") {
@@ -57,6 +59,7 @@ class HTTPRequest {
 	private $hostname = null;
 	private $port = 80;
 	private $path = "/";
+	private $username = null, $password = null;
 	
 	private $headers = array();
 	
@@ -127,6 +130,13 @@ class HTTPRequest {
 		return $this->posted_form;
 	}
 	
+	public function postData($content_type, $data) {
+		$this->method = "POST";
+		$this->posted_form = $data;
+		$this->setHeader("Content-Type", $content_type);
+		$this->setHeader("Content-Length", strlen($data));
+	}
+	
 	public function setHeader($name, $value) {
 		$this->headers[$name] = $value;
 	}
@@ -151,6 +161,13 @@ class HTTPRequest {
 	public function isRangeRequested() {
 		return array_key_exists("Range", $this->headers);
 	}
+	
+	public function setLogin($username, $password) {
+		$this->username = $username;
+		$this->password = $password;
+	}
+	public function getUsername() { return $this->username; }
+	public function getPassword() { return $this->password; }
 	
 	public function getURL() {
 		$url = $this->secure ? "https" : "http";

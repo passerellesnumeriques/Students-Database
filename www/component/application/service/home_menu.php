@@ -42,11 +42,13 @@ if (PNApplication::$instance->local_domain == PNApplication::$instance->current_
     <img src='/static/application/logout_white.png'/>
     Logout and Exit
 </a>
+<!-- 
 <div class="application_left_menu_separator"></div>
 <a class='application_left_menu_item' href="/dynamic/application/page/send_feedback">
     <img src='/static/application/feedback_white_16.png'/>
     Write Feedback
 </a>
+ -->
 <?php
     }
 }
