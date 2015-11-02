@@ -238,7 +238,7 @@ namespace datamodel {
 							$script .= "field.editable_field.fillContainer();\n";
 						}
 						$html .= "</td>";
-						$html .= $this->endDataRow($data, $value, $sub_index, $is_new, $can_edit);
+						$html .= $this->endDataRow($data, $path->sub_model, $value, $sub_index, $is_new, $can_edit);
 						$html .= "</tr>";
 						$first_sub_index = false;
 					}
@@ -267,7 +267,7 @@ namespace datamodel {
 						$script .= "field.setDataDisplay(".$data->javascriptDataDisplay($path->sub_model).",".json_encode($kv).");\n";
 					}
 					$html .= "</td>";
-					$html .= $this->endDataRow($data, $value, -1, $is_new, $can_edit);
+					$html .= $this->endDataRow($data, $path->sub_model, $value, -1, $is_new, $can_edit);
 					$html .= "</tr>";
 				}
 			}
@@ -295,13 +295,14 @@ namespace datamodel {
 		
 		/** Optionally add some columns/info at the end of the row for a DataDisplay
 		 * @param \datamodel\DataDisplay $data the data
+		 * @param integer|null $sub_model the sub model if any
 		 * @param mixed $value the initial value
 		 * @param integer $sub_index if this is a data display having sub-data
 		 * @param boolean $is_new true if this is for a new data
 		 * @param boolean $can_edit true if this is editable
 		 * @return string the HTML
 		 */
-		protected function endDataRow($data, $value, $sub_index, $is_new, $can_edit) {
+		protected function endDataRow($data, $sub_model, $value, $sub_index, $is_new, $can_edit) {
 			return "";
 		}
 	

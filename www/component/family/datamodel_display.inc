@@ -395,7 +395,7 @@ $display->addDataDisplay(new ParentDataDisplay($category, "Mother"));
 $model->addTableDataDisplay($display);
 
 class FamilyBackgroundDataScreen extends datamodel\GenericDataScreen {
-	protected function endDataRow($data, $value, $sub_index, $is_new, $can_edit) {
+	protected function endDataRow($data, $sub_model, $value, $sub_index, $is_new, $can_edit) {
 		$html = "";
 		switch ($data->getDisplayName()) {
 			case "Child Rank":

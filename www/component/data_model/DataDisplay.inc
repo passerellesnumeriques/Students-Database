@@ -1304,6 +1304,7 @@ class ReadOnlyDataDisplay extends DataDisplay {
 						$multiple_start_table = $current_table_alias;
 						$multiple_start_column = $col->name;
 						$multiple_sub_query->select(array($ft->getName()=>$current_table_alias));
+						$multiple_sub_query->selectSubModels($q->sub_models);
 						if ($condition <> null)
 							$multiple_sub_query->where($condition);
 					} else {
