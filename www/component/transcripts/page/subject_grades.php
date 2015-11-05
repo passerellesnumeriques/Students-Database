@@ -1216,17 +1216,19 @@ function importFromFile(event) {
 				if (id == 'final_grade') continue;
 				if (id.startsWith("total_eval_type_")) continue;
 				if (id.startsWith("eval_")) continue;
+				if (id == 'student_comment') continue;
 				cols.push({ id: id, name: gcols[i].select_menu_name ? gcols[i].select_menu_name : gcols[i].grid_column.title });
 			}
 			return cols;
 		};
 		prov.getColumnsCanBeImported = function() {
 			if (only_final)
-				return [{id:'final_grade',name:"Final Grade"}];
+				return [{id:'final_grade',name:"Final Grade"},{id:'student_comment',name:'Comment'}];
 			var cols = [];
 			for (var i = 0; i < evaluation_types.length; ++i)
 				for (var j = 0; j < evaluation_types[i].evaluations.length; ++j)
 					cols.push({id:'eval_'+evaluation_types[i].evaluations[j].id,name:evaluation_types[i].evaluations[j].name});
+			cols.push({id:'student_comment',name:'Comment'});
 			return cols;
 		};
 		new import_with_match(prov, event, true);
