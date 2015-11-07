@@ -243,8 +243,8 @@ function buildPages(content) {
 		}
 		h = fixed;
 		do {
-			sections[i] = page.appendChild(sections[i]);
 			h += getHeight(sections[i],knowledge);
+			sections[i] = page.appendChild(sections[i]);
 			i++;
 		} while (i < sections.length && h+getHeight(sections[i],knowledge) < 760);
 		if (page_footer) {

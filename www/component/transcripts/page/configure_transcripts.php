@@ -199,9 +199,9 @@ class page_configure_transcripts extends Page {
 			</div>
 			<div style='background-color:white;margin-bottom:5px;box-shadow: 0px 2px 2px #D0D0D0;'>
 				<div class='page_section_title'>
-					Colors and text
+					Grading system
 				</div>
-				<b>Grading system</b> <select onchange="saveTranscriptConfig('grading_system',this.options[this.selectedIndex].value);">
+				<select onchange="saveTranscriptConfig('grading_system',this.options[this.selectedIndex].value);" style="margin-bottom:2px;margin-left:5px;">
 				<?php
 				foreach($grading_systems as $name=>$spec) {
 					echo "<option value=\"".$name."\"";
@@ -210,6 +210,11 @@ class page_configure_transcripts extends Page {
 				}
 				?>
 				</select>
+			</div>
+			<div style='background-color:white;margin-bottom:5px;box-shadow: 0px 2px 2px #D0D0D0;'>
+				<div class='page_section_title'>
+					Colors and text
+				</div>
 				<div style='font-weight:bold'>Subject Category</div>
 				<div style='padding-left:15px'>
 					Background: <span id='subject_category_background' style='vertical-align:middle'></span><script type='text/javascript'>new color_widget('subject_category_background',<?php echo json_encode($config["subject_category_background"]);?>).onchange = function(cw) { saveTranscriptConfig('subject_category_background',cw.color); };</script>
@@ -396,8 +401,8 @@ function buildPages(content) {
 		}
 		h = fixed;
 		do {
-			sections[i] = page.appendChild(sections[i]);
 			h += getHeight(sections[i],knowledge);
+			sections[i] = page.appendChild(sections[i]);
 			i++;
 		} while (i < sections.length && h+getHeight(sections[i],knowledge) < 760);
 		if (page_footer) {
