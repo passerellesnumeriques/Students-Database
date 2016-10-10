@@ -21,6 +21,11 @@ class LDAPAuthenticationSystem extends AuthenticationSystem implements Authentic
 	private $dcs;
 	
 	public function authenticate($username, $password, &$error) {
+		if( (!isset($password) === true) || $password === '') {
+		  $error = "Password is empty.";
+		  return null;
+		}	
+	
 		$conn = @ldap_connect($this->server);
 		if ($conn === false) {
 			$error = "Unable to connect.";
