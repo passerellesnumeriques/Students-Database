@@ -115,7 +115,7 @@ class service_exam_export_results extends Service {
 							->whereIn("ApplicantExamSubject", "applicant", array_keys($applicants_ids))
 							->field("ApplicantExamSubject","applicant")
 							->executeSingleField();
-						$answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
+						$answers = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->whereIn("ApplicantExamAnswer","exam_subject_question",$all_questions_ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
 						$current_applicant = 0;
 						$row = 2;
 						foreach ($answers as $a) {
@@ -131,7 +131,11 @@ class service_exam_export_results extends Service {
 									PNApplication::$instance->application->updateTemporaryData($progress_id, $pc);
 								}
 							}
-							$index = array_search($a["exam_subject_question"], $all_questions_ids);
+							$index = array_search($a["exam_subject_question"], $all_questions_ids, true);
+							if ($index === false) {
+								$sheet->setCellValueByColumnAndRow(0, $row, "ERROR: There are answers to unknown questions");
+								continue;
+							}
 							$sheet->setCellValueByColumnAndRow($index+3, $row, $a["answer"]);
 						}
 					}
@@ -179,7 +183,7 @@ class service_exam_export_results extends Service {
 						->whereIn("ApplicantExamSubject", "applicant", array_keys($applicants_ids))
 						->field("ApplicantExamSubject","applicant")
 						->executeSingleField();
-					$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
+					$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->whereIn("ApplicantExamAnswer","exam_subject_question",$all_questions_ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
 					$current_applicant = 0;
 					$row = 2;
 					foreach ($grades as $a) {
@@ -195,7 +199,11 @@ class service_exam_export_results extends Service {
 								PNApplication::$instance->application->updateTemporaryData($progress_id, $pc);
 							}
 						}
-						$index = array_search($a["exam_subject_question"], $all_questions_ids);
+						$index = array_search($a["exam_subject_question"], $all_questions_ids, true);
+						if ($index === false) {
+							$sheet->setCellValueByColumnAndRow(0, $row, "ERROR: There are answers to unknown questions");
+							continue;
+						}
 						$sheet->setCellValueByColumnAndRow($index+3, $row, $a["score"]);
 					}
 				}
