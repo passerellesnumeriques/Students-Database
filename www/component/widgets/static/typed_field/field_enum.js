@@ -122,6 +122,7 @@ field_enum.prototype._create = function(data) {
 				for (var i = 0; i < select.options.length; ++i)
 					if (select.options[i].text.isSame(data)) {
 						select.selectedIndex = i;
+						data = select.options[i].value;
 						found = true;
 						break;
 					}
