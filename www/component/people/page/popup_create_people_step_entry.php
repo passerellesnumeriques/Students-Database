@@ -34,6 +34,7 @@ class page_popup_create_people_step_entry extends Page {
 				popup.addNextButton(function() {
 					popup.freeze("We are checking if the new people are already in the database...");
 					var peoples = [];
+					var errors = [];
 					for (var i = 0; i < grid.getNbRows(); ++i) {
 						var row = grid.getRow(i);
 						if (row._is_new) continue;
@@ -48,9 +49,8 @@ class page_popup_create_people_step_entry extends Page {
 									name = data.name;
 								else
 									name = data.datadisplay.name+" "+data.datadisplay.sub_data.names[data.sub_data];
-								alert("Please correct the problems: "+name+": "+field.error);
-								popup.unfreeze();
-								return;
+								errors.push("Row " + (i+1) + ", " + name + ": " + field.error);
+								continue;
 							}
 							var path = cell.col_id;
 							if (path == "remove") continue;
@@ -83,6 +83,14 @@ class page_popup_create_people_step_entry extends Page {
 								ppath.value.push({name:data.name,value:field.getCurrentData()});
 						}
 						peoples.push(people);
+					}
+					if (errors.length > 0) {
+						var msg = "Please correct the problems:\r\n";
+						for (var i = 0; i < errors.length; ++i)
+							msg += " - " + errors[i] + "\r\n";
+						alert(msg);
+						popup.unfreeze();
+						return;
 					}
 					if (peoples.length == 0) {
 						alert("You didn't enter anybody to create");

@@ -173,6 +173,11 @@ field_contact_type.prototype._create = function(data) {
 							});
 						};
 					}
+					var add_button = document.createElement("BUTTON");
+					add_button.className = "flat small_icon";
+					add_button.innerHTML = "<img src='"+theme.icons_10.add+"'/>";
+					setOpacity(add_button, "0");
+					this.element.appendChild(add_button);
 					return data;
 				};
 				this._setData(data);
@@ -210,8 +215,25 @@ field_contact_type.prototype._create = function(data) {
 						this.element.appendChild(div);
 						input._contact = contact;
 						input.onchange = function() {
-							this._contact.contact = this.value;
+							this._contact.contact = this.value.trim();
+							this.style.border = this._contact.contact.length > 0 ? "" : "1px solid red";
 							t._datachange(true);
+						};
+						input.style.border = contact.length > 0 ? "" : "1px solid red";
+						var remove_button = document.createElement("BUTTON");
+						remove_button.className = "flat small_icon";
+						remove_button.innerHTML = "<img src='"+theme.icons_10.remove+"'/>";
+						remove_button.title = "Remove contact";
+						div.appendChild(remove_button);
+						div.style.whiteSpace = "nowrap";
+						remove_button._contact = contact;
+						remove_button.onclick = function(event) {
+							var index = t._data.contacts.indexOf(this._contact);
+							if (index >= 0)
+								t._data.contacts.splice(index,1);
+							t.setData(t._data, true);
+							stopEventPropagation(event);
+							return false;
 						};
 					}
 					var add_button = document.createElement("BUTTON");
@@ -229,6 +251,26 @@ field_contact_type.prototype._create = function(data) {
 						return false;
 					};
 					return data;
+				};
+				this.validate = function() {
+					var data = this.getCurrentData();
+					var contact_type_name = "?";
+					switch (this.config.type) {
+					case "email": contact_type_name = "EMail"; break;
+					case "phone": contact_type_name = "Phone"; break;
+					case "IM": contact_type_name = "Instant Messaging"; break;
+					}
+					var error = "";
+					for (var i = 0; i < data.contacts.length; ++i) {
+						if (data.contacts[i].contact.length == 0) {
+							if (error.length > 0) error += ", " + (i+1);
+							else error = contact_type_name + " " + (i + 1);
+						}
+					}
+					if (error.length == 0)
+						this.signalError(null);
+					else
+						this.signalError(error + " cannot be empty");
 				};
 				this._setData(data);
 				
