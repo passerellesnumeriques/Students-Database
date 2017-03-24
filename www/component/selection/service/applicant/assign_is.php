@@ -147,25 +147,33 @@ class service_applicant_assign_is extends Service {
 		
 		// check if confirmation is still ok
 		if ($confirm_data <> null) {
-			$cmp = array_intersect_assoc($data, $conrifm_data);
-			if (count($cmp) == count($data)) {
+			$ok = true;
+			$ok &= count(array_intersect($data["ok"], $confirm_data["ok"])) == count($data["ok"]);
+			$ok &= count(array_intersect($data["different"], $confirm_data["different"])) == count($data["different"]);
+			$ok &= count(array_intersect($data["future"], $confirm_data["future"])) == count($data["future"]);
+			$ok &= count(array_intersect($data["past"], $confirm_data["past"])) == count($data["past"]);
+			if ($ok) {
 				// confirmation is ok, let's do it!
-				SQLQuery::create()->updateByKeys("Applicant", array(array(
-					$data["ok"],
-					array("information_session"=>$is_id)
-				)));
-				SQLQuery::create()->updateByKeys("Applicant", array(array(
-					$data["different"],
-					array("information_session"=>$is_id, "exam_center"=>$is["exam_center_id"])
-				)));
-				SQLQuery::create()->updateByKeys("Applicant", array(array(
-					$data["future"],
-					array("information_session"=>$is_id, "exam_center"=>$is["exam_center_id"], "exam_session"=>null, "exam_center_room"=>null)
-				)));
-				SQLQuery::create()->updateByKeys("Applicant", array(array(
-					$data["past"],
-					array("information_session"=>$is_id)
-				)));
+				if (count($data["ok"]) > 0)
+					SQLQuery::create()->updateByKeys("Applicant", array(array(
+						$data["ok"],
+						array("information_session"=>$is_id)
+					)));
+				if (count($data["different"]) > 0)
+					SQLQuery::create()->updateByKeys("Applicant", array(array(
+						$data["different"],
+						array("information_session"=>$is_id, "exam_center"=>$is["exam_center_id"])
+					)));
+				if (count($data["future"]) > 0)
+					SQLQuery::create()->updateByKeys("Applicant", array(array(
+						$data["future"],
+						array("information_session"=>$is_id, "exam_center"=>$is["exam_center_id"], "exam_session"=>null, "exam_center_room"=>null)
+					)));
+				if (count($data["past"]) > 0)
+					SQLQuery::create()->updateByKeys("Applicant", array(array(
+						$data["past"],
+						array("information_session"=>$is_id)
+					)));
 				if (!PNApplication::hasErrors()) {
 					SQLQuery::commitTransaction();
 					echo "true";
