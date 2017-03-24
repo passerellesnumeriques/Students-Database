@@ -124,6 +124,10 @@ function mini_popup(title, do_not_scroll) {
 		window.top.document.body.appendChild(this._div);
 		var t=this;
 		this._close.onclick = function() { t.close(); };
+		this._div.onclick = function(event) {
+			stopEventPropagation(event);
+			return false;
+		};
 	};
 	this._init();
 }

@@ -207,6 +207,7 @@ function autocomplete_menu(ac, onselectitem) {
 	};
 	/** Hide the menu */
 	this.hide = function() {
+		if (!t) return;
 		if (typeof animation != 'undefined')
 			this.anim = animation.fadeOut(t.div,300,function() {
 				t.div.style.visibility = "hidden";
