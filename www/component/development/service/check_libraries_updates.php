@@ -22,54 +22,15 @@ class service_check_libraries_updates extends Service {
 	}
 		
 	private function checkPHPExcel() {
-		$c = curl_init("https://phpexcel.codeplex.com/");
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-		curl_setopt($c, CURLOPT_TIMEOUT, 200);
-		set_time_limit(240);
-		$result = curl_exec($c);
-		if ($result === false) { echo "{error:".json_encode(curl_error($c))."}"; curl_close($c); return; }
-		curl_close($c);
-		$i = strpos($result, "rating_header");
-		if ($i === false) return null;
-		$j = strpos($result, "<td>", $i);
-		if ($j === false) return null;
-		$k = strpos($result, "</td>", $j);
-		if ($k === false) return null;
-		$v = trim(substr($result,$j+4,$k-$j-4));
-		$i = strpos($v, " ");
-		if ($i === false) return null;
-		$v = trim(substr($v, $i+1));
-		$c = file_get_contents("component/lib_php_excel/version");
-		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
+		$this->checkGitHubRepo("PHPOffice/PHPExcel", "component/lib_php_excel/version");
 	}
 	
 	private function checkMPDF() {
-		$c = curl_init("http://www.mpdf1.com/mpdf/index.php?page=Download");
-		if (file_exists("conf/proxy")) include("conf/proxy");
-		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
-		curl_setopt($c, CURLOPT_TIMEOUT, 200);
-		set_time_limit(240);
-		$result = curl_exec($c);
-		if ($result === false) { echo "{error:".json_encode(curl_error($c))."}"; curl_close($c); return; }
-		curl_close($c);
-		$i = strpos($result, "Download mPDF Version");
-		if ($i === false) return null;
-		$j = strpos($result, "(", $i);
-		if ($j === false) return null;
-		$v = trim(substr($result,$i+21,$j-$i-21));
-		$c = file_get_contents("component/lib_mpdf/version");
-		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
+		$this->checkGitHubRepo("mpdf/mpdf", "component/lib_mpdf/version");
 	}
 	
 	private function checkTinyMCE() {
-		$c = curl_init("http://www.tinymce.com/download/download.php");
+		$c = curl_init("https://www.tinymce.com/download/");
 		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
@@ -80,11 +41,13 @@ class service_check_libraries_updates extends Service {
 		$result = curl_exec($c);
 		if ($result === false) { echo "{error:".json_encode(curl_error($c))."}"; curl_close($c); return; }
 		curl_close($c);
-		$i = strpos($result, "<td><a href=\"/develop/changelog/?type=tinymce\">TinyMCE");
+		$i = strpos($result, "class=\"badge-samosa");
 		if ($i === false) return null;
-		$j = strpos($result, "</a>", $i);
+		$j = strpos($result, ">", $i);
 		if ($j === false) return null;
-		$v = trim(substr($result,$i+54,$j-$i-54));
+		$k = strpos($result, "</span>", $j);
+		if ($k === false) return null;
+		$v = trim(substr($result,$j+1,$k-$j-1));
 		$c = file_get_contents("component/lib_tinymce/version");
 		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
 	}
@@ -150,14 +113,18 @@ class service_check_libraries_updates extends Service {
 	}
 
 	private function checkGoogleAPI() {
-		$c = curl_init("https://api.github.com/repos/google/google-api-php-client/releases");
+		$this->checkGitHubRepo("google/google-api-php-client", "component/google/lib_api/version");
+	}
+	
+	private function checkGitHubRepo($repo, $current_file) {
+		$c = curl_init("https://api.github.com/repos/$repo/releases/latest");
 		if (file_exists("conf/proxy")) include("conf/proxy");
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 		global $pn_app_version;
 		curl_setopt($c, CURLOPT_HTTPHEADER, array(
-			"User-Agent: Students-Management-Software/".$pn_app_version.".dev"
+				"User-Agent: Students-Management-Software/".$pn_app_version.".dev"
 		));
 		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 20);
 		curl_setopt($c, CURLOPT_TIMEOUT, 200);
@@ -167,10 +134,11 @@ class service_check_libraries_updates extends Service {
 		curl_close($c);
 		$json = json_decode($result, true);
 		if ($json === null) { echo "{error:'Invalid response returned from GitHub',response:".json_encode($result)."}"; return; }
-		$v = @$json[0]["tag_name"];
+		$v = @$json["tag_name"];
 		if ($v == null) { echo "{error:'No release found in GitHub'}"; return; }
-		$c = file_get_contents("component/google/lib_api/version");
+		$c = file_get_contents($current_file);
 		echo "{latest:".json_encode($v).",current:".json_encode($c)."}";
 	}
+	
 }
 ?>
