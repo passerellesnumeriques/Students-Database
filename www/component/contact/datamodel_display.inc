@@ -80,6 +80,7 @@ class ContactDataDisplay extends datamodel\JoiningTableDataDisplay {
 		}
 
 		if (count($keys) == 0) return array();
+		sort($keys);
 
 		$q = \SQLQuery::create()
 			->select($table_name)
