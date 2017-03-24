@@ -2205,7 +2205,14 @@ class SQLQuery {
 			}
 			for ($i = 0; $i < count($to_update); $i++) {
 				$update = $to_update[$i];
-				$dm_table = DataModel::get()->getTableFromSQLName($update[0], $this->bypass_security);
+				$dm_table = DataModel::get()->getTableFromSQLName($update[0], true);
+				if (!$this->bypass_security) {
+					if (!$dm_table->canAccess()) {
+						if (!$dm_table->canPutNullFromForeignTable($update[3])) {
+							throw new Exception("Access denied to table ".$dm_table->getName().", necessary to remove link from ".$update[3]);
+						}
+					}
+				}
 				$pk = $dm_table->getPrimaryKey();
 				if ($pk <> null) $pk = $pk->name;
 				else $key_cols = $dm_table->getKey();
@@ -2334,7 +2341,7 @@ class SQLQuery {
 				}
 				$sql .= ")";
 				SQLQuery::db()->execute($sql);
-				$dm_table = DataModel::get()->getTableFromSQLName($update[0], $this->bypass_security);
+				$dm_table = DataModel::get()->getTableFromSQLName($update[0], true);
 				if ($dm_table->hasUpdateListeners()) {
 					$sub_model = DataModel::get()->getSubModelInstanceFromSQLName($table_name);
 					$dm_table->fireUpdate(array(array($update[4],array($update[1]=>null))), $sub_model);
