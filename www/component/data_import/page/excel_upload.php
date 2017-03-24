@@ -48,7 +48,7 @@ class page_excel_upload extends Page {
 		$this->addJavascript("/static/widgets/splitter_vertical/splitter_vertical.js");
 		$this->onload("setTimeout(init_page,1);");
 		?>
-		<div id='excel_container' style='width:100%;height:100%'>
+		<div id='excel_container' style='width:100%;height:100%;overflow:hidden;'>
 		</div>
 		<script type='text/javascript'>
 		window.excel_uploaded = true;
