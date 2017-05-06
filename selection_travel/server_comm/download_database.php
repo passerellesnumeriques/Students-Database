@@ -81,6 +81,8 @@ fclose($f);
 $f = fopen($sms_path."/conf/selection_travel_username","w");
 fwrite($f, $username);
 fclose($f);
+// remove campaign id
+@unlink($sms_path."/conf/selection_travel_campaign");
 
 // download a backup
 progress("The server is preparing a copy of the database");
@@ -218,6 +220,10 @@ $db_system->execute("INSERT INTO `selectiontravel_$domain`.`CalendarRights` (`ca
 );
 if (PNApplication::hasErrors()) PNApplication::printErrors();
 else {
+	// save the campaign id
+	$f = fopen($sms_path."/conf/selection_travel_campaign","w");
+	fwrite($f, $campaign_id);
+	fclose($f);
 	// activate the software
 	@unlink($sms_path."/index.php");
 	copy($sms_path."/index_activated.php", $sms_path."/index.php");

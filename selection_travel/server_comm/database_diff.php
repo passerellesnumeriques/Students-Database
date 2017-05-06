@@ -232,10 +232,13 @@ function getTableDiff(&$table, $sub_model, &$done) {
 	}
 	progress("Analyzing modifications you made on your database",count($done),$total_tables);
 }
+
+global $campaign_id, $app_version, $synch_uid, $username, $synch_key, $server;
+
 $done = array();
 $root_tables = DataModel::get()->internalGetTables(false);
 $sm = DataModel::get()->getSubModel("SelectionCampaign");
-$campaign_id = SQLQuery::create()->select("SelectionCampaign")->field("id")->executeSingleValue();
+$campaign_id = file_get_contents($sms_path."/conf/selection_travel_campaign");
 $sm_tables = $sm->internalGetTables();
 $total_tables = count($root_tables)+count($sm_tables);
 progress("Analyzing modifications you made on your database",0,$total_tables);
@@ -248,7 +251,6 @@ fclose($f);
 
 // send to server
 
-global $campaign_id, $app_version, $synch_uid, $username, $synch_key, $server;
 $synch_uid = file_get_contents(dirname(__FILE__)."/synch.uid");
 $username = file_get_contents($sms_path."/conf/selection_travel_username");
 $synch_key = $_POST["synch_key"];

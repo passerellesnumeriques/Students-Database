@@ -24,6 +24,9 @@ class selection extends Component {
 		Component::allowServiceWithoutLogin("selection", "travel/download_backup");
 		Component::allowServiceWithoutLogin("selection", "travel/download_update");
 		Component::allowServiceWithoutLogin("selection", "travel/synch_file");
+#SELECTION_TRAVEL
+#if ($this->campaign_id == null && file_exists("conf/selection_travel_campaign")) $this->setCampaignId(file_get_contents("conf/selection_travel_campaign"));
+#END
 		if ($this->campaign_id == null) {
 			if (isset($_COOKIE["selection_campaign"])) {
 				try {

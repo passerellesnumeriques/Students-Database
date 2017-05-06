@@ -16,12 +16,23 @@ class service_menu extends Service {
 	public function execute(&$component, $input) {
 		$campaigns = SQLQuery::create()->select("SelectionCampaign")->execute();
 		$id = $component->getCampaignId();
+#SELECTION_TRAVEL
+#if ($id == null) { $id = file_get_contents("conf/selection_travel_campaign"); $component->setCampaignId($id); }
+#END
 		$campaign = null;
 		if ($id <> null) foreach ($campaigns as $c) if ($c["id"] == $id) { $campaign = $c; break; }
 		$can_manage = PNApplication::$instance->user_management->hasRight("manage_selection_campaign",true);
 ?>
 <div style="padding-left:5px;text-align:center;margin-bottom:5px;">
 Selection Campaign:<br/>
+<?php 
+#SELECTION_TRAVEL
+#echo "<select disabled='disabled'>";
+#echo "<option value='".$id."' selected='selected'>".toHTML($campaign["name"])."</option>";
+#echo "</select>";
+#if (false) {
+#END
+?>
 <select onchange="changeCampaign(this.value);">
 <option value='0'></option>
 <?php 
@@ -33,6 +44,7 @@ foreach ($campaigns as $c) {
 ?></select>
 <?php 
 #SELECTION_TRAVEL
+#}
 #if (false) {
 #END
 if ($campaign <> null) {

@@ -249,6 +249,7 @@ if ($migrate_from == null) {
 	$new_version_path = $path;
 	// setup migrated version
 	copy($previous_version_path."/conf/selection_travel_username", $new_version_path."/conf/selection_travel_username");
+	copy($previous_version_path."/conf/selection_travel_campaign", $new_version_path."/conf/selection_travel_campaign");
 	copy($previous_version_path."/conf/instance.uid", $new_version_path."/conf/instance.uid");
 	copy($previous_version_path."/conf/domains", $new_version_path."/conf/domains");
 	copy($previous_version_path."/install_config.inc", $new_version_path."/install_config.inc");
