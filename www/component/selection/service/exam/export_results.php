@@ -160,7 +160,20 @@ class service_exam_export_results extends Service {
 					$style = $sheet->getStyleByColumnAndRow(2, 2);
 					$style->getFont()->setBold(true);
 					$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-					$col = 3;
+					$sheet->setCellValueByColumnAndRow(3, 1, "Total Exam");
+					$sheet->mergeCellsByColumnAndRow(3, 1, 3, 2);
+					$style = $sheet->getStyleByColumnAndRow(3, 1);
+					$style->getFont()->setBold(true);
+					$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+					$col = 4;
+					for ($part_i = 0; $part_i < count($parts); $part_i++) {
+						$sheet->setCellValueByColumnAndRow($col, 1, "Total Part ".($part_i+1));
+						$sheet->mergeCellsByColumnAndRow($col, 1, $col, 2);
+						$style = $sheet->getStyleByColumnAndRow($col, 1);
+						$style->getFont()->setBold(true);
+						$style->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+						$col++;
+					}
 					for ($part_i = 0; $part_i < count($parts); $part_i++) {
 						$sheet->setCellValueByColumnAndRow($col, 1, "Part ".($part_i+1)." - ".$parts[$part_i]["name"]);
 						$style = $sheet->getStyleByColumnAndRow($col, 1);
@@ -176,14 +189,21 @@ class service_exam_export_results extends Service {
 						}
 					}
 					// grades
-					$ids = SQLQuery::create()
+					$list = SQLQuery::create()
 						->select("ApplicantExamSubject")
 						->whereValue("ApplicantExamSubject","exam_subject",$subject["id"])
 						->whereValue("ApplicantExamSubject","exam_subject_version", $versions[$version]["id"])
 						->whereIn("ApplicantExamSubject", "applicant", array_keys($applicants_ids))
 						->field("ApplicantExamSubject","applicant")
-						->executeSingleField();
+						->field("ApplicantExamSubject","score")
+						->execute();
+					$ids = array();
+					foreach ($list as $a) {
+						array_push($ids, $a["applicant"]);
+						$applicants_ids[$current_applicant]["total_grade"] = $a["score"];
+					}
 					$grades = SQLQuery::create()->select("ApplicantExamAnswer")->whereIn("ApplicantExamAnswer","applicant",$ids)->whereIn("ApplicantExamAnswer","exam_subject_question",$all_questions_ids)->orderBy("ApplicantExamAnswer","applicant")->execute();
+					$parts_grades = SQLQuery::create()->select("ApplicantExamSubjectPart")->whereIn("ApplicantExamSubjectPart","applicant",$ids)->whereIn("ApplicantExamSubjectPart","exam_subject_part",$parts_ids)->orderBy("ApplicantExamSubjectPart","applicant")->execute();
 					$current_applicant = 0;
 					$row = 2;
 					foreach ($grades as $a) {
@@ -193,6 +213,17 @@ class service_exam_export_results extends Service {
 							$sheet->setCellValueByColumnAndRow(0, $row, $applicants_ids[$current_applicant]["applicant_id"]);
 							$sheet->setCellValueByColumnAndRow(1, $row, $applicants_ids[$current_applicant]["first_name"]);
 							$sheet->setCellValueByColumnAndRow(2, $row, $applicants_ids[$current_applicant]["last_name"]);
+							$sheet->setCellValueByColumnAndRow(3, $row, $applicants_ids[$current_applicant]["total_grade"]);
+							while (count($parts_grades) > 0 && $parts_grades[0]["applicant"] == $current_applicant) {
+								$part_id = $parts_grades[0]["exam_subject_part"];
+								for ($i = 0; $i < count($parts_ids); ++$i) {
+									if ($part_id == $parts_ids[$i]) {
+										$sheet->setCellValueByColumnAndRow(4+$i, $row, $parts_grades[0]["score"]);
+										break;
+									}
+								}
+								array_shift($parts_grades);
+							}
 							$progress++;
 							if (($progress % 100) == 0) {
 								$pc = 1+($progress*99/$nb);
@@ -204,7 +235,7 @@ class service_exam_export_results extends Service {
 							$sheet->setCellValueByColumnAndRow(0, $row, "ERROR: There are answers to unknown questions");
 							continue;
 						}
-						$sheet->setCellValueByColumnAndRow($index+3, $row, $a["score"]);
+						$sheet->setCellValueByColumnAndRow($index+4+count($parts), $row, $a["score"]);
 					}
 				}
 			}
