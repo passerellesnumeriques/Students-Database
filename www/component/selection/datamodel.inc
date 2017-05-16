@@ -66,7 +66,7 @@ $sm->addTable("TravelVersion")
 	->addForeignKey("database_diff", "Storage", false, false, false)
 	;
 $sm->addTable("TravelVersionSynchStorage")
-	->addForeignKey("storage", "Storage", false, false, false, false, true)
+	->addForeignKey("storage", "Storage", true, false, false, false, true)
 	->setPrimary("storage")
 	->addBoolean("new", false)
 	->addInteger("id",32,1,null,false,false)
