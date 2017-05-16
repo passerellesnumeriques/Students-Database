@@ -128,6 +128,7 @@ function getTableDiff(&$table, $sub_model, &$done) {
 	// get removed entities
 	set_time_limit(30);
 	$sql = "SELECT $pk_name FROM `selectiontravel_init`.`$table_name` WHERE ";
+	/*
 	// do not include the ones which will be automatically removed due to links
 	foreach ($cols as $col)
 		if ($col instanceof datamodel\ForeignKey) {
@@ -143,6 +144,7 @@ function getTableDiff(&$table, $sub_model, &$done) {
 				}
 			}
 		}
+		*/
 	$sql .= "($pk_name) NOT IN (SELECT $pk_name FROM `selectiontravel_$domain`.`$table_name`)";
 	$res = $db->execute($sql);
 	while (($row = $db->nextRow($res)) <> null) {
